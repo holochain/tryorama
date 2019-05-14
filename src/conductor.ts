@@ -2,12 +2,16 @@ const child_process = require('child_process')
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const tape = require('tape')
-const {connect} = require('@holochain/hc-web-client')
+
+const colors = require('colors/safe')
 
 /// //////////////////////////////////////////////////////////
 
 // these should be already set when the conductor is started by `hc test`
+const ADMIN_INTERFACE_PORT = 3334
+const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
+const ADMIN_INTERFACE_ID = 'admin-interface'
+
 const TEST_INTERFACE_PORT = 3333
 const TEST_INTERFACE_URL = `ws://localhost:${TEST_INTERFACE_PORT}`
 const TEST_INTERFACE_ID = 'test-interface'
@@ -24,7 +28,7 @@ export class Conductor {
   agentIds: {[instanceId: string]: any}
   dnaAddresses: {[instanceId: string]: any}
   opts: any
-  call: any
+  callAdmin: any
   callZome: any
   _handle: any
 
@@ -38,19 +42,23 @@ export class Conductor {
   }
 
   async connect () {
-    const { call, callZome } = await this.webClientConnect(TEST_INTERFACE_URL)
-    this.call = method => {
-      console.debug("calling", method)
+    const { call } = await this.webClientConnect(ADMIN_INTERFACE_URL)
+    const { callZome, onSignal } = await this.webClientConnect(TEST_INTERFACE_URL)
+    this.callAdmin = method => {
+      console.debug(colors.underline("calling"), method)
       return call(method)
     }
     this.callZome = callZome
+    onSignal(sig => {
+      console.log(colors.yellow('got a sig:'), sig)
+    })
   }
 
   /**
    * Calls the conductor RPC functions to initialize it according to the instances
    */
   async initialize () {
-    const call = this.call
+    const call = this.callAdmin
     console.log('insts', this.instances)
     const promises = this.instances.map(async instance => {
       const installDnaResponse = await call('admin/dna/install_from_file')(instance.dna)
@@ -87,11 +95,11 @@ export class Conductor {
   async run (fn) {
     try {
       await this.spawn()
-      console.info("test conductor spawned")
+      console.info(colors.inverse("test conductor spawned"))
       await this.connect()
-      console.info("test conductor connected")
+      console.info(colors.inverse("test conductor connected"))
       await this.initialize()
-      console.info("test conductor initialized", this.instances.length, 'instance(s)')
+      console.info(colors.inverse("test conductor initialized"), this.instances.length, 'instance(s)')
     } catch (e) {
       console.error("Error when initializing!")
       console.error(e)
@@ -132,6 +140,13 @@ persistence_dir = "${persistencePath}"
 
 [[interfaces]]
 admin = true
+id = "${ADMIN_INTERFACE_ID}"
+instances = []
+  [interfaces.driver]
+  type = "websocket"
+  port = ${ADMIN_INTERFACE_PORT}
+
+[[interfaces]]
 id = "${TEST_INTERFACE_ID}"
 instances = []
   [interfaces.driver]

@@ -1,10 +1,7 @@
-const child_process = require('child_process')
-const fs = require('fs')
-const os = require('os')
-const path = require('path')
 const tape = require('tape')
-const {connect} = require('@holochain/hc-web-client')
+const colors = require('colors/safe')
 
+import {connect} from '../../hc-web-client'
 import {Conductor} from './conductor'
 
 type InstanceConfig = {
@@ -31,7 +28,8 @@ export class DnaInstance {
   async call (zome, fn, params) {
     try {
       const result = await this.conductor.callZome(this.id, zome, fn)(params)
-      return result
+      console.info(colors.blue.inverse("zome call"), zome, fn, params)
+      return JSON.parse(result)
     } catch (e) {
       console.error('Exception occurred while calling zome function: ', e)
       throw e
