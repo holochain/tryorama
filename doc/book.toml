@@ -1,0 +1,5 @@
+[book]
+authors = ["Michael Dougherty"]
+multilingual = false
+src = "src"
+title = "Scenario Testing for Holochain hApps"
