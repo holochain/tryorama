@@ -17,11 +17,11 @@ export class DnaInstance {
   dnaAddress: string
   conductor: any
 
-  constructor (instanceId, conductor) {
-    this.id = instanceId
+  constructor (instance, conductor) {
+    this.id = instance.id
+    this.agentId = instance.agent.id
+    this.dnaAddress = instance.dna.id
     this.conductor = conductor
-    this.agentId = this.conductor.agentId(instanceId)
-    this.dnaAddress = this.conductor.dnaAddress(instanceId)
   }
 
   // internally calls `this.conductor.call`

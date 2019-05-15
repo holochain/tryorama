@@ -23,22 +23,27 @@ const TEST_INTERFACE_ID = 'test-interface'
  */
 export class Conductor {
 
-  instances: Array<any>
+  runningInstances: Array<string>
   webClientConnect: any
-  agentIds: {[instanceId: string]: any}
-  dnaAddresses: {[instanceId: string]: any}
+  agentIds: Set<string>
+  dnaIds: Set<string>
   opts: any
   callAdmin: any
   callZome: any
-  _handle: any
+  handle: any
 
-  constructor (instances, connect, opts = {}) {
-    this.instances = instances
+  isInitialized: boolean
+
+  constructor (connect, opts = {}) {
     this.webClientConnect = connect
-    this.agentIds = {}
-    this.dnaAddresses = {}
+    this.agentIds = new Set()
+    this.dnaIds = new Set()
     this.opts = {}
-    this._handle = null
+    this.handle = null
+  }
+
+  isRunning () {
+    return this.runningInstances.length > 0
   }
 
   async connect () {
@@ -54,59 +59,80 @@ export class Conductor {
     })
   }
 
+  async initialize () {
+    if (!this.isInitialized) {
+      try {
+        await this.spawn()
+        console.info(colors.inverse("test conductor spawned"))
+        await this.connect()
+        console.info(colors.inverse("test conductor connected"))
+      } catch (e) {
+        console.error("Error when initializing!")
+        console.error(e)
+        this.kill()
+      }
+      this.isInitialized = true
+    }
+  }
+
   /**
    * Calls the conductor RPC functions to initialize it according to the instances
    */
-  async initialize () {
-    const call = this.callAdmin
-    console.log('insts', this.instances)
-    const promises = this.instances.map(async instance => {
-      const installDnaResponse = await call('admin/dna/install_from_file')(instance.dna)
-      console.log('installDnaResponse', installDnaResponse)
-      const addAgentResponse = await call('test/agent/add')(instance.agent)
-      console.log('addAgentResponse', addAgentResponse)
-
-      await call('admin/instance/add')({
+  setupInstances (instanceConfigs) {
+    if (this.isRunning()) {
+      throw "Attempting to run a new test while another test has not yet been torn down"
+    }
+    const promises = instanceConfigs.map(async instance => {
+      if (!this.agentIds.has(instance.agent.id)) {
+        const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
+        console.log('addAgentResponse', addAgentResponse)
+        this.agentIds.add(instance.agent.id)
+      }
+      if (!this.dnaIds.has(instance.dna.id)) {
+        const installDnaResponse = await this.callAdmin('admin/dna/install_from_file')(instance.dna)
+        console.log('installDnaResponse', installDnaResponse)
+        this.dnaIds.add(instance.dna.id)
+      }
+      await this.callAdmin('admin/instance/add')({
         id: instance.id,
         agent_id: instance.agent.id,
         dna_id: instance.dna.id,
       })
-      await call('admin/instance/start')(instance)
-      await call('admin/interface/add_instance')({ interface_id: TEST_INTERFACE_ID, instance_id: instance.id })
-
-      this.agentIds[instance.id] = addAgentResponse.agentId
-      this.dnaAddresses[instance.id] = installDnaResponse.dna_hash
+      await this.callAdmin('admin/instance/start')(instance)
+      await this.callAdmin('admin/interface/add_instance')({
+        interface_id: TEST_INTERFACE_ID,
+        instance_id: instance.id
+      })
+      this.runningInstances.push(instance.id)
     })
     return Promise.all(promises)
   }
 
-  agentId (instanceId) {
-    return this.agentIds[instanceId]
-  }
-
-  dnaAddress (instanceId) {
-    return this.dnaAddresses[instanceId]
+  teardownInstances () {
+    if (!this.isRunning()) {
+      throw "Attempting teardown, but there is nothing to tear down"
+    }
+    const promises = this.runningInstances.map(async instanceId => {
+      await this.callAdmin('admin/interface/remove_instance')({
+        interface_id: TEST_INTERFACE_ID,
+        instance_id: instanceId,
+      })
+      await this.callAdmin('admin/instance/remove')({
+        id: instanceId
+      })
+    })
+    return Promise.all(promises).then(() => this.runningInstances = [])
   }
 
   register_callback (callback) {
     throw new Error('Not Implemented')
   }
 
-  async run (fn) {
-    try {
-      await this.spawn()
-      console.info(colors.inverse("test conductor spawned"))
-      await this.connect()
-      console.info(colors.inverse("test conductor connected"))
-      await this.initialize()
-      console.info(colors.inverse("test conductor initialized"), this.instances.length, 'instance(s)')
-    } catch (e) {
-      console.error("Error when initializing!")
-      console.error(e)
-      this.kill()
-    }
+  async run (instanceConfigs, fn) {
+    await this.initialize()
+    await this.setupInstances(instanceConfigs)
     await fn(() => this.kill())
-    await this.kill()
+    await this.teardownInstances()
   }
 
   spawn () {
@@ -124,11 +150,11 @@ export class Conductor {
     })
     handle.stderr.on('data', data => console.error(`!C!`, data.toString('utf8')))
     handle.on('close', code => console.log(`conductor exited with code`, code))
-    this._handle = handle
+    this.handle = handle
   }
 
   kill () {
-    this._handle.kill()
+    this.handle.kill()
   }
 
   initialConfig (persistencePath, opts) {
