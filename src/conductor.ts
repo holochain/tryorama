@@ -5,14 +5,17 @@ const path = require('path')
 
 const colors = require('colors/safe')
 
+import {promiseSerial} from './util'
+import {InstanceConfig} from './config'
+
 /// //////////////////////////////////////////////////////////
 
 // these should be already set when the conductor is started by `hc test`
-const ADMIN_INTERFACE_PORT = 3334
+const ADMIN_INTERFACE_PORT = 5555
 const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
-const TEST_INTERFACE_PORT = 3333
+const TEST_INTERFACE_PORT = 5556
 const TEST_INTERFACE_URL = `ws://localhost:${TEST_INTERFACE_PORT}`
 const TEST_INTERFACE_ID = 'test-interface'
 
@@ -40,26 +43,34 @@ export class Conductor {
     this.dnaIds = new Set()
     this.opts = {}
     this.handle = null
+    this.runningInstances = []
   }
 
-  isRunning () {
+  isRunning = () => {
     return this.runningInstances.length > 0
   }
 
-  async connect () {
+  connect = async () => {
     const { call } = await this.webClientConnect(ADMIN_INTERFACE_URL)
     const { callZome, onSignal } = await this.webClientConnect(TEST_INTERFACE_URL)
-    this.callAdmin = method => {
-      console.debug(colors.underline("calling"), method)
-      return call(method)
+    this.callAdmin = method => params => {
+      console.debug(colors.yellow.underline("calling"), method)
+      console.debug(params)
+      return call(method)(params)
     }
-    this.callZome = callZome
+    this.callZome = (...args) => async params => {
+      console.debug(colors.cyan.underline("calling"), ...args)
+      console.debug(params)
+      const result = await callZome(...args)(params)
+      console.debug('->', result)
+      return result
+    }
     onSignal(sig => {
-      console.log(colors.yellow('got a sig:'), sig)
+      console.log(colors.magenta('got a sig:'), sig)
     })
   }
 
-  async initialize () {
+  initialize = async () => {
     if (!this.isInitialized) {
       try {
         await this.spawn()
@@ -78,11 +89,11 @@ export class Conductor {
   /**
    * Calls the conductor RPC functions to initialize it according to the instances
    */
-  setupInstances (instanceConfigs) {
+  setupInstances = async (instanceConfigs) => {
     if (this.isRunning()) {
       throw "Attempting to run a new test while another test has not yet been torn down"
     }
-    const promises = instanceConfigs.map(async instance => {
+    for (const instance of instanceConfigs) {
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
         console.log('addAgentResponse', addAgentResponse)
@@ -104,11 +115,10 @@ export class Conductor {
         instance_id: instance.id
       })
       this.runningInstances.push(instance.id)
-    })
-    return Promise.all(promises)
+    }
   }
 
-  teardownInstances () {
+  teardownInstances = () => {
     if (!this.isRunning()) {
       throw "Attempting teardown, but there is nothing to tear down"
     }
@@ -124,14 +134,12 @@ export class Conductor {
     return Promise.all(promises).then(() => this.runningInstances = [])
   }
 
-  register_callback (callback) {
-    throw new Error('Not Implemented')
-  }
-
-  async run (instanceConfigs, fn) {
-    await this.initialize()
+  run = async (instanceConfigs, fn) => {
+    if (!this.isInitialized) {
+      throw "Cannot run uninitialized conductor"
+    }
     await this.setupInstances(instanceConfigs)
-    await fn(() => this.kill())
+    await fn()
     await this.teardownInstances()
   }
 

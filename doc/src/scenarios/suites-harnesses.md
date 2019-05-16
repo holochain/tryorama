@@ -63,3 +63,7 @@ export default scenario => {
     })
 }
 ```
+
+## TODO
+
+Note that the user must specify as part of their test suite what combinators (middleware) they're using. They can't just write weird scenarios willy-nilly. So they have to somehow include the combinator chain in the final product, before, e.g., it gets consumed by a central CI service that runs their scenarios on various orchestrators
