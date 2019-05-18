@@ -58,7 +58,7 @@ export class Conductor {
       console.debug(colors.yellow.underline("calling"), method)
       console.debug(params)
       const result = await call(method)(params)
-      console.debug(colors.yellow.bold('->'), result)
+      // console.debug(colors.yellow.bold('->'), result)
       return result
     }
     onSignal(sig => {
@@ -73,7 +73,7 @@ export class Conductor {
       console.debug(colors.cyan.underline("calling"), ...args)
       console.debug(params)
       const result = await callZome(...args)(params)
-      console.debug(colors.cyan.bold('->'), result)
+      // console.debug(colors.cyan.bold('->'), result)
       return result
     }
   }

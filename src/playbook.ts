@@ -66,45 +66,36 @@ export class Playbook {
   static dna = (path, id = `${path}`) => ({ path, id })
 
   /**
-   * Run a test case, specified by a closure:
-   * (stop, {instances}) => { test body }
-   * where `stop` is a function that ends the test and shuts down the running Conductor
-   * and the `instances` is an Object of instances specified in the config, keyed by "name"
-   * (name is the optional third parameter of `Config.instance`)
-   *
-   * e.g.:
-   *      scenario.run(async (stop, {alice, bob, carol}) => {
-   *          const resultAlice = await alice.callSync(...)
-   *          const resultBob = await bob.callSync(...)
-   *          assert(resultAlice === resultBob)
-   *          stop()
-   *      })
+   * origFn takes (s, instances)
+   * so does wrappedFn
    */
-  scenario = (desc, origFn) => {
-    const wrappedFn = this.middleware.reduce((f, g) => g(desc, f), origFn)
+  registerScenario = (desc, origFn) => {
+    const wrappedFn = this.middleware.reduce((f, m) => m(desc, f), origFn)
     this.scenarios.push([desc, wrappedFn])
   }
 
-  run = async () => {
+  runScenario = fn => this.conductor.run(this.instanceConfigs, () => {
+    console.log("[[[ beginning of conductor.run")
+    const s = 'TODO'
+    return fn(s, this.instanceMap)
+  })
+
+
+  runSuite = async () => {
     try {
       await this.conductor.initialize()
     } catch (e) {
       console.error("Error during conductor initialization:")
       console.error(e)
     }
-    for (const [desc, fn] of this.scenarios) {
+    const promises = this.scenarios.map(([desc, fn]) => {
       console.log(colors.green.inverse('running: '), desc)
-      try {
-        await this.conductor.run(this.instanceConfigs, () => {
-          console.log("[[[ beginning of conductor.run")
-          const s = 'TODO'
-          return fn(s, this.instanceMap)
-        })
-      } catch (e) {
-        console.error('scenario made a boo boo:')
-        console.error(e)
-      }
-    }
+      const p = fn(this.runScenario)
+      console.log('p', p)
+      return p
+    })
+    console.log(promises)
+    return Promise.all(promises)
   }
 
   close = () => this.conductor.kill()
