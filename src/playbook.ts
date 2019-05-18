@@ -39,10 +39,12 @@ export class Playbook {
   instanceMap: {[id: string]: DnaInstance}
   conductor: Conductor
   scenarios: Array<any>
+  middleware: Array<any>
   opts: any | void
 
-  constructor ({bridges, instances, debugLog}) {
+  constructor ({bridges, instances, middleware, debugLog}) {
     this.conductor = new Conductor(connect)
+    this.middleware = middleware
     this.instanceConfigs = []
     this.instanceMap = {}
     this.scenarios = []
@@ -64,22 +66,23 @@ export class Playbook {
   static dna = (path, id = `${path}`) => ({ path, id })
 
   /**
-     * Run a test case, specified by a closure:
-     * (stop, {instances}) => { test body }
-     * where `stop` is a function that ends the test and shuts down the running Conductor
-     * and the `instances` is an Object of instances specified in the config, keyed by "name"
-     * (name is the optional third parameter of `Config.instance`)
-     *
-     * e.g.:
-     *      scenario.run(async (stop, {alice, bob, carol}) => {
-     *          const resultAlice = await alice.callSync(...)
-     *          const resultBob = await bob.callSync(...)
-     *          assert(resultAlice === resultBob)
-     *          stop()
-     *      })
-     */
-  scenario = (desc, fn) => {
-    this.scenarios.push([desc, fn])
+   * Run a test case, specified by a closure:
+   * (stop, {instances}) => { test body }
+   * where `stop` is a function that ends the test and shuts down the running Conductor
+   * and the `instances` is an Object of instances specified in the config, keyed by "name"
+   * (name is the optional third parameter of `Config.instance`)
+   *
+   * e.g.:
+   *      scenario.run(async (stop, {alice, bob, carol}) => {
+   *          const resultAlice = await alice.callSync(...)
+   *          const resultBob = await bob.callSync(...)
+   *          assert(resultAlice === resultBob)
+   *          stop()
+   *      })
+   */
+  scenario = (desc, origFn) => {
+    const wrappedFn = this.middleware.reduce((f, g) => g(desc, f), origFn)
+    this.scenarios.push([desc, wrappedFn])
   }
 
   run = async () => {
@@ -90,9 +93,10 @@ export class Playbook {
       console.error(e)
     }
     for (const [desc, fn] of this.scenarios) {
-      console.log(colors.blue.inverse('running: '), desc)
+      console.log(colors.green.inverse('running: '), desc)
       try {
         await this.conductor.run(this.instanceConfigs, () => {
+          console.log("[[[ beginning of conductor.run")
           const s = 'TODO'
           return fn(s, this.instanceMap)
         })

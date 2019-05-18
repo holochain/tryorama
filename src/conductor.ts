@@ -2,6 +2,7 @@ const child_process = require('child_process')
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
+const getPort = require('get-port')
 
 const colors = require('colors/safe')
 
@@ -11,13 +12,9 @@ import {InstanceConfig} from './config'
 /// //////////////////////////////////////////////////////////
 
 // these should be already set when the conductor is started by `hc test`
-const ADMIN_INTERFACE_PORT = 5555
+const ADMIN_INTERFACE_PORT = 5550
 const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
-
-const TEST_INTERFACE_PORT = 5556
-const TEST_INTERFACE_URL = `ws://localhost:${TEST_INTERFACE_PORT}`
-const TEST_INTERFACE_ID = 'test-interface'
 
 /**
  * Represents a conductor process to which calls can be made via RPC
@@ -26,14 +23,16 @@ const TEST_INTERFACE_ID = 'test-interface'
  */
 export class Conductor {
 
-  runningInstances: Array<string>
   webClientConnect: any
   agentIds: Set<string>
   dnaIds: Set<string>
   opts: any
   callAdmin: any
-  callZome: any
   handle: any
+
+  runningInstances: Array<string>
+  callZome: any
+  testPort: number
 
   isInitialized: boolean
 
@@ -50,19 +49,16 @@ export class Conductor {
     return this.runningInstances.length > 0
   }
 
-  connect = async () => {
-    const { call } = await this.webClientConnect(ADMIN_INTERFACE_URL)
-    const { callZome, onSignal } = await this.webClientConnect(TEST_INTERFACE_URL)
-    this.callAdmin = method => params => {
+  testInterfaceUrl = () => `ws://localhost:${this.testPort}`
+  testInterfaceId = () => `test-interface-${this.testPort}`
+
+  connectAdmin = async () => {
+    const { call, onSignal } = await this.webClientConnect(ADMIN_INTERFACE_URL)
+    this.callAdmin = method => async params => {
       console.debug(colors.yellow.underline("calling"), method)
       console.debug(params)
-      return call(method)(params)
-    }
-    this.callZome = (...args) => async params => {
-      console.debug(colors.cyan.underline("calling"), ...args)
-      console.debug(params)
-      const result = await callZome(...args)(params)
-      console.debug('->', result)
+      const result = await call(method)(params)
+      console.debug(colors.yellow.bold('->'), result)
       return result
     }
     onSignal(sig => {
@@ -70,13 +66,25 @@ export class Conductor {
     })
   }
 
+  connectTest = async () => {
+    const url = this.testInterfaceUrl()
+    const { callZome } = await this.webClientConnect(url)
+    this.callZome = (...args) => async params => {
+      console.debug(colors.cyan.underline("calling"), ...args)
+      console.debug(params)
+      const result = await callZome(...args)(params)
+      console.debug(colors.cyan.bold('->'), result)
+      return result
+    }
+  }
+
   initialize = async () => {
     if (!this.isInitialized) {
       try {
         await this.spawn()
-        console.info(colors.inverse("test conductor spawned"))
-        await this.connect()
-        console.info(colors.inverse("test conductor connected"))
+        console.info(colors.green.bold("test conductor spawned"))
+        await this.connectAdmin()
+        console.info(colors.green.bold("test conductor connected to admin interface"))
       } catch (e) {
         console.error("Error when initializing!")
         console.error(e)
@@ -84,6 +92,23 @@ export class Conductor {
       }
       this.isInitialized = true
     }
+  }
+
+  getInterfacePort = async () => {
+    const port = await getPort()
+    // const port = await getPort({port: getPort.makeRange(5555, 5999)})
+    console.log("using port", port)
+    return port
+  }
+
+  setupNewInterface = async () => {
+    this.testPort = await this.getInterfacePort()
+    await this.callAdmin('admin/interface/add')({
+      id: this.testInterfaceId(),
+      admin: false,
+      type: 'websocket',
+      port: this.testPort,
+    })
   }
 
   /**
@@ -111,35 +136,39 @@ export class Conductor {
       })
       await this.callAdmin('admin/instance/start')(instance)
       await this.callAdmin('admin/interface/add_instance')({
-        interface_id: TEST_INTERFACE_ID,
+        interface_id: this.testInterfaceId(),  // NB: this changes between tests
         instance_id: instance.id
       })
       this.runningInstances.push(instance.id)
     }
   }
 
-  teardownInstances = () => {
+  teardownInstances = async () => {
     if (!this.isRunning()) {
       throw "Attempting teardown, but there is nothing to tear down"
     }
-    const promises = this.runningInstances.map(async instanceId => {
+    for (const instanceId of this.runningInstances) {
       await this.callAdmin('admin/interface/remove_instance')({
-        interface_id: TEST_INTERFACE_ID,
+        interface_id: this.testInterfaceId(),  // NB: this changes between tests
         instance_id: instanceId,
       })
       await this.callAdmin('admin/instance/remove')({
         id: instanceId
       })
-    })
-    return Promise.all(promises).then(() => this.runningInstances = [])
+    }
+    this.runningInstances = []
   }
 
   run = async (instanceConfigs, fn) => {
     if (!this.isInitialized) {
       throw "Cannot run uninitialized conductor"
     }
+    await this.setupNewInterface()
+    await this.connectTest()
     await this.setupInstances(instanceConfigs)
+    console.debug("Instances all set up, running test...")
     await fn()
+    console.debug("Test done, tearing down instances...")
     await this.teardownInstances()
   }
 
@@ -179,13 +208,6 @@ instances = []
   [interfaces.driver]
   type = "websocket"
   port = ${ADMIN_INTERFACE_PORT}
-
-[[interfaces]]
-id = "${TEST_INTERFACE_ID}"
-instances = []
-  [interfaces.driver]
-  type = "websocket"
-  port = ${TEST_INTERFACE_PORT}
 
 [logger]
 type = "debug"
