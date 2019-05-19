@@ -5,8 +5,7 @@ const { Playbook } = require('../src')
 const dnaPath = path.join(__dirname, "../../holochain-rust/app_spec/dist/app_spec.dna.json")
 const dnaBlog = Playbook.dna(dnaPath, 'blog')
 
-// TODO: need the function that actually RUNs the damn thing,
-// not the thing that registers the thing, inside the combinator.
+
 const withTape = tape => (run, f, desc) => () => new Promise(resolve => {
   tape(desc, t => {
     run((s, ins) => f(s, t, ins)).then(() => {
@@ -16,9 +15,7 @@ const withTape = tape => (run, f, desc) => () => new Promise(resolve => {
   })
 })
 
-const simpleMiddleware = (run, f, desc) => {
-  return () => run(f)
-}
+const simpleMiddleware = (run, f, desc) => () => run(f)
 
 const playbook = new Playbook({
   instances: {
@@ -28,8 +25,8 @@ const playbook = new Playbook({
   },
   debugLog: true,
   middleware: [
-    simpleMiddleware
-    // withTape(require('tape'))
+    // simpleMiddleware,
+    withTape(require('tape')),
   ],
   // immediate: true,
 })
@@ -55,9 +52,10 @@ const assert = x => {
 // const scenario = withTape(require('tape'))(playbook.scenario)
 const scenario = playbook.registerScenario
 
+require('./test-tape-combinator')(scenario)
 // require('./test-tape-manual')(scenario, tape)
 // require('./test-vanilla')(scenario)
-require('./test-simple')(scenario)
+// require('./test-simple')(scenario)
 
 playbook.runSuite().then(() => {
   console.log("all done!!")
