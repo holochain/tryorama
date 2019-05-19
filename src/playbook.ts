@@ -40,7 +40,8 @@ export class Playbook {
   conductor: Conductor
   scenarios: Array<any>
   middleware: Array<any>
-  opts: any | void
+  conductorOpts: any | void
+  immediate: boolean
 
   constructor ({bridges, instances, middleware, debugLog}) {
     this.conductor = new Conductor(connect)
@@ -48,6 +49,7 @@ export class Playbook {
     this.instanceConfigs = []
     this.instanceMap = {}
     this.scenarios = []
+    this.immediate = false
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
       console.debug('agentId', agentId)
       console.debug('dnaConfig', dnaConfig)
@@ -56,7 +58,7 @@ export class Playbook {
       this.instanceConfigs.push(instanceConfig)
       this.instanceMap[id] = new DnaInstance(instanceConfig, this.conductor)
     })
-    this.opts = {debugLog}
+    this.conductorOpts = {debugLog}
   }
 
   /**
@@ -74,12 +76,29 @@ export class Playbook {
     this.scenarios.push([desc, wrappedFn])
   }
 
-  runScenario = fn => this.conductor.run(this.instanceConfigs, () => {
-    console.log("[[[ beginning of conductor.run")
+  runScenario = desc => lv2fn => this.conductor.run(this.instanceConfigs, () => {
+    console.log(colors.green.inverse('running (2): '), desc)
     const s = 'TODO'
-    return fn(s, this.instanceMap)
+    const result = lv2fn(s, this.instanceMap)
+    console.log(colors.green.inverse('result (2): '), result)
+    return result
   })
 
+  runSuiteSequential = async () => {
+    for (const [desc, lv1fn] of this.scenarios) {
+      await lv1fn(this.runScenario(desc))
+    }
+  }
+
+  // runSuiteImmediate = async () => {
+  //   const promises = this.scenarios.map(([desc, lv1fn]) => {
+  //     console.log(colors.red.inverse('running (1): '), desc)
+  //     const result = lv1fn(this.runScenario(desc))
+  //     console.log(colors.red.inverse('result (1): '), result)
+  //     return result
+  //   })
+  //   return Promise.all(promises)
+  // }
 
   runSuite = async () => {
     try {
@@ -88,14 +107,12 @@ export class Playbook {
       console.error("Error during conductor initialization:")
       console.error(e)
     }
-    const promises = this.scenarios.map(([desc, fn]) => {
-      console.log(colors.green.inverse('running: '), desc)
-      const p = fn(this.runScenario)
-      console.log('p', p)
-      return p
-    })
-    console.log(promises)
-    return Promise.all(promises)
+
+    // if (this.immediate) {
+      // return this.runSuiteImmediate()
+    // } else {
+      return this.runSuiteSequential()
+    // }
   }
 
   close = () => this.conductor.kill()

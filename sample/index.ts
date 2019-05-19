@@ -42,7 +42,8 @@ const playbook = new Playbook({
   debugLog: true,
   middleware: [
     // withTape(require('tape'))
-  ]
+  ],
+  // immediate: true,
 })
 
 process.on('unhandledRejection', error => {
@@ -66,7 +67,8 @@ const assert = x => {
 // const scenario = withTape(require('tape'))(playbook.scenario)
 const scenario = playbook.registerScenario
 
-require('./test-tape-manual')(scenario, tape)
+// require('./test-tape-manual')(scenario, tape)
+require('./test-vanilla')(scenario)
 
 playbook.runSuite().then(() => {
   console.log("all done!!")
