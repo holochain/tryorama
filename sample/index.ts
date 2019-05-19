@@ -7,30 +7,17 @@ const dnaBlog = Playbook.dna(dnaPath, 'blog')
 
 // TODO: need the function that actually RUNs the damn thing,
 // not the thing that registers the thing, inside the combinator.
-const withTape = tape => (desc, f) => {
-  const g = (s, instances) => {
-    console.log('!!! calling all tape')
-    tape(desc, async t => {
-      try {
-        console.log()
-        console.log("<<<<<<<<<< now test begins <<<")
-        console.log("<<<<<<<<<< now test begins <<<")
-        console.log("<<<<<<<<<< now test begins <<<")
-        console.log()
-        await f(s, t, instances)
-        console.log()
-        console.log(">>> now test over >>>>>>>>>>>>")
-        console.log(">>> now test over >>>>>>>>>>>>")
-        console.log(">>> now test over >>>>>>>>>>>>")
-        console.log()
-        t.end()
-      } catch (e) {
-        console.error("Problem with test: ", e)
-        t.fail(e)
-      }
+const withTape = tape => (run, f, desc) => () => new Promise(resolve => {
+  tape(desc, t => {
+    run((s, ins) => f(s, t, ins)).then(() => {
+      t.end()
+      resolve()
     })
-  }
-  return g
+  })
+})
+
+const simpleMiddleware = (run, f, desc) => {
+  return () => run(f)
 }
 
 const playbook = new Playbook({
@@ -41,6 +28,7 @@ const playbook = new Playbook({
   },
   debugLog: true,
   middleware: [
+    simpleMiddleware
     // withTape(require('tape'))
   ],
   // immediate: true,
@@ -68,7 +56,8 @@ const assert = x => {
 const scenario = playbook.registerScenario
 
 // require('./test-tape-manual')(scenario, tape)
-require('./test-vanilla')(scenario)
+// require('./test-vanilla')(scenario)
+require('./test-simple')(scenario)
 
 playbook.runSuite().then(() => {
   console.log("all done!!")

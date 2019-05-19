@@ -72,7 +72,11 @@ export class Playbook {
    * so does wrappedFn
    */
   registerScenario = (desc, origFn) => {
-    const wrappedFn = this.middleware.reduce((f, m) => m(desc, f), origFn)
+    const runner = this.runScenario(desc)
+    const wrappedFn = this.middleware.reduce(
+      (f, m) => m(runner, f, desc),
+      origFn
+    )
     this.scenarios.push([desc, wrappedFn])
   }
 
