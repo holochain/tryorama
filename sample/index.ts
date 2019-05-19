@@ -1,21 +1,10 @@
 const path = require('path')
 const tape = require('tape')
-const { Playbook } = require('../src')
+const { Playbook, simpleMiddleware, tapeMiddleware } = require('../src')
 
 const dnaPath = path.join(__dirname, "../../holochain-rust/app_spec/dist/app_spec.dna.json")
 const dnaBlog = Playbook.dna(dnaPath, 'blog')
 
-
-const withTape = tape => (run, f, desc) => () => new Promise(resolve => {
-  tape(desc, t => {
-    run((s, ins) => f(s, t, ins)).then(() => {
-      t.end()
-      resolve()
-    })
-  })
-})
-
-const simpleMiddleware = (run, f, desc) => () => run(f)
 
 const playbook = new Playbook({
   instances: {
@@ -25,15 +14,15 @@ const playbook = new Playbook({
   },
   debugLog: true,
   middleware: [
+    tapeMiddleware(require('tape')),
     // simpleMiddleware,
-    withTape(require('tape')),
   ],
   // immediate: true,
 })
 
 process.on('unhandledRejection', error => {
   // Will print "unhandledRejection err is not defined"
-  console.error('unhandledRejection', error);
+  console.error('got unhandledRejection:', error);
 });
 
 // const withHarness = harness => run => async (desc, g) => {

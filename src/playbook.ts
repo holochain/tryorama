@@ -73,10 +73,19 @@ export class Playbook {
    */
   registerScenario = (desc, origFn) => {
     const runner = this.runScenario(desc)
-    const wrappedFn = this.middleware.reduce(
-      (f, m) => m(runner, f, desc),
-      origFn
-    )
+    let wrappedFn = origFn
+    let terminalFn = null
+    let i = 0
+    for (const m of this.middleware) {
+      if (terminalFn) {
+        throw new Error(`middleware in position ${i - 1} ('${m.name}') is terminal, cannot include other middleware beyond it!`)
+      }
+      wrappedFn = m(runner, wrappedFn, desc)
+      if (m.isTerminal) {
+        terminalFn = m
+      }
+      i++
+    }
     this.scenarios.push([desc, wrappedFn])
   }
 
@@ -112,11 +121,7 @@ export class Playbook {
       console.error(e)
     }
 
-    // if (this.immediate) {
-      // return this.runSuiteImmediate()
-    // } else {
-      return this.runSuiteSequential()
-    // }
+    return this.runSuiteSequential()
   }
 
   close = () => this.conductor.kill()

@@ -1,4 +1,5 @@
 
 import {Playbook} from './playbook'
+import {simpleMiddleware, tapeMiddleware} from './middleware'
 
-export {Playbook}
+export {Playbook, simpleMiddleware, tapeMiddleware}
