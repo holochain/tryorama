@@ -4,39 +4,13 @@ const colors = require('colors/safe')
 import {connect} from '../../hc-web-client'
 import {InstanceConfig} from './config'
 import {Conductor} from './conductor'
+import {ScenarioApi} from './api'
 
-export class DnaInstance {
-
-  id: string
-  agentId: string
-  dnaAddress: string
-  conductor: any
-
-  constructor (instance, conductor: Conductor) {
-    this.id = instance.id
-    this.agentId = instance.agent.id
-    this.dnaAddress = instance.dna.id
-    this.conductor = conductor
-  }
-
-  // internally calls `this.conductor.call`
-  async call (zome, fn, params) {
-    try {
-      const result = await this.conductor.callZome(this.id, zome, fn)(params)
-      console.info(colors.blue.inverse("zome call"), zome, fn, params)
-      return JSON.parse(result)
-    } catch (e) {
-      console.error('Exception occurred while calling zome function: ', e)
-      throw e
-    }
-  }
-}
 
 /// //////////////////////////////////////////////////////////
 
 export class Playbook {
   instanceConfigs: Array<InstanceConfig>
-  instanceMap: {[id: string]: DnaInstance}
   conductor: Conductor
   scenarios: Array<any>
   middleware: Array<any>
@@ -47,7 +21,6 @@ export class Playbook {
     this.conductor = new Conductor(connect)
     this.middleware = middleware
     this.instanceConfigs = []
-    this.instanceMap = {}
     this.scenarios = []
     this.immediate = false
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
@@ -56,7 +29,6 @@ export class Playbook {
       const instanceConfig = makeInstanceConfig(agentId, dnaConfig)
       const id = instanceConfig.id
       this.instanceConfigs.push(instanceConfig)
-      this.instanceMap[id] = new DnaInstance(instanceConfig, this.conductor)
     })
     this.conductorOpts = {debugLog}
   }
@@ -89,10 +61,10 @@ export class Playbook {
     this.scenarios.push([desc, wrappedFn])
   }
 
-  runScenario = desc => lv2fn => this.conductor.run(this.instanceConfigs, () => {
+  runScenario = desc => lv2fn => this.conductor.run(this.instanceConfigs, (instanceMap) => {
     console.log(colors.green.inverse('running (2): '), desc)
-    const s = 'TODO'
-    const result = lv2fn(s, this.instanceMap)
+    const api = new ScenarioApi
+    const result = lv2fn(api, instanceMap)
     console.log(colors.green.inverse('result (2): '), result)
     return result
   })

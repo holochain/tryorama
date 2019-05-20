@@ -16,6 +16,36 @@ const ADMIN_INTERFACE_PORT = 5550
 const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
+
+
+export class DnaInstance {
+
+  id: string
+  agentAddress: string | null
+  dnaAddress: string | null
+  conductor: any
+
+  constructor (instanceId, conductor: Conductor) {
+    this.id = instanceId
+    this.agentAddress = null
+    this.dnaAddress = null
+    this.conductor = conductor
+  }
+
+  // internally calls `this.conductor.call`
+  async call (zome, fn, params) {
+    try {
+      const result = await this.conductor.callZome(this.id, zome, fn)(params)
+      console.info(colors.blue.inverse("zome call"), this.id, zome, fn, params)
+      return JSON.parse(result)
+    } catch (e) {
+      console.error('Exception occurred while calling zome function: ', e)
+      throw e
+    }
+  }
+}
+
+
 /**
  * Represents a conductor process to which calls can be made via RPC
  *
@@ -26,6 +56,7 @@ export class Conductor {
   webClientConnect: any
   agentIds: Set<string>
   dnaIds: Set<string>
+  instanceMap: any
   opts: any
   callAdmin: any
   handle: any
@@ -40,6 +71,7 @@ export class Conductor {
     this.webClientConnect = connect
     this.agentIds = new Set()
     this.dnaIds = new Set()
+    this.instanceMap = {}
     this.opts = {}
     this.handle = null
     this.runningInstances = []
@@ -58,11 +90,14 @@ export class Conductor {
       console.debug(colors.yellow.underline("calling"), method)
       console.debug(params)
       const result = await call(method)(params)
-      // console.debug(colors.yellow.bold('->'), result)
+      console.debug(colors.yellow.bold('->'), result)
       return result
     }
     onSignal(sig => {
-      console.log(colors.magenta('got a sig:'), sig)
+      // if (sig.action.action_type !== 'InitializeChain') {
+      //   console.log(colors.magenta('got a sig:'))
+      //   console.log(JSON.stringify(sig, null, 2))
+      // }
     })
   }
 
@@ -119,15 +154,22 @@ export class Conductor {
       throw "Attempting to run a new test while another test has not yet been torn down"
     }
     for (const instance of instanceConfigs) {
+      if (!this.instanceMap[instance.id]) {
+        this.instanceMap[instance.id] = new DnaInstance(instance.id, this)
+      }
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
         console.log('addAgentResponse', addAgentResponse)
+        const agentAddress = addAgentResponse.agent_address
         this.agentIds.add(instance.agent.id)
+        this.instanceMap[instance.id].agentAddress = agentAddress
       }
       if (!this.dnaIds.has(instance.dna.id)) {
         const installDnaResponse = await this.callAdmin('admin/dna/install_from_file')(instance.dna)
         console.log('installDnaResponse', installDnaResponse)
+        const dnaAddress = installDnaResponse.dna_hash
         this.dnaIds.add(instance.dna.id)
+        this.instanceMap[instance.id].dnaAddress = dnaAddress
       }
       await this.callAdmin('admin/instance/add')({
         id: instance.id,
@@ -167,7 +209,7 @@ export class Conductor {
     await this.connectTest()
     await this.setupInstances(instanceConfigs)
     console.debug("Instances all set up, running test...")
-    await fn()
+    await fn(this.instanceMap)
     console.debug("Test done, tearing down instances...")
     await this.teardownInstances()
   }

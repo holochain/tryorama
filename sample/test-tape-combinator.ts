@@ -9,10 +9,10 @@ scenario('delete_post', async (s, t, insts) => {
     { "content": "Posty", "in_reply_to": "" }
   )
 
-  // await s.consistent()
+  await s.consistent()
 
   const bob_create_post_result = await bob.call("blog", "posts_by_agent",
-    { "agent": alice.agentId }
+    { "agent": alice.agentAddress }
   )
 
   t.ok(bob_create_post_result.Ok)
@@ -21,8 +21,10 @@ scenario('delete_post', async (s, t, insts) => {
   //remove link by alicce
   await alice.call("blog", "delete_post", { "content": "Posty", "in_reply_to": "" })
 
+  await s.consistent()
+
   // get posts by bob
-  const bob_agent_posts_expect_empty = await bob.call("blog", "posts_by_agent", { "agent": alice.agentId })
+  const bob_agent_posts_expect_empty = await bob.call("blog", "posts_by_agent", { "agent": alice.agentAddress })
 
   t.ok(bob_agent_posts_expect_empty.Ok)
   t.equal(bob_agent_posts_expect_empty.Ok.links.length, 0);
