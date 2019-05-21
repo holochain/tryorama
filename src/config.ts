@@ -15,12 +15,11 @@ export type InstanceConfig = {
   dna: DnaConfig
 }
 
-// nested or not?
-// type BridgeConfig = {
-//   handle: string
-//   caller_id: string
-//   callee_id: string
-// }
+export type BridgeConfig = {
+  handle: string
+  caller_id: string
+  callee_id: string
+}
 
 export const Config = {
   agent: id => ({ name: id, id }),

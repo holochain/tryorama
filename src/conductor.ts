@@ -6,7 +6,7 @@ const getPort = require('get-port')
 
 const colors = require('colors/safe')
 
-import {promiseSerial} from './util'
+import {promiseSerial, delay} from './util'
 import {InstanceConfig} from './config'
 
 /// //////////////////////////////////////////////////////////
@@ -60,8 +60,9 @@ export class Conductor {
   opts: any
   callAdmin: any
   handle: any
+  dnaNonce: number
 
-  runningInstances: Array<string>
+  runningInstances: Array<InstanceConfig>
   callZome: any
   testPort: number
 
@@ -75,6 +76,7 @@ export class Conductor {
     this.opts = {}
     this.handle = null
     this.runningInstances = []
+    this.dnaNonce = 1
   }
 
   isRunning = () => {
@@ -146,6 +148,24 @@ export class Conductor {
     })
   }
 
+
+  setupDna = async (nonNoncifiedInstanceId, instanceConfig) => {
+    const dnaConfig = JSON.parse(JSON.stringify(instanceConfig.dna))  // poor man's deep clone
+    dnaConfig.id += '-' + this.dnaNonce
+    dnaConfig.copy = true
+    dnaConfig.properties = {nonce: this.dnaNonce}
+
+    if (!this.dnaIds.has(dnaConfig.id)) {
+      const installDnaResponse = await this.callAdmin('admin/dna/install_from_file')(dnaConfig)
+      console.log('installDnaResponse', installDnaResponse)
+      const dnaAddress = installDnaResponse.dna_hash
+      this.dnaIds.add(dnaConfig.id)
+      this.instanceMap[nonNoncifiedInstanceId].dnaAddress = dnaAddress
+    }
+    return dnaConfig
+  }
+
+
   /**
    * Calls the conductor RPC functions to initialize it according to the instances
    */
@@ -153,35 +173,35 @@ export class Conductor {
     if (this.isRunning()) {
       throw "Attempting to run a new test while another test has not yet been torn down"
     }
-    for (const instance of instanceConfigs) {
-      if (!this.instanceMap[instance.id]) {
-        this.instanceMap[instance.id] = new DnaInstance(instance.id, this)
+    for (const instanceConfig of instanceConfigs) {
+      const instance = JSON.parse(JSON.stringify(instanceConfig))
+      const nonNoncifiedInstanceId = instance.id
+      instance.id += '-' + this.dnaNonce
+      if (this.instanceMap[nonNoncifiedInstanceId]) {
+        const inst = new DnaInstance(instance.id, this)
+        inst.agentAddress = this.instanceMap[nonNoncifiedInstanceId].agentAddress
+        this.instanceMap[nonNoncifiedInstanceId] = inst
+      } else {
+        this.instanceMap[nonNoncifiedInstanceId] = new DnaInstance(instance.id, this)
       }
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
         console.log('addAgentResponse', addAgentResponse)
         const agentAddress = addAgentResponse.agent_address
         this.agentIds.add(instance.agent.id)
-        this.instanceMap[instance.id].agentAddress = agentAddress
+        this.instanceMap[nonNoncifiedInstanceId].agentAddress = agentAddress
       }
-      if (!this.dnaIds.has(instance.dna.id)) {
-        const installDnaResponse = await this.callAdmin('admin/dna/install_from_file')(instance.dna)
-        console.log('installDnaResponse', installDnaResponse)
-        const dnaAddress = installDnaResponse.dna_hash
-        this.dnaIds.add(instance.dna.id)
-        this.instanceMap[instance.id].dnaAddress = dnaAddress
-      }
+      instance.dna = await this.setupDna(nonNoncifiedInstanceId, instance)
       await this.callAdmin('admin/instance/add')({
         id: instance.id,
         agent_id: instance.agent.id,
         dna_id: instance.dna.id,
       })
-      await this.callAdmin('admin/instance/start')(instance)
       await this.callAdmin('admin/interface/add_instance')({
         interface_id: this.testInterfaceId(),  // NB: this changes between tests
         instance_id: instance.id
       })
-      this.runningInstances.push(instance.id)
+      this.runningInstances.push(instance)
     }
   }
 
@@ -189,29 +209,75 @@ export class Conductor {
     if (!this.isRunning()) {
       throw "Attempting teardown, but there is nothing to tear down"
     }
-    for (const instanceId of this.runningInstances) {
+    for (const instance of this.runningInstances) {
       await this.callAdmin('admin/interface/remove_instance')({
         interface_id: this.testInterfaceId(),  // NB: this changes between tests
-        instance_id: instanceId,
+        instance_id: instance.id,
       })
       await this.callAdmin('admin/instance/remove')({
-        id: instanceId
+        id: instance.id
       })
+      // await this.callAdmin('admin/dna/uninstall')({
+      //   id: instance.dna.id
+      // })
     }
     this.runningInstances = []
   }
 
-  run = async (instanceConfigs, fn) => {
+  noncifyBridgeConfig = (bridgeConfig) => {
+    const bridge = JSON.parse(JSON.stringify(bridgeConfig))
+    bridge.caller_id += '-' + this.dnaNonce
+    bridge.callee_id += '-' + this.dnaNonce
+    return bridge
+  }
+
+  setupBridges = async (bridgeConfigs) => {
+    for (const bridgeConfig of bridgeConfigs) {
+      await this.callAdmin('admin/bridge/add')(this.noncifyBridgeConfig(bridgeConfig))
+    }
+  }
+
+  startInstances = async (instanceConfigs) => {
+    for (const instanceConfig of instanceConfigs) {
+      const instance = JSON.parse(JSON.stringify(instanceConfig))
+      instance.id += '-' + this.dnaNonce
+      await this.callAdmin('admin/instance/start')(instance)
+    }
+  }
+
+  teardownBridges = async (bridgeConfigs) => {
+    for (const bridgeConfig of bridgeConfigs) {
+      await this.callAdmin('admin/bridge/remove')(this.noncifyBridgeConfig(bridgeConfig))
+    }
+  }
+
+  run = async (instanceConfigs, bridgeConfigs, fn) => {
+    console.log()
+    console.log()
+    console.log("---------------------------------------------------------")
+    console.log("---------------------------------------------------------")
+    console.log("-------  starting")
+    console.log()
+    console.log()
     if (!this.isInitialized) {
       throw "Cannot run uninitialized conductor"
     }
-    await this.setupNewInterface()
-    await this.connectTest()
-    await this.setupInstances(instanceConfigs)
+    try {
+      await this.setupNewInterface()
+      await this.connectTest()
+      await this.setupBridges(bridgeConfigs)
+      await this.setupInstances(instanceConfigs)
+      await this.startInstances(instanceConfigs)
+    } catch (e) {
+      this.abort(e)
+    }
     console.debug("Instances all set up, running test...")
     await fn(this.instanceMap)
+
     console.debug("Test done, tearing down instances...")
+    await this.teardownBridges(bridgeConfigs)
     await this.teardownInstances()
+    this.dnaNonce += 1
   }
 
   spawn () {
@@ -221,6 +287,8 @@ export class Conductor {
     const config = this.initialConfig(persistencePath, this.opts)
     fs.writeFileSync(configPath, config)
     console.info("Using config file at", configPath)
+    const which = child_process.execSync('which holochain')
+    console.info("Using holochain binary at", which.toString('utf8'))
     const handle = child_process.spawn(`holochain`, ['-c', configPath])
 
     handle.stdout.on('data', data => {
@@ -234,6 +302,12 @@ export class Conductor {
 
   kill () {
     this.handle.kill()
+  }
+
+  abort (msg) {
+    console.error("Test conductor aborted:", msg)
+    this.kill()
+    process.exit(-1)
   }
 
   initialConfig (persistencePath, opts) {

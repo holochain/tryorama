@@ -2,7 +2,7 @@ const tape = require('tape')
 const colors = require('colors/safe')
 
 import {connect} from '../../hc-web-client'
-import {InstanceConfig} from './config'
+import {InstanceConfig, BridgeConfig} from './config'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
 
@@ -11,6 +11,7 @@ import {ScenarioApi} from './api'
 
 export class Playbook {
   instanceConfigs: Array<InstanceConfig>
+  bridgeConfigs: Array<BridgeConfig>
   conductor: Conductor
   scenarios: Array<any>
   middleware: Array<any>
@@ -21,6 +22,7 @@ export class Playbook {
     this.conductor = new Conductor(connect)
     this.middleware = middleware
     this.instanceConfigs = []
+    this.bridgeConfigs = bridges
     this.scenarios = []
     this.immediate = false
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
@@ -35,9 +37,13 @@ export class Playbook {
 
   /**
    * More conveniently create config for a DNA
-   * @type {[type]}
    */
   static dna = (path, id = `${path}`) => ({ path, id })
+
+  /**
+   * More conveniently create config for a bridge
+   */
+  static bridge = (handle, caller_id, callee_id) => ({handle, caller_id, callee_id})
 
   /**
    * origFn takes (s, instances)
@@ -61,7 +67,7 @@ export class Playbook {
     this.scenarios.push([desc, wrappedFn])
   }
 
-  runScenario = desc => lv2fn => this.conductor.run(this.instanceConfigs, (instanceMap) => {
+  runScenario = desc => lv2fn => this.conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
     console.log(colors.green.inverse('running (2): '), desc)
     const api = new ScenarioApi
     const result = lv2fn(api, instanceMap)

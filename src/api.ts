@@ -1,7 +1,6 @@
 
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
-
+import {delay} from './util'
 
 export class ScenarioApi {
   consistent = (instances?) => {

@@ -1,4 +1,5 @@
 
+export const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 // from https://hackernoon.com/functional-javascript-resolving-promises-sequentially-7aac18c4431e
 export const promiseSerial = promises =>
