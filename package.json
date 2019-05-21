@@ -5,7 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
-    "postinstall": "tsc",
+    "prepare": "npm run build",
     "test": "faucet test/*",
     "lint": "eslint .",
     "lint-fix": "eslint --fix ."
@@ -13,7 +13,7 @@
   "author": "Holochain Core Dev Team <devcore@holochain.org>",
   "license": "GPL-3",
   "dependencies": {
-    "@holochain/hc-web-client": "git+https://github.com/holochain/hc-web-client.git#call-when-connected",
+    "@holochain/hc-web-client": "github:holochain/hc-web-client#call-when-connected",
     "@types/node": "^12.0.0",
     "colors": "^1.3.3",
     "get-port": "^5.0.0",
