@@ -95,12 +95,13 @@ export class Conductor {
       console.debug(colors.yellow.bold('->'), result)
       return result
     }
-    onSignal(sig => {
-      // if (sig.action.action_type !== 'InitializeChain') {
-      //   console.log(colors.magenta('got a sig:'))
-      //   console.log(JSON.stringify(sig, null, 2))
-      // }
-    })
+    // TODO: merge this into hc-web-client mainline
+    // onSignal(sig => {
+    //   if (sig.action.action_type !== 'InitializeChain') {
+    //     console.log(colors.magenta('got a sig:'))
+    //     console.log(JSON.stringify(sig, null, 2))
+    //   }
+    // })
   }
 
   connectTest = async () => {
