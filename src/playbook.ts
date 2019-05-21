@@ -1,7 +1,7 @@
 const tape = require('tape')
 const colors = require('colors/safe')
 
-import {connect} from '../../hc-web-client'
+import {connect} from '@holochain/hc-web-client'
 import {InstanceConfig, BridgeConfig} from './config'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
