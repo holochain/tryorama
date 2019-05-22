@@ -266,8 +266,8 @@ export class Conductor {
     try {
       await this.setupNewInterface()
       await this.connectTest()
-      await this.setupBridges(bridgeConfigs)
       await this.setupInstances(instanceConfigs)
+      await this.setupBridges(bridgeConfigs)
       await this.startInstances(instanceConfigs)
     } catch (e) {
       this.abort(e)
