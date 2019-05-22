@@ -1,6 +1,7 @@
 # Scenario Syntax Exploration
 
-This is an exploration of various possible syntaxes for defining testing Scenarios.
+> <i class="fa fa-exclamation-triangle"></i> 
+> This is an exploration of various possible syntaxes for defining testing Scenarios. Currently we have moved forward with Syntax B, but we're keeping this here for further research.
 
 
 ### Syntax A

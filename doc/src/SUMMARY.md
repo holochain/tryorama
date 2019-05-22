@@ -2,7 +2,7 @@
 
 - [Overview](./overview.md)
 - [Scenarios](./scenarios/overview.md)
-  - [Suites](./scenarios/suites.md)
+  - [Test Suites](./scenarios/suites.md)
     - [Integration with 3rd-party test harnesses](./scenarios/suites-harnesses.md)
   - [Syntax](./scenarios/syntax.md)
   	- [Supporting types](./scenarios/types.md)

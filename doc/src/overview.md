@@ -4,11 +4,11 @@ This document is the anchor for all topics related to the next iteration of Scen
 
 ## Topics
 
-### [Scenario Syntax &raquo;](./scenarios.md)
+### [Scenario Syntax &raquo;](./scenarios/overview.md)
 
 The syntax and structure of defining an abstract *scenario* which can be run on any *orchestrator*
 
-### [Orchestrators &raquo;](./orchestrators.md)
+### [Orchestrators &raquo;](./orchestrators/overview.md)
 
 A runtime context which can run a *scenario*
 
