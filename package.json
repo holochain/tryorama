@@ -5,6 +5,7 @@
   "main": "lib/index.js",
   "scripts": {
     "build": "tsc",
+    "watch": "tsc -w",
     "prepare": "npm run build",
     "test": "faucet test/*",
     "lint": "eslint .",
