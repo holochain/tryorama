@@ -95,7 +95,7 @@ export class Conductor {
       console.debug(colors.yellow.bold('->'), result)
       return result
     }
-    // TODO: merge this into hc-web-client mainline
+
     // onSignal(sig => {
     //   if (sig.action.action_type !== 'InitializeChain') {
     //     console.log(colors.magenta('got a sig:'))
