@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "prepare": "npm run build",
+    "prepack": "npm run build",
     "test": "faucet test/*",
     "lint": "eslint .",
     "lint-fix": "eslint --fix ."
@@ -16,20 +16,21 @@
   "dependencies": {
     "@holochain/hc-web-client": "github:holochain/hc-web-client",
     "@holochain/scenario-waiter": "github:holochain/scenario-waiter",
-    "@types/node": "^12.0.0",
     "colors": "^1.3.3",
-    "get-port": "^5.0.0",
-    "tape": "^4.10.1",
-    "tape-async": "^2.3.0",
-    "typescript": "^3.4.5"
+    "get-port": "^5.0.0"
   },
   "devDependencies": {
+    "@types/node": "^12.0.0",
     "eslint": "^5.16.0",
     "eslint-config-standard": "^12.0.0",
     "eslint-plugin-import": "^2.17.2",
     "eslint-plugin-node": "^8.0.1",
     "eslint-plugin-promise": "^4.1.1",
     "eslint-plugin-standard": "^4.0.0",
-    "ts-node": "^8.1.0"
+    "faucet": "0.0.1",
+    "tape": "^4.10.1",
+    "tape-async": "^2.3.0",
+    "ts-node": "^8.1.0",
+    "typescript": "^3.4.5"
   }
 }
