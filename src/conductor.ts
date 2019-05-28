@@ -8,6 +8,7 @@ const colors = require('colors/safe')
 
 import {promiseSerial, delay} from './util'
 import {InstanceConfig} from './config'
+import {Signal} from '@holochain/netmodel'
 
 /// //////////////////////////////////////////////////////////
 
@@ -16,7 +17,7 @@ const ADMIN_INTERFACE_PORT = 5550
 const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
-
+console.debug = () => {}
 
 export class DnaInstance {
 
@@ -45,6 +46,10 @@ export class DnaInstance {
   }
 }
 
+type ConductorOpts = {
+  onSignal: (Signal) => void
+}
+
 
 /**
  * Represents a conductor process to which calls can be made via RPC
@@ -61,6 +66,7 @@ export class Conductor {
   callAdmin: any
   handle: any
   dnaNonce: number
+  onSignal: (any) => void
 
   runningInstances: Array<InstanceConfig>
   callZome: any
@@ -68,7 +74,7 @@ export class Conductor {
 
   isInitialized: boolean
 
-  constructor (connect, opts = {}) {
+  constructor (connect, opts: ConductorOpts) {
     this.webClientConnect = connect
     this.agentIds = new Set()
     this.dnaIds = new Set()
@@ -77,6 +83,7 @@ export class Conductor {
     this.handle = null
     this.runningInstances = []
     this.dnaNonce = 1
+    this.onSignal = opts.onSignal
   }
 
   isRunning = () => {
@@ -87,7 +94,7 @@ export class Conductor {
   testInterfaceId = () => `test-interface-${this.testPort}`
 
   connectAdmin = async () => {
-    const { call, onSignal } = await this.webClientConnect(ADMIN_INTERFACE_URL)
+    const { call, onSignal } = await this.webClientConnect({url: ADMIN_INTERFACE_URL})
     this.callAdmin = method => async params => {
       console.debug(colors.yellow.underline("calling"), method)
       console.debug(params)
@@ -96,17 +103,12 @@ export class Conductor {
       return result
     }
 
-    // onSignal(sig => {
-    //   if (sig.action.action_type !== 'InitializeChain') {
-    //     console.log(colors.magenta('got a sig:'))
-    //     console.log(JSON.stringify(sig, null, 2))
-    //   }
-    // })
+    onSignal(this.onSignal)
   }
 
   connectTest = async () => {
     const url = this.testInterfaceUrl()
-    const { callZome } = await this.webClientConnect(url)
+    const { callZome } = await this.webClientConnect({url})
     this.callZome = (...args) => async params => {
       console.debug(colors.cyan.underline("calling"), ...args)
       console.debug(params)
@@ -339,6 +341,10 @@ type = "debug"
   [[logger.rules.rules]]
   exclude = true
   pattern = ".*"
+
+[signals]
+trace = false
+consistency = true
     `
   }
 }

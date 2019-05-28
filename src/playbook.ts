@@ -5,9 +5,9 @@ import {connect} from '@holochain/hc-web-client'
 import {InstanceConfig, BridgeConfig} from './config'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
+import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/netmodel'
 
-
-/// //////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////
 
 export class Playbook {
   instanceConfigs: Array<InstanceConfig>
@@ -16,15 +16,16 @@ export class Playbook {
   scenarios: Array<any>
   middleware: Array<any>
   conductorOpts: any | void
-  immediate: boolean
+  waiter: Waiter
 
   constructor ({bridges, instances, middleware, debugLog}) {
-    this.conductor = new Conductor(connect)
+    this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this)})
     this.middleware = middleware
     this.instanceConfigs = []
     this.bridgeConfigs = bridges
     this.scenarios = []
-    this.immediate = false
+    this.conductorOpts = {debugLog}
+
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
       console.debug('agentId', agentId)
       console.debug('dnaConfig', dnaConfig)
@@ -32,7 +33,19 @@ export class Playbook {
       const id = instanceConfig.id
       this.instanceConfigs.push(instanceConfig)
     })
-    this.conductorOpts = {debugLog}
+
+    this.refreshWaiter()
+  }
+
+  onSignal (msg: {signal: Signal, instance_id: String}) {
+    if (msg.signal.signal_type === 'Consistency') {
+      // XXX, NB, this '-' magic is because of the nonced instance IDs
+      // TODO: deal with this more reasonably
+      const ix = msg.instance_id.lastIndexOf('-')
+      const node = msg.instance_id.substring(0, ix)
+      const signal = stringifySignal(msg.signal)
+      this.waiter.handleObservation({node, signal})
+    }
   }
 
   /**
@@ -67,12 +80,25 @@ export class Playbook {
     this.scenarios.push([desc, wrappedFn])
   }
 
-  runScenario = desc => lv2fn => this.conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
-    console.log(colors.green.inverse('running (2): '), desc)
-    const api = new ScenarioApi
-    const result = lv2fn(api, instanceMap)
-    console.log(colors.green.inverse('result (2): '), result)
-    return result
+  runScenario = desc => async lv2fn => {
+    await this.refreshWaiter()
+    return this.conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
+      const api = new ScenarioApi(this.waiter)
+      return lv2fn(api, instanceMap)
+    })
+  }
+
+  refreshWaiter = () => new Promise(resolve => {
+    if (this.waiter) {
+      console.log("Test over, waiting for Waiter to flush...")
+      this.waiter.registerCallback({nodes: null, callback: resolve})
+    } else {
+      resolve()
+    }
+  }).then(() => {
+    const nodeIds = this.instanceConfigs.map(i => i.id)
+    const networkModel = new FullSyncNetwork(nodeIds)
+    this.waiter = new Waiter(networkModel)
   })
 
   runSuiteSequential = async () => {
@@ -115,4 +141,11 @@ const makeInstanceConfig = (agentId, dnaConfig) => {
     },
     dna: dnaConfig
   }
+}
+
+const stringifySignal = orig => {
+  const signal = Object.assign({}, orig)
+  signal.event = JSON.stringify(signal.event)
+  signal.pending = signal.pending.map(p => (p.event = JSON.stringify(p.event), p))
+  return signal
 }

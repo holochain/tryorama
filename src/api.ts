@@ -1,14 +1,17 @@
-
+import {Waiter} from '@holochain/netmodel'
 
 import {delay} from './util'
 
 export class ScenarioApi {
-  consistent = (instances?) => {
-    console.log("................................")
-    console.log(". delaying 3 seconds as a hack .")
-    console.log("................................")
-    const promise = delay(3000)
-    console.log("Done waiting! (TODO hook up waiter)")
-    return promise
+
+  waiter: Waiter
+
+  constructor (waiter: Waiter) {
+    this.waiter = waiter
   }
+
+  consistent = (instances?) => new Promise(resolve => this.waiter.registerCallback({
+    nodes: instances ? instances.map(i => i.id) : null,
+    callback: resolve,
+  }))
 }
