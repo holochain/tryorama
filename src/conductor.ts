@@ -8,7 +8,7 @@ const colors = require('colors/safe')
 
 import {promiseSerial, delay} from './util'
 import {InstanceConfig} from './config'
-import {Signal} from '@holochain/netmodel'
+import {Signal} from '@holochain/scenario-waiter'
 
 /// //////////////////////////////////////////////////////////
 

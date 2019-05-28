@@ -1,4 +1,4 @@
-import {Waiter} from '@holochain/netmodel'
+import {Waiter} from '@holochain/scenario-waiter'
 
 import {delay} from './util'
 

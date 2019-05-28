@@ -2,10 +2,10 @@ const tape = require('tape')
 const colors = require('colors/safe')
 
 import {connect} from '@holochain/hc-web-client'
+import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/scenario-waiter'
 import {InstanceConfig, BridgeConfig} from './config'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
-import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/netmodel'
 
 /////////////////////////////////////////////////////////////
 
