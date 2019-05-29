@@ -103,6 +103,7 @@ export class Playbook {
 
   runSuiteSequential = async () => {
     for (const [desc, lv1fn] of this.scenarios) {
+      console.info('running scenario: ', desc)
       await lv1fn(this.runScenario(desc))
     }
   }

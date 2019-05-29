@@ -17,7 +17,7 @@ const ADMIN_INTERFACE_PORT = 5550
 const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
-console.debug = () => {}
+// console.debug = () => {}
 
 export class DnaInstance {
 
@@ -114,7 +114,7 @@ export class Conductor {
       console.debug(colors.cyan.underline("calling"), ...args)
       console.debug(params)
       const result = await callZome(...args)(params)
-      // console.debug(colors.cyan.bold('->'), result)
+      console.debug(colors.cyan.bold('->'), result)
       return result
     }
   }
