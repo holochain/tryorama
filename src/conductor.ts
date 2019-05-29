@@ -47,7 +47,8 @@ export class DnaInstance {
 }
 
 type ConductorOpts = {
-  onSignal: (Signal) => void
+  onSignal: (Signal) => void,
+  debugLog: boolean,
 }
 
 
@@ -79,7 +80,7 @@ export class Conductor {
     this.agentIds = new Set()
     this.dnaIds = new Set()
     this.instanceMap = {}
-    this.opts = {}
+    this.opts = opts
     this.handle = null
     this.runningInstances = []
     this.dnaNonce = 1
@@ -339,7 +340,7 @@ type = "debug"
   exclude = false
   pattern = "^debug/dna"
   [[logger.rules.rules]]
-  exclude = true
+  exclude = ${opts.debugLog ? 'false' : 'true'}
   pattern = ".*"
 
 [signals]

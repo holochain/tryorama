@@ -19,12 +19,12 @@ export class Playbook {
   waiter: Waiter
 
   constructor ({bridges, instances, middleware, debugLog}) {
-    this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this)})
+    this.conductorOpts = {}
+    this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), debugLog})
     this.middleware = middleware
     this.instanceConfigs = []
     this.bridgeConfigs = bridges
     this.scenarios = []
-    this.conductorOpts = {debugLog}
 
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
       console.debug('agentId', agentId)
