@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "dev": "tsc -w",
-    "prepack": "npm run build",
+    "prepare": "npm run build",
     "test": "faucet test/*",
     "lint": "eslint .",
     "lint-fix": "eslint --fix ."
