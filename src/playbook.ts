@@ -116,6 +116,7 @@ export const PlaybookClass = Conductor => class Playbook {
     for (const [desc, execute] of this.scenarios) {
       await execute()
     }
+    this.close()
   }
 
   close = () => this.conductor ? this.conductor.kill() : undefined
