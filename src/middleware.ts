@@ -1,6 +1,7 @@
-type ScenarioFn = (s: object, ins: Array<any>) => Promise<any>
 
-export const compose = ms => (f: ScenarioFn): ScenarioFn => ms.reduce((g, m) => m(g), f)
+import {ScenarioFnCustom} from './types'
+
+export const compose = ms => (f: ScenarioFnCustom): ScenarioFnCustom => ms.reduce((g, m) => m(g), f)
 
 /**
  * Middleware to retrofit each instance with a `callSync` method

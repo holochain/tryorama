@@ -1,12 +1,15 @@
 import * as colors from 'colors'
 
+import {ScenarioFn} from './types'
 
-export const simpleExecutor = (run, f, desc) => {
+type Runner = (ScenarioFn) => Promise<void>
+
+export const simpleExecutor = (run: Runner, f, desc) => {
   console.log(colors.yellow(`§`), colors.yellow.underline(`desc`))
   run(f)
 }
 
-export const tapeExecutor = tape => (run, f, desc) => new Promise((resolve, reject) => {
+export const tapeExecutor = tape => (run: Runner, f, desc) => new Promise((resolve, reject) => {
   if (f.length !== 3) {
     reject("tapeMiddleware requires scenario functions to take 3 arguments, please check your scenario definitions.")
   }

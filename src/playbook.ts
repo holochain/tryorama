@@ -3,32 +3,41 @@ const colors = require('colors/safe')
 
 import {connect} from '@holochain/hc-web-client'
 import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/scenario-waiter'
-import {InstanceConfig, BridgeConfig} from './config'
+import {InstanceConfig, BridgeConfig} from './types'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
 import {simpleExecutor} from './executors'
+import {identity} from './util'
 
 /////////////////////////////////////////////////////////////
 
-const identity = x => x
+type PlaybookConstructorParams = {
+  instances?: any,
+  bridges?: Array<BridgeConfig>,
+  middleware?: any,
+  executor?: any,
+  debugLog?: boolean,
+}
 
-export class Playbook {
+export const PlaybookClass = Conductor => class Playbook {
   instanceConfigs: Array<InstanceConfig>
   bridgeConfigs: Array<BridgeConfig>
-  conductor: Conductor | null
+  conductor: Conductor
   scenarios: Array<any>
   middleware: any | void
   executor: any | void
   conductorOpts: any | void
   waiter: Waiter
 
-  constructor ({bridges = [], instances = [], middleware = identity, executor = simpleExecutor, debugLog = false}) {
+  constructor ({bridges = [], instances = {}, middleware = identity, executor = simpleExecutor, debugLog = false}: PlaybookConstructorParams) {
     this.conductorOpts = {debugLog}
     this.middleware = middleware || (x => x)
     this.executor = executor || simpleExecutor
     this.instanceConfigs = []
     this.bridgeConfigs = bridges || []
     this.scenarios = []
+
+    this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
 
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
       console.debug('agentId', agentId)
@@ -77,7 +86,7 @@ export class Playbook {
 
   runScenario = async scenario => {
     await this.refreshWaiter()
-    return this.conductor!.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
+    return this.conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
       const api = new ScenarioApi(this.waiter)
       return scenario(api, instanceMap)
     })
@@ -115,7 +124,6 @@ export class Playbook {
 
   run = async () => {
     try {
-      this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
       await this.conductor.initialize()
     } catch (e) {
       console.error("Error during conductor initialization:")
@@ -128,6 +136,7 @@ export class Playbook {
   close = () => this.conductor ? this.conductor.kill() : undefined
 }
 
+export const Playbook = PlaybookClass(Conductor)
 
 const makeInstanceConfig = (agentId, dnaConfig) => {
   return {
