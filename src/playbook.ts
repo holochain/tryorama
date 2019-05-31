@@ -30,13 +30,13 @@ export const PlaybookClass = Conductor => class Playbook {
   waiter: Waiter
 
   constructor ({bridges = [], instances = {}, middleware = identity, executor = simpleExecutor, debugLog = false}: PlaybookConstructorParams) {
+    this.bridgeConfigs = bridges
+    this.middleware = middleware
+    this.executor = executor
     this.conductorOpts = {debugLog}
-    this.middleware = middleware || (x => x)
-    this.executor = executor || simpleExecutor
-    this.instanceConfigs = []
-    this.bridgeConfigs = bridges || []
-    this.scenarios = []
 
+    this.scenarios = []
+    this.instanceConfigs = []
     this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
 
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
@@ -73,22 +73,22 @@ export const PlaybookClass = Conductor => class Playbook {
 
   /**
    * origFn takes (s, instances)
-   * so does wrappedFn
    */
-  registerScenario = (desc, origFn) => {
-    const wrappedFn = () => this.executor(
+  registerScenario = (desc, scenario) => {
+    const execute = () => this.executor(
       this.runScenario,
-      this.middleware(origFn),
+      scenario,
       desc
     )
-    this.scenarios.push([desc, wrappedFn])
+    this.scenarios.push([desc, execute])
   }
 
   runScenario = async scenario => {
     await this.refreshWaiter()
+    const modifiedScenario = this.middleware(scenario)
     return this.conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
       const api = new ScenarioApi(this.waiter)
-      return scenario(api, instanceMap)
+      return modifiedScenario(api, instanceMap)
     })
   }
 
@@ -105,23 +105,6 @@ export const PlaybookClass = Conductor => class Playbook {
     this.waiter = new Waiter(networkModel)
   })
 
-  runSuite = async () => {
-    for (const [desc, execute] of this.scenarios) {
-      console.info('running scenario: ', desc)
-      await execute()
-    }
-  }
-
-  // runSuiteImmediate = async () => {
-  //   const promises = this.scenarios.map(([desc, lv1fn]) => {
-  //     console.log(colors.red.inverse('running (1): '), desc)
-  //     const result = lv1fn(this.runScenario(desc))
-  //     console.log(colors.red.inverse('result (1): '), result)
-  //     return result
-  //   })
-  //   return Promise.all(promises)
-  // }
-
   run = async () => {
     try {
       await this.conductor.initialize()
@@ -130,7 +113,9 @@ export const PlaybookClass = Conductor => class Playbook {
       console.error(e)
     }
 
-    return this.runSuite()
+    for (const [desc, execute] of this.scenarios) {
+      await execute()
+    }
   }
 
   close = () => this.conductor ? this.conductor.kill() : undefined

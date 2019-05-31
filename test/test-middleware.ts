@@ -33,7 +33,7 @@ test("the concept of middleware composition is sound", async t => {
 
 test("compose middlewares", async t => {
   const f = (s, ins) => ({s, ins})
-  const m = compose(testMiddlewares(t))
+  const m = compose(...testMiddlewares(t))
   const g = m(async (s, ins) => {
     t.deepEqual(s, {x: 1, y: 2})
     t.deepEqual(ins, ['p', 'q'])

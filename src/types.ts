@@ -2,8 +2,8 @@
 import {ScenarioApi} from './api'
 import {DnaInstance} from './instance'
 
-export type ScenarioFnCustom = (s: object, ins: Array<any>) => Promise<any>
-export type ScenarioFn = (s: ScenarioApi, ins: Array<DnaInstance>) => Promise<any>
+export type ScenarioFnCustom = (s: object, ins: {[id: string]: any}) => Promise<any>
+export type ScenarioFn = (s: ScenarioApi, ins: {[id: string]: DnaInstance}) => Promise<any>
 
 
 export type AgentConfig = {

@@ -160,7 +160,7 @@ export class Conductor {
         inst.agentAddress = this.instanceMap[nonNoncifiedInstanceId].agentAddress
         this.instanceMap[nonNoncifiedInstanceId] = inst
       } else {
-        this.instanceMap[nonNoncifiedInstanceId] = new DnaInstance(instance.id, this)
+        this.instanceMap[nonNoncifiedInstanceId] = new DnaInstance(instance.id, this.callZome)
       }
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
