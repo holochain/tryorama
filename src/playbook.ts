@@ -6,22 +6,26 @@ import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/scenario-waite
 import {InstanceConfig, BridgeConfig} from './config'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
+import {simpleExecutor} from './executors'
 
 /////////////////////////////////////////////////////////////
+
+const identity = x => x
 
 export class Playbook {
   instanceConfigs: Array<InstanceConfig>
   bridgeConfigs: Array<BridgeConfig>
-  conductor: Conductor
+  conductor: Conductor | null
   scenarios: Array<any>
-  middleware: Array<any>
+  middleware: any | void
+  executor: any | void
   conductorOpts: any | void
   waiter: Waiter
 
-  constructor ({bridges, instances, middleware, debugLog}) {
-    this.conductorOpts = {}
-    this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), debugLog})
-    this.middleware = middleware
+  constructor ({bridges = [], instances = [], middleware = identity, executor = simpleExecutor, debugLog = false}) {
+    this.conductorOpts = {debugLog}
+    this.middleware = middleware || (x => x)
+    this.executor = executor || simpleExecutor
     this.instanceConfigs = []
     this.bridgeConfigs = bridges || []
     this.scenarios = []
@@ -63,28 +67,19 @@ export class Playbook {
    * so does wrappedFn
    */
   registerScenario = (desc, origFn) => {
-    const runner = this.runScenario(desc)
-    let wrappedFn = origFn
-    let terminalFn = null
-    let i = 0
-    for (const m of this.middleware) {
-      if (terminalFn) {
-        throw new Error(`middleware in position ${i - 1} ('${m.name}') is terminal, cannot include other middleware beyond it!`)
-      }
-      wrappedFn = m(runner, wrappedFn, desc)
-      if (m.isTerminal) {
-        terminalFn = m
-      }
-      i++
-    }
+    const wrappedFn = () => this.executor(
+      this.runScenario,
+      this.middleware(origFn),
+      desc
+    )
     this.scenarios.push([desc, wrappedFn])
   }
 
-  runScenario = desc => async lv2fn => {
+  runScenario = async scenario => {
     await this.refreshWaiter()
-    return this.conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
+    return this.conductor!.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
       const api = new ScenarioApi(this.waiter)
-      return lv2fn(api, instanceMap)
+      return scenario(api, instanceMap)
     })
   }
 
@@ -101,10 +96,10 @@ export class Playbook {
     this.waiter = new Waiter(networkModel)
   })
 
-  runSuiteSequential = async () => {
-    for (const [desc, lv1fn] of this.scenarios) {
+  runSuite = async () => {
+    for (const [desc, execute] of this.scenarios) {
       console.info('running scenario: ', desc)
-      await lv1fn(this.runScenario(desc))
+      await execute()
     }
   }
 
@@ -118,18 +113,19 @@ export class Playbook {
   //   return Promise.all(promises)
   // }
 
-  runSuite = async () => {
+  run = async () => {
     try {
+      this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
       await this.conductor.initialize()
     } catch (e) {
       console.error("Error during conductor initialization:")
       console.error(e)
     }
 
-    return this.runSuiteSequential()
+    return this.runSuite()
   }
 
-  close = () => this.conductor.kill()
+  close = () => this.conductor ? this.conductor.kill() : undefined
 }
 
 
