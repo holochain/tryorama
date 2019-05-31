@@ -1,26 +1,4 @@
 
-export type AgentConfig = {
-  id: string,
-  name: string,
-}
-
-export type DnaConfig = {
-  id: string,
-  path: string,
-}
-
-export type InstanceConfig = {
-  id: string
-  agent: AgentConfig
-  dna: DnaConfig
-}
-
-export type BridgeConfig = {
-  handle: string
-  caller_id: string
-  callee_id: string
-}
-
 export const Config = {
   agent: id => ({ name: id, id }),
   dna: (path, id = `${path}`) => ({ path, id }),

@@ -1,3 +1,6 @@
+// TODO
+// Bring all samples back up to date!!
+
 const path = require('path')
 const tape = require('tape')
 const { Playbook, simpleMiddleware, tapeMiddleware } = require('../src')
@@ -25,11 +28,6 @@ process.on('unhandledRejection', error => {
   console.error('got unhandledRejection:', error);
 });
 
-// const withHarness = harness => run => async (desc, g) => {
-//   // inject `harness` as the second parameter
-//   const f = (s, instances) => g(s, harness, instances)
-//   return run(desc, f)
-// }
 
 const assert = x => {
   if (!x) {

@@ -3,28 +3,41 @@ const colors = require('colors/safe')
 
 import {connect} from '@holochain/hc-web-client'
 import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/scenario-waiter'
-import {InstanceConfig, BridgeConfig} from './config'
+import {InstanceConfig, BridgeConfig} from './types'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
+import {simpleExecutor} from './executors'
+import {identity} from './util'
 
 /////////////////////////////////////////////////////////////
 
-export class Playbook {
+type PlaybookConstructorParams = {
+  instances?: any,
+  bridges?: Array<BridgeConfig>,
+  middleware?: any,
+  executor?: any,
+  debugLog?: boolean,
+}
+
+export const PlaybookClass = Conductor => class Playbook {
   instanceConfigs: Array<InstanceConfig>
   bridgeConfigs: Array<BridgeConfig>
   conductor: Conductor
   scenarios: Array<any>
-  middleware: Array<any>
+  middleware: any | void
+  executor: any | void
   conductorOpts: any | void
   waiter: Waiter
 
-  constructor ({bridges, instances, middleware, debugLog}) {
-    this.conductorOpts = {}
-    this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), debugLog})
+  constructor ({bridges = [], instances = {}, middleware = identity, executor = simpleExecutor, debugLog = false}: PlaybookConstructorParams) {
+    this.bridgeConfigs = bridges
     this.middleware = middleware
-    this.instanceConfigs = []
-    this.bridgeConfigs = bridges || []
+    this.executor = executor
+    this.conductorOpts = {debugLog}
+
     this.scenarios = []
+    this.instanceConfigs = []
+    this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
 
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
       console.debug('agentId', agentId)
@@ -60,31 +73,22 @@ export class Playbook {
 
   /**
    * origFn takes (s, instances)
-   * so does wrappedFn
    */
-  registerScenario = (desc, origFn) => {
-    const runner = this.runScenario(desc)
-    let wrappedFn = origFn
-    let terminalFn = null
-    let i = 0
-    for (const m of this.middleware) {
-      if (terminalFn) {
-        throw new Error(`middleware in position ${i - 1} ('${m.name}') is terminal, cannot include other middleware beyond it!`)
-      }
-      wrappedFn = m(runner, wrappedFn, desc)
-      if (m.isTerminal) {
-        terminalFn = m
-      }
-      i++
-    }
-    this.scenarios.push([desc, wrappedFn])
+  registerScenario = (desc, scenario) => {
+    const execute = () => this.executor(
+      this.runScenario,
+      scenario,
+      desc
+    )
+    this.scenarios.push([desc, execute])
   }
 
-  runScenario = desc => async lv2fn => {
+  runScenario = async scenario => {
     await this.refreshWaiter()
+    const modifiedScenario = this.middleware(scenario)
     return this.conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
       const api = new ScenarioApi(this.waiter)
-      return lv2fn(api, instanceMap)
+      return modifiedScenario(api, instanceMap)
     })
   }
 
@@ -101,24 +105,7 @@ export class Playbook {
     this.waiter = new Waiter(networkModel)
   })
 
-  runSuiteSequential = async () => {
-    for (const [desc, lv1fn] of this.scenarios) {
-      console.info('running scenario: ', desc)
-      await lv1fn(this.runScenario(desc))
-    }
-  }
-
-  // runSuiteImmediate = async () => {
-  //   const promises = this.scenarios.map(([desc, lv1fn]) => {
-  //     console.log(colors.red.inverse('running (1): '), desc)
-  //     const result = lv1fn(this.runScenario(desc))
-  //     console.log(colors.red.inverse('result (1): '), result)
-  //     return result
-  //   })
-  //   return Promise.all(promises)
-  // }
-
-  runSuite = async () => {
+  run = async () => {
     try {
       await this.conductor.initialize()
     } catch (e) {
@@ -126,12 +113,16 @@ export class Playbook {
       console.error(e)
     }
 
-    return this.runSuiteSequential()
+    for (const [desc, execute] of this.scenarios) {
+      await execute()
+    }
+    this.close()
   }
 
-  close = () => this.conductor.kill()
+  close = () => this.conductor ? this.conductor.kill() : undefined
 }
 
+export const Playbook = PlaybookClass(Conductor)
 
 const makeInstanceConfig = (agentId, dnaConfig) => {
   return {

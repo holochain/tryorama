@@ -1,21 +1,34 @@
 
+import {ScenarioFnCustom} from './types'
 
-export const simpleMiddleware = (run, f, desc) => () => run(f)
-simpleMiddleware.isTerminal = true
+export const compose = (...ms) => (f: ScenarioFnCustom): ScenarioFnCustom => ms.reduce((g, m) => m(g), f)
 
-
-export const tapeMiddleware = tape => {
-  const m = (run, f, desc) => () => new Promise((resolve, reject) => {
-    if (f.length !== 3) {
-      reject("tapeMiddleware requires scenario functions to take 3 arguments, please check your scenario definitions.")
+/**
+ * Middleware to retrofit each instance with a `callSync` method
+ */
+export const callSyncMiddleware = f => (s, ins) => {
+  // callSync "polyfill"
+  Object.values(ins).forEach((i: any) => {
+    i.callSync = async (...args) => {
+        const ret = await i.call(...args)
+        await s.consistent()
+        return ret
     }
-    tape(desc, t => {
-      run((s, ins) => f(s, t, ins)).then(() => {
-        t.end()
-        resolve()
-      })
-    })
   })
-  m.isTerminal = true
-  return m
+  return f(s, ins)
 }
+
+/**
+ * Middleware to retrofit each instance with an `agentId` member,
+ * equivalent to the `agentAddress`
+ */
+export const agentIdMiddleware = f => (s, ins) => {
+    // agentId "polyfill"
+  Object.values(ins).forEach((i: any) => {
+    i.agentId = i.agentAddress
+    console.log('set agentId', i.agentId)
+  })
+  return f(s, ins)
+}
+
+export const backwardCompatibilityMiddleware = compose(callSyncMiddleware, agentIdMiddleware)

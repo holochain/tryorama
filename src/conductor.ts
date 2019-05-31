@@ -7,7 +7,8 @@ const getPort = require('get-port')
 const colors = require('colors/safe')
 
 import {promiseSerial, delay} from './util'
-import {InstanceConfig} from './config'
+import {InstanceConfig} from './types'
+import {DnaInstance} from './instance'
 import {Signal} from '@holochain/scenario-waiter'
 
 /// //////////////////////////////////////////////////////////
@@ -18,33 +19,6 @@ const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
 // console.debug = () => {}
-
-export class DnaInstance {
-
-  id: string
-  agentAddress: string | null
-  dnaAddress: string | null
-  conductor: any
-
-  constructor (instanceId, conductor: Conductor) {
-    this.id = instanceId
-    this.agentAddress = null
-    this.dnaAddress = null
-    this.conductor = conductor
-  }
-
-  // internally calls `this.conductor.call`
-  async call (zome, fn, params) {
-    try {
-      const result = await this.conductor.callZome(this.id, zome, fn)(params)
-      console.info(colors.blue.inverse("zome call"), this.id, zome, fn, params)
-      return JSON.parse(result)
-    } catch (e) {
-      console.error('Exception occurred while calling zome function: ', e)
-      throw e
-    }
-  }
-}
 
 type ConductorOpts = {
   onSignal: (Signal) => void,
@@ -182,11 +156,11 @@ export class Conductor {
       const nonNoncifiedInstanceId = instance.id
       instance.id += '-' + this.dnaNonce
       if (this.instanceMap[nonNoncifiedInstanceId]) {
-        const inst = new DnaInstance(instance.id, this)
+        const inst = new DnaInstance(instance.id, this.callZome)
         inst.agentAddress = this.instanceMap[nonNoncifiedInstanceId].agentAddress
         this.instanceMap[nonNoncifiedInstanceId] = inst
       } else {
-        this.instanceMap[nonNoncifiedInstanceId] = new DnaInstance(instance.id, this)
+        this.instanceMap[nonNoncifiedInstanceId] = new DnaInstance(instance.id, this.callZome)
       }
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
