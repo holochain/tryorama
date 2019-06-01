@@ -8,6 +8,7 @@ test('a', async t => {
 
   class TestConductor {
     initialize() {}
+    kill() {}
     run (instanceConfigs, bridgeConfigs, fn) {
       t.deepEqual(instanceConfigs, [
         {
