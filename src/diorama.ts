@@ -2,7 +2,7 @@ const tape = require('tape')
 const colors = require('colors/safe')
 
 import {connect} from '@holochain/hc-web-client'
-import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/scenario-waiter'
+import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/hachiko'
 import {InstanceConfig, BridgeConfig} from './types'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
@@ -52,7 +52,7 @@ export const DioramaClass = Conductor => class Diorama {
     this.refreshWaiter()
   }
 
-  onSignal (msg: {signal: Signal, instance_id: String}) {
+  onSignal (msg: {signal, instance_id: String}) {
     if (msg.signal.signal_type === 'Consistency') {
       // XXX, NB, this '-' magic is because of the nonced instance IDs
       // TODO: deal with this more reasonably

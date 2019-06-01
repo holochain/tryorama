@@ -9,7 +9,7 @@ const colors = require('colors/safe')
 import {promiseSerial, delay} from './util'
 import {InstanceConfig} from './types'
 import {DnaInstance} from './instance'
-import {Signal} from '@holochain/scenario-waiter'
+import {Signal} from '@holochain/hachiko'
 
 /// //////////////////////////////////////////////////////////
 

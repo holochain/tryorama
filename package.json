@@ -1,6 +1,6 @@
 {
   "name": "@holochain/diorama",
-  "version": "0.1.0-rc2",
+  "version": "0.1.0-rc3",
   "description": "Javascript module for orchestrating single and multi-agent scenario tests against DNAs running in the Holochain conductor",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -13,7 +13,9 @@
     "lint": "eslint .",
     "lint-fix": "eslint --fix ."
   },
-  "files": ["lib/**/*"],
+  "files": [
+    "lib/**/*"
+  ],
   "author": "Holochain Core Dev Team <devcore@holochain.org>",
   "license": "GPL-3",
   "dependencies": {
@@ -36,5 +38,8 @@
     "ts-node": "^8.1.0",
     "typescript": "^3.4.5"
   },
-  "keywords": ["holochain", "scenario"]
+  "keywords": [
+    "holochain",
+    "scenario"
+  ]
 }
