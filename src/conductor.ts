@@ -18,7 +18,7 @@ const ADMIN_INTERFACE_PORT = 5550
 const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
-// console.debug = () => {}
+console.debug = () => {}
 
 type ConductorOpts = {
   onSignal: (Signal) => void,

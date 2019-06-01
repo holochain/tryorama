@@ -47,6 +47,8 @@ export const PlaybookClass = Conductor => class Playbook {
       this.instanceConfigs.push(instanceConfig)
     })
 
+    this.registerScenario.only = this.registerScenarioOnly.bind(this)
+
     this.refreshWaiter()
   }
 
@@ -72,15 +74,24 @@ export const PlaybookClass = Conductor => class Playbook {
   static bridge = (handle, caller_id, callee_id) => ({handle, caller_id, callee_id})
 
   /**
-   * origFn takes (s, instances)
+   * scenario takes (s, instances)
    */
-  registerScenario = (desc, scenario) => {
+  registerScenario: any = (desc, scenario) => {
     const execute = () => this.executor(
       this.runScenario,
       scenario,
       desc
     )
-    this.scenarios.push([desc, execute])
+    this.scenarios.push([desc, execute, false])
+  }
+
+  registerScenarioOnly = (desc, scenario) => {
+    const execute = () => this.executor(
+      this.runScenario,
+      scenario,
+      desc
+    )
+    this.scenarios.push([desc, execute, true])
   }
 
   runScenario = async scenario => {
@@ -113,8 +124,17 @@ export const PlaybookClass = Conductor => class Playbook {
       console.error(e)
     }
 
-    for (const [desc, execute] of this.scenarios) {
-      await execute()
+    const onlyTests = this.scenarios.filter(([desc, execute, only]) => only)
+
+    if (onlyTests.length > 0) {
+      console.warn(`.only was invoked, only running ${onlyTests.length} test(s)!`)
+      for (const [desc, execute, _] of onlyTests) {
+        await execute()
+      }
+    } else {
+      for (const [desc, execute, _] of this.scenarios) {
+        await execute()
+      }
     }
     this.close()
   }
