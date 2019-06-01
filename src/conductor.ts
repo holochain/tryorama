@@ -265,8 +265,11 @@ export class Conductor {
     const config = this.initialConfig(persistencePath, this.opts)
     fs.writeFileSync(configPath, config)
     console.info("Using config file at", configPath)
-    const which = child_process.execSync('which holochain')
-    console.info("Using holochain binary at", which.toString('utf8'))
+    try {
+      const which = child_process.execSync('which holochain')
+      console.info("Using holochain binary at", which.toString('utf8'))
+    } catch (e) {}
+
     const handle = child_process.spawn(`holochain`, ['-c', configPath])
 
     handle.stdout.on('data', data => {
