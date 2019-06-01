@@ -259,7 +259,7 @@ export class Conductor {
   }
 
   spawn () {
-    const tmpPath = fs.mkdtempSync(path.join(os.tmpdir(), 'hc-playbook-'))
+    const tmpPath = fs.mkdtempSync(path.join(os.tmpdir(), 'hc-diorama-'))
     const configPath = path.join(tmpPath, 'conductor-config.toml')
     const persistencePath = tmpPath
     const config = this.initialConfig(persistencePath, this.opts)

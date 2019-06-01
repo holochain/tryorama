@@ -1,7 +1,7 @@
 # Integrating other testing frameworks and tools
 
 > <i class="fa fa-exclamation-triangle"></i> 
-> This is a bit out of date, but describes the basic idea. A real, working `withTape` middleware is implemented in `hc-playbook`
+> This is a bit out of date, but describes the basic idea. A real, working `withTape` middleware is implemented in `hc-diorama`
 
 Often we will want to use a testing framework like `tape` to help us write assertions and actually give us a proper testing environment. To integrate this with the above method of writing scenarios, we can use combinators to provide a different interface for writing scenarios.
 

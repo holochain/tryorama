@@ -1,4 +1,4 @@
 
-export {Playbook} from './playbook'
+export {Diorama} from './diorama'
 export * from './middleware'
 export * from './executors'

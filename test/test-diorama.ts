@@ -1,5 +1,5 @@
 import {simpleExecutor} from '../src/executors'
-import {PlaybookClass} from '../src/playbook'
+import {DioramaClass} from '../src/diorama'
 
 import * as test from 'tape'
 
@@ -36,31 +36,31 @@ test('a', async t => {
       fn('not very good test')
     }
   }
-  const Playbook = PlaybookClass(TestConductor)
+  const Diorama = DioramaClass(TestConductor)
 
-  const dna = Playbook.dna("path", "name")
-  const playbook = new Playbook({
+  const dna = Diorama.dna("path", "name")
+  const diorama = new Diorama({
     instances: {
       alice: dna,
       bob: dna
     },
     bridges: [
-      Playbook.bridge('bridge', 'alice', 'bob')
+      Diorama.bridge('bridge', 'alice', 'bob')
     ],
     debugLog: false,
   })
 
-  t.equal(playbook.instanceConfigs.length, 2)
-  t.equal(playbook.bridgeConfigs.length, 1)
+  t.equal(diorama.instanceConfigs.length, 2)
+  t.equal(diorama.bridgeConfigs.length, 1)
 
-  playbook.registerScenario('test scenario 1', async (s, notInstances) => {
+  diorama.registerScenario('test scenario 1', async (s, notInstances) => {
     t.ok(s.consistent)
     t.equal(notInstances, 'not very good test')
   })
 
-  t.equal(playbook.scenarios.length, 1)
+  t.equal(diorama.scenarios.length, 1)
 
-  await playbook.run()
+  await diorama.run()
 
   t.end()
 })

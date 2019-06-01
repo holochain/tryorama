@@ -2,11 +2,11 @@
 
 The new Scenario API will allow a scenario to be run on a variety of "orchestrators". Here are some of the orchestrators we have in mind.
 
-## Dev Orchestrator 1.0 (D1) a.k.a Playbook
+## Dev Orchestrator 1.0 (D1) a.k.a Diorama
 
 *in development*
 
-D1, tentatively named `playbook`, is a more or less direct replacement of the existing Node test conductor. It spins up a normal Rust conductor as a subprocess, using an admin interface to set up and tear down agents, DNAs, and instances for use by the scenarios.
+D1, tentatively named `diorama`, is a more or less direct replacement of the existing Node test conductor. It spins up a normal Rust conductor as a subprocess, using an admin interface to set up and tear down agents, DNAs, and instances for use by the scenarios.
 
 This should be as fast as possible, so as much state as possible is shared between tests. A single conductor process runs for the entire duration of the test suite, and agents and DNAs are cached, i.e. only set up, never torn down. Instances are set up and torn down for each test, to ensure a clean slate for each test.
 
