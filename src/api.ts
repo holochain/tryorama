@@ -1,4 +1,4 @@
-import {Waiter} from '@holochain/scenario-waiter'
+import {Waiter} from '@holochain/hachiko'
 
 import {delay} from './util'
 

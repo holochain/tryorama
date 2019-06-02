@@ -3,13 +3,13 @@
 
 const path = require('path')
 const tape = require('tape')
-const { Playbook, simpleMiddleware, tapeMiddleware } = require('../src')
+const { Diorama, simpleMiddleware, tapeMiddleware } = require('../src')
 
 const dnaPath = path.join(__dirname, "../../holochain-rust/app_spec/dist/app_spec.dna.json")
-const dnaBlog = Playbook.dna(dnaPath, 'blog')
+const dnaBlog = Diorama.dna(dnaPath, 'blog')
 
 
-const playbook = new Playbook({
+const diorama = new Diorama({
   instances: {
     alice: dnaBlog,
     bob: dnaBlog,
@@ -36,15 +36,15 @@ const assert = x => {
 }
 
 
-// const scenario = withTape(require('tape'))(playbook.scenario)
-const scenario = playbook.registerScenario
+// const scenario = withTape(require('tape'))(diorama.scenario)
+const scenario = diorama.registerScenario
 
 require('./test-tape-combinator')(scenario)
 // require('./test-tape-manual')(scenario, tape)
 // require('./test-vanilla')(scenario)
 // require('./test-simple')(scenario)
 
-playbook.runSuite().then(() => {
+diorama.runSuite().then(() => {
   console.log("all done!!")
-  playbook.close()
+  diorama.close()
 })

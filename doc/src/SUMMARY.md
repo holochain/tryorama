@@ -8,7 +8,7 @@
   	- [Supporting types](./scenarios/types.md)
   - [Scenario API](./scenarios/api.md) 
 - [Orchestrators](./orchestrators/overview.md)
-  - [Playbook](./orchestrators/dev-orchestrator-1.md)
+  - [Diorama](./orchestrators/dev-orchestrator-1.md)
     - [More verbose config](./orchestrators/dev-orchestrator-1-verbose.md)
   - [Dev Orchestrator 2.0 (E)](./orchestrators/dev-orchestrator-2.md)
   - [Net Orchestrator](./orchestrators/net-orchestrator.md)

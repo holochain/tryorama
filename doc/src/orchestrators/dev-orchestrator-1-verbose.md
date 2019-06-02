@@ -22,14 +22,14 @@ const bridges = [
 // across all files, will use
 const conductor = new Conductor({debugLog: true})
 
-const playbook2 = new Playbook(conductor, {
+const diorama2 = new Diorama(conductor, {
     instances: [
         Config.instance(agentAlice, dnaBlog),
         Config.instance(agentBob, dnaBlog),
     ],
     bridges
 })
-const playbook3 = new Playbook(conductor, {
+const diorama3 = new Diorama(conductor, {
     // more explicit list version
     instances: [
         Config.instance(agentAlice, dnaBlog),

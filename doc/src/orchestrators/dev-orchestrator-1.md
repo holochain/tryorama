@@ -1,10 +1,10 @@
-# Playbook (D1)
+# Diorama (D1)
 
 ## Constraints
 
 We're using a real conductor, which has some overhead with startup and creation of agents, DNAs, etc. Therefore, we want to keep this overhead as low as possible by only using one conductor instance for the entire test suite.
 
-Therefore, we need a `Conductor` object which is passed to each new `Playbook`.
+Therefore, we need a `Conductor` object which is passed to each new `Diorama`.
 
 ## Config
 
@@ -23,7 +23,7 @@ const bridges = [
 
 const conductor = new Conductor({debugLog: true})
 
-const playbook = new Playbook(conductor, {
+const diorama = new Diorama(conductor, {
     bridges: bridges,
     instances: {
         alice: dnaBlog,
@@ -32,17 +32,17 @@ const playbook = new Playbook(conductor, {
     },
 })
 ```
-Note the instance config object passed to `Playbook`:
+Note the instance config object passed to `Diorama`:
 
 * the key (e.g. "alice") becomes the instance ID as well as the agent ID and agent name (3 in 1!)
 * the value is the DNA config
 * this is not only incredibly compact and readable, but it prevents duplicates of instance IDs
 * it obviates the need to explicitly configure agents and instances
 
-As an orchestrator, playbook can run scenarios:
+As an orchestrator, diorama can run scenarios:
 
 ```js
 
-require('./a-bunch-of-scenarios')(playbook.scenario)
+require('./a-bunch-of-scenarios')(diorama.scenario)
 
 ```

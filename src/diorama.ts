@@ -2,7 +2,7 @@ const tape = require('tape')
 const colors = require('colors/safe')
 
 import {connect} from '@holochain/hc-web-client'
-import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/scenario-waiter'
+import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/hachiko'
 import {InstanceConfig, BridgeConfig} from './types'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
@@ -11,7 +11,7 @@ import {identity} from './util'
 
 /////////////////////////////////////////////////////////////
 
-type PlaybookConstructorParams = {
+type DioramaConstructorParams = {
   instances?: any,
   bridges?: Array<BridgeConfig>,
   middleware?: any,
@@ -19,7 +19,7 @@ type PlaybookConstructorParams = {
   debugLog?: boolean,
 }
 
-export const PlaybookClass = Conductor => class Playbook {
+export const DioramaClass = Conductor => class Diorama {
   instanceConfigs: Array<InstanceConfig>
   bridgeConfigs: Array<BridgeConfig>
   conductor: Conductor
@@ -29,7 +29,7 @@ export const PlaybookClass = Conductor => class Playbook {
   conductorOpts: any | void
   waiter: Waiter
 
-  constructor ({bridges = [], instances = {}, middleware = identity, executor = simpleExecutor, debugLog = false}: PlaybookConstructorParams) {
+  constructor ({bridges = [], instances = {}, middleware = identity, executor = simpleExecutor, debugLog = false}: DioramaConstructorParams) {
     this.bridgeConfigs = bridges
     this.middleware = middleware
     this.executor = executor
@@ -52,7 +52,7 @@ export const PlaybookClass = Conductor => class Playbook {
     this.refreshWaiter()
   }
 
-  onSignal (msg: {signal: Signal, instance_id: String}) {
+  onSignal (msg: {signal, instance_id: String}) {
     if (msg.signal.signal_type === 'Consistency') {
       // XXX, NB, this '-' magic is because of the nonced instance IDs
       // TODO: deal with this more reasonably
@@ -142,7 +142,7 @@ export const PlaybookClass = Conductor => class Playbook {
   close = () => this.conductor ? this.conductor.kill() : undefined
 }
 
-export const Playbook = PlaybookClass(Conductor)
+export const Diorama = DioramaClass(Conductor)
 
 const makeInstanceConfig = (agentId, dnaConfig) => {
   return {

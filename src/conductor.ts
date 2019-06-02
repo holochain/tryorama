@@ -9,7 +9,7 @@ const colors = require('colors/safe')
 import {promiseSerial, delay} from './util'
 import {InstanceConfig} from './types'
 import {DnaInstance} from './instance'
-import {Signal} from '@holochain/scenario-waiter'
+import {Signal} from '@holochain/hachiko'
 
 /// //////////////////////////////////////////////////////////
 
@@ -259,14 +259,17 @@ export class Conductor {
   }
 
   spawn () {
-    const tmpPath = fs.mkdtempSync(path.join(os.tmpdir(), 'hc-playbook-'))
+    const tmpPath = fs.mkdtempSync(path.join(os.tmpdir(), 'hc-diorama-'))
     const configPath = path.join(tmpPath, 'conductor-config.toml')
     const persistencePath = tmpPath
     const config = this.initialConfig(persistencePath, this.opts)
     fs.writeFileSync(configPath, config)
     console.info("Using config file at", configPath)
-    const which = child_process.execSync('which holochain')
-    console.info("Using holochain binary at", which.toString('utf8'))
+    try {
+      const which = child_process.execSync('which holochain')
+      console.info("Using holochain binary at", which.toString('utf8'))
+    } catch (e) {}
+
     const handle = child_process.spawn(`holochain`, ['-c', configPath])
 
     handle.stdout.on('data', data => {
