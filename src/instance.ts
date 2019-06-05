@@ -16,12 +16,12 @@ export class DnaInstance {
 
   // internally calls `this.conductor.call`
   async call (zome, fn, params) {
-    try {
       const result = await this.callZome(this.id, zome, fn)(params)
       console.info(colors.blue.inverse("zome call"), this.id, zome, fn, params)
+    try {
       return JSON.parse(result)
     } catch (e) {
-      console.error('Exception occurred while calling zome function: ', e)
+      console.error('Could not JSON.parse zome function return value: ', e)
       throw e
     }
   }

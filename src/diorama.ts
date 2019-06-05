@@ -106,7 +106,7 @@ export const DioramaClass = Conductor => class Diorama {
   refreshWaiter = () => new Promise(resolve => {
     if (this.waiter) {
       console.log("Test over, waiting for Waiter to flush...")
-      this.waiter.registerCallback({nodes: null, callback: resolve})
+      this.waiter.registerCallback({nodes: null, resolve})
     } else {
       resolve()
     }

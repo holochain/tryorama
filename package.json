@@ -6,7 +6,7 @@
   "types": "lib/index.d.ts",
   "scripts": {
     "build": "tsc -d",
-    "dev": "tsc -w",
+    "dev": "tsc -d -w",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "test": "ts-node test/index.ts",
