@@ -14,9 +14,13 @@ export const tapeExecutor = tape => (run: Runner, f, desc) => new Promise((resol
     reject("tapeMiddleware requires scenario functions to take 3 arguments, please check your scenario definitions.")
   }
   tape(desc, t => {
-    run((s, ins) => f(s, t, ins)).then(() => {
-      t.end()
-      resolve()
-    })
+    run((s, ins) => f(s, t, ins))
+      .catch((e) => {
+        t.fail(e)
+      })
+      .finally(() => {
+        t.end()
+        resolve()
+      })
   })
 })

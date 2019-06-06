@@ -18,11 +18,12 @@ const ADMIN_INTERFACE_PORT = 5550
 const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
-console.debug = () => {}
+const DEFAULT_ZOME_CALL_TIMEOUT = 10000
 
 type ConductorOpts = {
   onSignal: (Signal) => void,
   debugLog: boolean,
+  zomeCallTimeout?: number,
 }
 
 
@@ -84,13 +85,17 @@ export class Conductor {
   connectTest = async () => {
     const url = this.testInterfaceUrl()
     const { callZome } = await this.webClientConnect({url})
-    this.callZome = (...args) => async params => {
+    this.callZome = (...args) => params => new Promise((resolve, reject) => {
       console.debug(colors.cyan.underline("calling"), ...args)
       console.debug(params)
-      const result = await callZome(...args)(params)
-      console.debug(colors.cyan.bold('->'), result)
-      return result
-    }
+      const timeout = this.opts.zomeCallTimeout || DEFAULT_ZOME_CALL_TIMEOUT
+      const timer = setTimeout(() => reject(`zome call timed out after ${timeout / 1000} seconds`), timeout)
+      const promise = callZome(...args)(params).then(result => {
+        clearTimeout(timer)
+        console.debug(colors.cyan.bold('->'), result)
+        resolve(result)
+      })
+    })
   }
 
   initialize = async () => {
@@ -250,7 +255,11 @@ export class Conductor {
       this.abort(e)
     }
     console.debug("Instances all set up, running test...")
-    await fn(this.instanceMap)
+    try {
+      await fn(this.instanceMap)
+    } catch (e) {
+      this.failTest(e)
+    }
 
     console.debug("Test done, tearing down instances...")
     await this.teardownBridges(bridgeConfigs)
@@ -289,6 +298,11 @@ export class Conductor {
     console.error("Test conductor aborted:", msg)
     this.kill()
     process.exit(-1)
+  }
+
+  failTest (e) {
+    console.error("Test failed while running: ", e)
+    throw e
   }
 
   initialConfig (persistencePath, opts) {

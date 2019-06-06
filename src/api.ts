@@ -10,8 +10,11 @@ export class ScenarioApi {
     this.waiter = waiter
   }
 
-  consistent = (instances?) => new Promise(resolve => this.waiter.registerCallback({
-    nodes: instances ? instances.map(i => i.id) : null,
-    callback: resolve,
-  }))
+  consistent = (instances?) => new Promise((resolve, reject) => {
+    this.waiter.registerCallback({
+      nodes: instances ? instances.map(i => i.id) : null,
+      resolve,
+      reject,
+    })
+  })
 }
