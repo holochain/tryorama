@@ -1,4 +1,5 @@
 const child_process = require('child_process')
+const del = require('del')
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
@@ -19,7 +20,7 @@ const ADMIN_INTERFACE_PORT = 5550
 const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
-const DEFAULT_ZOME_CALL_TIMEOUT = 10000
+const DEFAULT_ZOME_CALL_TIMEOUT = 60000
 
 type ConductorOpts = {
   onSignal: (Signal) => void,
@@ -27,6 +28,7 @@ type ConductorOpts = {
   zomeCallTimeout?: number,
 }
 
+const storagePath = () => process.env.DIORAMA_STORAGE || fs.mkdtempSync(path.join(os.tmpdir(), 'hc-diorama-'))
 
 /**
  * Represents a conductor process to which calls can be made via RPC
@@ -208,6 +210,12 @@ export class Conductor {
     this.runningInstances = []
   }
 
+  cleanupStorage = async () => await del([
+    path.join(storagePath(), 'storage'),
+    path.join(storagePath(), 'dna'),
+  ])
+
+
   noncifyBridgeConfig = (bridgeConfig) => {
     const bridge = JSON.parse(JSON.stringify(bridgeConfig))
     bridge.caller_id += '-' + this.dnaNonce
@@ -265,11 +273,13 @@ export class Conductor {
     logger.debug("Test done, tearing down instances...")
     await this.teardownBridges(bridgeConfigs)
     await this.teardownInstances()
+    await this.cleanupStorage()
+    logger.debug("Storage cleared...")
     this.dnaNonce += 1
   }
 
   spawn () {
-    const tmpPath = process.env.DIORAMA_STORAGE || fs.mkdtempSync(path.join(os.tmpdir(), 'hc-diorama-'))
+    const tmpPath = storagePath()
     const configPath = path.join(tmpPath, 'conductor-config.toml')
     const persistencePath = tmpPath
     const config = this.initialConfig(persistencePath, this.opts)
