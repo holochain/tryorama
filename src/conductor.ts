@@ -138,7 +138,7 @@ export class Conductor {
   setupDna = async (nonNoncifiedInstanceId, instanceConfig) => {
     const dnaConfig = JSON.parse(JSON.stringify(instanceConfig.dna))  // poor man's deep clone
     dnaConfig.id += '-' + this.dnaNonce
-    dnaConfig.copy = false
+    dnaConfig.copy = true
     dnaConfig.uuid = 'uuid-' + this.dnaNonce
 
     if (!this.dnaIds.has(dnaConfig.id)) {
