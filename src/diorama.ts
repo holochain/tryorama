@@ -8,6 +8,7 @@ import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
 import {simpleExecutor} from './executors'
 import {identity} from './util'
+import logger from './logger'
 
 /////////////////////////////////////////////////////////////
 
@@ -40,8 +41,8 @@ export const DioramaClass = Conductor => class Diorama {
     this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
 
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
-      console.debug('agentId', agentId)
-      console.debug('dnaConfig', dnaConfig)
+      logger.debug('agentId', agentId)
+      logger.debug('dnaConfig', dnaConfig)
       const instanceConfig = makeInstanceConfig(agentId, dnaConfig)
       const id = instanceConfig.id
       this.instanceConfigs.push(instanceConfig)
@@ -105,7 +106,7 @@ export const DioramaClass = Conductor => class Diorama {
 
   refreshWaiter = () => new Promise(resolve => {
     if (this.waiter) {
-      console.log("Test over, waiting for Waiter to flush...")
+      logger.info("Test over, waiting for Waiter to flush...")
       this.waiter.registerCallback({nodes: null, resolve})
     } else {
       resolve()
@@ -120,14 +121,14 @@ export const DioramaClass = Conductor => class Diorama {
     try {
       await this.conductor.initialize()
     } catch (e) {
-      console.error("Error during conductor initialization:")
-      console.error(e)
+      logger.error("Error during conductor initialization:")
+      logger.error(e)
     }
 
     const onlyTests = this.scenarios.filter(([desc, execute, only]) => only)
 
     if (onlyTests.length > 0) {
-      console.warn(`.only was invoked, only running ${onlyTests.length} test(s)!`)
+      logger.warn(`.only was invoked, only running ${onlyTests.length} test(s)!`)
       for (const [desc, execute, _] of onlyTests) {
         await execute()
       }
