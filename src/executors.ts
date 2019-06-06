@@ -15,12 +15,12 @@ export const tapeExecutor = tape => (run: Runner, f, desc) => new Promise((resol
   }
   tape(desc, t => {
     run((s, ins) => f(s, t, ins))
-      .catch((e) => {
-        t.fail(e)
-      })
-      .finally(() => {
-        t.end()
-        resolve()
-      })
+    .catch((e) => {
+      t.fail(e)
+    })
+    .then(() => {
+      t.end()
+      resolve()
+    })
   })
 })
