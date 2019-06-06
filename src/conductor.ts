@@ -6,10 +6,11 @@ const getPort = require('get-port')
 
 const colors = require('colors/safe')
 
+import {Signal} from '@holochain/hachiko'
 import {promiseSerial, delay} from './util'
 import {InstanceConfig} from './types'
 import {DnaInstance} from './instance'
-import {Signal} from '@holochain/hachiko'
+import logger from './logger'
 
 /// //////////////////////////////////////////////////////////
 
@@ -72,10 +73,10 @@ export class Conductor {
   connectAdmin = async () => {
     const { call, onSignal } = await this.webClientConnect({url: ADMIN_INTERFACE_URL})
     this.callAdmin = method => async params => {
-      console.debug(colors.yellow.underline("calling"), method)
-      console.debug(params)
+      logger.debug(colors.yellow.underline("calling"), method)
+      logger.debug(params)
       const result = await call(method)(params)
-      console.debug(colors.yellow.bold('->'), result)
+      logger.debug(colors.yellow.bold('->'), result)
       return result
     }
 
@@ -86,13 +87,13 @@ export class Conductor {
     const url = this.testInterfaceUrl()
     const { callZome } = await this.webClientConnect({url})
     this.callZome = (...args) => params => new Promise((resolve, reject) => {
-      console.debug(colors.cyan.underline("calling"), ...args)
-      console.debug(params)
+      logger.debug(colors.cyan.underline("calling"), ...args)
+      logger.debug(params)
       const timeout = this.opts.zomeCallTimeout || DEFAULT_ZOME_CALL_TIMEOUT
-      const timer = setTimeout(() => reject(`zome call timed out after ${timeout / 1000} seconds`), timeout)
+      const timer = setTimeout(() => reject(`zome call timed out after ${timeout / 1000} seconds: ${args.join('/')}`), timeout)
       const promise = callZome(...args)(params).then(result => {
         clearTimeout(timer)
-        console.debug(colors.cyan.bold('->'), result)
+        logger.debug(colors.cyan.bold('->'), result)
         resolve(result)
       })
     })
@@ -102,12 +103,12 @@ export class Conductor {
     if (!this.isInitialized) {
       try {
         await this.spawn()
-        console.info(colors.green.bold("test conductor spawned"))
+        logger.info(colors.green.bold("test conductor spawned"))
         await this.connectAdmin()
-        console.info(colors.green.bold("test conductor connected to admin interface"))
+        logger.info(colors.green.bold("test conductor connected to admin interface"))
       } catch (e) {
-        console.error("Error when initializing!")
-        console.error(e)
+        logger.error("Error when initializing!")
+        logger.error(e)
         this.kill()
       }
       this.isInitialized = true
@@ -117,7 +118,7 @@ export class Conductor {
   getInterfacePort = async () => {
     const port = await getPort()
     // const port = await getPort({port: getPort.makeRange(5555, 5999)})
-    console.log("using port", port)
+    logger.info("using port", port)
     return port
   }
 
@@ -140,7 +141,7 @@ export class Conductor {
 
     if (!this.dnaIds.has(dnaConfig.id)) {
       const installDnaResponse = await this.callAdmin('admin/dna/install_from_file')(dnaConfig)
-      console.log('installDnaResponse', installDnaResponse)
+      logger.silly('installDnaResponse', installDnaResponse)
       const dnaAddress = installDnaResponse.dna_hash
       this.dnaIds.add(dnaConfig.id)
       this.instanceMap[nonNoncifiedInstanceId].dnaAddress = dnaAddress
@@ -169,7 +170,7 @@ export class Conductor {
       }
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
-        console.log('addAgentResponse', addAgentResponse)
+        logger.silly('addAgentResponse', addAgentResponse)
         const agentAddress = addAgentResponse.agent_address
         this.agentIds.add(instance.agent.id)
         this.instanceMap[nonNoncifiedInstanceId].agentAddress = agentAddress
@@ -235,13 +236,13 @@ export class Conductor {
   }
 
   run = async (instanceConfigs, bridgeConfigs, fn) => {
-    console.log()
-    console.log()
-    console.log("---------------------------------------------------------")
-    console.log("---------------------------------------------------------")
-    console.log("-------  starting")
-    console.log()
-    console.log()
+    logger.debug('')
+    logger.debug('')
+    logger.debug("---------------------------------------------------------")
+    logger.debug("---------------------------------------------------------")
+    logger.debug("-------  starting")
+    logger.debug('')
+    logger.debug('')
     if (!this.isInitialized) {
       throw "Cannot run uninitialized conductor"
     }
@@ -254,14 +255,14 @@ export class Conductor {
     } catch (e) {
       this.abort(e)
     }
-    console.debug("Instances all set up, running test...")
+    logger.debug("Instances all set up, running test...")
     try {
       await fn(this.instanceMap)
     } catch (e) {
       this.failTest(e)
     }
 
-    console.debug("Test done, tearing down instances...")
+    logger.debug("Test done, tearing down instances...")
     await this.teardownBridges(bridgeConfigs)
     await this.teardownInstances()
     this.dnaNonce += 1
@@ -273,20 +274,20 @@ export class Conductor {
     const persistencePath = tmpPath
     const config = this.initialConfig(persistencePath, this.opts)
     fs.writeFileSync(configPath, config)
-    console.info("Using config file at", configPath)
+    logger.info(`Using config file at ${configPath}`)
     try {
       const which = child_process.execSync('which holochain')
-      console.info("Using holochain binary at", which.toString('utf8'))
+      logger.info(`Using holochain binary at ${which.toString('utf8')}`)
     } catch (e) {}
 
     const handle = child_process.spawn(`holochain`, ['-c', configPath])
 
     handle.stdout.on('data', data => {
       const line = data.toString('utf8')
-      console.log(`[C]`, line)
+      logger.info(`[C] %s`, line)
     })
-    handle.stderr.on('data', data => console.error(`!C!`, data.toString('utf8')))
-    handle.on('close', code => console.log(`conductor exited with code`, code))
+    handle.stderr.on('data', data => logger.error(`!C! %s`, data.toString('utf8')))
+    handle.on('close', code => logger.info(`conductor exited with code ${code}`))
     this.handle = handle
   }
 
@@ -295,13 +296,13 @@ export class Conductor {
   }
 
   abort (msg) {
-    console.error("Test conductor aborted:", msg)
+    logger.error(`Test conductor aborted: %j`, msg)
     this.kill()
     process.exit(-1)
   }
 
   failTest (e) {
-    console.error("Test failed while running: ", e)
+    logger.error("Test failed while running: %j", e)
     throw e
   }
 

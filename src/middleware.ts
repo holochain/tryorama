@@ -26,7 +26,6 @@ export const agentIdMiddleware = f => (s, ins) => {
     // agentId "polyfill"
   Object.values(ins).forEach((i: any) => {
     i.agentId = i.agentAddress
-    console.log('set agentId', i.agentId)
   })
   return f(s, ins)
 }
