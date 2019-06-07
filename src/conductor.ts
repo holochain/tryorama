@@ -75,10 +75,10 @@ export class Conductor {
   connectAdmin = async () => {
     const { call, onSignal } = await this.webClientConnect({url: ADMIN_INTERFACE_URL})
     this.callAdmin = method => async params => {
-      logger.debug(colors.yellow.underline("calling"), method)
-      logger.debug(params)
+      logger.debug(`${colors.yellow.underline("calling")} %s`, method)
+      logger.debug(JSON.stringify(params, null, 2))
       const result = await call(method)(params)
-      logger.debug(colors.yellow.bold('->'), result)
+      logger.debug(`${colors.yellow.bold('->')} %j`, result)
       return result
     }
 
@@ -195,6 +195,7 @@ export class Conductor {
     if (!this.isRunning()) {
       throw "Attempting teardown, but there is nothing to tear down"
     }
+    let dnaId: string | null = null
     for (const instance of this.runningInstances) {
       await this.callAdmin('admin/interface/remove_instance')({
         interface_id: this.testInterfaceId(),  // NB: this changes between tests
@@ -203,10 +204,11 @@ export class Conductor {
       await this.callAdmin('admin/instance/remove')({
         id: instance.id
       })
-      // await this.callAdmin('admin/dna/uninstall')({
-      //   id: instance.dna.id
-      // })
+      dnaId = instance.dna.id  // XXX TODO: should be the same every time
     }
+    await this.callAdmin('admin/dna/uninstall')({
+      id: dnaId
+    })
     this.runningInstances = []
   }
 
@@ -270,10 +272,14 @@ export class Conductor {
       this.failTest(e)
     }
 
+    try {
+      await this.teardownBridges(bridgeConfigs)
+      await this.teardownInstances()
+      // await this.cleanupStorage()
+    } catch (e) {
+      this.abort(e)
+    }
     logger.debug("Test done, tearing down instances...")
-    await this.teardownBridges(bridgeConfigs)
-    await this.teardownInstances()
-    await this.cleanupStorage()
     logger.debug("Storage cleared...")
     this.dnaNonce += 1
   }
