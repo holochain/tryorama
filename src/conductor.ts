@@ -16,8 +16,7 @@ import logger from './logger'
 /// //////////////////////////////////////////////////////////
 
 // these should be already set when the conductor is started by `hc test`
-const ADMIN_INTERFACE_PORT = 5550
-const ADMIN_INTERFACE_URL = `ws://localhost:${ADMIN_INTERFACE_PORT}`
+const wsUrl = port => `ws://localhost:${port}`
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
 const DEFAULT_ZOME_CALL_TIMEOUT = 60000
@@ -50,6 +49,7 @@ export class Conductor {
   runningInstances: Array<InstanceConfig>
   callZome: any
   testPort: number
+  adminPort: number
 
   isInitialized: boolean
 
@@ -73,7 +73,7 @@ export class Conductor {
   testInterfaceId = () => `test-interface-${this.testPort}`
 
   connectAdmin = async () => {
-    const { call, onSignal } = await this.webClientConnect({url: ADMIN_INTERFACE_URL})
+    const { call, onSignal } = await this.webClientConnect({url: wsUrl(this.adminPort)})
     this.callAdmin = method => async params => {
       logger.debug(`${colors.yellow.underline("calling")} %s`, method)
       logger.debug(JSON.stringify(params, null, 2))
@@ -104,6 +104,7 @@ export class Conductor {
   initialize = async () => {
     if (!this.isInitialized) {
       try {
+        this.adminPort = await this.getInterfacePort()
         await this.spawn()
         logger.info(colors.green.bold("test conductor spawned"))
         await this.connectAdmin()
@@ -338,7 +339,7 @@ id = "${ADMIN_INTERFACE_ID}"
 instances = []
   [interfaces.driver]
   type = "websocket"
-  port = ${ADMIN_INTERFACE_PORT}
+  port = ${this.adminPort}
 
 [logger]
 type = "debug"

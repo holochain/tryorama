@@ -10,6 +10,9 @@ import {simpleExecutor} from './executors'
 import {identity} from './util'
 import logger from './logger'
 
+const MAX_RUNS_PER_CONDUCTOR = 5
+const MIN_POOL_SIZE = 1
+
 /////////////////////////////////////////////////////////////
 
 type DioramaConstructorParams = {
@@ -23,7 +26,7 @@ type DioramaConstructorParams = {
 export const DioramaClass = Conductor => class Diorama {
   instanceConfigs: Array<InstanceConfig>
   bridgeConfigs: Array<BridgeConfig>
-  conductor: Conductor
+  conductorPool: Array<{conductor: Conductor, runs: number}>
   scenarios: Array<any>
   middleware: any | void
   executor: any | void
@@ -38,7 +41,7 @@ export const DioramaClass = Conductor => class Diorama {
 
     this.scenarios = []
     this.instanceConfigs = []
-    this.conductor = new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
+    this.conductorPool = []
 
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
       logger.debug('agentId', agentId)
@@ -62,6 +65,35 @@ export const DioramaClass = Conductor => class Diorama {
       const signal = stringifySignal(msg.signal)
       this.waiter.handleObservation({node, signal})
     }
+  }
+
+  _newConductor (): Conductor {
+    return new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
+  }
+
+  getConductor = async (): Promise<Conductor> => {
+    logger.info("conductor pool size: %s", this.conductorPool.length)
+    this.conductorPool = this.conductorPool.filter(c => {
+      const done = c.runs >= MAX_RUNS_PER_CONDUCTOR
+      if (done) {
+        logger.info("killing conductor after %s runs", c.runs)
+        c.conductor.kill()
+      }
+      return !done
+    })
+
+    while (this.conductorPool.length < MIN_POOL_SIZE) {
+      const newConductor = this._newConductor()
+      await newConductor.initialize()
+      this.conductorPool.push({
+        conductor: newConductor,
+        runs: 0
+      })
+    }
+
+    const item = this.conductorPool[0]
+    item.runs += 1
+    return item.conductor
   }
 
   /**
@@ -98,7 +130,16 @@ export const DioramaClass = Conductor => class Diorama {
   runScenario = async scenario => {
     await this.refreshWaiter()
     const modifiedScenario = this.middleware(scenario)
-    return this.conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
+
+    let conductor
+    try {
+      conductor = await this.getConductor()
+    } catch (e) {
+      logger.error("Error during conductor initialization:")
+      logger.error(e)
+    }
+
+    return conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
       const api = new ScenarioApi(this.waiter)
       return modifiedScenario(api, instanceMap)
     })
@@ -118,13 +159,6 @@ export const DioramaClass = Conductor => class Diorama {
   })
 
   run = async () => {
-    try {
-      await this.conductor.initialize()
-    } catch (e) {
-      logger.error("Error during conductor initialization:")
-      logger.error(e)
-    }
-
     const onlyTests = this.scenarios.filter(([desc, execute, only]) => only)
 
     if (onlyTests.length > 0) {
@@ -140,7 +174,11 @@ export const DioramaClass = Conductor => class Diorama {
     this.close()
   }
 
-  close = () => this.conductor ? this.conductor.kill() : undefined
+  close = () => {
+    for (const {conductor} of this.conductorPool) {
+      conductor.kill()
+    }
+  }
 }
 
 export const Diorama = DioramaClass(Conductor)
