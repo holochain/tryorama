@@ -10,7 +10,7 @@ import {simpleExecutor} from './executors'
 import {identity} from './util'
 import logger from './logger'
 
-const MAX_RUNS_PER_CONDUCTOR = 5
+const MAX_RUNS_PER_CONDUCTOR = 1
 const MIN_POOL_SIZE = 1
 
 /////////////////////////////////////////////////////////////
@@ -32,6 +32,7 @@ export const DioramaClass = Conductor => class Diorama {
   executor: any | void
   conductorOpts: any | void
   waiter: Waiter
+  startNonce: number
 
   constructor ({bridges = [], instances = {}, middleware = identity, executor = simpleExecutor, debugLog = false}: DioramaConstructorParams) {
     this.bridgeConfigs = bridges
@@ -42,6 +43,7 @@ export const DioramaClass = Conductor => class Diorama {
     this.scenarios = []
     this.instanceConfigs = []
     this.conductorPool = []
+    this.startNonce = 1
 
     Object.entries(instances).forEach(([agentId, dnaConfig]) => {
       logger.debug('agentId', agentId)
@@ -68,7 +70,8 @@ export const DioramaClass = Conductor => class Diorama {
   }
 
   _newConductor (): Conductor {
-    return new Conductor(connect, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
+    this.startNonce += MAX_RUNS_PER_CONDUCTOR * 2 // just to be safe
+    return new Conductor(connect, this.startNonce, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
   }
 
   getConductor = async (): Promise<Conductor> => {

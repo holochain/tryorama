@@ -53,7 +53,7 @@ export class Conductor {
 
   isInitialized: boolean
 
-  constructor (connect, opts: ConductorOpts) {
+  constructor (connect, startNonce, opts: ConductorOpts) {
     this.webClientConnect = connect
     this.agentIds = new Set()
     this.dnaIds = new Set()
@@ -61,7 +61,7 @@ export class Conductor {
     this.opts = opts
     this.handle = null
     this.runningInstances = []
-    this.dnaNonce = 1
+    this.dnaNonce = startNonce
     this.onSignal = opts.onSignal
   }
 
