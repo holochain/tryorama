@@ -206,6 +206,9 @@ export class Conductor {
       })
       dnaId = instance.dna.id  // XXX TODO: should be the same every time
     }
+    await this.callAdmin('admin/interface/remove')({
+      id: this.testInterfaceId(),
+    })
     await this.callAdmin('admin/dna/uninstall')({
       id: dnaId
     })
