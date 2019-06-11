@@ -15,8 +15,14 @@ export const tapeExecutor = tape => (run: Runner, f, desc) => new Promise((resol
   }
   tape(desc, t => {
     run((s, ins) => f(s, t, ins))
-    .catch((e) => {
-      t.fail(e)
+    .catch((err) => {
+      try {
+        // Include stack trace from actual test function, but all on one line.
+        // This is the best we can do for now without messing with tape internals
+        t.fail(err.stack)
+      } catch (e) {
+        t.fail(err)
+      }
     })
     .then(() => {
       t.end()
