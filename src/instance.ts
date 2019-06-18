@@ -8,12 +8,14 @@ export class DnaInstance {
   agentAddress: string | null
   dnaAddress: string | null
   callZome: any
+  signals: Array<any>
 
   constructor (instanceId, callZome) {
     this.id = instanceId
     this.agentAddress = null
     this.dnaAddress = null
     this.callZome = callZome
+    this.signals = []
   }
 
   // internally calls `this.conductor.call`

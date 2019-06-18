@@ -39,7 +39,7 @@ export class Conductor {
   webClientConnect: any
   agentIds: Set<string>
   dnaIds: Set<string>
-  instanceMap: any
+  instanceMap: {[name: string]: DnaInstance}
   opts: any
   callAdmin: any
   handle: any

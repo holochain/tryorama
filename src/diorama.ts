@@ -58,7 +58,7 @@ export const DioramaClass = Conductor => class Diorama {
     this.refreshWaiter()
   }
 
-  onSignal (msg: {signal, instance_id: String}) {
+  onSignal (msg: {signal, instance_id: string}) {
     if (msg.signal.signal_type === 'Consistency') {
       // XXX, NB, this '-' magic is because of the nonced instance IDs
       // TODO: deal with this more reasonably
@@ -66,6 +66,10 @@ export const DioramaClass = Conductor => class Diorama {
       const node = msg.instance_id.substring(0, ix)
       const signal = stringifySignal(msg.signal)
       this.waiter.handleObservation({node, signal})
+    } else {
+      // sort of pseudocode
+      const {conductor} = this.currentConductor()
+      conductor.instanceMap[msg.instance_id].signals.push(msg.signal)
     }
   }
 
@@ -94,9 +98,13 @@ export const DioramaClass = Conductor => class Diorama {
       })
     }
 
-    const item = this.conductorPool[0]
+    const item = this.currentConductor()
     item.runs += 1
     return item.conductor
+  }
+
+  currentConductor () {
+    return this.conductorPool[0]
   }
 
   /**
