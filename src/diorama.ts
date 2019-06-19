@@ -66,10 +66,6 @@ export const DioramaClass = Conductor => class Diorama {
       const node = msg.instance_id.substring(0, ix)
       const signal = stringifySignal(msg.signal)
       this.waiter.handleObservation({node, signal})
-    } else {
-      // sort of pseudocode
-      const {conductor} = this.currentConductor()
-      conductor.instanceMap[msg.instance_id].signals.push(msg.signal)
     }
   }
 
