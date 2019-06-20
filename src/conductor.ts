@@ -39,7 +39,7 @@ export class Conductor {
   webClientConnect: any
   agentIds: Set<string>
   dnaIds: Set<string>
-  instanceMap: any
+  instanceMap: {[name: string]: DnaInstance}
   opts: any
   callAdmin: any
   handle: any
@@ -98,6 +98,20 @@ export class Conductor {
         logger.debug(colors.cyan.bold('->'), result)
         resolve(result)
       })
+    })
+  }
+
+  connectSignals = async () => {
+    const url = this.testInterfaceUrl()
+    const { onSignal } = await this.webClientConnect({url})
+
+    onSignal((msg: {signal, instance_id: string}) => {
+      console.log(this.instanceMap)
+      const instances = Object.keys(this.instanceMap).map(key => this.instanceMap[key])
+      const instance = instances.find(instance => instance.id == msg.instance_id)
+      if(instance) {
+        instance.signals.push(msg.signal)
+      }
     })
   }
 
@@ -266,6 +280,7 @@ export class Conductor {
       await this.setupInstances(instanceConfigs)
       await this.setupBridges(bridgeConfigs)
       await this.startInstances(instanceConfigs)
+      await this.connectSignals()
     } catch (e) {
       this.abort(e)
     }
