@@ -53,7 +53,7 @@ export class Conductor {
 
   isInitialized: boolean
 
-  constructor (connect, startNonce, opts: ConductorOpts) {
+  constructor (connect, startNonce, externalConductor, opts: ConductorOpts) {
     this.webClientConnect = connect
     this.agentIds = new Set()
     this.dnaIds = new Set()
@@ -63,6 +63,11 @@ export class Conductor {
     this.runningInstances = []
     this.dnaNonce = startNonce
     this.onSignal = opts.onSignal
+
+    if(externalConductor) {
+      this._connectAdmin(externalConductor.url)
+      this.isInitialized = true
+    }
   }
 
   isRunning = () => {
@@ -73,7 +78,11 @@ export class Conductor {
   testInterfaceId = () => `test-interface-${this.testPort}`
 
   connectAdmin = async () => {
-    const { call, onSignal } = await this.webClientConnect({url: wsUrl(this.adminPort)})
+    this._connectAdmin(wsUrl(this.adminPort))
+  }
+
+  _connectAdmin = async (url) => {
+    const { call, onSignal } = await this.webClientConnect({url})
     this.callAdmin = method => async params => {
       logger.debug(`${colors.yellow.underline("calling")} %s`, method)
       logger.debug(JSON.stringify(params, null, 2))
