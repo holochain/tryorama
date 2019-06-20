@@ -161,18 +161,28 @@ export const DioramaClass = Conductor => class Diorama {
     await this.refreshWaiter()
     const modifiedScenario = this.middleware(scenario)
 
-    let conductor
-    try {
-      conductor = await this.getConductor()
-    } catch (e) {
-      logger.error("Error during conductor initialization:")
-      logger.error(e)
-    }
+    if(this.externalConductors) {
+      // TODO:
+      // * find conductors in this.externalConductors according to instance
+      //   names in instanceConfigs
+      // * run prepareRun() on each of then with only the one instanceConfig
+      //   that matches by name
+      // * get and merge all those instanceMaps from all those conductors
+      // * run modifiedScenario() with that joined instanceMap
+    } else {
+      let conductor
+      try {
+        conductor = await this.getConductor()
+      } catch (e) {
+        logger.error("Error during conductor initialization:")
+        logger.error(e)
+      }
 
-    return conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
-      const api = new ScenarioApi(this.waiter)
-      return modifiedScenario(api, instanceMap)
-    })
+      return conductor.run(this.instanceConfigs, this.bridgeConfigs, (instanceMap) => {
+        const api = new ScenarioApi(this.waiter)
+        return modifiedScenario(api, instanceMap)
+      })
+    }
   }
 
   refreshWaiter = () => new Promise(resolve => {
