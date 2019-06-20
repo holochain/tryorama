@@ -15,7 +15,7 @@ export class DnaInstance {
     this.agentAddress = null
     this.dnaAddress = null
     this.callZome = callZome
-    this.signals = []
+    this.signals = []  // gets populated by onSignal via Conductor.connectSignals
   }
 
   // internally calls `this.conductor.call`

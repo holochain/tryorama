@@ -106,7 +106,6 @@ export class Conductor {
     const { onSignal } = await this.webClientConnect({url})
 
     onSignal((msg: {signal, instance_id: string}) => {
-      console.log(this.instanceMap)
       const instances = Object.keys(this.instanceMap).map(key => this.instanceMap[key])
       const instance = instances.find(instance => instance.id == msg.instance_id)
       if(instance) {
