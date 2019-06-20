@@ -263,6 +263,20 @@ export class Conductor {
   }
 
   run = async (instanceConfigs, bridgeConfigs, fn) => {
+    await this.prepareRun(instanceConfigs, bridgeConfigs)
+
+    try {
+      await fn(this.instanceMap)
+    } catch (e) {
+      this.failTest(e)
+    }
+
+    await this.cleanupRun(bridgeConfigs)
+
+    this.dnaNonce += 1
+  }
+
+  prepareRun = async (instanceConfigs, bridgeConfigs) => {
     logger.debug('')
     logger.debug('')
     logger.debug("---------------------------------------------------------")
@@ -284,12 +298,9 @@ export class Conductor {
       this.abort(e)
     }
     logger.debug("Instances all set up, running test...")
-    try {
-      await fn(this.instanceMap)
-    } catch (e) {
-      this.failTest(e)
-    }
+  }
 
+  cleanupRun = async (bridgeConfigs) => {
     try {
       await this.teardownBridges(bridgeConfigs)
       await this.teardownInstances()
@@ -299,7 +310,6 @@ export class Conductor {
     }
     logger.debug("Test done, tearing down instances...")
     logger.debug("Storage cleared...")
-    this.dnaNonce += 1
   }
 
   spawn () {
