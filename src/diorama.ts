@@ -9,6 +9,7 @@ import {ScenarioApi} from './api'
 import {simpleExecutor} from './executors'
 import {identity} from './util'
 import logger from './logger'
+import {Callbacks} from './callbacks'
 
 const MAX_RUNS_PER_CONDUCTOR = 1
 const MIN_POOL_SIZE = 1
@@ -21,6 +22,9 @@ type DioramaConstructorParams = {
   middleware?: any,
   executor?: any,
   debugLog?: boolean,
+  externalConductors?: boolean
+  callbacksAddress?: string,
+  callbacksPort?: number,
 }
 
 export const DioramaClass = Conductor => class Diorama {
@@ -33,8 +37,19 @@ export const DioramaClass = Conductor => class Diorama {
   conductorOpts: any | void
   waiter: Waiter
   startNonce: number
+  callbacks: Callbacks | void
 
-  constructor ({bridges = [], instances = {}, middleware = identity, executor = simpleExecutor, debugLog = false}: DioramaConstructorParams) {
+  constructor ({
+    bridges = [],
+    instances = {},
+    middleware = identity,
+    executor = simpleExecutor,
+    debugLog = false,
+    externalConductors = false,
+    callbacksAddress = '0.0.0.0',
+    callbacksPort = 9999,
+  }: DioramaConstructorParams) {
+
     this.bridgeConfigs = bridges
     this.middleware = middleware
     this.executor = executor
@@ -56,6 +71,10 @@ export const DioramaClass = Conductor => class Diorama {
     this.registerScenario.only = this.registerScenarioOnly.bind(this)
 
     this.refreshWaiter()
+
+    if(externalConductors) {
+        this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (params) => console.log('Got params:', params))
+    }
   }
 
   onSignal (msg: {signal, instance_id: string}) {
@@ -184,6 +203,9 @@ export const DioramaClass = Conductor => class Diorama {
   close = () => {
     for (const {conductor} of this.conductorPool) {
       conductor.kill()
+    }
+    if(this.callbacks) {
+      this.callbacks.stop()
     }
   }
 }

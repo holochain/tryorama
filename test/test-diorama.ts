@@ -1,8 +1,8 @@
 import {simpleExecutor} from '../src/executors'
 import {DioramaClass} from '../src/diorama'
-
 import * as test from 'tape'
 
+const http = require('http')
 
 test('a', async t => {
 
@@ -60,6 +60,36 @@ test('a', async t => {
   })
 
   t.equal(diorama.scenarios.length, 1)
+
+  await diorama.run()
+
+  t.end()
+})
+
+test('callbacks', async t => {
+  class TestConductor {
+    initialize() {}
+    kill() {}
+    run (instanceConfigs, bridgeConfigs, fn) {
+      fn('not very good test')
+    }
+  }
+  const Diorama = DioramaClass(TestConductor)
+  const dna = Diorama.dna("path", "name")
+  const diorama = new Diorama({
+    instances: {
+      alice: dna,
+      bob: dna
+    },
+    bridges: [
+      Diorama.bridge('bridge', 'alice', 'bob')
+    ],
+    debugLog: false,
+    externalConductors: true,
+    callbacksPort: 4242
+  })
+
+  http.get('http://0.0.0.0:4242/?name=alice&url=http://0.0.0.0:3000')
 
   await diorama.run()
 
