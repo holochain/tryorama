@@ -38,6 +38,7 @@ export const DioramaClass = Conductor => class Diorama {
   waiter: Waiter
   startNonce: number
   callbacks: Callbacks | void
+  externalConductors: void | any
 
   constructor ({
     bridges = [],
@@ -73,7 +74,10 @@ export const DioramaClass = Conductor => class Diorama {
     this.refreshWaiter()
 
     if(externalConductors) {
-        this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (params) => console.log('Got params:', params))
+      this.externalConductors = {}
+        this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor) => {
+            this.externalConductors[conductor.name] = this._newConductor(conductor)
+        })
     }
   }
 
@@ -88,9 +92,9 @@ export const DioramaClass = Conductor => class Diorama {
     }
   }
 
-  _newConductor (): Conductor {
+  _newConductor (externalConductor): Conductor {
     this.startNonce += MAX_RUNS_PER_CONDUCTOR * 2 // just to be safe
-    return new Conductor(connect, this.startNonce, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
+    return new Conductor(connect, this.startNonce, externalConductor, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
   }
 
   getConductor = async (): Promise<Conductor> => {
