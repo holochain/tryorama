@@ -109,7 +109,7 @@ export class Conductor {
       console.log(this.instanceMap)
       const instances = Object.keys(this.instanceMap).map(key => this.instanceMap[key])
       const instance = instances.find(instance => instance.id == msg.instance_id)
-      if(instance != undefined) {
+      if(instance) {
         instance.signals.push(msg.signal)
       }
     })
