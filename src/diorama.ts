@@ -67,9 +67,9 @@ export const DioramaClass = Conductor => class Diorama {
       const ix = msg.instance_id.lastIndexOf('-')
       const node = msg.instance_id.substring(0, ix)
       const signal = stringifySignal(msg.signal)
-      const instanceConfig = this.instanceConfigs.find(c => c.id === msg.instance_id)
+      const instanceConfig = this.instanceConfigs.find(c => c.id === node)
       if (!instanceConfig) {
-        throw new Error("Got a signal from a not-configured instance!")
+        throw new Error(`Got a signal from a not-configured instance! id: ${node}`)
       }
       const dnaId = instanceConfig.dna.id
       this.waiter.handleObservation({node, signal, dna: dnaId})
@@ -173,7 +173,8 @@ export const DioramaClass = Conductor => class Diorama {
         dna: i.dna.id,
       }))
       .groupBy(n => n.dna)
-      .mapValues(ns => new FullSyncNetwork(ns))
+      .mapValues(ns => new FullSyncNetwork(ns.map(n => n.id)))
+      .value()
     this.waiter = new Waiter(networkModels)
   })
 
