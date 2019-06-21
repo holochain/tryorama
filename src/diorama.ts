@@ -113,7 +113,7 @@ export const DioramaClass = Conductor => class Diorama {
   /**
    * More conveniently create config for a DNA
    */
-  static dna = (path, id = `${path}`, opts) => ({ path, id, ...opts })
+  static dna = (path, id = `${path}`, opts = {}) => ({ path, id, ...opts })
 
   /**
    * More conveniently create config for a bridge
