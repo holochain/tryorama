@@ -1,8 +1,10 @@
 const tape = require('tape')
 const colors = require('colors/safe')
 
+import * as _ from 'lodash'
+
 import {connect} from '@holochain/hc-web-client'
-import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/hachiko'
+import {Waiter, FullSyncNetwork, NodeId, NetworkMap, Signal} from '@holochain/hachiko'
 import {InstanceConfig, BridgeConfig} from './types'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
@@ -65,7 +67,12 @@ export const DioramaClass = Conductor => class Diorama {
       const ix = msg.instance_id.lastIndexOf('-')
       const node = msg.instance_id.substring(0, ix)
       const signal = stringifySignal(msg.signal)
-      this.waiter.handleObservation({node, signal})
+      const instanceConfig = this.instanceConfigs.find(c => c.id === msg.instance_id)
+      if (!instanceConfig) {
+        throw new Error("Got a signal from a not-configured instance!")
+      }
+      const dnaId = instanceConfig.dna.id
+      this.waiter.handleObservation({node, signal, dna: dnaId})
     }
   }
 
@@ -160,9 +167,14 @@ export const DioramaClass = Conductor => class Diorama {
       resolve()
     }
   }).then(() => {
-    const nodeIds = this.instanceConfigs.map(i => i.id)
-    const networkModel = new FullSyncNetwork(nodeIds)
-    this.waiter = new Waiter(networkModel)
+    const networkModels: NetworkMap = _.chain(this.instanceConfigs)
+      .map(i => ({
+        id: i.id,
+        dna: i.dna.id,
+      }))
+      .groupBy(n => n.dna)
+      .mapValues(ns => new FullSyncNetwork(ns))
+    this.waiter = new Waiter(networkModels)
   })
 
   run = async () => {
