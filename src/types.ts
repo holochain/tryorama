@@ -18,6 +18,7 @@ export type AgentConfig = {
 export type DnaConfig = {
   id: string,
   path: string,
+  uuid?: string,
 }
 
 export type InstanceConfig = {

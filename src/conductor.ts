@@ -162,7 +162,7 @@ export class Conductor {
     const dnaConfig = JSON.parse(JSON.stringify(instanceConfig.dna))  // poor man's deep clone
     dnaConfig.id += '-' + this.dnaNonce
     dnaConfig.copy = true
-    dnaConfig.uuid = 'uuid-' + this.dnaNonce
+    dnaConfig.uuid = `${dnaConfig.uuid || 'uuid'}-${this.dnaNonce}`
 
     if (!this.dnaIds.has(dnaConfig.id)) {
       const installDnaResponse = await this.callAdmin('admin/dna/install_from_file')(dnaConfig)
