@@ -1,11 +1,9 @@
 const tape = require('tape')
 const colors = require('colors/safe')
 
-import * as _ from 'lodash'
-
 import {connect} from '@holochain/hc-web-client'
 import {Waiter, FullSyncNetwork, NodeId, NetworkMap, Signal} from '@holochain/hachiko'
-import {InstanceConfig, BridgeConfig, ConductorConfig} from './types'
+import * as T from './types'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
 import {simpleExecutor} from './executors'
@@ -28,7 +26,7 @@ type DioramaConstructorParams = {
 }
 
 export const DioramaClass = Conductor => class Diorama {
-  conductorConfigs: {[name: string]: ConductorConfig}
+  conductorConfigs: {[name: string]: T.ConductorConfig}
   conductorPool: Array<{conductor: Conductor, runs: number}>
   scenarios: Array<any>
   middleware: any | void
@@ -39,25 +37,24 @@ export const DioramaClass = Conductor => class Diorama {
   callbacks: Callbacks | void
   conductors: void | any
   haveAllConductors: Promise<void>
+  _resolveHaveAllConductors: any
 
 
   constructor ({
-    conductorConfigs = {},
+    conductors = {},
     middleware = identity,
     executor = simpleExecutor,
     debugLog = false,
-    externalConductors = false,
     callbacksAddress = '0.0.0.0',
     callbacksPort = 9999,
   }: DioramaConstructorParams) {
 
-    this.conductorConfigs = conductorConfigs
+    this.conductorConfigs = conductors
     this.middleware = middleware
     this.executor = executor
     this.conductorOpts = {debugLog}
 
     this.scenarios = []
-    this.instanceConfigs = []
     this.conductorPool = []
     this.startNonce = 1
 
@@ -73,22 +70,16 @@ export const DioramaClass = Conductor => class Diorama {
 
     this.refreshWaiter()
 
-    this.haveAllConductors = new Promise
-
-    const checkHaveAllConductors = () => {
-      for (const conductorName of Object.keys(this.conductorConfigs)) {
-        if(!this.conductors[conductorName]) {
-          return false
-        }
-      }
-      return true
-    }
+    this.haveAllConductors = new Promise(resolve => {
+      this._resolveHaveAllConductors = resolve
+    })
 
     this.conductors = {}
     this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor) => {
         this.conductors[conductor.name] = this._newConductor(conductor)
-        if(this.checkHaveAllConductors()) {
-          this.haveAllConductors.resolve()
+        const hasAll = Object.keys(this.conductorConfigs).every(name => name in this.conductors)
+        if (hasAll) {
+          this._resolveHaveAllConductors()
         }
     })
   }
@@ -257,7 +248,7 @@ export const DioramaClass = Conductor => class Diorama {
 
 export const Diorama = DioramaClass(Conductor)
 
-const makeInstanceConfig = (agentId, dnaConfig) => {
+const makeInstanceConfig = (agentId, dnaConfig): T.InstanceConfig => {
   return {
     id: agentId,
     agent: {

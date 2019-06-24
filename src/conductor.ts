@@ -9,7 +9,7 @@ const colors = require('colors/safe')
 
 import {Signal} from '@holochain/hachiko'
 import {promiseSerial, delay} from './util'
-import {InstanceConfig} from './types'
+import * as T from './types'
 import {DnaInstance} from './instance'
 import logger from './logger'
 
@@ -46,14 +46,14 @@ export class Conductor {
   dnaNonce: number
   onSignal: (any) => void
 
-  runningInstances: Array<InstanceConfig>
+  runningInstances: Array<T.InstanceConfig>
   callZome: any
   testPort: number
   adminPort: number
 
   isInitialized: boolean
 
-  constructor (connect, startNonce, externalConductor, opts: ConductorOpts) {
+  constructor (connect, startNonce, externalConductor: T.ExternalConductor, opts: ConductorOpts) {
     this.webClientConnect = connect
     this.agentIds = new Set()
     this.dnaIds = new Set()
@@ -178,12 +178,12 @@ export class Conductor {
   /**
    * Calls the conductor RPC functions to initialize it according to the instances
    */
-  setupInstances = async (instanceConfigs) => {
+  setupInstances = async (instanceConfigs: Array<T.InstanceConfig>) => {
     if (this.isRunning()) {
       throw "Attempting to run a new test while another test has not yet been torn down"
     }
     for (const instanceConfig of instanceConfigs) {
-      const instance = JSON.parse(JSON.stringify(instanceConfig))
+      const instance = _.cloneDeep(instanceConfig)
       const nonNoncifiedInstanceId = instance.id
       instance.id += '-' + this.dnaNonce
       if (this.instanceMap[nonNoncifiedInstanceId]) {
@@ -251,13 +251,13 @@ export class Conductor {
     return bridge
   }
 
-  setupBridges = async (bridgeConfigs) => {
+  setupBridges = async (bridgeConfigs: Array<T.BridgeConfig>) => {
     for (const bridgeConfig of bridgeConfigs) {
       await this.callAdmin('admin/bridge/add')(this.noncifyBridgeConfig(bridgeConfig))
     }
   }
 
-  startInstances = async (instanceConfigs) => {
+  startInstances = async (instanceConfigs: Array<T.InstanceConfig>) => {
     for (const instanceConfig of instanceConfigs) {
       const instance = JSON.parse(JSON.stringify(instanceConfig))
       instance.id += '-' + this.dnaNonce
@@ -265,14 +265,14 @@ export class Conductor {
     }
   }
 
-  teardownBridges = async (bridgeConfigs) => {
+  teardownBridges = async (bridgeConfigs: Array<T.BridgeConfig>) => {
     for (const bridgeConfig of bridgeConfigs) {
       await this.callAdmin('admin/bridge/remove')(this.noncifyBridgeConfig(bridgeConfig))
     }
   }
 
-  run = async (instanceConfigs, bridgeConfigs, fn) => {
-    await this.prepareRun(instanceConfigs, bridgeConfigs)
+  run = async (config: T.ConductorConfig, fn) => {
+    await this.prepareRun(config)
 
     try {
       await fn(this.instanceMap)
@@ -280,12 +280,12 @@ export class Conductor {
       this.failTest(e)
     }
 
-    await this.cleanupRun(bridgeConfigs)
+    await this.cleanupRun(config)
 
     this.dnaNonce += 1
   }
 
-  prepareRun = async (instanceConfigs, bridgeConfigs) => {
+  prepareRun = async ({instances, bridges}: T.ConductorConfig) => {
     logger.debug('')
     logger.debug('')
     logger.debug("---------------------------------------------------------")
@@ -299,9 +299,9 @@ export class Conductor {
     try {
       await this.setupNewInterface()
       await this.connectTest()
-      await this.setupInstances(instanceConfigs)
-      await this.setupBridges(bridgeConfigs)
-      await this.startInstances(instanceConfigs)
+      await this.setupInstances(instances)
+      await this.setupBridges(bridges)
+      await this.startInstances(instances)
       await this.connectSignals()
     } catch (e) {
       this.abort(e)
@@ -309,9 +309,9 @@ export class Conductor {
     logger.debug("Instances all set up, running test...")
   }
 
-  cleanupRun = async (bridgeConfigs) => {
+  cleanupRun = async ({bridges}: T.ConductorConfig) => {
     try {
-      await this.teardownBridges(bridgeConfigs)
+      await this.teardownBridges(bridges)
       await this.teardownInstances()
       // await this.cleanupStorage()
     } catch (e) {
