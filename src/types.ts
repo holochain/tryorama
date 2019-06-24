@@ -5,6 +5,10 @@ import {DnaInstance} from './instance'
 export type ScenarioFnCustom = (s: object, ins: {[id: string]: any}) => Promise<any>
 export type ScenarioFn = (s: ScenarioApi, ins: {[id: string]: DnaInstance}) => Promise<any>
 
+export type ConductorConfig = {
+  instances: {[id: string]: InstanceConfig},
+  bridges: Array<BridgeConfig>,
+}
 
 export type AgentConfig = {
   id: string,

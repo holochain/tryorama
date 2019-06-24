@@ -3,7 +3,7 @@ const colors = require('colors/safe')
 
 import {connect} from '@holochain/hc-web-client'
 import {Waiter, FullSyncNetwork, NodeId, Signal} from '@holochain/hachiko'
-import {InstanceConfig, BridgeConfig} from './types'
+import {InstanceConfig, BridgeConfig, ConductorConfig} from './types'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
 import {simpleExecutor} from './executors'
@@ -17,19 +17,16 @@ const MIN_POOL_SIZE = 1
 /////////////////////////////////////////////////////////////
 
 type DioramaConstructorParams = {
-  instances?: any,
-  bridges?: Array<BridgeConfig>,
+  conductors?: any,
   middleware?: any,
   executor?: any,
   debugLog?: boolean,
-  externalConductors?: boolean
   callbacksAddress?: string,
   callbacksPort?: number,
 }
 
 export const DioramaClass = Conductor => class Diorama {
-  instanceConfigs: Array<InstanceConfig>
-  bridgeConfigs: Array<BridgeConfig>
+  conductorConfigs: {[name: string]: ConductorConfig}
   conductorPool: Array<{conductor: Conductor, runs: number}>
   scenarios: Array<any>
   middleware: any | void
@@ -38,11 +35,11 @@ export const DioramaClass = Conductor => class Diorama {
   waiter: Waiter
   startNonce: number
   callbacks: Callbacks | void
-  externalConductors: void | any
+  conductors: void | any
+
 
   constructor ({
-    bridges = [],
-    instances = {},
+    conductorConfigs = {},
     middleware = identity,
     executor = simpleExecutor,
     debugLog = false,
@@ -51,7 +48,7 @@ export const DioramaClass = Conductor => class Diorama {
     callbacksPort = 9999,
   }: DioramaConstructorParams) {
 
-    this.bridgeConfigs = bridges
+    this.conductorConfigs = conductorConfigs
     this.middleware = middleware
     this.executor = executor
     this.conductorOpts = {debugLog}
