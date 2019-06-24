@@ -36,6 +36,7 @@ export const DioramaClass = Conductor => class Diorama {
   startNonce: number
   callbacks: Callbacks | void
   conductors: void | any
+  haveAllConductors: Promise<void>
 
 
   constructor ({
@@ -70,12 +71,24 @@ export const DioramaClass = Conductor => class Diorama {
 
     this.refreshWaiter()
 
-    if(externalConductors) {
-      this.externalConductors = {}
-        this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor) => {
-            this.externalConductors[conductor.name] = this._newConductor(conductor)
-        })
+    this.haveAllConductors = new Promise
+
+    const checkHaveAllConductors = () => {
+      for (const conductorName of Object.keys(this.conductorConfigs)) {
+        if(!this.conductors[conductorName]) {
+          return false
+        }
+      }
+      return true
     }
+
+    this.conductors = {}
+    this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor) => {
+        this.conductors[conductor.name] = this._newConductor(conductor)
+        if(this.checkHaveAllConductors()) {
+          this.haveAllConductors.resolve()
+        }
+    })
   }
 
   onSignal (msg: {signal, instance_id: string}) {
@@ -196,6 +209,8 @@ export const DioramaClass = Conductor => class Diorama {
   })
 
   run = async () => {
+    await this.haveAllConductors
+
     const onlyTests = this.scenarios.filter(([desc, execute, only]) => only)
 
     if (onlyTests.length > 0) {
