@@ -4,6 +4,7 @@ import * as test from 'tape'
 
 test("end to end, sort of", async t => {
   const diorama = new Diorama({
+    conductors: {},
     executor: simpleExecutor
   })
   diorama.runScenario = async scenario => scenario('s', 'ins')
