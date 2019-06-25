@@ -16,7 +16,7 @@ export type ConductorConfig = {
 }
 
 export type ConductorConfigShorthand = {
-  instances: {[id: string]: InstanceConfigShorthand},
+  instances: {[id: string]: DnaConfig},
   bridges: Array<BridgeConfig>,
 }
 

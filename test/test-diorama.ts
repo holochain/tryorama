@@ -40,19 +40,38 @@ test('a', async t => {
   const Diorama = DioramaClass(TestConductor)
 
   const dna = Diorama.dna("path", "name")
+
   const diorama = new Diorama({
-    instances: {
-      alice: dna,
-      bob: dna
+    conductors: {
+      alice: {
+        instances: {
+          dpki: dna,
+          holofuel: dna
+        },
+        bridges: [
+          Diorama.bridge('bridge', 'holofuel', 'dpki')
+        ],
+      },
+
+      bob: {
+        instances: {
+          dpki: dna,
+          holofuel: dna
+        },
+        bridges: [
+          Diorama.bridge('bridge', 'holofuel', 'dpki')
+        ],
+      },
     },
-    bridges: [
-      Diorama.bridge('bridge', 'alice', 'bob')
-    ],
+
     debugLog: false,
   })
 
-  t.equal(diorama.instanceConfigs.length, 2)
-  t.equal(diorama.bridgeConfigs.length, 1)
+  t.equal(Object.keys(diorama.conductorConfigs).length, 2)
+  t.equal(diorama.conductorConfigs.alice.instances.length, 2)
+  t.equal(diorama.conductorConfigs.alice.bridges.length, 1)
+  t.equal(diorama.conductorConfigs.bob.instances.length, 2)
+  t.equal(diorama.conductorConfigs.bob.bridges.length, 1)
 
   diorama.registerScenario('test scenario 1', async (s, notInstances) => {
     t.ok(s.consistent)
@@ -77,15 +96,18 @@ test('callbacks', async t => {
   const Diorama = DioramaClass(TestConductor)
   const dna = Diorama.dna("path", "name")
   const diorama = new Diorama({
-    instances: {
-      alice: dna,
-      bob: dna
+    conductors: {
+      alice: {
+        instances: {
+          dpki: dna,
+          holofuel: dna
+        },
+        bridges: [
+          Diorama.bridge('bridge', 'holofuel', 'dpki')
+        ],
+      },
     },
-    bridges: [
-      Diorama.bridge('bridge', 'alice', 'bob')
-    ],
     debugLog: false,
-    externalConductors: true,
     callbacksPort: 4242
   })
 
