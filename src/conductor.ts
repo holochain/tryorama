@@ -336,6 +336,7 @@ export class Conductor {
     }
     logger.debug("Test done, tearing down instances...")
     logger.debug("Storage cleared...")
+    this.dnaNonce += 1
   }
 
   spawn () {
