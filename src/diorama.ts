@@ -83,7 +83,6 @@ export const DioramaClass = Conductor => class Diorama {
     })
   }
 
-  // TODO++ move into conductor
   onSignal ({conductorName, instanceId, signal}) {
 
     const instanceConfig = this.conductorConfigs[conductorName].instances.find(c => c.id === instanceId)
@@ -186,13 +185,12 @@ export const DioramaClass = Conductor => class Diorama {
     }
   }).then(() => {
     const networkModels: NetworkMap = _.chain(this.conductorConfigs)
-      .values()
-      .map(c => c.instances)
+      .toPairs()
+      .map(([name, c]) => c.instances.map(i => ({
+        id: `${name}::${i.id}`,
+        dna: i.dna.id
+      })))
       .flatten()
-      .map(i => ({
-        id: i.id,
-        dna: i.dna.id,
-      }))
       .groupBy(n => n.dna)
       .mapValues(ns => new FullSyncNetwork(ns.map(n => n.id)))
       .value()
