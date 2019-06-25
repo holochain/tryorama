@@ -10,7 +10,7 @@ export type ExternalConductor = {
 }
 
 export type ConductorConfig = {
-  instances: {[id: string]: InstanceConfig},
+  instances: Array<InstanceConfig>,
   bridges: Array<BridgeConfig>,
 }
 
@@ -43,3 +43,6 @@ export type BridgeConfig = {
   caller_id: string
   callee_id: string
 }
+
+export type ObjectN<V> = {[name: number]: V}
+export type ObjectS<V> = {[name: string]: V}

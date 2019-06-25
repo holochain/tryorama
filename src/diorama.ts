@@ -1,11 +1,16 @@
 const tape = require('tape')
 const colors = require('colors/safe')
 
+import * as _ from 'lodash'
+
 import {connect} from '@holochain/hc-web-client'
 import {Waiter, FullSyncNetwork, NodeId, NetworkMap, Signal} from '@holochain/hachiko'
+
 import * as T from './types'
+import {ObjectS} from './types'
 import {Conductor} from './conductor'
 import {ScenarioApi} from './api'
+import {ConductorMap, InstanceMap} from './instance'
 import {simpleExecutor} from './executors'
 import {identity} from './util'
 import logger from './logger'
@@ -17,7 +22,7 @@ const MIN_POOL_SIZE = 1
 /////////////////////////////////////////////////////////////
 
 type DioramaConstructorParams = {
-  conductors?: any,
+  conductors: ObjectS<T.ConductorConfigShorthand>,
   middleware?: any,
   executor?: any,
   debugLog?: boolean,
@@ -26,7 +31,7 @@ type DioramaConstructorParams = {
 }
 
 export const DioramaClass = Conductor => class Diorama {
-  conductorConfigs: {[name: string]: T.ConductorConfig}
+  conductorConfigs: ObjectS<T.ConductorConfig>
   conductorPool: Array<{conductor: Conductor, runs: number}>
   scenarios: Array<any>
   middleware: any | void
@@ -35,13 +40,13 @@ export const DioramaClass = Conductor => class Diorama {
   waiter: Waiter
   startNonce: number
   callbacks: Callbacks | void
-  conductors: void | any
+  conductors: Array<Conductor>
   haveAllConductors: Promise<void>
   _resolveHaveAllConductors: any
 
 
   constructor ({
-    conductors = {},
+    conductors,
     middleware = identity,
     executor = simpleExecutor,
     debugLog = false,
@@ -49,7 +54,7 @@ export const DioramaClass = Conductor => class Diorama {
     callbacksPort = 9999,
   }: DioramaConstructorParams) {
 
-    this.conductorConfigs = conductors
+    this.conductorConfigs = {}
     this.middleware = middleware
     this.executor = executor
     this.conductorOpts = {debugLog}
@@ -58,13 +63,7 @@ export const DioramaClass = Conductor => class Diorama {
     this.conductorPool = []
     this.startNonce = 1
 
-    Object.entries(instances).forEach(([agentId, dnaConfig]) => {
-      logger.debug('agentId', agentId)
-      logger.debug('dnaConfig', dnaConfig)
-      const instanceConfig = makeInstanceConfig(agentId, dnaConfig)
-      const id = instanceConfig.id
-      this.instanceConfigs.push(instanceConfig)
-    })
+    this.conductorConfigs = desugarConductorConfig(conductors)
 
     this.registerScenario.only = this.registerScenarioOnly.bind(this)
 
@@ -74,9 +73,8 @@ export const DioramaClass = Conductor => class Diorama {
       this._resolveHaveAllConductors = resolve
     })
 
-    this.conductors = {}
-    this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor) => {
-        this.conductors[conductor.name] = this._newConductor(conductor)
+    this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor: T.ExternalConductor) => {
+        this.conductors.push(this._newConductor(conductor))
         const hasAll = Object.keys(this.conductorConfigs).every(name => name in this.conductors)
         if (hasAll) {
           this._resolveHaveAllConductors()
@@ -84,50 +82,26 @@ export const DioramaClass = Conductor => class Diorama {
     })
   }
 
+  // TODO++ move into conductor
   onSignal (msg: {signal, instance_id: string}) {
-    if (msg.signal.signal_type === 'Consistency') {
-      // XXX, NB, this '-' magic is because of the nonced instance IDs
-      // TODO: deal with this more reasonably
-      const ix = msg.instance_id.lastIndexOf('-')
-      const node = msg.instance_id.substring(0, ix)
-      const signal = stringifySignal(msg.signal)
-      const instanceConfig = this.instanceConfigs.find(c => c.id === node)
-      if (!instanceConfig) {
-        throw new Error(`Got a signal from a not-configured instance! id: ${node}`)
-      }
-      const dnaId = instanceConfig.dna.id
-      this.waiter.handleObservation({node, signal, dna: dnaId})
-    }
+  //   if (msg.signal.signal_type === 'Consistency') {
+  //     // XXX, NB, this '-' magic is because of the nonced instance IDs
+  //     // TODO: deal with this more reasonably
+  //     const ix = msg.instance_id.lastIndexOf('-')
+  //     const node = msg.instance_id.substring(0, ix)
+  //     const signal = stringifySignal(msg.signal)
+  //     const instanceConfig = this.instanceConfigs.find(c => c.id === node)
+  //     if (!instanceConfig) {
+  //       throw new Error(`Got a signal from a not-configured instance! id: ${node}`)
+  //     }
+  //     const dnaId = instanceConfig.dna.id
+  //     this.waiter.handleObservation({node, signal, dna: dnaId})
+  //   }
   }
 
   _newConductor (externalConductor): Conductor {
     this.startNonce += MAX_RUNS_PER_CONDUCTOR * 2 // just to be safe
     return new Conductor(connect, this.startNonce, externalConductor, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
-  }
-
-  getConductor = async (): Promise<Conductor> => {
-    logger.info("conductor pool size: %s", this.conductorPool.length)
-    this.conductorPool = this.conductorPool.filter(c => {
-      const done = c.runs >= MAX_RUNS_PER_CONDUCTOR
-      if (done) {
-        logger.info("killing conductor after %s runs", c.runs)
-        c.conductor.kill()
-      }
-      return !done
-    })
-
-    while (this.conductorPool.length < MIN_POOL_SIZE) {
-      const newConductor = this._newConductor()
-      await newConductor.initialize()
-      this.conductorPool.push({
-        conductor: newConductor,
-        runs: 0
-      })
-    }
-
-    const item = this.currentConductor()
-    item.runs += 1
-    return item.conductor
   }
 
   currentConductor () {
@@ -169,28 +143,36 @@ export const DioramaClass = Conductor => class Diorama {
     await this.refreshWaiter()
     const modifiedScenario = this.middleware(scenario)
 
-    let conductorMap = {}
+    let conductorMap: ConductorMap = {}
 
     try {
-      for (const [name, conductor] of Object.entries(this.conductors)) {
-        let config = this.conductorConfigs[name]
-        conductor.prepareRun(config.instanceConfigs, config.bridgeConfigs)
+      let i = 0
+      for (const [name, config] of Object.entries(this.conductorConfigs)) {
+        let conductor = this.conductors[i++]
+        conductor.prepareRun(config)
         conductorMap[name] = conductor.instanceMap
       }
     } catch (e) {
-      logger.error("Error during conductor initialization:")
+      logger.error("Error during test instance setup:")
       logger.error(e)
     }
 
     try {
       const api = new ScenarioApi(this.waiter)
-      modifiedScenario(api, instanceMap)
+      modifiedScenario(api, conductorMap)
     } catch (e) {
       this.failTest(e)
     }
 
-    for (const conductor of this.conductors) {
-      conductor.cleanupRun()
+    try {
+      let i = 0
+      for (const [name, config] of Object.entries(this.conductorConfigs)) {
+        let conductor = this.conductors[i++]
+        conductor.cleanupRun(config)
+      }
+    } catch (e) {
+      logger.error("Error during test instance cleanup:")
+      logger.error(e)
     }
   }
 
@@ -207,7 +189,10 @@ export const DioramaClass = Conductor => class Diorama {
       resolve()
     }
   }).then(() => {
-    const networkModels: NetworkMap = _.chain(this.instanceConfigs)
+    const networkModels: NetworkMap = _.chain(this.conductorConfigs)
+      .values()
+      .map(c => c.instances)
+      .flatten()
       .map(i => ({
         id: i.id,
         dna: i.dna.id,
@@ -247,6 +232,20 @@ export const DioramaClass = Conductor => class Diorama {
 }
 
 export const Diorama = DioramaClass(Conductor)
+
+const desugarConductorConfig = (config: ObjectS<T.ConductorConfigShorthand>): ObjectS<T.ConductorConfig> => {
+  const newConfig = {}
+  Object.entries(config).forEach(([conductorName, {instances, bridges}]) => {
+    const instanceConfigs = Object.entries(instances).map(([agentId, dnaConfig]) => {
+      return makeInstanceConfig(agentId, dnaConfig)
+    })
+    newConfig[conductorName] = {
+      instances: instanceConfigs,
+      bridges: bridges,
+    }
+  })
+  return newConfig
+}
 
 const makeInstanceConfig = (agentId, dnaConfig): T.InstanceConfig => {
   return {

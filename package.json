@@ -1,5 +1,5 @@
 {
-  "name": "@holochain/diorama",
+  "name": "@holochain/triorama",
   "version": "0.2.0",
   "description": "Javascript module for orchestrating single and multi-agent scenario tests against DNAs running in the Holochain conductor",
   "main": "lib/index.js",

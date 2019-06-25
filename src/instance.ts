@@ -1,6 +1,7 @@
 import * as colors from 'colors'
 
 import logger from './logger'
+import * as T from './types'
 
 export class DnaInstance {
 
@@ -30,3 +31,6 @@ export class DnaInstance {
     }
   }
 }
+
+export type InstanceMap = T.ObjectS<DnaInstance>
+export type ConductorMap = T.ObjectS<InstanceMap>

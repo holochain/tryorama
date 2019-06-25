@@ -7,6 +7,8 @@ const getPort = require('get-port')
 
 const colors = require('colors/safe')
 
+const _ = require('lodash')
+
 import {Signal} from '@holochain/hachiko'
 import {promiseSerial, delay} from './util'
 import * as T from './types'
