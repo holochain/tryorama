@@ -205,6 +205,7 @@ export const DioramaClass = Conductor => class Diorama {
     logger.info("Waiting for all conductors to connect.")
     logger.info("Conductors in config: "+Object.keys(this.conductorConfigs))
     await this.haveAllConductors
+    logger.info("We have all conductors we need. Starting scenarios.")
 
     const onlyTests = this.scenarios.filter(([desc, execute, only]) => only)
 

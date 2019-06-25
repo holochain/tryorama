@@ -67,6 +67,7 @@ export class Conductor {
     this.dnaNonce = 1
     this.onSignal = opts.onSignal
     this.name = externalConductor.name
+    logger.info("externalConductor:", externalConductor)
     this._connectAdmin(externalConductor.url)
     this.isInitialized = true
   }
@@ -83,6 +84,7 @@ export class Conductor {
   }
 
   _connectAdmin = async (url) => {
+    logger.info("Trying to connect to conductor: "+url)
     const { call, onSignal } = await this.webClientConnect({url})
     this.callAdmin = method => async params => {
       logger.debug(`${colors.yellow.underline("calling")} %s`, method)
