@@ -14,7 +14,7 @@ export const tapeExecutor = tape => (run: Runner, f, desc) => new Promise((resol
     reject("tapeMiddleware requires scenario functions to take 3 arguments, please check your scenario definitions.")
   }
   tape(desc, t => {
-    run((s, ins) => f(s, t, ins))
+    run((s, conductors) => f(s, t, conductors))
     .catch((err) => {
       try {
         // Include stack trace from actual test function, but all on one line.

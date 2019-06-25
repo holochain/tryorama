@@ -146,7 +146,9 @@ export const DioramaClass = Conductor => class Diorama {
       let i = 0
       for (const [name, config] of Object.entries(this.conductorConfigs)) {
         let conductor = this.conductors[i++]
+        logger.debug('preparing run...')
         await conductor.prepareRun(config)
+        logger.debug('...run prepared.')
         conductorMap[name] = conductor.instanceMap
       }
     } catch (e) {
@@ -158,7 +160,9 @@ export const DioramaClass = Conductor => class Diorama {
 
     try {
       const api = new ScenarioApi(this.waiter)
-      modifiedScenario(api, conductorMap)
+      logger.debug('running scenario...')
+      await modifiedScenario(api, conductorMap)
+      logger.debug('...scenario ran')
     } catch (e) {
       this.failTest(e)
     }
@@ -167,7 +171,9 @@ export const DioramaClass = Conductor => class Diorama {
       let i = 0
       for (const [name, config] of Object.entries(this.conductorConfigs)) {
         let conductor = this.conductors[i++]
-        conductor.cleanupRun(config)
+        logger.debug('cleaning up run...')
+        await conductor.cleanupRun(config)
+        logger.debug('...cleaned up')
       }
     } catch (e) {
       logger.error("Error during test instance cleanup:")
