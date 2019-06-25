@@ -7,6 +7,7 @@ export type ScenarioFn = (s: ScenarioApi, ins: {[id: string]: DnaInstance}) => P
 
 export type ExternalConductor = {
   url: string,
+  name: string,
 }
 
 export type ConductorConfig = {
