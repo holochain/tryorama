@@ -54,6 +54,7 @@ export const DioramaClass = Conductor => class Diorama {
     callbacksPort = 9999,
   }: DioramaConstructorParams) {
 
+    this.conductors = []
     this.conductorConfigs = {}
     this.middleware = middleware
     this.executor = executor
