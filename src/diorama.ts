@@ -74,6 +74,7 @@ export const DioramaClass = Conductor => class Diorama {
     })
 
     this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor: T.ExternalConductor) => {
+        logger.info("Conductor connected: " + conductor.name)
         this.conductors.push(this._newConductor(conductor))
         const hasAll = Object.keys(this.conductorConfigs).every(name => name in this.conductors)
         if (hasAll) {
@@ -140,6 +141,8 @@ export const DioramaClass = Conductor => class Diorama {
   }
 
   runScenario = async scenario => {
+    logger.info("Waiting for for conductors to connect.")
+    logger.info("Conductors in config: "+Object.keys(this.conductorConfigs))
     await this.refreshWaiter()
     const modifiedScenario = this.middleware(scenario)
 
