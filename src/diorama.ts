@@ -233,6 +233,9 @@ export const DioramaClass = Conductor => class Diorama {
 
 export const Diorama = DioramaClass(Conductor)
 
+/**
+ * Go from "shorthand" config to "real" config
+ */
 const desugarConductorConfig = (config: ObjectS<T.ConductorConfigShorthand>): ObjectS<T.ConductorConfig> => {
   const newConfig = {}
   Object.entries(config).forEach(([conductorName, {instances, bridges}]) => {
