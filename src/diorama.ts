@@ -141,8 +141,6 @@ export const DioramaClass = Conductor => class Diorama {
   }
 
   runScenario = async scenario => {
-    logger.info("Waiting for for conductors to connect.")
-    logger.info("Conductors in config: "+Object.keys(this.conductorConfigs))
     await this.refreshWaiter()
     const modifiedScenario = this.middleware(scenario)
 
@@ -207,6 +205,8 @@ export const DioramaClass = Conductor => class Diorama {
   })
 
   run = async () => {
+    logger.info("Waiting for all conductors to connect.")
+    logger.info("Conductors in config: "+Object.keys(this.conductorConfigs))
     await this.haveAllConductors
 
     const onlyTests = this.scenarios.filter(([desc, execute, only]) => only)
