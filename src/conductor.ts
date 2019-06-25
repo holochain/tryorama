@@ -363,7 +363,7 @@ export class Conductor {
   }
 
   kill () {
-    this.handle.kill()
+    logger.info("TODO: kill?")
   }
 
   abort (msg) {
