@@ -43,6 +43,7 @@ export class Conductor {
   dnaIds: Set<string>
   instanceMap: {[name: string]: DnaInstance}
   opts: any
+  name: string
   callAdmin: any
   handle: any
   dnaNonce: number
@@ -55,7 +56,7 @@ export class Conductor {
 
   isInitialized: boolean
 
-  constructor (connect, startNonce, externalConductor: T.ExternalConductor, opts: ConductorOpts) {
+  constructor (connect, externalConductor: T.ExternalConductor, opts: ConductorOpts) {
     this.webClientConnect = connect
     this.agentIds = new Set()
     this.dnaIds = new Set()
@@ -63,13 +64,11 @@ export class Conductor {
     this.opts = opts
     this.handle = null
     this.runningInstances = []
-    this.dnaNonce = startNonce
+    this.dnaNonce = 1
     this.onSignal = opts.onSignal
-
-    if(externalConductor) {
-      this._connectAdmin(externalConductor.url)
-      this.isInitialized = true
-    }
+    this.name = externalConductor.name
+    this._connectAdmin(externalConductor.url)
+    this.isInitialized = true
   }
 
   isRunning = () => {
@@ -93,7 +92,23 @@ export class Conductor {
       return result
     }
 
-    onSignal(this.onSignal)
+    onSignal(({signal, instance_id}) => {
+      if (signal.signal_type !== 'Consistency') {
+        return
+      }
+
+      // take off the nonced suffix
+      // XXX, NB, this '-' magic is because of the nonced instance IDs
+      // TODO: deal with this more reasonably
+      const ix = instance_id.lastIndexOf('-')
+      const instanceId = instance_id.substring(0, ix)
+
+      this.onSignal({
+        conductorName: this.name,
+        instanceId: instanceId,
+        signal
+      })
+    })
   }
 
   connectTest = async () => {

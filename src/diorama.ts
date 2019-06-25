@@ -84,20 +84,15 @@ export const DioramaClass = Conductor => class Diorama {
   }
 
   // TODO++ move into conductor
-  onSignal (msg: {signal, instance_id: string}) {
-  //   if (msg.signal.signal_type === 'Consistency') {
-  //     // XXX, NB, this '-' magic is because of the nonced instance IDs
-  //     // TODO: deal with this more reasonably
-  //     const ix = msg.instance_id.lastIndexOf('-')
-  //     const node = msg.instance_id.substring(0, ix)
-  //     const signal = stringifySignal(msg.signal)
-  //     const instanceConfig = this.instanceConfigs.find(c => c.id === node)
-  //     if (!instanceConfig) {
-  //       throw new Error(`Got a signal from a not-configured instance! id: ${node}`)
-  //     }
-  //     const dnaId = instanceConfig.dna.id
-  //     this.waiter.handleObservation({node, signal, dna: dnaId})
-  //   }
+  onSignal ({conductorName, instanceId, signal}) {
+
+    const instanceConfig = this.conductorConfigs[conductorName].instances.find(c => c.id === instanceId)
+    if (!instanceConfig) {
+      throw new Error(`Got a signal from a not-configured instance! conductor: ${conductorName}, instance: ${instanceId}`)
+    }
+    const dnaId = instanceConfig.dna.id
+    const nodeId = `${conductorName}::${instanceId}`
+    this.waiter.handleObservation({node: nodeId, signal, dna: dnaId})
   }
 
   _newConductor (externalConductor): Conductor {
