@@ -77,7 +77,7 @@ export const DioramaClass = Conductor => class Diorama {
     this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor: T.ExternalConductor) => {
         logger.info("Conductor connected: " + conductor.name)
         this.conductors.push(this._newConductor(conductor))
-        const hasAll = Object.keys(this.conductorConfigs).every(name => name in this.conductors)
+        const hasAll = this.conductors.length >= Object.keys(this.conductorConfigs).length
         if (hasAll) {
           this._resolveHaveAllConductors()
         }
@@ -97,7 +97,8 @@ export const DioramaClass = Conductor => class Diorama {
 
   _newConductor (externalConductor): Conductor {
     this.startNonce += MAX_RUNS_PER_CONDUCTOR * 2 // just to be safe
-    return new Conductor(connect, this.startNonce, externalConductor, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
+    const conductor = new Conductor(connect, externalConductor, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
+    return conductor
   }
 
   currentConductor () {
@@ -145,13 +146,15 @@ export const DioramaClass = Conductor => class Diorama {
       let i = 0
       for (const [name, config] of Object.entries(this.conductorConfigs)) {
         let conductor = this.conductors[i++]
-        conductor.prepareRun(config)
+        await conductor.prepareRun(config)
         conductorMap[name] = conductor.instanceMap
       }
     } catch (e) {
       logger.error("Error during test instance setup:")
       logger.error(e)
     }
+
+    logger.info("CONDUCTOR MAP:", conductorMap)
 
     try {
       const api = new ScenarioApi(this.waiter)
