@@ -88,18 +88,20 @@ export const DioramaClass = Conductor => class Diorama {
     this.waiter.handleObservation({node: nodeId, signal, dna: dnaId})
   }
 
-  registerConductor (conductor: T.ExternalConductor) {
-    logger.info("Conductor connected: " + conductor.name)
-    this.conductors.push(this._newConductor(conductor))
+  async registerConductor (externalConductor: T.ExternalConductor) {
+    logger.info("Conductor connected: " + externalConductor.name)
+    const conductor = await this._newConductor(externalConductor)
+    this.conductors.push(conductor)
     const hasAll = this.conductors.length >= Object.keys(this.conductorConfigs).length
     if (hasAll) {
       this._resolveHaveAllConductors()
     }
   }
 
-  _newConductor (externalConductor): Conductor {
+  async _newConductor (externalConductor): Promise<Conductor> {
     this.startNonce += MAX_RUNS_PER_CONDUCTOR * 2 // just to be safe
     const conductor = new Conductor(connect, externalConductor, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
+    await conductor.initialize()
     return conductor
   }
 
@@ -156,6 +158,7 @@ export const DioramaClass = Conductor => class Diorama {
     } catch (e) {
       logger.error("Error during test instance setup:")
       logger.error(e)
+      throw e
     }
 
     logger.info("CONDUCTOR MAP:", conductorMap)
@@ -180,6 +183,7 @@ export const DioramaClass = Conductor => class Diorama {
     } catch (e) {
       logger.error("Error during test instance cleanup:")
       logger.error(e)
+      throw e
     }
   }
 

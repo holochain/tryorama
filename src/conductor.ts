@@ -44,7 +44,7 @@ export class Conductor {
   instanceMap: {[name: string]: DnaInstance}
   opts: any
   name: string
-  callAdmin: any
+  externalUrl: string
   handle: any
   dnaNonce: number
   onSignal: (any) => void
@@ -67,9 +67,16 @@ export class Conductor {
     this.dnaNonce = 1
     this.onSignal = opts.onSignal
     this.name = externalConductor.name
+    this.externalUrl = externalConductor.url
     logger.info("externalConductor:", externalConductor)
-    this._connectAdmin(externalConductor.url)
-    this.isInitialized = true
+  }
+
+  initialize = async (): Promise<void> => {
+    if (!this.isInitialized) {
+      await this.connectAdmin(this.externalUrl)
+      this.isInitialized = true
+    }
+    return Promise.resolve()
   }
 
   isRunning = () => {
@@ -79,13 +86,10 @@ export class Conductor {
   testInterfaceUrl = () => `ws://localhost:${this.testPort}`
   testInterfaceId = () => `test-interface-${this.testPort}`
 
-  connectAdmin = async () => {
-    this._connectAdmin(wsUrl(this.adminPort))
-  }
-
-  _connectAdmin = async (url) => {
+  connectAdmin = async (url) => {
     logger.info("Trying to connect to conductor: "+url)
     const { call, onSignal } = await this.webClientConnect({url})
+    logger.info("Connected.")
     this.callAdmin = method => async params => {
       logger.debug(`${colors.yellow.underline("calling")} %s`, method)
       logger.debug(JSON.stringify(params, null, 2))
@@ -111,6 +115,10 @@ export class Conductor {
         signal
       })
     })
+  }
+
+  callAdmin: ((string) => (any) => Promise<any>) = method => async params => {
+    throw new Error("callAdmin not set up yet! This is because hc-web-client has not yet established a websocket connection.")
   }
 
   connectTest = async () => {
@@ -142,23 +150,6 @@ export class Conductor {
     })
   }
 
-  initialize = async () => {
-    if (!this.isInitialized) {
-      try {
-        this.adminPort = await this.getInterfacePort()
-        await this.spawn()
-        logger.info(colors.green.bold("test conductor spawned"))
-        await this.connectAdmin()
-        logger.info(colors.green.bold("test conductor connected to admin interface"))
-      } catch (e) {
-        logger.error("Error when initializing!")
-        logger.error(e)
-        this.kill()
-      }
-      this.isInitialized = true
-    }
-  }
-
   getInterfacePort = async () => {
     const port = await getPort()
     // const port = await getPort({port: getPort.makeRange(5555, 5999)})
@@ -167,7 +158,9 @@ export class Conductor {
   }
 
   setupNewInterface = async () => {
+    console.debug("setupNewInterface :: getInterfacePort")
     this.testPort = await this.getInterfacePort()
+    console.debug("setupNewInterface :: callAdmin")
     await this.callAdmin('admin/interface/add')({
       id: this.testInterfaceId(),
       admin: false,
@@ -290,20 +283,6 @@ export class Conductor {
     }
   }
 
-  run = async (config: T.ConductorConfig, fn) => {
-    await this.prepareRun(config)
-
-    try {
-      await fn(this.instanceMap)
-    } catch (e) {
-      this.failTest(e)
-    }
-
-    await this.cleanupRun(config)
-
-    this.dnaNonce += 1
-  }
-
   prepareRun = async ({instances, bridges}: T.ConductorConfig) => {
     logger.debug('')
     logger.debug('')
@@ -316,11 +295,17 @@ export class Conductor {
       throw "Cannot run uninitialized conductor"
     }
     try {
+      logger.debug("prepareRun :: setupNewInterface")
       await this.setupNewInterface()
+      logger.debug("prepareRun :: connectTest")
       await this.connectTest()
+      logger.debug("prepareRun :: setupInstances")
       await this.setupInstances(instances)
+      logger.debug("prepareRun :: setupBridges")
       await this.setupBridges(bridges)
+      logger.debug("prepareRun :: startInstances")
       await this.startInstances(instances)
+      logger.debug("prepareRun :: connectSignals")
       await this.connectSignals()
     } catch (e) {
       this.abort(e)
@@ -369,7 +354,7 @@ export class Conductor {
   }
 
   abort (msg) {
-    logger.error(`Test conductor aborted: %j`, msg)
+    logger.error(`Test conductor aborted: `, msg)
     this.kill()
     process.exit(-1)
   }

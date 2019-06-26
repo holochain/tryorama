@@ -16,7 +16,7 @@ const logger = createLogger({
     format.simple(),
   ),
   transports: [new transports.Console({
-    level: 'info'
+    level: 'debug'
   })]
   // transports: [new NullTransport()]
 })
