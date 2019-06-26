@@ -74,14 +74,7 @@ export const DioramaClass = Conductor => class Diorama {
       this._resolveHaveAllConductors = resolve
     })
 
-    this.callbacks = new Callbacks(callbacksAddress, callbacksPort, (conductor: T.ExternalConductor) => {
-        logger.info("Conductor connected: " + conductor.name)
-        this.conductors.push(this._newConductor(conductor))
-        const hasAll = this.conductors.length >= Object.keys(this.conductorConfigs).length
-        if (hasAll) {
-          this._resolveHaveAllConductors()
-        }
-    })
+    this.callbacks = new Callbacks(callbacksAddress, callbacksPort, this.registerConductor.bind(this))
   }
 
   onSignal ({conductorName, instanceId, signal}) {
@@ -93,6 +86,15 @@ export const DioramaClass = Conductor => class Diorama {
     const dnaId = instanceConfig.dna.id
     const nodeId = `${conductorName}::${instanceId}`
     this.waiter.handleObservation({node: nodeId, signal, dna: dnaId})
+  }
+
+  registerConductor (conductor: T.ExternalConductor) {
+    logger.info("Conductor connected: " + conductor.name)
+    this.conductors.push(this._newConductor(conductor))
+    const hasAll = this.conductors.length >= Object.keys(this.conductorConfigs).length
+    if (hasAll) {
+      this._resolveHaveAllConductors()
+    }
   }
 
   _newConductor (externalConductor): Conductor {
