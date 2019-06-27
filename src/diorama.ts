@@ -267,8 +267,8 @@ const makeInstanceConfig = (conductorName, instanceId, dnaConfig): T.InstanceCon
   return {
     id: instanceId,
     agent: {
-      id: makeAgentId(conductorName, instanceId),
-      name: instanceId,
+      id: instanceId,
+      name: makeAgentId(conductorName, instanceId),
     },
     dna: dnaConfig
   }
