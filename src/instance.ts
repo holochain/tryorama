@@ -22,7 +22,7 @@ export class DnaInstance {
   // internally calls `this.conductor.call`
   async call (zome, fn, params) {
     const result = await this.callZome(this.id, zome, fn)(params)
-    logger.debug(colors.blue.inverse("zome call"), this.id, zome, fn, params)
+    logger.debug(colors.blue.inverse("zome call"), {id: this.id, zome, fn, params})
     try {
       return JSON.parse(result)
     } catch (e) {
