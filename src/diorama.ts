@@ -84,7 +84,7 @@ export const DioramaClass = Conductor => class Diorama {
       throw new Error(`Got a signal from a not-configured instance! conductor: ${conductorName}, instance: ${instanceId}`)
     }
     const dnaId = instanceConfig.dna.id
-    const nodeId = `${conductorName}::${instanceId}`
+    const nodeId = makeAgentId(conductorName, instanceId)
     this.waiter.handleObservation({node: nodeId, signal, dna: dnaId})
   }
 
@@ -252,8 +252,8 @@ export const Diorama = DioramaClass(Conductor)
 const desugarConductorConfig = (config: ObjectS<T.ConductorConfigShorthand>): ObjectS<T.ConductorConfig> => {
   const newConfig = {}
   Object.entries(config).forEach(([conductorName, {instances, bridges}]) => {
-    const instanceConfigs = Object.entries(instances).map(([agentId, dnaConfig]) => {
-      return makeInstanceConfig(agentId, dnaConfig)
+    const instanceConfigs = Object.entries(instances).map(([instanceId, dnaConfig]) => {
+      return makeInstanceConfig(conductorName, instanceId, dnaConfig)
     })
     newConfig[conductorName] = {
       instances: instanceConfigs,
@@ -263,16 +263,18 @@ const desugarConductorConfig = (config: ObjectS<T.ConductorConfigShorthand>): Ob
   return newConfig
 }
 
-const makeInstanceConfig = (agentId, dnaConfig): T.InstanceConfig => {
+const makeInstanceConfig = (conductorName, instanceId, dnaConfig): T.InstanceConfig => {
   return {
-    id: agentId,
+    id: instanceId,
     agent: {
-      id: agentId,
-      name: agentId,
+      id: makeAgentId(conductorName, instanceId),
+      name: instanceId,
     },
     dna: dnaConfig
   }
 }
+
+const makeAgentId = (conductorName, instanceId) => `${conductorName}::${instanceId}`
 
 const stringifySignal = orig => {
   const signal = Object.assign({}, orig)
