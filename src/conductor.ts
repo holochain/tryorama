@@ -125,13 +125,13 @@ export class Conductor {
     const url = this.testInterfaceUrl()
     const { callZome } = await this.webClientConnect({url})
     this.callZome = (...args) => params => new Promise((resolve, reject) => {
-      logger.debug(colors.cyan.underline("calling"), ...args)
-      logger.debug(params)
+      logger.debug(colors.cyan.underline("calling"), {id: args[0], zome: args[1], fn: args[2]})
+      logger.debug(JSON.stringify(params, null, 2))
       const timeout = this.opts.zomeCallTimeout || DEFAULT_ZOME_CALL_TIMEOUT
       const timer = setTimeout(() => reject(`zome call timed out after ${timeout / 1000} seconds: ${args.join('/')}`), timeout)
       const promise = callZome(...args)(params).then(result => {
         clearTimeout(timer)
-        logger.debug(colors.cyan.bold('->'), result)
+        logger.debug(colors.cyan.bold('->'), JSON.parse(result))
         resolve(result)
       })
     })
