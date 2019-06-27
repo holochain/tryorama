@@ -78,13 +78,13 @@ export const DioramaClass = Conductor => class Diorama {
   }
 
   onSignal ({conductorName, instanceId, signal}) {
-
     const instanceConfig = this.conductorConfigs[conductorName].instances.find(c => c.id === instanceId)
     if (!instanceConfig) {
       throw new Error(`Got a signal from a not-configured instance! conductor: ${conductorName}, instance: ${instanceId}`)
     }
     const dnaId = instanceConfig.dna.id
     const nodeId = makeAgentId(conductorName, instanceId)
+    signal = stringifySignal(signal)
     this.waiter.handleObservation({node: nodeId, signal, dna: dnaId})
   }
 
