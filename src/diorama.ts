@@ -89,7 +89,7 @@ export const DioramaClass = Conductor => class Diorama {
   }
 
   async registerConductor (externalConductor: T.ExternalConductor) {
-    logger.info("Conductor connected: " + externalConductor.name)
+    logger.info("Conductor connected: %s", externalConductor.name)
     const conductor = await this._newConductor(externalConductor)
     this.conductors.push(conductor)
     const hasAll = this.conductors.length >= Object.keys(this.conductorConfigs).length
@@ -161,7 +161,7 @@ export const DioramaClass = Conductor => class Diorama {
       throw e
     }
 
-    logger.info("CONDUCTOR MAP:", conductorMap)
+    logger.info("CONDUCTOR MAP: %j", conductorMap)
 
     try {
       const api = new ScenarioApi(this.waiter)
@@ -218,7 +218,7 @@ export const DioramaClass = Conductor => class Diorama {
 
   run = async () => {
     logger.info("Waiting for all conductors to connect.")
-    logger.info("Conductors in config: "+Object.keys(this.conductorConfigs))
+    logger.info("Conductors in config: %j", Object.keys(this.conductorConfigs))
     await this.haveAllConductors
     logger.info("We have all conductors we need. Starting scenarios.")
 

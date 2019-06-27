@@ -68,7 +68,7 @@ export class Conductor {
     this.onSignal = opts.onSignal
     this.name = externalConductor.name
     this.externalUrl = externalConductor.url
-    logger.info("externalConductor:", externalConductor)
+    logger.info("externalConductor: %j", externalConductor)
   }
 
   initialize = async (): Promise<void> => {
@@ -87,7 +87,7 @@ export class Conductor {
   testInterfaceId = () => `test-interface-${this.testPort}`
 
   connectAdmin = async (url) => {
-    logger.info("Trying to connect to conductor: "+url)
+    logger.info("Trying to connect to conductor: %s", url)
     const { call, onSignal } = await this.webClientConnect({url})
     logger.info("Connected.")
     this.callAdmin = method => async params => {
@@ -153,7 +153,7 @@ export class Conductor {
   getInterfacePort = async () => {
     const port = await getPort()
     // const port = await getPort({port: getPort.makeRange(5555, 5999)})
-    logger.info("using port", port)
+    logger.info("using port, %n", port)
     return port
   }
 
@@ -178,7 +178,7 @@ export class Conductor {
 
     if (!this.dnaIds.has(dnaConfig.id)) {
       const installDnaResponse = await this.callAdmin('admin/dna/install_from_file')(dnaConfig)
-      logger.silly('installDnaResponse', installDnaResponse)
+      logger.silly('installDnaResponse: %j', installDnaResponse)
       const dnaAddress = installDnaResponse.dna_hash
       this.dnaIds.add(dnaConfig.id)
       this.instanceMap[nonNoncifiedInstanceId].dnaAddress = dnaAddress
@@ -207,7 +207,7 @@ export class Conductor {
       }
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
-        logger.silly('addAgentResponse', addAgentResponse)
+        logger.silly('addAgentResponse: %j', addAgentResponse)
         const agentAddress = addAgentResponse.agent_address
         this.agentIds.add(instance.agent.id)
         this.instanceMap[nonNoncifiedInstanceId].agentAddress = agentAddress
@@ -354,7 +354,7 @@ export class Conductor {
   }
 
   abort (msg) {
-    logger.error(`Test conductor aborted: `, msg)
+    logger.error(`Test conductor aborted: %j`, msg)
     this.kill()
     process.exit(-1)
   }
