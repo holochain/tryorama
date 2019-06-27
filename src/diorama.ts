@@ -165,8 +165,9 @@ export const DioramaClass = Conductor => class Diorama {
 
     try {
       const api = new ScenarioApi(this.waiter)
-      logger.debug('running scenario...')
+      // Wait for Agent entries, etc. to be gossiped and held
       await api.consistent()
+      logger.debug('running scenario...')
       await modifiedScenario(api, conductorMap)
       logger.debug('...scenario ran')
     } catch (e) {
@@ -196,6 +197,7 @@ export const DioramaClass = Conductor => class Diorama {
   refreshWaiter = () => new Promise(resolve => {
     if (this.waiter) {
       logger.info("Test over, waiting for Waiter to flush...")
+      // Wait for final networking effects to resolve
       this.waiter.registerCallback({nodes: null, resolve})
     } else {
       resolve()
