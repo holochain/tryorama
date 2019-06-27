@@ -166,6 +166,7 @@ export const DioramaClass = Conductor => class Diorama {
     try {
       const api = new ScenarioApi(this.waiter)
       logger.debug('running scenario...')
+      await api.consistent()
       await modifiedScenario(api, conductorMap)
       logger.debug('...scenario ran')
     } catch (e) {
