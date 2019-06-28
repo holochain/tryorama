@@ -172,20 +172,20 @@ export const DioramaClass = Conductor => class Diorama {
       logger.debug('...scenario ran')
     } catch (e) {
       this.failTest(e)
-    }
-
-    try {
-      let i = 0
-      for (const [name, config] of Object.entries(this.conductorConfigs)) {
-        let conductor = this.conductors[i++]
-        logger.debug('cleaning up run...')
-        await conductor.cleanupRun(config)
-        logger.debug('...cleaned up')
+    } finally {
+      try {
+        let i = 0
+        for (const [name, config] of Object.entries(this.conductorConfigs)) {
+          let conductor = this.conductors[i++]
+          logger.debug('cleaning up run...')
+          await conductor.cleanupRun(config)
+          logger.debug('...cleaned up')
+        }
+      } catch (e) {
+        logger.error("Error during test instance cleanup:")
+        logger.error(e)
+        throw e
       }
-    } catch (e) {
-      logger.error("Error during test instance cleanup:")
-      logger.error(e)
-      throw e
     }
   }
 
