@@ -91,10 +91,10 @@ export class Conductor {
     const { call, onSignal } = await this.webClientConnect({url})
     logger.info("Connected.")
     this.callAdmin = method => async params => {
-      logger.debug(`${colors.yellow.underline("calling")} %s`, method)
+      logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
       logger.debug(JSON.stringify(params, null, 2))
       const result = await call(method)(params)
-      logger.debug(`${colors.yellow.bold('->')} %j`, result)
+      logger.debug(`${colors.yellow.bold('-> %j')}`, result)
       return result
     }
 
@@ -125,8 +125,8 @@ export class Conductor {
     const url = this.testInterfaceUrl()
     const { callZome } = await this.webClientConnect({url})
     this.callZome = (...args) => params => new Promise((resolve, reject) => {
-      logger.debug(colors.cyan.underline("calling"), {id: args[0], zome: args[1], fn: args[2]})
-      logger.debug(JSON.stringify(params, null, 2))
+      logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`, this.name, args[0], args[1], args[2])
+      logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
       const timeout = this.opts.zomeCallTimeout || DEFAULT_ZOME_CALL_TIMEOUT
       const timer = setTimeout(() => reject(`zome call timed out after ${timeout / 1000} seconds: ${args.join('/')}`), timeout)
       const promise = callZome(...args)(params).then(result => {
@@ -284,12 +284,8 @@ export class Conductor {
   }
 
   prepareRun = async ({instances, bridges}: T.ConductorConfig) => {
-    logger.debug('')
-    logger.debug('')
-    logger.debug("---------------------------------------------------------")
-    logger.debug("---------------------------------------------------------")
-    logger.debug("-------  starting")
-    logger.debug('')
+    logger.debug(colors.yellow.bold("---------------------------------------------------------"))
+    logger.debug(colors.yellow.bold(`-------  preparing ${this.name}`))
     logger.debug('')
     if (!this.isInitialized) {
       throw "Cannot run uninitialized conductor"
@@ -310,10 +306,12 @@ export class Conductor {
     } catch (e) {
       this.abort(e)
     }
-    logger.debug("Instances all set up, running test...")
+    logger.debug(colors.yellow.bold(`-------  done preparing ${this.name}`))
   }
 
   cleanupRun = async ({bridges}: T.ConductorConfig) => {
+    logger.debug(colors.yellow.bold(`-------  cleaning up ${this.name}`))
+    logger.debug('')
     try {
       await this.teardownBridges(bridges)
       await this.teardownInstances()
@@ -323,6 +321,8 @@ export class Conductor {
     }
     logger.debug("Test done, tearing down instances...")
     logger.debug("Storage cleared...")
+    logger.debug(colors.yellow.bold(`-------  done cleaning up ${this.name}`))
+    logger.debug(colors.yellow.bold("---------------------------------------------------------"))
     this.dnaNonce += 1
   }
 
