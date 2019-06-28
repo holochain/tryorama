@@ -74,7 +74,7 @@ export const DioramaClass = Conductor => class Diorama {
       this._resolveHaveAllConductors = resolve
     })
 
-    this.callbacks = new Callbacks(callbacksAddress, callbacksPort, this.registerConductor.bind(this))
+    //this.callbacks = new Callbacks(callbacksAddress, callbacksPort, this.registerConductor.bind(this))
   }
 
   onSignal ({conductorName, instanceId, signal}) {
