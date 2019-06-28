@@ -1,39 +1,44 @@
 # try-o-rama
 
-The first Holochain *test orchestrator*. 
+> "[diorama](https://github.com/holochain/diorama)"++ === "triorama", but "try-o-rama" is catchier ;)
 
-"[diorama](https://github.com/holochain/diorama)"++ === "triorama", but "try-o-rama" is catchier ;)
+Try-o-rama orchestrates scenario tests across multiple Conductors. The test writer writes scenarios and registers them with Try-o-rama. Once a collection of Conductors have been started by some other process, they can register with a Orchestrator which will cause the steps of the scenario to be executed on each Conductor, results reported back, and assertions made.
 
 ## Basic usage
 
 ```js
-const {Tryorama} = require('@holochain/try-o-rama')
-const dnaBlog = Tryorama.dna('path/to/blog.dna.json', 'blog')
-const dnaComments = Tryorama.dna('path/to/comments.dna.json', 'comments')
+const {Orchestrator} = require('@holochain/try-o-rama')
 
-const tryorama = new Tryorama({
+// We'll set up three conductors, all of which share the exact same configuration:
+
+const conductorConfig = {
   instances: {
-    aliceBlog: dnaBlog,
-    aliceComments: dnaComments,
-    bobBlog: dnaBlog,
-    bobComments: dnaComments
+    blog: Orchestrator.dna('path/to/blog.dna.json', 'blog'),
+    comments: Orchestrator.dna('path/to/comments.dna.json', 'comments'),
   },
   bridges: [
-    Tryorama.bridge('handle', aliceBlog, aliceComments),
-    Tryorama.bridge('handle', bobBlog, bobComments),
-  ]
+    Orchestrator.bridge('bridge-handle', 'blog', 'comments'),
+  ],
+}
+
+const orchestrator = new Orchestrator({
+  conductors: {
+    alice: conductorConfig,
+    bob: conductorConfig,
+    carol: conductorConfig,
+  }
 })
 
-tryorama.registerScenario('a test', async (s, {aliceBlog, bobBlog}) => {
-    await aliceBlog.call('blog', 'create_post', {
+orchestrator.registerScenario('a test', async (s, {alice, bob}) => {
+    await alice.blog.call('blog', 'create_post', {
         content: 'holo wurld'
     })
     await s.consistent()
-    const posts = await bobBlog.call('blog', 'list_posts')
+    const posts = await bob.blog.call('blog', 'list_posts')
     // write some assertions
 })
 
-tryorama.run()
+orchestrator.run()
 
 ```
 
