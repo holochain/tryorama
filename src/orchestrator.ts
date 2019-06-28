@@ -21,7 +21,7 @@ const MIN_POOL_SIZE = 1
 
 /////////////////////////////////////////////////////////////
 
-type DioramaConstructorParams = {
+type OrchestratorConstructorParams = {
   conductors: ObjectS<T.ConductorConfigShorthand>,
   middleware?: any,
   executor?: any,
@@ -30,7 +30,7 @@ type DioramaConstructorParams = {
   callbacksPort?: number,
 }
 
-export const DioramaClass = Conductor => class Diorama {
+export const OrchestratorClass = Conductor => class Orchestrator {
   conductorConfigs: ObjectS<T.ConductorConfig>
   conductorPool: Array<{conductor: Conductor, runs: number}>
   scenarios: Array<any>
@@ -52,7 +52,7 @@ export const DioramaClass = Conductor => class Diorama {
     debugLog = false,
     callbacksAddress = '0.0.0.0',
     callbacksPort = 9999,
-  }: DioramaConstructorParams) {
+  }: OrchestratorConstructorParams) {
 
     this.conductors = []
     this.conductorConfigs = {}
@@ -247,7 +247,7 @@ export const DioramaClass = Conductor => class Diorama {
   }
 }
 
-export const Diorama = DioramaClass(Conductor)
+export const Orchestrator = OrchestratorClass(Conductor)
 
 /**
  * Go from "shorthand" config to "real" config

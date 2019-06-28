@@ -1,15 +1,17 @@
-# diorama
+# try-o-rama
 
 The first Holochain *test orchestrator*. 
+
+"[diorama](https://github.com/holochain/diorama)"++ === "triorama", but "try-o-rama" is catchier ;)
 
 ## Basic usage
 
 ```js
-const {Diorama} = require('@holochain/diorama')
-const dnaBlog = Diorama.dna('path/to/blog.dna.json', 'blog')
-const dnaComments = Diorama.dna('path/to/comments.dna.json', 'comments')
+const {Tryorama} = require('@holochain/try-o-rama')
+const dnaBlog = Tryorama.dna('path/to/blog.dna.json', 'blog')
+const dnaComments = Tryorama.dna('path/to/comments.dna.json', 'comments')
 
-const diorama = new Diorama({
+const tryorama = new Tryorama({
   instances: {
     aliceBlog: dnaBlog,
     aliceComments: dnaComments,
@@ -17,12 +19,12 @@ const diorama = new Diorama({
     bobComments: dnaComments
   },
   bridges: [
-    Diorama.bridge('handle', aliceBlog, aliceComments),
-    Diorama.bridge('handle', bobBlog, bobComments),
+    Tryorama.bridge('handle', aliceBlog, aliceComments),
+    Tryorama.bridge('handle', bobBlog, bobComments),
   ]
 })
 
-diorama.registerScenario('a test', async (s, {aliceBlog, bobBlog}) => {
+tryorama.registerScenario('a test', async (s, {aliceBlog, bobBlog}) => {
     await aliceBlog.call('blog', 'create_post', {
         content: 'holo wurld'
     })
@@ -31,7 +33,7 @@ diorama.registerScenario('a test', async (s, {aliceBlog, bobBlog}) => {
     // write some assertions
 })
 
-diorama.run()
+tryorama.run()
 
 ```
 

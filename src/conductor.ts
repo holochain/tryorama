@@ -29,7 +29,7 @@ type ConductorOpts = {
   zomeCallTimeout?: number,
 }
 
-const storagePath = () => process.env.DIORAMA_STORAGE || fs.mkdtempSync(path.join(os.tmpdir(), 'hc-diorama-'))
+const storagePath = () => process.env.TRYORAMA_STORAGE || fs.mkdtempSync(path.join(os.tmpdir(), 'hc-diorama-'))
 
 /**
  * Represents a conductor process to which calls can be made via RPC

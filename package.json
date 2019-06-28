@@ -1,7 +1,7 @@
 {
-  "name": "@holochain/triorama",
-  "version": "0.2.0",
-  "description": "Javascript module for orchestrating single and multi-agent scenario tests against DNAs running in the Holochain conductor",
+  "name": "@holochain/try-o-rama",
+  "version": "0.0.1",
+  "description": "An orchestrator for running Holochain scenario tests across multiple networked Conductors",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "scripts": {
@@ -20,7 +20,7 @@
   "license": "GPL-3",
   "repository": {
     "type": "git",
-    "url": "https://github.com/holochain/diorama.git"
+    "url": "https://github.com/holochain/try-o-rama.git"
   },
   "dependencies": {
     "@holochain/hachiko": "^0.2.0-rc.1",
