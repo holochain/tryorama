@@ -69,9 +69,9 @@ test('a', async t => {
 
   t.equal(Object.keys(orchestrator.conductorConfigs).length, 2)
   t.equal(orchestrator.conductorConfigs.alice.instances.length, 2)
-  t.equal(orchestrator.conductorConfigs.alice.bridges.length, 1)
+  t.equal(orchestrator.conductorConfigs.alice.bridges!.length, 1)
   t.equal(orchestrator.conductorConfigs.bob.instances.length, 2)
-  t.equal(orchestrator.conductorConfigs.bob.bridges.length, 1)
+  t.equal(orchestrator.conductorConfigs.bob.bridges!.length, 1)
 
   orchestrator.registerScenario('test scenario 1', async (s, notInstances) => {
     t.ok(s.consistent)

@@ -153,7 +153,9 @@ export const OrchestratorClass = Conductor => class Orchestrator {
         logger.debug('preparing run...')
         await conductor.prepareRun(config)
         logger.debug('...run prepared.')
-        conductorMap[name] = conductor.instanceMap
+        // set a reference to this conductor on the passed object
+        // TODO: use this to allow starting and stopping the conductor itself
+        conductorMap[name] = _.merge(conductor.instanceMap, {_conductor: conductor})
       }
     } catch (e) {
       logger.error("Error during test instance setup:")
@@ -164,7 +166,7 @@ export const OrchestratorClass = Conductor => class Orchestrator {
     logger.info("CONDUCTOR MAP: %j", conductorMap)
 
     try {
-      const api = new ScenarioApi(this.waiter)
+      const api = new ScenarioApi(this.waiter, conductorMap)
       // Wait for Agent entries, etc. to be gossiped and held
       await api.consistent()
       logger.debug('running scenario...')

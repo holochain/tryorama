@@ -2,19 +2,22 @@ import * as colors from 'colors'
 
 import logger from './logger'
 import * as T from './types'
+import {Conductor} from './conductor'
 
-export class DnaInstance {
+export class ScenarioInstanceRef {
 
   id: string
   agentAddress: string | null
   dnaAddress: string | null
+  callAdmin: any
   callZome: any
   signals: Array<any>
 
-  constructor (instanceId, callZome) {
+  constructor ({instanceId, callZome, callAdmin}) {
     this.id = instanceId
     this.agentAddress = null
     this.dnaAddress = null
+    this.callAdmin = callAdmin
     this.callZome = callZome
     this.signals = []  // gets populated by onSignal via Conductor.connectSignals
   }
@@ -32,5 +35,6 @@ export class DnaInstance {
   }
 }
 
-export type InstanceMap = T.ObjectS<DnaInstance>
+export type InstanceMap = T.ObjectS<ScenarioInstanceRef>
+
 export type ConductorMap = T.ObjectS<InstanceMap>

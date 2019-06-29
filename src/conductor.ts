@@ -12,7 +12,7 @@ const _ = require('lodash')
 import {Signal} from '@holochain/hachiko'
 import {promiseSerial, delay} from './util'
 import * as T from './types'
-import {DnaInstance} from './instance'
+import {ScenarioInstanceRef, InstanceMap} from './instance'
 import logger from './logger'
 
 /// //////////////////////////////////////////////////////////
@@ -41,7 +41,7 @@ export class Conductor {
   webClientConnect: any
   agentIds: Set<string>
   dnaIds: Set<string>
-  instanceMap: {[name: string]: DnaInstance}
+  instanceMap: InstanceMap
   opts: any
   name: string
   externalUrl: string
@@ -50,7 +50,6 @@ export class Conductor {
   onSignal: (any) => void
 
   runningInstances: Array<T.InstanceConfig>
-  callZome: any
   testPort: number
   adminPort: number
 
@@ -86,6 +85,14 @@ export class Conductor {
   testInterfaceUrl = () => `ws://localhost:${this.testPort}`
   testInterfaceId = () => `test-interface-${this.testPort}`
 
+  callAdmin: ((string) => (any) => Promise<any>) = method => async params => {
+    throw new Error("callAdmin not set up yet! This is because hc-web-client has not yet established a websocket connection.")
+  }
+
+  callZome: ((...string) => (any) => Promise<any>) = method => async params => {
+    throw new Error("callZome not set up yet! This is because hc-web-client has not yet established a websocket connection.")
+  }
+
   connectAdmin = async (url) => {
     logger.info("Trying to connect to conductor: %s", url)
     const { call, onSignal } = await this.webClientConnect({url})
@@ -115,10 +122,6 @@ export class Conductor {
         signal
       })
     })
-  }
-
-  callAdmin: ((string) => (any) => Promise<any>) = method => async params => {
-    throw new Error("callAdmin not set up yet! This is because hc-web-client has not yet established a websocket connection.")
   }
 
   connectTest = async () => {
@@ -195,15 +198,19 @@ export class Conductor {
       throw "Attempting to run a new test while another test has not yet been torn down"
     }
     for (const instanceConfig of instanceConfigs) {
-      const instance = _.cloneDeep(instanceConfig)
-      const nonNoncifiedInstanceId = instance.id
-      instance.id += '-' + this.dnaNonce
+      const nonNoncifiedInstanceId = instanceConfig.id
+      const instance = {
+        id: instanceConfig.id + '-' + this.dnaNonce,
+        agent: instanceConfig.agent,
+        dna: instanceConfig.dna,
+      }
+      const {callZome, callAdmin} = this
       if (this.instanceMap[nonNoncifiedInstanceId]) {
-        const inst = new DnaInstance(instance.id, this.callZome)
+        const inst = new ScenarioInstanceRef({instanceId: instance.id, callZome, callAdmin})
         inst.agentAddress = this.instanceMap[nonNoncifiedInstanceId].agentAddress
         this.instanceMap[nonNoncifiedInstanceId] = inst
       } else {
-        this.instanceMap[nonNoncifiedInstanceId] = new DnaInstance(instance.id, this.callZome)
+        this.instanceMap[nonNoncifiedInstanceId] = new ScenarioInstanceRef({instanceId: instance.id, callZome, callAdmin})
       }
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
@@ -212,11 +219,11 @@ export class Conductor {
         this.agentIds.add(instance.agent.id)
         this.instanceMap[nonNoncifiedInstanceId].agentAddress = agentAddress
       }
-      instance.dna = await this.setupDna(nonNoncifiedInstanceId, instance)
+      const dna = await this.setupDna(nonNoncifiedInstanceId, instance)
       await this.callAdmin('admin/instance/add')({
         id: instance.id,
         agent_id: instance.agent.id,
-        dna_id: instance.dna.id,
+        dna_id: dna.id,
       })
       await this.callAdmin('admin/interface/add_instance')({
         interface_id: this.testInterfaceId(),  // NB: this changes between tests

@@ -1,9 +1,9 @@
 
 import {ScenarioApi} from './api'
-import {DnaInstance} from './instance'
+import {ScenarioInstanceRef} from './instance'
 
 export type ScenarioFnCustom = (s: object, ins: {[id: string]: any}) => Promise<any>
-export type ScenarioFn = (s: ScenarioApi, ins: {[id: string]: DnaInstance}) => Promise<any>
+export type ScenarioFn = (s: ScenarioApi, ins: {[id: string]: ScenarioInstanceRef}) => Promise<any>
 
 export type ExternalConductor = {
   url: string,
