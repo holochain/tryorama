@@ -297,8 +297,10 @@ export class Conductor {
       await this.connectTest()
       logger.debug("prepareRun :: setupInstances")
       await this.setupInstances(instances)
-      logger.debug("prepareRun :: setupBridges")
-      await this.setupBridges(bridges)
+      if (bridges) {
+        logger.debug("prepareRun :: setupBridges")
+        await this.setupBridges(bridges)
+      }
       logger.debug("prepareRun :: startInstances")
       await this.startInstances(instances)
       logger.debug("prepareRun :: connectSignals")
@@ -313,7 +315,9 @@ export class Conductor {
     logger.debug(colors.yellow.bold(`-------  cleaning up ${this.name}`))
     logger.debug('')
     try {
-      await this.teardownBridges(bridges)
+      if (bridges) {
+        await this.teardownBridges(bridges)
+      }
       await this.teardownInstances()
       // await this.cleanupStorage()
     } catch (e) {

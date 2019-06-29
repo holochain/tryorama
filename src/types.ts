@@ -12,12 +12,12 @@ export type ExternalConductor = {
 
 export type ConductorConfig = {
   instances: Array<InstanceConfig>,
-  bridges: Array<BridgeConfig>,
+  bridges?: Array<BridgeConfig>,
 }
 
 export type ConductorConfigShorthand = {
   instances: {[id: string]: DnaConfig},
-  bridges: Array<BridgeConfig>,
+  bridges?: Array<BridgeConfig>,
 }
 
 export type AgentConfig = {
