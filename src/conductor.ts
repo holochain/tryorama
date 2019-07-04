@@ -19,17 +19,18 @@ import logger from './logger'
 
 // these should be already set when the conductor is started by `hc test`
 const wsUrl = port => `ws://localhost:${port}`
-const ADMIN_INTERFACE_ID = 'admin-interface'
 
 const DEFAULT_ZOME_CALL_TIMEOUT = 60000
 
 type ConductorOpts = {
   onSignal: (Signal) => void,
-  debugLog: boolean,
   zomeCallTimeout?: number,
+  name: string,
+  adminInterfaceUrl: string,
+  configPath
 }
 
-const storagePath = () => process.env.TRYORAMA_STORAGE || fs.mkdtempSync(path.join(os.tmpdir(), 'hc-diorama-'))
+const storagePath = () => process.env.TRYORAMA_STORAGE || fs.mkdtempSync(path.join(os.tmpdir(), 'try-o-rama-'))
 
 /**
  * Represents a conductor process to which calls can be made via RPC
@@ -44,7 +45,7 @@ export class Conductor {
   instanceMap: InstanceMap
   opts: any
   name: string
-  externalUrl: string
+  adminInterfaceUrl: string
   handle: any
   dnaNonce: number
   onSignal: (any) => void
@@ -55,7 +56,7 @@ export class Conductor {
 
   isInitialized: boolean
 
-  constructor (connect, externalConductor: T.ExternalConductor, opts: ConductorOpts) {
+  constructor (connect, opts: ConductorOpts) {
     this.webClientConnect = connect
     this.agentIds = new Set()
     this.dnaIds = new Set()
@@ -65,14 +66,14 @@ export class Conductor {
     this.runningInstances = []
     this.dnaNonce = 1
     this.onSignal = opts.onSignal
-    this.name = externalConductor.name
-    this.externalUrl = externalConductor.url
-    logger.info("externalConductor: %j", externalConductor)
+    this.name = opts.name
+    this.adminInterfaceUrl = opts.adminInterfaceUrl
+    logger.info("externalConductor: %s @ %s", opts.name, opts.adminInterfaceUrl)
   }
 
   initialize = async (): Promise<void> => {
     if (!this.isInitialized) {
-      await this.connectAdmin(this.externalUrl)
+      await this.connectAdmin(this.adminInterfaceUrl)
       this.isInitialized = true
     }
     return Promise.resolve()
@@ -337,29 +338,6 @@ export class Conductor {
     this.dnaNonce += 1
   }
 
-  spawn () {
-    const tmpPath = storagePath()
-    const configPath = path.join(tmpPath, 'conductor-config.toml')
-    const persistencePath = tmpPath
-    const config = this.initialConfig(persistencePath, this.opts)
-    fs.writeFileSync(configPath, config)
-    logger.info(`Using config file at ${configPath}`)
-    try {
-      const which = child_process.execSync('which holochain')
-      logger.info(`Using holochain binary at ${which.toString('utf8')}`)
-    } catch (e) {}
-
-    const handle = child_process.spawn(`holochain`, ['-c', configPath])
-
-    handle.stdout.on('data', data => {
-      const line = data.toString('utf8')
-      logger.info(`[C] %s`, line)
-    })
-    handle.stderr.on('data', data => logger.error(`!C! %s`, data.toString('utf8')))
-    handle.on('close', code => logger.info(`conductor exited with code ${code}`))
-    this.handle = handle
-  }
-
   kill () {
     logger.info("TODO: kill?")
   }
@@ -373,40 +351,5 @@ export class Conductor {
   failTest (e) {
     logger.error("Test failed while running: %j", e)
     throw e
-  }
-
-  initialConfig (persistencePath, opts) {
-    return `
-agents = []
-dnas = []
-instances = []
-persistence_dir = "${persistencePath}"
-
-[[interfaces]]
-admin = true
-id = "${ADMIN_INTERFACE_ID}"
-instances = []
-  [interfaces.driver]
-  type = "websocket"
-  port = ${this.adminPort}
-
-[logger]
-type = "debug"
-  [[logger.rules.rules]]
-  color = "red"
-  exclude = false
-  pattern = "^err/"
-  [[logger.rules.rules]]
-  color = "white"
-  exclude = false
-  pattern = "^debug/dna"
-  [[logger.rules.rules]]
-  exclude = ${opts.debugLog ? 'false' : 'true'}
-  pattern = ".*"
-
-[signals]
-trace = false
-consistency = true
-    `
   }
 }

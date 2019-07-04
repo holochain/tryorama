@@ -1,5 +1,6 @@
 const tape = require('tape')
 const colors = require('colors/safe')
+const getPort = require('get-port')
 
 import * as _ from 'lodash'
 
@@ -26,6 +27,11 @@ type OrchestratorConstructorParams = {
   middleware?: any,
   executor?: any,
   debugLog?: boolean,
+
+  // this is used to spawn conductors, and is incompatible with the following two options
+  spawnConductor: T.SpawnConductorFn,
+
+  // these two are used to register external conductors over HTTP
   callbacksAddress?: string,
   callbacksPort?: number,
 }
@@ -42,11 +48,12 @@ export const OrchestratorClass = Conductor => class Orchestrator {
   callbacks: Callbacks | void
   conductors: Array<Conductor>
   haveAllConductors: Promise<void>
+  _spawnConductor: T.SpawnConductorFn
   _resolveHaveAllConductors: any
-
 
   constructor ({
     conductors,
+    spawnConductor,
     middleware = identity,
     executor = simpleExecutor,
     debugLog = false,
@@ -59,6 +66,7 @@ export const OrchestratorClass = Conductor => class Orchestrator {
     this.middleware = middleware
     this.executor = executor
     this.conductorOpts = {debugLog}
+    this._spawnConductor = spawnConductor
 
     this.scenarios = []
     this.conductorPool = []
@@ -90,7 +98,7 @@ export const OrchestratorClass = Conductor => class Orchestrator {
 
   async registerConductor (externalConductor: T.ExternalConductor) {
     logger.info("Conductor connected: %s", externalConductor.name)
-    const conductor = await this._newConductor(externalConductor)
+    const conductor = await this._newExternalConductor(externalConductor)
     this.conductors.push(conductor)
     const hasAll = this.conductors.length >= Object.keys(this.conductorConfigs).length
     if (hasAll) {
@@ -98,9 +106,27 @@ export const OrchestratorClass = Conductor => class Orchestrator {
     }
   }
 
-  async _newConductor (externalConductor): Promise<Conductor> {
+  async _newExternalConductor ({name, url}: T.ExternalConductor): Promise<Conductor> {
     this.startNonce += MAX_RUNS_PER_CONDUCTOR * 2 // just to be safe
-    const conductor = new Conductor(connect, externalConductor, {onSignal: this.onSignal.bind(this), ...this.conductorOpts})
+    const conductor = new Conductor(connect, {
+      name,
+      adminInterfaceUrl: url,
+      onSignal: this.onSignal.bind(this),
+      ...this.conductorOpts
+    })
+    await conductor.initialize()
+    return conductor
+  }
+
+  async _newInternalConductor (name: string): Promise<Conductor> {
+    const port = await getPort()
+    const url = `http://0.0.0.0:${port}`
+    const conductor = new Conductor(connect, {
+      name,
+      adminInterfaceUrl: url,
+      onSignal: this.onSignal.bind(this),
+      ...this.conductorOpts
+    })
     await conductor.initialize()
     return conductor
   }
