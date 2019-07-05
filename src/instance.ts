@@ -9,7 +9,7 @@ export class ScenarioInstanceRef {
   id: string
   agentAddress: string | null
   dnaAddress: string | null
-  callAdmin: any
+  callAdmin: any  // TODO: remove
   callZome: any
   signals: Array<any>
 

@@ -23,7 +23,6 @@ const wsUrl = port => `ws://localhost:${port}`
 const DEFAULT_ZOME_CALL_TIMEOUT = 60000
 
 type ConductorOpts = {
-  onSignal: (Signal) => void,
   zomeCallTimeout?: number,
   name: string,
   adminInterfaceUrl: string,
@@ -32,23 +31,18 @@ type ConductorOpts = {
 
 const storagePath = () => process.env.TRYORAMA_STORAGE || fs.mkdtempSync(path.join(os.tmpdir(), 'try-o-rama-'))
 
-/**
- * Represents a conductor process to which calls can be made via RPC
- *
- * @class      Conductor (name)
- */
 export class Conductor {
 
   webClientConnect: any
   agentIds: Set<string>
   dnaIds: Set<string>
   instanceMap: InstanceMap
-  opts: any
+  opts: ConductorOpts
   name: string
   adminInterfaceUrl: string
   handle: any
   dnaNonce: number
-  onSignal: (any) => void
+  onSignal: (Signal) => void
 
   runningInstances: Array<T.InstanceConfig>
   testPort: number
@@ -291,7 +285,7 @@ export class Conductor {
     }
   }
 
-  prepareRun = async ({instances, bridges}: T.ConductorConfig) => {
+  async prepareRun ({instances, bridges}: T.ConductorConfig) {
     logger.debug(colors.yellow.bold("---------------------------------------------------------"))
     logger.debug(colors.yellow.bold(`-------  preparing ${this.name}`))
     logger.debug('')
@@ -338,18 +332,5 @@ export class Conductor {
     this.dnaNonce += 1
   }
 
-  kill () {
-    logger.info("TODO: kill?")
-  }
-
-  abort (msg) {
-    logger.error(`Test conductor aborted: %j`, msg)
-    this.kill()
-    process.exit(-1)
-  }
-
-  failTest (e) {
-    logger.error("Test failed while running: %j", e)
-    throw e
-  }
+  abort (msg: string)
 }

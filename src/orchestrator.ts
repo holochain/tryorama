@@ -10,6 +10,8 @@ import {Waiter, FullSyncNetwork, NodeId, NetworkMap, Signal} from '@holochain/ha
 import * as T from './types'
 import {ObjectS} from './types'
 import {Conductor} from './conductor'
+import {ConductorManaged} from './conductor-managed'
+import {ConductorFactory, conductorFactoryProxy} from './conductor-factory'
 import {ScenarioApi} from './api'
 import {ConductorMap, InstanceMap} from './instance'
 import {simpleExecutor} from './executors'
@@ -28,12 +30,8 @@ type OrchestratorConstructorParams = {
   executor?: any,
   debugLog?: boolean,
 
-  // this is used to spawn conductors, and is incompatible with the following two options
   spawnConductor: T.SpawnConductorFn,
-
-  // these two are used to register external conductors over HTTP
-  callbacksAddress?: string,
-  callbacksPort?: number,
+  genConfig: T.GenConfigFn,
 }
 
 export const OrchestratorClass = Conductor => class Orchestrator {
@@ -45,44 +43,46 @@ export const OrchestratorClass = Conductor => class Orchestrator {
   conductorOpts: any | void
   waiter: Waiter
   startNonce: number
-  callbacks: Callbacks | void
-  conductors: Array<Conductor>
+  factories: ObjectS<ConductorFactory>
+  factoryMap: ObjectS<ConductorFactory>
   haveAllConductors: Promise<void>
   _spawnConductor: T.SpawnConductorFn
-  _resolveHaveAllConductors: any
 
   constructor ({
     conductors,
     spawnConductor,
+    genConfig,
     middleware = identity,
     executor = simpleExecutor,
     debugLog = false,
-    callbacksAddress = '0.0.0.0',
-    callbacksPort = 9999,
   }: OrchestratorConstructorParams) {
 
-    this.conductors = []
-    this.conductorConfigs = {}
+    this.factories = {}
     this.middleware = middleware
     this.executor = executor
     this.conductorOpts = {debugLog}
     this._spawnConductor = spawnConductor
 
     this.scenarios = []
-    this.conductorPool = []
     this.startNonce = 1
 
     this.conductorConfigs = desugarConductorConfig(conductors)
 
+    const reducer = (fs, [name, c]) => {
+      fs[name] = conductorFactoryProxy(new ConductorFactory({
+        spawnConductor: spawnConductor,
+        genConfig: genConfig,
+        testConfig: c
+      }))
+    }
+    this.factories = Object.entries(this.conductorConfigs).reduce(
+      reducer, {} as ObjectS<ConductorFactory>
+    )
+    this.factoryMap = this.factories  // duplicate, TODO remove?
+
     this.registerScenario.only = this.registerScenarioOnly.bind(this)
 
     this.refreshWaiter()
-
-    this.haveAllConductors = new Promise(resolve => {
-      this._resolveHaveAllConductors = resolve
-    })
-
-    //this.callbacks = new Callbacks(callbacksAddress, callbacksPort, this.registerConductor.bind(this))
   }
 
   onSignal ({conductorName, instanceId, signal}) {
@@ -94,45 +94,6 @@ export const OrchestratorClass = Conductor => class Orchestrator {
     const nodeId = makeAgentId(conductorName, instanceId)
     signal = stringifySignal(signal)
     this.waiter.handleObservation({node: nodeId, signal, dna: dnaId})
-  }
-
-  async registerConductor (externalConductor: T.ExternalConductor) {
-    logger.info("Conductor connected: %s", externalConductor.name)
-    const conductor = await this._newExternalConductor(externalConductor)
-    this.conductors.push(conductor)
-    const hasAll = this.conductors.length >= Object.keys(this.conductorConfigs).length
-    if (hasAll) {
-      this._resolveHaveAllConductors()
-    }
-  }
-
-  async _newExternalConductor ({name, url}: T.ExternalConductor): Promise<Conductor> {
-    this.startNonce += MAX_RUNS_PER_CONDUCTOR * 2 // just to be safe
-    const conductor = new Conductor(connect, {
-      name,
-      adminInterfaceUrl: url,
-      onSignal: this.onSignal.bind(this),
-      ...this.conductorOpts
-    })
-    await conductor.initialize()
-    return conductor
-  }
-
-  async _newInternalConductor (name: string): Promise<Conductor> {
-    const port = await getPort()
-    const url = `http://0.0.0.0:${port}`
-    const conductor = new Conductor(connect, {
-      name,
-      adminInterfaceUrl: url,
-      onSignal: this.onSignal.bind(this),
-      ...this.conductorOpts
-    })
-    await conductor.initialize()
-    return conductor
-  }
-
-  currentConductor () {
-    return this.conductorPool[0]
   }
 
   /**
@@ -174,14 +135,10 @@ export const OrchestratorClass = Conductor => class Orchestrator {
 
     try {
       let i = 0
-      for (const [name, config] of Object.entries(this.conductorConfigs)) {
-        let conductor = this.conductors[i++]
+      for (const [name, factory] of Object.entries(this.factories)) {
         logger.debug('preparing run...')
-        await conductor.prepareRun(config)
+        await factory.setup()
         logger.debug('...run prepared.')
-        // set a reference to this conductor on the passed object
-        // TODO: use this to allow starting and stopping the conductor itself
-        conductorMap[name] = _.merge(conductor.instanceMap, {_conductor: conductor})
       }
     } catch (e) {
       logger.error("Error during test instance setup:")
@@ -189,24 +146,21 @@ export const OrchestratorClass = Conductor => class Orchestrator {
       throw e
     }
 
-    logger.info("CONDUCTOR MAP: %j", conductorMap)
-
     try {
-      const api = new ScenarioApi(this.waiter, conductorMap)
+      const api = new ScenarioApi(this.waiter, null)
       // Wait for Agent entries, etc. to be gossiped and held
       await api.consistent()
       logger.debug('running scenario...')
-      await modifiedScenario(api, conductorMap)
+      await modifiedScenario(api, this.factoryMap)
       logger.debug('...scenario ran')
     } catch (e) {
       this.failTest(e)
     } finally {
       try {
         let i = 0
-        for (const [name, config] of Object.entries(this.conductorConfigs)) {
-          let conductor = this.conductors[i++]
+        for (const [name, factory] of Object.entries(this.factories)) {
           logger.debug('cleaning up run...')
-          await conductor.cleanupRun(config)
+          await factory.cleanup()
           logger.debug('...cleaned up')
         }
       } catch (e) {
@@ -266,12 +220,7 @@ export const OrchestratorClass = Conductor => class Orchestrator {
   }
 
   close = () => {
-    for (const {conductor} of this.conductorPool) {
-      conductor.kill()
-    }
-    if(this.callbacks) {
-      this.callbacks.stop()
-    }
+    Object.values(this.factories).forEach(factory => factory.kill())
   }
 }
 

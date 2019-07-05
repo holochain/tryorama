@@ -1,6 +1,7 @@
 
 import {ScenarioApi} from './api'
 import {ScenarioInstanceRef} from './instance'
+import {ConductorManaged} from './conductor-managed'
 
 export type ScenarioFnCustom = (s: object, ins: {[id: string]: any}) => Promise<any>
 export type ScenarioFn = (s: ScenarioApi, ins: {[id: string]: ScenarioInstanceRef}) => Promise<any>
@@ -47,3 +48,11 @@ export type BridgeConfig = {
 
 export type ObjectN<V> = {[name: number]: V}
 export type ObjectS<V> = {[name: string]: V}
+
+export type SpawnConductorFn = (configPath: string) => ConductorManaged
+export type GenConfigFn = (debug: boolean) => GenConfigReturn
+
+export type GenConfigReturn = {
+  configPath: string,
+  adminPort: number,
+}
