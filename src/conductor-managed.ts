@@ -40,31 +40,13 @@ const storagePath = () => process.env.TRYORAMA_STORAGE || fs.mkdtempSync(path.jo
  */
 export class ConductorManaged extends Conductor {
 
-  webClientConnect: any
-  agentIds: Set<string>
-  dnaIds: Set<string>
-  instanceMap: InstanceMap
-  opts: any
-  name: string
-  adminInterfaceUrl: string
-  handle: any
-  dnaNonce: number
-  onSignal: (any) => void
-
-  runningInstances: Array<T.InstanceConfig>
-  testPort: number
-  adminPort: number
-
-  isInitialized: boolean
-
-
   kill () {
-    logger.info("TODO: kill?")
+    return this.handle.kill()
   }
 
-  abort (msg) {
+  async abort (msg) {
     logger.error(`Test conductor aborted: %j`, msg)
-    this.kill()
+    await this.kill()
     process.exit(-1)
   }
 

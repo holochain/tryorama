@@ -3,6 +3,7 @@
  * The class representing
  */
 
+import {Signal} from '@holochain/hachiko'
 import {ConductorManaged} from './conductor-managed'
 import * as T from './types'
 
@@ -18,7 +19,8 @@ export interface ScenarioConductor {
 type ConstructorArgs = {
   spawnConductor: T.SpawnConductorFn,
   genConfig: T.GenConfigFn,
-  testConfig: T.ConductorConfig
+  testConfig: T.ConductorConfig,
+  onSignal: (Signal) => void,
 }
 
 export class ConductorFactory implements ScenarioConductor {
@@ -28,17 +30,20 @@ export class ConductorFactory implements ScenarioConductor {
   spawnConductor: T.SpawnConductorFn
   genConfig: T.GenConfigFn
   testConfig: T.ConductorConfig
+  onSignal: (Signal) => void
   firstSpawn: boolean  // Each test starts with firstSpawn === true
 
   constructor (args: ConstructorArgs) {
     const {
       spawnConductor,
       genConfig,
-      testConfig
+      testConfig,
+      onSignal,
     } = args
     this.spawnConductor = spawnConductor
     this.genConfig = genConfig
     this.testConfig = testConfig
+    this.onSignal = onSignal
     this.firstSpawn = true
   }
 
@@ -48,7 +53,15 @@ export class ConductorFactory implements ScenarioConductor {
     } else if (this.conductor) {
       throw new Error(`Attempted to spawn conductor '${this.name}' twice`)
     }
-    this.conductor = await this.spawnConductor(this.configData.configPath)
+    const {configPath, adminUrl} = this.configData
+    const handle = await this.spawnConductor(this.name, configPath)
+    this.conductor = new ConductorManaged({
+      name: this.name,
+      adminInterfaceUrl: adminUrl,
+      configPath: configPath,
+      onSignal: this.onSignal,
+    })
+    await this.conductor.initialize()
     if (this.firstSpawn) {
       await this.conductor.prepareRun(this.testConfig)
       this.firstSpawn = false
@@ -64,7 +77,7 @@ export class ConductorFactory implements ScenarioConductor {
   }
 
   async setup () {
-    this.configData = this.genConfig(true)
+    this.configData = await this.genConfig(true)
   }
 
   async cleanup () {

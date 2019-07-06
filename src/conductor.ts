@@ -22,11 +22,15 @@ const wsUrl = port => `ws://localhost:${port}`
 
 const DEFAULT_ZOME_CALL_TIMEOUT = 60000
 
+
+// TODO: is this just constructor args? or actually options for the conductor?
 type ConductorOpts = {
   zomeCallTimeout?: number,
   name: string,
   adminInterfaceUrl: string,
-  configPath
+  onSignal: (Signal) => void,
+  configPath: string,
+  handle: T.Mortal,
 }
 
 const storagePath = () => process.env.TRYORAMA_STORAGE || fs.mkdtempSync(path.join(os.tmpdir(), 'try-o-rama-'))
@@ -40,7 +44,7 @@ export class Conductor {
   opts: ConductorOpts
   name: string
   adminInterfaceUrl: string
-  handle: any
+  handle: T.Mortal
   dnaNonce: number
   onSignal: (Signal) => void
 
@@ -50,13 +54,13 @@ export class Conductor {
 
   isInitialized: boolean
 
-  constructor (connect, opts: ConductorOpts) {
-    this.webClientConnect = connect
+  constructor (opts: ConductorOpts) {
+    this.webClientConnect = 'TODO'
     this.agentIds = new Set()
     this.dnaIds = new Set()
     this.instanceMap = {}
     this.opts = opts
-    this.handle = null
+    this.handle = opts.handle
     this.runningInstances = []
     this.dnaNonce = 1
     this.onSignal = opts.onSignal
@@ -332,5 +336,8 @@ export class Conductor {
     this.dnaNonce += 1
   }
 
-  abort (msg: string)
+  abort (msg) {
+    logger.error(`Test conductor aborted: %j`, msg)
+    process.exit(-1)
+  }
 }

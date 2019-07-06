@@ -1,4 +1,4 @@
-
+import {ChildProcess} from 'child_process'
 import {ScenarioApi} from './api'
 import {ScenarioInstanceRef} from './instance'
 import {ConductorManaged} from './conductor-managed'
@@ -49,10 +49,14 @@ export type BridgeConfig = {
 export type ObjectN<V> = {[name: number]: V}
 export type ObjectS<V> = {[name: string]: V}
 
-export type SpawnConductorFn = (configPath: string) => ConductorManaged
-export type GenConfigFn = (debug: boolean) => GenConfigReturn
+export type GenConfigFn = (debug: boolean) => Promise<GenConfigReturn>
+export type SpawnConductorFn = (name: string, configPath: string) => Promise<Mortal>
 
 export type GenConfigReturn = {
   configPath: string,
-  adminPort: number,
+  adminUrl: string,
+}
+
+export interface Mortal {
+  kill(): Promise<void>
 }
