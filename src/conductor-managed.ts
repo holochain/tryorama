@@ -45,7 +45,7 @@ export class ConductorManaged extends Conductor {
   }
 
   async abort (msg) {
-    logger.error(`Test conductor aborted: %j`, msg)
+    logger.error(`Test conductor aborted: %o`, msg)
     await this.kill()
     process.exit(-1)
   }

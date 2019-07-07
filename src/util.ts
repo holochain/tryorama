@@ -9,3 +9,9 @@ export const promiseSerial = promises =>
     promise.then(result =>
       p.then(Array.prototype.concat.bind(result))),
       Promise.resolve([]))
+
+
+export const trace = (msg, x) => {
+  console.log('<T>', msg, x)
+  return x
+}

@@ -17,6 +17,7 @@ export interface ScenarioConductor {
 }
 
 type ConstructorArgs = {
+  name: string,
   spawnConductor: T.SpawnConductorFn,
   genConfig: T.GenConfigFn,
   testConfig: T.ConductorConfig,
@@ -35,19 +36,22 @@ export class ConductorFactory implements ScenarioConductor {
 
   constructor (args: ConstructorArgs) {
     const {
+      name,
       spawnConductor,
       genConfig,
       testConfig,
       onSignal,
     } = args
+    this.name = name
     this.spawnConductor = spawnConductor
     this.genConfig = genConfig
     this.testConfig = testConfig
     this.onSignal = onSignal
     this.firstSpawn = true
+    this.conductor = null
   }
 
-  async spawn () {
+  async spawn (): Promise<void> {
     if (!this.configData) {
       throw new Error(`Attempted to spawn conductor '${this.name}' before config was generated`)
     } else if (this.conductor) {
@@ -60,12 +64,14 @@ export class ConductorFactory implements ScenarioConductor {
       adminInterfaceUrl: adminUrl,
       configPath: configPath,
       onSignal: this.onSignal,
+      handle: handle,
     })
     await this.conductor.initialize()
     if (this.firstSpawn) {
       await this.conductor.prepareRun(this.testConfig)
       this.firstSpawn = false
     }
+    await this.conductor.makeConnections(this.testConfig)
   }
 
   async kill () {
@@ -76,8 +82,12 @@ export class ConductorFactory implements ScenarioConductor {
     this.conductor = null
   }
 
-  async setup () {
-    this.configData = await this.genConfig(true)
+  async setup (index: number) {
+    this.configData = await this.genConfig(true, index)
+    const {configPath, adminUrl} = this.configData
+    if (!configPath || !adminUrl) {
+      throw new Error('getConfig did not return valid values')
+    }
   }
 
   async cleanup () {
@@ -89,15 +99,29 @@ export class ConductorFactory implements ScenarioConductor {
   }
 }
 
-export const conductorFactoryProxy = original => new Proxy(original, {
-  get (factory, name) {
-    if (!factory.conductor) {
-      throw new Error("No conductor running.")
-    }
-    if (!(name in factory)) {
-      return factory.conductor.instanceMap[name]
-    } else {
-      return factory[name]
-    }
-  }
-})
+// export const conductorFactoryProxy = (original: ConductorFactory) => new Proxy(original, {
+//   get (obj, prop) {
+//     if (typeof prop === 'string' && !(obj[prop])) {
+//       if (obj.conductor) {
+//         if (obj.conductor.instanceMap[prop]) {
+//           return obj.conductor.instanceMap[prop]
+//         } else {
+//           throw new Error(`Unknown instance '${prop}' on conductor '${obj.name}'`)
+//         }
+//       } else {
+//         throw new Error(`Can't access '${prop}' on conductor object, as no conductor is spawned`)
+//       }
+//     } else {
+//       return obj[prop]
+//     }
+//     // if (!(name in obj)) {
+//     //   if (!obj.conductor) {
+//     //     console.log(name, obj)
+//     //     throw new Error("No conductor running.")
+//     //   }
+//     //   return obj.conductor.instanceMap[name]
+//     // } else {
+//     //   return obj[name]
+//     // }
+//   }
+// })

@@ -49,7 +49,7 @@ export type BridgeConfig = {
 export type ObjectN<V> = {[name: number]: V}
 export type ObjectS<V> = {[name: string]: V}
 
-export type GenConfigFn = (debug: boolean) => Promise<GenConfigReturn>
+export type GenConfigFn = (debug: boolean, index: number) => Promise<GenConfigReturn>
 export type SpawnConductorFn = (name: string, configPath: string) => Promise<Mortal>
 
 export type GenConfigReturn = {

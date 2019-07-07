@@ -1,7 +1,7 @@
 import {createLogger, format, transports} from 'winston'
 import {NullTransport} from 'winston-null'
 
-const logLevel = 'info'
+const logLevel = 'debug'
 
 const logger = createLogger({
   levels: {

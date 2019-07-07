@@ -2,6 +2,8 @@ import {simpleExecutor} from '../src/executors'
 import {OrchestratorClass} from '../src/orchestrator'
 import * as test from 'tape'
 
+import {genConfig, spawnConductor} from './common'
+
 const http = require('http')
 
 test('a', async t => {
@@ -63,8 +65,9 @@ test('a', async t => {
         ],
       },
     },
-
     debugLog: false,
+    genConfig,
+    spawnConductor,
   })
 
   t.equal(Object.keys(orchestrator.conductorConfigs).length, 2)
@@ -109,7 +112,8 @@ test('callbacks', async t => {
       },
     },
     debugLog: false,
-    callbacksPort: 4242
+    genConfig,
+    spawnConductor,
   })
 
   console.warn("TODO: reinstate a test that actually runs the orchestrator")

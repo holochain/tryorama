@@ -9,6 +9,7 @@ const colors = require('colors/safe')
 
 const _ = require('lodash')
 
+import {connect} from '@holochain/hc-web-client'
 import {Signal} from '@holochain/hachiko'
 import {promiseSerial, delay} from './util'
 import * as T from './types'
@@ -22,8 +23,6 @@ const wsUrl = port => `ws://localhost:${port}`
 
 const DEFAULT_ZOME_CALL_TIMEOUT = 60000
 
-
-// TODO: is this just constructor args? or actually options for the conductor?
 type ConductorOpts = {
   zomeCallTimeout?: number,
   name: string,
@@ -38,10 +37,10 @@ const storagePath = () => process.env.TRYORAMA_STORAGE || fs.mkdtempSync(path.jo
 export class Conductor {
 
   webClientConnect: any
+  zomeCallTimeout: number
   agentIds: Set<string>
   dnaIds: Set<string>
   instanceMap: InstanceMap
-  opts: ConductorOpts
   name: string
   adminInterfaceUrl: string
   handle: T.Mortal
@@ -55,11 +54,11 @@ export class Conductor {
   isInitialized: boolean
 
   constructor (opts: ConductorOpts) {
-    this.webClientConnect = 'TODO'
+    this.webClientConnect = connect
     this.agentIds = new Set()
     this.dnaIds = new Set()
     this.instanceMap = {}
-    this.opts = opts
+    this.zomeCallTimeout = opts.zomeCallTimeout || DEFAULT_ZOME_CALL_TIMEOUT
     this.handle = opts.handle
     this.runningInstances = []
     this.dnaNonce = 1
@@ -100,7 +99,7 @@ export class Conductor {
       logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
       logger.debug(JSON.stringify(params, null, 2))
       const result = await call(method)(params)
-      logger.debug(`${colors.yellow.bold('-> %j')}`, result)
+      logger.debug(`${colors.yellow.bold('-> %o')}`, result)
       return result
     }
 
@@ -129,7 +128,7 @@ export class Conductor {
     this.callZome = (...args) => params => new Promise((resolve, reject) => {
       logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`, this.name, args[0], args[1], args[2])
       logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
-      const timeout = this.opts.zomeCallTimeout || DEFAULT_ZOME_CALL_TIMEOUT
+      const timeout = this.zomeCallTimeout
       const timer = setTimeout(() => reject(`zome call timed out after ${timeout / 1000} seconds: ${args.join('/')}`), timeout)
       const promise = callZome(...args)(params).then(result => {
         clearTimeout(timer)
@@ -180,7 +179,7 @@ export class Conductor {
 
     if (!this.dnaIds.has(dnaConfig.id)) {
       const installDnaResponse = await this.callAdmin('admin/dna/install_from_file')(dnaConfig)
-      logger.silly('installDnaResponse: %j', installDnaResponse)
+      logger.silly('installDnaResponse: %o', installDnaResponse)
       const dnaAddress = installDnaResponse.dna_hash
       this.dnaIds.add(dnaConfig.id)
       this.instanceMap[nonNoncifiedInstanceId].dnaAddress = dnaAddress
@@ -205,15 +204,15 @@ export class Conductor {
       }
       const {callZome, callAdmin} = this
       if (this.instanceMap[nonNoncifiedInstanceId]) {
-        const inst = new ScenarioInstanceRef({instanceId: instance.id, callZome, callAdmin})
+        const inst = new ScenarioInstanceRef({instanceId: instance.id, conductor: this})
         inst.agentAddress = this.instanceMap[nonNoncifiedInstanceId].agentAddress
         this.instanceMap[nonNoncifiedInstanceId] = inst
       } else {
-        this.instanceMap[nonNoncifiedInstanceId] = new ScenarioInstanceRef({instanceId: instance.id, callZome, callAdmin})
+        this.instanceMap[nonNoncifiedInstanceId] = new ScenarioInstanceRef({instanceId: instance.id, conductor: this})
       }
       if (!this.agentIds.has(instance.agent.id)) {
         const addAgentResponse = await this.callAdmin('test/agent/add')(instance.agent)
-        logger.silly('addAgentResponse: %j', addAgentResponse)
+        logger.silly('addAgentResponse: %o', addAgentResponse)
         const agentAddress = addAgentResponse.agent_address
         this.agentIds.add(instance.agent.id)
         this.instanceMap[nonNoncifiedInstanceId].agentAddress = agentAddress
@@ -299,22 +298,25 @@ export class Conductor {
     try {
       logger.debug("prepareRun :: setupNewInterface")
       await this.setupNewInterface()
-      logger.debug("prepareRun :: connectTest")
-      await this.connectTest()
       logger.debug("prepareRun :: setupInstances")
       await this.setupInstances(instances)
       if (bridges) {
         logger.debug("prepareRun :: setupBridges")
         await this.setupBridges(bridges)
       }
-      logger.debug("prepareRun :: startInstances")
-      await this.startInstances(instances)
-      logger.debug("prepareRun :: connectSignals")
-      await this.connectSignals()
     } catch (e) {
       this.abort(e)
     }
     logger.debug(colors.yellow.bold(`-------  done preparing ${this.name}`))
+  }
+
+  async makeConnections ({instances}: T.ConductorConfig) {
+    logger.debug("makeConnections :: connectTest")
+    await this.connectTest()
+    logger.debug("makeConnections :: connectSignals")
+    await this.connectSignals()
+    logger.debug("makeConnections :: startInstances")
+    await this.startInstances(instances)
   }
 
   cleanupRun = async ({bridges}: T.ConductorConfig) => {
@@ -337,7 +339,7 @@ export class Conductor {
   }
 
   abort (msg) {
-    logger.error(`Test conductor aborted: %j`, msg)
+    logger.error(`Test conductor aborted: %o`, msg)
     process.exit(-1)
   }
 }

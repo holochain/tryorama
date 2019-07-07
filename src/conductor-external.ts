@@ -56,12 +56,8 @@ export class ConductorExternal extends Conductor {
 
 
   abort (msg) {
-    logger.error(`Test conductor aborted: %j`, msg)
+    logger.error(`Test conductor aborted: %o`, msg)
     process.exit(-1)
   }
 
-  failTest (e) {
-    logger.error("Test failed while running: %j", e)
-    throw e
-  }
 }

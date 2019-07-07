@@ -4,14 +4,13 @@ const getPort = require('get-port')
 
 import * as _ from 'lodash'
 
-import {connect} from '@holochain/hc-web-client'
 import {Waiter, FullSyncNetwork, NodeId, NetworkMap, Signal} from '@holochain/hachiko'
 
 import * as T from './types'
 import {ObjectS} from './types'
 import {Conductor} from './conductor'
 import {ConductorManaged} from './conductor-managed'
-import {ConductorFactory, conductorFactoryProxy} from './conductor-factory'
+import {ConductorFactory} from './conductor-factory'
 import {ScenarioApi} from './api'
 import {ConductorMap, InstanceMap} from './instance'
 import {simpleExecutor} from './executors'
@@ -45,8 +44,6 @@ export const OrchestratorClass = Conductor => class Orchestrator {
   startNonce: number
   factories: ObjectS<ConductorFactory>
   factoryMap: ObjectS<ConductorFactory>
-  haveAllConductors: Promise<void>
-  _spawnConductor: T.SpawnConductorFn
 
   constructor ({
     conductors,
@@ -61,29 +58,34 @@ export const OrchestratorClass = Conductor => class Orchestrator {
     this.middleware = middleware
     this.executor = executor
     this.conductorOpts = {debugLog}
-    this._spawnConductor = spawnConductor
 
     this.scenarios = []
     this.startNonce = 1
 
     this.conductorConfigs = desugarConductorConfig(conductors)
 
-    const reducer = (fs, [name, c]) => {
-      fs[name] = conductorFactoryProxy(new ConductorFactory({
+    const reducer = ([f1, f2], [name, c]) => {
+      const factory = new ConductorFactory({
+        name,
         spawnConductor: spawnConductor,
         genConfig: genConfig,
-        testConfig: c
-      }))
+        testConfig: c,
+        onSignal: this.onSignal.bind(this)
+      })
+      f1[name] = factory
+      f2[name] = (factory)
+      return [f1, f2]
     }
-    this.factories = Object.entries(this.conductorConfigs).reduce(
-      reducer, {} as ObjectS<ConductorFactory>
+    [this.factories, this.factoryMap] = Object.entries(this.conductorConfigs).reduce(
+      reducer,
+      [{} as ObjectS<ConductorFactory>, {} as ObjectS<ConductorFactory>]
     )
-    this.factoryMap = this.factories  // duplicate, TODO remove?
 
     this.registerScenario.only = this.registerScenarioOnly.bind(this)
 
     this.refreshWaiter()
   }
+
 
   onSignal ({conductorName, instanceId, signal}) {
     const instanceConfig = this.conductorConfigs[conductorName].instances.find(c => c.id === instanceId)
@@ -137,12 +139,14 @@ export const OrchestratorClass = Conductor => class Orchestrator {
       let i = 0
       for (const [name, factory] of Object.entries(this.factories)) {
         logger.debug('preparing run...')
-        await factory.setup()
+        await factory.setup(i++)
         logger.debug('...run prepared.')
       }
     } catch (e) {
+      logger.error("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
       logger.error("Error during test instance setup:")
       logger.error(e)
+      logger.error("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
       throw e
     }
 
@@ -164,15 +168,17 @@ export const OrchestratorClass = Conductor => class Orchestrator {
           logger.debug('...cleaned up')
         }
       } catch (e) {
+        logger.error("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         logger.error("Error during test instance cleanup:")
         logger.error(e)
+        logger.error("xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx")
         throw e
       }
     }
   }
 
   failTest (e) {
-    logger.error("Test failed while running: %j", e)
+    logger.error("Test failed while running: %o", e)
     throw e
   }
 
@@ -199,10 +205,6 @@ export const OrchestratorClass = Conductor => class Orchestrator {
   })
 
   run = async () => {
-    logger.info("Waiting for all conductors to connect.")
-    logger.info("Conductors in config: %j", Object.keys(this.conductorConfigs))
-    await this.haveAllConductors
-    logger.info("We have all conductors we need. Starting scenarios.")
 
     const onlyTests = this.scenarios.filter(([desc, execute, only]) => only)
 
