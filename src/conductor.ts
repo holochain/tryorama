@@ -3,7 +3,6 @@ const del = require('del')
 const fs = require('fs')
 const os = require('os')
 const path = require('path')
-const getPort = require('get-port')
 
 const colors = require('colors/safe')
 
@@ -27,6 +26,7 @@ type ConductorOpts = {
   zomeCallTimeout?: number,
   name: string,
   adminInterfaceUrl: string,
+  testPort: number,
   onSignal: (Signal) => void,
   configPath: string,
   handle: T.Mortal,
@@ -65,7 +65,8 @@ export class Conductor {
     this.onSignal = opts.onSignal
     this.name = opts.name
     this.adminInterfaceUrl = opts.adminInterfaceUrl
-    logger.info("externalConductor: %s @ %s", opts.name, opts.adminInterfaceUrl)
+    this.testPort = opts.testPort
+    logger.info("externalConductor: %s @ %s, test port = %n", opts.name, opts.adminInterfaceUrl, opts.testPort)
   }
 
   initialize = async (): Promise<void> => {
@@ -123,7 +124,11 @@ export class Conductor {
   }
 
   connectTest = async () => {
+    if (!this.testPort) {
+      throw new Error(`Attempting to connect to test interface with invalid port: ${this.testPort}`)
+    }
     const url = this.testInterfaceUrl()
+    logger.debug(`connectTest :: connecting to ${url}`)
     const { callZome } = await this.webClientConnect({url})
     this.callZome = (...args) => params => new Promise((resolve, reject) => {
       logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`, this.name, args[0], args[1], args[2])
@@ -151,16 +156,7 @@ export class Conductor {
     })
   }
 
-  getInterfacePort = async () => {
-    const port = await getPort()
-    // const port = await getPort({port: getPort.makeRange(5555, 5999)})
-    logger.info("using port, %n", port)
-    return port
-  }
-
   setupNewInterface = async () => {
-    console.debug("setupNewInterface :: getInterfacePort")
-    this.testPort = await this.getInterfacePort()
     console.debug("setupNewInterface :: callAdmin")
     await this.callAdmin('admin/interface/add')({
       id: this.testInterfaceId(),

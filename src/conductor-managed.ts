@@ -41,7 +41,9 @@ const storagePath = () => process.env.TRYORAMA_STORAGE || fs.mkdtempSync(path.jo
 export class ConductorManaged extends Conductor {
 
   kill () {
-    return this.handle.kill()
+    const signal = 'SIGINT'
+    logger.info(`Stopping conductor with ${signal}`)
+    return this.handle.kill(signal)
   }
 
   async abort (msg) {

@@ -58,5 +58,5 @@ export type GenConfigReturn = {
 }
 
 export interface Mortal {
-  kill(): Promise<void>
+  kill(signal?): Promise<void>
 }

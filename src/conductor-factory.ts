@@ -5,7 +5,9 @@
 
 import {Signal} from '@holochain/hachiko'
 import {ConductorManaged} from './conductor-managed'
+import logger from './logger'
 import * as T from './types'
+const getPort = require('get-port')
 
 const ADMIN_INTERFACE_ID = 'admin-interface'
 
@@ -31,6 +33,7 @@ export class ConductorFactory implements ScenarioConductor {
   spawnConductor: T.SpawnConductorFn
   genConfig: T.GenConfigFn
   testConfig: T.ConductorConfig
+  testPort: number
   onSignal: (Signal) => void
   firstSpawn: boolean  // Each test starts with firstSpawn === true
 
@@ -51,6 +54,13 @@ export class ConductorFactory implements ScenarioConductor {
     this.conductor = null
   }
 
+  getArbitraryInterfacePort = async () => {
+    const port = await getPort()
+    // const port = await getPort({port: getPort.makeRange(5555, 5999)})
+    logger.info("using port, %n", port)
+    return port
+  }
+
   async spawn (): Promise<void> {
     if (!this.configData) {
       throw new Error(`Attempted to spawn conductor '${this.name}' before config was generated`)
@@ -59,19 +69,27 @@ export class ConductorFactory implements ScenarioConductor {
     }
     const {configPath, adminUrl} = this.configData
     const handle = await this.spawnConductor(this.name, configPath)
+    if (!this.testPort) {
+      this.testPort = await this.getArbitraryInterfacePort()
+    }
     this.conductor = new ConductorManaged({
       name: this.name,
       adminInterfaceUrl: adminUrl,
+      testPort: this.testPort,
       configPath: configPath,
       onSignal: this.onSignal,
       handle: handle,
     })
+    logger.debug("ConductorFactory :: spawn :: spawned")
     await this.conductor.initialize()
+    logger.debug("ConductorFactory :: spawn :: initialized")
     if (this.firstSpawn) {
       await this.conductor.prepareRun(this.testConfig)
+      logger.debug("ConductorFactory :: spawn :: run")
       this.firstSpawn = false
     }
     await this.conductor.makeConnections(this.testConfig)
+    logger.debug("ConductorFactory :: spawn :: makeConnections")
   }
 
   async kill () {
@@ -85,6 +103,9 @@ export class ConductorFactory implements ScenarioConductor {
   async setup (index: number) {
     this.configData = await this.genConfig(true, index)
     const {configPath, adminUrl} = this.configData
+    logger.debug("genConfig data:")
+    logger.debug("configPath: %s", configPath)
+    logger.debug("adminUrl: %s", adminUrl)
     if (!configPath || !adminUrl) {
       throw new Error('getConfig did not return valid values')
     }
