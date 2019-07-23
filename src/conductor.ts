@@ -270,8 +270,8 @@ export class Conductor {
     }
   }
 
-  startInstances = async (instanceConfigs: Array<T.InstanceConfig>) => {
-    for (const instanceConfig of instanceConfigs) {
+  startInstances = async ({instances}: T.ConductorConfig) => {
+    for (const instanceConfig of instances) {
       const instance = JSON.parse(JSON.stringify(instanceConfig))
       instance.id += '-' + this.dnaNonce
       await this.callAdmin('admin/instance/start')(instance)
@@ -311,8 +311,6 @@ export class Conductor {
     await this.connectTest()
     logger.debug("makeConnections :: connectSignals")
     await this.connectSignals()
-    logger.debug("makeConnections :: startInstances")
-    await this.startInstances(instances)
   }
 
   cleanupRun = async ({bridges}: T.ConductorConfig) => {

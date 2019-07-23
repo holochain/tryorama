@@ -30,6 +30,7 @@ export class ConductorFactory implements ScenarioConductor {
   name: string
   configData: T.GenConfigReturn | null
   conductor: ConductorManaged | null
+  lastConductor: ConductorManaged | null
   spawnConductor: T.SpawnConductorFn
   genConfig: T.GenConfigFn
   testConfig: T.ConductorConfig
@@ -52,6 +53,7 @@ export class ConductorFactory implements ScenarioConductor {
     this.onSignal = onSignal
     this.firstSpawn = true
     this.conductor = null
+    this.lastConductor = null
   }
 
   getArbitraryInterfacePort = async () => {
@@ -72,23 +74,32 @@ export class ConductorFactory implements ScenarioConductor {
     if (!this.testPort) {
       this.testPort = await this.getArbitraryInterfacePort()
     }
-    this.conductor = new ConductorManaged({
-      name: this.name,
-      adminInterfaceUrl: adminUrl,
-      testPort: this.testPort,
-      configPath: configPath,
-      onSignal: this.onSignal,
-      handle: handle,
-    })
-    logger.debug("ConductorFactory :: spawn :: spawned")
-    await this.conductor.initialize()
-    logger.debug("ConductorFactory :: spawn :: initialized")
+
     if (this.firstSpawn) {
+      this.conductor = new ConductorManaged({
+        name: this.name,
+        adminInterfaceUrl: adminUrl,
+        testPort: this.testPort,
+        configPath: configPath,
+        onSignal: this.onSignal,
+        handle: handle,
+      })
+      logger.debug("ConductorFactory :: spawn :: spawned")
+      await this.conductor.initialize()
+      logger.debug("ConductorFactory :: spawn :: initialized")
       await this.conductor.prepareRun(this.testConfig)
       logger.debug("ConductorFactory :: spawn :: run")
-      this.firstSpawn = false
+    } else {
+      this.conductor = this.lastConductor!
+      this.conductor.handle = handle
+      this.lastConductor = null
     }
     await this.conductor.makeConnections(this.testConfig)
+    if (this.firstSpawn) {
+      logger.debug("makeConnections :: startInstances")
+      await this.conductor.startInstances(this.testConfig)
+    }
+    this.firstSpawn = false
     logger.debug("ConductorFactory :: spawn :: makeConnections")
   }
 
@@ -96,6 +107,7 @@ export class ConductorFactory implements ScenarioConductor {
     if (!this.conductor) {
       throw new Error(`Attempted to kill conductor '${this.name}' before spawning`)
     }
+    this.lastConductor = this.conductor
     await this.conductor.kill()
     this.conductor = null
   }
@@ -115,7 +127,10 @@ export class ConductorFactory implements ScenarioConductor {
     try {
       await this.conductor!.cleanupRun(this.testConfig)
       await this.kill()
-    } catch (e) {}
+    } catch (e) {
+      console.error("Caught something during factory cleanup:")
+      console.error(e)
+    }
     this.configData = null
   }
 }
