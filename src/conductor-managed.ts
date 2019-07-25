@@ -43,6 +43,7 @@ export class ConductorManaged extends Conductor {
   kill () {
     const signal = 'SIGINT'
     logger.info(`Stopping conductor with ${signal}`)
+    this.isInitialized = false
     return this.handle.kill(signal)
   }
 

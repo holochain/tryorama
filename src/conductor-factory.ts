@@ -93,6 +93,8 @@ export class ConductorFactory implements ScenarioConductor {
       this.conductor = this.lastConductor!
       this.conductor.handle = handle
       this.lastConductor = null
+      logger.debug("ConductorFactory :: spawn :: spawned")
+      await this.conductor.initialize()
     }
     await this.conductor.makeConnections(this.testConfig)
     if (this.firstSpawn) {
@@ -125,8 +127,10 @@ export class ConductorFactory implements ScenarioConductor {
 
   async cleanup () {
     try {
-      await this.conductor!.cleanupRun(this.testConfig)
-      await this.kill()
+      if (this.conductor) {
+        await this.conductor.cleanupRun(this.testConfig)
+        await this.kill()
+      }
     } catch (e) {
       console.error("Caught something during factory cleanup:")
       console.error(e)
