@@ -130,6 +130,8 @@ export class ConductorFactory implements ScenarioConductor {
       if (this.conductor) {
         await this.conductor.cleanupRun(this.testConfig)
         await this.kill()
+      } else {
+        logger.debug("factory cleaned up, but there was no conductor 🤔")
       }
     } catch (e) {
       console.error("Caught something during factory cleanup:")
