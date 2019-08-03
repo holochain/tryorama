@@ -1,6 +1,10 @@
 # try-o-rama
 
-> "[diorama](https://github.com/holochain/diorama)"++ === "triorama", but "try-o-rama" is catchier ;)
+> diorama++ === triorama, but "try-o-rama" is catchier ;)
+
+**NOTE:** This is experimental software, intended for use by Holochain Core developers to test real-world networking scenarios. If you are developing your own DNA and want to write scenario tests, your best bet is to use [diorama](https://github.com/holochain/diorama), which is more stable.
+
+- - -
 
 Try-o-rama orchestrates scenario tests across multiple Conductors. The test writer writes scenarios and registers them with Try-o-rama. Once a collection of Conductors have been started by some other process, they can register with a Orchestrator which will cause the steps of the scenario to be executed on each Conductor, results reported back, and assertions made.
 
