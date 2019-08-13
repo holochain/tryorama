@@ -62,9 +62,15 @@ test('a', async t => {
           Orchestrator.bridge('bridge', 'holofuel', 'dpki')
         ],
       },
+
     },
 
     debugLog: false,
+
+    waiter: {
+      softTimeout: 1000,
+      hardTimeout: 2000,
+    },
   })
 
   t.equal(Object.keys(orchestrator.conductorConfigs).length, 2)

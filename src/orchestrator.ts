@@ -4,7 +4,14 @@ const colors = require('colors/safe')
 import * as _ from 'lodash'
 
 import {connect} from '@holochain/hc-web-client'
-import {Waiter, FullSyncNetwork, NodeId, NetworkMap, Signal} from '@holochain/hachiko'
+import {
+  Waiter,
+  WaiterOptions,
+  FullSyncNetwork,
+  NodeId,
+  NetworkMap,
+  Signal
+} from '@holochain/hachiko'
 
 import * as T from './types'
 import {ObjectS} from './types'
@@ -28,6 +35,7 @@ type OrchestratorConstructorParams = {
   debugLog?: boolean,
   callbacksAddress?: string,
   callbacksPort?: number,
+  waiter?: WaiterOptions,
 }
 
 export const OrchestratorClass = Conductor => class Orchestrator {
@@ -38,6 +46,7 @@ export const OrchestratorClass = Conductor => class Orchestrator {
   executor: any | void
   conductorOpts: any | void
   waiter: Waiter
+  waiterOpts: WaiterOptions | undefined
   startNonce: number
   callbacks: Callbacks | void
   conductors: Array<Conductor>
@@ -52,6 +61,7 @@ export const OrchestratorClass = Conductor => class Orchestrator {
     debugLog = false,
     callbacksAddress = '0.0.0.0',
     callbacksPort = 9999,
+    waiter,
   }: OrchestratorConstructorParams) {
 
     this.conductors = []
@@ -59,6 +69,7 @@ export const OrchestratorClass = Conductor => class Orchestrator {
     this.middleware = middleware
     this.executor = executor
     this.conductorOpts = {debugLog}
+    this.waiterOpts = waiter
 
     this.scenarios = []
     this.conductorPool = []
@@ -215,7 +226,7 @@ export const OrchestratorClass = Conductor => class Orchestrator {
       .groupBy(n => n.dna)
       .mapValues(ns => new FullSyncNetwork(ns.map(n => n.id)))
       .value()
-    this.waiter = new Waiter(networkModels)
+    this.waiter = new Waiter(networkModels, this.waiterOpts)
   })
 
   run = async () => {
