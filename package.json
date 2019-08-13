@@ -1,6 +1,6 @@
 {
   "name": "@holochain/try-o-rama",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "An orchestrator for running Holochain scenario tests across multiple networked Conductors",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
