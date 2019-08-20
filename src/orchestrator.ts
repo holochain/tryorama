@@ -1,0 +1,92 @@
+import * as T from "./types";
+import * as M from "./middleware";
+import { Waiter, NetworkMap } from "@holochain/hachiko";
+import logger from "./logger";
+
+type OrchestratorConstructorParams = {
+  spawnConductor: T.SpawnConductorFn,
+  genConfig: T.GenConfigFn,
+  middleware?: any,
+  debugLog?: boolean,
+}
+
+type RegisteredScenario = {
+  desc: string,
+  execute: ScenarioExecutor,
+  only: boolean,
+}
+
+type ScenarioExecutor = () => void
+
+export class Orchestrator {
+
+  registerScenario: Function & { only: Function }
+
+  _genConfig: T.GenConfigFn
+  _middleware: M.Middleware
+  _scenarios: Array<RegisteredScenario>
+  _spawnConductor: T.SpawnConductorFn
+  _waiter: Waiter
+
+  constructor(o: OrchestratorConstructorParams) {
+    this._genConfig = o.genConfig
+    this._spawnConductor = o.spawnConductor
+    this._middleware = o.middleware
+    this._scenarios = []
+
+    const registerScenario = (desc, scenario) => this._makeExecutor(desc, scenario, false)
+    const registerScenarioOnly = (desc, scenario) => this._makeExecutor(desc, scenario, true)
+    this.registerScenario = Object.assign(registerScenario, { only: registerScenarioOnly })
+  }
+
+  run = async () => {
+    const onlyTests = this._scenarios.filter(({ only }) => only)
+    const tests = onlyTests.length > 0 ? onlyTests : this._scenarios
+
+    logger.debug("About to execute %d tests", tests.length)
+    if (onlyTests.length > 0) {
+      logger.warn(`.only was invoked, only running ${onlyTests.length} test(s)!`)
+    }
+    for (const { desc, execute } of tests) {
+      logger.debug("Executing test: %s", desc)
+      await execute()
+    }
+  }
+
+  _makeExecutor = (desc: string, scenario: Function, only: boolean): void => {
+    const execute = () => this._middleware(
+      (f: T.ScenarioFn, desc) => this._runScenario(f, desc),
+      scenario,
+      desc
+    )
+    this._scenarios.push({ desc, execute, only })
+  }
+
+  _runScenario = async (scenario: T.ScenarioFn, desc?: string): Promise<void> => {
+
+  }
+
+  // _refreshWaiter = () => new Promise(resolve => {
+  //   if (this._waiter) {
+  //     logger.info("Test over, waiting for Waiter to flush...")
+  //     // Wait for final networking effects to resolve
+  //     this._waiter.registerCallback({ nodes: null, resolve })
+  //   } else {
+  //     resolve()
+  //   }
+  // }).then(() => {
+  //   const networkModels: NetworkMap = _.chain(this.conductorConfigs)
+  //     .toPairs()
+  //     .map(([name, c]) => c.instances.map(i => ({
+  //       id: `${name}::${i.id}`,
+  //       dna: i.dna.id
+  //     })))
+  //     .flatten()
+  //     .groupBy(n => n.dna)
+  //     .mapValues(ns => new FullSyncNetwork(ns.map(n => n.id)))
+  //     .value()
+  //   this._waiter = new Waiter(networkModels)
+  // })
+
+}
+

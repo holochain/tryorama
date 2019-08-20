@@ -1,0 +1,1 @@
+import { ObjectS } from "./types";
