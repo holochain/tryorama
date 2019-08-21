@@ -30,7 +30,7 @@ export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, rej
     reject("tapeExecutor middleware requires scenario functions to take 3 arguments, please check your scenario definitions.")
   }
   tape("TODO", t => {
-    run((s, ins) => f(s, t, ins))
+    run((s, ins) => f(s, t, ins)
       .catch((err) => {
         try {
           // Include stack trace from actual test function, but all on one line.
@@ -41,9 +41,9 @@ export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, rej
         }
       })
       .then(() => {
-        logger.debug("Test end")
         t.end()
         resolve()
       })
+    )
   })
 })

@@ -12,11 +12,10 @@ const orchestrator = new Orchestrator({
 
 const testRan = sinon.spy()
 
-let resume: any = null
-const pauser = new Promise(resolve => (resume = resolve))
+const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 orchestrator.registerScenario('test scenario #1', async (s, t) => {
-  // await pauser
+  await delay(1000)
   t.equal(typeof s.initialize, 'function')
   testRan(1)
 })
@@ -26,9 +25,12 @@ orchestrator.registerScenario('test scenario #2', async (s, t) => {
   testRan(2)
 })
 
-orchestrator.run()
-
-test("Double-check that tapeExecutor test ran", t => {
-  t.equal(testRan.callCount, 2)
-  t.end()
+orchestrator.run().then(num => {
+  const valid = 
+    num === testRan.callCount 
+    && testRan.firstCall.calledWith(1) 
+    && testRan.secondCall.calledWith(2)
+  if (!valid) {
+    throw new Error("tape tests are broken!")
+  }
 })
