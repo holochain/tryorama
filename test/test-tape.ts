@@ -14,12 +14,12 @@ const testRan = sinon.spy()
 
 orchestrator.registerScenario('test scenario 1', async (s, t) => {
   t.equal(typeof s.initialize, 'function')
-  testRan("inside tape test")
+  testRan()
 })
 
 orchestrator.run()
 
 test("Double-check that tapeExecutor test ran", t => {
-  t.ok(testRan.calledWith("inside tape test"))
+  t.equal(testRan.callCount, 1)
   t.end()
 })

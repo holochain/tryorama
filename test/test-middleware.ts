@@ -3,16 +3,16 @@ const test = require('tape')
 
 import { combine } from '../src/middleware'
 
-const increment = (next, f) => next(s => f({ v: s.v + 1 }))
-const triple = (next, f) => next(s => f({ v: s.v * 3 }))
-const addParams = (next, f) => next((s, n) => f({ v: s.v + n }))
-const bangs = (next, f) => next(s => f(
+const increment = (run, f) => run(s => f({ v: s.v + 1 }))
+const triple = (run, f) => run(s => f({ v: s.v * 3 }))
+const addParams = (run, f) => run((s, n) => f({ v: s.v + n }))
+const bangs = (run, f) => run(s => f(
   Object.assign(s, { description: s.description + '!!!' })
 ))
 
 const runner = (desc, s, ...extra) => Object.assign(
-  (f) => { s.description = desc; f(s, ...extra) },
-  {description: desc}
+  (f) => { s.description = desc; return f(s, ...extra) },
+  { description: desc }
 )
 
 test('single middleware', t => {

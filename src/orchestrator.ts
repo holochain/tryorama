@@ -17,7 +17,7 @@ type RegisteredScenario = {
   only: boolean,
 }
 
-type ScenarioExecutor = () => void
+type ScenarioExecutor = () => Promise<void>
 
 export class Orchestrator {
 
@@ -46,7 +46,7 @@ export class Orchestrator {
 
     logger.debug("About to execute %d tests", tests.length)
     if (onlyTests.length > 0) {
-      logger.warn(`.only was invoked, only running ${onlyTests.length} test(s)!`)
+      logger.warn(`.only was invoked; only running ${onlyTests.length} test(s)!`)
     }
     for (const { desc, execute } of tests) {
       logger.debug("Executing test: %s", desc)
