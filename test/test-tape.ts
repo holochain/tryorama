@@ -4,6 +4,7 @@ const test = require('tape')
 import { Orchestrator } from '../src/orchestrator'
 import { tapeExecutor } from '../src/middleware'
 import { genConfig, spawnConductor } from './common'
+import logger from '../src/logger';
 
 const orchestrator = new Orchestrator({
   spawnConductor, genConfig,
@@ -25,12 +26,15 @@ orchestrator.registerScenario('test scenario #2', async (s, t) => {
   testRan(2)
 })
 
-orchestrator.run().then(num => {
+orchestrator.registerScenario('function signature check', async (s, t, x) => {})
+
+orchestrator.run().then(stats => {
   const valid = 
-    num === testRan.callCount 
-    && testRan.firstCall.calledWith(1) 
+    testRan.firstCall.calledWith(1) 
     && testRan.secondCall.calledWith(2)
+    && stats.errors[0].includes('2 arguments')
   if (!valid) {
-    throw new Error("tape tests are broken!")
+    logger.error("tape tests are broken!")
+    process.exit(-1)
   }
 })

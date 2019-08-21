@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "tsc -w",
-    "test": "ts-node test/index.ts"
+    "test": "ts-node test/index.ts | tap-diff"
   },
   "author": "",
   "license": "ISC",
@@ -22,6 +22,7 @@
   "devDependencies": {
     "@types/node": "^12.7.2",
     "sinon": "^7.4.1",
+    "tap-diff": "^0.1.1",
     "tape": "^4.11.0",
     "tape-async": "^2.3.0",
     "ts-node": "^8.3.0",

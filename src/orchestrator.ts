@@ -17,6 +17,11 @@ type RegisteredScenario = {
   only: boolean,
 }
 
+type TestStats = {
+  successes: number,
+  errors: Array<string>,
+}
+
 type ScenarioExecutor = () => Promise<void>
 
 export class Orchestrator {
@@ -40,9 +45,11 @@ export class Orchestrator {
     this.registerScenario = Object.assign(registerScenario, { only: registerScenarioOnly })
   }
 
-  run = async (): Promise<number> => {
+  run = async (): Promise<TestStats> => {
     const onlyTests = this._scenarios.filter(({ only }) => only)
     const tests = onlyTests.length > 0 ? onlyTests : this._scenarios
+    let successes = 0
+    const errors: Array<string> = []
 
     logger.debug("About to execute %d tests", tests.length)
     if (onlyTests.length > 0) {
@@ -50,20 +57,23 @@ export class Orchestrator {
     }
     for (const { desc, execute } of tests) {
       logger.debug("Executing test: %s", desc)
-      await execute()
+      try {
+        await execute()
+        successes += 1
+      } catch (e) {
+        errors.push(`'${desc}': ${e}`)
+      }
     }
-    return tests.length
+    return {
+      successes,
+      errors
+    }
   }
 
   _makeExecutor = (desc: string, scenario: Function, only: boolean): void => {
-    const runner = Object.assign(this._runScenario, { description: desc })
+    const runner = scenario => scenario(new ScenarioApi(desc))
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ desc, execute, only })
-  }
-
-  _runScenario = async (scenario: T.ScenarioFn): Promise<void> => {
-    const api = new ScenarioApi("TODO")
-    return scenario(api)
   }
 
   // _refreshWaiter = () => new Promise(resolve => {
