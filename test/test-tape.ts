@@ -12,14 +12,23 @@ const orchestrator = new Orchestrator({
 
 const testRan = sinon.spy()
 
-orchestrator.registerScenario('test scenario 1', async (s, t) => {
+let resume: any = null
+const pauser = new Promise(resolve => (resume = resolve))
+
+orchestrator.registerScenario('test scenario #1', async (s, t) => {
+  // await pauser
   t.equal(typeof s.initialize, 'function')
-  testRan()
+  testRan(1)
+})
+
+orchestrator.registerScenario('test scenario #2', async (s, t) => {
+  t.equal(typeof s.initialize, 'function')
+  testRan(2)
 })
 
 orchestrator.run()
 
 test("Double-check that tapeExecutor test ran", t => {
-  t.equal(testRan.callCount, 1)
+  t.equal(testRan.callCount, 2)
   t.end()
 })

@@ -1,3 +1,5 @@
+import logger from "./logger";
+
 export type Middleware = (run: MiddlewareRunner, scenario: Function) => Promise<void>
 export type MiddlewareRunner = (f: Function) => Promise<void>
 
@@ -23,11 +25,11 @@ export const combine = (...ms: Array<Middleware>): Middleware =>
 /** The no-op middleware */
 export const unit = (run, f) => run(f)
 
-export const tapeExecutor = (tape: Middleware) => (run, f) => new Promise((resolve, reject) => {
+export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, reject) => {
   if (f.length !== 2) {
     reject("tapeExecutor middleware requires scenario functions to take 3 arguments, please check your scenario definitions.")
   }
-  tape(run.description, t => {
+  tape("TODO", t => {
     run((s, ins) => f(s, t, ins))
       .catch((err) => {
         try {
@@ -39,6 +41,7 @@ export const tapeExecutor = (tape: Middleware) => (run, f) => new Promise((resol
         }
       })
       .then(() => {
+        logger.debug("Test end")
         t.end()
         resolve()
       })
