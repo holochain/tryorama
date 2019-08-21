@@ -7,6 +7,7 @@
     "test": "test"
   },
   "scripts": {
+    "dev": "tsc -w",
     "test": "ts-node test/index.ts"
   },
   "author": "",

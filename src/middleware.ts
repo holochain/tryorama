@@ -1,26 +1,28 @@
-export type Middleware = (next: MiddlewareRunner, scenario: Function, desc?: string) => void
-export type MiddlewareRunner = (f: Function, desc?: string) => void
+export type Middleware = (next: MiddlewareRunner, scenario: Function) => void
+export type MiddlewareRunner = (f: Function) => void
 
 
 export const combine = (...ms: Array<Middleware>): Middleware =>
-  (next, f, desc) => {
-    const go = (ms: Array<Middleware>, f: Function, desc?: string) => {
+  (next, f) => {
+    const go = (ms: Array<Middleware>, f: Function) => {
       const m = ms.pop()
       if (m) {
-        const recurse = (g, desc) => go(ms, g, desc)
+        const recurse = (g) => go(ms, g)
         return m(recurse, f)
       } else {
-        return next(f, desc)
+        return next(f)
       }
     }
-    return go(ms, f, desc)
+    return go(ms, f)
   }
 
-export const tapeExecutor = (tape: Middleware) => (next, f, desc) => new Promise((resolve, reject) => {
-  if (f.length !== 3) {
-    reject("tapeMiddleware requires scenario functions to take 3 arguments, please check your scenario definitions.")
+export const unit = (next, f) => next(f)
+
+export const tapeExecutor = (tape: Middleware) => (next, f) => new Promise((resolve, reject) => {
+  if (f.length !== 2) {
+    reject("tapeExecutor middleware requires scenario functions to take 3 arguments, please check your scenario definitions.")
   }
-  tape(desc, t => {
+  tape(next.description, t => {
     next((s, ins) => f(s, t, ins))
       .catch((err) => {
         try {

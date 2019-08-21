@@ -6,11 +6,14 @@ import { combine } from '../src/middleware'
 const increment = (next, f) => next(s => f({ v: s.v + 1 }))
 const triple = (next, f) => next(s => f({ v: s.v * 3 }))
 const addParams = (next, f) => next((s, n) => f({ v: s.v + n }))
-const bang = (next, f) => next(s => f(
-  Object.assign(s, { description: s.description + '!' })
+const bangs = (next, f) => next(s => f(
+  Object.assign(s, { description: s.description + '!!!' })
 ))
 
-const runner = (desc, s, ...extra) => (f) => { s.description = desc; f(s, ...extra) }
+const runner = (desc, s, ...extra) => Object.assign(
+  (f) => { s.description = desc; f(s, ...extra) },
+  {description: desc}
+)
 
 test('single middleware', t => {
   increment(runner('', { v: 0 }), s => {
@@ -34,15 +37,15 @@ test('middleware combinations', t => {
 })
 
 test('function signature modification', t => {
-  addParams(runner('', { v: 1 }, 2), (s) => {
+  addParams(runner('', { v: 1 }, 2), s => {
     t.equal(s.v, 3)
   })
   t.end()
 })
 
 test('description modification', t => {
-  bang(runner('description', {}, 2), (s) => {
-    t.equal(s.description, 'description!')
+  bangs(runner('description', {}, 2), s => {
+    t.equal(s.description, 'description!!!')
   })
   t.end()
 })

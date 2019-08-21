@@ -1,4 +1,5 @@
 import { ConductorConfig } from "./types";
+import { notImplemented } from "./common";
 
 
 
@@ -8,8 +9,12 @@ export class Conductor {
   _hcConnect: any
   _isInitialized: boolean
 
-  callZome = () => {
+  callAdmin = (...a) => {
+    throw notImplemented
+  }
 
+  callZome = (...a) => {
+    throw notImplemented
   }
 
   constructor(config: ConductorConfig) {

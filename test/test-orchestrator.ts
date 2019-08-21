@@ -1,41 +1,14 @@
-import {simpleExecutor} from '../src/executors'
-import {OrchestratorClass} from '../src/orchestrator'
+const sinon = require('sinon')
+const test = require('tape')
 
-import {test, genConfig, spawnConductor} from './common'
-
-class TestConductor {
-  initialize() {}
-  kill() {}
-  run (instanceConfigs, bridgeConfigs, fn) {
-    fn('not very good test')
-  }
-}
-const Orchestrator = OrchestratorClass(TestConductor)
-const dna = Orchestrator.dna("path", "name")
-const C = {
-  alice: {
-    instances: {
-      app: dna
-    }
-  }
-}
+import { Orchestrator } from '../src/orchestrator'
+import { genConfig, spawnConductor } from './common'
 
 test('Scenario API constructed properly', async t => {
-  const orchestrator = new Orchestrator({spawnConductor})
+  t.plan(1)
+  const orchestrator = new Orchestrator({ spawnConductor, genConfig })
   orchestrator.registerScenario('test scenario 1', async s => {
-    t.deepEqual(
-      Object.keys(s),
-      ['consistent']
-    )
+    t.equal(typeof s.initialize, 'function')
   })
-  t.end()
-})
-
-test('registerScenario', async t => {
-  const orchestrator = new Orchestrator({spawnConductor})
-  orchestrator.registerScenario('test scenario 1', async s => {
-    const alice = await s.conductors(C.alice)
-    await alice.call('zome', 'func', {args: 1})
-  })
-  t.end()
+  orchestrator.run()
 })
