@@ -26,8 +26,13 @@ export const combine = (...ms: Array<Middleware>): Middleware =>
 export const unit = (run, f) => run(f)
 
 /**
- * Given the `tape` module, tapeExecutor produces a middleware that combines a scenario
- * with a tape test. It registers a tape test with the same description as the scenario
+ * Given the `tape` module, tapeExecutor produces a middleware 
+ * that combines a scenario with a tape test. 
+ * It registers a tape test with the same description as the scenario itself.
+ * Rather than the usual single ScenarioApi parameter, it expands the scenario function
+ * signature to also accept tape's `t` object for making assertions
+ * If the test throws an error, it registers the error with tape and does not abort
+ * the entire test suite.
  */
 export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, reject) => {  
   return run(s => 
@@ -41,13 +46,11 @@ export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, rej
       }
       return f(s, t)
         .catch((err) => {
-          try {
-            // Include stack trace from actual test function, but all on one line.
-            // This is the best we can do for now without messing with tape internals
-            t.fail(err.stack)
-          } catch (e) {
-            t.fail(err)
-          }
+          // Include stack trace from actual test function, but all on one line.
+          // This is the best we can do for now without messing with tape internals
+          t.fail(err.stack ? err.stack : err)
+          t.end()
+          reject(err)
         })
         .then(() => {
           t.end()

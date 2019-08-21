@@ -15,26 +15,21 @@ const testRan = sinon.spy()
 
 const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-orchestrator.registerScenario('test scenario #1', async (s, t) => {
-  await delay(1000)
+orchestrator.registerScenario('real tape scenario #1', async (s, t) => {
+  await delay(100)
   t.equal(typeof s.initialize, 'function')
   testRan(1)
 })
 
-orchestrator.registerScenario('test scenario #2', async (s, t) => {
+orchestrator.registerScenario('real tape scenario #2', async (s, t) => {
   t.equal(typeof s.initialize, 'function')
   testRan(2)
 })
 
-orchestrator.registerScenario('function signature check', async (s, t, x) => {})
-
 orchestrator.run().then(stats => {
-  const valid = 
-    testRan.firstCall.calledWith(1) 
-    && testRan.secondCall.calledWith(2)
-    && stats.errors[0].includes('2 arguments')
+  const valid = testRan.firstCall.calledWith(1) && testRan.secondCall.calledWith(2)
   if (!valid) {
-    logger.error("tape tests are broken!")
+    logger.error("Real tape tests are broken! Please fix them.")
     process.exit(-1)
   }
 })
