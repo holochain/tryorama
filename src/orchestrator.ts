@@ -1,5 +1,6 @@
 import * as T from "./types";
 import * as M from "./middleware";
+import * as R from "./reporter";
 import { Waiter, NetworkMap } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
@@ -7,6 +8,7 @@ import { ScenarioApi } from "./api";
 type OrchestratorConstructorParams = {
   spawnConductor: T.SpawnConductorFn,
   genConfig: T.GenConfigFn,
+  reporter?: boolean | R.Reporter,
   middleware?: any,
   debugLog?: boolean,
 }
@@ -17,7 +19,7 @@ type RegisteredScenario = {
   only: boolean,
 }
 
-type TestStats = {
+export type TestStats = {
   successes: number,
   errors: Array<string>,
 }
@@ -33,12 +35,16 @@ export class Orchestrator {
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
   _waiter: Waiter
+  _reporter: R.Reporter
 
   constructor(o: OrchestratorConstructorParams) {
     this._genConfig = o.genConfig
     this._spawnConductor = o.spawnConductor
     this._middleware = o.middleware || M.unit
     this._scenarios = []
+    this._reporter = o.reporter === true
+      ? R.basic(x => console.log(x))
+      : o.reporter || R.unit
 
     const registerScenario = (desc, scenario) => this._makeExecutor(desc, scenario, false)
     const registerScenarioOnly = (desc, scenario) => this._makeExecutor(desc, scenario, true)
@@ -51,12 +57,15 @@ export class Orchestrator {
     let successes = 0
     const errors: Array<string> = []
 
+    this._reporter.before(tests.length)
+
     logger.debug("About to execute %d tests", tests.length)
     if (onlyTests.length > 0) {
       logger.warn(`.only was invoked; only running ${onlyTests.length} test(s)!`)
     }
     for (const { desc, execute } of tests) {
       logger.debug("Executing test: %s", desc)
+      this._reporter.each(desc)
       try {
         await execute()
         successes += 1
@@ -64,10 +73,12 @@ export class Orchestrator {
         errors.push(`'${desc}': ${e}`)
       }
     }
-    return {
+    const stats = {
       successes,
       errors
     }
+    this._reporter.after(stats)
+    return stats
   }
 
   _makeExecutor = (desc: string, scenario: Function, only: boolean): void => {

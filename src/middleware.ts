@@ -55,8 +55,8 @@ export const combine = (...ms: Array<Middleware>): Middleware =>
  * If the test throws an error, it registers the error with tape and does not abort
  * the entire test suite.
  */
-export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, reject) => {  
-  return run(s => 
+export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, reject) => {
+  return run(s =>
     tape(s.description, t => {
       if (f.length !== 2) {
         const err = "tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions."
