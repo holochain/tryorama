@@ -8,6 +8,7 @@
   },
   "scripts": {
     "dev": "tsc -w",
+    "doc": "typedoc",
     "test": "ts-node test/index.ts | tap-diff"
   },
   "author": "",
@@ -26,6 +27,7 @@
     "tape": "^4.11.0",
     "tape-async": "^2.3.0",
     "ts-node": "^8.3.0",
+    "typedoc": "^0.15.0",
     "typescript": "^3.5.3"
   }
 }

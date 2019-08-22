@@ -1,7 +1,26 @@
 import logger from "./logger";
 
+/**
+ * Middleware is a decorator for scenario functions. A Middleware takes two functions:
+ * - the function which will run the scenario
+ * - the scenario function itself
+ * 
+ * With these, as a middleware author, you are free to create a new scenario function
+ * that wraps the original one, and then use the `run` function to eventually execute
+ * that scenario. The purpose of exposing the `run` function is to allow the middleware
+ * to set up extra context outside of the running of the scenario, e.g. for integrating
+ * with test harnesses.
+ */
 export type Middleware = (run: MiddlewareRunner, scenario: Function) => Promise<void>
+
+/**
+ * A MiddlewareRunner is provided by the [Orchestrator], but it is exposed to the middleware
+ * author so that it can be called in the appropriate context
+ */
 export type MiddlewareRunner = (f: Function) => Promise<void>
+
+/** The no-op middleware */
+export const unit = (run, f) => run(f)
 
 /**
  * Combine multiple middlewares into a single middleware.
@@ -11,19 +30,21 @@ export type MiddlewareRunner = (f: Function) => Promise<void>
 export const combine = (...ms: Array<Middleware>): Middleware =>
   (run, f) => {
     const go = (ms: Array<Middleware>, f: Function) => {
+      // grab the next middleware
       const m = ms.pop()
       if (m) {
+        // if it exists, run it, where the runner actually just recurses
+        // to get the *next* middleware in the chain
         const recurse = (g) => go(ms, g)
         return m(recurse, f)
       } else {
+        // otherwise, use the actual runner on the final middleware now that it
+        // has been composed with all the previous middlewares
         return run(f)
       }
     }
     return go(ms, f)
   }
-
-/** The no-op middleware */
-export const unit = (run, f) => run(f)
 
 /**
  * Given the `tape` module, tapeExecutor produces a middleware 
@@ -45,16 +66,16 @@ export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, rej
         return
       }
       return f(s, t)
+        .then(() => {
+          t.end()
+          resolve()
+        })
         .catch((err) => {
           // Include stack trace from actual test function, but all on one line.
           // This is the best we can do for now without messing with tape internals
           t.fail(err.stack ? err.stack : err)
           t.end()
           reject(err)
-        })
-        .then(() => {
-          t.end()
-          resolve()
         })
     })
   )
