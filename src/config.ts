@@ -55,6 +55,7 @@ export const genConfig = (inputConfig: T.ConductorConfig | T.SugaredConductorCon
   return (args: T.GenConfigArgs) => TOML.stringify(
     Object.assign({},
       genInstanceConfig(config, args),
+      genBridgeConfig(config),
       genDpkiConfig(config),
       genSignalConfig(config),
       genNetworkConfig(config),
@@ -76,7 +77,7 @@ export const desugarConfig = (config: T.ConductorConfig | T.SugaredConductorConf
   return config as T.ConductorConfig
 }
 
-const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort }) => {
+export const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort }) => {
 
   const config: any = {
     agents: [],
@@ -111,7 +112,9 @@ const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort
     }
     if (!dnaIds.has(instance.dna.id)) {
       if (!instance.dna.hash) {
-        instance.dna.hash = await getDnaHash(instance.dna.file)
+        instance.dna.hash = await getDnaHash(instance.dna.path).catch(err => {
+          throw new Error(`Could not determine hash of DNA file '${instance.dna.path}'. Does the file exist?\n\tOriginal error: ${err}`)
+        })
       }
       config.dnas.push(instance.dna)
     }
@@ -132,27 +135,32 @@ const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort
   return config
 }
 
-const genDpkiConfig = ({ dpki }: T.ConductorConfig) => (dpki ? { dpki } : {})
+export const genBridgeConfig = ({ bridges }: T.ConductorConfig) => (bridges ? { bridges } : {})
 
-const genSignalConfig = ({ }) => ({
+export const genDpkiConfig = ({ dpki }: T.ConductorConfig) => (dpki ? { dpki } : {})
+
+export const genSignalConfig = ({ }) => ({
   signals: {
     trace: false,
     consistency: true,
   }
 })
 
-const genNetworkConfig = ({ }: T.ConductorConfig) => `\n`
+export const genNetworkConfig = ({ }: T.ConductorConfig) => `\n`
 
-const genLoggingConfig = (debug) => TOML.parse(`
-[logger]
-type = "debug"
-state_dump = false
-${debug ? '' : '[[logger.rules.rules]]'}
-${debug ? '' : 'exclude = true'}
-${debug ? '' : 'pattern = "^debug"'}
-`)
+export const genLoggingConfig = (debug) => {
+  return {
+    logger: {
+      type: 'debug',
+      state_dump: false,
+      rules: {
+        rules: [{ exclude: !debug, pattern: "^debug" }]
+      }
+    }
+  }
+}
 
-const getDnaHash = async (dnaPath) => {
+export const getDnaHash = async (dnaPath) => {
   const { stdout, stderr } = await exec('hc hash', dnaPath)
   if (stderr) {
     throw new Error("Error while getting hash: " + stderr)
