@@ -3,11 +3,11 @@ const test = require('tape')
 
 import { Orchestrator } from '../src/orchestrator'
 import { tapeExecutor } from '../src/middleware'
-import { genConfig, spawnConductor } from './common'
+import { genConfigArgs, spawnConductor } from './common'
 import logger from '../src/logger';
 
 const orchestrator = new Orchestrator({
-  spawnConductor, genConfig,
+  spawnConductor, genConfigArgs,
   middleware: tapeExecutor(test)
 })
 
@@ -17,12 +17,12 @@ const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
 orchestrator.registerScenario('real tape scenario #1', async (s, t) => {
   await delay(100)
-  t.equal(typeof s.initialize, 'function')
+  t.equal(typeof s.conductors, 'function')
   testRan(1)
 })
 
 orchestrator.registerScenario('real tape scenario #2', async (s, t) => {
-  t.equal(typeof s.initialize, 'function')
+  t.equal(typeof s.conductors, 'function')
   testRan(2)
 })
 

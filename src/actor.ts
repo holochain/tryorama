@@ -1,14 +1,28 @@
 import { notImplemented } from './common'
 import { Conductor } from './conductor'
-import { ConductorConfig } from './types';
+import { ConductorConfig, GenConfigArgs, SpawnConductorFn } from './types';
+import { getConfigPath } from './config';
 
 
+/**
+ * Representation of a Conductor user.
+ * An Actor is essentially a wrapper around a conductor config that was generated,
+ * and the possible reference to a conductor which is running based on that config.
+ * The Actor can spawn or kill a conductor based on the generated config.
+ * Actors are the main interface for writing scenarios.
+ */
 export class Actor {
 
-  _conductor: Conductor
+  name: string
 
-  constructor(config: ConductorConfig) {
-    this._conductor = new Conductor(config)
+  _conductor: Conductor
+  _genConfigArgs: GenConfigArgs
+  _spawnConductor: SpawnConductorFn
+
+  constructor(name: string, genConfigArgs: GenConfigArgs) {
+    this.name = name
+    this._genConfigArgs = genConfigArgs
+    this._conductor = new Conductor()
   }
 
   admin = (method, params) => {
@@ -19,8 +33,9 @@ export class Actor {
     this._conductor.callZome(instanceId, zome, fn, params)
   }
 
-  start = () => {
-    throw notImplemented
+  spawn = () => {
+    const path = getConfigPath(this._genConfigArgs.configDir)
+    this._spawnConductor(this.name, path)
   }
 
   kill = () => {

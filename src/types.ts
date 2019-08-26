@@ -1,36 +1,36 @@
+import _ from 'lodash'
 import { ScenarioApi } from "./api";
 
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }
 
 export type SpawnConductorFn = (name: string, configPath: string) => Promise<Mortal>
-export type GenConfigFn = (debug: boolean, index: number) => Promise<GenConfigReturn>
-export type GenConfigReturn = {
-  configPath: string,
-  adminUrl: string,
-}
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 
-export type ExternalConductor = {
-  url: string,
+export type GenConfigFn = (ConfigGenArgs) => Promise<string>
+export type GenConfigArgs = {
+  configDir: string,
+  adminPort: number,
+  zomePort: number
+}
+
+type ConductorConfigCommon = {
   name: string,
+  bridges?: Array<BridgeConfig>,
+  dpki?: DpkiConfig,
 }
 
 /** Base representation of a Conductor */
-export type ConductorConfig = {
+export type ConductorConfig = ConductorConfigCommon & {
   instances: Array<InstanceConfig>,
-  bridges?: Array<BridgeConfig>,
-  dpki?: DpkiConfig,
 }
 
 /** Shorthand representation of a Conductor, 
  *  where keys of `instance` are used as instance IDs as well as agent IDs
  */
-export type SugaredConductorConfig = {
+export type SugaredConductorConfig = ConductorConfigCommon & {
   instances: ObjectS<DnaConfig>,
-  bridges?: Array<BridgeConfig>,
-  dpki?: DpkiConfig,
 }
 
 export type AgentConfig = {

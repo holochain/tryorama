@@ -1,4 +1,8 @@
 import * as T from '../src/types'
 
-export const genConfig = (() => { }) as unknown as T.GenConfigFn
+export const genConfigArgs: () => Promise<T.GenConfigArgs> = async () => ({
+  configDir: 'config/dir',
+  adminPort: 1000,
+  zomePort: 2000,
+})
 export const spawnConductor = (() => { }) as unknown as T.SpawnConductorFn

@@ -1,13 +1,30 @@
 import { ConductorConfig } from "./types";
 import { notImplemented } from "./common";
+import logger from "./logger";
 
 
-
+/**
+ * Representation of a running Conductor instance.
+ * An [Actor] spawns a conductor process and uses the process handle to construct this class. 
+ * Though Conductor is spawned externally, this class is responsible for establishing WebSocket
+ * connections to the various interfaces to enable zome calls as well as admin and signal handling.
+ */
 export class Conductor {
 
   _config: ConductorConfig
   _hcConnect: any
   _isInitialized: boolean
+
+  constructor() {
+    this._hcConnect = require('@holochain/hc-web-client').connect
+    this._isInitialized = false
+    // this._config = config
+  }
+
+  initialize = async () => {
+    throw notImplemented
+    // await this._makeConnections()
+  }
 
   callAdmin = (...a) => {
     throw notImplemented
@@ -17,21 +34,14 @@ export class Conductor {
     throw notImplemented
   }
 
-  constructor(config: ConductorConfig) {
-    this._hcConnect = require('@holochain/hc-web-client').connect
-    this._isInitialized = false
-    this._config = config
-  }
-
-
-  // async makeConnections ({instances}: T.ConductorConfig) {
+  // _makeConnections = async ({instances}: ConductorConfig) => {
   //   logger.debug("makeConnections :: connectTest")
-  //   await this.connectTest()
+  //   await this._connectTest()
   //   logger.debug("makeConnections :: connectSignals")
-  //   await this.connectSignals()
+  //   await this._connectSignals()
   // }
 
-  // connectTest = async () => {
+  // _connectTest = async () => {
   //   if (!this.testPort) {
   //     throw new Error(`Attempting to connect to test interface with invalid port: ${this.testPort}`)
   //   }

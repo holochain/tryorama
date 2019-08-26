@@ -1,23 +1,37 @@
+const fs = require('fs').promises
+const path = require('path')
+
 import { Waiter } from '@holochain/hachiko'
-import { ConductorConfig } from "./types"
+import { GenConfigFn } from "./types"
 import { Actor } from "./actor"
 import logger from './logger';
+import { Orchestrator } from './orchestrator';
+import { promiseSerial } from './util';
+import { getConfigPath } from './config';
 
 
 export class ScenarioApi {
 
-  _waiter: Waiter
   description: string
 
-  constructor(description: string) {
+  _orchestrator: Orchestrator
+  _waiter: Waiter
+
+  constructor(description: string, orchestrator: Orchestrator) {
     this.description = description
+    this._orchestrator = orchestrator
   }
 
-  initialize = (configs: Array<ConductorConfig>, start?: boolean): Promise<Array<Actor>> => {
-    return Promise.all(configs.map(async config => {
-      const actor = new Actor(config)
+  conductors = (fns: Array<GenConfigFn>, start?: boolean): Promise<Array<Actor>> => {
+    return promiseSerial(fns.map(async (genConfig, i) => {
+      const genConfigArgs = await this._orchestrator._genConfigArgs()
+      const { configDir } = genConfigArgs
+      const configToml = genConfig(genConfigArgs)
+      await fs.writeFile(getConfigPath(configDir), configToml)
+
+      const actor = new Actor('TODO', genConfigArgs)
       if (start) {
-        await actor.start()
+        await actor.spawn()
       }
       return actor
     }))
@@ -32,6 +46,5 @@ export class ScenarioApi {
     //   reject,
     // })
   })
-
 
 }

@@ -3,7 +3,7 @@ const test = require('tape')
 
 import { Orchestrator } from '../src/orchestrator'
 import { tapeExecutor } from '../src/middleware'
-import { genConfig, spawnConductor } from './common'
+import { genConfigArgs, spawnConductor } from './common'
 import logger from '../src/logger';
 
 const createMockTape = () => {
@@ -13,13 +13,13 @@ const createMockTape = () => {
     end: sinon.spy(),
   }
   const runner = (_desc, f) => f(api)
-  return {runner, api}
+  return { runner, api }
 }
 
-const {runner: mockTape, api: mockT} = createMockTape()
+const { runner: mockTape, api: mockT } = createMockTape()
 
 const orchestrator = new Orchestrator({
-  spawnConductor, genConfig,
+  spawnConductor, genConfigArgs,
   middleware: tapeExecutor(mockTape)
 })
 

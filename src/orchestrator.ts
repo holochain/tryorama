@@ -4,14 +4,17 @@ import * as R from "./reporter";
 import { Waiter, NetworkMap } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
+import { defaultGenConfigArgs } from "./config";
 
 type OrchestratorConstructorParams = {
   spawnConductor: T.SpawnConductorFn,
-  genConfig: T.GenConfigFn,
+  genConfigArgs?: GenConfigArgsFn,
   reporter?: boolean | R.Reporter,
   middleware?: any,
   debugLog?: boolean,
 }
+
+type GenConfigArgsFn = () => Promise<T.GenConfigArgs>
 
 type RegisteredScenario = {
   desc: string,
@@ -30,7 +33,7 @@ export class Orchestrator {
 
   registerScenario: Function & { only: Function }
 
-  _genConfig: T.GenConfigFn
+  _genConfigArgs: GenConfigArgsFn
   _middleware: M.Middleware
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
@@ -38,7 +41,7 @@ export class Orchestrator {
   _reporter: R.Reporter
 
   constructor(o: OrchestratorConstructorParams) {
-    this._genConfig = o.genConfig
+    this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor
     this._middleware = o.middleware || M.unit
     this._scenarios = []
@@ -82,7 +85,7 @@ export class Orchestrator {
   }
 
   _makeExecutor = (desc: string, scenario: Function, only: boolean): void => {
-    const runner = scenario => scenario(new ScenarioApi(desc))
+    const runner = scenario => scenario(new ScenarioApi(desc, this))
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ desc, execute, only })
   }
