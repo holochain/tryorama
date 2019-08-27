@@ -29,7 +29,12 @@ export class ScenarioApi {
       const configToml = genConfig(genConfigArgs)
       await fs.writeFile(getConfigPath(configDir), configToml)
 
-      const actor = new Actor('TODO', genConfigArgs)
+      const actor = new Actor({
+        name: 'TODO',
+        onSignal: () => 'TODO',
+        genConfigArgs,
+        spawnConductor: this._orchestrator._spawnConductor
+      })
       if (start) {
         await actor.spawn()
       }

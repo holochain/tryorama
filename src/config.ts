@@ -1,5 +1,6 @@
 import * as T from "./types";
 import { totalmem } from "os";
+import { downloadFile } from "./util";
 const TOML = require('@iarna/toml')
 const _ = require('lodash')
 
@@ -10,12 +11,34 @@ const path = require('path')
 const getPort = require('get-port')
 
 
-const tempPath = () => Promise.resolve(
+const tempDir = () => Promise.resolve(
   process.env.TRYORAMA_STORAGE
   || fs.mkdtemp(path.join(os.tmpdir(), 'try-o-rama-'))
 )
 
-export const dna = (path, id = `${path}`, opts = {}): T.DnaConfig => ({ path, id, ...opts })
+const dnaDir = async () => path.join(await tempDir(), 'dnas')
+
+export const dna = (location, id?, opts = {}): T.DnaConfig => {
+  if (!id) {
+    id = dnaPathToId(location)
+  }
+  return { path: location, id, ...opts }
+}
+
+export const resolveDna = async (dna: T.DnaConfig) => {
+  if (dna.path.match(/^https?:/)) {
+    const dnaPath = path.join(dnaDir(), dna.id + '.dna.json')
+    await downloadFile({ url: dna.path, path: dnaPath })
+    return Object.assign({}, dna, { path: dnaPath })
+  } else {
+    return dna
+  }
+}
+
+export const dnaPathToId = (dnaPath) => {
+  const matches = dnaPath.match(/([^/]+)$/g)
+  return matches[0].replace(/\.dna\.json$/, '')
+}
 
 export const bridge = (handle, caller_id, callee_id) => ({ handle, caller_id, callee_id })
 
@@ -34,7 +57,7 @@ export const getConfigPath = configDir => path.join(configDir, 'conductor-config
  * In the future it would be great to move to domain socket based interfaces.
  */
 export const defaultGenConfigArgs = async () => {
-  const configDir = await tempPath()
+  const configDir = await tempDir()
   const adminPort = await getPort()
   let zomePort = adminPort
   while (zomePort == adminPort) {
@@ -46,8 +69,6 @@ export const defaultGenConfigArgs = async () => {
 
 /**
  * Helper function to generate TOML config from a simpler object.
- * 
- * @param config 
  */
 export const genConfig = (inputConfig: T.ConductorConfig | T.SugaredConductorConfig): T.GenConfigFn => {
   const config = desugarConfig(inputConfig)
@@ -61,7 +82,6 @@ export const genConfig = (inputConfig: T.ConductorConfig | T.SugaredConductorCon
       genNetworkConfig(config),
       genLoggingConfig(false),
     )
-
   )
 }
 
@@ -111,6 +131,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
       config.agents.push(instance.agent)
     }
     if (!dnaIds.has(instance.dna.id)) {
+      instance.dna = await resolveDna(instance.dna)
       if (!instance.dna.hash) {
         instance.dna.hash = await getDnaHash(instance.dna.path).catch(err => {
           throw new Error(`Could not determine hash of DNA file '${instance.dna.path}'. Does the file exist?\n\tOriginal error: ${err}`)

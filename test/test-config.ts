@@ -2,11 +2,9 @@ const sinon = require('sinon')
 const test = require('tape')
 const TOML = require('@iarna/toml')
 
-import { Orchestrator } from '../src/orchestrator'
 import * as T from '../src/types'
 import * as C from '../src/config';
 import { genConfigArgs } from './common';
-import { totalmem } from 'os';
 
 const { configPlain, configSugared } = (() => {
   const dna = C.dna('path/to/dna.json', 'dna-id', { uuid: 'uuid' })
@@ -49,6 +47,18 @@ const { configPlain, configSugared } = (() => {
   const configPlain = Object.assign({}, common, { instances: instancesDesugared })
   return { configPlain, configSugared }
 })()
+
+test('DNA id generation', t => {
+  t.equal(C.dnaPathToId('path/to/file'), 'file')
+  t.equal(C.dnaPathToId('path/to/file.dna'), 'file.dna')
+  t.equal(C.dnaPathToId('path/to/file.json'), 'file.json')
+  t.equal(C.dnaPathToId('path/to/file.dna.json'), 'file')
+
+  t.equal(C.dnaPathToId('file'), 'file')
+  t.equal(C.dnaPathToId('file.json'), 'file.json')
+  t.equal(C.dnaPathToId('file.dna.json'), 'file')
+  t.end()
+})
 
 test('Sugared config', async t => {
   t.deepEqual(C.desugarConfig(configSugared), configPlain)
