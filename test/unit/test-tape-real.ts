@@ -1,10 +1,10 @@
 const sinon = require('sinon')
 const test = require('tape')
 
-import { Orchestrator } from '../src'
-import { tapeExecutor } from '../src/middleware'
-import { genConfigArgs, spawnConductor } from './common'
-import logger from '../src/logger';
+import { Orchestrator } from '../../src'
+import { tapeExecutor } from '../../src/middleware'
+import { genConfigArgs, spawnConductor } from '../common'
+import logger from '../../src/logger';
 
 const orchestrator = new Orchestrator({
   spawnConductor, genConfigArgs,

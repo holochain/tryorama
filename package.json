@@ -9,7 +9,9 @@
   "scripts": {
     "dev": "tsc -w",
     "doc": "typedoc",
-    "test": "ts-node test/index.ts | tap-diff"
+    "test": "ts-node test | tap-diff",
+    "test:unit": "ts-node test/unit | tap-diff",
+    "test:e2e": "ts-node test/e2e | tap-diff"
   },
   "author": "",
   "license": "ISC",

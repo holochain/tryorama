@@ -1,6 +1,6 @@
 const test = require('tape')
 
-import { Orchestrator, Config } from '../src'
+import { Orchestrator, Config } from '../../src'
 
 const orchestrator = new Orchestrator()
 

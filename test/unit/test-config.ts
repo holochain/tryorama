@@ -2,9 +2,9 @@ const sinon = require('sinon')
 const test = require('tape')
 const TOML = require('@iarna/toml')
 
-import * as T from '../src/types'
-import * as C from '../src/config';
-import { genConfigArgs } from './common';
+import * as T from '../../src/types'
+import * as C from '../../src/config';
+import { genConfigArgs } from '../common';
 
 const { configPlain, configSugared } = (() => {
   const dna = C.dna('path/to/dna.json', 'dna-id', { uuid: 'uuid' })

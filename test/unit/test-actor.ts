@@ -1,8 +1,8 @@
 const sinon = require('sinon')
 const test = require('tape')
 
-import { Orchestrator, Config } from '../src'
-import { genConfigArgs, spawnConductor } from './common'
+import { Orchestrator, Config } from '../../src'
+import { genConfigArgs, spawnConductor } from '../common'
 
 test('Actor can be created', async t => {
   const orchestrator = new Orchestrator({ spawnConductor, genConfigArgs })

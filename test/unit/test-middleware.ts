@@ -1,7 +1,7 @@
 const sinon = require('sinon')
 const test = require('tape')
 
-import { combine } from '../src/middleware'
+import { combine } from '../../src/middleware'
 
 const increment = (run, f) => run(s => f({ v: s.v + 1 }))
 const triple = (run, f) => run(s => f({ v: s.v * 3 }))
