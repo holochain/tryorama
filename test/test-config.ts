@@ -48,6 +48,11 @@ const { configPlain, configSugared } = (() => {
   return { configPlain, configSugared }
 })()
 
+const configEmpty: T.ConductorConfig = {
+  name: 'empty',
+  instances: []
+}
+
 test('DNA id generation', t => {
   t.equal(C.dnaPathToId('path/to/file'), 'file')
   t.equal(C.dnaPathToId('path/to/file.dna'), 'file.dna')
@@ -67,11 +72,26 @@ test('Sugared config', async t => {
 
 test('genInstanceConfig', async t => {
   const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
-  const { instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs())
+  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs())
+  t.equal(agents.length, 2)
+  t.equal(dnas.length, 2)
   t.equal(instances.length, 2)
   t.equal(interfaces.length, 2)
   t.equal(interfaces[0].instances.length, 0)
   t.equal(interfaces[1].instances.length, 2)
+  t.end()
+  stubGetDnaHash.restore()
+})
+
+test('genInstanceConfig, empty', async t => {
+  const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
+  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configEmpty, await genConfigArgs())
+  t.equal(agents.length, 0)
+  t.equal(dnas.length, 0)
+  t.equal(instances.length, 0)
+  t.equal(interfaces.length, 2)
+  t.equal(interfaces[0].instances.length, 0)
+  t.equal(interfaces[1].instances.length, 0)
   t.end()
   stubGetDnaHash.restore()
 })
@@ -82,9 +102,21 @@ test('genBridgeConfig', async t => {
   t.end()
 })
 
+test('genBridgeConfig, empty', async t => {
+  const json = await C.genBridgeConfig(configEmpty)
+  t.notOk('bridges' in json)
+  t.end()
+})
+
 test('genDpkiConfig', async t => {
   const { dpki } = await C.genDpkiConfig(configPlain)
   t.deepEqual(dpki, { instance_id: 'alice', init_params: '{"well":"hello"}' })
+  t.end()
+})
+
+test('genDpkiConfig, empty', async t => {
+  const json = await C.genDpkiConfig(configEmpty)
+  t.notOk('dpki' in json)
   t.end()
 })
 
@@ -93,6 +125,11 @@ test('genSignalConfig', async t => {
   t.ok('trace' in signals)
   t.ok('consistency' in signals)
   t.equal(signals.consistency, true)
+  t.end()
+})
+
+test.skip('genNetworkConfig', async t => {
+  t.fail("TODO")
   t.end()
 })
 

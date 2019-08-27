@@ -26,8 +26,11 @@ export const downloadFile = async ({ url, path }: { url: string, path: string })
       reject(`Could not fetch ${url}, response was ${response.statusText} ${response.status}`)
     } else {
       const writer = fs.createWriteStream(path)
-        .on("finish", () => fulfill(path))
         .on("error", reject)
+        .on("finish", () => {
+          logger.debug("Download complete.")
+          fulfill(path)
+        })
       logger.debug("Starting streaming download...")
       response.data.pipe(writer)
     }

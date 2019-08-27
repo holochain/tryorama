@@ -63,5 +63,5 @@ export type DpkiConfig = {
 
 /** Something "killable" */
 export interface Mortal {
-  kill(signal?: any): Promise<void>
+  kill(signal?: string): void
 }

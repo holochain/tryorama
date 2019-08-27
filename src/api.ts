@@ -26,7 +26,7 @@ export class ScenarioApi {
     return promiseSerial(fns.map(async (genConfig, i) => {
       const genConfigArgs = await this._orchestrator._genConfigArgs()
       const { configDir } = genConfigArgs
-      const configToml = genConfig(genConfigArgs)
+      const configToml = await genConfig(genConfigArgs)
       await fs.writeFile(getConfigPath(configDir), configToml)
 
       const actor = new Actor({

@@ -3,7 +3,7 @@ import { Signal } from '@holochain/hachiko'
 
 import { ConductorConfig, Mortal, GenConfigArgs } from "./types";
 import { notImplemented } from "./common";
-import logger from "./logger";
+import { makeLogger } from "./logger";
 
 
 const DEFAULT_ZOME_CALL_TIMEOUT = 60000
@@ -19,6 +19,7 @@ export class Conductor {
   name: string
   onSignal: (Signal) => void
   zomeCallTimeout: number
+  logger: any
 
   _genConfigArgs: GenConfigArgs
   _handle: Mortal
@@ -27,6 +28,7 @@ export class Conductor {
 
   constructor({ name, handle, onSignal, adminPort, zomePort }) {
     this.name = name
+    this.logger = makeLogger(name)
     this.onSignal = onSignal
     this.zomeCallTimeout = DEFAULT_ZOME_CALL_TIMEOUT
 
@@ -45,6 +47,7 @@ export class Conductor {
   }
 
   initialize = async () => {
+    this.logger('Iniitalizing')
     await this._makeConnections()
   }
 
@@ -60,14 +63,14 @@ export class Conductor {
   _connectAdmin = async () => {
 
     const url = this._adminInterfaceUrl()
-    logger.debug(`connectTest :: connecting to ${url}`)
+    this.logger.debug(`connectTest :: connecting to ${url}`)
     const { call, callZome, onSignal } = await this._hcConnect({ url })
 
     this.callAdmin = method => async params => {
-      logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
-      logger.debug(JSON.stringify(params, null, 2))
+      this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
+      this.logger.debug(JSON.stringify(params, null, 2))
       const result = await call(method)(params)
-      logger.debug(`${colors.yellow.bold('-> %o')}`, result)
+      this.logger.debug(`${colors.yellow.bold('-> %o')}`, result)
       return result
     }
 
@@ -86,14 +89,14 @@ export class Conductor {
 
   _connectZome = async () => {
     const url = this._zomeInterfaceUrl()
-    logger.debug(`connectTest :: connecting to ${url}`)
+    this.logger.debug(`connectTest :: connecting to ${url}`)
     const { call, callZome, onSignal } = await this._hcConnect({ url })
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
-      logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`,
+      this.logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`,
         this.name, instanceId, zomeName, fnName
       )
-      logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
+      this.logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
       const timeout = this.zomeCallTimeout
       const timer = setTimeout(
         () => reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`),
@@ -101,7 +104,7 @@ export class Conductor {
       )
       const promise = callZome(instanceId, zomeName, fnName)(params).then(result => {
         clearTimeout(timer)
-        logger.debug(colors.cyan.bold('->'), JSON.parse(result))
+        this.logger.debug(colors.cyan.bold('->'), JSON.parse(result))
         resolve(result)
       })
       return promise

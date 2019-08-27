@@ -4,10 +4,10 @@ import * as R from "./reporter";
 import { Waiter, NetworkMap } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
-import { defaultGenConfigArgs } from "./config";
+import { defaultGenConfigArgs, defaultSpawnConductor } from "./config";
 
 type OrchestratorConstructorParams = {
-  spawnConductor: T.SpawnConductorFn,
+  spawnConductor?: T.SpawnConductorFn,
   genConfigArgs?: GenConfigArgsFn,
   reporter?: boolean | R.Reporter,
   middleware?: any,
@@ -40,9 +40,9 @@ export class Orchestrator {
   _waiter: Waiter
   _reporter: R.Reporter
 
-  constructor(o: OrchestratorConstructorParams) {
+  constructor(o: OrchestratorConstructorParams = {}) {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
-    this._spawnConductor = o.spawnConductor
+    this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.unit
     this._scenarios = []
     this._reporter = o.reporter === true
