@@ -16,9 +16,11 @@ const mkdirIdempotent = dir => fs.access(dir).catch(() => {
   fs.mkdir(dir, { recursive: true })
 })
 
+const tempDirBase = () => path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
+
 const tempDir = async () => {
   if (!tempDir._cached) {
-    const base = path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
+    const base = tempDirBase()
     await mkdirIdempotent(base)
     tempDir._cached = await fs.mkdtemp(base)
   }
@@ -27,8 +29,13 @@ const tempDir = async () => {
 
 tempDir._cached = null
 
+/**
+ * Directory to store downloaded DNAs in.
+ * **NOTE**: this is currently shared among all runs over all time, for better caching.
+ * TODO: change this to `tempDir` instead of `tempDirBase` to remove this overzealous caching!
+ */
 const dnaDir = async () => {
-  const dir = path.join(await tempDir(), 'dnas-fetched')
+  const dir = path.join(tempDirBase(), 'dnas-fetched')
   await mkdirIdempotent(dir)
   return dir
 }

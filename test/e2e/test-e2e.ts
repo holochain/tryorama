@@ -51,6 +51,31 @@ test('test with successful zome call', async t => {
       name: 'alice',
       avatar_url: 'https://tinyurl.com/yxcwavlr',
     })
+    // TODO: decide on this syntax and hook it up
+    t.equal(alice.var('app', 'agentAddress'), agentAddress)
+  })
+  const stats = await orchestrator.run()
+  t.equal(stats.successes, 1)
+  t.equal(stats.errors.length, 0)
+  t.end()
+})
+
+// TODO: unskip when ready
+test.skip('test with kill and respawn', async t => {
+  const C = testConfig()
+  const orchestrator = new Orchestrator()
+  orchestrator.registerScenario('proper zome call', async s => {
+    const [alice] = await s.conductors([C.alice])
+    await alice.spawn()
+    await alice.kill()
+
+    t.throws(() => alice.call('chat', 'x', 'x', 'x'))
+
+    await alice.spawn()
+    const agentAddress = await alice.call('chat', 'chat', 'handle_register', {
+      name: 'alice',
+      avatar_url: 'https://tinyurl.com/yxcwavlr',
+    })
     t.equal(alice.agentAddress, agentAddress)
   })
   const stats = await orchestrator.run()
