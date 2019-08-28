@@ -8,7 +8,7 @@ export type SpawnConductorFn = (name: string, configPath: string) => Promise<Mor
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 
-export type GenConfigFn = (ConfigGenArgs) => Promise<string>
+export type GenConfigFn = (args: GenConfigArgs, uuid: string) => Promise<string>
 export type GenConfigArgs = {
   configDir: string,
   adminPort: number,
@@ -36,11 +36,15 @@ export type SugaredConductorConfig = ConductorConfigCommon & {
 export type AgentConfig = {
   id: string,
   name: string,
+  keystore_file: string,
+  public_address: string,
+  test_agent: boolean,
 }
 
 export type DnaConfig = {
   id: string,
-  path: string,
+  file: string,
+  hash?: string,
   uuid?: string,
 }
 

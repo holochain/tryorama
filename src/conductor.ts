@@ -28,7 +28,8 @@ export class Conductor {
 
   constructor({ name, handle, onSignal, adminPort, zomePort }) {
     this.name = name
-    this.logger = makeLogger(name)
+    this.logger = makeLogger(`conductor ${name}`)
+    this.logger.debug("Conductor constructing")
     this.onSignal = onSignal
     this.zomeCallTimeout = DEFAULT_ZOME_CALL_TIMEOUT
 
@@ -47,12 +48,12 @@ export class Conductor {
   }
 
   initialize = async () => {
-    this.logger('Iniitalizing')
     await this._makeConnections()
   }
 
-  kill = () => {
-    this._handle.kill()
+  kill = (signal?) => {
+    this.logger.debug("Killing...")
+    this._handle.kill(signal)
   }
 
   _makeConnections = async () => {
@@ -63,8 +64,8 @@ export class Conductor {
   _connectAdmin = async () => {
 
     const url = this._adminInterfaceUrl()
-    this.logger.debug(`connectTest :: connecting to ${url}`)
-    const { call, callZome, onSignal } = await this._hcConnect({ url })
+    this.logger.debug(`connectAdmin :: connecting to ${url}`)
+    const { call, onSignal } = await this._hcConnect({ url })
 
     this.callAdmin = method => async params => {
       this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
@@ -89,8 +90,8 @@ export class Conductor {
 
   _connectZome = async () => {
     const url = this._zomeInterfaceUrl()
-    this.logger.debug(`connectTest :: connecting to ${url}`)
-    const { call, callZome, onSignal } = await this._hcConnect({ url })
+    this.logger.debug(`connectZome :: connecting to ${url}`)
+    const { callZome } = await this._hcConnect({ url })
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
       this.logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`,
@@ -102,12 +103,11 @@ export class Conductor {
         () => reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`),
         timeout
       )
-      const promise = callZome(instanceId, zomeName, fnName)(params).then(result => {
+      return callZome(instanceId, zomeName, fnName)(params).then(result => {
         clearTimeout(timer)
         this.logger.debug(colors.cyan.bold('->'), JSON.parse(result))
         resolve(result)
-      })
-      return promise
+      }).catch(reject)
     })
   }
 

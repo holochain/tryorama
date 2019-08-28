@@ -10,7 +10,16 @@ export const promiseSerial = promises =>
     Promise.resolve([]))
 
 
-export const downloadFile = async ({ url, path }: { url: string, path: string }): Promise<string> => {
+export const downloadFile = async ({ url, path, overwrite }: { url: string, path: string, overwrite?: boolean }): Promise<string> => {
+  if (overwrite) {
+    // only download file if it doesn't already exist at this path.
+    return fs.access(path).catch(() => _downloadFile({ url, path }))
+  } else {
+    return _downloadFile({ url, path })
+  }
+}
+
+const _downloadFile = async ({ url, path }: { url: string, path: string }): Promise<string> => {
   const response = await axios.request({
     url: url,
     method: 'GET',

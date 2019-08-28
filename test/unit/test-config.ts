@@ -23,10 +23,13 @@ const { configPlain, configSugared } = (() => {
       agent: {
         id: 'alice',
         name: 'alice',
+        keystore_file: 'alice',
+        public_address: 'alice',
+        test_agent: true,
       },
       dna: {
         id: 'dna-id',
-        path: 'path/to/dna.json',
+        file: 'path/to/dna.json',
         uuid: 'uuid'
       }
     },
@@ -35,10 +38,13 @@ const { configPlain, configSugared } = (() => {
       agent: {
         id: 'bob',
         name: 'bob',
+        keystore_file: 'bob',
+        public_address: 'bob',
+        test_agent: true,
       },
       dna: {
         id: 'dna-id',
-        path: 'path/to/dna.json',
+        file: 'path/to/dna.json',
         uuid: 'uuid'
       }
     }

@@ -4,7 +4,7 @@ import { notImplemented } from './common'
 import { Conductor } from './conductor'
 import { ConductorConfig, GenConfigArgs, SpawnConductorFn } from './types';
 import { getConfigPath } from './config';
-import logger from './logger';
+import { makeLogger } from './logger';
 
 type ConstructorArgs = {
   name: string,
@@ -22,6 +22,7 @@ type ConstructorArgs = {
 export class Actor {
 
   name: string
+  logger: any
   onSignal: (Signal) => void
 
   _conductor: Conductor | null
@@ -30,6 +31,7 @@ export class Actor {
 
   constructor({ name, genConfigArgs, onSignal, spawnConductor }) {
     this.name = name
+    this.logger = makeLogger(`actor ${name}`)
     this.onSignal = onSignal
     this._genConfigArgs = genConfigArgs
     this._spawnConductor = spawnConductor
@@ -38,30 +40,36 @@ export class Actor {
 
   admin = (method, params) => {
     this._conductorGuard()
-    this._conductor!.callAdmin(method, params)
+    return this._conductor!.callAdmin(method, params)
   }
 
   call = (instanceId, zome, fn, params) => {
-    this._conductor!.callZome(instanceId, zome, fn, params)
+    this._conductorGuard()
+    return this._conductor!.callZome(instanceId, zome, fn, params)
   }
 
   spawn = async () => {
+    this.logger.debug("spawning")
     const path = getConfigPath(this._genConfigArgs.configDir)
-    const handle = this._spawnConductor(this.name, path)
+    const handle = await this._spawnConductor(this.name, path)
+    this.logger.debug("spawned")
     this._conductor = new Conductor({
       name: this.name,
       handle,
       onSignal: this.onSignal.bind(this),
       ...this._genConfigArgs
     })
+    this.logger.debug("initializing")
     await this._conductor.initialize()
+    this.logger.debug("initialized")
   }
 
   kill = () => {
     if (this._conductor) {
-      this._conductor.kill()
+      this.logger.debug("Killing...")
+      return this._conductor.kill('SIGINT')
     } else {
-      logger.warn(`Attempted to kill conductor '${this.name}' twice`)
+      this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
     }
   }
 

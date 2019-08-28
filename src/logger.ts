@@ -1,7 +1,12 @@
 import { createLogger, format, transports } from 'winston'
-import { NullTransport } from 'winston-null'
 
 const logLevel = 'debug'
+
+const myFormat = format.printf(({ level, message, label, timestamp }) =>
+  label
+    ? `${timestamp} [${label}] ${level}: ${message}`
+    : `${timestamp} ${level}: ${message}`
+)
 
 export const makeLogger = (label?) => createLogger({
   levels: {
@@ -14,8 +19,10 @@ export const makeLogger = (label?) => createLogger({
   },
   format: format.combine(
     format.splat(),
-    format.simple(),
-    format.label(label ? { label } : {})
+    format.colorize(),
+    format.timestamp({ format: 'mediumTime' }),
+    format.label(label ? { label } : {}),
+    myFormat,
   ),
   transports: [
     new transports.Console({ level: logLevel })

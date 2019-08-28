@@ -14,19 +14,23 @@ export class ScenarioApi {
 
   description: string
 
+  _actors: Array<Actor>
+  _uuid: string
   _orchestrator: Orchestrator
   _waiter: Waiter
 
-  constructor(description: string, orchestrator: Orchestrator) {
+  constructor(description: string, orchestrator: Orchestrator, uuid: string) {
     this.description = description
+    this._actors = []
+    this._uuid = uuid
     this._orchestrator = orchestrator
   }
 
   conductors = (fns: Array<GenConfigFn>, start?: boolean): Promise<Array<Actor>> => {
-    return promiseSerial(fns.map(async (genConfig, i) => {
+    return promiseSerial(fns.map(async (genConfig) => {
       const genConfigArgs = await this._orchestrator._genConfigArgs()
       const { configDir } = genConfigArgs
-      const configToml = await genConfig(genConfigArgs)
+      const configToml = await genConfig(genConfigArgs, this._uuid)
       await fs.writeFile(getConfigPath(configDir), configToml)
 
       const actor = new Actor({
@@ -38,6 +42,7 @@ export class ScenarioApi {
       if (start) {
         await actor.spawn()
       }
+      this._actors.push(actor)
       return actor
     }))
   }
@@ -51,5 +56,13 @@ export class ScenarioApi {
     //   reject,
     // })
   })
+
+  /**
+   * Only called externally when there is a test failure, 
+   * to ensure that conductors have been properly cleaned up
+   */
+  _cleanup = () => {
+    this._actors.forEach(actor => actor.kill())
+  }
 
 }

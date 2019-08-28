@@ -1,5 +1,4 @@
 import * as T from "./types";
-
 import { downloadFile } from "./util";
 import { spawn } from "child_process";
 import logger from "./logger";
@@ -18,11 +17,15 @@ const mkdirIdempotent = dir => fs.access(dir).catch(() => {
 })
 
 const tempDir = async () => {
-  const base = path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
-  await mkdirIdempotent(base)
-  const dir = await fs.mkdtemp(base)
-  return dir
+  if (!tempDir._cached) {
+    const base = path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
+    await mkdirIdempotent(base)
+    tempDir._cached = await fs.mkdtemp(base)
+  }
+  return tempDir._cached
 }
+
+tempDir._cached = null
 
 const dnaDir = async () => {
   const dir = path.join(await tempDir(), 'dnas-fetched')
@@ -34,22 +37,29 @@ export const dna = (location, id?, opts = {}): T.DnaConfig => {
   if (!id) {
     id = dnaPathToId(location)
   }
-  return { path: location, id, ...opts }
+  return { file: location, id, ...opts }
 }
 
 /**
- * If a dna config object contains a URL in the path, 
- * download the file to a temp directory, 
- * and rewrite the path to point to downloaded file
+ * 1. If a dna config object contains a URL in the path, download the file to a temp directory, 
+ *     and rewrite the path to point to downloaded file.
+ * 2. Then, if the hash is not set, calculate the hash and set it.
+ * 3. Add the UUID for this scenario
  */
-export const resolveDna = async (dna: T.DnaConfig) => {
-  if (dna.path.match(/^https?:/)) {
+export const resolveDna = async (inputDna: T.DnaConfig, uuid: string): Promise<T.DnaConfig> => {
+  const dna = _.cloneDeep(inputDna)
+  if (dna.file.match(/^https?:/)) {
     const dnaPath = path.join(await dnaDir(), dna.id + '.dna.json')
-    await downloadFile({ url: dna.path, path: dnaPath })
-    return Object.assign({}, dna, { path: dnaPath })
-  } else {
-    return dna
+    await downloadFile({ url: dna.file, path: dnaPath, overwrite: false })
+    dna.file = dnaPath
   }
+  if (!dna.hash) {
+    dna.hash = await getDnaHash(dna.file).catch(err => {
+      throw new Error(`Could not determine hash of DNA file '${dna.file}'. Does the file exist?\n\tOriginal error: ${err}`)
+    })
+  }
+  dna.uuid += '::' + uuid
+  return dna
 }
 
 export const dnaPathToId = (dnaPath) => {
@@ -101,16 +111,15 @@ export const defaultSpawnConductor = async (name, configPath) => {
 export const genConfig = (inputConfig: T.ConductorConfig | T.SugaredConductorConfig): T.GenConfigFn => {
   const config = desugarConfig(inputConfig)
 
-  return async (args: T.GenConfigArgs) => {
+  return async (args: T.GenConfigArgs, uuid: string) => {
     const pieces = [
-      await genInstanceConfig(config, args),
+      await genInstanceConfig(config, args, uuid),
       genBridgeConfig(config),
       genDpkiConfig(config),
       genSignalConfig(config),
       genNetworkConfig(config),
       genLoggingConfig(false),
     ]
-    console.log(pieces)
     const json = Object.assign({},
       ...pieces
     )
@@ -123,14 +132,22 @@ export const desugarConfig = (config: T.ConductorConfig | T.SugaredConductorConf
     const { instances } = config
     config.instances = Object.entries(instances).map(([id, dna]) => ({
       id,
-      agent: { id, name: id },
+      agent: agentFromName(id),
       dna
     } as T.InstanceConfig))
   }
   return config as T.ConductorConfig
 }
 
-export const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort }) => {
+const agentFromName = name => ({
+  name,
+  id: name,
+  keystore_file: name,
+  public_address: name,
+  test_agent: true,
+})
+
+export const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort }, uuid) => {
 
   const config: any = {
     agents: [],
@@ -162,15 +179,12 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
   for (const instance of instances) {
     if (!agentIds.has(instance.agent.id)) {
       config.agents.push(instance.agent)
+      agentIds.add(instance.agent.id)
     }
     if (!dnaIds.has(instance.dna.id)) {
-      instance.dna = await resolveDna(instance.dna)
-      if (!instance.dna.hash) {
-        instance.dna.hash = await getDnaHash(instance.dna.path).catch(err => {
-          throw new Error(`Could not determine hash of DNA file '${instance.dna.path}'. Does the file exist?\n\tOriginal error: ${err}`)
-        })
-      }
+      instance.dna = await resolveDna(instance.dna, uuid)
       config.dnas.push(instance.dna)
+      dnaIds.add(instance.dna.id)
     }
     config.instances.push({
       id: instance.id,
@@ -205,9 +219,10 @@ export const genLoggingConfig = (debug) => {
   return {
     logger: {
       type: 'debug',
-      state_dump: false,
+      state_dump: debug,
       rules: {
-        rules: [{ exclude: !debug, pattern: "^debug" }]
+        rules: [{ exclude: !debug, pattern: ".*" }]
+        // rules: [{ exclude: !debug, pattern: "^debug" }]
       }
     }
   }

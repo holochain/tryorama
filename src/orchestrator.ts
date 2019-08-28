@@ -1,3 +1,5 @@
+const uuidGen = require('uuid/v4')
+
 import * as T from "./types";
 import * as M from "./middleware";
 import * as R from "./reporter";
@@ -5,6 +7,7 @@ import { Waiter, NetworkMap } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
 import { defaultGenConfigArgs, defaultSpawnConductor } from "./config";
+
 
 type OrchestratorConstructorParams = {
   spawnConductor?: T.SpawnConductorFn,
@@ -17,6 +20,7 @@ type OrchestratorConstructorParams = {
 type GenConfigArgsFn = () => Promise<T.GenConfigArgs>
 
 type RegisteredScenario = {
+  api: ScenarioApi,
   desc: string,
   execute: ScenarioExecutor,
   only: boolean,
@@ -24,8 +28,9 @@ type RegisteredScenario = {
 
 export type TestStats = {
   successes: number,
-  errors: Array<string>,
+  errors: Array<TestError>,
 }
+type TestError = { description: string, message: any }
 
 type ScenarioExecutor = () => Promise<void>
 
@@ -58,7 +63,7 @@ export class Orchestrator {
     const onlyTests = this._scenarios.filter(({ only }) => only)
     const tests = onlyTests.length > 0 ? onlyTests : this._scenarios
     let successes = 0
-    const errors: Array<string> = []
+    const errors: Array<TestError> = []
 
     this._reporter.before(tests.length)
 
@@ -66,14 +71,18 @@ export class Orchestrator {
     if (onlyTests.length > 0) {
       logger.warn(`.only was invoked; only running ${onlyTests.length} test(s)!`)
     }
-    for (const { desc, execute } of tests) {
-      logger.debug("Executing test: %s", desc)
+    for (const { api, desc, execute } of tests) {
       this._reporter.each(desc)
       try {
+        logger.debug("Executing test: %s", desc)
         await execute()
+        logger.debug("Test succeeded: %s", desc)
         successes += 1
       } catch (e) {
-        errors.push(`'${desc}': ${e}`)
+        logger.debug("Test failed: %s", desc)
+        errors.push({ description: desc, message: e })
+      } finally {
+        await api._cleanup()
       }
     }
     const stats = {
@@ -85,9 +94,10 @@ export class Orchestrator {
   }
 
   _makeExecutor = (desc: string, scenario: Function, only: boolean): void => {
-    const runner = scenario => scenario(new ScenarioApi(desc, this))
+    const api = new ScenarioApi(desc, this, uuidGen())
+    const runner = scenario => scenario(api)
     const execute = () => this._middleware(runner, scenario)
-    this._scenarios.push({ desc, execute, only })
+    this._scenarios.push({ api, desc, execute, only })
   }
 
   // _refreshWaiter = () => new Promise(resolve => {
