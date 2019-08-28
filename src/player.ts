@@ -19,7 +19,7 @@ type ConstructorArgs = {
  * The Actor can spawn or kill a conductor based on the generated config.
  * Actors are the main interface for writing scenarios.
  */
-export class Actor {
+export class Player {
 
   name: string
   logger: any

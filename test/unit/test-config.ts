@@ -78,9 +78,9 @@ test('Sugared config', async t => {
 
 test('genInstanceConfig', async t => {
   const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
-  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs())
+  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs(), 'uuid')
   t.equal(agents.length, 2)
-  t.equal(dnas.length, 2)
+  t.equal(dnas.length, 1)
   t.equal(instances.length, 2)
   t.equal(interfaces.length, 2)
   t.equal(interfaces[0].instances.length, 0)
@@ -91,7 +91,7 @@ test('genInstanceConfig', async t => {
 
 test('genInstanceConfig, empty', async t => {
   const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
-  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configEmpty, await genConfigArgs())
+  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configEmpty, await genConfigArgs(), 'uuid')
   t.equal(agents.length, 0)
   t.equal(dnas.length, 0)
   t.equal(instances.length, 0)
@@ -146,10 +146,10 @@ test('genLoggingConfig', async t => {
   const expectedVerbose = TOML.parse(`
 [logger]
 type = "debug"
-state_dump = false
+state_dump = true
 [[logger.rules.rules]]
 exclude = false
-pattern = "^debug"
+pattern = ".*"
   `)
 
   const expectedQuiet = TOML.parse(`
@@ -158,7 +158,7 @@ type = "debug"
 state_dump = false
 [[logger.rules.rules]]
 exclude = true
-pattern = "^debug"
+pattern = ".*"
   `)
 
   t.deepEqual(loggerVerbose, expectedVerbose)

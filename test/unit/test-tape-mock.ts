@@ -36,9 +36,10 @@ test('tapeExecutor failure modes', async t => {
   await orchestrator.run().then(stats => {
     t.ok(badTestRun.notCalled)
     t.ok(mockT.ok.calledOnce)
-    t.ok(stats.errors[0].includes('2 arguments'))
-    t.ok(stats.errors[1].includes('2 arguments'))
-    t.ok(stats.errors[2].includes('this gets caught'))
+    console.log('stats', stats)
+    t.ok(String(stats.errors[0].message).includes('2 arguments'))
+    t.ok(String(stats.errors[1].message).includes('2 arguments'))
+    t.ok(String(stats.errors[2].message).includes('this gets caught'))
     t.end()
   })
 })

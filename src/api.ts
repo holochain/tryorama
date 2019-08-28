@@ -3,7 +3,7 @@ const path = require('path')
 
 import { Waiter } from '@holochain/hachiko'
 import { GenConfigFn } from "./types"
-import { Actor } from "./actor"
+import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
 import { promiseSerial } from './util';
@@ -14,7 +14,7 @@ export class ScenarioApi {
 
   description: string
 
-  _actors: Array<Actor>
+  _actors: Array<Player>
   _uuid: string
   _orchestrator: Orchestrator
   _waiter: Waiter
@@ -26,14 +26,14 @@ export class ScenarioApi {
     this._orchestrator = orchestrator
   }
 
-  conductors = (fns: Array<GenConfigFn>, start?: boolean): Promise<Array<Actor>> => {
+  conductors = (fns: Array<GenConfigFn>, start?: boolean): Promise<Array<Player>> => {
     return promiseSerial(fns.map(async (genConfig) => {
       const genConfigArgs = await this._orchestrator._genConfigArgs()
       const { configDir } = genConfigArgs
       const configToml = await genConfig(genConfigArgs, this._uuid)
       await fs.writeFile(getConfigPath(configDir), configToml)
 
-      const actor = new Actor({
+      const actor = new Player({
         name: 'TODO',
         onSignal: () => 'TODO',
         genConfigArgs,
@@ -47,7 +47,7 @@ export class ScenarioApi {
     }))
   }
 
-  consistency = (actors: Array<Actor>): Promise<void> => new Promise((resolve, reject) => {
+  consistency = (actors: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
     logger.warn("Waiting 5 seconds instead of real consistency check")
     setTimeout(resolve, 5000)
     // this._waiter.registerCallback({
