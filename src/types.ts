@@ -16,7 +16,6 @@ export type GenConfigArgs = {
 }
 
 type ConductorConfigCommon = {
-  name: string,
   bridges?: Array<BridgeConfig>,
   dpki?: DpkiConfig,
 }

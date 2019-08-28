@@ -2,6 +2,8 @@ const fs = require('fs')
 import axios from 'axios'
 import logger from './logger'
 
+export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
+
 // from https://hackernoon.com/functional-javascript-resolving-promises-sequentially-7aac18c4431e
 export const promiseSerial = promises =>
   promises.reduce((promise, p) =>

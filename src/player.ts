@@ -2,7 +2,7 @@ import { Signal } from '@holochain/hachiko'
 
 import { notImplemented } from './common'
 import { Conductor } from './conductor'
-import { ConductorConfig, GenConfigArgs, SpawnConductorFn } from './types';
+import { GenConfigArgs, SpawnConductorFn } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
 

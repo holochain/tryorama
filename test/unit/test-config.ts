@@ -55,7 +55,6 @@ const { configPlain, configSugared } = (() => {
 })()
 
 const configEmpty: T.ConductorConfig = {
-  name: 'empty',
   instances: []
 }
 

@@ -1,6 +1,7 @@
 const test = require('tape')
 
 import { Orchestrator, Config } from '../../src'
+import { delay } from '../../src/util';
 
 
 const testConfig = () => {
@@ -11,13 +12,11 @@ const testConfig = () => {
 
   return {
     alice: Config.genConfig({
-      name: 'alice',
       instances: {
         chat: dna
       },
     }),
     bob: Config.genConfig({
-      name: 'bob',
       instances: {
         chat: dna
       }
@@ -29,7 +28,7 @@ test('test with error', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator()
   orchestrator.registerScenario('invalid instance', async s => {
-    const [alice] = await s.conductors([C.alice])
+    const {alice} = await s.conductors({alice: C.alice})
     await alice.spawn()
     await alice.call('blah', 'blah', 'blah', 'blah')
     alice.kill()
@@ -41,11 +40,11 @@ test('test with error', async t => {
   t.end()
 })
 
-test('test with successful zome call', async t => {
+test.skip('test with successful zome call', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator()
   orchestrator.registerScenario('proper zome call', async s => {
-    const [alice] = await s.conductors([C.alice])
+    const {alice} = await s.conductors({alice: C.alice})
     await alice.spawn()
     const agentAddress = await alice.call('chat', 'chat', 'handle_register', {
       name: 'alice',
@@ -60,13 +59,14 @@ test('test with successful zome call', async t => {
   t.end()
 })
 
-// TODO: unskip when ready
-test.skip('test with kill and respawn', async t => {
+test.only('test with kill and respawn', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator()
   orchestrator.registerScenario('proper zome call', async s => {
-    const [alice] = await s.conductors([C.alice])
+    const {alice} = await s.conductors({alice: C.alice})
     await alice.spawn()
+    console.log('delaying...')
+    await delay(15000)
     await alice.kill()
 
     t.throws(() => alice.call('chat', 'x', 'x', 'x'))
@@ -76,7 +76,7 @@ test.skip('test with kill and respawn', async t => {
       name: 'alice',
       avatar_url: 'https://tinyurl.com/yxcwavlr',
     })
-    t.equal(alice.agentAddress, agentAddress)
+    t.equal(agentAddress.length, 46)
   })
   const stats = await orchestrator.run()
   t.equal(stats.successes, 1)
