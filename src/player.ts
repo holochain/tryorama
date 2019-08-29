@@ -10,6 +10,9 @@ type ConstructorArgs = {
   name: string,
   genConfigArgs: GenConfigArgs,
   onSignal: (Signal) => void,
+  onJoin: () => void,
+  onLeave: () => void,
+  spawnConductor: SpawnConductorFn,
 }
 
 /**
@@ -23,15 +26,19 @@ export class Player {
 
   name: string
   logger: any
+  onJoin: () => void
+  onLeave: () => void
   onSignal: (Signal) => void
 
   _conductor: Conductor | null
   _genConfigArgs: GenConfigArgs
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, genConfigArgs, onSignal, spawnConductor }) {
+  constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
+    this.onJoin = onJoin
+    this.onLeave = onLeave
     this.onSignal = onSignal
     this._genConfigArgs = genConfigArgs
     this._spawnConductor = spawnConductor
@@ -62,15 +69,16 @@ export class Player {
     this.logger.debug("initializing")
     await this._conductor.initialize()
     this.logger.debug("initialized")
+    this.onJoin()
   }
 
-  kill = (): Promise<void> => {
+  kill = async (): Promise<void> => {
     if (this._conductor) {
       this.logger.debug("Killing...")
-      return this._conductor.kill('SIGINT')
+      await this._conductor.kill('SIGINT')
+      this.onLeave()
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
-      return Promise.resolve()
     }
   }
 

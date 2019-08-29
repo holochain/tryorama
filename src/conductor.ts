@@ -43,11 +43,16 @@ export class Conductor {
   }
 
   callAdmin: Function = (...a) => {
-    throw notImplemented
+    // Not supporting admin functions because currently adding DNAs, instances, etc.
+    // is undefined behavior, since the Waiter needs to know about all DNAs in existence,
+    // and it's too much of a pain to track all of that with mutable conductor config.
+    // If admin functions are added, then a hook must be added as well to update Waiter's
+    // NetworkModels as new DNAs and instances are added/removed.
+    throw new Error("Admin functions are currently not supported.")
   }
 
   callZome: Function = (...a) => {
-    throw notImplemented
+    throw new Error("Attempting to call zome function before conductor was initialized")
   }
 
   initialize = async () => {
@@ -77,13 +82,13 @@ export class Conductor {
       ws.on('close', resolve)
     })
 
-    this.callAdmin = async (method, params) => {
-      this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
-      this.logger.debug(JSON.stringify(params, null, 2))
-      const result = await call(method)(params)
-      this.logger.debug(`${colors.yellow.bold('-> %o')}`, result)
-      return result
-    }
+    // this.callAdmin = async (method, params) => {
+    //   this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
+    //   this.logger.debug(JSON.stringify(params, null, 2))
+    //   const result = await call(method)(params)
+    //   this.logger.debug(`${colors.yellow.bold('-> %o')}`, result)
+    //   return result
+    // }
 
     onSignal(({ signal, instance_id }) => {
       if (signal.signal_type !== 'Consistency') {

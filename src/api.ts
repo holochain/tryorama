@@ -1,5 +1,7 @@
+import _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
+const TOML = require("@iarna/toml")
 
 import { Waiter } from '@holochain/hachiko'
 import { GenConfigFn, ObjectS } from "./types"
@@ -31,10 +33,25 @@ export class ScenarioApi {
       const genConfigArgs = await this._orchestrator._genConfigArgs()
       const { configDir } = genConfigArgs
       const configToml = await genConfig(genConfigArgs, this._uuid)
+      const configJson = TOML.parse(configToml)
+      const { dnas, instances } = configJson
+
       await fs.writeFile(getConfigPath(configDir), configToml)
+
+      const onJoin = () => {
+        // TODO
+        dnas.forEach(dna => this._waiter.addNode(dna.hash, name))
+      }
+
+      const onLeave = () => {
+        // TODO
+        dnas.forEach(dna => this._waiter.removeNode(dna.hash, name))
+      }
 
       const player = new Player({
         name,
+        onJoin,
+        onLeave,
         onSignal: () => 'TODO: hook up consistency signals',
         genConfigArgs,
         spawnConductor: this._orchestrator._spawnConductor
