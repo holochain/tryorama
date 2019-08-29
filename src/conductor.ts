@@ -1,6 +1,7 @@
 const colors = require('colors/safe')
-import { Signal } from '@holochain/hachiko'
+const hcWebClient = require('@holochain/hc-web-client')
 
+import { Signal } from '@holochain/hachiko'
 import { ConductorConfig, Mortal, GenConfigArgs } from "./types";
 import { notImplemented } from "./common";
 import { makeLogger } from "./logger";
@@ -25,6 +26,7 @@ export class Conductor {
   _handle: Mortal
   _hcConnect: any
   _isInitialized: boolean
+  _wsClosePromise: Promise<void>
 
   constructor({ name, handle, onSignal, adminPort, zomePort }) {
     this.name = name
@@ -35,8 +37,9 @@ export class Conductor {
 
     this._genConfigArgs = { adminPort, zomePort, configDir: 'UNUSED' }
     this._handle = handle
-    this._hcConnect = require('@holochain/hc-web-client').connect
+    this._hcConnect = hcWebClient.connect
     this._isInitialized = false
+    this._wsClosePromise = Promise.resolve()
   }
 
   callAdmin: Function = (...a) => {
@@ -51,10 +54,13 @@ export class Conductor {
     await this._makeConnections()
   }
 
-  kill = (signal?) => {
+  kill = (signal?): Promise<void> => {
     this.logger.debug("Killing...")
     this._handle.kill(signal)
+    return this._wsClosePromise
   }
+
+  wsClosed = () => this._wsClosePromise
 
   _makeConnections = async () => {
     await this._connectAdmin()
@@ -65,9 +71,13 @@ export class Conductor {
 
     const url = this._adminInterfaceUrl()
     this.logger.debug(`connectAdmin :: connecting to ${url}`)
-    const { call, onSignal } = await this._hcConnect({ url })
+    const { call, onSignal, ws } = await this._hcConnect({ url })
 
-    this.callAdmin = method => async params => {
+    this._wsClosePromise = new Promise(resolve => {
+      ws.on('close', resolve)
+    })
+
+    this.callAdmin = async (method, params) => {
       this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
       this.logger.debug(JSON.stringify(params, null, 2))
       const result = await call(method)(params)

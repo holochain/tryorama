@@ -64,12 +64,13 @@ export class Player {
     this.logger.debug("initialized")
   }
 
-  kill = () => {
+  kill = (): Promise<void> => {
     if (this._conductor) {
       this.logger.debug("Killing...")
       return this._conductor.kill('SIGINT')
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
+      return Promise.resolve()
     }
   }
 

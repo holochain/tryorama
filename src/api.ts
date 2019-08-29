@@ -61,8 +61,10 @@ export class ScenarioApi {
    * Only called externally when there is a test failure, 
    * to ensure that conductors have been properly cleaned up
    */
-  _cleanup = () => {
-    this._players.forEach(player => player.kill())
+  _cleanup = (): Promise<void> => {
+    return Promise.all(
+      this._players.map(player => player.kill())
+    ).then(() => { })
   }
 
 }
