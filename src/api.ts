@@ -14,14 +14,14 @@ export class ScenarioApi {
 
   description: string
 
-  _actors: Array<Player>
+  _players: Array<Player>
   _uuid: string
   _orchestrator: Orchestrator
   _waiter: Waiter
 
   constructor(description: string, orchestrator: Orchestrator, uuid: string) {
     this.description = description
-    this._actors = []
+    this._players = []
     this._uuid = uuid
     this._orchestrator = orchestrator
   }
@@ -33,25 +33,25 @@ export class ScenarioApi {
       const configToml = await genConfig(genConfigArgs, this._uuid)
       await fs.writeFile(getConfigPath(configDir), configToml)
 
-      const actor = new Player({
+      const player = new Player({
         name,
-        onSignal: () => 'TODO',
+        onSignal: () => 'TODO: hook up consistency signals',
         genConfigArgs,
         spawnConductor: this._orchestrator._spawnConductor
       })
       if (start) {
-        await actor.spawn()
+        await player.spawn()
       }
-      this._actors.push(actor)
-      return actor
+      this._players.push(player)
+      return player
     }))
   }
 
-  consistency = (actors: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
+  consistency = (players: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
     logger.warn("Waiting 5 seconds instead of real consistency check")
     setTimeout(resolve, 5000)
     // this._waiter.registerCallback({
-    //   nodes: actors ? actors.map(i => i.id) : null,
+    //   nodes: players ? players.map(i => i.id) : null,
     //   resolve,
     //   reject,
     // })
@@ -62,7 +62,7 @@ export class ScenarioApi {
    * to ensure that conductors have been properly cleaned up
    */
   _cleanup = () => {
-    this._actors.forEach(actor => actor.kill())
+    this._players.forEach(player => player.kill())
   }
 
 }

@@ -14,10 +14,10 @@ type ConstructorArgs = {
 
 /**
  * Representation of a Conductor user.
- * An Actor is essentially a wrapper around a conductor config that was generated,
+ * A Player is essentially a wrapper around a conductor config that was generated,
  * and the possible reference to a conductor which is running based on that config.
- * The Actor can spawn or kill a conductor based on the generated config.
- * Actors are the main interface for writing scenarios.
+ * The Player can spawn or kill a conductor based on the generated config.
+ * Players are the main interface for writing scenarios.
  */
 export class Player {
 
@@ -31,7 +31,7 @@ export class Player {
 
   constructor({ name, genConfigArgs, onSignal, spawnConductor }) {
     this.name = name
-    this.logger = makeLogger(`actor ${name}`)
+    this.logger = makeLogger(`player ${name}`)
     this.onSignal = onSignal
     this._genConfigArgs = genConfigArgs
     this._spawnConductor = spawnConductor

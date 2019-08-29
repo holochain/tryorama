@@ -10,7 +10,7 @@ const DEFAULT_ZOME_CALL_TIMEOUT = 60000
 
 /**
  * Representation of a running Conductor instance.
- * An [Actor] spawns a conductor process and uses the process handle to construct this class. 
+ * A [Player] spawns a conductor process and uses the process handle to construct this class. 
  * Though Conductor is spawned externally, this class is responsible for establishing WebSocket
  * connections to the various interfaces to enable zome calls as well as admin and signal handling.
  */
