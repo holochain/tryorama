@@ -19,12 +19,14 @@ type OrchestratorConstructorParams = {
 
 type GenConfigArgsFn = () => Promise<T.GenConfigArgs>
 
+type ScenarioModifier = 'only' | 'skip' | null
 type RegisteredScenario = {
   api: ScenarioApi,
   desc: string,
   execute: ScenarioExecutor,
-  only: boolean,
+  modifier: ScenarioModifier,
 }
+type Register = (desc: string, scenario: Function) => void
 
 export type TestStats = {
   successes: number,
@@ -36,7 +38,7 @@ type ScenarioExecutor = () => Promise<void>
 
 export class Orchestrator {
 
-  registerScenario: Function & { only: Function }
+  registerScenario: Register & { only: Register, skip: Register }
 
   _genConfigArgs: GenConfigArgsFn
   _middleware: M.Middleware
@@ -54,14 +56,21 @@ export class Orchestrator {
       ? R.basic(x => console.log(x))
       : o.reporter || R.unit
 
-    const registerScenario = (desc, scenario) => this._makeExecutor(desc, scenario, false)
-    const registerScenarioOnly = (desc, scenario) => this._makeExecutor(desc, scenario, true)
-    this.registerScenario = Object.assign(registerScenario, { only: registerScenarioOnly })
+    const registerScenario = (desc, scenario) => this._makeExecutor(desc, scenario, null)
+    const registerScenarioOnly = (desc, scenario) => this._makeExecutor(desc, scenario, 'only')
+    const registerScenarioSkip = (desc, scenario) => this._makeExecutor(desc, scenario, 'skip')
+    this.registerScenario = Object.assign(registerScenario, {
+      only: registerScenarioOnly,
+      skip: registerScenarioSkip,
+    })
   }
 
   run = async (): Promise<TestStats> => {
-    const onlyTests = this._scenarios.filter(({ only }) => only)
-    const tests = onlyTests.length > 0 ? onlyTests : this._scenarios
+    const allTests = this._scenarios
+    const onlyTests = allTests.filter(({ modifier }) => modifier === 'only')
+    const tests = onlyTests.length > 0
+      ? onlyTests
+      : allTests.filter(({ modifier }) => modifier !== 'skip')
     let successes = 0
     const errors: Array<TestError> = []
 
@@ -70,6 +79,9 @@ export class Orchestrator {
     logger.debug("About to execute %d tests", tests.length)
     if (onlyTests.length > 0) {
       logger.warn(`.only was invoked; only running ${onlyTests.length} test(s)!`)
+    }
+    if (tests.length < allTests.length) {
+      logger.warn(`Skipping ${allTests.length - tests.length} test(s)!`)
     }
     for (const { api, desc, execute } of tests) {
       this._reporter.each(desc)
@@ -93,11 +105,11 @@ export class Orchestrator {
     return stats
   }
 
-  _makeExecutor = (desc: string, scenario: Function, only: boolean): void => {
+  _makeExecutor = (desc: string, scenario: Function, modifier: ScenarioModifier): void => {
     const api = new ScenarioApi(desc, this, uuidGen())
     const runner = scenario => scenario(api)
     const execute = () => this._middleware(runner, scenario)
-    this._scenarios.push({ api, desc, execute, only })
+    this._scenarios.push({ api, desc, execute, modifier })
   }
 
   // _refreshWaiter = () => new Promise(resolve => {
