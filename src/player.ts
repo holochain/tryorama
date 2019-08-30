@@ -1,4 +1,4 @@
-import { Signal } from '@holochain/hachiko'
+import { Signal, DnaId } from '@holochain/hachiko'
 
 import { notImplemented } from './common'
 import { Conductor } from './conductor'
@@ -9,11 +9,13 @@ import { makeLogger } from './logger';
 type ConstructorArgs = {
   name: string,
   genConfigArgs: GenConfigArgs,
-  onSignal: (Signal) => void,
+  onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
   spawnConductor: SpawnConductorFn,
 }
+
+const noop = (...x) => { }
 
 /**
  * Representation of a Conductor user.
@@ -28,9 +30,10 @@ export class Player {
   logger: any
   onJoin: () => void
   onLeave: () => void
-  onSignal: (Signal) => void
+  onSignal: ({ instanceId: string, signal: Signal }) => void
 
   _conductor: Conductor | null
+  _dnaIds: Array<DnaId>
   _genConfigArgs: GenConfigArgs
   _spawnConductor: SpawnConductorFn
 
@@ -56,6 +59,12 @@ export class Player {
   }
 
   spawn = async () => {
+    if (this._conductor) {
+      this.logger.error("Attempted to spawn conductor twice!")
+      throw new Error("Attempted to spawn conductor twice!")
+    }
+
+    this.onJoin()
     this.logger.debug("spawning")
     const path = getConfigPath(this._genConfigArgs.configDir)
     const handle = await this._spawnConductor(this.name, path)
@@ -69,7 +78,6 @@ export class Player {
     this.logger.debug("initializing")
     await this._conductor.initialize()
     this.logger.debug("initialized")
-    this.onJoin()
   }
 
   kill = async (): Promise<void> => {
@@ -84,6 +92,7 @@ export class Player {
 
   _conductorGuard = () => {
     if (this._conductor === null) {
+      this.logger.error("Attempted conductor action when no conductor is running! You must `.spawn()` first")
       throw new Error("Attempted conductor action when no conductor is running! You must `.spawn()` first")
     }
   }

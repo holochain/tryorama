@@ -18,7 +18,7 @@ const DEFAULT_ZOME_CALL_TIMEOUT = 60000
 export class Conductor {
 
   name: string
-  onSignal: (Signal) => void
+  onSignal: ({ instanceId: string, signal: Signal }) => void
   zomeCallTimeout: number
   logger: any
 

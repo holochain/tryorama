@@ -23,7 +23,7 @@ const mainConfig = Config.genConfig({
     chat: dnaChat,  // agent_id="chat", instance_id="chat", dna=dnaChat
   },
   // specify a bridge from chat to blog
-  bridges: [Config.bridge('bridge-name', 'chat', 'blog')]
+  bridges: [Config.bridge('bridge-name', 'chat', 'blog')],
 })
 
 // Instatiate a test orchestrator. 
@@ -41,11 +41,15 @@ orchestrator.registerScenario('proper zome call', async s => {
   
   // You have to spawn the conductors yourself...
   await alice.spawn()
-  
   // ...unless you pass `true` as an extra parameter, 
   // in which case each conductor will auto-spawn
   const {carol} = await s.conductors({carol: mainConfig}, true)
-  
+
+  // You can also kill them...
+  await alice.kill()
+  // ...and re-spawn the same conductor you just killed
+  await alice.spawn()
+
   // now you can make zome calls,
   await alice.call('chat', 'messages', 'direct_message', {
     content: 'hello world',

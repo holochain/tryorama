@@ -1,7 +1,7 @@
 import _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
-const TOML = require("@iarna/toml")
+const TOML = require('@iarna/toml')
 
 import { Waiter } from '@holochain/hachiko'
 import { GenConfigFn, ObjectS } from "./types"
@@ -38,24 +38,23 @@ export class ScenarioApi {
 
       await fs.writeFile(getConfigPath(configDir), configToml)
 
-      const onJoin = () => {
-        // TODO
-        dnas.forEach(dna => this._waiter.addNode(dna.hash, name))
-      }
-
-      const onLeave = () => {
-        // TODO
-        dnas.forEach(dna => this._waiter.removeNode(dna.hash, name))
-      }
-
       const player = new Player({
         name,
-        onJoin,
-        onLeave,
-        onSignal: () => 'TODO: hook up consistency signals',
         genConfigArgs,
-        spawnConductor: this._orchestrator._spawnConductor
+        spawnConductor: this._orchestrator._spawnConductor,
+        onJoin: () => dnas.forEach(dna => this._waiter.addNode(dna.id, name)),
+        onLeave: () => dnas.forEach(dna => this._waiter.removeNode(dna.id, name)),
+        onSignal: ({ instanceId, signal }) => {
+          const instance = instances.find(c => c.id === instanceId)
+          const dnaId = instance!.dna.id
+          this._waiter.handleObservation({
+            dna: dnaId,
+            node: name,
+            signal
+          })
+        },
       })
+
       if (start) {
         await player.spawn()
       }
@@ -64,14 +63,16 @@ export class ScenarioApi {
     }))
   }
 
-  consistency = (players: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
-    logger.warn("Waiting 5 seconds instead of real consistency check")
-    setTimeout(resolve, 5000)
-    // this._waiter.registerCallback({
-    //   nodes: players ? players.map(i => i.id) : null,
-    //   resolve,
-    //   reject,
-    // })
+  consistency = (players?: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
+    if (players) {
+      throw new Error("Calling `consistency` with parameters is currently unsupported. See https://github.com/holochain/hachiko/issues/10")
+    }
+    this._waiter.registerCallback({
+      // nodes: players ? players.map(p => p.name) : null,
+      nodes: null,
+      resolve,
+      reject,
+    })
   })
 
   /**
