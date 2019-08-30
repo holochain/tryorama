@@ -117,9 +117,10 @@ export class Conductor {
         () => reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`),
         timeout
       )
-      return callZome(instanceId, zomeName, fnName)(params).then(result => {
+      callZome(instanceId, zomeName, fnName)(params).then(json => {
         clearTimeout(timer)
-        this.logger.debug(colors.cyan.bold('->'), JSON.parse(result))
+        const result = JSON.parse(json)
+        this.logger.debug(colors.cyan.bold('->'), result)
         resolve(result)
       }).catch(reject)
     })

@@ -32,7 +32,7 @@ export type TestStats = {
   successes: number,
   errors: Array<TestError>,
 }
-type TestError = { description: string, message: any }
+type TestError = { description: string, error: any }
 
 type ScenarioExecutor = () => Promise<void>
 
@@ -92,7 +92,7 @@ export class Orchestrator {
         successes += 1
       } catch (e) {
         logger.debug("Test failed: %s", desc)
-        errors.push({ description: desc, message: e })
+        errors.push({ description: desc, error: e })
       } finally {
         await api._cleanup()
       }

@@ -1,14 +1,14 @@
-import _ from 'lodash'
+import * as _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
 const TOML = require('@iarna/toml')
 
-import { Waiter } from '@holochain/hachiko'
+import { Waiter, FullSyncNetwork } from '@holochain/hachiko'
 import { GenConfigFn, ObjectS } from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
-import { promiseSerial } from './util';
+import { promiseSerialObject } from './util';
 import { getConfigPath } from './config';
 
 
@@ -26,41 +26,45 @@ export class ScenarioApi {
     this._players = []
     this._uuid = uuid
     this._orchestrator = orchestrator
+    this._waiter = new Waiter(FullSyncNetwork)
   }
 
   conductors = (fns: ObjectS<GenConfigFn>, start?: boolean): Promise<ObjectS<Player>> => {
-    return promiseSerial(Object.entries(fns).map(async ([name, genConfig]) => {
-      const genConfigArgs = await this._orchestrator._genConfigArgs()
-      const { configDir } = genConfigArgs
-      const configToml = await genConfig(genConfigArgs, this._uuid)
-      const configJson = TOML.parse(configToml)
-      const { dnas, instances } = configJson
+    const players = {}
+    Object.entries(fns).forEach(([name, genConfig]) => {
+      players[name] = (async () => {
+        const genConfigArgs = await this._orchestrator._genConfigArgs()
+        const { configDir } = genConfigArgs
+        const configToml = await genConfig(genConfigArgs, this._uuid)
+        const configJson = TOML.parse(configToml)
+        const { dnas, instances } = configJson
 
-      await fs.writeFile(getConfigPath(configDir), configToml)
+        await fs.writeFile(getConfigPath(configDir), configToml)
 
-      const player = new Player({
-        name,
-        genConfigArgs,
-        spawnConductor: this._orchestrator._spawnConductor,
-        onJoin: () => dnas.forEach(dna => this._waiter.addNode(dna.id, name)),
-        onLeave: () => dnas.forEach(dna => this._waiter.removeNode(dna.id, name)),
-        onSignal: ({ instanceId, signal }) => {
-          const instance = instances.find(c => c.id === instanceId)
-          const dnaId = instance!.dna.id
-          this._waiter.handleObservation({
-            dna: dnaId,
-            node: name,
-            signal
-          })
-        },
-      })
-
-      if (start) {
-        await player.spawn()
-      }
-      this._players.push(player)
-      return player
-    }))
+        const player = new Player({
+          name,
+          genConfigArgs,
+          spawnConductor: this._orchestrator._spawnConductor,
+          onJoin: () => dnas.forEach(dna => this._waiter.addNode(dna.id, name)),
+          onLeave: () => dnas.forEach(dna => this._waiter.removeNode(dna.id, name)),
+          onSignal: ({ instanceId, signal }) => {
+            const instance = instances.find(c => c.id === instanceId)
+            const dnaId = instance!.dna.id
+            this._waiter.handleObservation({
+              dna: dnaId,
+              node: name,
+              signal
+            })
+          },
+        })
+        if (start) {
+          await player.spawn()
+        }
+        this._players.push(player)
+        return player
+      })()
+    })
+    return promiseSerialObject(players)
   }
 
   consistency = (players?: Array<Player>): Promise<void> => new Promise((resolve, reject) => {

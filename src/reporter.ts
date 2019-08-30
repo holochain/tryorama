@@ -23,8 +23,17 @@ export const basic = log => ({
     log(`(try-o-rama)  Orchestrator test run complete:
 ${total} total scenarios
 ${successes} successes
-${errors.length} errors:
-\t${errors.join('\n\t')}
+${errors.length > 0 ? `${errors.length} errors:` : '0 errors'}
+\t${errors.map(formatError).join('\n\t')}
 `)
   },
 })
+
+const formatError = e => {
+  if (e.error instanceof Error) {
+    e.error = e.error.toString()
+  } else if (e.error instanceof Object) {
+    e.error = JSON.stringify(e.error, null, 2)
+  }
+  return e
+}
