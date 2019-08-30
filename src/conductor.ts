@@ -96,7 +96,6 @@ export class Conductor {
       }
 
       this.onSignal({
-        conductorName: this.name,
         instanceId: instance_id,
         signal
       })
