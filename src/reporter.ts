@@ -1,7 +1,7 @@
-import logger from "./logger";
+const _ = require('lodash')
 import { TestStats } from "./orchestrator";
 
-const noop = (...x) => { }
+const noop = (..._x) => { }
 
 export type Reporter = {
   before: (total: number) => void,
@@ -29,11 +29,11 @@ ${errors.length > 0 ? `${errors.length} errors:` : '0 errors'}
   },
 })
 
-const formatError = e => {
-  if (e.error instanceof Error) {
-    e.error = e.error.toString()
-  } else if (e.error instanceof Object) {
-    e.error = JSON.stringify(e.error, null, 2)
+const formatError = ({ description, error }) => {
+  if (error instanceof Error) {
+    error = error.toString()
+  } else if (_.isObject(error)) {
+    error = JSON.stringify(error, null, 2)
   }
-  return e
+  return `( ${description} ): ${error}`
 }

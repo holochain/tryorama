@@ -5,6 +5,7 @@ import { Orchestrator } from '../../src'
 import { tapeExecutor } from '../../src/middleware'
 import { genConfigArgs, spawnConductor } from '../common'
 import logger from '../../src/logger';
+import { delay } from '../../src/util';
 
 const orchestrator = new Orchestrator({
   spawnConductor, genConfigArgs,
@@ -13,15 +14,14 @@ const orchestrator = new Orchestrator({
 
 const testRan = sinon.spy()
 
-const delay = ms => new Promise(resolve => setTimeout(resolve, ms))
 
-orchestrator.registerScenario('real tape scenario #1', async (s, t) => {
-  await delay(100)
+orchestrator.registerScenario.skip('real tape scenario #1', async (s, t) => {
+  await delay(1000)
   t.equal(typeof s.conductors, 'function')
   testRan(1)
 })
 
-orchestrator.registerScenario('real tape scenario #2', async (s, t) => {
+orchestrator.registerScenario.skip('real tape scenario #2', async (s, t) => {
   t.equal(typeof s.conductors, 'function')
   testRan(2)
 })

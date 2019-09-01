@@ -44,7 +44,6 @@ export class Orchestrator {
   _middleware: M.Middleware
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
-  _waiter: Waiter
   _reporter: R.Reporter
 
   constructor(o: OrchestratorConstructorParams = {}) {
@@ -87,6 +86,7 @@ export class Orchestrator {
       this._reporter.each(desc)
       try {
         logger.debug("Executing test: %s", desc)
+        await api.consistency()
         await execute()
         logger.debug("Test succeeded: %s", desc)
         successes += 1
@@ -111,28 +111,6 @@ export class Orchestrator {
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })
   }
-
-  // _refreshWaiter = () => new Promise(resolve => {
-  //   if (this._waiter) {
-  //     logger.info("Test over, waiting for Waiter to flush...")
-  //     // Wait for final networking effects to resolve
-  //     this._waiter.registerCallback({ nodes: null, resolve })
-  //   } else {
-  //     resolve()
-  //   }
-  // }).then(() => {
-  //   const networkModels: NetworkMap = _.chain(this.conductorConfigs)
-  //     .toPairs()
-  //     .map(([name, c]) => c.instances.map(i => ({
-  //       id: `${name}::${i.id}`,
-  //       dna: i.dna.id
-  //     })))
-  //     .flatten()
-  //     .groupBy(n => n.dna)
-  //     .mapValues(ns => new FullSyncNetwork(ns.map(n => n.id)))
-  //     .value()
-  //   this._waiter = new Waiter(networkModels)
-  // })
 
 }
 

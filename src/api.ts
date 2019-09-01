@@ -37,7 +37,7 @@ export class ScenarioApi {
         const { configDir } = genConfigArgs
         const configToml = await genConfig(genConfigArgs, this._uuid)
         const configJson = TOML.parse(configToml)
-        const { dnas, instances } = configJson
+        const { instances } = configJson
 
         await fs.writeFile(getConfigPath(configDir), configToml)
 
@@ -45,16 +45,17 @@ export class ScenarioApi {
           name,
           genConfigArgs,
           spawnConductor: this._orchestrator._spawnConductor,
-          onJoin: () => dnas.forEach(dna => this._waiter.addNode(dna.id, name)),
-          onLeave: () => dnas.forEach(dna => this._waiter.removeNode(dna.id, name)),
+          onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, name)),
+          onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, name)),
           onSignal: ({ instanceId, signal }) => {
             const instance = instances.find(c => c.id === instanceId)
-            const dnaId = instance!.dna.id
-            this._waiter.handleObservation({
+            const dnaId = instance!.dna
+            const observation = {
               dna: dnaId,
               node: name,
               signal
-            })
+            }
+            this._waiter.handleObservation(observation)
           },
         })
         if (start) {
@@ -71,6 +72,8 @@ export class ScenarioApi {
     if (players) {
       throw new Error("Calling `consistency` with parameters is currently unsupported. See https://github.com/holochain/hachiko/issues/10")
     }
+    setTimeout(resolve, 5000)
+    return
     this._waiter.registerCallback({
       // nodes: players ? players.map(p => p.name) : null,
       nodes: null,

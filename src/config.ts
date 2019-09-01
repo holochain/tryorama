@@ -65,7 +65,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, uuid: string): Promise<T
       throw new Error(`Could not determine hash of DNA file '${dna.file}'. Does the file exist?\n\tOriginal error: ${err}`)
     })
   }
-  dna.uuid += '::' + uuid
+  dna.uuid = dna.uuid ? `${dna.uuid}::${uuid}` : uuid
   return dna
 }
 
@@ -160,9 +160,11 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
     agents: [],
     dnas: [],
     instances: [],
+    persistence_dir: configDir,
   }
 
   const adminInterface = {
+    admin: true,
     id: 'try-o-rama-admin-interface',
     driver: {
       type: 'websocket',

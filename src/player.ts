@@ -64,7 +64,7 @@ export class Player {
       throw new Error("Attempted to spawn conductor twice!")
     }
 
-    this.onJoin()
+    await this.onJoin()
     this.logger.debug("spawning")
     const path = getConfigPath(this._genConfigArgs.configDir)
     const handle = await this._spawnConductor(this.name, path)
@@ -84,7 +84,8 @@ export class Player {
     if (this._conductor) {
       this.logger.debug("Killing...")
       await this._conductor.kill('SIGINT')
-      this.onLeave()
+      this._conductor = null
+      await this.onLeave()
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
     }

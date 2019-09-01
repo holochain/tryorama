@@ -56,8 +56,10 @@ export const combine = (...ms: Array<Middleware>): Middleware =>
  * the entire test suite.
  */
 export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, reject) => {
-  return run(s =>
+  run(s => {
     tape(s.description, t => {
+      logger.debug('ENTER')
+      // TODO: move this outside?
       if (f.length !== 2) {
         const err = "tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions."
         t.fail(err)
@@ -65,18 +67,21 @@ export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, rej
         reject(err)
         return
       }
-      return f(s, t)
+      f(s, t)
         .then(() => {
+          t.pass('passed! now what. (' + s.description + ')')
+          logger.debug('PASS (%s)', s.description)
           t.end()
           resolve()
         })
         .catch((err) => {
           // Include stack trace from actual test function, but all on one line.
           // This is the best we can do for now without messing with tape internals
+          logger.debug('FAIL')
           t.fail(err.stack ? err.stack : err)
           t.end()
           reject(err)
         })
     })
-  )
+  })
 })

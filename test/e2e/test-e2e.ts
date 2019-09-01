@@ -1,4 +1,7 @@
-const test = require('tape')
+import * as tape from 'tape'
+import tapeP from 'tape-promise'
+
+const test = tapeP(tape)
 
 import { Orchestrator, Config } from '../../src'
 import { delay } from '../../src/util';
@@ -59,12 +62,44 @@ test('test with simple zome call', async t => {
   t.end()
 })
 
-///////////////////////////////////////////////////////////////////
-
-
-test.skip('test with successful zome call', async t => {
+test('test with consistency awaiting', async t => {
   const C = testConfig()
-  const orchestrator = new Orchestrator()
+  const orchestrator = new Orchestrator({ reporter: true })
+  orchestrator.registerScenario('proper zome call', async s => {
+    const { alice, bob } = await s.conductors({ alice: C.alice, bob: C.bob }, true)
+
+    const streamAddress = await alice.call('chat', 'chat', 'create_stream', {
+      name: 'stream',
+      description: 'whatever',
+      initial_members: [],
+    })
+    t.ok(streamAddress.Ok)
+    await s.consistency()
+
+    const messageResult = await alice.call('chat', 'chat', 'post_message', {
+      stream_address: streamAddress.Ok,
+      message: {
+        message_type: 'type',
+        timestamp: 0,
+        payload: 'hello',
+        meta: '',
+      }
+    })
+    await s.consistency()
+
+    const streams = await alice.call('chat', 'chat', 'get_all_public_streams', {})
+    t.ok(streams.Ok)
+
+  })
+  const stats = await orchestrator.run()
+  t.equal(stats.successes, 1)
+  t.equal(stats.errors.length, 0)
+  t.end()
+})
+
+test.skip('test with agentAddress', async t => {
+  const C = testConfig()
+  const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
     const { alice } = await s.conductors({ alice: C.alice })
     await alice.spawn()
@@ -81,27 +116,29 @@ test.skip('test with successful zome call', async t => {
   t.end()
 })
 
-test.skip('test with kill and respawn', async t => {
+test('test with kill and respawn', async t => {
   const C = testConfig()
-  const orchestrator = new Orchestrator()
+  const orchestrator = new Orchestrator({ reporter: true })
+  orchestrator.registerScenario('attempted call with killed conductor', async s => {
+    const { alice } = await s.conductors({ alice: C.alice })
+    await alice.spawn()
+    await alice.kill()
+    await t.rejects(alice.call('chat', 'x', 'x', 'x'))
+  })
+
   orchestrator.registerScenario('proper zome call', async s => {
     const { alice } = await s.conductors({ alice: C.alice })
     await alice.spawn()
-    console.log('delaying...')
-    await delay(15000)
     await alice.kill()
-
-    t.throws(() => alice.call('chat', 'x', 'x', 'x'))
-
     await alice.spawn()
     const agentAddress = await alice.call('chat', 'chat', 'register', {
       name: 'alice',
       avatar_url: 'https://tinyurl.com/yxcwavlr',
     })
-    t.equal(agentAddress.length, 46)
+    t.equal(agentAddress.Ok.length, 63)
   })
   const stats = await orchestrator.run()
   t.equal(stats.successes, 1)
-  t.equal(stats.errors.length, 0)
+  t.equal(stats.errors.length, 1)
   t.end()
 })

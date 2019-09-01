@@ -105,7 +105,7 @@ export class Conductor {
   _connectZome = async () => {
     const url = this._zomeInterfaceUrl()
     this.logger.debug(`connectZome :: connecting to ${url}`)
-    const { callZome } = await this._hcConnect({ url })
+    const { callZome, onSignal } = await this._hcConnect({ url })
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
       this.logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`,
