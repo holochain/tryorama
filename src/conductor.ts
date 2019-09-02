@@ -82,13 +82,16 @@ export class Conductor {
       ws.on('close', resolve)
     })
 
-    // this.callAdmin = async (method, params) => {
-    //   this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
-    //   this.logger.debug(JSON.stringify(params, null, 2))
-    //   const result = await call(method)(params)
-    //   this.logger.debug(`${colors.yellow.bold('-> %o')}`, result)
-    //   return result
-    // }
+    this.callAdmin = async (method, params) => {
+      if (!method.match(/^admin\/.*\/list$/)) {
+        this.logger.warn("Calling admin functions which modify state during tests may result in unexpected behavior!")
+      }
+      this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
+      this.logger.debug(JSON.stringify(params, null, 2))
+      const result = await call(method)(params)
+      this.logger.debug(`${colors.yellow.bold('-> %o')}`, result)
+      return result
+    }
 
     onSignal(({ signal, instance_id }) => {
       if (signal.signal_type !== 'Consistency') {
