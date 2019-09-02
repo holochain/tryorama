@@ -62,11 +62,15 @@ test('test with simple zome call', async t => {
   t.end()
 })
 
-test('test with consistency awaiting', async t => {
+test.only('test with consistency awaiting', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
     const { alice, bob } = await s.conductors({ alice: C.alice, bob: C.bob }, true)
+
+    await s.consistency()
+
+    // TODO: make bob join the stream too, and have him check for alice's message
 
     const streamAddress = await alice.call('chat', 'chat', 'create_stream', {
       name: 'stream',

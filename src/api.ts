@@ -72,8 +72,6 @@ export class ScenarioApi {
     if (players) {
       throw new Error("Calling `consistency` with parameters is currently unsupported. See https://github.com/holochain/hachiko/issues/10")
     }
-    setTimeout(resolve, 5000)
-    return
     this._waiter.registerCallback({
       // nodes: players ? players.map(p => p.name) : null,
       nodes: null,

@@ -68,6 +68,7 @@ export class Player {
     this.logger.debug("spawning")
     const path = getConfigPath(this._genConfigArgs.configDir)
     const handle = await this._spawnConductor(this.name, path)
+
     this.logger.debug("spawned")
     this._conductor = new Conductor({
       name: this.name,
