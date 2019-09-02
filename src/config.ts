@@ -65,7 +65,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, uuid: string): Promise<T
       throw new Error(`Could not determine hash of DNA file '${dna.file}'. Does the file exist?\n\tOriginal error: ${err}`)
     })
   }
-  dna.uuid += '::' + uuid
+  dna.uuid = dna.uuid ? `${dna.uuid}::${uuid}` : uuid
   return dna
 }
 
@@ -100,7 +100,7 @@ export const defaultGenConfigArgs = async () => {
   return { configDir, adminPort, zomePort }
 }
 
-export const defaultSpawnConductor = async (name, configPath) => {
+export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => new Promise((resolve, reject) => {
   const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
   const handle = spawn(binPath, ['-c', configPath])
 
@@ -108,8 +108,17 @@ export const defaultSpawnConductor = async (name, configPath) => {
   handle.stderr.on('data', data => logger.error(`!C '${name}'! %s`, data.toString('utf8')))
   handle.on('close', code => logger.info(`conductor '${name}' exited with code ${code}`))
 
-  return handle
-}
+  handle.stdout.on('data', data => {
+    // wait for the logs to convey that the interfaces have started
+    // because the consumer of this function needs those interfaces
+    // to be started so that it can initiate, and form,
+    // the websocket connections
+    if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
+      console.info(`Conductor '${name}' process spawning successful`)
+      resolve(handle)
+    }
+  })
+})
 
 
 /**
@@ -121,11 +130,11 @@ export const genConfig = (inputConfig: T.ConductorConfig | T.SugaredConductorCon
   return async (args: T.GenConfigArgs, uuid: string) => {
     const pieces = [
       await genInstanceConfig(config, args, uuid),
-      genBridgeConfig(config),
-      genDpkiConfig(config),
-      genSignalConfig(config),
-      genNetworkConfig(config),
-      genLoggingConfig(false),
+      await genBridgeConfig(config),
+      await genDpkiConfig(config),
+      await genSignalConfig(config),
+      await genNetworkConfig(config, args),
+      await genLoggingConfig(false),
     ]
     const json = Object.assign({},
       ...pieces
@@ -160,9 +169,11 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
     agents: [],
     dnas: [],
     instances: [],
+    persistence_dir: configDir,
   }
 
   const adminInterface = {
+    admin: true,
     id: 'try-o-rama-admin-interface',
     driver: {
       type: 'websocket',
@@ -220,7 +231,19 @@ export const genSignalConfig = ({ }) => ({
   }
 })
 
-export const genNetworkConfig = ({ }: T.ConductorConfig) => ({})
+export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }) => {
+  const dir = path.join(configDir, 'n3h-storage')
+  await mkdirIdempotent(dir)
+  return {
+    network: {
+      type: 'n3h',
+      n3h_log_level: 'i',
+      bootstrap_nodes: [],
+      n3h_mode: 'REAL',
+      n3h_persistence_path: dir,
+    }
+  }
+}
 
 export const genLoggingConfig = (debug) => {
   return {

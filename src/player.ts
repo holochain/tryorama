@@ -1,4 +1,4 @@
-import { Signal } from '@holochain/hachiko'
+import { Signal, DnaId } from '@holochain/hachiko'
 
 import { notImplemented } from './common'
 import { Conductor } from './conductor'
@@ -9,8 +9,13 @@ import { makeLogger } from './logger';
 type ConstructorArgs = {
   name: string,
   genConfigArgs: GenConfigArgs,
-  onSignal: (Signal) => void,
+  onSignal: ({ instanceId: string, signal: Signal }) => void,
+  onJoin: () => void,
+  onLeave: () => void,
+  spawnConductor: SpawnConductorFn,
 }
+
+const noop = (...x) => { }
 
 /**
  * Representation of a Conductor user.
@@ -23,15 +28,20 @@ export class Player {
 
   name: string
   logger: any
-  onSignal: (Signal) => void
+  onJoin: () => void
+  onLeave: () => void
+  onSignal: ({ instanceId: string, signal: Signal }) => void
 
   _conductor: Conductor | null
+  _dnaIds: Array<DnaId>
   _genConfigArgs: GenConfigArgs
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, genConfigArgs, onSignal, spawnConductor }) {
+  constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
+    this.onJoin = onJoin
+    this.onLeave = onLeave
     this.onSignal = onSignal
     this._genConfigArgs = genConfigArgs
     this._spawnConductor = spawnConductor
@@ -49,9 +59,16 @@ export class Player {
   }
 
   spawn = async () => {
+    if (this._conductor) {
+      this.logger.error("Attempted to spawn conductor twice!")
+      throw new Error("Attempted to spawn conductor twice!")
+    }
+
+    await this.onJoin()
     this.logger.debug("spawning")
     const path = getConfigPath(this._genConfigArgs.configDir)
     const handle = await this._spawnConductor(this.name, path)
+
     this.logger.debug("spawned")
     this._conductor = new Conductor({
       name: this.name,
@@ -64,18 +81,20 @@ export class Player {
     this.logger.debug("initialized")
   }
 
-  kill = (): Promise<void> => {
+  kill = async (): Promise<void> => {
     if (this._conductor) {
       this.logger.debug("Killing...")
-      return this._conductor.kill('SIGINT')
+      await this._conductor.kill('SIGINT')
+      this._conductor = null
+      await this.onLeave()
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
-      return Promise.resolve()
     }
   }
 
   _conductorGuard = () => {
     if (this._conductor === null) {
+      this.logger.error("Attempted conductor action when no conductor is running! You must `.spawn()` first")
       throw new Error("Attempted conductor action when no conductor is running! You must `.spawn()` first")
     }
   }

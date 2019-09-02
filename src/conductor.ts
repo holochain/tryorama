@@ -18,7 +18,7 @@ const DEFAULT_ZOME_CALL_TIMEOUT = 60000
 export class Conductor {
 
   name: string
-  onSignal: (Signal) => void
+  onSignal: ({ instanceId: string, signal: Signal }) => void
   zomeCallTimeout: number
   logger: any
 
@@ -43,11 +43,16 @@ export class Conductor {
   }
 
   callAdmin: Function = (...a) => {
-    throw notImplemented
+    // Not supporting admin functions because currently adding DNAs, instances, etc.
+    // is undefined behavior, since the Waiter needs to know about all DNAs in existence,
+    // and it's too much of a pain to track all of that with mutable conductor config.
+    // If admin functions are added, then a hook must be added as well to update Waiter's
+    // NetworkModels as new DNAs and instances are added/removed.
+    throw new Error("Admin functions are currently not supported.")
   }
 
   callZome: Function = (...a) => {
-    throw notImplemented
+    throw new Error("Attempting to call zome function before conductor was initialized")
   }
 
   initialize = async () => {
@@ -77,13 +82,13 @@ export class Conductor {
       ws.on('close', resolve)
     })
 
-    this.callAdmin = async (method, params) => {
-      this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
-      this.logger.debug(JSON.stringify(params, null, 2))
-      const result = await call(method)(params)
-      this.logger.debug(`${colors.yellow.bold('-> %o')}`, result)
-      return result
-    }
+    // this.callAdmin = async (method, params) => {
+    //   this.logger.debug(`${colors.yellow.bold("[setup call on %s]:")} ${colors.yellow.underline("%s")}`, this.name, method)
+    //   this.logger.debug(JSON.stringify(params, null, 2))
+    //   const result = await call(method)(params)
+    //   this.logger.debug(`${colors.yellow.bold('-> %o')}`, result)
+    //   return result
+    // }
 
     onSignal(({ signal, instance_id }) => {
       if (signal.signal_type !== 'Consistency') {
@@ -91,7 +96,6 @@ export class Conductor {
       }
 
       this.onSignal({
-        conductorName: this.name,
         instanceId: instance_id,
         signal
       })
@@ -101,7 +105,7 @@ export class Conductor {
   _connectZome = async () => {
     const url = this._zomeInterfaceUrl()
     this.logger.debug(`connectZome :: connecting to ${url}`)
-    const { callZome } = await this._hcConnect({ url })
+    const { callZome, onSignal } = await this._hcConnect({ url })
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
       this.logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`,
@@ -113,9 +117,10 @@ export class Conductor {
         () => reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`),
         timeout
       )
-      return callZome(instanceId, zomeName, fnName)(params).then(result => {
+      callZome(instanceId, zomeName, fnName)(params).then(json => {
         clearTimeout(timer)
-        this.logger.debug(colors.cyan.bold('->'), JSON.parse(result))
+        const result = JSON.parse(json)
+        this.logger.debug(colors.cyan.bold('->'), result)
         resolve(result)
       }).catch(reject)
     })

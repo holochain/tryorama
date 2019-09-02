@@ -1,16 +1,24 @@
 const fs = require('fs')
 import axios from 'axios'
 import logger from './logger'
+import { ObjectS } from './types';
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 
 // from https://hackernoon.com/functional-javascript-resolving-promises-sequentially-7aac18c4431e
-export const promiseSerial = promises =>
-  promises.reduce((promise, p) =>
+export function promiseSerialArray<T>(promises: Array<Promise<T>>): Promise<Array<T>> {
+  return promises.reduce((promise, p) =>
     promise.then(result =>
       p.then(Array.prototype.concat.bind(result))),
     Promise.resolve([]))
+}
 
+export function promiseSerialObject<T>(promises: ObjectS<Promise<T>>): Promise<ObjectS<T>> {
+  return Object.entries(promises).reduce((promise, [key, p]) =>
+    promise.then(result =>
+      p.then(v => Object.assign(result, { [key]: v }))),
+    Promise.resolve({}))
+}
 
 export const downloadFile = async ({ url, path, overwrite }: { url: string, path: string, overwrite?: boolean }): Promise<string> => {
   if (overwrite) {

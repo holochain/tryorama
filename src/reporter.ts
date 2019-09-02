@@ -1,7 +1,7 @@
-import logger from "./logger";
+const _ = require('lodash')
 import { TestStats } from "./orchestrator";
 
-const noop = (...x) => { }
+const noop = (..._x) => { }
 
 export type Reporter = {
   before: (total: number) => void,
@@ -23,8 +23,17 @@ export const basic = log => ({
     log(`(try-o-rama)  Orchestrator test run complete:
 ${total} total scenarios
 ${successes} successes
-${errors.length} errors:
-\t${errors.join('\n\t')}
+${errors.length > 0 ? `${errors.length} errors:` : '0 errors'}
+\t${errors.map(formatError).join('\n\t')}
 `)
   },
 })
+
+const formatError = ({ description, error }) => {
+  if (error instanceof Error) {
+    error = error.toString()
+  } else if (_.isObject(error)) {
+    error = JSON.stringify(error, null, 2)
+  }
+  return `( ${description} ): ${error}`
+}

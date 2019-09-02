@@ -15,6 +15,7 @@ type OrchestratorConstructorParams = {
   reporter?: boolean | R.Reporter,
   middleware?: any,
   debugLog?: boolean,
+  tape?: any,
 }
 
 type GenConfigArgsFn = () => Promise<T.GenConfigArgs>
@@ -32,7 +33,7 @@ export type TestStats = {
   successes: number,
   errors: Array<TestError>,
 }
-type TestError = { description: string, message: any }
+type TestError = { description: string, error: any }
 
 type ScenarioExecutor = () => Promise<void>
 
@@ -44,14 +45,15 @@ export class Orchestrator {
   _middleware: M.Middleware
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
-  _waiter: Waiter
   _reporter: R.Reporter
+  _tape: any
 
   constructor(o: OrchestratorConstructorParams = {}) {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.unit
     this._scenarios = []
+    this._tape = o.tape
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))
       : o.reporter || R.unit
@@ -71,8 +73,6 @@ export class Orchestrator {
     const tests = onlyTests.length > 0
       ? onlyTests
       : allTests.filter(({ modifier }) => modifier !== 'skip')
-    let successes = 0
-    const errors: Array<TestError> = []
 
     this._reporter.before(tests.length)
 
@@ -83,6 +83,8 @@ export class Orchestrator {
     if (tests.length < allTests.length) {
       logger.warn(`Skipping ${allTests.length - tests.length} test(s)!`)
     }
+    let successes = 0
+    const errors: Array<TestError> = []
     for (const { api, desc, execute } of tests) {
       this._reporter.each(desc)
       try {
@@ -92,7 +94,7 @@ export class Orchestrator {
         successes += 1
       } catch (e) {
         logger.debug("Test failed: %s", desc)
-        errors.push({ description: desc, message: e })
+        errors.push({ description: desc, error: e })
       } finally {
         await api._cleanup()
       }
@@ -111,28 +113,6 @@ export class Orchestrator {
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })
   }
-
-  // _refreshWaiter = () => new Promise(resolve => {
-  //   if (this._waiter) {
-  //     logger.info("Test over, waiting for Waiter to flush...")
-  //     // Wait for final networking effects to resolve
-  //     this._waiter.registerCallback({ nodes: null, resolve })
-  //   } else {
-  //     resolve()
-  //   }
-  // }).then(() => {
-  //   const networkModels: NetworkMap = _.chain(this.conductorConfigs)
-  //     .toPairs()
-  //     .map(([name, c]) => c.instances.map(i => ({
-  //       id: `${name}::${i.id}`,
-  //       dna: i.dna.id
-  //     })))
-  //     .flatten()
-  //     .groupBy(n => n.dna)
-  //     .mapValues(ns => new FullSyncNetwork(ns.map(n => n.id)))
-  //     .value()
-  //   this._waiter = new Waiter(networkModels)
-  // })
 
 }
 
