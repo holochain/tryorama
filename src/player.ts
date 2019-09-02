@@ -15,8 +15,6 @@ type ConstructorArgs = {
   spawnConductor: SpawnConductorFn,
 }
 
-const noop = (...x) => { }
-
 /**
  * Representation of a Conductor user.
  * A Player is essentially a wrapper around a conductor config that was generated,
