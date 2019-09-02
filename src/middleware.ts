@@ -1,5 +1,3 @@
-import logger from "./logger";
-
 /**
  * Middleware is a decorator for scenario functions. A Middleware takes two functions:
  * - the function which will run the scenario
@@ -27,8 +25,8 @@ export const unit = (run, f) => run(f)
  * The middlewares are applied in the order that they're provided.
  * If using something fancy like `tapeExecutor`, put it at the end of the chain.
  */
-export const combine = (...ms: Array<Middleware>): Middleware =>
-  (run, f) => {
+export const combine = (...ms: Array<Middleware>): Middleware => {
+  return (run, f) => {
     const go = (ms: Array<Middleware>, f: Function) => {
       // grab the next middleware
       const m = ms.pop()
@@ -45,6 +43,7 @@ export const combine = (...ms: Array<Middleware>): Middleware =>
     }
     return go(ms, f)
   }
+}
 
 /**
  * Given the `tape` module, tapeExecutor produces a middleware 
@@ -54,30 +53,31 @@ export const combine = (...ms: Array<Middleware>): Middleware =>
  * signature to also accept tape's `t` object for making assertions
  * If the test throws an error, it registers the error with tape and does not abort
  * the entire test suite.
+ * 
+ * NB: This has had intermittent problems that seemed to fix themselves magically.
+ * Tape is a bit brittle when it comes to dynamically specifying tests.
+ * Beware...
+ * 
+ * If problems persist, it may be necessary to resolve this promise immediately so that
+ * all tape tests can be registered synchronously. Then it is a matter of getting the
+ * entire test suite to await the end of all tape tests. It could be done by specifying
+ * a parallel vs. serial mode for test running.
  */
 export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, reject) => {
+  if (f.length !== 2) {
+    reject("tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions.")
+    return
+  }
   run(s => {
     tape(s.description, t => {
-      logger.debug('ENTER')
-      // TODO: move this outside?
-      if (f.length !== 2) {
-        const err = "tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions."
-        t.fail(err)
-        t.end()
-        reject(err)
-        return
-      }
       f(s, t)
         .then(() => {
-          t.pass('passed! now what. (' + s.description + ')')
-          logger.debug('PASS (%s)', s.description)
           t.end()
           resolve()
         })
         .catch((err) => {
           // Include stack trace from actual test function, but all on one line.
           // This is the best we can do for now without messing with tape internals
-          logger.debug('FAIL')
           t.fail(err.stack ? err.stack : err)
           t.end()
           reject(err)

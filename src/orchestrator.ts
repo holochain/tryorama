@@ -15,6 +15,7 @@ type OrchestratorConstructorParams = {
   reporter?: boolean | R.Reporter,
   middleware?: any,
   debugLog?: boolean,
+  tape?: any,
 }
 
 type GenConfigArgsFn = () => Promise<T.GenConfigArgs>
@@ -45,12 +46,14 @@ export class Orchestrator {
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
   _reporter: R.Reporter
+  _tape: any
 
   constructor(o: OrchestratorConstructorParams = {}) {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.unit
     this._scenarios = []
+    this._tape = o.tape
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))
       : o.reporter || R.unit
@@ -70,8 +73,6 @@ export class Orchestrator {
     const tests = onlyTests.length > 0
       ? onlyTests
       : allTests.filter(({ modifier }) => modifier !== 'skip')
-    let successes = 0
-    const errors: Array<TestError> = []
 
     this._reporter.before(tests.length)
 
@@ -82,11 +83,12 @@ export class Orchestrator {
     if (tests.length < allTests.length) {
       logger.warn(`Skipping ${allTests.length - tests.length} test(s)!`)
     }
+    let successes = 0
+    const errors: Array<TestError> = []
     for (const { api, desc, execute } of tests) {
       this._reporter.each(desc)
       try {
         logger.debug("Executing test: %s", desc)
-        await api.consistency()
         await execute()
         logger.debug("Test succeeded: %s", desc)
         successes += 1
