@@ -1,6 +1,9 @@
 import _ from 'lodash'
 import { ScenarioApi } from "./api"
 import * as t from "io-ts"
+import { ThrowReporter } from "io-ts/lib/ThrowReporter"
+
+export const decodeOrThrow = (validator, value) => ThrowReporter.report(validator.decode(value))
 
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }

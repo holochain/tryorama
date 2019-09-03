@@ -118,7 +118,7 @@ export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
       // to be started so that it can initiate, and form,
       // the websocket connections
       if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
-        console.info(`Conductor '${name}' process spawning successful`)
+        logger.info(`Conductor '${name}' process spawning successful`)
         resolve(handle)
       }
     })
@@ -130,7 +130,7 @@ export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
  * Helper function to generate TOML config from a simpler object.
  */
 export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn => {
-  const config = desugarConfig(inputConfig)
+  T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
 
   return async (args: T.GenConfigArgs, uuid: string) => {
     const pieces = [
