@@ -9,7 +9,6 @@ import { genConfigArgs } from '../common';
 const { configPlain, configSugared } = (() => {
   const dna = C.dna('path/to/dna.json', 'dna-id', { uuid: 'uuid' })
   const common = {
-    name: 'conducty mcconductorface',
     bridges: [C.bridge('b', 'alice', 'bob')],
     dpki: C.dpki('alice', { well: 'hello' }),
   }
@@ -90,19 +89,6 @@ test('genInstanceConfig', async t => {
   stubGetDnaHash.restore()
 })
 
-test('genInstanceConfig, empty', async t => {
-  const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
-  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configEmpty, await genConfigArgs(), 'uuid')
-  t.equal(agents.length, 0)
-  t.equal(dnas.length, 0)
-  t.equal(instances.length, 0)
-  t.equal(interfaces.length, 2)
-  t.equal(interfaces[0].instances.length, 0)
-  t.equal(interfaces[1].instances.length, 0)
-  t.end()
-  stubGetDnaHash.restore()
-})
-
 test('genBridgeConfig', async t => {
   const { bridges } = await C.genBridgeConfig(configPlain)
   t.deepEqual(bridges, [{ handle: 'b', caller_id: 'alice', callee_id: 'bob' }])
@@ -165,4 +151,15 @@ pattern = ".*"
   t.deepEqual(loggerVerbose, expectedVerbose)
   t.deepEqual(loggerQuiet, expectedQuiet)
   t.end()
+})
+
+test('genConfig produces valid TOML', async t => {
+  const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
+  const builder = C.genConfig(configSugared)
+  const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222 }, 'uuid')
+  const json = TOML.parse(toml)
+  const toml2 = TOML.stringify(json)
+  t.equal(toml, toml2)
+  t.end()
+  stubGetDnaHash.restore()
 })

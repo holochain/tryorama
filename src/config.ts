@@ -55,6 +55,9 @@ export const dna = (location, id?, opts = {}): T.DnaConfig => {
  */
 export const resolveDna = async (inputDna: T.DnaConfig, uuid: string): Promise<T.DnaConfig> => {
   const dna = _.cloneDeep(inputDna)
+  if (!dna.file) {
+    throw new Error(`Invalid 'file' for dna: ${JSON.stringify(dna)}`)
+  }
   if (dna.file.match(/^https?:/)) {
     const dnaPath = path.join(await dnaDir(), dna.id + '.dna.json')
     await downloadFile({ url: dna.file, path: dnaPath, overwrite: false })
@@ -126,7 +129,7 @@ export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
 /**
  * Helper function to generate TOML config from a simpler object.
  */
-export const genConfig = (inputConfig: T.ConductorConfig | T.SugaredConductorConfig): T.GenConfigFn => {
+export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn => {
   const config = desugarConfig(inputConfig)
 
   return async (args: T.GenConfigArgs, uuid: string) => {

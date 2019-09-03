@@ -32,6 +32,9 @@ export type SugaredConductorConfig = ConductorConfigCommon & {
   instances: ObjectS<DnaConfig>,
 }
 
+/** For situations where we can accept either flavor of config */
+export type EitherConductorConfig = ConductorConfig | SugaredConductorConfig
+
 export type AgentConfig = {
   id: string,
   name: string,

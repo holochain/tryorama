@@ -4,12 +4,12 @@ const path = require('path')
 const TOML = require('@iarna/toml')
 
 import { Waiter, FullSyncNetwork } from '@holochain/hachiko'
-import { GenConfigFn, ObjectS } from "./types"
+import * as T from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
 import { promiseSerialObject } from './util';
-import { getConfigPath } from './config';
+import { getConfigPath, genConfig } from './config';
 
 
 export class ScenarioApi {
@@ -29,13 +29,15 @@ export class ScenarioApi {
     this._waiter = new Waiter(FullSyncNetwork)
   }
 
-  players = (fns: ObjectS<GenConfigFn>, start?: boolean): Promise<ObjectS<Player>> => {
+  players = (configs: T.ObjectS<T.GenConfigFn | T.EitherConductorConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
     const players = {}
-    Object.entries(fns).forEach(([name, genConfig]) => {
+    Object.entries(configs).forEach(([name, config]) => {
       players[name] = (async () => {
         const genConfigArgs = await this._orchestrator._genConfigArgs()
         const { configDir } = genConfigArgs
-        const configToml = await genConfig(genConfigArgs, this._uuid)
+        // If an object was passed in, run it through genConfig first. Otherwise use the given function.
+        const configBuilder = _.isFunction(config) ? (config as T.GenConfigFn) : genConfig(config as T.EitherConductorConfig)
+        const configToml = await configBuilder(genConfigArgs, this._uuid)
         const configJson = TOML.parse(configToml)
         const { instances } = configJson
 
