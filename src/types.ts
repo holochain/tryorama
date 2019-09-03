@@ -12,11 +12,13 @@ export type SpawnConductorFn = (name: string, configPath: string) => Promise<Mor
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 
-export type GenConfigFn = (args: GenConfigArgs, uuid: string) => Promise<string>
+export type GenConfigFn = (args: GenConfigArgs) => Promise<string>
 export type GenConfigArgs = {
+  conductorName: string,
   configDir: string,
+  uuid: string,
   adminPort: number,
-  zomePort: number
+  zomePort: number,
 }
 
 export const AgentConfigV = t.type({

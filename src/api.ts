@@ -8,7 +8,7 @@ import * as T from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
-import { promiseSerialObject } from './util';
+import { promiseSerialObject, delay } from './util';
 import { getConfigPath, genConfig } from './config';
 
 
@@ -29,15 +29,15 @@ export class ScenarioApi {
     this._waiter = new Waiter(FullSyncNetwork)
   }
 
-  players = (configs: T.ObjectS<T.GenConfigFn | T.EitherConductorConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
+  players = async (configs: T.ObjectS<T.GenConfigFn | T.EitherConductorConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
     const players = {}
     Object.entries(configs).forEach(([name, config]) => {
       players[name] = (async () => {
-        const genConfigArgs = await this._orchestrator._genConfigArgs()
+        const genConfigArgs = await this._orchestrator._genConfigArgs(name, this._uuid)
         const { configDir } = genConfigArgs
         // If an object was passed in, run it through genConfig first. Otherwise use the given function.
         const configBuilder = _.isFunction(config) ? (config as T.GenConfigFn) : genConfig(config as T.EitherConductorConfig)
-        const configToml = await configBuilder(genConfigArgs, this._uuid)
+        const configToml = await configBuilder(genConfigArgs)
         const configJson = TOML.parse(configToml)
         const { instances } = configJson
 
@@ -67,7 +67,12 @@ export class ScenarioApi {
         return player
       })()
     })
-    return promiseSerialObject(players)
+    const ps = await promiseSerialObject<Player>(players)
+    // if (start) {
+    //   logger.warn("Waiting for conductors to settle... (TODO check back later to see if this is necessary)")
+    //   await delay(5000)
+    // }
+    return ps
   }
 
   consistency = (players?: Array<Player>): Promise<void> => new Promise((resolve, reject) => {

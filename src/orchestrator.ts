@@ -18,7 +18,7 @@ type OrchestratorConstructorParams = {
   tape?: any,
 }
 
-type GenConfigArgsFn = () => Promise<T.GenConfigArgs>
+type GenConfigArgsFn = (conductorName: string, uuid: string) => Promise<T.GenConfigArgs>
 
 type ScenarioModifier = 'only' | 'skip' | null
 type RegisteredScenario = {

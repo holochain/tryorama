@@ -22,7 +22,7 @@ export class Conductor {
   zomeCallTimeout: number
   logger: any
 
-  _genConfigArgs: GenConfigArgs
+  _ports: { adminPort: number, zomePort: number }
   _handle: Mortal
   _hcConnect: any
   _isInitialized: boolean
@@ -35,7 +35,7 @@ export class Conductor {
     this.onSignal = onSignal
     this.zomeCallTimeout = DEFAULT_ZOME_CALL_TIMEOUT
 
-    this._genConfigArgs = { adminPort, zomePort, configDir: 'UNUSED' }
+    this._ports = { adminPort, zomePort }
     this._handle = handle
     this._hcConnect = hcWebClient.connect
     this._isInitialized = false
@@ -129,6 +129,6 @@ export class Conductor {
     })
   }
 
-  _adminInterfaceUrl = () => `ws://localhost:${this._genConfigArgs.adminPort}`
-  _zomeInterfaceUrl = () => `ws://localhost:${this._genConfigArgs.zomePort}`
+  _adminInterfaceUrl = () => `ws://localhost:${this._ports.adminPort}`
+  _zomeInterfaceUrl = () => `ws://localhost:${this._ports.zomePort}`
 }
