@@ -29,7 +29,7 @@ export class ScenarioApi {
     this._waiter = new Waiter(FullSyncNetwork)
   }
 
-  conductors = (fns: ObjectS<GenConfigFn>, start?: boolean): Promise<ObjectS<Player>> => {
+  players = (fns: ObjectS<GenConfigFn>, start?: boolean): Promise<ObjectS<Player>> => {
     const players = {}
     Object.entries(fns).forEach(([name, genConfig]) => {
       players[name] = (async () => {
@@ -82,7 +82,7 @@ export class ScenarioApi {
 
   /**
    * Only called externally when there is a test failure, 
-   * to ensure that conductors have been properly cleaned up
+   * to ensure that players/conductors have been properly cleaned up
    */
   _cleanup = (): Promise<void> => {
     return Promise.all(
