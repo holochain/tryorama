@@ -81,7 +81,7 @@ export const bridge = (handle, caller_id, callee_id) => ({ handle, caller_id, ca
 
 export const dpki = (instance_id, init_params?): T.DpkiConfig => ({
   instance_id,
-  init_params: JSON.stringify(init_params ? init_params : {})
+  init_params: init_params ? init_params : {}
 })
 
 export const getConfigPath = configDir => path.join(configDir, 'conductor-config.toml')
