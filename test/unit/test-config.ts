@@ -6,7 +6,7 @@ import * as T from '../../src/types'
 import * as C from '../../src/config';
 import { genConfigArgs } from '../common';
 
-const { configPlain, configSugared } = (() => {
+export const { configPlain, configSugared } = (() => {
   const dna = C.dna('path/to/dna.json', 'dna-id', { uuid: 'uuid' })
   const common = {
     bridges: [C.bridge('b', 'alice', 'bob')],
@@ -20,10 +20,10 @@ const { configPlain, configSugared } = (() => {
     {
       id: 'alice',
       agent: {
-        id: 'alice',
-        name: 'alice',
-        keystore_file: 'alice',
-        public_address: 'alice',
+        id: 'name::alice',
+        name: 'name::alice',
+        keystore_file: 'name::alice',
+        public_address: 'name::alice',
         test_agent: true,
       },
       dna: {
@@ -35,10 +35,10 @@ const { configPlain, configSugared } = (() => {
     {
       id: 'bob',
       agent: {
-        id: 'bob',
-        name: 'bob',
-        keystore_file: 'bob',
-        public_address: 'bob',
+        id: 'name::bob',
+        name: 'name::bob',
+        keystore_file: 'name::bob',
+        public_address: 'name::bob',
         test_agent: true,
       },
       dna: {
@@ -70,13 +70,13 @@ test('DNA id generation', t => {
 })
 
 test('Sugared config', async t => {
-  t.deepEqual(C.desugarConfig(configSugared), configPlain)
+  t.deepEqual(C.desugarConfig('name', configSugared), configPlain)
   t.end()
 })
 
 test('genInstanceConfig', async t => {
   const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
-  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs(), 'uuid')
+  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs())
   t.equal(agents.length, 2)
   t.equal(dnas.length, 1)
   t.equal(instances.length, 2)
@@ -103,7 +103,7 @@ test('genBridgeConfig, empty', async t => {
 
 test('genDpkiConfig', async t => {
   const { dpki } = await C.genDpkiConfig(configPlain)
-  t.deepEqual(dpki, { instance_id: 'alice', init_params: '{"well":"hello"}' })
+  t.deepEqual(dpki, { instance_id: 'alice', init_params: { "well": "hello" } })
   t.end()
 })
 
@@ -156,7 +156,7 @@ pattern = ".*"
 test('genConfig produces valid TOML', async t => {
   const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
   const builder = C.genConfig(configSugared)
-  const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222 }, 'uuid')
+  const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
   t.equal(toml, toml2)
