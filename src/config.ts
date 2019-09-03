@@ -100,7 +100,7 @@ export const defaultGenConfigArgs = async () => {
   return { configDir, adminPort, zomePort }
 }
 
-export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => new Promise((resolve, reject) => {
+export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
   const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
   const handle = spawn(binPath, ['-c', configPath])
 
@@ -108,17 +108,19 @@ export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => ne
   handle.stderr.on('data', data => logger.error(`!C '${name}'! %s`, data.toString('utf8')))
   handle.on('close', code => logger.info(`conductor '${name}' exited with code ${code}`))
 
-  handle.stdout.on('data', data => {
-    // wait for the logs to convey that the interfaces have started
-    // because the consumer of this function needs those interfaces
-    // to be started so that it can initiate, and form,
-    // the websocket connections
-    if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
-      console.info(`Conductor '${name}' process spawning successful`)
-      resolve(handle)
-    }
+  return new Promise((resolve) => {
+    handle.stdout.on('data', data => {
+      // wait for the logs to convey that the interfaces have started
+      // because the consumer of this function needs those interfaces
+      // to be started so that it can initiate, and form,
+      // the websocket connections
+      if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
+        console.info(`Conductor '${name}' process spawning successful`)
+        resolve(handle)
+      }
+    })
   })
-})
+}
 
 
 /**

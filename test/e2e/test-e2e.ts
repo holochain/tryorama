@@ -62,7 +62,7 @@ test('test with simple zome call', async t => {
   t.end()
 })
 
-test.only('test with consistency awaiting', async t => {
+test('test with consistency awaiting', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
@@ -70,12 +70,12 @@ test.only('test with consistency awaiting', async t => {
 
     await s.consistency()
 
-    // TODO: make bob join the stream too, and have him check for alice's message
-
     const streamAddress = await alice.call('chat', 'chat', 'create_stream', {
       name: 'stream',
       description: 'whatever',
-      initial_members: [],
+      initial_members: [
+        bob.info('chat').agentAddress
+      ],
     })
     t.ok(streamAddress.Ok)
     await s.consistency()
@@ -91,9 +91,9 @@ test.only('test with consistency awaiting', async t => {
     })
     await s.consistency()
 
-    const streams = await alice.call('chat', 'chat', 'get_all_public_streams', {})
+    const streams = await bob.call('chat', 'chat', 'get_all_public_streams', {})
     t.ok(streams.Ok)
-
+    // TODO: have bob check that he can see alice's stream
   })
   const stats = await orchestrator.run()
   t.equal(stats.successes, 1)
@@ -101,7 +101,7 @@ test.only('test with consistency awaiting', async t => {
   t.end()
 })
 
-test.skip('test with agentAddress', async t => {
+test.only('agentAddress and dnaAddress', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
@@ -111,8 +111,8 @@ test.skip('test with agentAddress', async t => {
       name: 'alice',
       avatar_url: 'https://tinyurl.com/yxcwavlr',
     })
-    // TODO: decide on this syntax and hook it up
-    t.equal(alice.var('app', 'agentAddress'), agentAddress)
+    t.equal(alice.info('chat').agentAddress, agentAddress.Ok)
+    t.equal(alice.info('chat').dnaAddress.length, 46)
   })
   const stats = await orchestrator.run()
   t.equal(stats.successes, 1)

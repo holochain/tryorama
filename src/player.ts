@@ -1,8 +1,10 @@
+const _ = require('lodash')
+
 import { Signal, DnaId } from '@holochain/hachiko'
 
 import { notImplemented } from './common'
 import { Conductor } from './conductor'
-import { GenConfigArgs, SpawnConductorFn } from './types';
+import { GenConfigArgs, SpawnConductorFn, ObjectS } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
 
@@ -15,7 +17,10 @@ type ConstructorArgs = {
   spawnConductor: SpawnConductorFn,
 }
 
-const noop = (...x) => { }
+type InstanceInfo = {
+  agentAddress: string,
+  dnaAddress: string,
+}
 
 /**
  * Representation of a Conductor user.
@@ -35,6 +40,7 @@ export class Player {
   _conductor: Conductor | null
   _dnaIds: Array<DnaId>
   _genConfigArgs: GenConfigArgs
+  _instanceInfo: ObjectS<InstanceInfo>
   _spawnConductor: SpawnConductorFn
 
   constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, spawnConductor }: ConstructorArgs) {
@@ -43,9 +49,10 @@ export class Player {
     this.onJoin = onJoin
     this.onLeave = onLeave
     this.onSignal = onSignal
-    this._genConfigArgs = genConfigArgs
-    this._spawnConductor = spawnConductor
     this._conductor = null
+    this._genConfigArgs = genConfigArgs
+    this._instanceInfo = {}
+    this._spawnConductor = spawnConductor
   }
 
   admin = (method, params) => {
@@ -58,10 +65,15 @@ export class Player {
     return this._conductor!.callZome(instanceId, zome, fn, params)
   }
 
+  info = (instanceId) => {
+    this._conductorGuard()
+    return _.clone(this._instanceInfo[instanceId])
+  }
+
   spawn = async () => {
     if (this._conductor) {
-      this.logger.error("Attempted to spawn conductor twice!")
-      throw new Error("Attempted to spawn conductor twice!")
+      this.logger.warn(`Attempted to spawn conductor '${this.name}' twice!`)
+      return
     }
 
     await this.onJoin()
@@ -78,6 +90,7 @@ export class Player {
     })
     this.logger.debug("initializing")
     await this._conductor.initialize()
+    await this._setInstanceInfo()
     this.logger.debug("initialized")
   }
 
@@ -90,6 +103,26 @@ export class Player {
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
     }
+  }
+
+  _setInstanceInfo = async () => {
+    const agentList = await this._conductor!.callAdmin("admin/agent/list", {})
+    const dnaList = await this._conductor!.callAdmin("admin/dna/list", {})
+    const instanceList = await this._conductor!.callAdmin("admin/instance/list", {})
+    instanceList.forEach(i => {
+      const agent = agentList.find(a => a.id === i.agent)
+      const dna = dnaList.find(d => d.id === i.dna)
+      if (!agent) {
+        throw new Error(`Instance '${i.id}' refers to nonexistant agent id '${i.agent}'`)
+      }
+      if (!dna) {
+        throw new Error(`Instance '${i.id}' refers to nonexistant dna id '${i.dna}'`)
+      }
+      this._instanceInfo[i.id] = {
+        agentAddress: agent.public_address,
+        dnaAddress: dna.hash,
+      }
+    })
   }
 
   _conductorGuard = () => {
