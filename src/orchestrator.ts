@@ -67,6 +67,8 @@ export class Orchestrator {
     })
   }
 
+  numRegistered = () => this._scenarios.length
+
   run = async (): Promise<TestStats> => {
     const allTests = this._scenarios
     const onlyTests = allTests.filter(({ modifier }) => modifier === 'only')

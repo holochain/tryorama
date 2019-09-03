@@ -9,7 +9,7 @@ test('Scenario API constructed properly', async t => {
   const orchestrator = new Orchestrator({ spawnConductor, genConfigArgs })
   orchestrator.registerScenario('test scenario 1', async s => {
     t.equal(s.description, 'test scenario 1')
-    t.equal(typeof s.conductors, 'function')
+    t.equal(typeof s.players, 'function')
     t.equal(typeof s.consistency, 'function')
   })
   orchestrator.run()
