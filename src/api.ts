@@ -31,16 +31,21 @@ export class ScenarioApi {
 
   players = async (configs: T.ObjectS<T.GenConfigFn | T.EitherConductorConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
     const players = {}
-    Object.entries(configs).forEach(([name, config]) => {
-      players[name] = (async () => {
-        const genConfigArgs = await this._orchestrator._genConfigArgs(name, this._uuid)
-        const { configDir } = genConfigArgs
-        // If an object was passed in, run it through genConfig first. Otherwise use the given function.
-        const configBuilder = _.isFunction(config) ? (config as T.GenConfigFn) : genConfig(config as T.EitherConductorConfig)
-        const configToml = await configBuilder(genConfigArgs)
-        const configJson = TOML.parse(configToml)
-        const { instances } = configJson
+    const configsIntermediate = await Promise.all(Object.entries(configs).map(async ([name, config]) => {
+      const genConfigArgs = await this._orchestrator._genConfigArgs(name, this._uuid)
+      const { configDir } = genConfigArgs
+      // If an object was passed in, run it through genConfig first. Otherwise use the given function.
+      const configBuilder = _.isFunction(config) ? (config as T.GenConfigFn) : genConfig(config as T.EitherConductorConfig)
+      const configToml = await configBuilder(genConfigArgs)
+      const configJson = TOML.parse(configToml)
+      return { name, configDir, configJson, configToml, genConfigArgs }
+    }))
 
+    this._assertUniqueTestAgentNames(configsIntermediate.map(c => c.configJson))
+
+    configsIntermediate.forEach(({ name, configDir, configJson, configToml, genConfigArgs }) => {
+      players[name] = (async () => {
+        const { instances } = configJson
         await fs.writeFile(getConfigPath(configDir), configToml)
 
         const player = new Player({
@@ -95,6 +100,17 @@ export class ScenarioApi {
     return Promise.all(
       this._players.map(player => player.kill())
     ).then(() => { })
+  }
+
+  _assertUniqueTestAgentNames = (configs) => {
+    const agentNames = _.chain(configs).values().map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
+    const frequencies = _.countBy(agentNames) as { [k: string]: number }
+    const dupes = new Set(Object.entries(frequencies).filter(([k, v]) => v > 1).map(([k, v]) => k))
+    if (dupes.size > 0) {
+      const msg = `There are ${dupes.size} non-unique test agent IDs specified across all conductor configs: ${JSON.stringify(Array.from(dupes))}`
+      logger.debug(msg)
+      throw new Error(msg)
+    }
   }
 
 }
