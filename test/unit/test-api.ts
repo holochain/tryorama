@@ -7,16 +7,20 @@ import { Orchestrator } from '../../src';
 import { ScenarioApi } from '../../src/api'
 import { configSugared } from './test-config';
 import * as C from '../../src/config';
+import { GenConfigArgs } from '../../src/types';
 
-test.only('API detects duplicate agent IDs', async t => {
+test('API detects duplicate agent IDs', async t => {
   const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
   const orchestrator = new Orchestrator()
   const api = new ScenarioApi("description", orchestrator, "uuid")
-
+  const args = {
+    conductorName: 'same',
+    uuid: 'also-same',
+  } as GenConfigArgs
   await t.rejects(
     api.players({
-      alice: C.desugarConfig('same', configSugared),
-      bob: C.desugarConfig('same', configSugared)
+      alice: C.desugarConfig(args, configSugared),
+      bob: C.desugarConfig(args, configSugared)
     }),
     /There are 2 non-unique test agent IDs specified/
   )

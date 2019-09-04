@@ -27,6 +27,9 @@ const badTestRun = sinon.spy()
 
 orchestrator.registerScenario('too few arguments', async (_s) => badTestRun())
 orchestrator.registerScenario('too many arguments', async (_s, _t, _x) => badTestRun())
+orchestrator.registerScenario('perfectly fine test', async (_, t) => {
+  t.ok(true)
+})
 orchestrator.registerScenario('error thrown', async (_, t) => {
   t.ok(true)
   throw new Error("this gets caught")
@@ -35,8 +38,10 @@ orchestrator.registerScenario('error thrown', async (_, t) => {
 test('tapeExecutor failure modes', async t => {
   await orchestrator.run().then(stats => {
     t.ok(badTestRun.notCalled)
-    t.ok(mockT.ok.calledOnce)
-    console.log('stats', stats)
+    t.equal(mockT.ok.callCount, 2)
+    t.ok(mockT.fail.calledOnce)
+    t.equal(mockT.end.callCount, 2)
+    t.equal(stats.successes, 1)
     t.ok(String(stats.errors[0].error).includes('2 arguments'))
     t.ok(String(stats.errors[1].error).includes('2 arguments'))
     t.ok(String(stats.errors[2].error).includes('this gets caught'))

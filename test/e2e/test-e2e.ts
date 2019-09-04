@@ -101,7 +101,7 @@ test('test with consistency awaiting', async t => {
   t.end()
 })
 
-test.only('agentAddress and dnaAddress', async t => {
+test('agentAddress and dnaAddress', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {

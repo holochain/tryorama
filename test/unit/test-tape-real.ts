@@ -2,14 +2,16 @@ const sinon = require('sinon')
 const test = require('tape')
 
 import { Orchestrator } from '../../src'
-import { tapeExecutor } from '../../src/middleware'
+import { tapeExecutor, combine } from '../../src/middleware'
 import { genConfigArgs, spawnConductor } from '../common'
 import logger from '../../src/logger';
 import { delay } from '../../src/util';
 
 const orchestrator = new Orchestrator({
   spawnConductor, genConfigArgs,
-  middleware: tapeExecutor(test)
+  // NB: once, combine caused middleware to only be applied to the first test!
+  // keep this in here.
+  middleware: combine(tapeExecutor(test))
 })
 
 const testRan = sinon.spy()

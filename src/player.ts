@@ -98,6 +98,7 @@ export class Player {
     if (this._conductor) {
       this.logger.debug("Killing...")
       await this._conductor.kill('SIGINT')
+      this.logger.debug("Killed.")
       this._conductor = null
       await this.onLeave()
     } else {

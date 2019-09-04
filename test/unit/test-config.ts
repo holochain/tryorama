@@ -20,10 +20,10 @@ export const { configPlain, configSugared } = (() => {
     {
       id: 'alice',
       agent: {
-        id: 'name::alice',
-        name: 'name::alice',
-        keystore_file: 'name::alice',
-        public_address: 'name::alice',
+        id: 'alice',
+        name: 'name::alice::uuid',
+        keystore_file: '[UNUSED]',
+        public_address: '[SHOULD BE REWRITTEN]',
         test_agent: true,
       },
       dna: {
@@ -35,10 +35,10 @@ export const { configPlain, configSugared } = (() => {
     {
       id: 'bob',
       agent: {
-        id: 'name::bob',
-        name: 'name::bob',
-        keystore_file: 'name::bob',
-        public_address: 'name::bob',
+        id: 'bob',
+        name: 'name::bob::uuid',
+        keystore_file: '[UNUSED]',
+        public_address: '[SHOULD BE REWRITTEN]',
         test_agent: true,
       },
       dna: {
@@ -70,7 +70,7 @@ test('DNA id generation', t => {
 })
 
 test('Sugared config', async t => {
-  t.deepEqual(C.desugarConfig('name', configSugared), configPlain)
+  t.deepEqual(C.desugarConfig({ conductorName: 'name', uuid: 'uuid' } as T.GenConfigArgs, configSugared), configPlain)
   t.end()
 })
 

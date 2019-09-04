@@ -95,10 +95,12 @@ export class Orchestrator {
         logger.debug("Test succeeded: %s", desc)
         successes += 1
       } catch (e) {
-        logger.debug("Test failed: %s", desc)
+        logger.debug("Test failed: %s %o", desc, e)
         errors.push({ description: desc, error: e })
       } finally {
+        logger.debug("Cleaning up test: %s", desc)
         await api._cleanup()
+        logger.debug("Finished with test: %s", desc)
       }
     }
     const stats = {
@@ -111,7 +113,7 @@ export class Orchestrator {
 
   _makeExecutor = (desc: string, scenario: Function, modifier: ScenarioModifier): void => {
     const api = new ScenarioApi(desc, this, uuidGen())
-    const runner = scenario => scenario(api)
+    const runner = async scenario => scenario(api)
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })
   }

@@ -5,6 +5,7 @@ import { Signal } from '@holochain/hachiko'
 import { ConductorConfig, Mortal, GenConfigArgs } from "./types";
 import { notImplemented } from "./common";
 import { makeLogger } from "./logger";
+import { delay } from './util';
 
 
 const DEFAULT_ZOME_CALL_TIMEOUT = 60000
@@ -79,7 +80,11 @@ export class Conductor {
     const { call, onSignal, ws } = await this._hcConnect({ url })
 
     this._wsClosePromise = new Promise(resolve => {
-      ws.on('close', resolve)
+      // Wait 3 seconds and for websocket to close, whichever happens *last*
+      Promise.all([
+        ws.on('close', resolve),
+        delay(3000),
+      ]).then(() => resolve())
     })
 
     this.callAdmin = async (method, params) => {

@@ -133,7 +133,7 @@ export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn =
   T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
 
   return async (args: T.GenConfigArgs) => {
-    const config = desugarConfig(args.conductorName, inputConfig)
+    const config = desugarConfig(args, inputConfig)
     const pieces = [
       await genInstanceConfig(config, args),
       await genBridgeConfig(config),
@@ -149,25 +149,26 @@ export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn =
   }
 }
 
-export const desugarConfig = (conductorName: string, config: T.EitherConductorConfig): T.ConductorConfig => {
+export const desugarConfig = (args: T.GenConfigArgs, config: T.EitherConductorConfig): T.ConductorConfig => {
   config = _.cloneDeep(config)
   if (!_.isArray(config.instances)) {
     // time to desugar the object
     const { instances } = config
     config.instances = Object.entries(instances).map(([id, dna]) => ({
       id,
-      agent: agentFromName(`${conductorName}::${id}`),  // NB: very important that agents have different names on different conductors!!
+      agent: makeTestAgent(id, args),
       dna
     } as T.InstanceConfig))
   }
   return config as T.ConductorConfig
 }
 
-const agentFromName = name => ({
-  name,
-  id: name,
-  keystore_file: name,
-  public_address: name,
+const makeTestAgent = (id, { conductorName, uuid }: T.GenConfigArgs) => ({
+  // NB: very important that agents have different names on different conductors!!
+  name: `${conductorName}::${id}::${uuid}`,
+  id: id,
+  keystore_file: '[UNUSED]',
+  public_address: '[SHOULD BE REWRITTEN]',
   test_agent: true,
 })
 
@@ -245,7 +246,7 @@ export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }) =>
   return {
     network: {
       type: 'n3h',
-      n3h_log_level: 'i',
+      n3h_log_level: 'e',
       bootstrap_nodes: [],
       n3h_mode: 'REAL',
       n3h_persistence_path: dir,
@@ -260,7 +261,6 @@ export const genLoggingConfig = (debug) => {
       state_dump: debug,
       rules: {
         rules: [{ exclude: !debug, pattern: ".*" }]
-        // rules: [{ exclude: !debug, pattern: "^debug" }]
       }
     }
   }
