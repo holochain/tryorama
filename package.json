@@ -11,7 +11,7 @@
     "doc": "typedoc",
     "test": "ts-node test | tap-diff",
     "test:unit": "ts-node test/unit | tap-diff",
-    "test:e2e": "ts-node test/e2e | tap-diff"
+    "test:e2e": "ts-node test/e2e"
   },
   "author": "",
   "license": "ISC",

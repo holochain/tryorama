@@ -73,10 +73,10 @@ export class ScenarioApi {
       })()
     })
     const ps = await promiseSerialObject<Player>(players)
-    // if (start) {
-    //   logger.warn("Waiting for conductors to settle... (TODO check back later to see if this is necessary)")
-    //   await delay(5000)
-    // }
+    if (start) {
+      logger.warn("Waiting for conductors to settle... (TODO check back later to see if this is necessary)")
+      await delay(100)
+    }
     return ps
   }
 

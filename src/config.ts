@@ -1,6 +1,6 @@
 import * as T from "./types";
 import { downloadFile } from "./util";
-import { spawn } from "child_process";
+import { spawn, ChildProcess } from "child_process";
 import logger from "./logger";
 const TOML = require('@iarna/toml')
 const _ = require('lodash')
@@ -103,7 +103,7 @@ export const defaultGenConfigArgs = async (conductorName: string, uuid: string) 
   return { conductorName, configDir, adminPort, zomePort, uuid }
 }
 
-export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
+export const defaultSpawnConductor = (name, configPath): Promise<ChildProcess> => {
   const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
   const handle = spawn(binPath, ['-c', configPath])
 
@@ -145,7 +145,8 @@ export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn =
     const json = Object.assign({},
       ...pieces
     )
-    return TOML.stringify(json)
+    const toml = TOML.stringify(json) + "\n"
+    return toml
   }
 }
 

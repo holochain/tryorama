@@ -159,7 +159,7 @@ test('genConfig produces valid TOML', async t => {
   const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
-  t.equal(toml, toml2)
+  t.equal(toml, toml2 + "\n")
   t.end()
   stubGetDnaHash.restore()
 })

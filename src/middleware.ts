@@ -70,21 +70,26 @@ export const tapeExecutor = (tape: any): Middleware => (run, f) => new Promise((
     reject("tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions.")
     return
   }
-  run(s => {
-    tape(s.description, t => {
+  console.log('__EXECUTOR')
+  tape("s.description", t => {
+    console.log('__TAPE')
+    run(s => {
+      console.log('__RUN')
       // NB: f must return a Promise
       f(s, t)
         .then(() => {
           t.end()
-          resolve()
+          // resolve()
         })
         .catch((err) => {
           // Include stack trace from actual test function, but all on one line.
           // This is the best we can do for now without messing with tape internals
           t.fail(err.stack ? err.stack : err)
           t.end()
-          reject(err)
+          console.error('TAPEERR', err)
+          // reject(err)
         })
     })
   })
+  resolve()
 })

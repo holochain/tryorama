@@ -88,6 +88,7 @@ export class Player {
       onSignal: this.onSignal.bind(this),
       ...this._genConfigArgs
     })
+
     this.logger.debug("initializing")
     await this._conductor.initialize()
     await this._setInstanceInfo()
@@ -96,10 +97,11 @@ export class Player {
 
   kill = async (): Promise<void> => {
     if (this._conductor) {
-      this.logger.debug("Killing...")
-      await this._conductor.kill('SIGINT')
-      this.logger.debug("Killed.")
+      const c = this._conductor
       this._conductor = null
+      this.logger.debug("Killing...")
+      await c.kill('SIGINT')
+      this.logger.debug("Killed.")
       await this.onLeave()
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
