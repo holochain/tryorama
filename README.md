@@ -35,15 +35,15 @@ const orchestrator = new Orchestrator()
 
 // Register a scenario, which is a function that gets a special API injected in
 orchestrator.registerScenario('proper zome call', async s => {
-  // Declare two conductors using the previously specified config, 
+  // Declare two players using the previously specified config, 
   // and nickname them "alice" and "bob"
-  const {alice, bob} = await s.conductors({alice: mainConfig, bob: mainConfig})
+  const {alice, bob} = await s.players({alice: mainConfig, bob: mainConfig})
   
   // You have to spawn the conductors yourself...
   await alice.spawn()
   // ...unless you pass `true` as an extra parameter, 
   // in which case each conductor will auto-spawn
-  const {carol} = await s.conductors({carol: mainConfig}, true)
+  const {carol} = await s.players({carol: mainConfig}, true)
 
   // You can also kill them...
   await alice.kill()

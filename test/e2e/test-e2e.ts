@@ -31,7 +31,7 @@ test('test with error', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator()
   orchestrator.registerScenario('invalid instance', async s => {
-    const { alice } = await s.conductors({ alice: C.alice })
+    const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
     await alice.call('blah', 'blah', 'blah', 'blah')
     alice.kill()
@@ -47,7 +47,7 @@ test('test with simple zome call', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
-    const players = await s.conductors({ alice: C.alice })
+    const players = await s.players({ alice: C.alice })
     const { alice } = players
     await alice.spawn()
     const agentAddress = await alice.call('chat', 'chat', 'register', {
@@ -66,7 +66,7 @@ test('test with consistency awaiting', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
-    const { alice, bob } = await s.conductors({ alice: C.alice, bob: C.bob }, true)
+    const { alice, bob } = await s.players({ alice: C.alice, bob: C.bob }, true)
 
     await s.consistency()
 
@@ -105,7 +105,7 @@ test.only('agentAddress and dnaAddress', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
-    const { alice } = await s.conductors({ alice: C.alice })
+    const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
     const agentAddress = await alice.call('chat', 'chat', 'register', {
       name: 'alice',
@@ -124,14 +124,14 @@ test('test with kill and respawn', async t => {
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('attempted call with killed conductor', async s => {
-    const { alice } = await s.conductors({ alice: C.alice })
+    const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
     await alice.kill()
     await t.rejects(alice.call('chat', 'x', 'x', 'x'))
   })
 
   orchestrator.registerScenario('proper zome call', async s => {
-    const { alice } = await s.conductors({ alice: C.alice })
+    const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
     await alice.kill()
     await alice.spawn()

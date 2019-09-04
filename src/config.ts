@@ -55,6 +55,9 @@ export const dna = (location, id?, opts = {}): T.DnaConfig => {
  */
 export const resolveDna = async (inputDna: T.DnaConfig, uuid: string): Promise<T.DnaConfig> => {
   const dna = _.cloneDeep(inputDna)
+  if (!dna.file) {
+    throw new Error(`Invalid 'file' for dna: ${JSON.stringify(dna)}`)
+  }
   if (dna.file.match(/^https?:/)) {
     const dnaPath = path.join(await dnaDir(), dna.id + '.dna.json')
     await downloadFile({ url: dna.file, path: dnaPath, overwrite: false })
@@ -78,7 +81,7 @@ export const bridge = (handle, caller_id, callee_id) => ({ handle, caller_id, ca
 
 export const dpki = (instance_id, init_params?): T.DpkiConfig => ({
   instance_id,
-  init_params: JSON.stringify(init_params ? init_params : {})
+  init_params: init_params ? init_params : {}
 })
 
 export const getConfigPath = configDir => path.join(configDir, 'conductor-config.toml')
@@ -90,14 +93,14 @@ export const getConfigPath = configDir => path.join(configDir, 'conductor-config
  * when multiple conductors are attempting to secure ports for their interfaces.
  * In the future it would be great to move to domain socket based interfaces.
  */
-export const defaultGenConfigArgs = async () => {
+export const defaultGenConfigArgs = async (conductorName: string, uuid: string) => {
   const adminPort = await getPort()
   const configDir = await tempDir()
   let zomePort = adminPort
   while (zomePort == adminPort) {
     zomePort = await getPort()
   }
-  return { configDir, adminPort, zomePort }
+  return { conductorName, configDir, adminPort, zomePort, uuid }
 }
 
 export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
@@ -115,7 +118,7 @@ export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
       // to be started so that it can initiate, and form,
       // the websocket connections
       if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
-        console.info(`Conductor '${name}' process spawning successful`)
+        logger.info(`Conductor '${name}' process spawning successful`)
         resolve(handle)
       }
     })
@@ -126,12 +129,13 @@ export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
 /**
  * Helper function to generate TOML config from a simpler object.
  */
-export const genConfig = (inputConfig: T.ConductorConfig | T.SugaredConductorConfig): T.GenConfigFn => {
-  const config = desugarConfig(inputConfig)
+export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn => {
+  T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
 
-  return async (args: T.GenConfigArgs, uuid: string) => {
+  return async (args: T.GenConfigArgs) => {
+    const config = desugarConfig(args.conductorName, inputConfig)
     const pieces = [
-      await genInstanceConfig(config, args, uuid),
+      await genInstanceConfig(config, args),
       await genBridgeConfig(config),
       await genDpkiConfig(config),
       await genSignalConfig(config),
@@ -145,12 +149,14 @@ export const genConfig = (inputConfig: T.ConductorConfig | T.SugaredConductorCon
   }
 }
 
-export const desugarConfig = (config: T.ConductorConfig | T.SugaredConductorConfig): T.ConductorConfig => {
-  if (_.isObject(config.instances)) {
+export const desugarConfig = (conductorName: string, config: T.EitherConductorConfig): T.ConductorConfig => {
+  config = _.cloneDeep(config)
+  if (!_.isArray(config.instances)) {
+    // time to desugar the object
     const { instances } = config
     config.instances = Object.entries(instances).map(([id, dna]) => ({
       id,
-      agent: agentFromName(id),
+      agent: agentFromName(`${conductorName}::${id}`),  // NB: very important that agents have different names on different conductors!!
       dna
     } as T.InstanceConfig))
   }
@@ -165,7 +171,7 @@ const agentFromName = name => ({
   test_agent: true,
 })
 
-export const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort }, uuid) => {
+export const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort, uuid }) => {
 
   const config: any = {
     agents: [],

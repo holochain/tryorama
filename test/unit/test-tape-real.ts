@@ -17,12 +17,12 @@ const testRan = sinon.spy()
 
 orchestrator.registerScenario('real tape scenario #1', async (s, t) => {
   await delay(500)
-  t.equal(typeof s.conductors, 'function')
+  t.equal(typeof s.players, 'function')
   testRan(1)
 })
 
 orchestrator.registerScenario('real tape scenario #2', async (s, t) => {
-  t.equal(typeof s.conductors, 'function')
+  t.equal(typeof s.players, 'function')
   testRan(2)
 })
 
