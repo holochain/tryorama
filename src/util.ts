@@ -1,4 +1,5 @@
 const fs = require('fs')
+const fsp = require('fs').promises
 import axios from 'axios'
 import logger from './logger'
 import { ObjectS } from './types';
@@ -20,16 +21,16 @@ export function promiseSerialObject<T>(promises: ObjectS<Promise<T>>): Promise<O
     Promise.resolve({}))
 }
 
-export const downloadFile = async ({ url, path, overwrite }: { url: string, path: string, overwrite?: boolean }): Promise<string> => {
+export const downloadFile = async ({ url, path, overwrite }: { url: string, path: string, overwrite?: boolean }): Promise<void> => {
   if (overwrite) {
-    // only download file if it doesn't already exist at this path.
-    return fs.access(path).catch(() => _downloadFile({ url, path }))
+    await _downloadFile({ url, path })
   } else {
-    return _downloadFile({ url, path })
+    // only download file if it doesn't already exist at this path.
+    await fsp.access(path).catch(() => _downloadFile({ url, path }))
   }
 }
 
-const _downloadFile = async ({ url, path }: { url: string, path: string }): Promise<string> => {
+const _downloadFile = async ({ url, path }: { url: string, path: string }): Promise<void> => {
   const response = await axios.request({
     url: url,
     method: 'GET',
@@ -37,18 +38,18 @@ const _downloadFile = async ({ url, path }: { url: string, path: string }): Prom
     maxContentLength: 999999999999,
   }).catch(e => {
     logger.warn('axios error: ', parseAxiosError(e))
-    return e.response
+    throw e.response
   })
 
   return new Promise((fulfill, reject) => {
-    if (response.status != 200) {
+    if (!response.status || response.status != 200) {
       reject(`Could not fetch ${url}, response was ${response.statusText} ${response.status}`)
     } else {
       const writer = fs.createWriteStream(path)
         .on("error", reject)
         .on("finish", () => {
           logger.debug("Download complete.")
-          fulfill(path)
+          fulfill()
         })
       logger.debug("Starting streaming download...")
       response.data.pipe(writer)
