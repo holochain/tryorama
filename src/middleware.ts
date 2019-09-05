@@ -70,11 +70,8 @@ export const tapeExecutor = (tape: any): Middleware => (run, f) => new Promise((
     reject("tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions.")
     return
   }
-  console.log('__EXECUTOR')
   tape("s.description", t => {
-    console.log('__TAPE')
     run(s => {
-      console.log('__RUN')
       // NB: f must return a Promise
       f(s, t)
         .then(() => {
@@ -86,10 +83,19 @@ export const tapeExecutor = (tape: any): Middleware => (run, f) => new Promise((
           // This is the best we can do for now without messing with tape internals
           t.fail(err.stack ? err.stack : err)
           t.end()
-          console.error('TAPEERR', err)
           // reject(err)
         })
     })
   })
   resolve()
 })
+
+/** Run tests in series rather than in parallel */
+export const runSeries = (() => {
+  let lastPromise = Promise.resolve()
+  return async (run, f) => {
+    const result = run(f)
+    lastPromise = lastPromise.catch(e => { }).then(() => result)
+    return result
+  }
+})()

@@ -44,6 +44,7 @@ test('test with error', async t => {
 })
 
 test('test with simple zome call', async t => {
+  t.plan(3)
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
@@ -59,10 +60,11 @@ test('test with simple zome call', async t => {
   const stats = await orchestrator.run()
   t.equal(stats.successes, 1)
   t.equal(stats.errors.length, 0)
-  t.end()
+  console.log(stats)
 })
 
 test('test with consistency awaiting', async t => {
+  t.plan(4)
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
@@ -98,10 +100,10 @@ test('test with consistency awaiting', async t => {
   const stats = await orchestrator.run()
   t.equal(stats.successes, 1)
   t.equal(stats.errors.length, 0)
-  t.end()
 })
 
 test('agentAddress and dnaAddress', async t => {
+  t.plan(4)
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('proper zome call', async s => {
@@ -117,10 +119,10 @@ test('agentAddress and dnaAddress', async t => {
   const stats = await orchestrator.run()
   t.equal(stats.successes, 1)
   t.equal(stats.errors.length, 0)
-  t.end()
 })
 
 test('test with kill and respawn', async t => {
+  t.plan(4)
   const C = testConfig()
   const orchestrator = new Orchestrator({ reporter: true })
   orchestrator.registerScenario('attempted call with killed conductor', async s => {
@@ -144,5 +146,4 @@ test('test with kill and respawn', async t => {
   const stats = await orchestrator.run()
   t.equal(stats.successes, 1)
   t.equal(stats.errors.length, 1)
-  t.end()
 })

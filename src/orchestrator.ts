@@ -52,7 +52,7 @@ export class Orchestrator {
   constructor(o: OrchestratorConstructorParams = {}) {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
-    this._middleware = o.middleware || M.unit
+    this._middleware = o.middleware || M.runSeries
     this._scenarios = []
     this._tape = o.tape
     this._reporter = o.reporter === true
