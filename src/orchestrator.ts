@@ -7,8 +7,9 @@ import * as R from "./reporter";
 import { Waiter, NetworkMap } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
-import { defaultGenConfigArgs, defaultSpawnConductor } from "./config";
+import { defaultGenConfigArgs, spawnUnique } from "./config";
 
+const defaultSpawnConductor = spawnUnique
 
 type OrchestratorConstructorParams = {
   spawnConductor?: T.SpawnConductorFn,
