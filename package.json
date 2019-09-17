@@ -1,6 +1,6 @@
 {
   "name": "@holochain/try-o-rama",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "description": "",
   "main": "lib/index.js",
   "directories": {
@@ -16,7 +16,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@holochain/hachiko": "^0.4.0-rc.1",
+    "@holochain/hachiko": "^0.4.0",
     "@holochain/hc-web-client": "^0.5.0",
     "@iarna/toml": "^2.2.3",
     "axios": "^0.19.0",
