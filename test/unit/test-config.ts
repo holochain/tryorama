@@ -4,6 +4,7 @@ const TOML = require('@iarna/toml')
 
 import * as T from '../../src/types'
 import * as C from '../../src/config';
+import * as Gen from '../../src/config/gen';
 import { genConfigArgs } from '../common';
 
 export const { configPlain, configSugared } = (() => {
@@ -75,7 +76,7 @@ test('Sugared config', async t => {
 })
 
 test('genInstanceConfig', async t => {
-  const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
+  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs())
   t.equal(agents.length, 2)
   t.equal(dnas.length, 1)
@@ -154,7 +155,7 @@ pattern = ".*"
 })
 
 test('genConfig produces valid TOML', async t => {
-  const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
+  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const builder = C.genConfig(configSugared)
   const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)

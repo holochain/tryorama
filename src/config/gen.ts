@@ -106,7 +106,7 @@ export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn =
       await genDpkiConfig(config),
       await genSignalConfig(config),
       await genNetworkConfig(config, args),
-      await genLoggingConfig(false),
+      await genLoggingConfig(false, false),
     ]
     const json = Object.assign({},
       ...pieces
@@ -221,11 +221,11 @@ export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }) =>
   }
 }
 
-export const genLoggingConfig = (debug) => {
+export const genLoggingConfig = (debug, state_dump) => {
   return {
     logger: {
       type: 'debug',
-      state_dump: debug,
+      state_dump,
       rules: {
         rules: [{ exclude: !debug, pattern: ".*" }]
       }

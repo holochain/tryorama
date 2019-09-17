@@ -76,18 +76,17 @@ export const tapeExecutor = (tape: any): Middleware => (run, f) => new Promise((
       f(s, t)
         .then(() => {
           t.end()
-          // resolve()
+          resolve()
         })
         .catch((err) => {
           // Include stack trace from actual test function, but all on one line.
           // This is the best we can do for now without messing with tape internals
           t.fail(err.stack ? err.stack : err)
           t.end()
-          // reject(err)
+          reject(err)
         })
     })
   })
-  resolve()
 })
 
 /** Run tests in series rather than in parallel */

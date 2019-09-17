@@ -128,8 +128,24 @@ test('test with kill and respawn', async t => {
   orchestrator.registerScenario('attempted call with killed conductor', async s => {
     const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
+  
+    await t.doesNotReject(
+      alice.call('chat', 'chat', 'register', {
+        name: 'alice',
+        avatar_url: 'https://tinyurl.com/yxcwavlr',
+      })
+    )
+  
     await alice.kill()
-    await t.rejects(alice.call('chat', 'x', 'x', 'x'))
+
+    await t.rejects(
+      alice.call('chat', 'chat', 'register', {
+        name: 'alice',
+        avatar_url: 'https://tinyurl.com/yxcwavlr',
+      }),
+      /.*no conductor is running.*/
+    )
+    
   })
 
   orchestrator.registerScenario('proper zome call', async s => {

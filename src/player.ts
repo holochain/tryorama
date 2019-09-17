@@ -56,17 +56,17 @@ export class Player {
   }
 
   admin = (method, params) => {
-    this._conductorGuard()
+    this._conductorGuard(`admin(${method}, ${JSON.stringify(params)})`)
     return this._conductor!.callAdmin(method, params)
   }
 
   call = (instanceId, zome, fn, params) => {
-    this._conductorGuard()
+    this._conductorGuard(`call(${instanceId}, ${zome}, ${fn}, ${JSON.stringify(params)})`)
     return this._conductor!.callZome(instanceId, zome, fn, params)
   }
 
   info = (instanceId) => {
-    this._conductorGuard()
+    this._conductorGuard(`info(${instanceId})`)
     return _.clone(this._instanceInfo[instanceId])
   }
 
@@ -128,10 +128,11 @@ export class Player {
     })
   }
 
-  _conductorGuard = () => {
+  _conductorGuard = (context) => {
     if (this._conductor === null) {
-      this.logger.error("Attempted conductor action when no conductor is running! You must `.spawn()` first")
-      throw new Error("Attempted conductor action when no conductor is running! You must `.spawn()` first")
+      const msg = `Attempted conductor action when no conductor is running! You must \`.spawn()\` first.\nAction: ${context}`
+      this.logger.error(msg)
+      throw new Error(msg)
     }
   }
 }

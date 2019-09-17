@@ -7,10 +7,11 @@ import { Orchestrator } from '../../src';
 import { ScenarioApi } from '../../src/api'
 import { configSugared } from './test-config';
 import * as C from '../../src/config';
+import * as Gen from '../../src/config/gen';
 import { GenConfigArgs } from '../../src/types';
 
 test('API detects duplicate agent IDs', async t => {
-  const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
+  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const orchestrator = new Orchestrator()
   const api = new ScenarioApi("description", orchestrator, "uuid")
   const args = {

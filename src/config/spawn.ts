@@ -4,7 +4,13 @@ import logger from "../logger";
 
 export const spawnUnique = (name, configPath): Promise<ChildProcess> => {
   const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
-  const handle = spawn(binPath, ['-c', configPath])
+  const handle = spawn(binPath, ['-c', configPath], {
+    env: {
+      ...process.env, 
+      "N3H_QUIET": "1",
+      "RUST_BACKTRACE": "1",
+    }
+  })
 
   handle.stdout.on('data', data => logger.info(`[C '${name}'] %s`, data.toString('utf8')))
   handle.stderr.on('data', data => logger.error(`!C '${name}'! %s`, data.toString('utf8')))
@@ -24,16 +30,17 @@ export const spawnUnique = (name, configPath): Promise<ChildProcess> => {
   })
 }
 
-const memomap = {}
 
 /** 
  * Only spawn one conductor per "name", to be used for entire test suite
  * TODO: disable `.kill()` and `.spawn()` in scenario API
  */
-export const spawnMemoized = (name, configPath): Promise<ChildProcess> => {
-  if (name in memomap) {
+export const memoizedSpawner = () => {
+  const memomap = {}
+  return (name, configPath): Promise<ChildProcess> => {
+    if (!(name in memomap)) {
+      memomap[name] = spawnUnique(name, configPath)
+    }
     return memomap[name]
-  } else {
-    return spawnUnique(name, configPath)
   }
 }
