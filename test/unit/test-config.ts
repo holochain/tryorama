@@ -128,8 +128,8 @@ test.skip('genNetworkConfig', async t => {
 })
 
 test('genLoggingConfig', async t => {
-  const loggerVerbose = await C.genLoggingConfig(true)
-  const loggerQuiet = await C.genLoggingConfig(false)
+  const loggerVerbose = await C.genLoggingConfig(true, true)
+  const loggerQuiet = await C.genLoggingConfig(false, false)
 
   const expectedVerbose = TOML.parse(`
 [logger]
@@ -156,7 +156,7 @@ pattern = ".*"
 
 test('genConfig produces valid TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const builder = C.genConfig(configSugared)
+  const builder = C.genConfig(configSugared, false)
   const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)

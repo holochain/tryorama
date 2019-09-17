@@ -18,12 +18,12 @@ const testConfig = () => {
       instances: {
         chat: dna
       },
-    }),
+    }, false),
     bob: Config.genConfig({
       instances: {
         chat: dna
       }
-    })
+    }, false)
   }
 }
 

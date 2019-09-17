@@ -106,7 +106,7 @@ export const genConfig = (inputConfig: T.EitherConductorConfig, debugLog: boolea
       await genDpkiConfig(config),
       await genSignalConfig(config),
       await genNetworkConfig(config, args),
-      await genLoggingConfig(debugLog, false),
+      await genLoggingConfig(false, false),
     ]
     const json = Object.assign({},
       ...pieces
