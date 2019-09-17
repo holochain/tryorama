@@ -95,7 +95,7 @@ export const defaultGenConfigArgs = async (conductorName: string, uuid: string) 
 /**
  * Helper function to generate TOML config from a simpler object.
  */
-export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn => {
+export const genConfig = (inputConfig: T.EitherConductorConfig, debugLog: boolean): T.GenConfigFn => {
   T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
 
   return async (args: T.GenConfigArgs) => {
@@ -106,7 +106,7 @@ export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn =
       await genDpkiConfig(config),
       await genSignalConfig(config),
       await genNetworkConfig(config, args),
-      await genLoggingConfig(false, false),
+      await genLoggingConfig(debugLog, false),
     ]
     const json = Object.assign({},
       ...pieces

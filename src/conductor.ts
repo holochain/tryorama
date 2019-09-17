@@ -128,7 +128,7 @@ export class Conductor {
       callZome(instanceId, zomeName, fnName)(params).then(json => {
         clearTimeout(timer)
         const result = JSON.parse(json)
-        this.logger.debug(colors.cyan.bold('->'), result)
+        this.logger.debug(`${colors.cyan.bold('->')} %o`, result)
         resolve(result)
       }).catch(reject)
     })

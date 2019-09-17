@@ -7,7 +7,7 @@
     "test": "test"
   },
   "scripts": {
-    "dev": "tsc -w",
+    "dev": "rm -rf ./lib ; tsc -w",
     "doc": "typedoc",
     "test": "ts-node test | tap-diff",
     "test:unit": "ts-node test/unit | tap-diff",

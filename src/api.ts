@@ -35,7 +35,9 @@ export class ScenarioApi {
       const genConfigArgs = await this._orchestrator._genConfigArgs(name, this._uuid)
       const { configDir } = genConfigArgs
       // If an object was passed in, run it through genConfig first. Otherwise use the given function.
-      const configBuilder = _.isFunction(config) ? (config as T.GenConfigFn) : genConfig(config as T.EitherConductorConfig)
+      const configBuilder = _.isFunction(config) 
+        ? (config as T.GenConfigFn) 
+        : genConfig(config as T.EitherConductorConfig, this._orchestrator._debugLog)
       const configToml = await configBuilder(genConfigArgs)
       const configJson = TOML.parse(configToml)
       return { name, configDir, configJson, configToml, genConfigArgs }

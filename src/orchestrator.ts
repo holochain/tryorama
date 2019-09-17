@@ -43,6 +43,7 @@ export class Orchestrator {
 
   registerScenario: Register & { only: Register, skip: Register }
 
+  _debugLog: boolean
   _genConfigArgs: GenConfigArgsFn
   _middleware: M.Middleware
   _scenarios: Array<RegisteredScenario>
@@ -54,6 +55,7 @@ export class Orchestrator {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.runSeries
+    this._debugLog = o.debugLog || false
     this._scenarios = []
     this._tape = o.tape
     this._reporter = o.reporter === true
