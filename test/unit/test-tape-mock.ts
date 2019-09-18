@@ -18,28 +18,55 @@ const createMockTape = () => {
 
 const { runner: mockTape, api: mockT } = createMockTape()
 
-const orchestrator = new Orchestrator({
+const orchestratorPlain = new Orchestrator({
+  spawnConductor, genConfigArgs
+})
+
+const orchestratorTape = new Orchestrator({
   spawnConductor, genConfigArgs,
   middleware: tapeExecutor(mockTape)
 })
 
-const badTestRun = sinon.spy()
+const badTestRunPlain = sinon.spy()
+const badTestRunTape = sinon.spy()
 
-orchestrator.registerScenario('too few arguments', async (_s) => badTestRun())
-orchestrator.registerScenario('too many arguments', async (_s, _t, _x) => badTestRun())
-orchestrator.registerScenario('error thrown', async (_, t) => {
+orchestratorPlain.registerScenario('perfectly fine test', async (_s) => {
+
+})
+orchestratorPlain.registerScenario('error thrown', async (_s) => {
+  throw new Error("this gets caught")
+})
+
+orchestratorTape.registerScenario('too few arguments', async (_s) => badTestRunTape())
+orchestratorTape.registerScenario('too many arguments', async (_s, _t, _x) => badTestRunTape())
+orchestratorTape.registerScenario('perfectly fine test', async (_, t) => {
+  t.ok(true)
+})
+orchestratorTape.registerScenario('error thrown', async (_, t) => {
   t.ok(true)
   throw new Error("this gets caught")
 })
 
+test('unit executor failure modes', async t => {
+  await orchestratorPlain.run().then(stats => {
+    t.ok(badTestRunPlain.notCalled)
+    t.equal(stats.successes, 1)
+    console.log(stats)
+    t.ok(String(stats.errors[0].error).includes('this gets caught'))
+    t.end()
+  })
+})
+
 test('tapeExecutor failure modes', async t => {
-  await orchestrator.run().then(stats => {
-    t.ok(badTestRun.notCalled)
-    t.ok(mockT.ok.calledOnce)
-    console.log('stats', stats)
+  await orchestratorTape.run().then(stats => {
+    t.ok(badTestRunTape.notCalled)
+    t.equal(mockT.ok.callCount, 2)
+    t.ok(mockT.fail.calledOnceWith(sinon.match('this gets caught')))
+    t.equal(mockT.end.callCount, 2)
+    t.equal(stats.successes, 1)
+    t.equal(stats.errors.length, 3)
     t.ok(String(stats.errors[0].error).includes('2 arguments'))
     t.ok(String(stats.errors[1].error).includes('2 arguments'))
-    t.ok(String(stats.errors[2].error).includes('this gets caught'))
     t.end()
   })
 })

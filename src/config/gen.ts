@@ -1,7 +1,5 @@
-import * as T from "./types";
-import { downloadFile } from "./util";
-import { spawn } from "child_process";
-import logger from "./logger";
+import * as T from "../types";
+import { downloadFile } from "../util";
 const TOML = require('@iarna/toml')
 const _ = require('lodash')
 
@@ -16,18 +14,11 @@ const mkdirIdempotent = dir => fs.access(dir).catch(() => {
   fs.mkdir(dir, { recursive: true })
 })
 
-const tempDirBase = () => path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
-
+const tempDirBase = path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
 const tempDir = async () => {
-  if (!tempDir._cached) {
-    const base = tempDirBase()
-    await mkdirIdempotent(base)
-    tempDir._cached = await fs.mkdtemp(base)
-  }
-  return tempDir._cached
+  await mkdirIdempotent(tempDirBase)
+  return fs.mkdtemp(tempDirBase)
 }
-
-tempDir._cached = null
 
 /**
  * Directory to store downloaded DNAs in.
@@ -35,7 +26,7 @@ tempDir._cached = null
  * TODO: change this to `tempDir` instead of `tempDirBase` to remove this overzealous caching!
  */
 const dnaDir = async () => {
-  const dir = path.join(tempDirBase(), 'dnas-fetched')
+  const dir = path.join(tempDirBase, 'dnas-fetched')
   await mkdirIdempotent(dir)
   return dir
 }
@@ -103,71 +94,51 @@ export const defaultGenConfigArgs = async (conductorName: string, uuid: string) 
   return { conductorName, configDir, adminPort, zomePort, uuid }
 }
 
-export const defaultSpawnConductor = (name, configPath): Promise<T.Mortal> => {
-  const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
-  const handle = spawn(binPath, ['-c', configPath])
-
-  handle.stdout.on('data', data => logger.info(`[C '${name}'] %s`, data.toString('utf8')))
-  handle.stderr.on('data', data => logger.error(`!C '${name}'! %s`, data.toString('utf8')))
-  handle.on('close', code => logger.info(`conductor '${name}' exited with code ${code}`))
-
-  return new Promise((resolve) => {
-    handle.stdout.on('data', data => {
-      // wait for the logs to convey that the interfaces have started
-      // because the consumer of this function needs those interfaces
-      // to be started so that it can initiate, and form,
-      // the websocket connections
-      if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
-        logger.info(`Conductor '${name}' process spawning successful`)
-        resolve(handle)
-      }
-    })
-  })
-}
-
 
 /**
  * Helper function to generate TOML config from a simpler object.
  */
-export const genConfig = (inputConfig: T.EitherConductorConfig): T.GenConfigFn => {
+export const genConfig = (inputConfig: T.EitherConductorConfig, debugLog: boolean): T.GenConfigFn => {
   T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
 
   return async (args: T.GenConfigArgs) => {
-    const config = desugarConfig(args.conductorName, inputConfig)
+    const config = desugarConfig(args, inputConfig)
     const pieces = [
       await genInstanceConfig(config, args),
       await genBridgeConfig(config),
       await genDpkiConfig(config),
       await genSignalConfig(config),
       await genNetworkConfig(config, args),
-      await genLoggingConfig(false),
+      await genLoggingConfig(false, false),
     ]
     const json = Object.assign({},
       ...pieces
     )
-    return TOML.stringify(json)
+    const toml = TOML.stringify(json) + "\n"
+    return toml
   }
 }
 
-export const desugarConfig = (conductorName: string, config: T.EitherConductorConfig): T.ConductorConfig => {
+export const desugarConfig = (args: T.GenConfigArgs, config: T.EitherConductorConfig): T.ConductorConfig => {
   config = _.cloneDeep(config)
   if (!_.isArray(config.instances)) {
     // time to desugar the object
     const { instances } = config
     config.instances = Object.entries(instances).map(([id, dna]) => ({
       id,
-      agent: agentFromName(`${conductorName}::${id}`),  // NB: very important that agents have different names on different conductors!!
+      agent: makeTestAgent(id, args),
       dna
     } as T.InstanceConfig))
   }
   return config as T.ConductorConfig
 }
 
-const agentFromName = name => ({
-  name,
-  id: name,
-  keystore_file: name,
-  public_address: name,
+const makeTestAgent = (id, { conductorName, uuid }: T.GenConfigArgs) => ({
+  // NB: very important that agents have different names on different conductors!!
+  name: `${conductorName}::${id}::${uuid}`,
+  id: id,
+  keystore_file: '[UNUSED]',
+  public_address: '[SHOULD BE REWRITTEN]',
   test_agent: true,
 })
 
@@ -230,7 +201,18 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
 
 export const genBridgeConfig = ({ bridges }: T.ConductorConfig) => (bridges ? { bridges } : {})
 
-export const genDpkiConfig = ({ dpki }: T.ConductorConfig) => (dpki ? { dpki } : {})
+export const genDpkiConfig = ({ dpki }: T.ConductorConfig) => {
+  if (dpki && _.isObject(dpki)) {
+    return {
+      dpki: {
+        instance_id: dpki.instance_id,
+        init_params: `${JSON.stringify(dpki.init_params)}`
+      }
+    }
+  } else {
+    return {}
+  }
+}
 
 export const genSignalConfig = ({ }) => ({
   signals: {
@@ -245,7 +227,7 @@ export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }) =>
   return {
     network: {
       type: 'n3h',
-      n3h_log_level: 'i',
+      n3h_log_level: 'e',
       bootstrap_nodes: [],
       n3h_mode: 'REAL',
       n3h_persistence_path: dir,
@@ -253,14 +235,13 @@ export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }) =>
   }
 }
 
-export const genLoggingConfig = (debug) => {
+export const genLoggingConfig = (debug, state_dump) => {
   return {
     logger: {
       type: 'debug',
-      state_dump: debug,
+      state_dump,
       rules: {
         rules: [{ exclude: !debug, pattern: ".*" }]
-        // rules: [{ exclude: !debug, pattern: "^debug" }]
       }
     }
   }

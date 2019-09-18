@@ -2,13 +2,14 @@ import _ from 'lodash'
 import { ScenarioApi } from "./api"
 import * as t from "io-ts"
 import { ThrowReporter } from "io-ts/lib/ThrowReporter"
+import { ChildProcess } from 'child_process';
 
 export const decodeOrThrow = (validator, value) => ThrowReporter.report(validator.decode(value))
 
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }
 
-export type SpawnConductorFn = (name: string, configPath: string) => Promise<Mortal>
+export type SpawnConductorFn = (name: string, configPath: string) => Promise<ChildProcess>
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 

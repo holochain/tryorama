@@ -1,3 +1,4 @@
+const _ = require('lodash')
 const uuidGen = require('uuid/v4')
 
 import * as T from "./types";
@@ -6,8 +7,9 @@ import * as R from "./reporter";
 import { Waiter, NetworkMap } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
-import { defaultGenConfigArgs, defaultSpawnConductor } from "./config";
+import { defaultGenConfigArgs, spawnUnique } from "./config";
 
+const defaultSpawnConductor = spawnUnique
 
 type OrchestratorConstructorParams = {
   spawnConductor?: T.SpawnConductorFn,
@@ -41,6 +43,7 @@ export class Orchestrator {
 
   registerScenario: Register & { only: Register, skip: Register }
 
+  _debugLog: boolean
   _genConfigArgs: GenConfigArgsFn
   _middleware: M.Middleware
   _scenarios: Array<RegisteredScenario>
@@ -51,16 +54,17 @@ export class Orchestrator {
   constructor(o: OrchestratorConstructorParams = {}) {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
-    this._middleware = o.middleware || M.unit
+    this._middleware = o.middleware || M.runSeries
+    this._debugLog = o.debugLog || false
     this._scenarios = []
     this._tape = o.tape
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))
       : o.reporter || R.unit
 
-    const registerScenario = (desc, scenario) => this._makeExecutor(desc, scenario, null)
-    const registerScenarioOnly = (desc, scenario) => this._makeExecutor(desc, scenario, 'only')
-    const registerScenarioSkip = (desc, scenario) => this._makeExecutor(desc, scenario, 'skip')
+    const registerScenario = (desc, scenario) => this._registerScenario(desc, scenario, null)
+    const registerScenarioOnly = (desc, scenario) => this._registerScenario(desc, scenario, 'only')
+    const registerScenarioSkip = (desc, scenario) => this._registerScenario(desc, scenario, 'skip')
     this.registerScenario = Object.assign(registerScenario, {
       only: registerScenarioOnly,
       skip: registerScenarioSkip,
@@ -85,6 +89,37 @@ export class Orchestrator {
     if (tests.length < allTests.length) {
       logger.warn(`Skipping ${allTests.length - tests.length} test(s)!`)
     }
+    return this._executeParallel(tests)
+  }
+
+  _executeParallel = async (tests: Array<RegisteredScenario>) => {
+    let successes = 0
+    const errors: Array<TestError> = []
+    const all = tests.map(({ api, desc, execute }) => {
+      return { api, desc, promise: execute() }
+    }).map(({ api, desc, promise }) => {
+      return promise
+        .then(() => {
+          console.info('success for ', desc)
+          successes += 1
+        })
+        .catch(e => {
+          console.error("got an error for ", desc, e)
+          errors.push({ description: desc, error: e })
+        })
+        .then(() => {
+          logger.info("Done with test: %s", desc)
+          return api._cleanup()
+        })
+    })
+    await Promise.all(all)
+
+    const stats = { successes, errors }
+    this._reporter.after(stats)
+    return stats
+  }
+
+  _executeSeries = async (tests: Array<RegisteredScenario>) => {
     let successes = 0
     const errors: Array<TestError> = []
     for (const { api, desc, execute } of tests) {
@@ -95,10 +130,12 @@ export class Orchestrator {
         logger.debug("Test succeeded: %s", desc)
         successes += 1
       } catch (e) {
-        logger.debug("Test failed: %s", desc)
+        logger.debug("Test failed: %s %o", desc, e)
         errors.push({ description: desc, error: e })
       } finally {
+        logger.debug("Cleaning up test: %s", desc)
         await api._cleanup()
+        logger.debug("Finished with test: %s", desc)
       }
     }
     const stats = {
@@ -109,9 +146,9 @@ export class Orchestrator {
     return stats
   }
 
-  _makeExecutor = (desc: string, scenario: Function, modifier: ScenarioModifier): void => {
+  _registerScenario = (desc: string, scenario: Function, modifier: ScenarioModifier): void => {
     const api = new ScenarioApi(desc, this, uuidGen())
-    const runner = scenario => scenario(api)
+    const runner = async scenario => scenario(api)
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })
   }

@@ -1,3 +1,5 @@
+const _ = require('lodash')
+
 /**
  * Middleware is a decorator for scenario functions. A Middleware takes two functions:
  * - the function which will run the scenario
@@ -41,7 +43,7 @@ export const combine = (...ms: Array<Middleware>): Middleware => {
         return run(f)
       }
     }
-    return go(ms, f)
+    return go(_.cloneDeep(ms), f)
   }
 }
 
@@ -63,14 +65,15 @@ export const combine = (...ms: Array<Middleware>): Middleware => {
  * entire test suite to await the end of all tape tests. It could be done by specifying
  * a parallel vs. serial mode for test running.
  */
-export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, reject) => {
+export const tapeExecutor = (tape: any): Middleware => (run, f) => new Promise((resolve, reject) => {
   if (f.length !== 2) {
     reject("tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions.")
     return
   }
   run(s => {
     tape(s.description, t => {
-      f(s, t)
+      const p = async () => await f(s, t)
+      p()
         .then(() => {
           t.end()
           resolve()
@@ -85,3 +88,13 @@ export const tapeExecutor = (tape: any) => (run, f) => new Promise((resolve, rej
     })
   })
 })
+
+/** Run tests in series rather than in parallel */
+export const runSeries = (() => {
+  let lastPromise = Promise.resolve()
+  return async (run, f) => {
+    const result = run(f)
+    lastPromise = lastPromise.catch(e => { }).then(() => result)
+    return result
+  }
+})()

@@ -4,6 +4,7 @@ const TOML = require('@iarna/toml')
 
 import * as T from '../../src/types'
 import * as C from '../../src/config';
+import * as Gen from '../../src/config/gen';
 import { genConfigArgs } from '../common';
 
 export const { configPlain, configSugared } = (() => {
@@ -20,10 +21,10 @@ export const { configPlain, configSugared } = (() => {
     {
       id: 'alice',
       agent: {
-        id: 'name::alice',
-        name: 'name::alice',
-        keystore_file: 'name::alice',
-        public_address: 'name::alice',
+        id: 'alice',
+        name: 'name::alice::uuid',
+        keystore_file: '[UNUSED]',
+        public_address: '[SHOULD BE REWRITTEN]',
         test_agent: true,
       },
       dna: {
@@ -35,10 +36,10 @@ export const { configPlain, configSugared } = (() => {
     {
       id: 'bob',
       agent: {
-        id: 'name::bob',
-        name: 'name::bob',
-        keystore_file: 'name::bob',
-        public_address: 'name::bob',
+        id: 'bob',
+        name: 'name::bob::uuid',
+        keystore_file: '[UNUSED]',
+        public_address: '[SHOULD BE REWRITTEN]',
         test_agent: true,
       },
       dna: {
@@ -70,12 +71,12 @@ test('DNA id generation', t => {
 })
 
 test('Sugared config', async t => {
-  t.deepEqual(C.desugarConfig('name', configSugared), configPlain)
+  t.deepEqual(C.desugarConfig({ conductorName: 'name', uuid: 'uuid' } as T.GenConfigArgs, configSugared), configPlain)
   t.end()
 })
 
 test('genInstanceConfig', async t => {
-  const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
+  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs())
   t.equal(agents.length, 2)
   t.equal(dnas.length, 1)
@@ -103,7 +104,7 @@ test('genBridgeConfig, empty', async t => {
 
 test('genDpkiConfig', async t => {
   const { dpki } = await C.genDpkiConfig(configPlain)
-  t.deepEqual(dpki, { instance_id: 'alice', init_params: { "well": "hello" } })
+  t.deepEqual(dpki, { instance_id: 'alice', init_params: '{"well":"hello"}' })
   t.end()
 })
 
@@ -127,8 +128,8 @@ test.skip('genNetworkConfig', async t => {
 })
 
 test('genLoggingConfig', async t => {
-  const loggerVerbose = await C.genLoggingConfig(true)
-  const loggerQuiet = await C.genLoggingConfig(false)
+  const loggerVerbose = await C.genLoggingConfig(true, true)
+  const loggerQuiet = await C.genLoggingConfig(false, false)
 
   const expectedVerbose = TOML.parse(`
 [logger]
@@ -154,12 +155,12 @@ pattern = ".*"
 })
 
 test('genConfig produces valid TOML', async t => {
-  const stubGetDnaHash = sinon.stub(C, 'getDnaHash').resolves('fakehash')
-  const builder = C.genConfig(configSugared)
+  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
+  const builder = C.genConfig(configSugared, false)
   const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
-  t.equal(toml, toml2)
+  t.equal(toml, toml2 + "\n")
   t.end()
   stubGetDnaHash.restore()
 })

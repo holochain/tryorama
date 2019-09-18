@@ -1,22 +1,25 @@
 {
   "name": "@holochain/try-o-rama",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.6",
   "description": "",
   "main": "lib/index.js",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "dev": "tsc -w",
+    "build": "rm -rf ./lib ; tsc",
+    "dev": "rm -rf ./lib ; tsc -w",
     "doc": "typedoc",
+    "prepare": "npm run build",
+    "prepublishOnly": "npm test",
     "test": "ts-node test | tap-diff",
     "test:unit": "ts-node test/unit | tap-diff",
-    "test:e2e": "ts-node test/e2e | tap-diff"
+    "test:e2e": "ts-node test/e2e"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@holochain/hachiko": "^0.4.0-rc.1",
+    "@holochain/hachiko": "^0.4.0",
     "@holochain/hc-web-client": "^0.5.0",
     "@iarna/toml": "^2.2.3",
     "axios": "^0.19.0",
