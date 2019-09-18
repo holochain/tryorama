@@ -22,13 +22,17 @@ export type GenConfigArgs = {
   zomePort: number,
 }
 
-export const AgentConfigV = t.type({
-  id: t.string,
-  name: t.string,
-  keystore_file: t.string,
-  public_address: t.string,
-  test_agent: t.boolean,
-})
+export const AgentConfigV = t.intersection([
+  t.type({
+    id: t.string,
+    name: t.string,
+    keystore_file: t.string,
+    public_address: t.string,
+  }),
+  t.partial({
+    test_agent: t.boolean,
+  })
+])
 export type AgentConfig = t.TypeOf<typeof AgentConfigV>
 
 export const DnaConfigV = t.intersection([
