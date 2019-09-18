@@ -70,10 +70,10 @@ export const tapeExecutor = (tape: any): Middleware => (run, f) => new Promise((
     reject("tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions.")
     return
   }
-  tape("s.description", t => {
-    run(s => {
-      // NB: f must return a Promise
-      f(s, t)
+  run(s => {
+    tape(s.description, t => {
+      const p = async () => await f(s, t)
+      p()
         .then(() => {
           t.end()
           resolve()

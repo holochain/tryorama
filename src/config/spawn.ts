@@ -2,21 +2,30 @@
 import { spawn, ChildProcess } from "child_process";
 import logger from "../logger";
 
-export const spawnUnique = (name, configPath): Promise<ChildProcess> => {
-  const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
-  const handle = spawn(binPath, ['-c', configPath], {
-    env: {
-      ...process.env, 
-      "N3H_QUIET": "1",
-      "RUST_BACKTRACE": "1",
-    }
-  })
+export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
 
-  handle.stdout.on('data', data => logger.info(`[C '${name}'] %s`, data.toString('utf8')))
-  handle.stderr.on('data', data => logger.error(`!C '${name}'! %s`, data.toString('utf8')))
-  handle.on('close', code => logger.info(`conductor '${name}' exited with code ${code}`))
-
-  return new Promise((resolve) => {
+  let handle
+  try {
+    const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
+    handle = spawn(binPath, ['-c', configPath], {
+      env: {
+        ...process.env, 
+        "N3H_QUIET": "1",
+        "RUST_BACKTRACE": "1",
+      }
+    })
+  
+    handle.stdout.on('data', data => logger.info(`[C '${name}'] %s`, data.toString('utf8')))
+    handle.stderr.on('data', data => logger.error(`!C '${name}'! %s`, data.toString('utf8')))
+  } catch (err) {
+    return Promise.reject(err)
+  }
+  
+  return new Promise((resolve, reject) => {
+    handle.on('close', code => {
+      logger.info(`conductor '${name}' exited with code ${code}`)
+      reject(`Conductor exited before fully starting (code ${code})`)
+    })
     handle.stdout.on('data', data => {
       // wait for the logs to convey that the interfaces have started
       // because the consumer of this function needs those interfaces

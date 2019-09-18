@@ -4,6 +4,7 @@ import tapeP from 'tape-promise'
 const test = tapeP(tape)
 
 import { Orchestrator, Config } from '../../src'
+import { runSeries } from '../../src/middleware'
 import { delay } from '../../src/util';
 
 
@@ -27,9 +28,14 @@ const testConfig = () => {
   }
 }
 
+const testOrchestrator = () => new Orchestrator({
+  middleware: runSeries,
+  reporter: true,
+})
+
 test('test with error', async t => {
   const C = testConfig()
-  const orchestrator = new Orchestrator()
+  const orchestrator = testOrchestrator()
   orchestrator.registerScenario('invalid instance', async s => {
     const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
@@ -46,8 +52,8 @@ test('test with error', async t => {
 test('test with simple zome call', async t => {
   t.plan(3)
   const C = testConfig()
-  const orchestrator = new Orchestrator({ reporter: true })
-  orchestrator.registerScenario('proper zome call', async s => {
+  const orchestrator = testOrchestrator()
+  orchestrator.registerScenario('simple zome call', async s => {
     const players = await s.players({ alice: C.alice })
     const { alice } = players
     await alice.spawn()
@@ -66,8 +72,8 @@ test('test with simple zome call', async t => {
 test('test with consistency awaiting', async t => {
   t.plan(4)
   const C = testConfig()
-  const orchestrator = new Orchestrator({ reporter: true })
-  orchestrator.registerScenario('proper zome call', async s => {
+  const orchestrator = testOrchestrator()
+  orchestrator.registerScenario('zome call with consistency', async s => {
     const { alice, bob } = await s.players({ alice: C.alice, bob: C.bob }, true)
 
     await s.consistency()
@@ -105,8 +111,8 @@ test('test with consistency awaiting', async t => {
 test('agentAddress and dnaAddress', async t => {
   t.plan(4)
   const C = testConfig()
-  const orchestrator = new Orchestrator({ reporter: true })
-  orchestrator.registerScenario('proper zome call', async s => {
+  const orchestrator = testOrchestrator()
+  orchestrator.registerScenario('check addresses', async s => {
     const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
     const agentAddress = await alice.call('chat', 'chat', 'register', {
@@ -124,7 +130,7 @@ test('agentAddress and dnaAddress', async t => {
 test('test with kill and respawn', async t => {
   t.plan(4)
   const C = testConfig()
-  const orchestrator = new Orchestrator({ reporter: true })
+  const orchestrator = testOrchestrator()
   orchestrator.registerScenario('attempted call with killed conductor', async s => {
     const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
@@ -148,7 +154,7 @@ test('test with kill and respawn', async t => {
     
   })
 
-  orchestrator.registerScenario('proper zome call', async s => {
+  orchestrator.registerScenario('spawn-kill-spawn', async s => {
     const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
     await alice.kill()

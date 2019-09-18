@@ -201,7 +201,18 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
 
 export const genBridgeConfig = ({ bridges }: T.ConductorConfig) => (bridges ? { bridges } : {})
 
-export const genDpkiConfig = ({ dpki }: T.ConductorConfig) => (dpki ? { dpki } : {})
+export const genDpkiConfig = ({ dpki }: T.ConductorConfig) => {
+  if (dpki && _.isObject(dpki)) {
+    return {
+      dpki: {
+        instance_id: dpki.instance_id,
+        init_params: `${JSON.stringify(dpki.init_params)}`
+      }
+    }
+  } else {
+    return {}
+  }
+}
 
 export const genSignalConfig = ({ }) => ({
   signals: {

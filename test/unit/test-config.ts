@@ -104,7 +104,7 @@ test('genBridgeConfig, empty', async t => {
 
 test('genDpkiConfig', async t => {
   const { dpki } = await C.genDpkiConfig(configPlain)
-  t.deepEqual(dpki, { instance_id: 'alice', init_params: { "well": "hello" } })
+  t.deepEqual(dpki, { instance_id: 'alice', init_params: '{"well":"hello"}' })
   t.end()
 })
 

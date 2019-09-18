@@ -108,7 +108,7 @@ export class Orchestrator {
           errors.push({ description: desc, error: e })
         })
         .then(() => {
-          logger.info("&& Done with test: %s", desc)
+          logger.info("Done with test: %s", desc)
           return api._cleanup()
         })
     })
