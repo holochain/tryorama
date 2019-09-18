@@ -76,8 +76,10 @@ test('test with consistency awaiting', async t => {
   orchestrator.registerScenario('zome call with consistency', async s => {
     const { alice, bob } = await s.players({ alice: C.alice, bob: C.bob }, true)
 
+    // TODO: this sometimes does not properly await...
     await s.consistency()
 
+    // ... i.e., sometimes this fails with "base for link not found"
     const streamAddress = await alice.call('chat', 'chat', 'create_stream', {
       name: 'stream',
       description: 'whatever',
