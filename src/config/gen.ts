@@ -15,7 +15,10 @@ const mkdirIdempotent = dir => fs.access(dir).catch(() => {
 })
 
 const tempDirBase = path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
-const tempDir = () => fs.mkdtemp(tempDirBase)
+const tempDir = async () => {
+  await mkdirIdempotent(tempDirBase)
+  return fs.mkdtemp(tempDirBase)
+}
 
 /**
  * Directory to store downloaded DNAs in.
