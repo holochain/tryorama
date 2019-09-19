@@ -1,5 +1,6 @@
 import * as T from "../types";
-import { downloadFile } from "../util";
+import { downloadFile, trace } from "../util";
+import logger from '../logger';
 const TOML = require('@iarna/toml')
 const _ = require('lodash')
 
@@ -9,6 +10,8 @@ const os = require('os')
 const path = require('path')
 const getPort = require('get-port')
 
+export const ADMIN_INTERFACE_ID = 'try-o-rama-admin-interface'
+export const ZOME_INTERFACE_ID = 'try-o-rama-zome-interface'
 
 const mkdirIdempotent = dir => fs.access(dir).catch(() => {
   fs.mkdir(dir, { recursive: true })
@@ -96,9 +99,14 @@ export const defaultGenConfigArgs = async (conductorName: string, uuid: string) 
 
 
 /**
- * Helper function to generate TOML config from a simpler object.
+ * Helper function to generate, from a simple object, a function that returns valid TOML config.
  */
-export const genConfig = (inputConfig: T.EitherConductorConfig, debugLog: boolean): T.GenConfigFn => {
+export const genConfig = (inputConfig: T.AnyConductorConfig, debugLog: boolean): T.GenConfigFn => {
+  if (typeof inputConfig === 'function') {
+    // let an already-generated function just pass through
+    return inputConfig
+  }
+
   T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
 
   return async (args: T.GenConfigArgs) => {
@@ -133,7 +141,7 @@ export const desugarConfig = (args: T.GenConfigArgs, config: T.EitherConductorCo
   return config as T.ConductorConfig
 }
 
-const makeTestAgent = (id, { conductorName, uuid }: T.GenConfigArgs) => ({
+export const makeTestAgent = (id, { conductorName, uuid }: T.GenConfigArgs) => ({
   // NB: very important that agents have different names on different conductors!!
   name: `${conductorName}::${id}::${uuid}`,
   id: id,
@@ -153,7 +161,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
 
   const adminInterface = {
     admin: true,
-    id: 'try-o-rama-admin-interface',
+    id: ADMIN_INTERFACE_ID,
     driver: {
       type: 'websocket',
       port: adminPort,
@@ -162,7 +170,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
   }
 
   const zomeInterface = {
-    id: 'try-o-rama-zome-interface',
+    id: ZOME_INTERFACE_ID,
     driver: {
       type: 'websocket',
       port: zomePort,
@@ -257,4 +265,15 @@ export const getDnaHash = async (dnaPath) => {
     throw new Error("Could not parse hash from `hc hash` output, which follows: " + stdout)
   }
   return hash
+}
+
+export const assertUniqueTestAgentNames = (configs: Array<T.InstanceConfig>) => {
+  const agentNames = _.chain(configs).values().map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
+  const frequencies = _.countBy(agentNames) as { [k: string]: number }
+  const dupes = new Set(Object.entries(frequencies).filter(([k, v]) => v > 1).map(([k, v]) => k))
+  if (dupes.size > 0) {
+    const msg = `There are ${dupes.size} non-unique test agent IDs specified across all conductor configs: ${JSON.stringify(Array.from(dupes))}`
+    logger.debug(msg)
+    throw new Error(msg)
+  }
 }

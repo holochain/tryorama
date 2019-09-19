@@ -9,8 +9,11 @@ import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
 import { promiseSerialObject, delay } from './util';
-import { getConfigPath, genConfig } from './config';
+import { getConfigPath, genConfig, assertUniqueTestAgentNames } from './config';
 
+type Modifiers = {
+  singleConductor: boolean
+}
 
 export class ScenarioApi {
 
@@ -20,13 +23,15 @@ export class ScenarioApi {
   _uuid: string
   _orchestrator: Orchestrator
   _waiter: Waiter
+  _modifiers: Modifiers
 
-  constructor(description: string, orchestrator: Orchestrator, uuid: string) {
+  constructor(description: string, orchestrator: Orchestrator, uuid: string, modifiers: Modifiers = {singleConductor: false}) {
     this.description = description
     this._players = []
     this._uuid = uuid
     this._orchestrator = orchestrator
     this._waiter = new Waiter(FullSyncNetwork)
+    this._modifiers = modifiers
   }
 
   players = async (configs: T.ObjectS<T.GenConfigFn | T.EitherConductorConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
@@ -43,7 +48,7 @@ export class ScenarioApi {
       return { name, configDir, configJson, configToml, genConfigArgs }
     }))
 
-    this._assertUniqueTestAgentNames(configsIntermediate.map(c => c.configJson))
+    assertUniqueTestAgentNames(configsIntermediate.map(c => c.configJson))
 
     configsIntermediate.forEach(({ name, configDir, configJson, configToml, genConfigArgs }) => {
       players[name] = (async () => {
@@ -102,17 +107,6 @@ export class ScenarioApi {
     return Promise.all(
       this._players.map(player => player.kill())
     ).then(() => { })
-  }
-
-  _assertUniqueTestAgentNames = (configs) => {
-    const agentNames = _.chain(configs).values().map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
-    const frequencies = _.countBy(agentNames) as { [k: string]: number }
-    const dupes = new Set(Object.entries(frequencies).filter(([k, v]) => v > 1).map(([k, v]) => k))
-    if (dupes.size > 0) {
-      const msg = `There are ${dupes.size} non-unique test agent IDs specified across all conductor configs: ${JSON.stringify(Array.from(dupes))}`
-      logger.debug(msg)
-      throw new Error(msg)
-    }
   }
 
 }

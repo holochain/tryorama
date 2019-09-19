@@ -96,6 +96,10 @@ export type SugaredConductorConfig = t.TypeOf<typeof SugaredConductorConfigV>
 export const EitherConductorConfigV = t.union([ConductorConfigV, SugaredConductorConfigV])
 export type EitherConductorConfig = t.TypeOf<typeof EitherConductorConfigV>
 
+/** For situations where we can accept either flavor of config */
+export type AnyConductorConfig = EitherConductorConfig | GenConfigFn
+
+
 /** Something "killable" */
 export interface Mortal {
   kill(signal?: string): void
