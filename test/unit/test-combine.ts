@@ -1,3 +1,4 @@
+const _ = require('lodash')
 const sinon = require('sinon')
 const test = require('tape')
 const TOML = require('@iarna/toml')
@@ -5,25 +6,29 @@ const TOML = require('@iarna/toml')
 import * as T from '../../src/types'
 import * as C from '../../src/config';
 import * as Gen from '../../src/config/gen';
-import { combineConfigs, mergeJsonConfigs, incBy } from '../../src/config/combine';
+import { combineConfigs, mergeJsonConfigs, suffix } from '../../src/config/combine';
 import { genConfigArgs } from '../common';
+import { promiseSerialObject, trace } from '../../src/util';
 
 const makeTestConfigs = async () => {
   const dna1a = C.dna('path/to/dna1.json', 'dna-1', { uuid: 'a' })
   const dna1b = C.dna('path/to/dna1.json', 'dna-1', { uuid: 'b' })
   const dna2 = C.dna('path/to/dna2.json', 'dna-2')
 
-  const mkInstance = (n, id, dna) => ({
-    id: incBy(n)(id),
+  const mkInstance = (conductorName, id, dna) => ({
+    id: suffix(conductorName)(id),
     dna,
-    agent: Gen.makeTestAgent(id, {
-      conductorName: `conductor-${n}`,
-      uuid: 'uuid',
-    } as T.GenConfigArgs)
+    agent: {
+      name: `${conductorName}::${id}::uuid`,
+      id: suffix(conductorName)(id),
+      keystore_file: '[UNUSED]',
+      public_address: '[SHOULD BE REWRITTEN]',
+      test_agent: true,
+    }
   })
 
-  const configs = [
-    {
+  const configs = {
+    one: {
       instances: {
         alice: dna1a,
         bob: dna1b,
@@ -31,7 +36,7 @@ const makeTestConfigs = async () => {
       bridges: [C.bridge('b', 'alice', 'bob')],
       dpki: C.dpki('alice', { well: 'hello' }),
     },
-    {
+    two: {
       instances: {
         xena: dna1a,
         yancy: dna1b,
@@ -43,63 +48,49 @@ const makeTestConfigs = async () => {
       ],
       dpki: C.dpki('xena', { well: 'hello' }),
     },
-    {
-      // create these instances more methodically.
-      // we want the instance IDs to be the same as an earlier
-      // conductor, but the agent IDs must be unique
-      // instances: [
-      //   {
-      //     id: 'alice',
-      //     dna: dna2,
-      //     agent: Gen.makeTestAgent('alice-clone', {
-      //       conductorName: 'conductorName',
-      //       uuid: 'uuid',
-      //     } as T.GenConfigArgs)
-      //   },
-      //   {
-      //     id: 'bob',
-      //     dna: dna2,
-      //     agent: Gen.makeTestAgent('bob-clone', {
-      //       conductorName: 'conductorName',
-      //       uuid: 'uuid',
-      //     } as T.GenConfigArgs)
-      //   }
-      // ],
+    three: {
       instances: {
         alice: dna2,
         bob: dna2,
       },
-      bridges: [C.bridge('b', 'alice-clone', 'bob-clone')],
+      bridges: [C.bridge('b', 'alice', 'bob')],
       dpki: C.dpki('bob', { well: 'hello' }),
     },
-  ]
+  }
 
   const expected = {
     instances: [
-      mkInstance(0, 'alice', dna1a),
-      mkInstance(0, 'bob', dna1b),
-      mkInstance(1, 'xena', dna1a),
-      mkInstance(1, 'yancy', dna1b),
-      mkInstance(1, 'ziggy', dna2),
-      mkInstance(2, 'alice', dna2),
-      mkInstance(2, 'bob', dna2),
+      mkInstance('one', 'alice', dna1a),
+      mkInstance('one', 'bob', dna1b),
+      mkInstance('two', 'xena', dna1a),
+      mkInstance('two', 'yancy', dna1b),
+      mkInstance('two', 'ziggy', dna2),
+      mkInstance('three', 'alice', dna2),
+      mkInstance('three', 'bob', dna2),
     ],
     bridges: [
-      C.bridge('b', 'alice0', 'bob0'),
-      C.bridge('x', 'xena1', 'yancy1'),
-      C.bridge('y', 'yancy1', 'ziggy1'),
-      C.bridge('b', 'alice2', 'bob2')
+      C.bridge('b', 'alice-one', 'bob-one'),
+      C.bridge('x', 'xena-two', 'yancy-two'),
+      C.bridge('y', 'yancy-two', 'ziggy-two'),
+      C.bridge('b', 'alice-three', 'bob-three')
     ],
     dpki: C.dpki('alice', { well: 'hello' })
   }
 
-  return { 
-    configs: await Promise.all(configs.map(async (c, i) => await expandConfig(c, `conductor-${i}`))), 
+  return {
+    configs: await (
+      _.chain(configs)
+      .toPairs()
+      .map(async ([name, c]) => [name, await expandConfig(c, name)])
+      .thru(x => Promise.all(x))
+      .value()
+      .then(_.fromPairs)
+    ),
     expected: await expandConfig(expected, 'expected')
   }
 }
 
-const expandConfig = async (config, conductorName) => {
+const expandConfig = async (config, conductorName): Promise<any> => {
   const builder = C.genConfig(config, false)
   const toml = await builder({ 
     configDir: 'dir', 
@@ -116,19 +107,23 @@ test('test configs are valid', async t => {
   const {configs, expected} = await makeTestConfigs()
   stubGetDnaHash.restore()
 
-  t.doesNotThrow(() => Gen.assertUniqueTestAgentNames(configs))
+  t.doesNotThrow(() => Gen.assertUniqueTestAgentNames(Object.values(configs)))
   t.doesNotThrow(() => Gen.assertUniqueTestAgentNames([expected]))
   t.end()
 })
 
-test.only('can combine configs', async t => {
+test('can combine configs', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const {configs, expected} = await makeTestConfigs()
 
-  console.log("CONFIGS:\n", JSON.stringify(configs, null, 2))
-  console.log("EXPECTED:\n", JSON.stringify(expected, null, 2))
-
-  t.deepEqual(mergeJsonConfigs(configs), expected)
+  const combined = mergeJsonConfigs(configs)
+  t.deepEqual(combined.agents, expected.agents)
+  t.deepEqual(combined.dnas, expected.dnas)
+  t.deepEqual(combined.bridges, expected.bridges)
+  t.deepEqual(combined.instances, expected.instances)
+  t.deepEqual(combined.interfaces, expected.interfaces)
+  
+  t.deepEqual(combined, expected)
   t.end()
   stubGetDnaHash.restore()
 })

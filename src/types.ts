@@ -1,4 +1,4 @@
-import _ from 'lodash'
+const _ = require('lodash')
 import { ScenarioApi } from "./api"
 import * as t from "io-ts"
 import { ThrowReporter } from "io-ts/lib/ThrowReporter"

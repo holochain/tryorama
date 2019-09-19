@@ -7,62 +7,85 @@ import { trace } from "../util";
 
 
 export const combineConfigs = 
-(configs: Array<T.AnyConductorConfig>, debugLog: boolean = false) => 
+(configs: T.ObjectS<T.AnyConductorConfig>, debugLog: boolean = false) => 
 (args: T.GenConfigArgs) => {
-  const configsJson = configs
-    .map(c => genConfig(c, debugLog)(args))
-    .map(TOML.parse)
+  const configsJson = _.chain(configs)
+    .mapValues(c => genConfig(c, debugLog)(args))
+    .mapValues(TOML.parse)
+    .value()
+  const merged = mergeJsonConfigs(configsJson)
+  return TOML.stringify(merged)
 }
 
-export const incBy = n => x => x += n 
+export const suffix = suff => x => `${x}-${suff}`
 
-export const mergeJsonConfigs = (configs: Array<any>) => {
+/**
+ * Given a map with keys as conductor names and values as conductor configs Objects,
+ * merge all configs into a single valid conductor config Object.
+ * Basically, each agent ID is suffixed by the conductor name, and referendes updated
+ * to preserve uniqueness. Then all agents, dnas, instances, and bridges are merged
+ * together.
+ * 
+ * All other options, like logging, interfaces, etc. are taken from one particular config,
+ * with the assumption that the others are the same. The `standard` param allows you to
+ * specify, by conductor name, which config to use to pull these other values from.
+ */
+export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => {
+
   const agents = _.chain(configs)
-    .map(c => c.agents)
-    .flatten()
-    .map((c, i) => _.update(c, 'id', incBy(i)))
-    .value()
-  const dnas = _.chain(configs)
-    .map(c => c.dnas)
-    .uniqBy(dna => dna.id)
-    .flatten()
-    .value()
-  const instances = _.chain(configs)
-    .map(c => c.instances)
-    .mapValues((inst, i) => 
-      _.chain(inst)
-      .update('id', incBy(i))
-      .update('agent', incBy(i))
+    .toPairs()
+    .map(([name, c]) => 
+      _.chain(c.agents)
+      .map(a => _.update(a, 'id', suffix(name)))
       .value()
     )
     .flatten()
     .value()
-  const bridges = _.chain(configs)
-    .map(c => c.bridges)
-    .map((bs, i) => 
-      _.chain(bs)
-      .flatten()
-      .map(b => _.chain(b)
-        .update('caller_id', incBy(i))
-        .update('callee_id', incBy(i))
+
+  const dnas = _.chain(configs)
+    .map(c => c.dnas)
+    .flatten()
+    .uniqBy(dna => dna.id)
+    .value()
+  
+  const instances = _.chain(configs)
+    .toPairs()
+    .map(([name, c]) => 
+      _.map(c.instances, (inst) => 
+        _.chain(inst)
+        .update('id', suffix(name))
+        .update('agent', suffix(name))
+        .update('storage.path', suffix(name))
         .value()
       )
-      .value()
+    )
+    .flatten()
+    .value()
+
+  const bridges = _.chain(configs)
+    .toPairs()
+    .map(([name, c]) => 
+      _.map(c.bridges, b => _.chain(b)
+        .update('caller_id', suffix(name))
+        .update('callee_id', suffix(name))
+        .value()
+      )
     )
     .flatten()
     .value()
   
-  console.log('---------------')
-  console.log(agents)
-  console.log(dnas)
-  console.log(instances)
-  console.log('---------------')
-
-  const first = configs[0]
+  const first = standard ? configs[standard] : _.values(configs)[0]
+  
   const zomeInterfaceIndex = _.findIndex(first.interfaces, i => i.id === ZOME_INTERFACE_ID)
   const zomeInterfaceInstances = _.chain(configs)
-    .map(c => c.interfaces[zomeInterfaceIndex])
-    .map(i => i.instances)
+    .toPairs()
+    .map(([name, c]) => 
+      _.map(
+        c.interfaces[zomeInterfaceIndex].instances,
+        i => _.update(i, 'id', suffix(name))
+      )
+    )
+    .flatten()
     .value()
 
   const interfaces = _.set(
@@ -70,12 +93,14 @@ export const mergeJsonConfigs = (configs: Array<any>) => {
     [zomeInterfaceIndex, 'instances'], 
     zomeInterfaceInstances
   )
-
-  return Object.assign({}, first, {
+  
+  const combined = _.assign(first, {
     agents,
     dnas,
     bridges,
     instances,
     interfaces,
   })
+
+  return combined
 }

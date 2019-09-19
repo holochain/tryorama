@@ -32,6 +32,7 @@
     "winston": "^3.2.1"
   },
   "devDependencies": {
+    "@types/lodash": "^4.14.138",
     "@types/node": "^12.7.2",
     "sinon": "^7.4.1",
     "tap-diff": "^0.1.1",
