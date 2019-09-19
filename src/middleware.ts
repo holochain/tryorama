@@ -1,4 +1,4 @@
-import { combineConfigs, suffix } from "./config/combine";
+import { combineConfigs, adjoin } from "./config/combine";
 
 const _ = require('lodash')
 
@@ -107,7 +107,7 @@ export const singleConductor = (run, f) => run(s => {
     const combined = combineConfigs(configs)
     const {combined: player} = await s.players({combined}, true)
     const players = names.map(name => {
-      const modify = suffix(name)
+      const modify = adjoin(name)
       const p = {
         call: (instanceId, ...a) => player.call(modify(instanceId), ...a),
         info: (instanceId) => player.info(modify(instanceId)),

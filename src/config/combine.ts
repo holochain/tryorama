@@ -25,17 +25,24 @@ async (args: T.GenConfigArgs) => {
   return TOML.stringify(merged)
 }
 
-export const suffix = suff => {
-  if (typeof suff !== 'string' || '1234567890'.includes(suff[0])) {
-    throw new Error(`Using invalid suffix: ${suff}`)
+/**
+ * Define a standard way to add extra string to ID identifiers for use in combining configs
+ * This is used to modify file paths as well, so it should result in a valid path.
+ * i.e.: 
+ *     adjoin('x')('path/to/foo') === 'path/to/foo--x'   // OK
+ *     adjoin('x')('path/to/foo') === 'x::path/to/foo'   // BAD
+ */
+export const adjoin = tag => {
+  if (typeof tag !== 'string' || '1234567890'.includes(tag[0])) {
+    throw new Error(`Using invalid adjoin tag: ${tag}`)
   }
-  return x => `${x}-${suff}`
+  return x => `${x}--${tag}`
 }
 
 /**
  * Given a map with keys as conductor names and values as conductor configs Objects,
  * merge all configs into a single valid conductor config Object.
- * Basically, each agent ID is suffixed by the conductor name, and referendes updated
+ * Basically, each agent ID is adjoined by the conductor name, and references updated
  * to preserve uniqueness. Then all agents, dnas, instances, and bridges are merged
  * together.
  * 
@@ -49,15 +56,15 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .toPairs()
     .map(([name, c]) => 
       _.chain(c.agents)
-      .map(a => _.update(a, 'id', suffix(name)))
-      // .map(a => _.update(a, 'name', suffix(name)))
+      .map(a => _.update(a, 'id', adjoin(name)))
+      .map(a => _.update(a, 'name', adjoin(name)))
       .value()
     )
     .flatten()
     .value()
 
   const dnas = _.chain(configs)
-    .map(c => trace(c).dnas)
+    .map(c => c.dnas)
     .flatten()
     .uniqBy(dna => dna.id)
     .value()
@@ -67,9 +74,9 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .map(([name, c]) => 
       _.map(c.instances, (inst) => 
         _.chain(inst)
-        .update('id', suffix(name))
-        .update('agent', suffix(name))
-        .update('storage.path', suffix(name))
+        .update('id', adjoin(name))
+        .update('agent', adjoin(name))
+        .update('storage.path', adjoin(name))
         .value()
       )
     )
@@ -80,8 +87,8 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .toPairs()
     .map(([name, c]) => 
       _.map(c.bridges, b => _.chain(b)
-        .update('caller_id', suffix(name))
-        .update('callee_id', suffix(name))
+        .update('caller_id', adjoin(name))
+        .update('callee_id', adjoin(name))
         .value()
       )
     )
@@ -97,7 +104,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .map(([name, c]) => 
       _.map(
         c.interfaces[zomeInterfaceIndex].instances,
-        i => _.update(i, 'id', suffix(name))
+        i => _.update(i, 'id', adjoin(name))
       )
     )
     .flatten()

@@ -268,11 +268,12 @@ export const getDnaHash = async (dnaPath) => {
 }
 
 export const assertUniqueTestAgentNames = (configs: Array<T.InstanceConfig>) => {
-  const agentNames = _.chain(configs).values().map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
+  const agentNames = _.chain(configs).values().map(n => trace(n.agents, 'n.agentsss').filter(a => a.test_agent).map(a => a.name)).flatten().value()
   const frequencies = _.countBy(agentNames) as { [k: string]: number }
-  const dupes = new Set(Object.entries(frequencies).filter(([k, v]) => v > 1).map(([k, v]) => k))
-  if (dupes.size > 0) {
-    const msg = `There are ${dupes.size} non-unique test agent names specified across all conductor configs: ${JSON.stringify(Array.from(dupes))}`
+  const dupes = Object.entries(frequencies).filter(([k, v]) => v > 1)
+  if (dupes.length > 0) {
+    const display = dupes.reduce((s, [name, freq]) => `${s}\n(x${freq}): ${name}`, "")
+    const msg = `There are ${dupes.length} non-unique test agent names specified across all conductor configs: ${display}`
     logger.debug(msg)
     throw new Error(msg)
   }

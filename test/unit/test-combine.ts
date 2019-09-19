@@ -6,7 +6,7 @@ const TOML = require('@iarna/toml')
 import * as T from '../../src/types'
 import * as C from '../../src/config';
 import * as Gen from '../../src/config/gen';
-import { combineConfigs, mergeJsonConfigs, suffix } from '../../src/config/combine';
+import { combineConfigs, mergeJsonConfigs, adjoin } from '../../src/config/combine';
 import { genConfigArgs } from '../common';
 import { promiseSerialObject, trace } from '../../src/util';
 
@@ -16,11 +16,11 @@ const makeTestConfigs = async () => {
   const dna2 = C.dna('path/to/dna2.json', 'dna-2')
 
   const mkInstance = (conductorName, id, dna) => ({
-    id: suffix(conductorName)(id),
+    id: adjoin(conductorName)(id),
     dna,
     agent: {
-      name: `${conductorName}::${id}::uuid`,
-      id: suffix(conductorName)(id),
+      name: adjoin(conductorName)(`${conductorName}::${id}::uuid`),
+      id: adjoin(conductorName)(id),
       keystore_file: '[UNUSED]',
       public_address: '[SHOULD BE REWRITTEN]',
       test_agent: true,
@@ -69,10 +69,10 @@ const makeTestConfigs = async () => {
       mkInstance('three', 'bob', dna2),
     ],
     bridges: [
-      C.bridge('b', 'alice-one', 'bob-one'),
-      C.bridge('x', 'xena-two', 'yancy-two'),
-      C.bridge('y', 'yancy-two', 'ziggy-two'),
-      C.bridge('b', 'alice-three', 'bob-three')
+      C.bridge('b', 'alice--one', 'bob--one'),
+      C.bridge('x', 'xena--two', 'yancy--two'),
+      C.bridge('y', 'yancy--two', 'ziggy--two'),
+      C.bridge('b', 'alice--three', 'bob--three')
     ],
     dpki: C.dpki('alice', { well: 'hello' })
   }
