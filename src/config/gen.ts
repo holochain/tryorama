@@ -272,7 +272,7 @@ export const assertUniqueTestAgentNames = (configs: Array<T.InstanceConfig>) => 
   const frequencies = _.countBy(agentNames) as { [k: string]: number }
   const dupes = new Set(Object.entries(frequencies).filter(([k, v]) => v > 1).map(([k, v]) => k))
   if (dupes.size > 0) {
-    const msg = `There are ${dupes.size} non-unique test agent IDs specified across all conductor configs: ${JSON.stringify(Array.from(dupes))}`
+    const msg = `There are ${dupes.size} non-unique test agent names specified across all conductor configs: ${JSON.stringify(Array.from(dupes))}`
     logger.debug(msg)
     throw new Error(msg)
   }

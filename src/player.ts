@@ -133,6 +133,8 @@ export class Player {
       const msg = `Attempted conductor action when no conductor is running! You must \`.spawn()\` first.\nAction: ${context}`
       this.logger.error(msg)
       throw new Error(msg)
+    } else {
+      this.logger.debug(context)
     }
   }
 }

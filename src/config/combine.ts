@@ -14,13 +14,23 @@ async (args: T.GenConfigArgs) => {
     .map(async ([name, c]) => [name, await genConfig(c, debugLog)(args)])
     .thru(x => Promise.all(x))
     .value()
-    .then(cs => cs.map(([_, c]) => (TOML.parse(c))))
+    .then(cs => 
+      _.chain(cs)
+      .fromPairs()
+      .mapValues(TOML.parse)
+      .value()
+    )
   const merged = mergeJsonConfigs(configsJson)
   console.log("MERGED", merged)
   return TOML.stringify(merged)
 }
 
-export const suffix = suff => x => `${x}-${suff}`
+export const suffix = suff => {
+  if (typeof suff !== 'string' || '1234567890'.includes(suff[0])) {
+    throw new Error(`Using invalid suffix: ${suff}`)
+  }
+  return x => `${x}-${suff}`
+}
 
 /**
  * Given a map with keys as conductor names and values as conductor configs Objects,
@@ -40,6 +50,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .map(([name, c]) => 
       _.chain(c.agents)
       .map(a => _.update(a, 'id', suffix(name)))
+      // .map(a => _.update(a, 'name', suffix(name)))
       .value()
     )
     .flatten()
