@@ -8,12 +8,15 @@ import { trace } from "../util";
 
 export const combineConfigs = 
 (configs: T.ObjectS<T.AnyConductorConfig>, debugLog: boolean = false) => 
-(args: T.GenConfigArgs) => {
-  const configsJson = _.chain(configs)
-    .mapValues(c => genConfig(c, debugLog)(args))
-    .mapValues(TOML.parse)
+async (args: T.GenConfigArgs) => {
+  const configsJson = await _.chain(configs)
+    .toPairs()
+    .map(async ([name, c]) => [name, await genConfig(c, debugLog)(args)])
+    .thru(x => Promise.all(x))
     .value()
+    .then(cs => cs.map(([_, c]) => (TOML.parse(c))))
   const merged = mergeJsonConfigs(configsJson)
+  console.log("MERGED", merged)
   return TOML.stringify(merged)
 }
 
@@ -43,7 +46,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .value()
 
   const dnas = _.chain(configs)
-    .map(c => c.dnas)
+    .map(c => trace(c).dnas)
     .flatten()
     .uniqBy(dna => dna.id)
     .value()
@@ -74,6 +77,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .flatten()
     .value()
   
+  
   const first = standard ? configs[standard] : _.values(configs)[0]
   
   const zomeInterfaceIndex = _.findIndex(first.interfaces, i => i.id === ZOME_INTERFACE_ID)
@@ -89,11 +93,11 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .value()
 
   const interfaces = _.set(
-    first.interfaces, 
-    [zomeInterfaceIndex, 'instances'], 
+    first.interfaces,
+    [zomeInterfaceIndex, 'instances'],
     zomeInterfaceInstances
   )
-  
+
   const combined = _.assign(first, {
     agents,
     dnas,
