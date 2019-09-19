@@ -100,8 +100,10 @@ export const defaultGenConfigArgs = async (conductorName: string, uuid: string) 
 
 /**
  * Helper function to generate, from a simple object, a function that returns valid TOML config.
+ * 
+ * TODO: move debugLog into ConductorConfig
  */
-export const genConfig = (inputConfig: T.AnyConductorConfig, debugLog: boolean): T.GenConfigFn => {
+export const genConfig = (inputConfig: T.AnyConductorConfig, o: {debugLog: boolean, networking: T.NetworkingMode}): T.GenConfigFn => {
   if (typeof inputConfig === 'function') {
     // let an already-generated function just pass through
     return inputConfig
@@ -116,7 +118,7 @@ export const genConfig = (inputConfig: T.AnyConductorConfig, debugLog: boolean):
       await genBridgeConfig(config),
       await genDpkiConfig(config),
       await genSignalConfig(config),
-      await genNetworkConfig(config, args),
+      await genNetworkConfig(config, args, o.networking),
       await genLoggingConfig(false, false),
     ]
     const json = Object.assign({},
@@ -229,17 +231,59 @@ export const genSignalConfig = ({ }) => ({
   }
 })
 
-export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }) => {
-  const dir = path.join(configDir, 'n3h-storage')
+
+/*
+
+    pub network_id: GatewayId,
+    pub transport_configs: Vec<TransportConfig>,
+    #[serde(deserialize_with = "vec_url_de", serialize_with = "vec_url_se")]
+    pub bootstrap_nodes: Vec<Url>,
+    pub work_dir: PathBuf,
+    pub log_level: char,
+    #[serde(with = "url_serde")]
+    pub bind_url: Url,
+    pub dht_gossip_interval: u64,
+    pub dht_timeout_threshold: u64,
+    pub dht_custom_config: Vec<u8>,
+*/
+export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }, networking: T.NetworkingMode) => {
+  const dir = path.join(configDir, 'network-storage')
   await mkdirIdempotent(dir)
-  return {
-    network: {
-      type: 'n3h',
-      n3h_log_level: 'e',
-      bootstrap_nodes: [],
-      n3h_mode: 'REAL',
-      n3h_persistence_path: dir,
+  if (networking === 'memory') {
+    return {
+      network: {
+        type: 'memory',
+        work_dir: '',
+        log_level: 'd',
+        bind_url: `mem://${dir}`,
+        dht_custom_config: [],
+        dht_timeout_threshold: 8000,
+        dht_gossip_interval: 500,
+        bootstrap_nodes: [],
+        network_id: {
+          nickname: 'app_spec',
+          id: 'app_spec_memory',
+        },
+        transport_configs: [
+          {
+            type: "memory",
+            data: "app-spec-memory",
+          }
+        ]
+      }
     }
+  } else if (networking === 'n3h') {
+    return {
+      network: {
+        type: 'n3h',
+        n3h_log_level: 'e',
+        bootstrap_nodes: [],
+        n3h_mode: 'REAL',
+        n3h_persistence_path: dir,
+      }
+    }
+  } else {
+    throw new Error("Unsupported networking type: " + networking)
   }
 }
 

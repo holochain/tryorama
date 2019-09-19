@@ -7,11 +7,11 @@ import { trace } from "../util";
 
 
 export const combineConfigs = 
-(configs: T.ObjectS<T.AnyConductorConfig>, debugLog: boolean = false) => 
+(configs: T.ObjectS<T.AnyConductorConfig>, o: T.OrchestratorData) => 
 async (args: T.GenConfigArgs) => {
   const configsJson = await _.chain(configs)
     .toPairs()
-    .map(async ([name, c]) => [name, await genConfig(c, debugLog)(args)])
+    .map(async ([name, c]) => [name, await genConfig(c, o)(args)])
     .thru(x => Promise.all(x))
     .value()
     .then(cs => 
@@ -21,7 +21,6 @@ async (args: T.GenConfigArgs) => {
       .value()
     )
   const merged = mergeJsonConfigs(configsJson)
-  console.log("MERGED", merged)
   return TOML.stringify(merged)
 }
 

@@ -42,7 +42,10 @@ export class ScenarioApi {
       // If an object was passed in, run it through genConfig first. Otherwise use the given function.
       const configBuilder = _.isFunction(config)
         ? (config as T.GenConfigFn) 
-        : genConfig(config as T.EitherConductorConfig, this._orchestrator._debugLog)
+        : genConfig(config as T.EitherConductorConfig, {
+            debugLog: this._orchestrator._debugLog,
+            networking: this._orchestrator._networkingMode,
+          })
       const configToml = await configBuilder(genConfigArgs)
       const configJson = TOML.parse(configToml)
       return { name, configDir, configJson, configToml, genConfigArgs }
@@ -97,6 +100,11 @@ export class ScenarioApi {
       resolve,
       reject,
     })
+  })
+
+  orchestratorData = (): T.OrchestratorData => ({
+    debugLog: this._orchestrator._debugLog,
+    networking: this._orchestrator._networkingMode,
   })
 
   /**

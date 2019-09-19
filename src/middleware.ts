@@ -104,7 +104,7 @@ export const runSeries = (() => {
 export const singleConductor = (run, f) => run(s => {
   const players = async (configs, ...a) => {
     const names = Object.keys(configs)
-    const combined = combineConfigs(configs)
+    const combined = combineConfigs(configs, s.orchestratorData())
     const {combined: player} = await s.players({combined}, true)
     const players = names.map(name => {
       const modify = adjoin(name)

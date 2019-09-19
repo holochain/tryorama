@@ -18,6 +18,7 @@ type OrchestratorConstructorParams = {
   middleware?: any,
   debugLog?: boolean,
   tape?: any,
+  networking?: T.NetworkingMode
 }
 
 type GenConfigArgsFn = (conductorName: string, uuid: string) => Promise<T.GenConfigArgs>
@@ -46,6 +47,7 @@ export class Orchestrator {
   _debugLog: boolean
   _genConfigArgs: GenConfigArgsFn
   _middleware: M.Middleware
+  _networkingMode: T.NetworkingMode
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
   _reporter: R.Reporter
@@ -55,6 +57,7 @@ export class Orchestrator {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.runSeries
+    this._networkingMode = o.networking || 'n3h'
     this._debugLog = o.debugLog || false
     this._scenarios = []
     this._tape = o.tape

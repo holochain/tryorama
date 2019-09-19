@@ -9,6 +9,9 @@ export const decodeOrThrow = (validator, value) => ThrowReporter.report(validato
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }
 
+export type NetworkingMode = 'n3h' | 'lib3h' | 'memory'
+export type OrchestratorData = {debugLog: boolean, networking: NetworkingMode}
+
 export type SpawnConductorFn = (name: string, configPath: string) => Promise<ChildProcess>
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
