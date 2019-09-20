@@ -121,3 +121,24 @@ export const singleConductor = (run, f) => run((s: ScenarioApi) => {
   }
   return f(Object.assign({}, s, { players }))
 })
+
+// TODO: add test
+export const callSync = (run, f) => run(s => {
+  const s_ = Object.assign({}, s, {
+    players: async (...a) => {
+      const players = await s.players(...a)
+      const players_ = _.mapValues(
+        players,
+        api => Object.assign(api, {
+          callSync: async (...b) => {
+            const result = await api.call(...b)
+            await s.consistency()
+            return result
+          }
+        })
+      )
+      return players_
+    }
+  })
+  return f(s_)
+})

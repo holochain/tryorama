@@ -126,7 +126,7 @@ test('genSignalConfig', async t => {
   t.end()
 })
 
-test.only('genNetworkConfig', async t => {
+test('genNetworkConfig', async t => {
   const c1 = await C.genNetworkConfig({network: 'memory'} as CC, {configDir: ''}, blah)
   const c2 = await C.genNetworkConfig({network: 'websocket'} as CC, {configDir: ''}, blah)
   t.equal(c1.network.type, 'memory')
