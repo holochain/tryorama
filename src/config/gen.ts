@@ -103,7 +103,7 @@ export const defaultGenConfigArgs = async (conductorName: string, uuid: string) 
  * 
  * TODO: move debugLog into ConductorConfig
  */
-export const genConfig = (inputConfig: T.AnyConductorConfig, o: {debugLog: boolean, networking: T.NetworkingMode}): T.GenConfigFn => {
+export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig): T.GenConfigFn => {
   if (typeof inputConfig === 'function') {
     // let an already-generated function just pass through
     return inputConfig
@@ -118,8 +118,8 @@ export const genConfig = (inputConfig: T.AnyConductorConfig, o: {debugLog: boole
       await genBridgeConfig(config),
       await genDpkiConfig(config),
       await genSignalConfig(config),
-      await genNetworkConfig(config, args, o.networking),
-      await genLoggingConfig(o.debugLog, false),
+      await genNetworkConfig(config, args, g),
+      await genLoggerConfig(config, args, g),
     ]
     const json = Object.assign({},
       ...pieces
@@ -231,10 +231,11 @@ export const genSignalConfig = ({ }) => ({
   }
 })
 
-export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }, networking: T.NetworkingMode) => {
+export const genNetworkConfig = async (c: T.ConductorConfig, { configDir }, g: T.GlobalConfig) => {
   const dir = path.join(configDir, 'network-storage')
   await mkdirIdempotent(dir)
-  if (networking === 'memory') {
+  const network = c.network || g.network
+  if (network === 'memory') {
     return {
       network: {
         type: 'memory',
@@ -257,7 +258,7 @@ export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }, ne
         ]
       }
     }
-  } else if (networking === 'n3h') {
+  } else if (network === 'n3h') {
     return {
       network: {
         type: 'n3h',
@@ -267,20 +268,27 @@ export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }, ne
         n3h_persistence_path: dir,
       }
     }
+  } else if (typeof network === 'object') {
+    return {network}
   } else {
-    throw new Error("Unsupported networking type: " + networking)
+    throw new Error("Unsupported network type: " + network)
   }
 }
 
-export const genLoggingConfig = (debug, state_dump) => {
-  return {
-    logger: {
-      type: 'debug',
-      state_dump,
-      rules: {
-        rules: [{ exclude: !debug, pattern: ".*" }]
+export const genLoggerConfig = (c: T.ConductorConfig, {}, g: T.GlobalConfig) => {
+  const logger = c.logger || g.logger || false
+  if (typeof logger === 'boolean') {
+    return {
+      logger: {
+        type: 'debug',
+        state_dump: false,
+        rules: {
+          rules: [{ exclude: !logger, pattern: ".*" }]
+        }
       }
     }
+  } else {
+    return {logger}
   }
 }
 

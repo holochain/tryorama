@@ -11,6 +11,11 @@ import { defaultGenConfigArgs, spawnUnique } from "./config";
 
 const defaultSpawnConductor = spawnUnique
 
+const defaultGlobalConfig: T.GlobalConfig = {
+  network: 'memory',
+  logger: false,
+}
+
 type OrchestratorConstructorParams = {
   spawnConductor?: T.SpawnConductorFn,
   genConfigArgs?: GenConfigArgsFn,
@@ -18,7 +23,7 @@ type OrchestratorConstructorParams = {
   middleware?: any,
   debugLog?: boolean,
   tape?: any,
-  networking?: T.NetworkingConfig,
+  globalConfig?: T.GlobalConfig,
 }
 
 type GenConfigArgsFn = (conductorName: string, uuid: string) => Promise<T.GenConfigArgs>
@@ -47,7 +52,7 @@ export class Orchestrator {
   _debugLog: boolean
   _genConfigArgs: GenConfigArgsFn
   _middleware: M.Middleware
-  _networkingMode: T.NetworkingMode
+  _globalConfig: T.GlobalConfig
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
   _reporter: R.Reporter
@@ -57,7 +62,7 @@ export class Orchestrator {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.runSeries
-    this._networkingMode = o.networking || 'n3h'
+    this._globalConfig = o.globalConfig || defaultGlobalConfig
     this._debugLog = o.debugLog || false
     this._scenarios = []
     this._tape = o.tape

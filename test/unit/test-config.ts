@@ -7,6 +7,10 @@ import * as C from '../../src/config';
 import * as Gen from '../../src/config/gen';
 import { genConfigArgs } from '../common';
 
+const blah = {} as any
+
+type CC = T.ConductorConfig
+
 export const { configPlain, configSugared } = (() => {
   const dna = C.dna('path/to/dna.json', 'dna-id', { uuid: 'uuid' })
   const common = {
@@ -122,19 +126,20 @@ test('genSignalConfig', async t => {
   t.end()
 })
 
-test.skip('genNetworkConfig', async t => {
-  t.fail("TODO")
+test('genNetworkConfig', async t => {
+  const { network } = await C.genNetworkConfig({network: 'memory'} as CC, {configDir: ''}, blah)
+  t.equal(network.type, 'memory')
   t.end()
 })
 
-test('genLoggingConfig', async t => {
-  const loggerVerbose = await C.genLoggingConfig(true, true)
-  const loggerQuiet = await C.genLoggingConfig(false, false)
+test('genLoggerConfig', async t => {
+  const loggerVerbose = await C.genLoggerConfig({logger: true} as CC, {configDir: ''}, blah)
+  const loggerQuiet = await C.genLoggerConfig({logger: false} as CC, {configDir: ''}, blah)
 
   const expectedVerbose = TOML.parse(`
 [logger]
 type = "debug"
-state_dump = true
+state_dump = false
 [[logger.rules.rules]]
 exclude = false
 pattern = ".*"
@@ -156,7 +161,7 @@ pattern = ".*"
 
 test('genConfig produces valid TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const builder = C.genConfig(configSugared, {debugLog: false, networking: 'n3h'})
+  const builder = C.genConfig(configSugared, {logger: false, network: 'n3h'})
   const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
@@ -171,7 +176,7 @@ test('invalid config throws nice error', async t => {
       instances: [
         {id: 'what'}
       ]
-    } as any, {debugLog: false, networking: 'n3h'})({ 
+    } as any, {logger: false, network: 'n3h'})({ 
       configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' 
     }),
     /Tried to use an invalid value/

@@ -20,8 +20,6 @@ export const decodeOrThrow = (validator, value) => {
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }
 
-export type OrchestratorData = {debugLog: boolean, networking: NetworkingMode}
-
 export type SpawnConductorFn = (name: string, configPath: string) => Promise<ChildProcess>
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
@@ -80,22 +78,30 @@ export const DpkiConfigV = t.type({
 })
 export type DpkiConfig = t.TypeOf<typeof DpkiConfigV>
 
-export const NetworkingModeV = t.union([
+export const NetworkModeV = t.union([
   t.literal('n3h'),
   t.literal('lib3h'),
   t.literal('memory'),
 ])
-export type NetworkingMode = t.TypeOf<typeof NetworkingModeV>
+export type NetworkMode = t.TypeOf<typeof NetworkModeV>
 
-export const NetworkingConfigV = t.union([
-  NetworkingModeV,
+export const NetworkConfigV = t.union([
+  NetworkModeV,
   t.record(t.string, t.any),  // TODO: could make this actually match the shape of networking
 ])
-export type NetworkingConfig = t.TypeOf<typeof NetworkingConfigV>
+export type NetworkConfig = t.TypeOf<typeof NetworkConfigV>
+
+export const LoggerConfigV = t.union([
+  t.boolean,
+  t.record(t.string, t.any),
+])
+export type LoggerConfig = t.TypeOf<typeof LoggerConfigV>
 
 const ConductorConfigCommonV = t.partial({
   bridges: t.array(BridgeConfigV),
   dpki: DpkiConfigV,
+  network: NetworkConfigV,
+  logger: LoggerConfigV,
 })
 
 /** Base representation of a Conductor */
@@ -124,6 +130,12 @@ export type EitherConductorConfig = t.TypeOf<typeof EitherConductorConfigV>
 
 /** For situations where we can accept either flavor of config */
 export type AnyConductorConfig = EitherConductorConfig | GenConfigFn
+
+export const GlobalConfigV = t.type({
+  network: NetworkConfigV,
+  logger: LoggerConfigV,
+})
+export type GlobalConfig = t.TypeOf<typeof GlobalConfigV>
 
 
 /** Something "killable" */

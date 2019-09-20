@@ -42,10 +42,7 @@ export class ScenarioApi {
       // If an object was passed in, run it through genConfig first. Otherwise use the given function.
       const configBuilder = _.isFunction(config)
         ? (config as T.GenConfigFn) 
-        : genConfig(config as T.EitherConductorConfig, {
-            debugLog: this._orchestrator._debugLog,
-            networking: this._orchestrator._networkingMode,
-          })
+        : genConfig(config as T.EitherConductorConfig, this._orchestrator._globalConfig)
       const configToml = await configBuilder(genConfigArgs)
       const configJson = TOML.parse(configToml)
       return { name, configDir, configJson, configToml, genConfigArgs }
@@ -102,10 +99,7 @@ export class ScenarioApi {
     })
   })
 
-  orchestratorData = (): T.OrchestratorData => ({
-    debugLog: this._orchestrator._debugLog,
-    networking: this._orchestrator._networkingMode,
-  })
+  globalConfig = (): T.GlobalConfig => this._orchestrator._globalConfig
 
   /**
    * Only called externally when there is a test failure, 

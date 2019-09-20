@@ -91,7 +91,7 @@ const makeTestConfigs = async () => {
 }
 
 const expandConfig = async (config, conductorName): Promise<any> => {
-  const builder = C.genConfig(config, {debugLog: false, networking: 'n3h'})
+  const builder = C.genConfig(config, {logger: false, network: 'n3h'})
   const toml = await builder({ 
     configDir: 'dir', 
     adminPort: 1111, 

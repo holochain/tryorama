@@ -7,11 +7,11 @@ import { trace } from "../util";
 
 
 export const combineConfigs = 
-(configs: T.ObjectS<T.AnyConductorConfig>, o: T.OrchestratorData) => 
+(configs: T.ObjectS<T.AnyConductorConfig>, g: T.GlobalConfig) => 
 async (args: T.GenConfigArgs) => {
   const configsJson = await _.chain(configs)
     .toPairs()
-    .map(async ([name, c]) => [name, await genConfig(c, o)(args)])
+    .map(async ([name, c]) => [name, await genConfig(c, g)(args)])
     .thru(x => Promise.all(x))
     .value()
     .then(cs => 
