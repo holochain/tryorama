@@ -1,3 +1,5 @@
+import { combineConfigs, adjoin } from "./config/combine";
+
 const _ = require('lodash')
 
 /**
@@ -98,3 +100,23 @@ export const runSeries = (() => {
     return result
   }
 })()
+
+export const singleConductor = (run, f) => run(s => {
+  const players = async (configs, ...a) => {
+    const names = Object.keys(configs)
+    const combined = combineConfigs(configs, s.orchestratorData())
+    const {combined: player} = await s.players({combined}, true)
+    const players = names.map(name => {
+      const modify = adjoin(name)
+      const p = {
+        call: (instanceId, ...a) => player.call(modify(instanceId), ...a),
+        info: (instanceId) => player.info(modify(instanceId)),
+        spawn: () => { throw new Error("player.spawn is disabled by singleConductor middleware")},
+        kill: () => { throw new Error("player.kill is disabled by singleConductor middleware")},
+      }
+      return [name, p]
+    })
+    return _.fromPairs(players)
+  }
+  return f(Object.assign({}, s, { players }))
+})

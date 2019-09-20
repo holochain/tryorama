@@ -23,7 +23,7 @@ test('API detects duplicate agent IDs', async t => {
       alice: C.desugarConfig(args, configSugared),
       bob: C.desugarConfig(args, configSugared)
     }),
-    /There are 2 non-unique test agent IDs specified/
+    /There are 2 non-unique test agent names specified/
   )
   stubGetDnaHash.restore()
 })

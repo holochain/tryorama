@@ -1,4 +1,4 @@
-import _ from 'lodash'
+const _ = require('lodash')
 import { ScenarioApi } from "./api"
 import * as t from "io-ts"
 import { ThrowReporter } from "io-ts/lib/ThrowReporter"
@@ -8,6 +8,9 @@ export const decodeOrThrow = (validator, value) => ThrowReporter.report(validato
 
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }
+
+export type NetworkingMode = 'n3h' | 'lib3h' | 'memory'
+export type OrchestratorData = {debugLog: boolean, networking: NetworkingMode}
 
 export type SpawnConductorFn = (name: string, configPath: string) => Promise<ChildProcess>
 
@@ -95,6 +98,10 @@ export type SugaredConductorConfig = t.TypeOf<typeof SugaredConductorConfigV>
 /** For situations where we can accept either flavor of config */
 export const EitherConductorConfigV = t.union([ConductorConfigV, SugaredConductorConfigV])
 export type EitherConductorConfig = t.TypeOf<typeof EitherConductorConfigV>
+
+/** For situations where we can accept either flavor of config */
+export type AnyConductorConfig = EitherConductorConfig | GenConfigFn
+
 
 /** Something "killable" */
 export interface Mortal {

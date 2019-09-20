@@ -1,5 +1,6 @@
 import * as T from "../types";
-import { downloadFile } from "../util";
+import { downloadFile, trace } from "../util";
+import logger from '../logger';
 const TOML = require('@iarna/toml')
 const _ = require('lodash')
 
@@ -9,6 +10,8 @@ const os = require('os')
 const path = require('path')
 const getPort = require('get-port')
 
+export const ADMIN_INTERFACE_ID = 'try-o-rama-admin-interface'
+export const ZOME_INTERFACE_ID = 'try-o-rama-zome-interface'
 
 const mkdirIdempotent = dir => fs.access(dir).catch(() => {
   fs.mkdir(dir, { recursive: true })
@@ -96,9 +99,16 @@ export const defaultGenConfigArgs = async (conductorName: string, uuid: string) 
 
 
 /**
- * Helper function to generate TOML config from a simpler object.
+ * Helper function to generate, from a simple object, a function that returns valid TOML config.
+ * 
+ * TODO: move debugLog into ConductorConfig
  */
-export const genConfig = (inputConfig: T.EitherConductorConfig, debugLog: boolean): T.GenConfigFn => {
+export const genConfig = (inputConfig: T.AnyConductorConfig, o: {debugLog: boolean, networking: T.NetworkingMode}): T.GenConfigFn => {
+  if (typeof inputConfig === 'function') {
+    // let an already-generated function just pass through
+    return inputConfig
+  }
+
   T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
 
   return async (args: T.GenConfigArgs) => {
@@ -108,7 +118,7 @@ export const genConfig = (inputConfig: T.EitherConductorConfig, debugLog: boolea
       await genBridgeConfig(config),
       await genDpkiConfig(config),
       await genSignalConfig(config),
-      await genNetworkConfig(config, args),
+      await genNetworkConfig(config, args, o.networking),
       await genLoggingConfig(false, false),
     ]
     const json = Object.assign({},
@@ -133,7 +143,7 @@ export const desugarConfig = (args: T.GenConfigArgs, config: T.EitherConductorCo
   return config as T.ConductorConfig
 }
 
-const makeTestAgent = (id, { conductorName, uuid }: T.GenConfigArgs) => ({
+export const makeTestAgent = (id, { conductorName, uuid }: T.GenConfigArgs) => ({
   // NB: very important that agents have different names on different conductors!!
   name: `${conductorName}::${id}::${uuid}`,
   id: id,
@@ -153,7 +163,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
 
   const adminInterface = {
     admin: true,
-    id: 'try-o-rama-admin-interface',
+    id: ADMIN_INTERFACE_ID,
     driver: {
       type: 'websocket',
       port: adminPort,
@@ -162,7 +172,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
   }
 
   const zomeInterface = {
-    id: 'try-o-rama-zome-interface',
+    id: ZOME_INTERFACE_ID,
     driver: {
       type: 'websocket',
       port: zomePort,
@@ -221,17 +231,59 @@ export const genSignalConfig = ({ }) => ({
   }
 })
 
-export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }) => {
-  const dir = path.join(configDir, 'n3h-storage')
+
+/*
+
+    pub network_id: GatewayId,
+    pub transport_configs: Vec<TransportConfig>,
+    #[serde(deserialize_with = "vec_url_de", serialize_with = "vec_url_se")]
+    pub bootstrap_nodes: Vec<Url>,
+    pub work_dir: PathBuf,
+    pub log_level: char,
+    #[serde(with = "url_serde")]
+    pub bind_url: Url,
+    pub dht_gossip_interval: u64,
+    pub dht_timeout_threshold: u64,
+    pub dht_custom_config: Vec<u8>,
+*/
+export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }, networking: T.NetworkingMode) => {
+  const dir = path.join(configDir, 'network-storage')
   await mkdirIdempotent(dir)
-  return {
-    network: {
-      type: 'n3h',
-      n3h_log_level: 'e',
-      bootstrap_nodes: [],
-      n3h_mode: 'REAL',
-      n3h_persistence_path: dir,
+  if (networking === 'memory') {
+    return {
+      network: {
+        type: 'memory',
+        work_dir: '',
+        log_level: 'd',
+        bind_url: `mem://${dir}`,
+        dht_custom_config: [],
+        dht_timeout_threshold: 8000,
+        dht_gossip_interval: 500,
+        bootstrap_nodes: [],
+        network_id: {
+          nickname: 'app_spec',
+          id: 'app_spec_memory',
+        },
+        transport_configs: [
+          {
+            type: "memory",
+            data: "app-spec-memory",
+          }
+        ]
+      }
     }
+  } else if (networking === 'n3h') {
+    return {
+      network: {
+        type: 'n3h',
+        n3h_log_level: 'e',
+        bootstrap_nodes: [],
+        n3h_mode: 'REAL',
+        n3h_persistence_path: dir,
+      }
+    }
+  } else {
+    throw new Error("Unsupported networking type: " + networking)
   }
 }
 
@@ -257,4 +309,16 @@ export const getDnaHash = async (dnaPath) => {
     throw new Error("Could not parse hash from `hc hash` output, which follows: " + stdout)
   }
   return hash
+}
+
+export const assertUniqueTestAgentNames = (configs: Array<T.InstanceConfig>) => {
+  const agentNames = _.chain(configs).values().map(n => trace(n.agents, 'n.agentsss').filter(a => a.test_agent).map(a => a.name)).flatten().value()
+  const frequencies = _.countBy(agentNames) as { [k: string]: number }
+  const dupes = Object.entries(frequencies).filter(([k, v]) => v > 1)
+  if (dupes.length > 0) {
+    const display = dupes.reduce((s, [name, freq]) => `${s}\n(x${freq}): ${name}`, "")
+    const msg = `There are ${dupes.length} non-unique test agent names specified across all conductor configs: ${display}`
+    logger.debug(msg)
+    throw new Error(msg)
+  }
 }
