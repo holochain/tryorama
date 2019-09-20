@@ -1,10 +1,21 @@
 const _ = require('lodash')
 import { ScenarioApi } from "./api"
 import * as t from "io-ts"
+import { reporter } from 'io-ts-reporters'
 import { ThrowReporter } from "io-ts/lib/ThrowReporter"
 import { ChildProcess } from 'child_process';
+import logger from "./logger";
 
-export const decodeOrThrow = (validator, value) => ThrowReporter.report(validator.decode(value))
+export const decodeOrThrow = (validator, value) => {
+  const result = validator.decode(value)
+  const errors = reporter(result)
+  if (errors.length > 0) {
+    const msg = `Tried to use an invalid value for a complex type and found the following problems:\n    - ${errors.join("\n    - ")}`
+    logger.error(msg)
+    throw new Error(msg)
+  }
+  return result
+}
 
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }

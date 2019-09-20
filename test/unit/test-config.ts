@@ -164,3 +164,17 @@ test('genConfig produces valid TOML', async t => {
   t.end()
   stubGetDnaHash.restore()
 })
+
+test('invalid config throws nice error', async t => {
+  t.throws(() => {
+    C.genConfig({
+      instances: [
+        {id: 'what'}
+      ]
+    } as any, {debugLog: false, networking: 'n3h'})({ 
+      configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' 
+    }),
+    /Tried to use an invalid value/
+  })
+  t.end()
+})
