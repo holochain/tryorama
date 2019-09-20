@@ -20,7 +20,6 @@ export const decodeOrThrow = (validator, value) => {
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }
 
-export type NetworkingMode = 'n3h' | 'lib3h' | 'memory'
 export type OrchestratorData = {debugLog: boolean, networking: NetworkingMode}
 
 export type SpawnConductorFn = (name: string, configPath: string) => Promise<ChildProcess>
@@ -80,6 +79,19 @@ export const DpkiConfigV = t.type({
   init_params: t.UnknownRecord,
 })
 export type DpkiConfig = t.TypeOf<typeof DpkiConfigV>
+
+export const NetworkingModeV = t.union([
+  t.literal('n3h'),
+  t.literal('lib3h'),
+  t.literal('memory'),
+])
+export type NetworkingMode = t.TypeOf<typeof NetworkingModeV>
+
+export const NetworkingConfigV = t.union([
+  NetworkingModeV,
+  t.record(t.string, t.any),  // TODO: could make this actually match the shape of networking
+])
+export type NetworkingConfig = t.TypeOf<typeof NetworkingConfigV>
 
 const ConductorConfigCommonV = t.partial({
   bridges: t.array(BridgeConfigV),

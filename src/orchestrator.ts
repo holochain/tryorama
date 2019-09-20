@@ -18,7 +18,7 @@ type OrchestratorConstructorParams = {
   middleware?: any,
   debugLog?: boolean,
   tape?: any,
-  networking?: T.NetworkingMode
+  networking?: T.NetworkingConfig,
 }
 
 type GenConfigArgsFn = (conductorName: string, uuid: string) => Promise<T.GenConfigArgs>

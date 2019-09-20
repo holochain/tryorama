@@ -231,21 +231,6 @@ export const genSignalConfig = ({ }) => ({
   }
 })
 
-
-/*
-
-    pub network_id: GatewayId,
-    pub transport_configs: Vec<TransportConfig>,
-    #[serde(deserialize_with = "vec_url_de", serialize_with = "vec_url_se")]
-    pub bootstrap_nodes: Vec<Url>,
-    pub work_dir: PathBuf,
-    pub log_level: char,
-    #[serde(with = "url_serde")]
-    pub bind_url: Url,
-    pub dht_gossip_interval: u64,
-    pub dht_timeout_threshold: u64,
-    pub dht_custom_config: Vec<u8>,
-*/
 export const genNetworkConfig = async ({ }: T.ConductorConfig, { configDir }, networking: T.NetworkingMode) => {
   const dir = path.join(configDir, 'network-storage')
   await mkdirIdempotent(dir)
