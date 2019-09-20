@@ -80,8 +80,8 @@ export type DpkiConfig = t.TypeOf<typeof DpkiConfigV>
 
 export const NetworkModeV = t.union([
   t.literal('n3h'),
-  t.literal('lib3h'),
   t.literal('memory'),
+  t.literal('websocket'),
 ])
 export type NetworkMode = t.TypeOf<typeof NetworkModeV>
 

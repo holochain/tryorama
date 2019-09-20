@@ -235,29 +235,28 @@ export const genNetworkConfig = async (c: T.ConductorConfig, { configDir }, g: T
   const dir = path.join(configDir, 'network-storage')
   await mkdirIdempotent(dir)
   const network = c.network || g.network
-  if (network === 'memory') {
-    return {
-      network: {
-        type: 'memory',
-        work_dir: '',
-        log_level: 'd',
-        bind_url: `mem://${dir}`,
-        dht_custom_config: [],
-        dht_timeout_threshold: 8000,
-        dht_gossip_interval: 500,
-        bootstrap_nodes: [],
-        network_id: {
-          nickname: 'app_spec',
-          id: 'app_spec_memory',
-        },
-        transport_configs: [
-          {
-            type: "memory",
-            data: "app-spec-memory",
-          }
-        ]
+  const lib3hConfig = type => ({
+    type,
+    work_dir: '',
+    log_level: 'd',
+    bind_url: `http://0.0.0.0`,
+    dht_custom_config: [],
+    dht_timeout_threshold: 8000,
+    dht_gossip_interval: 500,
+    bootstrap_nodes: [],
+    network_id: {
+      nickname: 'app_spec',
+      id: 'app_spec_memory',
+    },
+    transport_configs: [
+      {
+        type,
+        data: type === 'memory' ? 'app-spec-memory' : 'unencrypted',
       }
-    }
+    ]
+  })
+  if (network === 'memory' || network === 'websocket') {
+    return {network: lib3hConfig(network)}
   } else if (network === 'n3h') {
     return {
       network: {
