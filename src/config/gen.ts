@@ -251,7 +251,7 @@ export const genNetworkConfig = async (c: T.ConductorConfig, { configDir }, g: T
     transport_configs: [
       {
         type,
-        data: type === 'memory' ? 'app-spec-memory' : 'unencrypted',
+        data: type === 'memory' ? 'app-spec-memory' : 'Unencrypted',
       }
     ]
   })
