@@ -119,7 +119,7 @@ export const genConfig = (inputConfig: T.AnyConductorConfig, o: {debugLog: boole
       await genDpkiConfig(config),
       await genSignalConfig(config),
       await genNetworkConfig(config, args, o.networking),
-      await genLoggingConfig(false, false),
+      await genLoggingConfig(o.debugLog, false),
     ]
     const json = Object.assign({},
       ...pieces
