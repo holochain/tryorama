@@ -28,7 +28,7 @@ const myPlayerConfig = {
 }
 
 orchestator.registerScenario('messages are fetchable', async s => {
-  const { alice, bob } = await s.players({ alice: myPlayerConfig, bob: myPlayerConfig })
+  const { alice, bob } = await s.players({ alice: myPlayerConfig, bob: myPlayerConfig }, true)
   await alice.call('chat', 'channels', 'post_message_to_channel', 'hello!')
   await s.consistency() // wait long enough for network propagation to reach bob
   const result = await bob.call('chat', 'channels', 'get_messages_on_channel', {})
