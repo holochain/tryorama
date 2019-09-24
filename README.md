@@ -2,6 +2,10 @@
 
 An end-to-end/scenario testing framework for Holochain applications in JavaScript/TypeScript
 
+## Installation
+
+    npm install @holochain/try-o-rama
+
 ## Scenarios
 
 Tryorama lets you write scenarios involving multiple DNA instances on multiple conductors. The scenarios read like a script in a play. In very loose pseudocode, a scenario looks something like this:
