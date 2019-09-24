@@ -70,7 +70,12 @@ export class Player {
     return _.clone(this._instanceInfo[instanceId])
   }
 
-  spawn = async () => {
+  /**
+   * spawn can take a function as an argument, which allows the caller
+   * to do something with the child process handle, even before the conductor
+   * has fully started up
+   */
+  spawn = async (f?: Function) => {
     if (this._conductor) {
       this.logger.warn(`Attempted to spawn conductor '${this.name}' twice!`)
       return
@@ -80,6 +85,13 @@ export class Player {
     this.logger.debug("spawning")
     const path = getConfigPath(this._genConfigArgs.configDir)
     const handle = await this._spawnConductor(this.name, path)
+
+    if (f) {
+      this.logger.info('running spawned handle hack. TODO: document this :)')
+      f(handle)
+    }
+
+    await this._awaitConductorInterfaceStartup(handle, this.name)
 
     this.logger.debug("spawned")
     this._conductor = new Conductor({
@@ -136,5 +148,24 @@ export class Player {
     } else {
       this.logger.debug(context)
     }
+  }
+
+  _awaitConductorInterfaceStartup = (handle, name) => {
+    return new Promise((resolve, reject) => {
+      handle.on('close', code => {
+        this.logger.info(`conductor '${name}' exited with code ${code}`)
+        reject(`Conductor exited before fully starting (code ${code})`)
+      })
+      handle.stdout.on('data', data => {
+        // wait for the logs to convey that the interfaces have started
+        // because the consumer of this function needs those interfaces
+        // to be started so that it can initiate, and form,
+        // the websocket connections
+        if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
+          this.logger.info(`Conductor '${name}' process spawning successful`)
+          resolve(handle)
+        }
+      })
+    })
   }
 }

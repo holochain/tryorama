@@ -256,7 +256,7 @@ export const genNetworkConfig = async (c: T.ConductorConfig, { configDir }, g: T
     ]
   })
   if (network === 'memory' || network === 'websocket') {
-    return {network: lib3hConfig(network)}
+    return { network: lib3hConfig(network) }
   } else if (network === 'n3h') {
     return {
       network: {
@@ -268,13 +268,13 @@ export const genNetworkConfig = async (c: T.ConductorConfig, { configDir }, g: T
       }
     }
   } else if (typeof network === 'object') {
-    return {network}
+    return { network }
   } else {
     throw new Error("Unsupported network type: " + network)
   }
 }
 
-export const genLoggerConfig = (c: T.ConductorConfig, {}, g: T.GlobalConfig) => {
+export const genLoggerConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) => {
   const logger = c.logger || g.logger || false
   if (typeof logger === 'boolean') {
     return {
@@ -287,7 +287,7 @@ export const genLoggerConfig = (c: T.ConductorConfig, {}, g: T.GlobalConfig) => 
       }
     }
   } else {
-    return {logger}
+    return { logger }
   }
 }
 
@@ -304,7 +304,7 @@ export const getDnaHash = async (dnaPath) => {
 }
 
 export const assertUniqueTestAgentNames = (configs: Array<T.InstanceConfig>) => {
-  const agentNames = _.chain(configs).values().map(n => trace(n.agents, 'n.agentsss').filter(a => a.test_agent).map(a => a.name)).flatten().value()
+  const agentNames = _.chain(configs).values().map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
   const frequencies = _.countBy(agentNames) as { [k: string]: number }
   const dupes = Object.entries(frequencies).filter(([k, v]) => v > 1)
   if (dupes.length > 0) {
