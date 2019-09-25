@@ -216,7 +216,7 @@ export const genDpkiConfig = ({ dpki }: T.ConductorConfig) => {
     return {
       dpki: {
         instance_id: dpki.instance_id,
-        init_params: `${JSON.stringify(dpki.init_params)}`
+        init_params: JSON.stringify(dpki.init_params)
       }
     }
   } else {

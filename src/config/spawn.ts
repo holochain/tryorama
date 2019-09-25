@@ -1,5 +1,5 @@
 
-import { spawn, ChildProcess } from "child_process";
+import { spawn, execSync, ChildProcess } from "child_process";
 import logger from "../logger";
 
 export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
@@ -7,6 +7,9 @@ export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
   let handle
   try {
     const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
+    const version = execSync(`${binPath} --version`)
+    logger.info("Using conductor path: %s", binPath)
+    logger.info("Holochain version: %s", version)
     handle = spawn(binPath, ['-c', configPath], {
       env: {
         ...process.env,

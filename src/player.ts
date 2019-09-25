@@ -61,6 +61,9 @@ export class Player {
   }
 
   call = (instanceId, zome, fn, params) => {
+    if (typeof instanceId !== 'string' && typeof zome !== 'string' && typeof fn !== 'string') {
+      throw new Error("player.call() must take 4 arguments: (instanceId, zomeName, funcName, params)")
+    }
     this._conductorGuard(`call(${instanceId}, ${zome}, ${fn}, ${JSON.stringify(params)})`)
     return this._conductor!.callZome(instanceId, zome, fn, params)
   }
