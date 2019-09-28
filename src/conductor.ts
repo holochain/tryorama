@@ -31,7 +31,7 @@ export class Conductor {
 
   constructor({ name, handle, onSignal, adminPort, zomePort }) {
     this.name = name
-    this.logger = makeLogger(`conductor ${name}`)
+    this.logger = makeLogger(`try-o-rama conductor ${name}`)
     this.logger.debug("Conductor constructing")
     this.onSignal = onSignal
     this.zomeCallTimeout = DEFAULT_ZOME_CALL_TIMEOUT

@@ -1,6 +1,6 @@
 
 import { spawn, execSync, ChildProcess } from "child_process";
-import logger from "../logger";
+import logger, { makeLogger } from "../logger";
 
 export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
 
@@ -18,8 +18,10 @@ export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
       }
     })
 
-    handle.stdout.on('data', data => logger.info(`[C '${name}'] %s`, data.toString('utf8')))
-    handle.stderr.on('data', data => logger.error(`!C '${name}'! %s`, data.toString('utf8')))
+    let plainLogger = makeLogger()
+
+    handle.stdout.on('data', data => plainLogger.info(getFancy(`[[[CONDUCTOR ${name}]]]\n${data.toString('utf8')}`)))
+    handle.stderr.on('data', data => plainLogger.error(getFancy(`{{{CONDUCTOR ${name}}}}\n${data.toString('utf8')}`)))
     return Promise.resolve(handle)
     // NB: the code to await for the interfaces to start up has been moved
     // to Player::_awaitConductorInterfaceStartup, so that we have access
@@ -30,6 +32,15 @@ export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
   }
 }
 
+const bullets = "☉★☯⛬☸⛰☮⚽"
+let currentBullet = 0
+
+const getFancy = (output) => {
+  const bullet = bullets[currentBullet]
+  currentBullet = (currentBullet + 1) % bullets.length
+  const indented = output.split('\n').join(`\n${bullet} `)
+  return `\n${bullet}${bullet}${bullet} ${indented}`
+}
 
 /** 
  * Only spawn one conductor per "name", to be used for entire test suite

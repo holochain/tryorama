@@ -1,6 +1,6 @@
 import { createLogger, format, transports } from 'winston'
 
-const logLevel = 'debug'
+const logLevel = 'info'
 
 const myFormat = format.printf(({ level, message, label, timestamp }) =>
   label
@@ -8,7 +8,7 @@ const myFormat = format.printf(({ level, message, label, timestamp }) =>
     : `${timestamp} ${level}: ${message}`
 )
 
-export const makeLogger = (label?) => createLogger({
+export const makeLogger = (label?, plain?) => createLogger({
   levels: {
     error: 0,
     warn: 1,
@@ -21,7 +21,7 @@ export const makeLogger = (label?) => createLogger({
     format.splat(),
     format.colorize(),
     format.timestamp({ format: 'mediumTime' }),
-    format.label(label ? { label } : {}),
+    format.label(label ? { label: plain ? label : `try-o-rama: ${label}` } : {}),
     myFormat,
   ),
   transports: [
@@ -29,4 +29,4 @@ export const makeLogger = (label?) => createLogger({
   ]
 })
 
-export default makeLogger()
+export default makeLogger('try-o-rama', true)

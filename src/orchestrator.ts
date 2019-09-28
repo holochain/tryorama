@@ -111,7 +111,7 @@ export class Orchestrator {
     }).map(({ api, desc, promise }) => {
       return promise
         .then(() => {
-          console.info('success for ', desc)
+          console.debug('success for ', desc)
           successes += 1
         })
         .catch(e => {
@@ -119,7 +119,7 @@ export class Orchestrator {
           errors.push({ description: desc, error: e })
         })
         .then(() => {
-          logger.info("Done with test: %s", desc)
+          logger.debug("Done with test: %s", desc)
           return api._cleanup()
         })
     })
