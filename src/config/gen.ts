@@ -63,6 +63,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, uuid: string): Promise<T
     })
   }
   dna.uuid = dna.uuid ? `${dna.uuid}::${uuid}` : uuid
+  dna.id += '::' + dna.uuid
   return dna
 }
 
