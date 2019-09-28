@@ -4,7 +4,7 @@ const uuidGen = require('uuid/v4')
 import * as T from "./types";
 import * as M from "./middleware";
 import * as R from "./reporter";
-import { Waiter, NetworkMap } from "@holochain/hachiko";
+import { WaiterOptions } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
 import { defaultGenConfigArgs, spawnUnique } from "./config";
@@ -24,6 +24,7 @@ type OrchestratorConstructorParams = {
   debugLog?: boolean,
   tape?: any,
   globalConfig?: T.GlobalConfig,
+  waiter?: WaiterOptions,
 }
 
 type GenConfigArgsFn = (conductorName: string, uuid: string) => Promise<T.GenConfigArgs>
@@ -48,6 +49,7 @@ type ScenarioExecutor = () => Promise<void>
 export class Orchestrator {
 
   registerScenario: Register & { only: Register, skip: Register }
+  waiterConfig?: WaiterOptions
 
   _debugLog: boolean
   _genConfigArgs: GenConfigArgsFn
@@ -69,6 +71,7 @@ export class Orchestrator {
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))
       : o.reporter || R.unit
+    this.waiterConfig = o.waiter
 
     const registerScenario = (desc, scenario) => this._registerScenario(desc, scenario, null)
     const registerScenarioOnly = (desc, scenario) => this._registerScenario(desc, scenario, 'only')

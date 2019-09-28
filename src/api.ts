@@ -25,12 +25,12 @@ export class ScenarioApi {
   _waiter: Waiter
   _modifiers: Modifiers
 
-  constructor(description: string, orchestrator: Orchestrator, uuid: string, modifiers: Modifiers = {singleConductor: false}) {
+  constructor(description: string, orchestrator: Orchestrator, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
     this._players = []
     this._uuid = uuid
     this._orchestrator = orchestrator
-    this._waiter = new Waiter(FullSyncNetwork)
+    this._waiter = new Waiter(FullSyncNetwork, undefined, orchestrator.waiterConfig)
     this._modifiers = modifiers
   }
 
@@ -41,7 +41,7 @@ export class ScenarioApi {
       const { configDir } = genConfigArgs
       // If an object was passed in, run it through genConfig first. Otherwise use the given function.
       const configBuilder = _.isFunction(config)
-        ? (config as T.GenConfigFn) 
+        ? (config as T.GenConfigFn)
         : genConfig(config as T.EitherConductorConfig, this._orchestrator._globalConfig)
       const configToml = await configBuilder(genConfigArgs)
       const configJson = TOML.parse(configToml)
