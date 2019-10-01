@@ -32,7 +32,7 @@ export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
   }
 }
 
-const bullets = "☉★☯⛬☸⛰☮⚽"
+const bullets = "☉★☯☸☮"
 let currentBullet = 0
 
 const getFancy = (output) => {
