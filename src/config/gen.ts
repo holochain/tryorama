@@ -47,7 +47,7 @@ export const dna = (location, id?, opts = {}): T.DnaConfig => {
  * 2. Then, if the hash is not set, calculate the hash and set it.
  * 3. Add the UUID for this scenario
  */
-export const resolveDna = async (inputDna: T.DnaConfig, uuid: string): Promise<T.DnaConfig> => {
+export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): Promise<T.DnaConfig> => {
   const dna = _.cloneDeep(inputDna)
   if (!dna.file) {
     throw new Error(`Invalid 'file' for dna: ${JSON.stringify(dna)}`)
@@ -57,13 +57,15 @@ export const resolveDna = async (inputDna: T.DnaConfig, uuid: string): Promise<T
     await downloadFile({ url: dna.file, path: dnaPath, overwrite: false })
     dna.file = dnaPath
   }
+
+  dna.id = dna.uuid ? `${dna.id}::${dna.uuid}` : dna.id
+  dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
+
   if (!dna.hash) {
     dna.hash = await getDnaHash(dna.file).catch(err => {
       throw new Error(`Could not determine hash of DNA file '${dna.file}'. Does the file exist?\n\tOriginal error: ${err}`)
     })
   }
-  dna.uuid = dna.uuid ? `${dna.uuid}::${uuid}` : uuid
-  dna.id += '::' + dna.uuid
   return dna
 }
 
@@ -189,15 +191,15 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
       config.agents.push(instance.agent)
       agentIds.add(instance.agent.id)
     }
-    if (!dnaIds.has(instance.dna.id)) {
-      instance.dna = await resolveDna(instance.dna, uuid)
-      config.dnas.push(instance.dna)
-      dnaIds.add(instance.dna.id)
+    const resolvedDna = await resolveDna(instance.dna, uuid)
+    if (!dnaIds.has(resolvedDna.id)) {
+      config.dnas.push(resolvedDna)
+      dnaIds.add(resolvedDna.id)
     }
     config.instances.push({
       id: instance.id,
       agent: instance.agent.id,
-      dna: instance.dna.id,
+      dna: resolvedDna.id,
       storage: {
         type: 'file',
         path: path.join(configDir, instance.id)

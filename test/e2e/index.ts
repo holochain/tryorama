@@ -21,4 +21,4 @@ const seriesOrchestrator = () => new Orchestrator({
 })
 
 require('./test-always-on')(singleConductorSeriesOrchestrator)
-// require('./test-always-on')(seriesOrchestrator)
+require('./test-always-on')(seriesOrchestrator)

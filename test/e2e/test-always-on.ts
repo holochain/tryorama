@@ -15,7 +15,9 @@ module.exports = (testOrchestrator) => {
     const dna = Config.dna(
       'https://github.com/holochain/holochain-basic-chat/releases/download/0.0.15/holochain-basic-chat.dna.json'
     )
-    const args: GlobalConfig = {logger: false, network: 'n3h'}
+    const network = 'n3h'
+    // const network = { type: 'sim1h', dynamo_url: 'http://localhost:8000' }
+    const args: GlobalConfig = { logger: false, network }
 
     return {
       alice: Config.genConfig({
@@ -41,7 +43,7 @@ module.exports = (testOrchestrator) => {
     const stats = await orchestrator.run()
     t.equal(stats.successes, 0)
     t.equal(stats.errors.length, 1)
-    t.equal(stats.errors[0].error.message, 'instance identifier invalid')
+    t.ok(stats.errors[0].error.message.match(/instance identifier invalid.*/))
     t.end()
   })
 

@@ -1,2 +1,4 @@
+import logger from '../src/logger'
 require('./unit')
-require('./e2e')
+logger.warn('end-to-end tests temporarily disabled!')
+// require('./e2e')

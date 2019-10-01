@@ -3,6 +3,7 @@ const test = require('tape')
 const TOML = require('@iarna/toml')
 
 import * as T from '../../src/types'
+import * as util from '../../src/util'
 import * as C from '../../src/config';
 import * as Gen from '../../src/config/gen';
 import { genConfigArgs } from '../common';
@@ -79,6 +80,52 @@ test('Sugared config', async t => {
   t.end()
 })
 
+test('resolveDna ids and uuids', async t => {
+  const stubDownloadFile = sinon.stub(util, 'downloadFile').resolves()
+  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
+  const dna1 = await Gen.resolveDna({
+    id: 'x',
+    file: ' ',
+  }, 'A')
+  const dna2 = await Gen.resolveDna({
+    id: 'x',
+    file: ' ',
+  }, 'B')
+  const dna3 = await Gen.resolveDna({
+    id: 'y',
+    file: ' ',
+  }, 'C')
+  const dna4 = await Gen.resolveDna({
+    id: 'x',
+    uuid: 'a',
+    file: ' ',
+  }, 'D')
+  const dna5 = await Gen.resolveDna({
+    id: 'y',
+    uuid: 'b',
+    file: ' ',
+  }, 'E')
+
+  t.equal(dna1.id, 'x')
+  t.equal(dna1.uuid, 'A')
+
+  t.equal(dna2.id, 'x')
+  t.equal(dna2.uuid, 'B')
+
+  t.equal(dna3.id, 'y')
+  t.equal(dna3.uuid, 'C')
+
+  t.equal(dna4.id, 'x::a')
+  t.equal(dna4.uuid, 'a::D')
+
+  t.equal(dna5.id, 'y::b')
+  t.equal(dna5.uuid, 'b::E')
+
+  t.end()
+  stubDownloadFile.restore()
+  stubGetDnaHash.restore()
+})
+
 test('genInstanceConfig', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs())
@@ -127,8 +174,8 @@ test('genSignalConfig', async t => {
 })
 
 test('genNetworkConfig', async t => {
-  const c1 = await C.genNetworkConfig({network: 'memory'} as CC, {configDir: ''}, blah)
-  const c2 = await C.genNetworkConfig({network: 'websocket'} as CC, {configDir: ''}, blah)
+  const c1 = await C.genNetworkConfig({ network: 'memory' } as CC, { configDir: '' }, blah)
+  const c2 = await C.genNetworkConfig({ network: 'websocket' } as CC, { configDir: '' }, blah)
   t.equal(c1.network.type, 'memory')
   t.equal(c1.network.transport_configs[0].type, 'memory')
   t.equal(c2.network.type, 'websocket')
@@ -137,8 +184,8 @@ test('genNetworkConfig', async t => {
 })
 
 test('genLoggerConfig', async t => {
-  const loggerVerbose = await C.genLoggerConfig({logger: true} as CC, {configDir: ''}, blah)
-  const loggerQuiet = await C.genLoggerConfig({logger: false} as CC, {configDir: ''}, blah)
+  const loggerVerbose = await C.genLoggerConfig({ logger: true } as CC, { configDir: '' }, blah)
+  const loggerQuiet = await C.genLoggerConfig({ logger: false } as CC, { configDir: '' }, blah)
 
   const expectedVerbose = TOML.parse(`
 [logger]
@@ -165,7 +212,7 @@ pattern = ".*"
 
 test('genConfig produces valid TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const builder = C.genConfig(configSugared, {logger: false, network: 'n3h'})
+  const builder = C.genConfig(configSugared, { logger: false, network: 'n3h' })
   const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
@@ -178,12 +225,12 @@ test('invalid config throws nice error', async t => {
   t.throws(() => {
     C.genConfig({
       instances: [
-        {id: 'what'}
+        { id: 'what' }
       ]
-    } as any, {logger: false, network: 'n3h'})({ 
-      configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' 
+    } as any, { logger: false, network: 'n3h' })({
+      configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName'
     }),
-    /Tried to use an invalid value/
+      /Tried to use an invalid value/
   })
   t.end()
 })
