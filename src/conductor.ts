@@ -124,14 +124,15 @@ export class Conductor {
       const timeout = this.zomeCallTimeout
       const timer = setTimeout(
         () => {
+          const msg = `zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`
           if (env.stateDumpOnError) {
             this.callAdmin('debug/state_dump', { instance_id: instanceId }).then(dump => {
               this.logger.error("STATE DUMP:")
               this.logger.error(dump)
-              reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`)
+              reject(msg)
             })
           } else {
-            reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`)
+            reject(msg)
           }
         },
         timeout
