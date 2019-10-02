@@ -6,6 +6,7 @@ import { ConductorConfig, Mortal, GenConfigArgs } from "./types";
 import { notImplemented } from "./common";
 import { makeLogger } from "./logger";
 import { delay } from './util';
+import env from './env';
 
 
 const DEFAULT_ZOME_CALL_TIMEOUT = 60000
@@ -122,7 +123,17 @@ export class Conductor {
       this.logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
       const timeout = this.zomeCallTimeout
       const timer = setTimeout(
-        () => reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`),
+        () => {
+          if (env.stateDumpOnError) {
+            this.callAdmin('debug/state_dump', { instance_id: instanceId }).then(dump => {
+              this.logger.error("STATE DUMP:")
+              this.logger.error(dump)
+              reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`)
+            })
+          } else {
+            reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`)
+          }
+        },
         timeout
       )
       callZome(instanceId, zomeName, fnName)(params).then(json => {
