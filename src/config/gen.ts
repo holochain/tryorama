@@ -1,6 +1,7 @@
 import * as T from "../types";
 import { downloadFile, trace } from "../util";
 import logger from '../logger';
+import { saneLoggerConfig, quietLoggerConfig } from './logger';
 const TOML = require('@iarna/toml')
 const _ = require('lodash')
 
@@ -280,15 +281,7 @@ export const genNetworkConfig = async (c: T.ConductorConfig, { configDir }, g: T
 export const genLoggerConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) => {
   const logger = c.logger || g.logger || false
   if (typeof logger === 'boolean') {
-    return {
-      logger: {
-        type: 'debug',
-        state_dump: false,
-        rules: {
-          rules: [{ exclude: !logger, pattern: ".*" }]
-        }
-      }
-    }
+    return logger ? saneLoggerConfig : quietLoggerConfig
   } else {
     return { logger }
   }
