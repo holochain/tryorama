@@ -296,12 +296,16 @@ export const genLoggerConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) =>
 
 export const getDnaHash = async (dnaPath) => {
   const { stdout, stderr } = await exec(`hc hash -p ${dnaPath}`)
-  if (stderr) {
+  if (!stdout) {
     throw new Error("Error while getting hash: " + stderr)
   }
   const [hash] = stdout.match(/\w{46}/)
   if (!hash) {
-    throw new Error("Could not parse hash from `hc hash` output, which follows: " + stdout)
+    let msg = "Could not parse hash from `hc hash` output, which follows: " + stdout
+    if (stderr) {
+      msg += "`hc hash` also produced error output: " + stderr
+    }
+    throw new Error(msg)
   }
   return hash
 }
