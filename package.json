@@ -1,14 +1,15 @@
 {
   "name": "@holochain/try-o-rama",
-  "version": "0.1.1-beta.1",
+  "version": "0.1.2",
   "description": "",
   "main": "lib/index.js",
+  "types": "lib/index.d.ts",
   "directories": {
     "test": "test"
   },
   "scripts": {
-    "build": "rm -rf ./lib ; tsc",
-    "dev": "rm -rf ./lib ; tsc -w",
+    "build": "rm -rf ./lib ; tsc -d",
+    "dev": "rm -rf ./lib ; tsc -d -w",
     "doc": "typedoc",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
