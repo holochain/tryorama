@@ -21,8 +21,6 @@ type OrchestratorConstructorParams = {
   genConfigArgs?: GenConfigArgsFn,
   reporter?: boolean | R.Reporter,
   middleware?: any,
-  debugLog?: boolean,
-  tape?: any,
   globalConfig?: T.GlobalConfig,
   waiter?: WaiterOptions,
 }
@@ -51,23 +49,19 @@ export class Orchestrator {
   registerScenario: Register & { only: Register, skip: Register }
   waiterConfig?: WaiterOptions
 
-  _debugLog: boolean
   _genConfigArgs: GenConfigArgsFn
   _middleware: M.Middleware
   _globalConfig: T.GlobalConfig
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
   _reporter: R.Reporter
-  _tape: any
 
   constructor(o: OrchestratorConstructorParams = {}) {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.runSeries
     this._globalConfig = o.globalConfig || defaultGlobalConfig
-    this._debugLog = o.debugLog || false
     this._scenarios = []
-    this._tape = o.tape
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))
       : o.reporter || R.unit
@@ -130,32 +124,35 @@ export class Orchestrator {
     return stats
   }
 
-  _executeSeries = async (tests: Array<RegisteredScenario>) => {
-    let successes = 0
-    const errors: Array<TestError> = []
-    for (const { api, desc, execute } of tests) {
-      this._reporter.each(desc)
-      try {
-        logger.debug("Executing test: %s", desc)
-        await execute()
-        logger.debug("Test succeeded: %s", desc)
-        successes += 1
-      } catch (e) {
-        logger.debug("Test failed: %s %o", desc, e)
-        errors.push({ description: desc, error: e })
-      } finally {
-        logger.debug("Cleaning up test: %s", desc)
-        await api._cleanup()
-        logger.debug("Finished with test: %s", desc)
-      }
-    }
-    const stats = {
-      successes,
-      errors
-    }
-    this._reporter.after(stats)
-    return stats
-  }
+  // Unnecessary if indeed the callSerial middleware works as well
+  // as it should:
+  //
+  // _executeSeries = async (tests: Array<RegisteredScenario>) => {
+  //   let successes = 0
+  //   const errors: Array<TestError> = []
+  //   for (const { api, desc, execute } of tests) {
+  //     this._reporter.each(desc)
+  //     try {
+  //       logger.debug("Executing test: %s", desc)
+  //       await execute()
+  //       logger.debug("Test succeeded: %s", desc)
+  //       successes += 1
+  //     } catch (e) {
+  //       logger.debug("Test failed: %s %o", desc, e)
+  //       errors.push({ description: desc, error: e })
+  //     } finally {
+  //       logger.debug("Cleaning up test: %s", desc)
+  //       await api._cleanup()
+  //       logger.debug("Finished with test: %s", desc)
+  //     }
+  //   }
+  //   const stats = {
+  //     successes,
+  //     errors
+  //   }
+  //   this._reporter.after(stats)
+  //   return stats
+  // }
 
   _registerScenario = (desc: string, scenario: Function, modifier: ScenarioModifier): void => {
     const api = new ScenarioApi(desc, this, uuidGen())

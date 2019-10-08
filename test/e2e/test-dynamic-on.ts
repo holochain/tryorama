@@ -7,6 +7,7 @@ import { Orchestrator, Config } from '../../src'
 import { runSeries } from '../../src/middleware'
 import { delay } from '../../src/util';
 import { testConfig } from './common';
+import { GlobalConfig } from '../../src/types';
 
 
 const testOrchestrator = () => new Orchestrator({

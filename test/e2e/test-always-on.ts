@@ -36,11 +36,11 @@ module.exports = (testOrchestrator) => {
         name: 'alice',
         avatar_url: 'https://tinyurl.com/yxcwavlr',
       })
-      t.equal(agentAddress.Ok.length, 63)
+      t.equal(agentAddress.Ok.length, 63, 'zome call succeeded')
     })
     const stats = await orchestrator.run()
-    t.equal(stats.successes, 1)
-    t.equal(stats.errors.length, 0)
+    t.equal(stats.successes, 1, 'only success')
+    t.equal(stats.errors.length, 0, 'no errors')
     console.log(stats)
   })
 
@@ -62,7 +62,7 @@ module.exports = (testOrchestrator) => {
           bob.info('chat').agentAddress
         ],
       })
-      t.ok(streamAddress.Ok)
+      t.ok(streamAddress.Ok, 'alice create stream')
       await s.consistency()
 
       const messageResult = await alice.call('chat', 'chat', 'post_message', {
@@ -77,7 +77,7 @@ module.exports = (testOrchestrator) => {
       await s.consistency()
 
       const streams = await bob.call('chat', 'chat', 'get_all_public_streams', {})
-      t.ok(streams.Ok)
+      t.ok(streams.Ok, 'bob gets streams')
       // TODO: have bob check that he can see alice's stream
     })
     const stats = await orchestrator.run()
