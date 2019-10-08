@@ -140,18 +140,13 @@ export class Conductor {
         this.name, instanceId, zomeName, fnName
       )
       this.logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
-<<<<<<< HEAD
-      const timeoutSoft = this.zomeCallTimeout / 2
-      const timeoutHard = this.zomeCallTimeout
+      const timeoutSoft = this.zomeCallTimeoutMs / 2
+      const timeoutHard = this.zomeCallTimeoutMs
       const timerSoft = setTimeout(
         () => this.logger.warn(`Zome call has been running for more than ${timeoutSoft / 1000} seconds. Continuing to wait...`),
         timeoutSoft
       )
       const timerHard = setTimeout(
-=======
-      const timeout = this.zomeCallTimeoutMs
-      const timer = setTimeout(
->>>>>>> 53a499f67f5e49116af494440c3d8c7d20babd08
         () => {
           const msg = `zome call timed out after ${timeoutHard / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`
           if (env.stateDumpOnError) {
@@ -167,13 +162,9 @@ export class Conductor {
         timeoutHard
       )
       callZome(instanceId, zomeName, fnName)(params).then(json => {
-<<<<<<< HEAD
         clearTimeout(timerSoft)
         clearTimeout(timerHard)
-=======
-        clearTimeout(timer)
         this._restartTimer()
->>>>>>> 53a499f67f5e49116af494440c3d8c7d20babd08
         const result = JSON.parse(json)
         this.logger.debug(`${colors.cyan.bold('->')} %o`, result)
         resolve(result)

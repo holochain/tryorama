@@ -184,17 +184,7 @@ test('genNetworkConfig', async t => {
 })
 
 test('genLoggerConfig', async t => {
-  const loggerVerbose = await C.genLoggerConfig({ logger: true } as CC, { configDir: '' }, blah)
   const loggerQuiet = await C.genLoggerConfig({ logger: false } as CC, { configDir: '' }, blah)
-
-  const expectedVerbose = TOML.parse(`
-[logger]
-type = "debug"
-state_dump = false
-[[logger.rules.rules]]
-exclude = false
-pattern = ".*"
-  `)
 
   const expectedQuiet = TOML.parse(`
 [logger]
@@ -205,7 +195,6 @@ exclude = true
 pattern = ".*"
   `)
 
-  t.deepEqual(loggerVerbose, expectedVerbose)
   t.deepEqual(loggerQuiet, expectedQuiet)
   t.end()
 })
