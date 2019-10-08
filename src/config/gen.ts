@@ -1,5 +1,6 @@
 import * as T from "../types";
 import { downloadFile, trace } from "../util";
+import env from '../env';
 import logger from '../logger';
 import { saneLoggerConfig, quietLoggerConfig } from './logger';
 const TOML = require('@iarna/toml')
@@ -18,7 +19,7 @@ const mkdirIdempotent = dir => fs.access(dir).catch(() => {
   fs.mkdir(dir, { recursive: true })
 })
 
-const tempDirBase = path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
+const tempDirBase = path.join(env.tempStorage || os.tmpdir(), 'try-o-rama/')
 mkdirIdempotent(tempDirBase)
 
 const tempDir = async () => {
