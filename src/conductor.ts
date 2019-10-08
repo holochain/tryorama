@@ -124,8 +124,13 @@ export class Conductor {
   }
 
   _onConductorTimeout = () => {
-    this.logger.error(`Conductor '${this.name}' self-destructed after ${this.conductorTimeoutMs / 1000} seconds of no activity!`)
     this.kill('SIGKILL')
+    const msg = `Conductor '${this.name}' self-destructed after ${this.conductorTimeoutMs / 1000} seconds of no activity!`
+    if (env.strictConductorTimeout) {
+      throw new Error(msg)
+    } else {
+      this.logger.error(msg)
+    }
   }
 
   _connectZome = async () => {
