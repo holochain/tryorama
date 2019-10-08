@@ -137,6 +137,12 @@ export const GlobalConfigV = t.type({
 })
 export type GlobalConfig = t.TypeOf<typeof GlobalConfigV>
 
+export const GlobalConfigPartialV = t.partial({
+  network: NetworkConfigV,
+  logger: LoggerConfigV,
+})
+export type GlobalConfigPartial = t.TypeOf<typeof GlobalConfigPartialV>
+
 
 /** Something "killable" */
 export interface Mortal {
