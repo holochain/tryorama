@@ -6,9 +6,11 @@ import { ConductorConfig, Mortal, GenConfigArgs } from "./types";
 import { notImplemented } from "./common";
 import { makeLogger } from "./logger";
 import { delay } from './util';
+import env from './env';
 
 
-const DEFAULT_ZOME_CALL_TIMEOUT = 60000
+const DEFAULT_ZOME_CALL_TIMEOUT = 90000
+const DEFAULT_CONDUCTOR_ACTIVITY_TIMEOUT = 120000
 
 /**
  * Representation of a running Conductor instance.
@@ -20,7 +22,8 @@ export class Conductor {
 
   name: string
   onSignal: ({ instanceId: string, signal: Signal }) => void
-  zomeCallTimeout: number
+  zomeCallTimeoutMs: number
+  conductorTimeoutMs: number
   logger: any
 
   _ports: { adminPort: number, zomePort: number }
@@ -28,19 +31,22 @@ export class Conductor {
   _hcConnect: any
   _isInitialized: boolean
   _wsClosePromise: Promise<void>
+  _conductorTimer: any
 
   constructor({ name, handle, onSignal, adminPort, zomePort }) {
     this.name = name
     this.logger = makeLogger(`try-o-rama conductor ${name}`)
     this.logger.debug("Conductor constructing")
     this.onSignal = onSignal
-    this.zomeCallTimeout = DEFAULT_ZOME_CALL_TIMEOUT
+    this.zomeCallTimeoutMs = DEFAULT_ZOME_CALL_TIMEOUT
+    this.conductorTimeoutMs = DEFAULT_CONDUCTOR_ACTIVITY_TIMEOUT
 
     this._ports = { adminPort, zomePort }
     this._handle = handle
     this._hcConnect = hcWebClient.connect
     this._isInitialized = false
     this._wsClosePromise = Promise.resolve()
+    this._conductorTimer = null
   }
 
   callAdmin: Function = (...a) => {
@@ -57,6 +63,7 @@ export class Conductor {
   }
 
   initialize = async () => {
+    this._restartTimer()
     await this._makeConnections()
   }
 
@@ -74,7 +81,7 @@ export class Conductor {
   }
 
   _connectAdmin = async () => {
-
+    this._restartTimer()
     const url = this._adminInterfaceUrl()
     this.logger.debug(`connectAdmin :: connecting to ${url}`)
     const { call, onSignal, ws } = await this._hcConnect({ url })
@@ -88,6 +95,7 @@ export class Conductor {
     })
 
     this.callAdmin = async (method, params) => {
+      this._restartTimer()
       if (!method.match(/^admin\/.*\/list$/)) {
         this.logger.warn("Calling admin functions which modify state during tests may result in unexpected behavior!")
       }
@@ -110,23 +118,58 @@ export class Conductor {
     })
   }
 
+  _restartTimer = () => {
+    clearTimeout(this._conductorTimer)
+    this._conductorTimer = setTimeout(() => this._onConductorTimeout(), this.conductorTimeoutMs)
+  }
+
+  _onConductorTimeout = () => {
+    this.kill('SIGKILL')
+    const msg = `Conductor '${this.name}' self-destructed after ${this.conductorTimeoutMs / 1000} seconds of no activity!`
+    if (env.strictConductorTimeout) {
+      throw new Error(msg)
+    } else {
+      this.logger.error(msg)
+    }
+  }
+
   _connectZome = async () => {
+    this._restartTimer()
     const url = this._zomeInterfaceUrl()
     this.logger.debug(`connectZome :: connecting to ${url}`)
     const { callZome, onSignal } = await this._hcConnect({ url })
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
+      this._restartTimer()
       this.logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`,
         this.name, instanceId, zomeName, fnName
       )
       this.logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
-      const timeout = this.zomeCallTimeout
-      const timer = setTimeout(
-        () => reject(`zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`),
-        timeout
+      const timeoutSoft = this.zomeCallTimeoutMs / 2
+      const timeoutHard = this.zomeCallTimeoutMs
+      const timerSoft = setTimeout(
+        () => this.logger.warn(`Zome call has been running for more than ${timeoutSoft / 1000} seconds. Continuing to wait...`),
+        timeoutSoft
+      )
+      const timerHard = setTimeout(
+        () => {
+          const msg = `zome call timed out after ${timeoutHard / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`
+          if (env.stateDumpOnError) {
+            this.callAdmin('debug/state_dump', { instance_id: instanceId }).then(dump => {
+              this.logger.error("STATE DUMP:")
+              this.logger.error(JSON.stringify(dump, null, 2))
+            }).catch(err => this.logger.error("Error while calling debug/state_dump: %o", err))
+              .then(() => reject(msg))
+          } else {
+            reject(msg)
+          }
+        },
+        timeoutHard
       )
       callZome(instanceId, zomeName, fnName)(params).then(json => {
-        clearTimeout(timer)
+        clearTimeout(timerSoft)
+        clearTimeout(timerHard)
+        this._restartTimer()
         const result = JSON.parse(json)
         this.logger.debug(`${colors.cyan.bold('->')} %o`, result)
         resolve(result)
