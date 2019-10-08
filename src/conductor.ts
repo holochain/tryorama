@@ -9,7 +9,7 @@ import { delay } from './util';
 import env from './env';
 
 
-const DEFAULT_ZOME_CALL_TIMEOUT = 60000
+const DEFAULT_ZOME_CALL_TIMEOUT = 120000
 
 /**
  * Representation of a running Conductor instance.
@@ -121,24 +121,30 @@ export class Conductor {
         this.name, instanceId, zomeName, fnName
       )
       this.logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
-      const timeout = this.zomeCallTimeout
-      const timer = setTimeout(
+      const timeoutSoft = this.zomeCallTimeout / 2
+      const timeoutHard = this.zomeCallTimeout
+      const timerSoft = setTimeout(
+        () => this.logger.warn(`Zome call has been running for more than ${timeoutSoft / 1000} seconds. Continuing to wait...`),
+        timeoutSoft
+      )
+      const timerHard = setTimeout(
         () => {
-          const msg = `zome call timed out after ${timeout / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`
+          const msg = `zome call timed out after ${timeoutHard / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`
           if (env.stateDumpOnError) {
             this.callAdmin('debug/state_dump', { instance_id: instanceId }).then(dump => {
               this.logger.error("STATE DUMP:")
-              this.logger.error(dump)
-              reject(msg)
-            })
+              this.logger.error(JSON.stringify(dump, null, 2))
+            }).catch(err => this.logger.error("Error while calling debug/state_dump: %o", err))
+              .then(() => reject(msg))
           } else {
             reject(msg)
           }
         },
-        timeout
+        timeoutHard
       )
       callZome(instanceId, zomeName, fnName)(params).then(json => {
-        clearTimeout(timer)
+        clearTimeout(timerSoft)
+        clearTimeout(timerHard)
         const result = JSON.parse(json)
         this.logger.debug(`${colors.cyan.bold('->')} %o`, result)
         resolve(result)
