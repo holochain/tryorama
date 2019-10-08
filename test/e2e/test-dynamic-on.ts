@@ -6,6 +6,7 @@ const test = tapeP(tape)
 import { Orchestrator, Config } from '../../src'
 import { runSeries } from '../../src/middleware'
 import { delay } from '../../src/util';
+import { testConfig } from './common';
 import { GlobalConfig } from '../../src/types';
 
 
@@ -13,27 +14,6 @@ const testOrchestrator = () => new Orchestrator({
   middleware: runSeries,
   reporter: true,
 })
-
-const testConfig = () => {
-
-  const dna = Config.dna(
-    'https://github.com/holochain/holochain-basic-chat/releases/download/0.0.15/holochain-basic-chat.dna.json'
-  )
-  const args: GlobalConfig = { logger: false, network: 'n3h' }
-
-  return {
-    alice: Config.genConfig({
-      instances: {
-        chat: dna
-      },
-    }, args),
-    bob: Config.genConfig({
-      instances: {
-        chat: dna
-      }
-    }, args)
-  }
-}
 
 test('test with kill and respawn', async t => {
   t.plan(4)

@@ -19,6 +19,8 @@ const mkdirIdempotent = dir => fs.access(dir).catch(() => {
 })
 
 const tempDirBase = path.join(process.env.TRYORAMA_STORAGE || os.tmpdir(), 'try-o-rama/')
+mkdirIdempotent(tempDirBase)
+
 const tempDir = async () => {
   await mkdirIdempotent(tempDirBase)
   return fs.mkdtemp(tempDirBase)

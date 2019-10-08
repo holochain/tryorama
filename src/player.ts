@@ -74,9 +74,10 @@ export class Player {
   }
 
   /**
-   * spawn can take a function as an argument, which allows the caller
+   * Spawn can take a function as an argument, which allows the caller
    * to do something with the child process handle, even before the conductor
-   * has fully started up
+   * has fully started up. Otherwise, by default, you will have to wait for 
+   * the proper output to be seen before this promise resolves.
    */
   spawn = async (f?: Function) => {
     if (this._conductor) {
