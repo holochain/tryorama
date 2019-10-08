@@ -7,31 +7,9 @@ import { Orchestrator, Config } from '../../src'
 import { runSeries } from '../../src/middleware'
 import { delay } from '../../src/util';
 import { GlobalConfig } from '../../src/types';
+import { testConfig } from '../common';
 
 module.exports = (testOrchestrator) => {
-
-  const testConfig = () => {
-
-    const dna = Config.dna(
-      'https://github.com/holochain/holochain-basic-chat/releases/download/0.0.15/holochain-basic-chat.dna.json'
-    )
-    const network = 'n3h'
-    // const network = { type: 'sim1h', dynamo_url: 'http://localhost:8000' }
-    const args: GlobalConfig = { logger: false, network }
-
-    return {
-      alice: Config.genConfig({
-        instances: {
-          chat: dna
-        },
-      }, args),
-      bob: Config.genConfig({
-        instances: {
-          chat: dna
-        }
-      }, args)
-    }
-  }
 
   test('test with error', async t => {
     const C = testConfig()

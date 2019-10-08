@@ -6,34 +6,13 @@ const test = tapeP(tape)
 import { Orchestrator, Config } from '../../src'
 import { runSeries } from '../../src/middleware'
 import { delay } from '../../src/util';
-import { OrchestratorData } from '../../src/types';
+import { testConfig } from './common';
 
 
 const testOrchestrator = () => new Orchestrator({
   middleware: runSeries,
   reporter: true,
 })
-
-const testConfig = () => {
-
-  const dna = Config.dna(
-    'https://github.com/holochain/holochain-basic-chat/releases/download/0.0.15/holochain-basic-chat.dna.json'
-  )
-  const args: OrchestratorData = {debugLog: false, networking: 'n3h'}
-
-  return {
-    alice: Config.genConfig({
-      instances: {
-        chat: dna
-      },
-    }, args),
-    bob: Config.genConfig({
-      instances: {
-        chat: dna
-      }
-    }, args)
-  }
-}
 
 test('test with kill and respawn', async t => {
   t.plan(4)
@@ -42,14 +21,14 @@ test('test with kill and respawn', async t => {
   orchestrator.registerScenario('attempted call with killed conductor', async s => {
     const { alice } = await s.players({ alice: C.alice })
     await alice.spawn()
-  
+
     await t.doesNotReject(
       alice.call('chat', 'chat', 'register', {
         name: 'alice',
         avatar_url: 'https://tinyurl.com/yxcwavlr',
       })
     )
-  
+
     await alice.kill()
 
     await t.rejects(
@@ -59,7 +38,7 @@ test('test with kill and respawn', async t => {
       }),
       /.*no conductor is running.*/
     )
-    
+
   })
 
   orchestrator.registerScenario('spawn-kill-spawn', async s => {
