@@ -85,7 +85,7 @@ export class Player {
    * @deprecated in 0.1.2
    * Use `player.instance(instanceId)` instead
    */
-  info = this.instance
+  info = (instanceId) => this.instance(instanceId)
 
   /**
    * Spawn can take a function as an argument, which allows the caller

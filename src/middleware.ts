@@ -111,6 +111,7 @@ export const singleConductor = (run, f) => run((s: ScenarioApi) => {
       const modify = adjoin(name)
       const p = {
         call: (instanceId, ...a) => player.call(modify(instanceId), a[0], a[1], a[2]),
+        info: (instanceId) => player.instance(modify(instanceId)),
         instance: (instanceId) => player.instance(modify(instanceId)),
         spawn: () => { throw new Error("player.spawn is disabled by singleConductor middleware") },
         kill: () => { throw new Error("player.kill is disabled by singleConductor middleware") },
