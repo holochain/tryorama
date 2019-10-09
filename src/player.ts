@@ -34,12 +34,12 @@ export class Player {
 
   name: string
   logger: any
-  instances: ObjectS<Instance>
   onJoin: () => void
   onLeave: () => void
   onSignal: ({ instanceId: string, signal: Signal }) => void
 
   _conductor: Conductor | null
+  _instances: ObjectS<Instance>
   _dnaIds: Array<DnaId>
   _genConfigArgs: GenConfigArgs
   _spawnConductor: SpawnConductorFn
@@ -51,8 +51,8 @@ export class Player {
     this.onLeave = onLeave
     this.onSignal = onSignal
 
-    this.instances = {}
     this._conductor = null
+    this._instances = {}
     this._genConfigArgs = genConfigArgs
     this._spawnConductor = spawnConductor
   }
@@ -71,14 +71,21 @@ export class Player {
   }
 
   /** 
-   * Basically the same as `player.instances[instanceId]`, but with cloned data
-   * Here for backwards compatibility
-   * @deprecated in 0.1.2
+   * Get a particular Instance of this conductor.
+   * The reason for supplying a getter rather than allowing direct access to the collection
+   * of instances is to allow middlewares to modify the instanceId being retrieved,
+   * especially for singleConductor middleware
    */
-  info = (instanceId) => {
-    this._conductorGuard(`info(${instanceId})`)
-    return _.clone(this.instances[instanceId])
+  instance = (instanceId) => {
+    this._conductorGuard(`instance(${instanceId})`)
+    return _.clone(this._instances[instanceId])
   }
+
+  /**
+   * @deprecated in 0.1.2
+   * Use `player.instance(instanceId)` instead
+   */
+  info = this.instance
 
   /**
    * Spawn can take a function as an argument, which allows the caller
@@ -144,7 +151,7 @@ export class Player {
       if (!dna) {
         throw new Error(`Instance '${i.id}' refers to nonexistant dna id '${i.dna}'`)
       }
-      this.instances[i.id] = new Instance({
+      this._instances[i.id] = new Instance({
         id: i.id,
         agentAddress: agent.public_address,
         dnaAddress: dna.hash,

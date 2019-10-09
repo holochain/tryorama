@@ -16,6 +16,11 @@ await instance.call('zome', 'fn', params)
 await player.call('instanceId', 'zome', 'fn', params) 
 ```
 
+### Deprecated
+
+- `s.info` deprecated in favor of `s.instance`. For now they are equivalent
+
+
 ## [0.1.1] - 2019-10-08
 
 ### Added

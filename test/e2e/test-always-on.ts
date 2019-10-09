@@ -51,7 +51,7 @@ module.exports = (testOrchestrator) => {
     orchestrator.registerScenario('simple zome call', async s => {
       const players = await s.players({ alice: C.alice }, true)
       const { alice } = players
-      const instance = alice.instances.chat
+      const instance = alice.instance('chat')
       const agentAddress = await instance.call('chat', 'register', {
         name: 'alice',
         avatar_url: 'https://tinyurl.com/yxcwavlr',
