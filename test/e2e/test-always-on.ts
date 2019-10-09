@@ -44,6 +44,26 @@ module.exports = (testOrchestrator) => {
     console.log(stats)
   })
 
+  test('test with simple zome call via instance', async t => {
+    t.plan(3)
+    const C = testConfig()
+    const orchestrator = testOrchestrator()
+    orchestrator.registerScenario('simple zome call', async s => {
+      const players = await s.players({ alice: C.alice }, true)
+      const { alice } = players
+      const instance = alice.instances.chat
+      const agentAddress = await instance.call('chat', 'register', {
+        name: 'alice',
+        avatar_url: 'https://tinyurl.com/yxcwavlr',
+      })
+      t.equal(agentAddress.Ok.length, 63, 'zome call succeeded')
+    })
+    const stats = await orchestrator.run()
+    t.equal(stats.successes, 1, 'only success')
+    t.equal(stats.errors.length, 0, 'no errors')
+    console.log(stats)
+  })
+
   test('test with consistency awaiting', async t => {
     t.plan(4)
     const C = testConfig()

@@ -4,6 +4,7 @@ import { Signal, DnaId } from '@holochain/hachiko'
 
 import { notImplemented } from './common'
 import { Conductor } from './conductor'
+import { Instance } from './instance'
 import { GenConfigArgs, SpawnConductorFn, ObjectS } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
@@ -33,6 +34,7 @@ export class Player {
 
   name: string
   logger: any
+  instances: ObjectS<Instance>
   onJoin: () => void
   onLeave: () => void
   onSignal: ({ instanceId: string, signal: Signal }) => void
@@ -40,7 +42,6 @@ export class Player {
   _conductor: Conductor | null
   _dnaIds: Array<DnaId>
   _genConfigArgs: GenConfigArgs
-  _instanceInfo: ObjectS<InstanceInfo>
   _spawnConductor: SpawnConductorFn
 
   constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, spawnConductor }: ConstructorArgs) {
@@ -49,9 +50,10 @@ export class Player {
     this.onJoin = onJoin
     this.onLeave = onLeave
     this.onSignal = onSignal
+
+    this.instances = {}
     this._conductor = null
     this._genConfigArgs = genConfigArgs
-    this._instanceInfo = {}
     this._spawnConductor = spawnConductor
   }
 
@@ -68,9 +70,14 @@ export class Player {
     return this._conductor!.callZome(instanceId, zome, fn, params)
   }
 
+  /** 
+   * Basically the same as `player.instances[instanceId]`, but with cloned data
+   * Here for backwards compatibility
+   * @deprecated in 0.1.2
+   */
   info = (instanceId) => {
     this._conductorGuard(`info(${instanceId})`)
-    return _.clone(this._instanceInfo[instanceId])
+    return _.clone(this.instances[instanceId])
   }
 
   /**
@@ -107,7 +114,7 @@ export class Player {
 
     this.logger.debug("initializing")
     await this._conductor.initialize()
-    await this._setInstanceInfo()
+    await this._setInstances()
     this.logger.debug("initialized")
   }
 
@@ -124,7 +131,7 @@ export class Player {
     }
   }
 
-  _setInstanceInfo = async () => {
+  _setInstances = async () => {
     const agentList = await this._conductor!.callAdmin("admin/agent/list", {})
     const dnaList = await this._conductor!.callAdmin("admin/dna/list", {})
     const instanceList = await this._conductor!.callAdmin("admin/instance/list", {})
@@ -137,10 +144,12 @@ export class Player {
       if (!dna) {
         throw new Error(`Instance '${i.id}' refers to nonexistant dna id '${i.dna}'`)
       }
-      this._instanceInfo[i.id] = {
+      this.instances[i.id] = new Instance({
+        id: i.id,
         agentAddress: agent.public_address,
         dnaAddress: dna.hash,
-      }
+        callZome: (zome, fn, params) => this._conductor!.callZome(i.id, zome, fn, params)
+      })
     })
   }
 

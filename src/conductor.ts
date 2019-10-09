@@ -153,7 +153,7 @@ export class Conductor {
       )
       const timerHard = setTimeout(
         () => {
-          const msg = `zome call timed out after ${timeoutHard / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`
+          const msg = `zome call timed out after ${timeoutHard / 1000} seconds on conductor '${this.name}': ${instanceId}/${zomeName}/${fnName}`
           if (env.stateDumpOnError) {
             this.callAdmin('debug/state_dump', { instance_id: instanceId }).then(dump => {
               this.logger.error("STATE DUMP:")

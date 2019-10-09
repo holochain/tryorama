@@ -1,6 +1,6 @@
 import { createLogger, format, transports } from 'winston'
 
-const logLevel = 'info'
+const logLevel = 'debug'
 
 const myFormat = format.printf(({ level, message, label, timestamp }) =>
   label
