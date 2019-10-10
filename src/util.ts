@@ -46,11 +46,11 @@ const _downloadFile = async ({ url, path }: { url: string, path: string }): Prom
     if (!response.status || response.status != 200) {
       reject(`Could not fetch ${url}, response was ${response.statusText} ${response.status}`)
     } else {
-      const writer = fs.createWriteStream(path)
+      const writer = fs.createWriteStream(path, { emitClose: true })
         .on("error", reject)
-        .on("finish", () => {
+        .on("close", () => {
           logger.debug("Download complete.")
-          fulfill()
+          setTimeout(fulfill, 10)  // a little wiggle room to allow the file to "settle in"
         })
       logger.debug("Starting streaming download...")
       response.data.pipe(writer)
