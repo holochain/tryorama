@@ -48,9 +48,9 @@ const _downloadFile = async ({ url, path }: { url: string, path: string }): Prom
     } else {
       const writer = fs.createWriteStream(path, { emitClose: true })
         .on("error", reject)
-        .on("close", () => {
+        .on("finish", () => {
           logger.debug("Download complete.")
-          setTimeout(fulfill, 10)  // a little wiggle room to allow the file to "settle in"
+          writer.close(fulfill)
         })
       logger.debug("Starting streaming download...")
       response.data.pipe(writer)

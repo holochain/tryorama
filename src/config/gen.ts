@@ -1,5 +1,6 @@
 import * as T from "../types";
 import { downloadFile, trace } from "../util";
+import { Mutex } from 'async-mutex'
 import env from '../env';
 import logger from '../logger';
 import { saneLoggerConfig, quietLoggerConfig } from './logger';
@@ -45,6 +46,8 @@ export const dna = (location, id?, opts = {}): T.DnaConfig => {
   return { file: location, id, ...opts }
 }
 
+const downloadMutex = new Mutex()
+
 /**
  * 1. If a dna config object contains a URL in the path, download the file to a temp directory, 
  *     and rewrite the path to point to downloaded file.
@@ -58,8 +61,13 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   }
   if (dna.file.match(/^https?:/)) {
     const dnaPath = path.join(await dnaDir(), dna.id + '.dna.json')
-    await downloadFile({ url: dna.file, path: dnaPath, overwrite: false })
-    dna.file = dnaPath
+    const release = await downloadMutex.acquire()
+    try {
+      await downloadFile({ url: dna.file, path: dnaPath, overwrite: false })
+    } finally {
+      dna.file = dnaPath
+      release()
+    }
   }
 
   dna.id = dna.uuid ? `${dna.id}::${dna.uuid}` : dna.id
