@@ -174,6 +174,8 @@ export class Player {
     return new Promise((resolve, reject) => {
       handle.on('close', code => {
         this.logger.info(`conductor '${name}' exited with code ${code}`)
+        // this rejection will have no effect if the promise already resolved,
+        // which happens below
         reject(`Conductor exited before fully starting (code ${code})`)
       })
       handle.stdout.on('data', data => {
