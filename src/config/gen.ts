@@ -213,8 +213,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
       agent: instance.agent.id,
       dna: resolvedDna.id,
       storage: {
-        type: 'file',
-        path: path.join(configDir, instance.id)
+        type: 'memory'
       }
     })
     zomeInterface.instances.push({ id: instance.id })
