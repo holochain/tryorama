@@ -3,9 +3,9 @@ const _ = require('lodash')
 import { Signal, DnaId } from '@holochain/hachiko'
 
 import { notImplemented } from './common'
-import { Conductor } from './conductor'
+import { Conductor, CallZomeFunc, CallAdminFunc } from './conductor'
 import { Instance } from './instance'
-import { GenConfigArgs, SpawnConductorFn, ObjectS } from './types';
+import { GenConfigArgs, SpawnConductorFn, ObjectS, ObjectN } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
 
@@ -39,7 +39,7 @@ export class Player {
   onSignal: ({ instanceId: string, signal: Signal }) => void
 
   _conductor: Conductor | null
-  _instances: ObjectS<Instance>
+  _instances: ObjectS<Instance> | ObjectN<Instance>
   _dnaIds: Array<DnaId>
   _genConfigArgs: GenConfigArgs
   _spawnConductor: SpawnConductorFn
@@ -57,12 +57,12 @@ export class Player {
     this._spawnConductor = spawnConductor
   }
 
-  admin = (method, params) => {
+  admin: CallAdminFunc = (method, params): Promise<any> => {
     this._conductorGuard(`admin(${method}, ${JSON.stringify(params)})`)
     return this._conductor!.callAdmin(method, params)
   }
 
-  call = (instanceId, zome, fn, params) => {
+  call: CallZomeFunc = (instanceId, zome, fn, params): Promise<any> => {
     if (typeof instanceId !== 'string' && typeof zome !== 'string' && typeof fn !== 'string') {
       throw new Error("player.call() must take 4 arguments: (instanceId, zomeName, funcName, params)")
     }
@@ -79,6 +79,10 @@ export class Player {
   instance = (instanceId) => {
     this._conductorGuard(`instance(${instanceId})`)
     return _.clone(this._instances[instanceId])
+  }
+
+  instances = (filterPredicate?): Array<Instance> => {
+    return _.flow(_.values, _.filter(filterPredicate), _.cloneDeep)(this._instances)
   }
 
   /**

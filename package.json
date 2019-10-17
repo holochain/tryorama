@@ -31,12 +31,14 @@
     "io-ts": "^2.0.1",
     "io-ts-reporters": "^1.0.0",
     "lodash": "^4.17.15",
+    "ramda": "^0.26.1",
     "uuid": "^3.3.3",
     "winston": "^3.2.1"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.138",
+    "@types/lodash": "^4.14.144",
     "@types/node": "^12.7.5",
+    "@types/ramda": "^0.26.33",
     "sinon": "^7.4.2",
     "tap-diff": "^0.1.1",
     "tape": "^4.11.0",

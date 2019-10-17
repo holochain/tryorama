@@ -14,6 +14,9 @@ const DEFAULT_CONDUCTOR_ACTIVITY_TIMEOUT = 120000
 // probably unnecessary, but it can't hurt
 const WS_CLOSE_DELAY_FUDGE = 1000
 
+export type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
+export type CallZomeFunc = (instanceId: string, zomeName: string, fnName: string, params: Record<string, any>) => Promise<any>
+
 /**
  * Representation of a running Conductor instance.
  * A [Player] spawns a conductor process and uses the process handle to construct this class. 
@@ -51,7 +54,7 @@ export class Conductor {
     this._conductorTimer = null
   }
 
-  callAdmin: Function = (...a) => {
+  callAdmin: CallAdminFunc = (...a) => {
     // Not supporting admin functions because currently adding DNAs, instances, etc.
     // is undefined behavior, since the Waiter needs to know about all DNAs in existence,
     // and it's too much of a pain to track all of that with mutable conductor config.
@@ -60,7 +63,7 @@ export class Conductor {
     throw new Error("Admin functions are currently not supported.")
   }
 
-  callZome: Function = (...a) => {
+  callZome: CallZomeFunc = (...a) => {
     throw new Error("Attempting to call zome function before conductor was initialized")
   }
 
@@ -98,7 +101,7 @@ export class Conductor {
       })
     )
 
-    this.callAdmin = async (method, params) => {
+    this.callAdmin = async (method, params): Promise<any> => {
       this._restartTimer()
       if (!method.match(/^admin\/.*\/list$/)) {
         this.logger.warn("Calling admin functions which modify state during tests may result in unexpected behavior!")
@@ -148,7 +151,7 @@ export class Conductor {
     this.logger.debug(`connectZome :: connecting to ${url}`)
     const { callZome, onSignal } = await this._hcConnect({ url })
 
-    this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
+    this.callZome = (instanceId, zomeName, fnName, params): Promise<any> => new Promise((resolve, reject) => {
       this._restartTimer()
       this.logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`,
         this.name, instanceId, zomeName, fnName
