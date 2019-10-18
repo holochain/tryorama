@@ -11,6 +11,8 @@ import env from './env';
 
 const DEFAULT_ZOME_CALL_TIMEOUT = 90000
 const DEFAULT_CONDUCTOR_ACTIVITY_TIMEOUT = 120000
+// probably unnecessary, but it can't hurt
+const WS_CLOSE_DELAY_FUDGE = 1000
 
 /**
  * Representation of a running Conductor instance.
@@ -86,13 +88,15 @@ export class Conductor {
     this.logger.debug(`connectAdmin :: connecting to ${url}`)
     const { call, onSignal, ws } = await this._hcConnect({ url })
 
-    this._wsClosePromise = new Promise(resolve => {
-      // Wait 3 seconds and for websocket to close, whichever happens *last*
+    this._wsClosePromise = (
+      // Wait for a constant delay and for websocket to close, whichever happens *last*
       Promise.all([
-        ws.on('close', resolve),
-        delay(3000),
-      ]).then(() => resolve())
-    })
+        new Promise(resolve => ws.on('close', resolve)),
+        delay(WS_CLOSE_DELAY_FUDGE),
+      ]).then(() => {
+        this._clearTimer()
+      })
+    )
 
     this.callAdmin = async (method, params) => {
       this._restartTimer()
@@ -116,6 +120,11 @@ export class Conductor {
         signal
       })
     })
+  }
+
+  _clearTimer = () => {
+    clearTimeout(this._conductorTimer)
+    this._conductorTimer = null
   }
 
   _restartTimer = () => {
@@ -153,7 +162,7 @@ export class Conductor {
       )
       const timerHard = setTimeout(
         () => {
-          const msg = `zome call timed out after ${timeoutHard / 1000} seconds: ${instanceId}/${zomeName}/${fnName}`
+          const msg = `zome call timed out after ${timeoutHard / 1000} seconds on conductor '${this.name}': ${instanceId}/${zomeName}/${fnName}`
           if (env.stateDumpOnError) {
             this.callAdmin('debug/state_dump', { instance_id: instanceId }).then(dump => {
               this.logger.error("STATE DUMP:")

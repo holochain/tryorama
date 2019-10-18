@@ -11,7 +11,7 @@ import { defaultGenConfigArgs, spawnUnique } from "./config";
 
 const defaultSpawnConductor = spawnUnique
 
-const defaultGlobalConfig: T.GlobalConfig = {
+export const defaultGlobalConfig: T.GlobalConfig = {
   network: 'memory',
   logger: false,
 }
@@ -21,7 +21,7 @@ type OrchestratorConstructorParams = {
   genConfigArgs?: GenConfigArgsFn,
   reporter?: boolean | R.Reporter,
   middleware?: any,
-  globalConfig?: T.GlobalConfig,
+  globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
 }
 
@@ -60,7 +60,7 @@ export class Orchestrator {
     this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.runSeries
-    this._globalConfig = o.globalConfig || defaultGlobalConfig
+    this._globalConfig = _.merge(defaultGlobalConfig, o.globalConfig || {})
     this._scenarios = []
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))

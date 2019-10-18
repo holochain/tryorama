@@ -4,6 +4,7 @@ import { Signal, DnaId } from '@holochain/hachiko'
 
 import { notImplemented } from './common'
 import { Conductor } from './conductor'
+import { Instance } from './instance'
 import { GenConfigArgs, SpawnConductorFn, ObjectS } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
@@ -38,9 +39,9 @@ export class Player {
   onSignal: ({ instanceId: string, signal: Signal }) => void
 
   _conductor: Conductor | null
+  _instances: ObjectS<Instance>
   _dnaIds: Array<DnaId>
   _genConfigArgs: GenConfigArgs
-  _instanceInfo: ObjectS<InstanceInfo>
   _spawnConductor: SpawnConductorFn
 
   constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, spawnConductor }: ConstructorArgs) {
@@ -49,9 +50,10 @@ export class Player {
     this.onJoin = onJoin
     this.onLeave = onLeave
     this.onSignal = onSignal
+
     this._conductor = null
+    this._instances = {}
     this._genConfigArgs = genConfigArgs
-    this._instanceInfo = {}
     this._spawnConductor = spawnConductor
   }
 
@@ -68,10 +70,22 @@ export class Player {
     return this._conductor!.callZome(instanceId, zome, fn, params)
   }
 
-  info = (instanceId) => {
-    this._conductorGuard(`info(${instanceId})`)
-    return _.clone(this._instanceInfo[instanceId])
+  /** 
+   * Get a particular Instance of this conductor.
+   * The reason for supplying a getter rather than allowing direct access to the collection
+   * of instances is to allow middlewares to modify the instanceId being retrieved,
+   * especially for singleConductor middleware
+   */
+  instance = (instanceId) => {
+    this._conductorGuard(`instance(${instanceId})`)
+    return _.clone(this._instances[instanceId])
   }
+
+  /**
+   * @deprecated in 0.1.2
+   * Use `player.instance(instanceId)` instead
+   */
+  info = (instanceId) => this.instance(instanceId)
 
   /**
    * Spawn can take a function as an argument, which allows the caller
@@ -107,7 +121,7 @@ export class Player {
 
     this.logger.debug("initializing")
     await this._conductor.initialize()
-    await this._setInstanceInfo()
+    await this._setInstances()
     this.logger.debug("initialized")
   }
 
@@ -124,7 +138,7 @@ export class Player {
     }
   }
 
-  _setInstanceInfo = async () => {
+  _setInstances = async () => {
     const agentList = await this._conductor!.callAdmin("admin/agent/list", {})
     const dnaList = await this._conductor!.callAdmin("admin/dna/list", {})
     const instanceList = await this._conductor!.callAdmin("admin/instance/list", {})
@@ -137,10 +151,12 @@ export class Player {
       if (!dna) {
         throw new Error(`Instance '${i.id}' refers to nonexistant dna id '${i.dna}'`)
       }
-      this._instanceInfo[i.id] = {
+      this._instances[i.id] = new Instance({
+        id: i.id,
         agentAddress: agent.public_address,
         dnaAddress: dna.hash,
-      }
+        callZome: (zome, fn, params) => this._conductor!.callZome(i.id, zome, fn, params)
+      })
     })
   }
 
@@ -158,6 +174,8 @@ export class Player {
     return new Promise((resolve, reject) => {
       handle.on('close', code => {
         this.logger.info(`conductor '${name}' exited with code ${code}`)
+        // this rejection will have no effect if the promise already resolved,
+        // which happens below
         reject(`Conductor exited before fully starting (code ${code})`)
       })
       handle.stdout.on('data', data => {

@@ -15,6 +15,8 @@ type Modifiers = {
   singleConductor: boolean
 }
 
+type AnyConfig = T.GenConfigFn | T.EitherConductorConfig
+
 export class ScenarioApi {
 
   description: string
@@ -34,9 +36,13 @@ export class ScenarioApi {
     this._modifiers = modifiers
   }
 
-  players = async (configs: T.ObjectS<T.GenConfigFn | T.EitherConductorConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
+  players = async (configs: T.ObjectS<AnyConfig> | Array<AnyConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
     const players = {}
-    const configsIntermediate = await Promise.all(Object.entries(configs).map(async ([name, config]) => {
+    // if passing an array, convert to an object with keys as stringified indices. Otherwise just get the key, value pairs
+    const entries: Array<[string, AnyConfig]> = _.isArray(configs)
+      ? configs.map((v, i) => [String(i), v])
+      : Object.entries(configs)
+    const configsIntermediate = await Promise.all(entries.map(async ([name, config]) => {
       const genConfigArgs = await this._orchestrator._genConfigArgs(name, this._uuid)
       const { configDir } = genConfigArgs
       // If an object was passed in, run it through genConfig first. Otherwise use the given function.

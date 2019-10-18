@@ -7,6 +7,7 @@ import * as util from '../../src/util'
 import * as C from '../../src/config';
 import * as Gen from '../../src/config/gen';
 import { genConfigArgs } from '../common';
+import { defaultGlobalConfig, Orchestrator } from '../../src/orchestrator'
 
 const blah = {} as any
 
@@ -206,6 +207,26 @@ test('genConfig produces valid TOML', async t => {
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
   t.equal(toml, toml2 + "\n")
+  t.end()
+  stubGetDnaHash.restore()
+})
+
+test('Orchestrator constructor allows partial GlobalConfig', async t => {
+  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
+
+  const o1 = new Orchestrator({
+    globalConfig: { logger: { whatever: 'and ever' } }
+  })
+  t.equal((o1._globalConfig.logger as any).whatever, 'and ever')
+  t.deepEqual(o1._globalConfig.network, defaultGlobalConfig.network)
+
+  const o2 = new Orchestrator({
+    globalConfig: { network: { whatever: 'and ever' } }
+  })
+  t.equal((o1._globalConfig.network as any).whatever, 'and ever')
+  t.deepEqual(o1._globalConfig.logger, defaultGlobalConfig.logger)
+
+
   t.end()
   stubGetDnaHash.restore()
 })
