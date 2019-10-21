@@ -7,15 +7,19 @@
  * in between killing and spawning the same conductor
  */
 
+const getPortRaw = require('get-port')
+
 const PARKED_PORTS = new Set()
 
 export const getPort = async () => {
   let port = null
+  let lower = 33000
   do {
-    port = await require('get-port')()
+    port = await getPortRaw({ port: getPortRaw.makeRange(lower++, 33999) })
   } while (PARKED_PORTS.has(port))
+  PARKED_PORTS.add(port)
   return port
 }
 
-export const parkPort = port => PARKED_PORTS.add(port)
+// export const parkPort = port => PARKED_PORTS.add(port)
 export const unparkPort = port => PARKED_PORTS.delete(port)
