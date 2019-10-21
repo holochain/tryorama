@@ -10,6 +10,7 @@ import logger from './logger';
 import { Orchestrator } from './orchestrator';
 import { promiseSerialObject, delay } from './util';
 import { getConfigPath, genConfig, assertUniqueTestAgentNames } from './config';
+import { parkPort } from './config/get-port-cautiously'
 
 type Modifiers = {
   singleConductor: boolean
@@ -44,22 +45,23 @@ export class ScenarioApi {
       : Object.entries(configs)
     const configsIntermediate = await Promise.all(entries.map(async ([name, config]) => {
       const genConfigArgs = await this._orchestrator._genConfigArgs(name, this._uuid)
-      const { configDir } = genConfigArgs
+      parkPort(genConfigArgs.adminPort)
+      parkPort(genConfigArgs.zomePort)
       // If an object was passed in, run it through genConfig first. Otherwise use the given function.
       const configBuilder = _.isFunction(config)
         ? (config as T.GenConfigFn)
         : genConfig(config as T.EitherConductorConfig, this._orchestrator._globalConfig)
       const configToml = await configBuilder(genConfigArgs)
       const configJson = TOML.parse(configToml)
-      return { name, configDir, configJson, configToml, genConfigArgs }
+      return { name, configJson, configToml, genConfigArgs }
     }))
 
     assertUniqueTestAgentNames(configsIntermediate.map(c => c.configJson))
 
-    configsIntermediate.forEach(({ name, configDir, configJson, configToml, genConfigArgs }) => {
+    configsIntermediate.forEach(({ name, configJson, configToml, genConfigArgs }) => {
       players[name] = (async () => {
         const { instances } = configJson
-        await fs.writeFile(getConfigPath(configDir), configToml)
+        await fs.writeFile(getConfigPath(genConfigArgs.configDir), configToml)
 
         const player = new Player({
           name,
@@ -113,7 +115,7 @@ export class ScenarioApi {
    */
   _cleanup = (): Promise<void> => {
     return Promise.all(
-      this._players.map(player => player.kill())
+      this._players.map(player => player.cleanup())
     ).then(() => { })
   }
 

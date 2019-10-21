@@ -2,12 +2,12 @@ const _ = require('lodash')
 
 import { Signal, DnaId } from '@holochain/hachiko'
 
-import { notImplemented } from './common'
 import { Conductor } from './conductor'
 import { Instance } from './instance'
 import { GenConfigArgs, SpawnConductorFn, ObjectS } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
+import { unparkPort } from './config/get-port-cautiously'
 
 type ConstructorArgs = {
   name: string,
@@ -136,6 +136,13 @@ export class Player {
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
     }
+  }
+
+  /** Runs at the end of a test run */
+  cleanup = async (): Promise<void> => {
+    await this.kill()
+    unparkPort(this._genConfigArgs.adminPort)
+    unparkPort(this._genConfigArgs.zomePort)
   }
 
   _setInstances = async () => {

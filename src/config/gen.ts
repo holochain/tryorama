@@ -11,7 +11,7 @@ const exec = require('util').promisify(require('child_process').exec)
 const fs = require('fs').promises
 const os = require('os')
 const path = require('path')
-const getPort = require('get-port')
+const { getPort } = require('./get-port-cautiously')
 
 export const ADMIN_INTERFACE_ID = 'try-o-rama-admin-interface'
 export const ZOME_INTERFACE_ID = 'try-o-rama-zome-interface'
@@ -102,7 +102,7 @@ export const getConfigPath = configDir => path.join(configDir, 'conductor-config
  * when multiple conductors are attempting to secure ports for their interfaces.
  * In the future it would be great to move to domain socket based interfaces.
  */
-export const defaultGenConfigArgs = async (conductorName: string, uuid: string) => {
+export const defaultGenConfigArgs = async (conductorName: string, uuid: string): Promise<T.GenConfigArgs> => {
   const adminPort = await getPort()
   const configDir = await tempDir()
   let zomePort = adminPort
