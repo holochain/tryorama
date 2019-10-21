@@ -15,6 +15,7 @@ type ConstructorArgs = {
   onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
+  onActivity: () => void,
   spawnConductor: SpawnConductorFn,
 }
 
@@ -37,6 +38,7 @@ export class Player {
   onJoin: () => void
   onLeave: () => void
   onSignal: ({ instanceId: string, signal: Signal }) => void
+  onActivity: () => void
 
   _conductor: Conductor | null
   _instances: ObjectS<Instance>
@@ -44,12 +46,13 @@ export class Player {
   _genConfigArgs: GenConfigArgs
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, spawnConductor }: ConstructorArgs) {
+  constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
     this.onLeave = onLeave
     this.onSignal = onSignal
+    this.onActivity = onActivity
 
     this._conductor = null
     this._instances = {}
@@ -116,6 +119,7 @@ export class Player {
       name: this.name,
       handle,
       onSignal: this.onSignal.bind(this),
+      onActivity: this.onActivity,
       ...this._genConfigArgs
     })
 
@@ -125,24 +129,33 @@ export class Player {
     this.logger.debug("initialized")
   }
 
-  kill = async (): Promise<void> => {
+  kill = async (signal = 'SIGINT'): Promise<boolean> => {
     if (this._conductor) {
       const c = this._conductor
       this._conductor = null
       this.logger.debug("Killing...")
-      await c.kill('SIGINT')
+      await c.kill(signal)
       this.logger.debug("Killed.")
       await this.onLeave()
+      return true
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
+      return false
     }
   }
 
   /** Runs at the end of a test run */
-  cleanup = async (): Promise<void> => {
-    await this.kill()
-    unparkPort(this._genConfigArgs.adminPort)
-    unparkPort(this._genConfigArgs.zomePort)
+  cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
+    if (this._conductor) {
+      await this.kill(signal)
+      unparkPort(this._genConfigArgs.adminPort)
+      unparkPort(this._genConfigArgs.zomePort)
+      return true
+    } else {
+      unparkPort(this._genConfigArgs.adminPort)
+      unparkPort(this._genConfigArgs.zomePort)
+      return false
+    }
   }
 
   _setInstances = async () => {

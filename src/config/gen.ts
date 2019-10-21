@@ -103,12 +103,12 @@ export const getConfigPath = configDir => path.join(configDir, 'conductor-config
  * In the future it would be great to move to domain socket based interfaces.
  */
 export const defaultGenConfigArgs = async (conductorName: string, uuid: string): Promise<T.GenConfigArgs> => {
+  logger.debug('getting admin port')
   const adminPort = await getPort()
+  logger.debug('getting zome port')
+  const zomePort = await getPort()
+  logger.debug('getting temp dir')
   const configDir = await tempDir()
-  let zomePort = adminPort
-  while (zomePort == adminPort) {
-    zomePort = await getPort()
-  }
   return { conductorName, configDir, adminPort, zomePort, uuid }
 }
 
