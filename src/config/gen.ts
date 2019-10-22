@@ -11,7 +11,7 @@ const exec = require('util').promisify(require('child_process').exec)
 const fs = require('fs').promises
 const os = require('os')
 const path = require('path')
-const getPort = require('get-port')
+const { getPort } = require('./get-port-cautiously')
 
 export const ADMIN_INTERFACE_ID = 'try-o-rama-admin-interface'
 export const ZOME_INTERFACE_ID = 'try-o-rama-zome-interface'
@@ -60,6 +60,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
     throw new Error(`Invalid 'file' for dna: ${JSON.stringify(dna)}`)
   }
   if (dna.file.match(/^https?:/)) {
+    logger.warn("Specifying DNA urls is deprecated, and this ability will soon go away. Please download the file yourself.")
     const dnaPath = path.join(await dnaDir(), dna.id + '.dna.json')
     const release = await downloadMutex.acquire()
     try {
@@ -102,13 +103,13 @@ export const getConfigPath = configDir => path.join(configDir, 'conductor-config
  * when multiple conductors are attempting to secure ports for their interfaces.
  * In the future it would be great to move to domain socket based interfaces.
  */
-export const defaultGenConfigArgs = async (conductorName: string, uuid: string) => {
+export const defaultGenConfigArgs = async (conductorName: string, uuid: string): Promise<T.GenConfigArgs> => {
+  logger.debug('getting admin port')
   const adminPort = await getPort()
+  logger.debug('getting zome port')
+  const zomePort = await getPort()
+  logger.debug('getting temp dir')
   const configDir = await tempDir()
-  let zomePort = adminPort
-  while (zomePort == adminPort) {
-    zomePort = await getPort()
-  }
   return { conductorName, configDir, adminPort, zomePort, uuid }
 }
 
