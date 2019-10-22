@@ -60,6 +60,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
     throw new Error(`Invalid 'file' for dna: ${JSON.stringify(dna)}`)
   }
   if (dna.file.match(/^https?:/)) {
+    logger.warn("Specifying DNA urls is deprecated, and this ability will soon go away. Please download the file yourself.")
     const dnaPath = path.join(await dnaDir(), dna.id + '.dna.json')
     const release = await downloadMutex.acquire()
     try {

@@ -22,6 +22,7 @@ export function promiseSerialObject<T>(promises: ObjectS<Promise<T>>): Promise<O
     Promise.resolve({}))
 }
 
+/** @deprecated */
 export const downloadFile = async ({ url, path, overwrite }: { url: string, path: string, overwrite?: boolean }): Promise<void> => {
   if (overwrite) {
     await _downloadFile({ url, path })
@@ -31,6 +32,7 @@ export const downloadFile = async ({ url, path, overwrite }: { url: string, path
   }
 }
 
+/** @deprecated */
 const _downloadFile = async ({ url, path }: { url: string, path: string }): Promise<void> => {
   const response = await axios.request({
     url: url,
