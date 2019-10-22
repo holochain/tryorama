@@ -6,23 +6,23 @@ import * as T from "../types";
 import { trace } from "../util";
 
 
-export const combineConfigs = 
-(configs: T.ObjectS<T.AnyConductorConfig>, g: T.GlobalConfig) => 
-async (args: T.GenConfigArgs) => {
-  const configsJson = await _.chain(configs)
-    .toPairs()
-    .map(async ([name, c]) => [name, await genConfig(c, g)(args)])
-    .thru(x => Promise.all(x))
-    .value()
-    .then(cs => 
-      _.chain(cs)
-      .fromPairs()
-      .mapValues(TOML.parse)
-      .value()
-    )
-  const merged = mergeJsonConfigs(configsJson)
-  return TOML.stringify(merged)
-}
+export const combineConfigs =
+  (configs: T.ObjectS<T.AnyConductorConfig>, g: T.GlobalConfig) =>
+    async (args: T.GenConfigArgs) => {
+      const configsJson = await _.chain(configs)
+        .toPairs()
+        .map(async ([name, c]) => [name, await genConfig(c, g)(args)])
+        .thru(x => Promise.all(x))
+        .value()
+        .then(cs =>
+          _.chain(cs)
+            .fromPairs()
+            .mapValues(TOML.parse)
+            .value()
+        )
+      const merged = mergeJsonConfigs(configsJson)
+      return TOML.stringify(merged)
+    }
 
 /**
  * Define a standard way to add extra string to ID identifiers for use in combining configs
@@ -53,11 +53,11 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
 
   const agents = _.chain(configs)
     .toPairs()
-    .map(([name, c]) => 
+    .map(([name, c]) =>
       _.chain(c.agents)
-      .map(a => _.update(a, 'id', adjoin(name)))
-      .map(a => _.update(a, 'name', adjoin(name)))
-      .value()
+        .map(a => _.update(a, 'id', adjoin(name)))
+        .map(a => _.update(a, 'name', adjoin(name)))
+        .value()
     )
     .flatten()
     .value()
@@ -67,16 +67,16 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     .flatten()
     .uniqBy(dna => dna.id)
     .value()
-  
+
   const instances = _.chain(configs)
     .toPairs()
-    .map(([name, c]) => 
-      _.map(c.instances, (inst) => 
+    .map(([name, c]) =>
+      _.map(c.instances, (inst) =>
         _.chain(inst)
-        .update('id', adjoin(name))
-        .update('agent', adjoin(name))
-        .update('storage.path', adjoin(name))
-        .value()
+          .update('id', adjoin(name))
+          .update('agent', adjoin(name))
+          // .update('storage.path', adjoin(name))  // not used for in-memory storage
+          .value()
       )
     )
     .flatten()
@@ -84,7 +84,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
 
   const bridges = _.chain(configs)
     .toPairs()
-    .map(([name, c]) => 
+    .map(([name, c]) =>
       _.map(c.bridges, b => _.chain(b)
         .update('caller_id', adjoin(name))
         .update('callee_id', adjoin(name))
@@ -93,14 +93,14 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
     )
     .flatten()
     .value()
-  
-  
+
+
   const first = standard ? configs[standard] : _.values(configs)[0]
-  
+
   const zomeInterfaceIndex = _.findIndex(first.interfaces, i => i.id === ZOME_INTERFACE_ID)
   const zomeInterfaceInstances = _.chain(configs)
     .toPairs()
-    .map(([name, c]) => 
+    .map(([name, c]) =>
       _.map(
         c.interfaces[zomeInterfaceIndex].instances,
         i => _.update(i, 'id', adjoin(name))
