@@ -12,9 +12,9 @@ export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
     logger.info("Holochain version: %s", version)
     handle = spawn(binPath, ['-c', configPath], {
       env: {
-        ...process.env,
         "N3H_QUIET": "1",
         "RUST_BACKTRACE": "1",
+        ...process.env,
       }
     })
 
