@@ -129,7 +129,7 @@ export class ScenarioApi {
   }
 
   _destroyConductors = async () => {
-    const kills = this._cleanup('SIGKILL')
+    const kills = await this._cleanup('SIGKILL')
     const names = this._players.filter((player, i) => kills[i]).map(player => player.name)
     const msg = `
 The following conductors were forcefully shutdown after ${this.conductorTimeoutMs / 1000} seconds of no activity:
