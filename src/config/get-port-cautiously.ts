@@ -7,11 +7,14 @@
  * in between killing and spawning the same conductor
  */
 
+import { Mutex } from 'async-mutex'
+
 const getPortRaw = require('get-port')
 
+const portMutex = new Mutex()
 const PARKED_PORTS = new Set()
 
-export const getPort = async () => {
+export const getPort = () => portMutex.runExclusive(async () => {
   let port = null
   let lower = 33000
   do {
@@ -19,7 +22,7 @@ export const getPort = async () => {
   } while (PARKED_PORTS.has(port))
   PARKED_PORTS.add(port)
   return port
-}
+})
 
 // export const parkPort = port => PARKED_PORTS.add(port)
 export const unparkPort = port => PARKED_PORTS.delete(port)
