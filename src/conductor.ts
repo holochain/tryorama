@@ -113,6 +113,8 @@ export class Conductor {
         return
       }
 
+      this._onActivity()
+
       this.onSignal({
         instanceId: instance_id,
         signal

@@ -130,7 +130,9 @@ export class ScenarioApi {
 
   _destroyConductors = async () => {
     const kills = await this._cleanup('SIGKILL')
+    this._clearTimer()
     const names = this._players.filter((player, i) => kills[i]).map(player => player.name)
+    names.sort()
     const msg = `
 The following conductors were forcefully shutdown after ${this.conductorTimeoutMs / 1000} seconds of no activity:
 ${names.join(', ')}
@@ -147,11 +149,12 @@ ${names.join(', ')}
    * Only called externally when there is a test failure, 
    * to ensure that players/conductors have been properly cleaned up
    */
-  _cleanup = (signal?): Promise<Array<boolean>> => {
-    this._clearTimer()
-    return Promise.all(
+  _cleanup = async (signal?): Promise<Array<boolean>> => {
+    const kills = await Promise.all(
       this._players.map(player => player.cleanup(signal))
     )
+    this._clearTimer()
+    return kills
   }
 
 }
