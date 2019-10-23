@@ -66,8 +66,9 @@ export class Player {
     return this._conductor!.callAdmin(method, params)
   }
 
-  call: CallZomeFunc = (instanceId, zome, fn, params): Promise<any> => {
-    if (typeof instanceId !== 'string' && typeof zome !== 'string' && typeof fn !== 'string') {
+  call: CallZomeFunc = (...args): Promise<any> => {
+    const [instanceId, zome, fn, params] = args
+    if (args.length != 4 || typeof instanceId !== 'string' || typeof zome !== 'string' || typeof fn !== 'string') {
       throw new Error("player.call() must take 4 arguments: (instanceId, zomeName, funcName, params)")
     }
     this._conductorGuard(`call(${instanceId}, ${zome}, ${fn}, ${JSON.stringify(params)})`)
