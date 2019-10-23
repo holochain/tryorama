@@ -14,11 +14,18 @@ const getPortRaw = require('get-port')
 const portMutex = new Mutex()
 const PARKED_PORTS = new Set()
 
+const PORT_RANGE = [33000, 34000]
+
+let nextPort = PORT_RANGE[0]
+
 export const getPort = () => portMutex.runExclusive(async () => {
   let port = null
-  let lower = 33000
   do {
-    port = await getPortRaw({ port: getPortRaw.makeRange(lower++, 33999) })
+    port = await getPortRaw({ port: getPortRaw.makeRange(nextPort, PORT_RANGE[1]) })
+    nextPort += 1
+    if (nextPort >= PORT_RANGE[1]) {
+      nextPort = PORT_RANGE[0]
+    }
   } while (PARKED_PORTS.has(port))
   PARKED_PORTS.add(port)
   return port
