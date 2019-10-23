@@ -1,9 +1,10 @@
 const TOML = require('@iarna/toml')
 const _ = require('lodash')
 
-import { genConfig, ZOME_INTERFACE_ID } from "./gen";
+import { genConfig } from "./gen";
 import * as T from "../types";
 import { trace } from "../util";
+import env from '../env'
 
 
 export const combineConfigs =
@@ -97,7 +98,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<any>, standard?: string) => 
 
   const first = standard ? configs[standard] : _.values(configs)[0]
 
-  const zomeInterfaceIndex = _.findIndex(first.interfaces, i => i.id === ZOME_INTERFACE_ID)
+  const zomeInterfaceIndex = _.findIndex(first.interfaces, i => i.id === env.zomeInterfaceId)
   const zomeInterfaceInstances = _.chain(configs)
     .toPairs()
     .map(([name, c]) =>

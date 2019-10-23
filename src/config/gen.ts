@@ -13,9 +13,6 @@ const os = require('os')
 const path = require('path')
 const { getPort } = require('./get-port-cautiously')
 
-export const ADMIN_INTERFACE_ID = 'try-o-rama-admin-interface'
-export const ZOME_INTERFACE_ID = 'try-o-rama-zome-interface'
-
 const mkdirIdempotent = dir => fs.access(dir).catch(() => {
   fs.mkdir(dir, { recursive: true })
 })
@@ -179,7 +176,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
 
   const adminInterface = {
     admin: true,
-    id: ADMIN_INTERFACE_ID,
+    id: env.adminInterfaceId,
     driver: {
       type: 'websocket',
       port: adminPort,
@@ -188,7 +185,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
   }
 
   const zomeInterface = {
-    id: ZOME_INTERFACE_ID,
+    id: env.zomeInterfaceId,
     driver: {
       type: 'websocket',
       port: zomePort,

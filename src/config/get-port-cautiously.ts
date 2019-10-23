@@ -8,23 +8,23 @@
  */
 
 import { Mutex } from 'async-mutex'
+import env from '../env'
 
 const getPortRaw = require('get-port')
 
 const portMutex = new Mutex()
 const PARKED_PORTS = new Set()
 
-const PORT_RANGE = [33000, 34000]
-
-let nextPort = PORT_RANGE[0]
+const [rangeLo, rangeHi] = env.portRange
+let nextPort = rangeLo
 
 export const getPort = () => portMutex.runExclusive(async () => {
   let port = null
   do {
-    port = await getPortRaw({ port: getPortRaw.makeRange(nextPort, PORT_RANGE[1]) })
+    port = await getPortRaw({ port: getPortRaw.makeRange(nextPort, rangeHi) })
     nextPort += 1
-    if (nextPort >= PORT_RANGE[1]) {
-      nextPort = PORT_RANGE[0]
+    if (nextPort >= rangeHi) {
+      nextPort = rangeLo
     }
   } while (PARKED_PORTS.has(port))
   PARKED_PORTS.add(port)

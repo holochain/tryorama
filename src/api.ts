@@ -18,12 +18,9 @@ type Modifiers = {
 
 type AnyConfig = T.GenConfigFn | T.EitherConductorConfig
 
-const DEFAULT_CONDUCTOR_ACTIVITY_TIMEOUT = 120000
-
 export class ScenarioApi {
 
   description: string
-  conductorTimeoutMs: number
 
   _players: Array<Player>
   _uuid: string
@@ -34,7 +31,6 @@ export class ScenarioApi {
 
   constructor(description: string, orchestrator: Orchestrator, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
-    this.conductorTimeoutMs = DEFAULT_CONDUCTOR_ACTIVITY_TIMEOUT
     this._players = []
     this._uuid = uuid
     this._orchestrator = orchestrator
@@ -125,7 +121,7 @@ export class ScenarioApi {
   _restartTimer = () => {
     logger.debug('restarted timer')
     clearTimeout(this._activityTimer)
-    this._activityTimer = setTimeout(() => this._destroyConductors(), this.conductorTimeoutMs)
+    this._activityTimer = setTimeout(() => this._destroyConductors(), env.conductorTimeoutMs)
   }
 
   _destroyConductors = async () => {
@@ -134,7 +130,7 @@ export class ScenarioApi {
     const names = this._players.filter((player, i) => kills[i]).map(player => player.name)
     names.sort()
     const msg = `
-The following conductors were forcefully shutdown after ${this.conductorTimeoutMs / 1000} seconds of no activity:
+The following conductors were forcefully shutdown after ${env.conductorTimeoutMs / 1000} seconds of no activity:
 ${names.join(', ')}
 `
     if (env.strictConductorTimeout) {

@@ -8,10 +8,9 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 
-
-const DEFAULT_ZOME_CALL_TIMEOUT = 90000
 // probably unnecessary, but it can't hurt
-const WS_CLOSE_DELAY_FUDGE = 1000
+// TODO: bump this gradually down to 0 until we can maybe remove it altogether
+const WS_CLOSE_DELAY_FUDGE = 500
 
 export type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
 export type CallZomeFunc = (instanceId: string, zomeName: string, fnName: string, params: Record<string, any>) => Promise<any>
@@ -26,7 +25,6 @@ export class Conductor {
 
   name: string
   onSignal: ({ instanceId: string, signal: Signal }) => void
-  zomeCallTimeoutMs: number
   logger: any
 
   _ports: { adminPort: number, zomePort: number }
@@ -41,7 +39,6 @@ export class Conductor {
     this.logger = makeLogger(`try-o-rama conductor ${name}`)
     this.logger.debug("Conductor constructing")
     this.onSignal = onSignal
-    this.zomeCallTimeoutMs = DEFAULT_ZOME_CALL_TIMEOUT
 
     this._ports = { adminPort, zomePort }
     this._handle = handle
@@ -134,8 +131,8 @@ export class Conductor {
         this.name, instanceId, zomeName, fnName
       )
       this.logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
-      const timeoutSoft = this.zomeCallTimeoutMs / 2
-      const timeoutHard = this.zomeCallTimeoutMs
+      const timeoutSoft = env.zomeCallTimeoutMs / 2
+      const timeoutHard = env.zomeCallTimeoutMs
       const callInfo = `${zomeName}/${fnName}`
       const timerSoft = setTimeout(
         () => this.logger.warn(`Zome call '${callInfo}' has been running for more than ${timeoutSoft / 1000} seconds. Continuing to wait...`),
