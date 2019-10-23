@@ -32,11 +32,8 @@ module.exports = (testOrchestrator) => {
     orchestrator.registerScenario('simple zome call', async s => {
       const players = await s.players({ alice: C.alice }, true)
       const { alice } = players
-      const agentAddress = await alice.call('chat', 'chat', 'register', {
-        name: 'alice',
-        avatar_url: 'https://tinyurl.com/yxcwavlr',
-      })
-      t.equal(agentAddress.Ok.length, 63, 'zome call succeeded')
+      const hash = await alice.call('app', 'main', 'commit_entry', { content: 'content' }).then(x => x.Ok)
+      t.equal(hash.length, 46, 'zome call succeeded')
     })
     const stats = await orchestrator.run()
     t.equal(stats.successes, 1, 'only success')
@@ -51,12 +48,9 @@ module.exports = (testOrchestrator) => {
     orchestrator.registerScenario('simple zome call', async s => {
       const players = await s.players({ alice: C.alice }, true)
       const { alice } = players
-      const instance = alice.instance('chat')
-      const agentAddress = await instance.call('chat', 'register', {
-        name: 'alice',
-        avatar_url: 'https://tinyurl.com/yxcwavlr',
-      })
-      t.equal(agentAddress.Ok.length, 63, 'zome call succeeded')
+      const instance = alice.instance('app')
+      const hash = await instance.call('main', 'commit_entry', { content: 'content' }).then(x => x.Ok)
+      t.equal(hash.length, 46, 'zome call succeeded')
     })
     const stats = await orchestrator.run()
     t.equal(stats.successes, 1, 'only success')
@@ -65,7 +59,7 @@ module.exports = (testOrchestrator) => {
   })
 
   test('test with consistency awaiting', async t => {
-    t.plan(4)
+    t.plan(5)
     const C = testConfig()
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('zome call with consistency', async s => {
@@ -75,29 +69,20 @@ module.exports = (testOrchestrator) => {
       await s.consistency()
 
       // ... i.e., sometimes this fails with "base for link not found"
-      const streamAddress = await alice.call('chat', 'chat', 'create_stream', {
-        name: 'stream',
-        description: 'whatever',
-        initial_members: [
-          bob.info('chat').agentAddress
-        ],
-      })
-      t.ok(streamAddress.Ok, 'alice create stream')
+      const baseHash = await alice.call('app', 'main', 'commit_entry', { content: 'base' }).then(x => x.Ok)
+      const targetHash = await alice.call('app', 'main', 'commit_entry', { content: 'target' }).then(x => x.Ok)
+      t.equal(baseHash.length, 46, 'alice creates base')
+      t.equal(targetHash.length, 46, 'alice creates target')
       await s.consistency()
 
-      const messageResult = await alice.call('chat', 'chat', 'post_message', {
-        stream_address: streamAddress.Ok,
-        message: {
-          message_type: 'type',
-          timestamp: 0,
-          payload: 'hello',
-          meta: '',
-        }
+      const messageResult = await alice.call('app', 'main', 'link_entries', {
+        base: baseHash,
+        target: targetHash,
       })
       await s.consistency()
 
-      const streams = await bob.call('chat', 'chat', 'get_all_public_streams', {})
-      t.ok(streams.Ok, 'bob gets streams')
+      const links = await bob.call('app', 'main', 'get_links', { base: baseHash }).then(x => x.Ok)
+      t.ok(links, 'bob gets links')
       // TODO: have bob check that he can see alice's stream
     })
     const stats = await orchestrator.run()
@@ -111,12 +96,9 @@ module.exports = (testOrchestrator) => {
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('check addresses', async s => {
       const { alice } = await s.players({ alice: C.alice }, true)
-      const agentAddress = await alice.call('chat', 'chat', 'register', {
-        name: 'alice',
-        avatar_url: 'https://tinyurl.com/yxcwavlr',
-      })
-      t.equal(alice.info('chat').agentAddress, agentAddress.Ok)
-      t.equal(alice.info('chat').dnaAddress.length, 46)
+      const agentAddress = await alice.call('app', 'main', 'whoami', {})
+      t.equal(alice.info('app').agentAddress, agentAddress.Ok)
+      t.equal(alice.info('app').dnaAddress.length, 46)
     })
     const stats = await orchestrator.run()
     t.equal(stats.successes, 1)

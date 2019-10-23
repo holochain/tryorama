@@ -10,19 +10,13 @@ const network = {
 const seriesOrchestrator = () => new Orchestrator({
   middleware: runSeries,
   reporter: true,
-  globalConfig: {
-    network,
-    logger: true,
-  }
+  // globalConfig is specified explicitly in testConfig in this case
 })
 
 const singleConductorSeriesOrchestrator = () => new Orchestrator({
   middleware: combine(runSeries, singleConductor),
   reporter: true,
-  globalConfig: {
-    network,
-    logger: true,
-  }
+  // globalConfig is specified explicitly in testConfig in this case
 })
 
 require('./test-always-on')(seriesOrchestrator)
