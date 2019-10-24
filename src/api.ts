@@ -2,6 +2,7 @@ import * as _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
 const TOML = require('@iarna/toml')
+const base64 = require('base-64')
 
 import { Waiter, FullSyncNetwork } from '@holochain/hachiko'
 import * as T from "./types"
@@ -11,6 +12,7 @@ import { Orchestrator } from './orchestrator';
 import { promiseSerialObject, delay } from './util';
 import { getConfigPath, genConfig, assertUniqueTestAgentNames } from './config';
 import env from './env'
+import { trycpSession } from './trycp'
 
 type Modifiers = {
   singleConductor: boolean
@@ -39,15 +41,19 @@ export class ScenarioApi {
     this._activityTimer = null
   }
 
-  players = async (configs: T.ObjectS<AnyConfig> | Array<AnyConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
+  players = async (configs: T.ObjectS<AnyConfig> | Array<AnyConfig>, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
     logger.debug('creating players')
+    const makeGenConfigArgs = this._orchestrator._makeGenConfigArgs
+    const spawnConductor = this._orchestrator._spawnConductor
     const players = {}
+
     // if passing an array, convert to an object with keys as stringified indices. Otherwise just get the key, value pairs
     const entries: Array<[string, AnyConfig]> = _.isArray(configs)
       ? configs.map((v, i) => [String(i), v])
       : Object.entries(configs)
+
     const configsIntermediate = await Promise.all(entries.map(async ([name, config]) => {
-      const genConfigArgs = await this._orchestrator._genConfigArgs(name, this._uuid)
+      const genConfigArgs = await makeGenConfigArgs(name, this._uuid)
       // If an object was passed in, run it through genConfig first. Otherwise use the given function.
       const configBuilder = _.isFunction(config)
         ? (config as T.GenConfigFn)
@@ -63,12 +69,20 @@ export class ScenarioApi {
     configsIntermediate.forEach(({ name, configJson, configToml, genConfigArgs }) => {
       players[name] = (async () => {
         const { instances } = configJson
-        await fs.writeFile(getConfigPath(genConfigArgs.configDir), configToml)
+        const { playerName, urlBase, configDir } = genConfigArgs
+        if (configDir) {
+          await fs.writeFile(getConfigPath(configDir), configToml)
+        } else {
+          const wsUrl = T.adminWsUrl(genConfigArgs)
+          const trycp = await trycpSession(wsUrl, playerName)
+          const result = await trycp.player(base64.encode(configToml))
+          logger.info(`TryCP result: ${result}`)
+        }
 
         const player = new Player({
           name,
           genConfigArgs,
-          spawnConductor: this._orchestrator._spawnConductor,
+          spawnConductor,
           onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, name)),
           onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, name)),
           onActivity: () => this._restartTimer(),
@@ -83,18 +97,14 @@ export class ScenarioApi {
             this._waiter.handleObservation(observation)
           },
         })
-        if (start) {
-          await player.spawn()
+        if (spawnArgs) {
+          await player.spawn(spawnArgs)
         }
         this._players.push(player)
         return player
       })()
     })
     const ps = await promiseSerialObject<Player>(players)
-    if (start) {
-      logger.warn("Waiting for conductors to settle... (TODO check back later to see if this is necessary)")
-      await delay(100)
-    }
     return ps
   }
 

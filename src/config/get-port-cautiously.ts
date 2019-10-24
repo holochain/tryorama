@@ -18,8 +18,8 @@ const PARKED_PORTS = new Set()
 const [rangeLo, rangeHi] = env.portRange
 let nextPort = rangeLo
 
-export const getPort = () => portMutex.runExclusive(async () => {
-  let port = null
+export const getPort = (): Promise<number> => portMutex.runExclusive(async (): Promise<number> => {
+  let port: number = 0
   do {
     port = await getPortRaw({ port: getPortRaw.makeRange(nextPort, rangeHi) })
     nextPort += 1

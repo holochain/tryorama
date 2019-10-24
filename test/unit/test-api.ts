@@ -15,7 +15,7 @@ test('API detects duplicate agent IDs', async t => {
   const orchestrator = new Orchestrator()
   const api = new ScenarioApi("description", orchestrator, "uuid")
   const args = {
-    conductorName: 'same',
+    playerName: 'same',
     uuid: 'also-same',
   } as GenConfigArgs
   await t.rejects(

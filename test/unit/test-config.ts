@@ -77,7 +77,7 @@ test('DNA id generation', t => {
 })
 
 test('Sugared config', async t => {
-  t.deepEqual(C.desugarConfig({ conductorName: 'name', uuid: 'uuid' } as T.GenConfigArgs, configSugared), configPlain)
+  t.deepEqual(C.desugarConfig({ playerName: 'name', uuid: 'uuid' } as T.GenConfigArgs, configSugared), configPlain)
   t.end()
 })
 
@@ -203,7 +203,7 @@ pattern = ".*"
 test('genConfig produces valid TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const builder = C.genConfig(configSugared, { logger: false, network: 'n3h' })
-  const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
+  const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
   t.equal(toml, toml2 + "\n")
@@ -238,7 +238,7 @@ test('invalid config throws nice error', async t => {
         { id: 'what' }
       ]
     } as any, { logger: false, network: 'n3h' })({
-      configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName'
+      configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName'
     }),
       /Tried to use an invalid value/
   })

@@ -22,19 +22,23 @@ export const decodeOrThrow = (validator, value) => {
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }
 
-export type SpawnConductorFn = (player: Player) => Promise<Conductor>
+export type SpawnConductorFn = (player: Player, args: any) => Promise<Conductor>
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 
 export type GenConfigFn = (args: GenConfigArgs) => Promise<string>
 export type GenConfigArgs = {
-  conductorName: string,
-  configDir: string,
+  playerName: string,
+  configDir: string | null,  // if this is null, then we are using TryCP to send config remotely
   uuid: string,
   urlBase: string,
   adminPort: number,
   zomePort: number,
 }
+
+export const adminWsUrl = ({ urlBase, adminPort }) => `${urlBase}:${adminPort}`
+export const zomeWsUrl = ({ urlBase, zomePort }) => `${urlBase}:${zomePort}`
+
 
 export const AgentConfigV = t.intersection([
   t.type({

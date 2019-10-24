@@ -1,14 +1,18 @@
 
 import { spawn, execSync, ChildProcess } from "child_process";
+import { Ws } from 'ws'
+import axios from "axios"
+
 import logger, { makeLogger } from "../logger";
 import * as T from '../types'
-import axios from "axios"
 import * as path from "path";
 import { Player } from "..";
 import { Conductor } from "../conductor";
 import { getConfigPath } from ".";
+import { trycpSession } from "../trycp";
 
-export const spawnLocal: T.SpawnConductorFn = async (player: Player): Promise<Conductor> => {
+
+export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook }): Promise<Conductor> => {
   const name = player.name
   const configPath = getConfigPath(player._genConfigArgs.configDir)
   let handle
@@ -30,6 +34,11 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player): Promise<Co
     handle.stdout.on('data', data => plainLogger.info(getFancy(`[[[CONDUCTOR ${name}]]]\n${data.toString('utf8')}`)))
     handle.stderr.on('data', data => plainLogger.error(getFancy(`{{{CONDUCTOR ${name}}}}\n${data.toString('utf8')}`)))
 
+    if (handleHook) {
+      player.logger.info('running spawned handle hack. TODO: document this.')
+      handleHook(handle)
+    }
+
     const conductor = new Conductor({
       name,
       kill: async (...args) => handle.kill(...args),
@@ -38,6 +47,9 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player): Promise<Co
       adminWsUrl: `${player._genConfigArgs.urlBase}:${player._genConfigArgs.adminPort}`,
       zomeWsUrl: `${player._genConfigArgs.urlBase}:${player._genConfigArgs.zomePort}`,
     })
+
+    await awaitConductorInterfaceStartup(handle, player.name)
+
     return conductor
     // NB: the code to await for the interfaces to start up has been moved
     // to Player::_awaitConductorInterfaceStartup, so that we have access
@@ -48,30 +60,43 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player): Promise<Co
   }
 }
 
+const awaitConductorInterfaceStartup = (handle, name) => {
+  return new Promise((resolve, reject) => {
+    handle.on('close', code => {
+      logger.info(`conductor '${name}' exited with code ${code}`)
+      // this rejection will have no effect if the promise already resolved,
+      // which happens below
+      reject(`Conductor exited before fully starting (code ${code})`)
+    })
+    handle.stdout.on('data', data => {
+      // wait for the logs to convey that the interfaces have started
+      // because the consumer of this function needs those interfaces
+      // to be started so that it can initiate, and form,
+      // the websocket connections
+      if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
+        logger.info(`Conductor '${name}' process spawning successful`)
+        resolve(handle)
+      }
+    })
+  })
+}
+
 export const spawnRemote: T.SpawnConductorFn = async (player: Player): Promise<Conductor> => {
   const name = player.name
 
+  const wsUrl = T.adminWsUrl(player._genConfigArgs)
+  const trycp = await trycpSession(wsUrl, name)
+  const spawnResult = await trycp.spawn()
+  logger.info(`TryCP spawn result: ${spawnResult}`)
+
   return new Conductor({
     name,
-    kill: (signal?) => trycp.call('kill', signal),
+    kill: (signal?) => trycp.kill(signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
     adminWsUrl: 'TODO',
     zomeWsUrl: 'TODO',
   })
-}
-
-class TrycpHandle implements T.Mortal {
-
-  kill: () => Promise<void>
-
-  constructor(urlBase: string, id: string) {
-    this.kill = async () => {
-      const url = path.join()
-      await axios.post(url, { id })
-    }
-  }
-
 }
 
 const bullets = "☉★☯☸☮"
@@ -86,14 +111,15 @@ const getFancy = (output) => {
 
 /** 
  * Only spawn one conductor per "name", to be used for entire test suite
+ * Unused.
  * TODO: disable `.kill()` and `.spawn()` in scenario API
  */
-export const memoizedSpawner = () => {
+const memoizedSpawner = () => {
   const memomap = {}
-  return (player): Promise<ChildProcess> => {
+  return (player, args): Promise<ChildProcess> => {
     const name = player.name
     if (!(name in memomap)) {
-      memomap[name] = spawnLocal(player)
+      memomap[name] = spawnLocal(player, args)
     }
     return memomap[name]
   }

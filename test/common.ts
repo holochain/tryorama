@@ -42,7 +42,7 @@ export const genConfigArgs: () => Promise<T.GenConfigArgs> = async () => ({
   urlBase: 'http://localhost',
   adminPort: 1000,
   zomePort: 2000,
-  conductorName: 'conductorName',
+  playerName: 'playerName',
   uuid: 'uuid',
 })
 export const spawnConductor = (() => { }) as unknown as T.SpawnConductorFn

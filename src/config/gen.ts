@@ -11,7 +11,6 @@ const exec = require('util').promisify(require('child_process').exec)
 const fs = require('fs').promises
 const os = require('os')
 const path = require('path')
-const { getPort } = require('./get-port-cautiously')
 
 const mkdirIdempotent = dir => fs.access(dir).catch(() => {
   fs.mkdir(dir, { recursive: true })
@@ -20,7 +19,7 @@ const mkdirIdempotent = dir => fs.access(dir).catch(() => {
 const tempDirBase = path.join(env.tempStorage || os.tmpdir(), 'try-o-rama/')
 mkdirIdempotent(tempDirBase)
 
-const tempDir = async () => {
+export const tempDir = async () => {
   await mkdirIdempotent(tempDirBase)
   return fs.mkdtemp(tempDirBase)
 }
@@ -93,24 +92,6 @@ export const dpki = (instance_id, init_params?): T.DpkiConfig => ({
 
 export const getConfigPath = configDir => path.join(configDir, 'conductor-config.toml')
 
-/**
- * Function to generate the default args for genConfig functions.
- * This can be overridden as part of Orchestrator config.
- * NB: Since we are using ports, there is a small chance of a race condition
- * when multiple conductors are attempting to secure ports for their interfaces.
- * In the future it would be great to move to domain socket based interfaces.
- */
-export const defaultGenConfigArgs = async (conductorName: string, uuid: string): Promise<T.GenConfigArgs> => {
-  logger.debug('getting admin port')
-  const adminPort = await getPort()
-  logger.debug('getting zome port')
-  const zomePort = await getPort()
-  logger.debug('getting temp dir')
-  const configDir = await tempDir()
-  const urlBase = `http://localhost`
-  return { conductorName, configDir, urlBase, adminPort, zomePort, uuid }
-}
-
 
 /**
  * Helper function to generate, from a simple object, a function that returns valid TOML config.
@@ -157,9 +138,9 @@ export const desugarConfig = (args: T.GenConfigArgs, config: T.EitherConductorCo
   return config as T.ConductorConfig
 }
 
-export const makeTestAgent = (id, { conductorName, uuid }: T.GenConfigArgs) => ({
+export const makeTestAgent = (id, { playerName, uuid }: T.GenConfigArgs) => ({
   // NB: very important that agents have different names on different conductors!!
-  name: `${conductorName}::${id}::${uuid}`,
+  name: `${playerName}::${id}::${uuid}`,
   id: id,
   keystore_file: '[UNUSED]',
   public_address: '[SHOULD BE REWRITTEN]',

@@ -7,9 +7,10 @@ import * as R from "./reporter";
 import { WaiterOptions } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
-import { defaultGenConfigArgs, spawnLocal } from "./config";
+import { makeLocalGenConfigArgs, spawnLocal } from "./config";
 
 const defaultSpawnConductor = spawnLocal
+const defaultMakeGenConfigArgs = makeLocalGenConfigArgs
 
 export const defaultGlobalConfig: T.GlobalConfig = {
   network: 'memory',
@@ -18,14 +19,15 @@ export const defaultGlobalConfig: T.GlobalConfig = {
 
 type OrchestratorConstructorParams = {
   spawnConductor?: T.SpawnConductorFn,
-  genConfigArgs?: GenConfigArgsFn,
+  genConfigArgs?: MakeGenConfigArgsFn,
   reporter?: boolean | R.Reporter,
   middleware?: any,
   globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
+  trycpManagerUrl?: string,
 }
 
-type GenConfigArgsFn = (conductorName: string, uuid: string) => Promise<T.GenConfigArgs>
+type MakeGenConfigArgsFn = (playerName: string, uuid: string) => Promise<T.GenConfigArgs>
 
 type ScenarioModifier = 'only' | 'skip' | null
 type RegisteredScenario = {
@@ -49,15 +51,16 @@ export class Orchestrator {
   registerScenario: Register & { only: Register, skip: Register }
   waiterConfig?: WaiterOptions
 
-  _genConfigArgs: GenConfigArgsFn
+  _makeGenConfigArgs: MakeGenConfigArgsFn
   _middleware: M.Middleware
   _globalConfig: T.GlobalConfig
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
   _reporter: R.Reporter
+  _trycpManagerUrl: string | null
 
   constructor(o: OrchestratorConstructorParams = {}) {
-    this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
+    this._makeGenConfigArgs = o.genConfigArgs || defaultMakeGenConfigArgs
     this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.runSeries
     this._globalConfig = _.merge(defaultGlobalConfig, o.globalConfig || {})
@@ -65,6 +68,7 @@ export class Orchestrator {
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))
       : o.reporter || R.unit
+    this._trycpManagerUrl = o.trycpManagerUrl || null
     this.waiterConfig = o.waiter
 
     const registerScenario = (desc, scenario) => this._registerScenario(desc, scenario, null)

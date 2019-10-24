@@ -16,12 +16,12 @@ const makeTestConfigs = async () => {
   const dna2 = C.dna('path/to/dna2.json', 'dna-2')
   const providedUuid = 'UUID'
 
-  const mkInstance = (conductorName, id, dna) => ({
-    id: adjoin(conductorName)(id),
+  const mkInstance = (playerName, id, dna) => ({
+    id: adjoin(playerName)(id),
     dna,
     agent: {
-      name: adjoin(conductorName)(`${conductorName}::${id}::uuid`),
-      id: adjoin(conductorName)(id),
+      name: adjoin(playerName)(`${playerName}::${id}::uuid`),
+      id: adjoin(playerName)(id),
       keystore_file: '[UNUSED]',
       public_address: '[SHOULD BE REWRITTEN]',
       test_agent: true,
@@ -91,14 +91,14 @@ const makeTestConfigs = async () => {
   }
 }
 
-const expandConfig = async (config, conductorName): Promise<any> => {
+const expandConfig = async (config, playerName): Promise<any> => {
   const builder = C.genConfig(config, { logger: false, network: 'n3h' })
   const toml = await builder({
     configDir: 'dir',
     adminPort: 1111,
     zomePort: 2222,
     uuid: 'uuid',
-    conductorName
+    playerName
   })
   return TOML.parse(toml)
 }

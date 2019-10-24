@@ -102,7 +102,7 @@ export class Player {
    * has fully started up. Otherwise, by default, you will have to wait for 
    * the proper output to be seen before this promise resolves.
    */
-  spawn = async (f?: Function) => {
+  spawn = async (spawnArgs: any) => {
     if (this._conductor) {
       this.logger.warn(`Attempted to spawn conductor '${this.name}' twice!`)
       return
@@ -110,14 +110,7 @@ export class Player {
 
     await this.onJoin()
     this.logger.debug("spawning")
-    const conductor = await this._spawnConductor(this)
-
-    if (f) {
-      this.logger.info('running spawned handle hack. TODO: document this :)')
-      f(conductor._handle)
-    }
-
-    await this._awaitConductorInterfaceStartup(conductor._handle, this.name)
+    const conductor = await this._spawnConductor(this, spawnArgs)
 
     this.logger.debug("spawned")
     this._conductor = conductor
@@ -189,24 +182,4 @@ export class Player {
     }
   }
 
-  _awaitConductorInterfaceStartup = (handle, name) => {
-    return new Promise((resolve, reject) => {
-      handle.on('close', code => {
-        this.logger.info(`conductor '${name}' exited with code ${code}`)
-        // this rejection will have no effect if the promise already resolved,
-        // which happens below
-        reject(`Conductor exited before fully starting (code ${code})`)
-      })
-      handle.stdout.on('data', data => {
-        // wait for the logs to convey that the interfaces have started
-        // because the consumer of this function needs those interfaces
-        // to be started so that it can initiate, and form,
-        // the websocket connections
-        if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
-          this.logger.info(`Conductor '${name}' process spawning successful`)
-          resolve(handle)
-        }
-      })
-    })
-  }
 }
