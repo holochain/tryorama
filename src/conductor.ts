@@ -27,20 +27,22 @@ export class Conductor {
   onSignal: ({ instanceId: string, signal: Signal }) => void
   logger: any
 
-  _ports: { adminPort: number, zomePort: number }
+  _adminWsUrl: string
+  _zomeWsUrl: string
   _handle: Mortal
   _hcConnect: any
   _isInitialized: boolean
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, handle, onSignal, onActivity, adminPort, zomePort }) {
+  constructor({ name, handle, onSignal, onActivity, adminWsUrl, zomeWsUrl }) {
     this.name = name
     this.logger = makeLogger(`try-o-rama conductor ${name}`)
     this.logger.debug("Conductor constructing")
     this.onSignal = onSignal
 
-    this._ports = { adminPort, zomePort }
+    this._adminWsUrl = adminWsUrl
+    this._zomeWsUrl = zomeWsUrl
     this._handle = handle
     this._hcConnect = hcWebClient.connect
     this._isInitialized = false
@@ -81,7 +83,7 @@ export class Conductor {
 
   _connectAdmin = async () => {
     this._onActivity()
-    const url = this._adminInterfaceUrl()
+    const url = this._adminWsUrl
     this.logger.debug(`connectAdmin :: connecting to ${url}`)
     const { call, onSignal, ws } = await this._hcConnect({ url })
 
@@ -121,7 +123,7 @@ export class Conductor {
 
   _connectZome = async () => {
     this._onActivity()
-    const url = this._zomeInterfaceUrl()
+    const url = this._zomeWsUrl
     this.logger.debug(`connectZome :: connecting to ${url}`)
     const { callZome, onSignal } = await this._hcConnect({ url })
 
@@ -166,7 +168,4 @@ export class Conductor {
         })
     })
   }
-
-  _adminInterfaceUrl = () => `ws://localhost:${this._ports.adminPort}`
-  _zomeInterfaceUrl = () => `ws://localhost:${this._ports.zomePort}`
 }

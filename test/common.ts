@@ -8,9 +8,9 @@ export const testConfig = () => {
   const dna = Config.dna(
     'https://github.com/holochain/passthrough-dna/releases/download/v0.0.5/passthrough-dna.dna.json'
   )
-  // const network = { type: 'sim2h', sim2h_url: 'http://localhost:9000' }
-  // console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")
-  const network = 'n3h'
+  const network = { type: 'sim2h', sim2h_url: 'http://localhost:9000' }
+  console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")
+  // const network = 'n3h'
   const args: T.GlobalConfig = { logger: true, network }
 
   return {
@@ -39,6 +39,7 @@ export const withClock = f => t => {
 
 export const genConfigArgs: () => Promise<T.GenConfigArgs> = async () => ({
   configDir: 'config/dir',
+  urlBase: 'http://localhost',
   adminPort: 1000,
   zomePort: 2000,
   conductorName: 'conductorName',

@@ -107,7 +107,8 @@ export const defaultGenConfigArgs = async (conductorName: string, uuid: string):
   const zomePort = await getPort()
   logger.debug('getting temp dir')
   const configDir = await tempDir()
-  return { conductorName, configDir, adminPort, zomePort, uuid }
+  const urlBase = `http://localhost`
+  return { conductorName, configDir, urlBase, adminPort, zomePort, uuid }
 }
 
 

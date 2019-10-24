@@ -7,9 +7,9 @@ import * as R from "./reporter";
 import { WaiterOptions } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
-import { defaultGenConfigArgs, spawnUnique } from "./config";
+import { defaultGenConfigArgs, spawnLocal } from "./config";
 
-const defaultSpawnConductor = spawnUnique
+const defaultSpawnConductor = spawnLocal
 
 export const defaultGlobalConfig: T.GlobalConfig = {
   network: 'memory',

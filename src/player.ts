@@ -110,24 +110,17 @@ export class Player {
 
     await this.onJoin()
     this.logger.debug("spawning")
-    const path = getConfigPath(this._genConfigArgs.configDir)
-    const handle = await this._spawnConductor(this.name, path)
+    const conductor = await this._spawnConductor(this)
 
     if (f) {
       this.logger.info('running spawned handle hack. TODO: document this :)')
-      f(handle)
+      f(conductor._handle)
     }
 
-    await this._awaitConductorInterfaceStartup(handle, this.name)
+    await this._awaitConductorInterfaceStartup(conductor._handle, this.name)
 
     this.logger.debug("spawned")
-    this._conductor = new Conductor({
-      name: this.name,
-      handle,
-      onSignal: this.onSignal.bind(this),
-      onActivity: this.onActivity,
-      ...this._genConfigArgs
-    })
+    this._conductor = conductor
 
     this.logger.debug("initializing")
     await this._conductor.initialize()

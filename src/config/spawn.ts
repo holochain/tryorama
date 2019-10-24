@@ -1,9 +1,16 @@
 
 import { spawn, execSync, ChildProcess } from "child_process";
 import logger, { makeLogger } from "../logger";
+import * as T from '../types'
+import axios from "axios"
+import * as path from "path";
+import { Player } from "..";
+import { Conductor } from "../conductor";
+import { getConfigPath } from ".";
 
-export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
-
+export const spawnLocal: T.SpawnConductorFn = async (player: Player): Promise<Conductor> => {
+  const name = player.name
+  const configPath = getConfigPath(player._genConfigArgs.configDir)
   let handle
   try {
     const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
@@ -22,7 +29,17 @@ export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
 
     handle.stdout.on('data', data => plainLogger.info(getFancy(`[[[CONDUCTOR ${name}]]]\n${data.toString('utf8')}`)))
     handle.stderr.on('data', data => plainLogger.error(getFancy(`{{{CONDUCTOR ${name}}}}\n${data.toString('utf8')}`)))
-    return Promise.resolve(handle)
+    // handle.kill = async (...args) => handle.kill(...args)
+
+    const conductor = new Conductor({
+      name,
+      handle,
+      onSignal: player.onSignal.bind(player),
+      onActivity: player.onActivity,
+      adminWsUrl: `${player._genConfigArgs.urlBase}:${player._genConfigArgs.adminPort}`,
+      zomeWsUrl: `${player._genConfigArgs.urlBase}:${player._genConfigArgs.zomePort}`,
+    })
+    return conductor
     // NB: the code to await for the interfaces to start up has been moved
     // to Player::_awaitConductorInterfaceStartup, so that we have access
     // to the handle immediately. Consequently this no longer needs to be
@@ -30,6 +47,23 @@ export const spawnUnique = async (name, configPath): Promise<ChildProcess> => {
   } catch (err) {
     return Promise.reject(err)
   }
+}
+
+// export const spawnRemote = async (name, configPath, userData): Promise<TrycpHandle> => {
+//   return new TrycpHandle()
+// }
+
+class TrycpHandle implements T.Mortal {
+
+  kill: () => Promise<void>
+
+  constructor(urlBase: string, id: string) {
+    this.kill = async () => {
+      const url = path.join()
+      await axios.post(url, { id })
+    }
+  }
+
 }
 
 const bullets = "☉★☯☸☮"
@@ -48,9 +82,10 @@ const getFancy = (output) => {
  */
 export const memoizedSpawner = () => {
   const memomap = {}
-  return (name, configPath): Promise<ChildProcess> => {
+  return (player): Promise<ChildProcess> => {
+    const name = player.name
     if (!(name in memomap)) {
-      memomap[name] = spawnUnique(name, configPath)
+      memomap[name] = spawnLocal(player)
     }
     return memomap[name]
   }

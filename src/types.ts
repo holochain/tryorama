@@ -5,6 +5,8 @@ import { reporter } from 'io-ts-reporters'
 import { ThrowReporter } from "io-ts/lib/ThrowReporter"
 import { ChildProcess } from 'child_process';
 import logger from "./logger";
+import { Conductor } from "./conductor"
+import { Player } from "./player"
 
 export const decodeOrThrow = (validator, value) => {
   const result = validator.decode(value)
@@ -20,7 +22,7 @@ export const decodeOrThrow = (validator, value) => {
 export type ObjectN<V> = { [name: number]: V }
 export type ObjectS<V> = { [name: string]: V }
 
-export type SpawnConductorFn = (name: string, configPath: string) => Promise<ChildProcess>
+export type SpawnConductorFn = (player: Player) => Promise<Conductor>
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 
@@ -29,6 +31,7 @@ export type GenConfigArgs = {
   conductorName: string,
   configDir: string,
   uuid: string,
+  urlBase: string,
   adminPort: number,
   zomePort: number,
 }
@@ -146,5 +149,5 @@ export type GlobalConfigPartial = t.TypeOf<typeof GlobalConfigPartialV>
 
 /** Something "killable" */
 export interface Mortal {
-  kill(signal?: string): void
+  kill(signal?: string): Promise<void>
 }
