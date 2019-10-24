@@ -29,11 +29,10 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player): Promise<Co
 
     handle.stdout.on('data', data => plainLogger.info(getFancy(`[[[CONDUCTOR ${name}]]]\n${data.toString('utf8')}`)))
     handle.stderr.on('data', data => plainLogger.error(getFancy(`{{{CONDUCTOR ${name}}}}\n${data.toString('utf8')}`)))
-    // handle.kill = async (...args) => handle.kill(...args)
 
     const conductor = new Conductor({
       name,
-      handle,
+      kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
       adminWsUrl: `${player._genConfigArgs.urlBase}:${player._genConfigArgs.adminPort}`,
@@ -49,9 +48,18 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player): Promise<Co
   }
 }
 
-// export const spawnRemote = async (name, configPath, userData): Promise<TrycpHandle> => {
-//   return new TrycpHandle()
-// }
+export const spawnRemote: T.SpawnConductorFn = async (player: Player): Promise<Conductor> => {
+  const name = player.name
+
+  return new Conductor({
+    name,
+    kill: (signal?) => trycp.call('kill', signal),
+    onSignal: player.onSignal.bind(player),
+    onActivity: player.onActivity,
+    adminWsUrl: 'TODO',
+    zomeWsUrl: 'TODO',
+  })
+}
 
 class TrycpHandle implements T.Mortal {
 

@@ -2,7 +2,7 @@ const colors = require('colors/safe')
 const hcWebClient = require('@holochain/hc-web-client')
 
 import { Signal } from '@holochain/hachiko'
-import { ConductorConfig, Mortal, GenConfigArgs } from "./types";
+import { ConductorConfig, KillFn, GenConfigArgs } from "./types";
 import { notImplemented } from "./common";
 import { makeLogger } from "./logger";
 import { delay } from './util';
@@ -17,7 +17,7 @@ export type CallZomeFunc = (instanceId: string, zomeName: string, fnName: string
 
 /**
  * Representation of a running Conductor instance.
- * A [Player] spawns a conductor process and uses the process handle to construct this class. 
+ * A [Player] spawns a conductor process locally or remotely and constructs this class accordingly. 
  * Though Conductor is spawned externally, this class is responsible for establishing WebSocket
  * connections to the various interfaces to enable zome calls as well as admin and signal handling.
  */
@@ -26,24 +26,29 @@ export class Conductor {
   name: string
   onSignal: ({ instanceId: string, signal: Signal }) => void
   logger: any
+  kill: KillFn
 
   _adminWsUrl: string
   _zomeWsUrl: string
-  _handle: Mortal
   _hcConnect: any
   _isInitialized: boolean
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, handle, onSignal, onActivity, adminWsUrl, zomeWsUrl }) {
+  constructor({ name, kill, onSignal, onActivity, adminWsUrl, zomeWsUrl }) {
     this.name = name
     this.logger = makeLogger(`try-o-rama conductor ${name}`)
     this.logger.debug("Conductor constructing")
     this.onSignal = onSignal
 
+    this.kill = async (signal?): Promise<void> => {
+      this.logger.debug("Killing...")
+      await kill(signal)
+      return this._wsClosePromise
+    }
+
     this._adminWsUrl = adminWsUrl
     this._zomeWsUrl = zomeWsUrl
-    this._handle = handle
     this._hcConnect = hcWebClient.connect
     this._isInitialized = false
     this._wsClosePromise = Promise.resolve()
@@ -66,12 +71,6 @@ export class Conductor {
   initialize = async () => {
     this._onActivity()
     await this._makeConnections()
-  }
-
-  kill = (signal?): Promise<void> => {
-    this.logger.debug("Killing...")
-    this._handle.kill(signal)
-    return this._wsClosePromise
   }
 
   wsClosed = () => this._wsClosePromise

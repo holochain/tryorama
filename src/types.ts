@@ -148,6 +148,4 @@ export type GlobalConfigPartial = t.TypeOf<typeof GlobalConfigPartialV>
 
 
 /** Something "killable" */
-export interface Mortal {
-  kill(signal?: string): Promise<void>
-}
+export type KillFn = (signal?: string) => Promise<void>
