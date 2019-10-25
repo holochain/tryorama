@@ -24,7 +24,6 @@ type OrchestratorConstructorParams = {
   middleware?: any,
   globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
-  trycpManagerUrl?: string,
 }
 
 type MakeGenConfigArgsFn = (playerName: string, uuid: string) => Promise<T.GenConfigArgs>
@@ -57,7 +56,6 @@ export class Orchestrator {
   _scenarios: Array<RegisteredScenario>
   _spawnConductor: T.SpawnConductorFn
   _reporter: R.Reporter
-  _trycpManagerUrl: string | null
 
   constructor(o: OrchestratorConstructorParams = {}) {
     this._makeGenConfigArgs = o.genConfigArgs || defaultMakeGenConfigArgs
@@ -68,7 +66,6 @@ export class Orchestrator {
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))
       : o.reporter || R.unit
-    this._trycpManagerUrl = o.trycpManagerUrl || null
     this.waiterConfig = o.waiter
 
     const registerScenario = (desc, scenario) => this._registerScenario(desc, scenario, null)
