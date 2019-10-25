@@ -30,9 +30,9 @@ export type GenConfigFn = (args: GenConfigArgs) => Promise<string>
 export type GenConfigArgs = {
   playerName: string,
   uuid: string,
+  configDir: string,
   adminPort: number,
   zomePort: number,
-  commitConfig: (configToml: string) => Promise<void>,
 }
 
 export const adminWsUrl = ({ urlBase, adminPort }) => `${urlBase}:${adminPort}`
