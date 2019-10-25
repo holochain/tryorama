@@ -9,14 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `spawnRemote` added for remotely spawning a conductor via TryCP
-- `makeRemoteGenConfigArgs` added for creating config generation args obtained from a remote machine
+- `makeRemoteConfigSeedArgs` added for creating config generation args obtained from a remote machine
 
 ### Changed
 
-- `GenConfigArgs` now includes `baseUrl` along with ports, to facilitate remote connections to other than localhost
+- `ConfigSeedArgs` now includes `baseUrl` along with ports, to facilitate remote connections to other than localhost
 - `SpawnConductorFn` signature has changed. Now it takes a `Player` and some user data, and returns a fully constructed `Conductor`
 - `SpawnConductorFn` now is expected to handle awaiting the Conductor's readiness for websocket connections. Previously that was handled internally during `player.spawn`
-- Various internal names have changed, like genConfigArgs() -> makeGenConfigArgs()
+- Various internal names have changed, like GenConfigFn -> ConfigSeed
 - `player.spawn()` now takes a user-defined argument which gets passed to the spawnConductor function.
 - Optional `player.spawn()` function argument now becomes `{handleHook}` in the context of the `spawnConductorLocal` function
 

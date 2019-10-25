@@ -98,7 +98,7 @@ export const getConfigPath = configDir => path.join(configDir, 'conductor-config
  * 
  * TODO: move debugLog into ConductorConfig
  */
-export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig): T.GenConfigFn => {
+export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig): T.ConfigSeed => {
   if (typeof inputConfig === 'function') {
     // let an already-generated function just pass through
     return inputConfig
@@ -106,7 +106,7 @@ export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig):
 
   T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
 
-  return async (args: T.GenConfigArgs) => {
+  return async (args: T.ConfigSeedArgs) => {
     const config = desugarConfig(args, inputConfig)
     const pieces = [
       await genInstanceConfig(config, args),
@@ -124,7 +124,7 @@ export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig):
   }
 }
 
-export const desugarConfig = (args: T.GenConfigArgs, config: T.EitherConductorConfig): T.ConductorConfig => {
+export const desugarConfig = (args: T.ConfigSeedArgs, config: T.EitherConductorConfig): T.ConductorConfig => {
   config = _.cloneDeep(config)
   if (!_.isArray(config.instances)) {
     // time to desugar the object
@@ -138,7 +138,7 @@ export const desugarConfig = (args: T.GenConfigArgs, config: T.EitherConductorCo
   return config as T.ConductorConfig
 }
 
-export const makeTestAgent = (id, { playerName, uuid }: T.GenConfigArgs) => ({
+export const makeTestAgent = (id, { playerName, uuid }: T.ConfigSeedArgs) => ({
   // NB: very important that agents have different names on different conductors!!
   name: `${playerName}::${id}::${uuid}`,
   id: id,

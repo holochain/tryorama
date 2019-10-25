@@ -77,7 +77,7 @@ test('DNA id generation', t => {
 })
 
 test('Sugared config', async t => {
-  t.deepEqual(C.desugarConfig({ playerName: 'name', uuid: 'uuid' } as T.GenConfigArgs, configSugared), configPlain)
+  t.deepEqual(C.desugarConfig({ playerName: 'name', uuid: 'uuid' } as T.ConfigSeedArgs, configSugared), configPlain)
   t.end()
 })
 

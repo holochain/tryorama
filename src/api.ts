@@ -17,7 +17,7 @@ type Modifiers = {
   singleConductor: boolean
 }
 
-type AnyConfig = T.GenConfigFn | T.EitherConductorConfig
+type AnyConfig = T.ConfigSeed | T.EitherConductorConfig
 
 export class ScenarioApi {
 
@@ -55,7 +55,7 @@ export class ScenarioApi {
       const genConfigArgs = await makeGenConfigArgs(name, this._uuid)
       // If an object was passed in, run it through genConfig first. Otherwise use the given function.
       const configBuilder = _.isFunction(config)
-        ? (config as T.GenConfigFn)
+        ? (config as T.ConfigSeed)
         : genConfig(config as T.EitherConductorConfig, this._orchestrator._globalConfig)
       const configToml = await configBuilder(genConfigArgs)
       const configJson = TOML.parse(configToml)

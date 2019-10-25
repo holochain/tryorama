@@ -15,7 +15,7 @@ const base64 = require('base-64')
  * when multiple conductors are attempting to secure ports for their interfaces.
  * In the future it would be great to move to domain socket based interfaces.
  */
-export const makeLocalGenConfigArgs = async (playerName: string, uuid: string): Promise<T.GenConfigArgs> => {
+export const makeLocalGenConfigArgs = async (playerName: string, uuid: string): Promise<T.ConfigSeedArgs> => {
   const adminPort = await getPort()
   const zomePort = await getPort()
   const configDir = await tempDir()
@@ -24,7 +24,7 @@ export const makeLocalGenConfigArgs = async (playerName: string, uuid: string): 
   return { playerName, commitConfig, urlBase, adminPort, zomePort, uuid }
 }
 
-export const makeRemoteGenConfigArgs = async (playerName: string, uuid: string): Promise<T.GenConfigArgs> => {
+export const makeRemoteGenConfigArgs = async (playerName: string, uuid: string): Promise<T.ConfigSeedArgs> => {
   const { urlBase, trycpPort, adminPort, zomePort } = await getMachineDataFromMRMM()
   const trycpUrl = urlBase + ':' + trycpPort
   const commitConfig = (configToml) => trycpSession(trycpUrl, playerName).then(trycp => trycp.player(base64.encode(configToml)))

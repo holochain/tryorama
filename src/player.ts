@@ -5,14 +5,14 @@ import { Signal, DnaId } from '@holochain/hachiko'
 import { notImplemented } from './common'
 import { Conductor, CallZomeFunc, CallAdminFunc } from './conductor'
 import { Instance } from './instance'
-import { GenConfigArgs, SpawnConductorFn, ObjectS, ObjectN } from './types';
+import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
 
 type ConstructorArgs = {
   name: string,
-  genConfigArgs: GenConfigArgs,
+  genConfigArgs: ConfigSeedArgs,
   onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
@@ -44,7 +44,7 @@ export class Player {
   _conductor: Conductor | null
   _instances: ObjectS<Instance> | ObjectN<Instance>
   _dnaIds: Array<DnaId>
-  _genConfigArgs: GenConfigArgs
+  _genConfigArgs: ConfigSeedArgs
   _spawnConductor: SpawnConductorFn
 
   constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {

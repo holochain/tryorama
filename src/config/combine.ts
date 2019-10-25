@@ -9,7 +9,7 @@ import env from '../env'
 
 export const combineConfigs =
   (configs: T.ObjectS<T.AnyConductorConfig>, g: T.GlobalConfig) =>
-    async (args: T.GenConfigArgs) => {
+    async (args: T.ConfigSeedArgs) => {
       const configsJson = await _.chain(configs)
         .toPairs()
         .map(async ([name, c]) => [name, await genConfig(c, g)(args)])

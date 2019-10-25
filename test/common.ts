@@ -37,7 +37,7 @@ export const withClock = f => t => {
   }
 }
 
-export const genConfigArgs: () => Promise<T.GenConfigArgs> = async () => ({
+export const genConfigArgs: () => Promise<T.ConfigSeedArgs> = async () => ({
   configDir: 'config/dir',
   urlBase: 'http://localhost',
   adminPort: 1000,

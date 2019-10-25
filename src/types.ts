@@ -26,8 +26,8 @@ export type SpawnConductorFn = (player: Player, args: any) => Promise<Conductor>
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 
-export type GenConfigFn = (args: GenConfigArgs) => Promise<string>
-export type GenConfigArgs = {
+export type ConfigSeed = (args: ConfigSeedArgs) => Promise<string>
+export type ConfigSeedArgs = {
   playerName: string,
   uuid: string,
   configDir: string,
@@ -135,7 +135,7 @@ export const EitherConductorConfigV = t.union([ConductorConfigV, SugaredConducto
 export type EitherConductorConfig = t.TypeOf<typeof EitherConductorConfigV>
 
 /** For situations where we can accept either flavor of config */
-export type AnyConductorConfig = EitherConductorConfig | GenConfigFn
+export type AnyConductorConfig = EitherConductorConfig | ConfigSeed
 
 export const GlobalConfigV = t.type({
   network: NetworkConfigV,
@@ -149,6 +149,4 @@ export const GlobalConfigPartialV = t.partial({
 })
 export type GlobalConfigPartial = t.TypeOf<typeof GlobalConfigPartialV>
 
-
-/** Something "killable" */
 export type KillFn = (signal?: string) => Promise<void>

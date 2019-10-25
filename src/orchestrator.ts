@@ -26,7 +26,7 @@ type OrchestratorConstructorParams = {
   waiter?: WaiterOptions,
 }
 
-type MakeGenConfigArgsFn = (playerName: string, uuid: string) => Promise<T.GenConfigArgs>
+type MakeGenConfigArgsFn = (playerName: string, uuid: string) => Promise<T.ConfigSeedArgs>
 
 type ScenarioModifier = 'only' | 'skip' | null
 type RegisteredScenario = {

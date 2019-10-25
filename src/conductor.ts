@@ -2,7 +2,7 @@ const colors = require('colors/safe')
 const hcWebClient = require('@holochain/hc-web-client')
 
 import { Signal } from '@holochain/hachiko'
-import { ConductorConfig, KillFn, GenConfigArgs } from "./types";
+import { ConductorConfig, KillFn, ConfigSeedArgs } from "./types";
 import { notImplemented } from "./common";
 import { makeLogger } from "./logger";
 import { delay } from './util';
