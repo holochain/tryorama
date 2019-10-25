@@ -35,6 +35,10 @@ export type ConfigSeedArgs = {
   zomePort: number,
 }
 
+export type AnyConfigBuilder = ConfigSeed | EitherConductorConfig
+export type PlayerConfigs<T> = ObjectS<T> | Array<T>
+export type MachineConfigs<T> = ObjectS<PlayerConfigs<T>>
+
 export const adminWsUrl = ({ urlBase, adminPort }) => `${urlBase}:${adminPort}`
 export const zomeWsUrl = ({ urlBase, zomePort }) => `${urlBase}:${zomePort}`
 

@@ -124,7 +124,7 @@ export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig):
   }
 }
 
-export const desugarConfig = (args: T.ConfigSeedArgs, config: T.EitherConductorConfig): T.ConductorConfig => {
+export const desugarConfig = (args: { playerName: string, uuid: string }, config: T.EitherConductorConfig): T.ConductorConfig => {
   config = _.cloneDeep(config)
   if (!_.isArray(config.instances)) {
     // time to desugar the object
@@ -138,7 +138,7 @@ export const desugarConfig = (args: T.ConfigSeedArgs, config: T.EitherConductorC
   return config as T.ConductorConfig
 }
 
-export const makeTestAgent = (id, { playerName, uuid }: T.ConfigSeedArgs) => ({
+export const makeTestAgent = (id, { playerName, uuid }) => ({
   // NB: very important that agents have different names on different conductors!!
   name: `${playerName}::${id}::${uuid}`,
   id: id,

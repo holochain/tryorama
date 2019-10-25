@@ -6,7 +6,7 @@ import { genConfigArgs, spawnConductor } from '../common'
 
 test('Scenario API constructed properly', async t => {
   t.plan(3)
-  const orchestrator = new Orchestrator({ spawnConductor, genConfigArgs })
+  const orchestrator = new Orchestrator()
   orchestrator.registerScenario('test scenario 1', async s => {
     t.equal(s.description, 'test scenario 1')
     t.equal(typeof s.players, 'function')

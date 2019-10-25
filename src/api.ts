@@ -8,97 +8,139 @@ import * as T from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
-import { promiseSerialObject, delay } from './util';
-import { getConfigPath, genConfig, assertUniqueTestAgentNames } from './config';
+import { promiseSerialObject, delay, stripPortFromUrl } from './util';
+import { getConfigPath, genConfig, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
-import { trycpSession } from './trycp'
+import { trycpSession, TrycpSession } from './trycp'
 
 type Modifiers = {
   singleConductor: boolean
 }
 
-type AnyConfig = T.ConfigSeed | T.EitherConductorConfig
+const LOCAL_MACHINE_ID = 'local'
+
+const standardizeConfigSeed = (configData: T.AnyConfigBuilder, globalConfig: T.GlobalConfig): T.ConfigSeed => {
+  return _.isFunction(configData)
+    ? (configData as T.ConfigSeed)
+    : genConfig(configData as T.EitherConductorConfig, globalConfig)
+}
 
 export class ScenarioApi {
 
   description: string
 
-  _players: Array<Player>
+  _globalConfig: T.GlobalConfig
+  _players: Record<string, Player>
   _uuid: string
-  _orchestrator: Orchestrator
   _waiter: Waiter
   _modifiers: Modifiers
   _activityTimer: any
 
   constructor(description: string, orchestrator: Orchestrator, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
-    this._players = []
+    this._players = {}
     this._uuid = uuid
-    this._orchestrator = orchestrator
+    this._globalConfig = orchestrator._globalConfig
     this._waiter = new Waiter(FullSyncNetwork, undefined, orchestrator.waiterConfig)
     this._modifiers = modifiers
     this._activityTimer = null
   }
 
-  players = async (configs: T.ObjectS<AnyConfig> | Array<AnyConfig>, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
+  players = async (machines: T.MachineConfigs<T.AnyConfigBuilder>, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
+
     logger.debug('creating players')
-    const makeGenConfigArgs = this._orchestrator._makeGenConfigArgs
-    const spawnConductor = this._orchestrator._spawnConductor
-    const players = {}
+    const configsJson: Array<any> = []
+    const playerBuilders: Record<string, Function> = {}
 
-    // if passing an array, convert to an object with keys as stringified indices. Otherwise just get the key, value pairs
-    const entries: Array<[string, AnyConfig]> = _.isArray(configs)
-      ? configs.map((v, i) => [String(i), v])
-      : Object.entries(configs)
+    for (const machineEndpoint in machines) {
+      const configs = machines[machineEndpoint]
+      const machineUrl = stripPortFromUrl(machineEndpoint)
 
-    const configsIntermediate = await Promise.all(entries.map(async ([name, config]) => {
-      const genConfigArgs = await makeGenConfigArgs(name, this._uuid)
-      // If an object was passed in, run it through genConfig first. Otherwise use the given function.
-      const configBuilder = _.isFunction(config)
-        ? (config as T.ConfigSeed)
-        : genConfig(config as T.EitherConductorConfig, this._orchestrator._globalConfig)
-      const configToml = await configBuilder(genConfigArgs)
-      const configJson = TOML.parse(configToml)
-      return { name, configJson, configToml, genConfigArgs }
-    }))
+      // // if passing an array, convert to an object with keys as stringified indices. Otherwise just get the key, value pairs
+      // const entries: Array<[string, AnyConfigBuilder]> = _.isArray(configs)
+      //   ? configs.map((v, i) => [String(i), v])
+      //   : Object.entries(configs)
 
-    logger.debug('deduping agent ids')
-    assertUniqueTestAgentNames(configsIntermediate.map(c => c.configJson))
+      const trycp: TrycpSession | null = (machineEndpoint === LOCAL_MACHINE_ID) ? null : await trycpSession(machineEndpoint)
 
-    configsIntermediate.forEach(({ name, configJson, configToml, genConfigArgs }) => {
-      players[name] = (async () => {
-        const { instances } = configJson
-        const { playerName, urlBase, commitConfig } = genConfigArgs
+      for (const playerName in configs) {
+        const configSeed = standardizeConfigSeed(configs[playerName], this._globalConfig)
+        const configSeedArgs = trycp
+          ? _.assign(await trycp.getArgs(), { uuid: this._uuid })
+          : await localConfigSeedArgs(playerName, this._uuid)
+        const configToml = await configSeed(configSeedArgs)
+        const configJson = TOML.parse(configToml)
+        configsJson.push(configJson)
 
-        await commitConfig(configToml)
+        // this code will only be executed once it is determined that all configs are valid
+        playerBuilders[playerName] = async () => {
+          const { instances } = configJson
+          const { configDir } = configSeedArgs
+          if (trycp) {
+            await trycp.player(playerName, configToml)
+          } else {
+            await fs.writeFile(getConfigPath(configDir), configToml)
+          }
 
-        const player = new Player({
-          name,
-          genConfigArgs,
-          spawnConductor,
-          onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, name)),
-          onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, name)),
-          onActivity: () => this._restartTimer(),
-          onSignal: ({ instanceId, signal }) => {
-            const instance = instances.find(c => c.id === instanceId)
-            const dnaId = instance!.dna
-            const observation = {
-              dna: dnaId,
-              node: name,
-              signal
-            }
-            this._waiter.handleObservation(observation)
-          },
-        })
-        if (spawnArgs) {
-          await player.spawn(spawnArgs)
+          const player = new Player({
+            name: playerName,
+            configSeedArgs,
+            spawnConductor: trycp ? spawnRemote(trycp, machineUrl) : spawnLocal,
+            onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
+            onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
+            onActivity: () => this._restartTimer(),
+            onSignal: ({ instanceId, signal }) => {
+              const instance = instances.find(c => c.id === instanceId)
+              const dnaId = instance!.dna
+              const observation = {
+                dna: dnaId,
+                node: playerName,
+                signal
+              }
+              this._waiter.handleObservation(observation)
+            },
+          })
+
+          if (spawnArgs) {
+            await player.spawn(spawnArgs)
+          }
         }
-        this._players.push(player)
-        return player
-      })()
-    })
-    const ps = await promiseSerialObject<Player>(players)
-    return ps
+      }
+    }
+
+    // this will throw an error if something is wrong
+    assertUniqueTestAgentNames(configsJson)
+
+    const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
+    this._players = players
+    return players
+
+    // const configsIntermediate = await Promise.all(entries.map(async ([name, config]) => {
+    //   const genConfigArgs = await makeGenConfigArgs(name, this._uuid)
+    //   // If an object was passed in, run it through genConfig first. Otherwise use the given function.
+    //   const configBuilder = _.isFunction(config)
+    //     ? (config as T.ConfigSeed)
+    //     : genConfig(config as T.EitherConductorConfig, this._globalConfig)
+    //   const configToml = await configBuilder(genConfigArgs)
+    //   return { name, configJson, configToml, genConfigArgs }
+    // }))
+
+    // logger.debug('deduping agent ids')
+    // assertUniqueTestAgentNames(configsIntermediate.map(c => c.configJson))
+
+    // configsIntermediate.forEach(({ name, configJson, configToml }) => {
+    //   players[name] = (async () => {
+    //     const { instances } = configJson
+
+    //       (trycp) ?  : fs.writeFile(getConfigPath(configDir), configToml)
+    //     await commitConfig(configToml)
+
+
+    //     return player
+    //   })()
+    // })
+    // const ps = await promiseSerialObject<Player>(players)
+    // return ps
   }
 
   consistency = (players?: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
@@ -113,7 +155,7 @@ export class ScenarioApi {
     })
   })
 
-  globalConfig = (): T.GlobalConfig => this._orchestrator._globalConfig
+  globalConfig = (): T.GlobalConfig => this._globalConfig
 
   _clearTimer = () => {
     logger.debug('cleared timer')
@@ -130,7 +172,7 @@ export class ScenarioApi {
   _destroyConductors = async () => {
     const kills = await this._cleanup('SIGKILL')
     this._clearTimer()
-    const names = this._players.filter((player, i) => kills[i]).map(player => player.name)
+    const names = _.values(this._players).filter((player, i) => kills[i]).map(player => player.name)
     names.sort()
     const msg = `
 The following conductors were forcefully shutdown after ${env.conductorTimeoutMs / 1000} seconds of no activity:
@@ -150,7 +192,7 @@ ${names.join(', ')}
    */
   _cleanup = async (signal?): Promise<Array<boolean>> => {
     const kills = await Promise.all(
-      this._players.map(player => player.cleanup(signal))
+      _.values(this._players).map(player => player.cleanup(signal))
     )
     this._clearTimer()
     return kills

@@ -7,6 +7,11 @@ import { ObjectS } from './types';
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 export const trace = (x, msg = '{T}') => (console.log(msg, typeof x, x), x)
 
+export const stripPortFromUrl = url => {
+  const [base, port] = url.split(':')
+  return base
+}
+
 // from https://hackernoon.com/functional-javascript-resolving-promises-sequentially-7aac18c4431e
 export function promiseSerialArray<T>(promises: Array<Promise<T>>): Promise<Array<T>> {
   return promises.reduce((promise, p) =>

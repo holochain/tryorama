@@ -7,10 +7,6 @@ import * as R from "./reporter";
 import { WaiterOptions } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
-import { makeLocalGenConfigArgs, spawnLocal } from "./config";
-
-const defaultSpawnConductor = spawnLocal
-const defaultMakeGenConfigArgs = makeLocalGenConfigArgs
 
 export const defaultGlobalConfig: T.GlobalConfig = {
   network: 'memory',
@@ -18,12 +14,11 @@ export const defaultGlobalConfig: T.GlobalConfig = {
 }
 
 type OrchestratorConstructorParams = {
-  spawnConductor?: T.SpawnConductorFn,
-  genConfigArgs?: MakeGenConfigArgsFn,
   reporter?: boolean | R.Reporter,
-  middleware?: any,
+  middleware?: M.Middleware,
   globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
+  newConfig?: any,  // TODO give type, maybe flatten into overall config
 }
 
 type MakeGenConfigArgsFn = (playerName: string, uuid: string) => Promise<T.ConfigSeedArgs>
@@ -50,16 +45,12 @@ export class Orchestrator {
   registerScenario: Register & { only: Register, skip: Register }
   waiterConfig?: WaiterOptions
 
-  _makeGenConfigArgs: MakeGenConfigArgsFn
   _middleware: M.Middleware
   _globalConfig: T.GlobalConfig
   _scenarios: Array<RegisteredScenario>
-  _spawnConductor: T.SpawnConductorFn
   _reporter: R.Reporter
 
   constructor(o: OrchestratorConstructorParams = {}) {
-    this._makeGenConfigArgs = o.genConfigArgs || defaultMakeGenConfigArgs
-    this._spawnConductor = o.spawnConductor || defaultSpawnConductor
     this._middleware = o.middleware || M.runSeries
     this._globalConfig = _.merge(defaultGlobalConfig, o.globalConfig || {})
     this._scenarios = []

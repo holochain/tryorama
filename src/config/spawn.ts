@@ -9,12 +9,12 @@ import * as path from "path";
 import { Player } from "..";
 import { Conductor } from "../conductor";
 import { getConfigPath } from ".";
-import { trycpSession } from "../trycp";
+import { trycpSession, TrycpSession } from "../trycp";
 
 
 export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook }): Promise<Conductor> => {
   const name = player.name
-  const configPath = getConfigPath(player._genConfigArgs.configDir)
+  const configPath = getConfigPath(player._configSeedArgs.configDir)
   let handle
   try {
     const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
@@ -44,8 +44,8 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      adminWsUrl: `${player._genConfigArgs.urlBase}:${player._genConfigArgs.adminPort}`,
-      zomeWsUrl: `${player._genConfigArgs.urlBase}:${player._genConfigArgs.zomePort}`,
+      adminWsUrl: `ws://localhost:${player._configSeedArgs.adminPort}`,
+      zomeWsUrl: `ws://localhost:${player._configSeedArgs.zomePort}`,
     })
 
     await awaitConductorInterfaceStartup(handle, player.name)
@@ -81,21 +81,19 @@ const awaitConductorInterfaceStartup = (handle, name) => {
   })
 }
 
-export const spawnRemote: T.SpawnConductorFn = async (player: Player): Promise<Conductor> => {
+export const spawnRemote = (trycp: TrycpSession, machineUrl: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
   const name = player.name
 
-  const wsUrl = 'TODO: must come from MRMM'
-  const trycp = await trycpSession(wsUrl, name)
-  const spawnResult = await trycp.spawn()
+  const spawnResult = await trycp.spawn(name)
   logger.info(`TryCP spawn result: ${spawnResult}`)
 
   return new Conductor({
     name,
-    kill: (signal?) => trycp.kill(signal),
+    kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    adminWsUrl: 'TODO',
-    zomeWsUrl: 'TODO',
+    adminWsUrl: `${machineUrl}:${player._configSeedArgs.adminPort}`,
+    zomeWsUrl: `${machineUrl}:${player._configSeedArgs.zomePort}`,
   })
 }
 

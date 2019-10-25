@@ -1,23 +1,30 @@
 
 import { Orchestrator } from '../../src'
-import { runSeries, combine, singleConductor } from '../../src/middleware'
+import { runSeries, combine, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
 
 const network = {
   type: 'sim1h',
   dynamo_url: 'http://localhost:8000',
 }
 
-const seriesOrchestrator = () => new Orchestrator({
-  middleware: runSeries,
+const localOrchestrator = () => new Orchestrator({
+  middleware: combine(runSeries, localOnly),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })
 
-const singleConductorSeriesOrchestrator = () => new Orchestrator({
+const mrmmOrchestrator = () => new Orchestrator({
+  middleware: combine(runSeries, machinePerPlayer('MOCK')),
+  reporter: true,
+  // globalConfig is specified explicitly in testConfig in this case
+})
+
+const singleConductorOrchestrator = () => new Orchestrator({
   middleware: combine(runSeries, singleConductor),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })
 
-require('./test-always-on')(seriesOrchestrator)
-require('./test-always-on')(singleConductorSeriesOrchestrator)
+require('./test-always-on')(localOrchestrator)
+require('./test-always-on')(singleConductorOrchestrator)
+require('./test-always-on')(mrmmOrchestrator)

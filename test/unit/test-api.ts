@@ -9,6 +9,7 @@ import { configSugared } from './test-config';
 import * as C from '../../src/config';
 import * as Gen from '../../src/config/gen';
 import { ConfigSeedArgs } from '../../src/types';
+import { trace } from '../../src/util';
 
 test('API detects duplicate agent IDs', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
@@ -20,8 +21,10 @@ test('API detects duplicate agent IDs', async t => {
   } as ConfigSeedArgs
   await t.rejects(
     api.players({
-      alice: C.desugarConfig(args, configSugared),
-      bob: C.desugarConfig(args, configSugared)
+      local: {
+        alice: C.desugarConfig(args, configSugared),
+        bob: C.desugarConfig(args, configSugared)
+      }
     }),
     /There are 2 non-unique test agent names specified/
   )

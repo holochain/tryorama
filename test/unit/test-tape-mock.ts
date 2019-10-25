@@ -18,12 +18,9 @@ const createMockTape = () => {
 
 const { runner: mockTape, api: mockT } = createMockTape()
 
-const orchestratorPlain = new Orchestrator({
-  spawnConductor, genConfigArgs
-})
+const orchestratorPlain = new Orchestrator()
 
 const orchestratorTape = new Orchestrator({
-  spawnConductor, genConfigArgs,
   middleware: tapeExecutor(mockTape)
 })
 

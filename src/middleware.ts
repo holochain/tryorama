@@ -1,5 +1,6 @@
 import { combineConfigs, adjoin } from "./config/combine";
 import { ScenarioApi } from "./api";
+import { invokeMRMM } from "./trycp";
 
 const _ = require('lodash')
 
@@ -102,11 +103,16 @@ export const runSeries = (() => {
   }
 })()
 
+/** 
+ * Take all configs defined for all machines and all players,
+ * merge the configs into one big TOML file, 
+ * and create a single player on the local machine to run it.
+*/
 export const singleConductor = (run, f) => run((s: ScenarioApi) => {
   const players = async (configs, ...a) => {
     const names = Object.keys(configs)
     const combined = combineConfigs(configs, s.globalConfig())
-    const { combined: player } = await s.players({ combined }, true)
+    const { combined: player } = await s.players({ local: { combined } }, true)
     const players = names.map(name => {
       const modify = adjoin(name)
       const p = {
@@ -120,17 +126,17 @@ export const singleConductor = (run, f) => run((s: ScenarioApi) => {
     })
     return _.fromPairs(players)
   }
-  return f(Object.assign({}, s, { players }))
+  return f(_.assign({}, s, { players }))
 })
 
 // TODO: add test
 export const callSync = (run, f) => run(s => {
-  const s_ = Object.assign({}, s, {
+  const s_ = _.assign({}, s, {
     players: async (...a) => {
       const players = await s.players(...a)
       const players_ = _.mapValues(
         players,
-        api => Object.assign(api, {
+        api => _.assign(api, {
           callSync: async (...b) => {
             const result = await api.call(...b)
             await s.consistency()
@@ -143,3 +149,38 @@ export const callSync = (run, f) => run(s => {
   })
   return f(s_)
 })
+
+/**
+ * Allow a test to skip the level of machine configuration
+ * This middleware wraps the player configs in the "local" machine
+ */
+export const localOnly: Middleware = (run, f) => run(s => {
+  const s_ = _.assign({}, s, {
+    players: (configs, ...a) => s.players({ local: configs }, ...a)
+  })
+  return f(s_)
+})
+
+/**
+ * Allow a test to skip the level of machine configuration
+ * This middleware finds a new machine for each player, and returns the
+ * properly wrapped config specifying the acquired machine endpoints
+ */
+export const machinePerPlayer = (mrmmUrl): Middleware => (run, f) => run(s => {
+  const s_ = _.assign({}, s, {
+    players: async (configs, ...a) => {
+      const wrappedConfig = await _.chain(configs)
+        .toPairs()
+        .map(async (playerName, config) => {
+          const machineEndpoint = await invokeMRMM(mrmmUrl)
+          return [machineEndpoint, { [playerName]: config }]
+        })
+        .fromPairs()
+        .thru(x => Promise.all(x))
+        .value()
+      return s.players(wrappedConfig, ...a)
+    }
+  })
+  return f(s_)
+})
+

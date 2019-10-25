@@ -12,7 +12,7 @@ import { unparkPort } from './config/get-port-cautiously'
 
 type ConstructorArgs = {
   name: string,
-  genConfigArgs: ConfigSeedArgs,
+  configSeedArgs: ConfigSeedArgs,
   onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
@@ -44,10 +44,10 @@ export class Player {
   _conductor: Conductor | null
   _instances: ObjectS<Instance> | ObjectN<Instance>
   _dnaIds: Array<DnaId>
-  _genConfigArgs: ConfigSeedArgs
+  _configSeedArgs: ConfigSeedArgs
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ name, configSeedArgs, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
@@ -57,7 +57,7 @@ export class Player {
 
     this._conductor = null
     this._instances = {}
-    this._genConfigArgs = genConfigArgs
+    this._configSeedArgs = configSeedArgs
     this._spawnConductor = spawnConductor
   }
 
@@ -140,12 +140,12 @@ export class Player {
   cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
     if (this._conductor) {
       await this.kill(signal)
-      unparkPort(this._genConfigArgs.adminPort)
-      unparkPort(this._genConfigArgs.zomePort)
+      unparkPort(this._configSeedArgs.adminPort)
+      unparkPort(this._configSeedArgs.zomePort)
       return true
     } else {
-      unparkPort(this._genConfigArgs.adminPort)
-      unparkPort(this._genConfigArgs.zomePort)
+      unparkPort(this._configSeedArgs.adminPort)
+      unparkPort(this._configSeedArgs.zomePort)
       return false
     }
   }
