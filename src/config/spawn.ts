@@ -84,7 +84,7 @@ const awaitConductorInterfaceStartup = (handle, name) => {
 export const spawnRemote: T.SpawnConductorFn = async (player: Player): Promise<Conductor> => {
   const name = player.name
 
-  const wsUrl = T.adminWsUrl(player._genConfigArgs)
+  const wsUrl = 'TODO: must come from MRMM'
   const trycp = await trycpSession(wsUrl, name)
   const spawnResult = await trycp.spawn()
   logger.info(`TryCP spawn result: ${spawnResult}`)

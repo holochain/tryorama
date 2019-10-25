@@ -29,11 +29,10 @@ export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 export type GenConfigFn = (args: GenConfigArgs) => Promise<string>
 export type GenConfigArgs = {
   playerName: string,
-  configDir: string | null,  // if this is null, then we are using TryCP to send config remotely
   uuid: string,
-  urlBase: string,
   adminPort: number,
   zomePort: number,
+  commitConfig: (configToml: string) => Promise<void>,
 }
 
 export const adminWsUrl = ({ urlBase, adminPort }) => `${urlBase}:${adminPort}`

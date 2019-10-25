@@ -2,7 +2,6 @@ import * as _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
 const TOML = require('@iarna/toml')
-const base64 = require('base-64')
 
 import { Waiter, FullSyncNetwork } from '@holochain/hachiko'
 import * as T from "./types"
@@ -69,15 +68,9 @@ export class ScenarioApi {
     configsIntermediate.forEach(({ name, configJson, configToml, genConfigArgs }) => {
       players[name] = (async () => {
         const { instances } = configJson
-        const { playerName, urlBase, configDir } = genConfigArgs
-        if (configDir) {
-          await fs.writeFile(getConfigPath(configDir), configToml)
-        } else {
-          const wsUrl = T.adminWsUrl(genConfigArgs)
-          const trycp = await trycpSession(wsUrl, playerName)
-          const result = await trycp.player(base64.encode(configToml))
-          logger.info(`TryCP result: ${result}`)
-        }
+        const { playerName, urlBase, commitConfig } = genConfigArgs
+
+        await commitConfig(configToml)
 
         const player = new Player({
           name,
