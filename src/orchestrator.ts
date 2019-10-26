@@ -13,9 +13,9 @@ export const defaultGlobalConfig: T.GlobalConfig = {
   logger: false,
 }
 
-type OrchestratorConstructorParams = {
+type OrchestratorConstructorParams<S> = {
   reporter?: boolean | R.Reporter,
-  middleware?: M.Middleware,
+  middleware?: M.MiddlewareT<ScenarioApi, S>,
   globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
   newConfig?: any,  // TODO give type, maybe flatten into overall config
@@ -40,17 +40,17 @@ type TestError = { description: string, error: any }
 
 type ScenarioExecutor = () => Promise<void>
 
-export class Orchestrator {
+export class Orchestrator<S> {
 
   registerScenario: Register & { only: Register, skip: Register }
   waiterConfig?: WaiterOptions
 
-  _middleware: M.Middleware
+  _middleware: M.MiddlewareT<ScenarioApi, S>
   _globalConfig: T.GlobalConfig
   _scenarios: Array<RegisteredScenario>
   _reporter: R.Reporter
 
-  constructor(o: OrchestratorConstructorParams = {}) {
+  constructor(o: OrchestratorConstructorParams<S> = {}) {
     this._middleware = o.middleware || M.runSeries
     this._globalConfig = _.merge(defaultGlobalConfig, o.globalConfig || {})
     this._scenarios = []
@@ -146,7 +146,7 @@ export class Orchestrator {
   //   return stats
   // }
 
-  _registerScenario = (desc: string, scenario: Function, modifier: ScenarioModifier): void => {
+  _registerScenario = (desc: string, scenario: S, modifier: ScenarioModifier): void => {
     const orchestratorData = _.pick(this, [
       '_globalConfig',
       'waiterConfig',
