@@ -1,9 +1,16 @@
 import { connect } from '@holochain/hc-web-client'
 import logger from './logger'
+import * as T from './types'
 const base64 = require('base-64')
 
+type PartialConfigSeedArgs = {
+  adminPort: number,
+  zomePort: number,
+  configDir: string,
+}
+
 export type TrycpSession = {
-  getArgs: () => Promise<any>,
+  getArgs: () => Promise<PartialConfigSeedArgs>,
   player: (id, configToml) => Promise<any>,
   spawn: (id) => Promise<any>,
   kill: (id, signal?) => Promise<any>,
@@ -12,10 +19,15 @@ export type TrycpSession = {
 }
 
 export const trycpSession = async (url): Promise<TrycpSession> => {
-  const { call, close } = await connect(url)
+  const { call, close } = await connect({ url })
 
   return {
-    getArgs: () => call('get_args')({}),
+    getArgs: () => Promise.resolve({
+      adminPort: 1111,
+      zomePort: 2222,
+      configDir: './temp',
+    }),
+    // getArgs: () => call('get_args')({}),
     player: (id, configToml) => call('player')({ id, config: base64.encode(configToml) }),
     spawn: (id) => call('spawn')({ id }),
     kill: (id, signal?) => call('kill')({ id, signal }),
@@ -29,7 +41,7 @@ export const invokeMRMM = (url) => {
   return fakeTrycpServer()
 }
 
-const fakeTrycpServer = async (): Promise<{ host: string, port: number }> => new Promise(async resolve => {
+const fakeTrycpServer = async (): Promise<string> => new Promise(async resolve => {
   const { getPort } = require('./config/get-port-cautiously')
   const { spawn } = require('child_process')
 
@@ -38,7 +50,7 @@ const fakeTrycpServer = async (): Promise<{ host: string, port: number }> => new
   trycp.stdout.on('data', (data) => {
     var regex = new RegExp("waiting for connections on port " + port);
     if (regex.test(data)) {
-      resolve({ host: "ws://localhost", port })
+      resolve(`ws://localhost:${port}`)
     }
     console.log(`stdout: ${data}`);
   });

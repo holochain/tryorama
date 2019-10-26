@@ -25,6 +25,6 @@ const singleConductorOrchestrator = () => new Orchestrator({
   // globalConfig is specified explicitly in testConfig in this case
 })
 
-require('./test-always-on')(localOrchestrator)
-require('./test-always-on')(singleConductorOrchestrator)
-// require('./test-always-on')(mrmmOrchestrator)
+// require('./test-always-on')(localOrchestrator)
+// require('./test-always-on')(singleConductorOrchestrator)
+require('./test-always-on')(mrmmOrchestrator)

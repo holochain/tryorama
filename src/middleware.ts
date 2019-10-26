@@ -171,15 +171,14 @@ export const localOnly: Middleware = (run, f) => run(s => {
  */
 export const machinePerPlayer = (mrmmUrl): Middleware => (run, f) => run(s => {
   const s_ = _.assign({}, s, {
-    players: async (configs, ...a) => {
+    players: async (configs: T.PlayerConfigs, ...a) => {
       const pairs = await _.chain(configs)
         .toPairs()
-        .map(async (playerName, config) => {
+        .map(async ([playerName, config]) => {
           const machineEndpoint = await invokeMRMM(mrmmUrl)
           return [machineEndpoint, { [playerName]: config }]
         })
         .thru(x => Promise.all(x))
-        .fromPairs()
         .value()
       const wrappedConfig = _.fromPairs(pairs)
       return s.players(wrappedConfig, ...a)
