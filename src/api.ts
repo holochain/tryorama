@@ -8,7 +8,7 @@ import * as T from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
-import { promiseSerialObject, delay, stripPortFromUrl } from './util';
+import { promiseSerialObject, delay, stripPortFromUrl, trace } from './util';
 import { getConfigPath, genConfig, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
 import { trycpSession, TrycpSession } from './trycp'
@@ -36,22 +36,20 @@ export class ScenarioApi {
   _modifiers: Modifiers
   _activityTimer: any
 
-  constructor(description: string, orchestrator: Orchestrator, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
+  constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
     this._players = {}
     this._uuid = uuid
-    this._globalConfig = orchestrator._globalConfig
-    this._waiter = new Waiter(FullSyncNetwork, undefined, orchestrator.waiterConfig)
+    this._globalConfig = orchestratorData._globalConfig
+    this._waiter = new Waiter(FullSyncNetwork, undefined, orchestratorData.waiterConfig)
     this._modifiers = modifiers
     this._activityTimer = null
   }
 
-  players = async (machines: T.MachineConfigs<T.AnyConfigBuilder>, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
-
+  players = async (machines: T.MachineConfigs, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
     logger.debug('creating players')
     const configsJson: Array<any> = []
     const playerBuilders: Record<string, Function> = {}
-
     for (const machineEndpoint in machines) {
       const configs = machines[machineEndpoint]
       const machineUrl = stripPortFromUrl(machineEndpoint)
@@ -66,7 +64,7 @@ export class ScenarioApi {
       for (const playerName in configs) {
         const configSeed = standardizeConfigSeed(configs[playerName], this._globalConfig)
         const configSeedArgs = trycp
-          ? _.assign(await trycp.getArgs(), { uuid: this._uuid })
+          ? _.assign(await trycp.getArgs(), { playerName, uuid: this._uuid })
           : await localConfigSeedArgs(playerName, this._uuid)
         const configToml = await configSeed(configSeedArgs)
         const configJson = TOML.parse(configToml)
@@ -104,6 +102,8 @@ export class ScenarioApi {
           if (spawnArgs) {
             await player.spawn(spawnArgs)
           }
+
+          return player
         }
       }
     }

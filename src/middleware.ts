@@ -3,7 +3,6 @@ import { ScenarioApi } from "./api";
 import { invokeMRMM } from "./trycp";
 import { trace } from "./util";
 import * as T from "./types";
-import { A, S } from "ts-toolbelt";
 
 const _ = require('lodash')
 
@@ -190,7 +189,7 @@ export const machinePerPlayer = (mrmmUrl): Middleware<T.PlayerConfigs> => (run, 
     players: async (configs: T.PlayerConfigs, ...a) => {
       const pairs = await _.chain(configs)
         .toPairs()
-        .map(async (playerName, config) => {
+        .map(async ([playerName, config]) => {
           const machineEndpoint = await invokeMRMM(mrmmUrl)
           return [machineEndpoint, { [playerName]: config }]
         })
@@ -203,7 +202,7 @@ export const machinePerPlayer = (mrmmUrl): Middleware<T.PlayerConfigs> => (run, 
   return f(s_)
 })
 
-const unwrapMachineConfig = <T>(machineConfigs: T.MachineConfigs): T.PlayerConfigs =>
+const unwrapMachineConfig = (machineConfigs: T.MachineConfigs): T.PlayerConfigs =>
   _.chain(machineConfigs)
     .values()
     .map(_.toPairs)

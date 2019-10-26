@@ -147,7 +147,11 @@ export class Orchestrator {
   // }
 
   _registerScenario = (desc: string, scenario: Function, modifier: ScenarioModifier): void => {
-    const api = new ScenarioApi(desc, this, uuidGen())
+    const orchestratorData = _.pick(this, [
+      '_globalConfig',
+      'waiterConfig',
+    ])
+    const api = new ScenarioApi(desc, orchestratorData, uuidGen())
     const runner = async scenario => scenario(api)
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })

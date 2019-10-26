@@ -20,11 +20,11 @@ const mrmmOrchestrator = () => new Orchestrator({
 })
 
 const singleConductorOrchestrator = () => new Orchestrator({
-  middleware: combine(runSeries, singleConductor),
+  middleware: combine(runSeries, singleConductor, localOnly),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })
 
-require('./test-always-on')(localOrchestrator)
-require('./test-always-on')(singleConductorOrchestrator)
+// require('./test-always-on')(localOrchestrator)
+// require('./test-always-on')(singleConductorOrchestrator)
 require('./test-always-on')(mrmmOrchestrator)
