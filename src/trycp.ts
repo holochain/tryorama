@@ -26,11 +26,11 @@ export const trycpSession = async (url): Promise<TrycpSession> => {
 
 export const invokeMRMM = (url) => {
   logger.warn("Using fake MRMM which spins up trycp servers on local machine!")
-  return fakeMRMM()
+  return fakeTrycpServer()
 }
 
-const fakeMRMM = async (): Promise<{ host: string, port: number }> => new Promise(async resolve => {
-  const getPort = require('./config/get-port-cautiously')
+const fakeTrycpServer = async (): Promise<{ host: string, port: number }> => new Promise(async resolve => {
+  const { getPort } = require('./config/get-port-cautiously')
   const { spawn } = require('child_process')
 
   const port = await getPort()

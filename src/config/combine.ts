@@ -8,11 +8,11 @@ import env from '../env'
 
 
 export const combineConfigs =
-  (configs: T.MachineConfigs<T.AnyConductorConfig>, g: T.GlobalConfig): T.ConfigSeed =>
+  (configs: T.MachineConfigs, g: T.GlobalConfig): T.ConfigSeed =>
     async (args: T.ConfigSeedArgs) => {
       const configsJson = await _.chain(configs)
-        .values()  // throw away machine IDs
-        .toPairs()
+        .values().map(x => _.toPairs(x)).flatten()  // throw away machine IDs
+        .tap(trace)
         .map(async ([name, c]) => [name, await genConfig(c, g)(args)])
         .thru(x => Promise.all(x))
         .value()

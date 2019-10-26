@@ -5,7 +5,7 @@ import logger from './logger'
 import { ObjectS } from './types';
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
-export const trace = (x, msg = '{T}') => (console.log(msg, typeof x, x), x)
+export const trace = (x, msg = '{T}') => (console.log(msg, `<${typeof x}>`, x), x)
 
 export const stripPortFromUrl = url => {
   const [base, port] = url.split(':')

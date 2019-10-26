@@ -36,8 +36,9 @@ export type ConfigSeedArgs = {
 }
 
 export type AnyConfigBuilder = ConfigSeed | EitherConductorConfig
-export type PlayerConfigs<T> = ObjectS<T> | Array<T>
-export type MachineConfigs<T> = ObjectS<PlayerConfigs<T>>
+// TODO: make this only take ConfigSeed
+export type PlayerConfigs = ObjectS<AnyConfigBuilder> | Array<AnyConfigBuilder>
+export type MachineConfigs = ObjectS<PlayerConfigs>
 
 export const adminWsUrl = ({ urlBase, adminPort }) => `${urlBase}:${adminPort}`
 export const zomeWsUrl = ({ urlBase, zomePort }) => `${urlBase}:${zomePort}`

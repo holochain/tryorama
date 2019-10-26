@@ -36,17 +36,17 @@ export class ScenarioApi {
   _modifiers: Modifiers
   _activityTimer: any
 
-  constructor(description: string, orchestrator: Orchestrator, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
+  constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
     this._players = {}
     this._uuid = uuid
-    this._globalConfig = orchestrator._globalConfig
-    this._waiter = new Waiter(FullSyncNetwork, undefined, orchestrator.waiterConfig)
+    this._globalConfig = orchestratorData._globalConfig
+    this._waiter = new Waiter(FullSyncNetwork, undefined, orchestratorData.waiterConfig)
     this._modifiers = modifiers
     this._activityTimer = null
   }
 
-  players = async (machines: T.MachineConfigs<T.AnyConfigBuilder>, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
+  players = async (machines: T.MachineConfigs, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
 
     logger.debug('creating players')
     const configsJson: Array<any> = []
@@ -104,6 +104,8 @@ export class ScenarioApi {
           if (spawnArgs) {
             await player.spawn(spawnArgs)
           }
+
+          return player
         }
       }
     }

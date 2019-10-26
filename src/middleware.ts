@@ -1,6 +1,8 @@
 import { combineConfigs, adjoin } from "./config/combine";
 import { ScenarioApi } from "./api";
 import { invokeMRMM } from "./trycp";
+import { trace } from "./util";
+import * as T from "./types";
 
 const _ = require('lodash')
 
@@ -109,9 +111,10 @@ export const runSeries = (() => {
  * and create a single player on the local machine to run it.
 */
 export const singleConductor = (run, f) => run((s: ScenarioApi) => {
-  const players = async (configs, ...a) => {
-    const names = Object.keys(configs)
-    const combined = combineConfigs(configs, s.globalConfig())
+  const players = async (machineConfigs: T.MachineConfigs, ...a) => {
+    const playerConfigs = unwrapMachineConfig(machineConfigs)
+    const names = Object.keys(playerConfigs)
+    const combined = combineConfigs(machineConfigs, s.globalConfig())
     const { combined: player } = await s.players({ local: { combined } }, true)
     const players = names.map(name => {
       const modify = adjoin(name)
@@ -169,18 +172,26 @@ export const localOnly: Middleware = (run, f) => run(s => {
 export const machinePerPlayer = (mrmmUrl): Middleware => (run, f) => run(s => {
   const s_ = _.assign({}, s, {
     players: async (configs, ...a) => {
-      const wrappedConfig = await _.chain(configs)
+      const pairs = await _.chain(configs)
         .toPairs()
         .map(async (playerName, config) => {
           const machineEndpoint = await invokeMRMM(mrmmUrl)
           return [machineEndpoint, { [playerName]: config }]
         })
-        .fromPairs()
         .thru(x => Promise.all(x))
+        .fromPairs()
         .value()
+      const wrappedConfig = _.fromPairs(pairs)
       return s.players(wrappedConfig, ...a)
     }
   })
   return f(s_)
 })
 
+const unwrapMachineConfig = (machineConfigs: T.MachineConfigs): T.PlayerConfigs =>
+  _.chain(machineConfigs)
+    .values()
+    .map(_.toPairs)
+    .flatten()
+    .fromPairs()
+    .value()
