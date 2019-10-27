@@ -3,8 +3,7 @@ import { ScenarioApi } from "./api";
 import { invokeMRMM } from "./trycp";
 import { trace } from "./util";
 import * as T from "./types";
-
-const _ = require('lodash')
+import * as _ from 'lodash'
 
 interface ApiPlayers<Config> {
   players: (config: Config, data?: any) => Promise<any>
@@ -23,10 +22,9 @@ export type RunnerT<A> = (f: A) => Promise<void>
 
 export type Scenario<S> = (s: S) => Promise<void>
 export type Scenario2<S, T> = (s: S, t: T) => Promise<void>
-export type ScenarioModded<T> = ((s: any) => Promise<void>) & { __phantom__: T | never }
 
 /**
- * Middleware is a decorator for scenario functions. A Middleware takes two functions:
+ * Middleware is a composable decorator for scenario functions. A Middleware takes two functions:
  * - the function which will run the scenario
  * - the scenario function itself
  * 
@@ -36,40 +34,24 @@ export type ScenarioModded<T> = ((s: any) => Promise<void>) & { __phantom__: T |
  * to set up extra context outside of the running of the scenario, e.g. for integrating
  * with test harnesses.
  */
-export type Middleware<A, B> = (run: Runner<A>, original: Scenario<B>) => Promise<void>
-export type MiddlewareT<A, B> = (run: RunnerT<A>, original: B) => Promise<void>
+export type Middleware<A, B> = (run: Runner<B>, original: Scenario<A>) => Promise<void>
+export type MiddlewareT<A, B> = (run: RunnerT<B>, original: A) => Promise<void>
 
 /** The no-op middleware */
 export const unit = <A>(run: Runner<A>, f: Scenario<A>) => run(f)
 
 /**
  * Combine multiple middlewares into a single middleware.
- * The middlewares are applied in the order that they're provided.
- * If using something fancy like `tapeExecutor`, put it at the end of the chain.
+ * The middlewares are applied in the *reverse order* that they're provided.
+ * i.e. the middleware at the end of the chain is the one to act directly on the user-supplied scenario,
+ * and the first middleware is the one to provide the clean vanilla scenario that the orchestrator knows how to run
+ * So, if using something fancy like `tapeExecutor`, put it at the beginning of the chain.
  */
-export const combine = (...ms: Array<Middleware<any, any>>): Middleware<any, any> => {
-  return (run, f) => {
-    const go = (ms: Array<Middleware<any, any>>, f: Scenario<any>) => {
-      // grab the next middleware
-      const m = ms.pop()
-      if (m) {
-        // if it exists, run it, where the runner actually just recurses
-        // to get the *next* middleware in the chain
-        const recurse = (g) => go(ms, g)
-        return m(recurse, f)
-      } else {
-        // otherwise, use the actual runner on the final middleware now that it
-        // has been composed with all the previous middlewares
-        return run(f)
-      }
-    }
-    return go(_.cloneDeep(ms), f)
-  }
-}
+export const combine = (...ms) => ms.reduce(compose)
 
 export const compose = <A, B, C>(x: Middleware<A, B>, y: Middleware<B, C>): Middleware<A, C> =>
-  (run: Runner<A>, f: Scenario<C>) => {
-    return y(g => x(run, g), f)
+  (run: Runner<C>, f: Scenario<A>) => {
+    return x(g => y(run, g), f)
   }
 
 type TapeExecutor = {}
@@ -92,7 +74,7 @@ type TapeExecutor = {}
  * entire test suite to await the end of all tape tests. It could be done by specifying
  * a parallel vs. serial mode for test running.
  */
-export const tapeExecutor = <A extends ScenarioApi>(tape: any): MiddlewareT<Scenario<A>, Scenario2<A, any>> => (run, f) => new Promise((resolve, reject) => {
+export const tapeExecutor = <A extends ScenarioApi>(tape: any): MiddlewareT<Scenario2<A, any>, Scenario<A>> => (run, f) => new Promise((resolve, reject) => {
   if (f.length !== 2) {
     reject("tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions.")
     return
@@ -118,9 +100,9 @@ export const tapeExecutor = <A extends ScenarioApi>(tape: any): MiddlewareT<Scen
 })
 
 /** Run tests in series rather than in parallel */
-export const runSeries = (() => {
+export const runSeries = ((): MiddlewareT<any, any> => {
   let lastPromise = Promise.resolve()
-  return async (run, f) => {
+  return async (run: RunnerT<any>, f: any) => {
     const result = run(f)
     lastPromise = lastPromise.catch(e => { /* TODO */ }).then(() => result)
     return result
@@ -132,27 +114,29 @@ export const runSeries = (() => {
  * merge the configs into one big TOML file, 
  * and create a single player on the local machine to run it.
 */
-export const singleConductor = (run: Runner<ApiMachineConfigs>, f: Scenario<ApiMachineConfigs>) => run((s: ScenarioApi) => {
-  const players = async (machineConfigs: T.MachineConfigs, ...a) => {
-    // throw away machine info, flatten to just all player names
-    const playerConfigs = unwrapMachineConfig(machineConfigs)
-    const playerNames = _.keys(playerConfigs)
-    const combined = combineConfigs(machineConfigs, s.globalConfig())
-    const { combined: player } = await s.players({ local: { combined } }, true)
-    const players = playerNames.map(name => {
-      const modify = adjoin(name)
-      const p = {
-        call: (instanceId, ...a) => player.call(modify(instanceId), a[0], a[1], a[2]),
-        info: (instanceId) => player.instance(modify(instanceId)),
-        instance: (instanceId) => player.instance(modify(instanceId)),
-        spawn: () => { throw new Error("player.spawn is disabled by singleConductor middleware") },
-        kill: () => { throw new Error("player.kill is disabled by singleConductor middleware") },
-      }
-      return [name, p]
-    })
-    return _.fromPairs(players)
-  }
-  return f(_.assign({}, s, { players }))
+export const singleConductor: Middleware<ApiMachineConfigs, ApiMachineConfigs> = (run: Runner<ApiMachineConfigs>, f: Scenario<ApiMachineConfigs>) => run((s: ScenarioApi) => {
+  const s_ = _.assign({}, s, {
+    players: async (machineConfigs: T.MachineConfigs, ...a) => {
+      // throw away machine info, flatten to just all player names
+      const playerConfigs = unwrapMachineConfig(machineConfigs)
+      const playerNames = _.keys(playerConfigs)
+      const combined = combineConfigs(machineConfigs, s.globalConfig())
+      const { combined: player } = await s.players({ local: { combined } }, true)
+      const players = playerNames.map(name => {
+        const modify = adjoin(name)
+        const p = {
+          call: (instanceId, ...a) => player.call(modify(instanceId), a[0], a[1], a[2]),
+          info: (instanceId) => player.instance(modify(instanceId)),
+          instance: (instanceId) => player.instance(modify(instanceId)),
+          spawn: () => { throw new Error("player.spawn is disabled by singleConductor middleware") },
+          kill: () => { throw new Error("player.kill is disabled by singleConductor middleware") },
+        }
+        return [name, p]
+      })
+      return _.fromPairs(players)
+    }
+  })
+  return f(s_)
 })
 
 // TODO: add test
@@ -180,7 +164,7 @@ export const callSync = (run, f) => run(s => {
  * Allow a test to skip the level of machine configuration
  * This middleware wraps the player configs in the "local" machine
  */
-export const localOnly: Middleware<ApiMachineConfigs, ApiPlayerConfigs> = (run, f) => run(s => {
+export const localOnly: Middleware<ApiPlayerConfigs, ApiMachineConfigs> = (run, f) => run(s => {
   const s_ = _.assign({}, s, {
     players: (configs, ...a) => s.players({ local: configs }, ...a)
   })
@@ -192,7 +176,7 @@ export const localOnly: Middleware<ApiMachineConfigs, ApiPlayerConfigs> = (run, 
  * This middleware finds a new machine for each player, and returns the
  * properly wrapped config specifying the acquired machine endpoints
  */
-export const machinePerPlayer = (mrmmUrl): Middleware<ApiMachineConfigs, ApiPlayerConfigs> => (run, f) => run(s => {
+export const machinePerPlayer = (mrmmUrl): Middleware<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
   const s_ = _.assign({}, s, {
     players: async (configs: T.PlayerConfigs, ...a) => {
       const pairs = await _.chain(configs)

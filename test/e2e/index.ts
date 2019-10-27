@@ -1,6 +1,6 @@
 
 import { Orchestrator } from '../../src'
-import { runSeries, combine, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
+import { runSeries, compose, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
 
 const network = {
   type: 'sim1h',
@@ -8,19 +8,19 @@ const network = {
 }
 
 const localOrchestrator = () => new Orchestrator({
-  middleware: combine(runSeries, localOnly),
+  middleware: compose(runSeries, localOnly),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })
 
 const mrmmOrchestrator = () => new Orchestrator({
-  middleware: combine(runSeries, machinePerPlayer('MOCK')),
+  middleware: compose(runSeries, machinePerPlayer('MOCK')),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })
 
 const singleConductorOrchestrator = () => new Orchestrator({
-  middleware: combine(runSeries, singleConductor, localOnly),
+  middleware: compose(compose(runSeries, localOnly), singleConductor),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })

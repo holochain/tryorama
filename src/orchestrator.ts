@@ -15,7 +15,7 @@ export const defaultGlobalConfig: T.GlobalConfig = {
 
 type OrchestratorConstructorParams<S> = {
   reporter?: boolean | R.Reporter,
-  middleware?: M.MiddlewareT<ScenarioApi, S>,
+  middleware?: M.MiddlewareT<S, M.Scenario<ScenarioApi>>,
   globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
   newConfig?: any,  // TODO give type, maybe flatten into overall config
@@ -45,7 +45,7 @@ export class Orchestrator<S> {
   registerScenario: Register & { only: Register, skip: Register }
   waiterConfig?: WaiterOptions
 
-  _middleware: M.MiddlewareT<ScenarioApi, S>
+  _middleware: M.MiddlewareT<S, M.Scenario<ScenarioApi>>
   _globalConfig: T.GlobalConfig
   _scenarios: Array<RegisteredScenario>
   _reporter: R.Reporter
