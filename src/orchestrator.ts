@@ -51,7 +51,7 @@ export class Orchestrator<S> {
   _reporter: R.Reporter
 
   constructor(o: OrchestratorConstructorParams<S> = {}) {
-    this._middleware = o.middleware || M.runSeries
+    this._middleware = o.middleware || M.runSeries<any>()
     this._globalConfig = _.merge(defaultGlobalConfig, o.globalConfig || {})
     this._scenarios = []
     this._reporter = o.reporter === true

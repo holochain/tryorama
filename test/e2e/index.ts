@@ -8,19 +8,19 @@ const network = {
 }
 
 const localOrchestrator = () => new Orchestrator({
-  middleware: compose(runSeries, localOnly),
+  middleware: compose(runSeries(), localOnly),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })
 
 const mrmmOrchestrator = () => new Orchestrator({
-  middleware: compose(runSeries, machinePerPlayer('MOCK')),
+  middleware: compose(runSeries(), machinePerPlayer('MOCK')),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })
 
 const singleConductorOrchestrator = () => new Orchestrator({
-  middleware: compose(compose(runSeries, localOnly), singleConductor),
+  middleware: compose(compose(runSeries(), localOnly), singleConductor),
   reporter: true,
   // globalConfig is specified explicitly in testConfig in this case
 })

@@ -40,8 +40,42 @@ export type MiddlewareT<A, B> = (run: RunnerT<B>, original: A) => Promise<void>
 /** The no-op middleware */
 export const unit = <A>(run: Runner<A>, f: Scenario<A>) => run(f)
 
+/** Compose two middlewares, typesafe */
+export const compose = <A, B, C>(x: MiddlewareT<A, B>, y: MiddlewareT<B, C>): MiddlewareT<A, C> =>
+  (run: RunnerT<C>, f: A) => {
+    return x(g => y(run, g), f)
+  }
+
+/** Compose 2 middlewares, typesafe. Same as `compose` */
+export const compose2 = compose
+
+/** Compose 3 middlewares, typesafe */
+export const compose3 = <A, B, C, D>(
+  a: MiddlewareT<A, B>,
+  b: MiddlewareT<B, C>,
+  c: MiddlewareT<C, D>
+): MiddlewareT<A, D> => compose(compose2(a, b), c)
+
+/** Compose 4 middlewares, typesafe */
+export const compose4 = <A, B, C, D, E>(
+  a: MiddlewareT<A, B>,
+  b: MiddlewareT<B, C>,
+  c: MiddlewareT<C, D>,
+  d: MiddlewareT<D, E>,
+): MiddlewareT<A, E> => compose(compose3(a, b, c), d)
+
+/** Compose 5 middlewares, typesafe */
+export const compose5 = <A, B, C, D, E, F>(
+  a: MiddlewareT<A, B>,
+  b: MiddlewareT<B, C>,
+  c: MiddlewareT<C, D>,
+  d: MiddlewareT<D, E>,
+  e: MiddlewareT<E, F>,
+): MiddlewareT<A, F> => compose(compose4(a, b, c, d), e)
+
 /**
  * Combine multiple middlewares into a single middleware.
+ * NOT typesafe, i.e. type info is lost, but convenient.
  * The middlewares are applied in the *reverse order* that they're provided.
  * i.e. the middleware at the end of the chain is the one to act directly on the user-supplied scenario,
  * and the first middleware is the one to provide the clean vanilla scenario that the orchestrator knows how to run
@@ -49,10 +83,7 @@ export const unit = <A>(run: Runner<A>, f: Scenario<A>) => run(f)
  */
 export const combine = (...ms) => ms.reduce(compose)
 
-export const compose = <A, B, C>(x: Middleware<A, B>, y: Middleware<B, C>): Middleware<A, C> =>
-  (run: Runner<C>, f: Scenario<A>) => {
-    return x(g => y(run, g), f)
-  }
+
 
 type TapeExecutor = {}
 
@@ -99,15 +130,18 @@ export const tapeExecutor = <A extends ScenarioApi>(tape: any): MiddlewareT<Scen
   })
 })
 
-/** Run tests in series rather than in parallel */
-export const runSeries = ((): MiddlewareT<any, any> => {
+/** 
+ * Run tests in series rather than in parallel.
+ * Needs to be invoked as a function so types can be inferred at moment of creation.
+ */
+export const runSeries = (<A>(): MiddlewareT<A, A> => {
   let lastPromise = Promise.resolve()
-  return async (run: RunnerT<any>, f: any) => {
+  return async (run: RunnerT<A>, f: A) => {
     const result = run(f)
     lastPromise = lastPromise.catch(e => { /* TODO */ }).then(() => result)
     return result
   }
-})()
+})
 
 /** 
  * Take all configs defined for all machines and all players,
