@@ -51,15 +51,15 @@ export class ScenarioApi {
     const configsJson: Array<any> = []
     const playerBuilders: Record<string, Function> = {}
     for (const machineEndpoint in machines) {
+      const trycp: TrycpSession | null = (machineEndpoint === LOCAL_MACHINE_ID) ? null : await trycpSession(machineEndpoint)
+      // choose our spwn method based on whether this is a local or remote machine
+      const spawnConductor = trycp ? spawnRemote(trycp, stripPortFromUrl(machineEndpoint)) : spawnLocal
       const configs = machines[machineEndpoint]
-      const machineUrl = stripPortFromUrl(machineEndpoint)
 
       // // if passing an array, convert to an object with keys as stringified indices. Otherwise just get the key, value pairs
       // const entries: Array<[string, AnyConfigBuilder]> = _.isArray(configs)
       //   ? configs.map((v, i) => [String(i), v])
       //   : Object.entries(configs)
-
-      const trycp: TrycpSession | null = (machineEndpoint === LOCAL_MACHINE_ID) ? null : await trycpSession(machineEndpoint)
 
       for (const playerName in configs) {
         const configSeed = standardizeConfigSeed(configs[playerName], this._globalConfig)
@@ -83,7 +83,7 @@ export class ScenarioApi {
           const player = new Player({
             name: playerName,
             configSeedArgs,
-            spawnConductor: trycp ? spawnRemote(trycp, machineUrl) : spawnLocal,
+            spawnConductor,
             onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
             onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
             onActivity: () => this._restartTimer(),
