@@ -2,7 +2,6 @@ const _ = require('lodash')
 
 import { Signal, DnaId } from '@holochain/hachiko'
 
-import { notImplemented } from './common'
 import { Conductor, CallZomeFunc, CallAdminFunc } from './conductor'
 import { Instance } from './instance'
 import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN } from './types';

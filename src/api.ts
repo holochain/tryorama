@@ -114,33 +114,6 @@ export class ScenarioApi {
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
     this._players = players
     return players
-
-    // const configsIntermediate = await Promise.all(entries.map(async ([name, config]) => {
-    //   const genConfigArgs = await makeGenConfigArgs(name, this._uuid)
-    //   // If an object was passed in, run it through genConfig first. Otherwise use the given function.
-    //   const configBuilder = _.isFunction(config)
-    //     ? (config as T.ConfigSeed)
-    //     : genConfig(config as T.EitherConductorConfig, this._globalConfig)
-    //   const configToml = await configBuilder(genConfigArgs)
-    //   return { name, configJson, configToml, genConfigArgs }
-    // }))
-
-    // logger.debug('deduping agent ids')
-    // assertUniqueTestAgentNames(configsIntermediate.map(c => c.configJson))
-
-    // configsIntermediate.forEach(({ name, configJson, configToml }) => {
-    //   players[name] = (async () => {
-    //     const { instances } = configJson
-
-    //       (trycp) ?  : fs.writeFile(getConfigPath(configDir), configToml)
-    //     await commitConfig(configToml)
-
-
-    //     return player
-    //   })()
-    // })
-    // const ps = await promiseSerialObject<Player>(players)
-    // return ps
   }
 
   consistency = (players?: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
@@ -184,7 +157,6 @@ ${names.join(', ')}
       logger.error(msg)
     }
   }
-
 
   /**
    * Only called externally when there is a test failure, 

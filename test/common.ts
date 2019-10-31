@@ -2,6 +2,14 @@ const sinon = require('sinon')
 import * as T from '../src/types'
 
 import { Orchestrator, Config } from '../src'
+import { spawnTest } from '../src/config'
+
+export const testOrchestrator = () => new Orchestrator({
+  mode: {
+    executor: 'none',
+    spawning: 'local',
+  }
+})
 
 export const testConfig = () => {
 

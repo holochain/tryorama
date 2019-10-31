@@ -11,6 +11,16 @@ import { Conductor } from "../conductor";
 import { getConfigPath } from ".";
 import { trycpSession, TrycpSession } from "../trycp";
 
+export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
+  return new Conductor({
+    name: 'test-conductor',
+    kill: async () => { },
+    onSignal: () => { },
+    onActivity: () => { },
+    adminWsUrl: '',
+    zomeWsUrl: '',
+  })
+}
 
 export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook }): Promise<Conductor> => {
   const name = player.name

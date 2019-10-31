@@ -10,10 +10,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - `spawnRemote` added for remotely spawning a conductor via TryCP
 - `makeRemoteConfigSeedArgs` added for creating config generation args obtained from a remote machine
+- added `mode` orchestrator config option as a more ergonomic alternative to manually specifying middlewares
 
 ### Changed
 
-- Middlewares now compose in the reverse order! (fb1e95ef)
+- **BREAKING**: Middlewares now compose in the reverse order! (fb1e95ef)
 - `ConfigSeedArgs` now includes `baseUrl` along with ports, to facilitate remote connections to other than localhost
 - `SpawnConductorFn` signature has changed. Now it takes a `Player` and some user data, and returns a fully constructed `Conductor`
 - `SpawnConductorFn` now is expected to handle awaiting the Conductor's readiness for websocket connections. Previously that was handled internally during `player.spawn`

@@ -15,13 +15,35 @@ export const defaultGlobalConfig: T.GlobalConfig = {
 
 type OrchestratorConstructorParams<S> = {
   reporter?: boolean | R.Reporter,
-  middleware?: M.MiddlewareT<S, M.Scenario<ScenarioApi>>,
   globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
-  newConfig?: any,  // TODO give type, maybe flatten into overall config
+  middleware?: M.MiddlewareT<S, M.Scenario<ScenarioApi>>,
+  mode?: ModeOpts,
 }
 
-type MakeGenConfigArgsFn = (playerName: string, uuid: string) => Promise<T.ConfigSeedArgs>
+type ModeOpts = {
+  executor: 'none' | 'tape' | { tape: any },
+  spawning: 'local' | 'remote' | T.SpawnConductorFn,
+}
+
+const defaultModeOpts: ModeOpts = {
+  executor: { tape: require('tape') },
+  spawning: 'local',
+}
+
+const modeToMiddleware = (mode: ModeOpts): M.MiddlewareT<any, M.Scenario<ScenarioApi>> => {
+  const defaultMrmmUrl = 'UNUSED'
+  console.warn(`warn: using placeholder mrmm url: ${defaultMrmmUrl}`)
+  const executor = (mode.executor === 'none')
+    ? M.runSeries()
+    : mode.executor === 'tape'
+      ? M.tapeExecutor(require('tape'))
+      : M.tapeExecutor(mode.executor.tape)
+  const spawning = (mode.spawning === 'local')
+    ? M.localOnly
+    : M.machinePerPlayer(defaultMrmmUrl)
+  return M.compose(executor, spawning)
+}
 
 type ScenarioModifier = 'only' | 'skip' | null
 type RegisteredScenario = {
@@ -51,7 +73,11 @@ export class Orchestrator<S> {
   _reporter: R.Reporter
 
   constructor(o: OrchestratorConstructorParams<S> = {}) {
-    this._middleware = o.middleware || M.runSeries<any>()
+    if (o.mode && o.middleware) {
+      throw new Error("Cannot set both `mode` and `middleware` in the orchestrator params. Pick one or the others.")
+    }
+
+    this._middleware = o.middleware || modeToMiddleware(o.mode || defaultModeOpts)
     this._globalConfig = _.merge(defaultGlobalConfig, o.globalConfig || {})
     this._scenarios = []
     this._reporter = o.reporter === true

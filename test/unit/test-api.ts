@@ -10,10 +10,11 @@ import * as C from '../../src/config';
 import * as Gen from '../../src/config/gen';
 import { ConfigSeedArgs } from '../../src/types';
 import { trace } from '../../src/util';
+import { testOrchestrator } from '../common';
 
 test('API detects duplicate agent IDs', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const orchestrator = new Orchestrator()
+  const orchestrator = testOrchestrator()
   const api = new ScenarioApi("description", orchestrator, "uuid")
   const args = {
     playerName: 'same',
