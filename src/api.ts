@@ -64,7 +64,7 @@ export class ScenarioApi {
       for (const playerName in configs) {
         const configSeed = standardizeConfigSeed(configs[playerName], this._globalConfig)
         const configSeedArgs = trycp
-          ? _.assign(await trycp.getArgs(), { playerName, uuid: this._uuid })
+          ? _.assign(await trycp.setup(playerName), { playerName, uuid: this._uuid })
           : await localConfigSeedArgs(playerName, this._uuid)
         const configToml = await configSeed(configSeedArgs)
         const configJson = TOML.parse(configToml)
