@@ -10,7 +10,7 @@ type PartialConfigSeedArgs = {
 }
 
 export type TrycpSession = {
-  getArgs: () => Promise<PartialConfigSeedArgs>,
+  setup: (id) => Promise<PartialConfigSeedArgs>,
   player: (id, configToml) => Promise<any>,
   spawn: (id) => Promise<any>,
   kill: (id, signal?) => Promise<any>,
@@ -22,7 +22,7 @@ export const trycpSession = async (url): Promise<TrycpSession> => {
   const { call, close } = await connect({ url })
 
   return {
-    getArgs: () => call('get_args')({}),
+    setup: (id) => call('setup')({ id }),
     player: (id, configToml) => call('player')({ id, config: base64.encode(configToml) }),
     spawn: (id) => call('spawn')({ id }),
     kill: (id, signal?) => call('kill')({ id, signal }),

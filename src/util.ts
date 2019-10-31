@@ -8,8 +8,13 @@ export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, 
 export const trace = (x, msg = '{T}') => (console.log(msg, `<${typeof x}>`, x), x)
 
 export const stripPortFromUrl = url => {
-  const [base, port] = url.split(':')
-  return base
+  const i = url.lastIndexOf(':')
+  const maybePort = url.substring(i + 1)
+  if (maybePort.match(/^\d{1,5}$/)) {
+    return url.substring(0, i)
+  } else {
+    throw new Error(`No port found in string "${url}"`)
+  }
 }
 
 // from https://hackernoon.com/functional-javascript-resolving-promises-sequentially-7aac18c4431e
