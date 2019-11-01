@@ -1,6 +1,5 @@
 import { combineConfigs, adjoin } from "./config/combine";
 import { ScenarioApi } from "./api";
-import { invokeMRMM } from "./trycp";
 import { trace } from "./util";
 import * as T from "./types";
 import * as _ from 'lodash'
@@ -218,14 +217,15 @@ export const localOnly: MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> = (run,
  * This middleware finds a new machine for each player, and returns the
  * properly wrapped config specifying the acquired machine endpoints
  */
-export const machinePerPlayer = (mrmmUrl): MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
+export const machinePerPlayer = (trycpEndpoints: Array<string>): MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
+  let urlIndex = 0
   const s_ = _.assign({}, s, {
     players: async (configs: T.PlayerConfigs, ...a) => {
       const pairs = await _.chain(configs)
         .toPairs()
         .map(async ([playerName, config]) => {
-          const machineEndpoint = await invokeMRMM(mrmmUrl)
-          return [machineEndpoint, { [playerName]: config }]
+          const endpoint = trycpEndpoints[urlIndex++]
+          return [endpoint, { [playerName]: config }]
         })
         .thru(x => Promise.all(x))
         .value()
@@ -235,6 +235,7 @@ export const machinePerPlayer = (mrmmUrl): MiddlewareS<ApiPlayerConfigs, ApiMach
   })
   return f(s_)
 })
+
 
 const unwrapMachineConfig = (machineConfigs: T.MachineConfigs): T.PlayerConfigs =>
   _.chain(machineConfigs)

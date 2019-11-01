@@ -1,7 +1,10 @@
+import * as _ from 'lodash'
 import { connect } from '@holochain/hc-web-client'
 import logger from './logger'
 import * as T from './types'
+import { notImplemented } from './common'
 const base64 = require('base-64')
+const moniker = require('moniker')
 
 type PartialConfigSeedArgs = {
   adminPort: number,
@@ -31,16 +34,17 @@ export const trycpSession = async (url): Promise<TrycpSession> => {
   }
 }
 
-export const invokeMRMM = (url) => {
-  logger.warn("Using fake MRMM which spins up trycp servers on local machine!")
-  return fakeTrycpServer()
-}
+///////////////////////////////////////////////////////////////////
+// Fake MMM stuff
 
-const fakeTrycpServer = async (): Promise<string> => new Promise(async resolve => {
-  const { getPort } = require('./config/get-port-cautiously')
+
+type MmmConfigItem = { service: string, region: string, image: string }
+type MmmConfig = Array<MmmConfigItem>
+
+// TODO: use docker image instead
+const fakeTrycpServer = async (port): Promise<string> => new Promise(async resolve => {
   const { spawn } = require('child_process')
 
-  const port = await getPort()
   const trycp = spawn('trycp_server', ['-p', String(port)]);
   trycp.stdout.on('data', (data) => {
     var regex = new RegExp("waiting for connections on port " + port);
@@ -53,3 +57,16 @@ const fakeTrycpServer = async (): Promise<string> => new Promise(async resolve =
     console.error(`stderr: ${data}`);
   });
 })
+
+export const fakeMmmConfigs = (num): MmmConfig => {
+  return _.range(num).map(n => ({
+    service: moniker.choose(),
+    region: 'whatever',
+    image: 'TODO',
+  }))
+}
+
+export const spinupLocalCluster = (mmmConfig: MmmConfig): Promise<Array<string>> => {
+  let basePort = 40000
+  return Promise.all(mmmConfig.map((_config, n) => fakeTrycpServer(basePort + n)))
+}

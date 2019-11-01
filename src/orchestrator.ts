@@ -32,17 +32,12 @@ const defaultModeOpts: ModeOpts = {
 }
 
 const modeToMiddleware = (mode: ModeOpts): M.Middleware<any, M.Scenario<ScenarioApi>> => {
-  const defaultMrmmUrl = 'UNUSED'
-  console.warn(`warn: using placeholder mrmm url: ${defaultMrmmUrl}`)
   const executor = (mode.executor === 'none')
     ? M.runSeries()
     : mode.executor === 'tape'
       ? M.tapeExecutor(require('tape'))
       : M.tapeExecutor(mode.executor.tape)
-  const spawning = (mode.spawning === 'local')
-    ? M.localOnly
-    : M.machinePerPlayer(defaultMrmmUrl)
-  return M.compose(executor, spawning)
+  return M.compose(executor, M.localOnly)
 }
 
 type ScenarioModifier = 'only' | 'skip' | null

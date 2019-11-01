@@ -13,7 +13,7 @@ module.exports = (testOrchestrator) => {
 
   test('test with error', async t => {
     const C = testConfig()
-    const orchestrator = testOrchestrator()
+    const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('invalid instance', async s => {
       const players = await s.players({ alice: C.alice }, true)
       console.log("players", players)
@@ -30,7 +30,7 @@ module.exports = (testOrchestrator) => {
   test('test with simple zome call', async t => {
     t.plan(3)
     const C = testConfig()
-    const orchestrator = testOrchestrator()
+    const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('simple zome call', async s => {
       const players = await s.players({ alice: C.alice }, true)
       const { alice } = players
@@ -46,7 +46,7 @@ module.exports = (testOrchestrator) => {
   test('test with simple zome call via instance', async t => {
     t.plan(3)
     const C = testConfig()
-    const orchestrator = testOrchestrator()
+    const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('simple zome call', async s => {
       const players = await s.players({ alice: C.alice }, true)
       const { alice } = players
@@ -63,7 +63,7 @@ module.exports = (testOrchestrator) => {
   test('test with consistency awaiting', async t => {
     t.plan(5)
     const C = testConfig()
-    const orchestrator = testOrchestrator()
+    const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('zome call with consistency', async s => {
       const { alice, bob } = await s.players({ alice: C.alice, bob: C.bob }, true)
 
@@ -95,7 +95,7 @@ module.exports = (testOrchestrator) => {
   test('agentAddress and dnaAddress', async t => {
     t.plan(4)
     const C = testConfig()
-    const orchestrator = testOrchestrator()
+    const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('check addresses', async s => {
       const { alice } = await s.players({ alice: C.alice }, true)
       const agentAddress = await alice.call('app', 'main', 'whoami', {})
