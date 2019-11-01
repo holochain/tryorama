@@ -20,7 +20,7 @@ const singleConductorOrchestrator = () => new Orchestrator({
 // the endpoints.
 const trycpEndpoints = memoize(async () => {
   const NUM_MMM = 5
-  const config = fakeMmmConfigs(NUM_MMM)
+  const config = fakeMmmConfigs(NUM_MMM, 'holochain/holochain-rust:trycp')
   return await spinupLocalCluster(config)
 })
 

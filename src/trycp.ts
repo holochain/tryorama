@@ -37,15 +37,13 @@ export const trycpSession = async (url): Promise<TrycpSession> => {
 ///////////////////////////////////////////////////////////////////
 // Fake MMM stuff
 
+const { spawn } = require('child_process')
 
 type MmmConfigItem = { service: string, region: string, image: string }
 type MmmConfig = Array<MmmConfigItem>
 
-// TODO: use docker image instead
-const fakeTrycpServer = async (port): Promise<string> => new Promise(async resolve => {
-  const { spawn } = require('child_process')
-
-  const trycp = spawn('trycp_server', ['-p', String(port)]);
+const provisionLocalTrycpServer = (spawner): Promise<string> => new Promise(async resolve => {
+  const trycp = spawner();
   trycp.stdout.on('data', (data) => {
     var regex = new RegExp("waiting for connections on port " + port);
     if (regex.test(data)) {
@@ -58,15 +56,23 @@ const fakeTrycpServer = async (port): Promise<string> => new Promise(async resol
   });
 })
 
-export const fakeMmmConfigs = (num): MmmConfig => {
+const fakeTrycpServer = async (port: number): Promise<string> => new Promise(async resolve => {
+  return provisionLocalTrycpServer(() => spawn('trycp_server', ['-p', String(port)]));
+})
+
+const localDockerTrycpServer = async (dockerImage: string, port: number): Promise<string> => new Promise(async resolve => {
+  return provisionLocalTrycpServer(() => spawn('docker', ['--expose', `${port}:443`, dockerImage]));
+})
+
+export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {
   return _.range(num).map(n => ({
     service: moniker.choose(),
     region: 'whatever',
-    image: 'TODO',
+    image: dockerImage,
   }))
 }
 
 export const spinupLocalCluster = (mmmConfig: MmmConfig): Promise<Array<string>> => {
   let basePort = 40000
-  return Promise.all(mmmConfig.map((_config, n) => fakeTrycpServer(basePort + n)))
+  return Promise.all(mmmConfig.map(({ image }, n) => localDockerTrycpServer(image, basePort + n)))
 }
