@@ -11,7 +11,7 @@ import { Orchestrator } from './orchestrator';
 import { promiseSerialObject, delay, stripPortFromUrl, trace } from './util';
 import { getConfigPath, genConfig, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
-import { trycpSession, TrycpSession } from './trycp'
+import { trycpSession, TrycpClient } from './trycp'
 
 type Modifiers = {
   singleConductor: boolean
@@ -51,7 +51,7 @@ export class ScenarioApi {
     const configsJson: Array<any> = []
     const playerBuilders: Record<string, Function> = {}
     for (const machineEndpoint in machines) {
-      const trycp: TrycpSession | null = (machineEndpoint === LOCAL_MACHINE_ID) ? null : await trycpSession(machineEndpoint)
+      const trycp: TrycpClient | null = (machineEndpoint === LOCAL_MACHINE_ID) ? null : await trycpSession(machineEndpoint)
       // choose our spwn method based on whether this is a local or remote machine
       const spawnConductor = trycp ? spawnRemote(trycp, stripPortFromUrl(machineEndpoint)) : spawnLocal
       const configs = machines[machineEndpoint]

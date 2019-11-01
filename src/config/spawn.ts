@@ -9,7 +9,7 @@ import * as path from "path";
 import { Player } from "..";
 import { Conductor } from "../conductor";
 import { getConfigPath } from ".";
-import { trycpSession, TrycpSession } from "../trycp";
+import { trycpSession, TrycpClient } from "../trycp";
 
 export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
   return new Conductor({
@@ -91,7 +91,7 @@ const awaitConductorInterfaceStartup = (handle, name) => {
   })
 }
 
-export const spawnRemote = (trycp: TrycpSession, machineUrl: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
+export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
   const name = player.name
 
   const spawnResult = await trycp.spawn(name)

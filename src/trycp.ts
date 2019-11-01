@@ -12,7 +12,7 @@ type PartialConfigSeedArgs = {
   configDir: string,
 }
 
-export type TrycpSession = {
+export type TrycpClient = {
   setup: (id) => Promise<PartialConfigSeedArgs>,
   player: (id, configToml) => Promise<any>,
   spawn: (id) => Promise<any>,
@@ -21,7 +21,7 @@ export type TrycpSession = {
   closeSession: () => Promise<void>,
 }
 
-export const trycpSession = async (url): Promise<TrycpSession> => {
+export const trycpSession = async (url): Promise<TrycpClient> => {
   const { call, close } = await connect({ url })
 
   return {
