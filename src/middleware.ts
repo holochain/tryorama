@@ -17,14 +17,21 @@ type ApiPlayerConfigs = ApiPlayers<T.PlayerConfigs>
  * A Runner is provided by the [Orchestrator], but it is exposed to the middleware
  * author so that it can be called in the appropriate context
  */
-export type Runner<A> = (f: Scenario<A>) => Promise<void>
-export type RunnerT<A> = (f: A) => Promise<void>
+export type Runner<A> = (f: A) => Promise<void>
+/** RunnerS assumes a normal Scenario */
+export type RunnerS<A> = (f: Scenario<A>) => Promise<void>
 
+/** The default Scenario function type which takes a single argument */
 export type Scenario<S> = (s: S) => Promise<void>
+/** A scenario function which takes two arguments */
 export type Scenario2<S, T> = (s: S, t: T) => Promise<void>
+/** A scenario function which takes three arguments */
+export type Scenario3<S, T, U> = (s: S, t: T, u: U) => Promise<void>
+/** A scenario function which takes four arguments */
+export type Scenario4<S, T, U, V> = (s: S, t: T, u: U, v: V) => Promise<void>
 
 /**
- * Middleware is a composable decorator for scenario functions. A Middleware takes two functions:
+ * Middleware is a composable decorator for scenario functions. A MiddlewareS takes two functions:
  * - the function which will run the scenario
  * - the scenario function itself
  * 
@@ -34,15 +41,16 @@ export type Scenario2<S, T> = (s: S, t: T) => Promise<void>
  * to set up extra context outside of the running of the scenario, e.g. for integrating
  * with test harnesses.
  */
-export type Middleware<A, B> = (run: Runner<B>, original: Scenario<A>) => Promise<void>
-export type MiddlewareT<A, B> = (run: RunnerT<B>, original: A) => Promise<void>
+export type Middleware<A, B> = (run: Runner<B>, original: A) => Promise<void>
+/** Middleware assumes mapping from a normal Scenario to another */
+export type MiddlewareS<A, B> = (run: RunnerS<B>, original: Scenario<A>) => Promise<void>
 
 /** The no-op middleware */
-export const unit = <A>(run: Runner<A>, f: Scenario<A>) => run(f)
+export const unit = <A>(run: RunnerS<A>, f: Scenario<A>) => run(f)
 
 /** Compose two middlewares, typesafe */
-export const compose = <A, B, C>(x: MiddlewareT<A, B>, y: MiddlewareT<B, C>): MiddlewareT<A, C> =>
-  (run: RunnerT<C>, f: A) => {
+export const compose = <A, B, C>(x: Middleware<A, B>, y: Middleware<B, C>): Middleware<A, C> =>
+  (run: Runner<C>, f: A) => {
     return x(g => y(run, g), f)
   }
 
@@ -51,27 +59,27 @@ export const compose2 = compose
 
 /** Compose 3 middlewares, typesafe */
 export const compose3 = <A, B, C, D>(
-  a: MiddlewareT<A, B>,
-  b: MiddlewareT<B, C>,
-  c: MiddlewareT<C, D>
-): MiddlewareT<A, D> => compose(compose2(a, b), c)
+  a: Middleware<A, B>,
+  b: Middleware<B, C>,
+  c: Middleware<C, D>
+): Middleware<A, D> => compose(compose2(a, b), c)
 
 /** Compose 4 middlewares, typesafe */
 export const compose4 = <A, B, C, D, E>(
-  a: MiddlewareT<A, B>,
-  b: MiddlewareT<B, C>,
-  c: MiddlewareT<C, D>,
-  d: MiddlewareT<D, E>,
-): MiddlewareT<A, E> => compose(compose3(a, b, c), d)
+  a: Middleware<A, B>,
+  b: Middleware<B, C>,
+  c: Middleware<C, D>,
+  d: Middleware<D, E>,
+): Middleware<A, E> => compose(compose3(a, b, c), d)
 
 /** Compose 5 middlewares, typesafe */
 export const compose5 = <A, B, C, D, E, F>(
-  a: MiddlewareT<A, B>,
-  b: MiddlewareT<B, C>,
-  c: MiddlewareT<C, D>,
-  d: MiddlewareT<D, E>,
-  e: MiddlewareT<E, F>,
-): MiddlewareT<A, F> => compose(compose4(a, b, c, d), e)
+  a: Middleware<A, B>,
+  b: Middleware<B, C>,
+  c: Middleware<C, D>,
+  d: Middleware<D, E>,
+  e: Middleware<E, F>,
+): Middleware<A, F> => compose(compose4(a, b, c, d), e)
 
 /**
  * Combine multiple middlewares into a single middleware.
@@ -105,7 +113,7 @@ type TapeExecutor = {}
  * entire test suite to await the end of all tape tests. It could be done by specifying
  * a parallel vs. serial mode for test running.
  */
-export const tapeExecutor = <A extends ScenarioApi>(tape: any): MiddlewareT<Scenario2<A, any>, Scenario<A>> => (run, f) => new Promise((resolve, reject) => {
+export const tapeExecutor = <A extends ScenarioApi>(tape: any): Middleware<Scenario2<A, any>, Scenario<A>> => (run, f) => new Promise((resolve, reject) => {
   if (f.length !== 2) {
     reject("tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions.")
     return
@@ -134,9 +142,9 @@ export const tapeExecutor = <A extends ScenarioApi>(tape: any): MiddlewareT<Scen
  * Run tests in series rather than in parallel.
  * Needs to be invoked as a function so types can be inferred at moment of creation.
  */
-export const runSeries = (<A>(): MiddlewareT<A, A> => {
+export const runSeries = (<A>(): Middleware<A, A> => {
   let lastPromise = Promise.resolve()
-  return async (run: RunnerT<A>, f: A) => {
+  return async (run: Runner<A>, f: A) => {
     const result = run(f)
     lastPromise = lastPromise.catch(e => { /* TODO */ }).then(() => result)
     return result
@@ -148,7 +156,7 @@ export const runSeries = (<A>(): MiddlewareT<A, A> => {
  * merge the configs into one big TOML file, 
  * and create a single player on the local machine to run it.
 */
-export const singleConductor: Middleware<ApiMachineConfigs, ApiMachineConfigs> = (run: Runner<ApiMachineConfigs>, f: Scenario<ApiMachineConfigs>) => run((s: ScenarioApi) => {
+export const singleConductor: MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> = (run: RunnerS<ApiMachineConfigs>, f: Scenario<ApiMachineConfigs>) => run((s: ScenarioApi) => {
   const s_ = _.assign({}, s, {
     players: async (machineConfigs: T.MachineConfigs, ...a) => {
       // throw away machine info, flatten to just all player names
@@ -198,7 +206,7 @@ export const callSync = (run, f) => run(s => {
  * Allow a test to skip the level of machine configuration
  * This middleware wraps the player configs in the "local" machine
  */
-export const localOnly: Middleware<ApiPlayerConfigs, ApiMachineConfigs> = (run, f) => run(s => {
+export const localOnly: MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> = (run, f) => run(s => {
   const s_ = _.assign({}, s, {
     players: (configs, ...a) => s.players({ local: configs }, ...a)
   })
@@ -210,7 +218,7 @@ export const localOnly: Middleware<ApiPlayerConfigs, ApiMachineConfigs> = (run, 
  * This middleware finds a new machine for each player, and returns the
  * properly wrapped config specifying the acquired machine endpoints
  */
-export const machinePerPlayer = (mrmmUrl): Middleware<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
+export const machinePerPlayer = (mrmmUrl): MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
   const s_ = _.assign({}, s, {
     players: async (configs: T.PlayerConfigs, ...a) => {
       const pairs = await _.chain(configs)

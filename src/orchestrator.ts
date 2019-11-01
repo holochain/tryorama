@@ -17,7 +17,7 @@ type OrchestratorConstructorParams<S> = {
   reporter?: boolean | R.Reporter,
   globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
-  middleware?: M.MiddlewareT<S, M.Scenario<ScenarioApi>>,
+  middleware?: M.Middleware<S, M.Scenario<ScenarioApi>>,
   mode?: ModeOpts,
 }
 
@@ -31,7 +31,7 @@ const defaultModeOpts: ModeOpts = {
   spawning: 'local',
 }
 
-const modeToMiddleware = (mode: ModeOpts): M.MiddlewareT<any, M.Scenario<ScenarioApi>> => {
+const modeToMiddleware = (mode: ModeOpts): M.Middleware<any, M.Scenario<ScenarioApi>> => {
   const defaultMrmmUrl = 'UNUSED'
   console.warn(`warn: using placeholder mrmm url: ${defaultMrmmUrl}`)
   const executor = (mode.executor === 'none')
@@ -67,7 +67,7 @@ export class Orchestrator<S> {
   registerScenario: Register & { only: Register, skip: Register }
   waiterConfig?: WaiterOptions
 
-  _middleware: M.MiddlewareT<S, M.Scenario<ScenarioApi>>
+  _middleware: M.Middleware<S, M.Scenario<ScenarioApi>>
   _globalConfig: T.GlobalConfig
   _scenarios: Array<RegisteredScenario>
   _reporter: R.Reporter
