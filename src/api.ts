@@ -30,7 +30,8 @@ export class ScenarioApi {
   description: string
 
   _globalConfig: T.GlobalConfig
-  _players: Record<string, Player>
+  _localPlayers: Record<string, Player>
+  _trycpClients: Array<TrycpClient>
   _uuid: string
   _waiter: Waiter
   _modifiers: Modifiers
@@ -38,7 +39,8 @@ export class ScenarioApi {
 
   constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
-    this._players = {}
+    this._localPlayers = {}
+    this._trycpClients = []
     this._uuid = uuid
     this._globalConfig = orchestratorData._globalConfig
     this._waiter = new Waiter(FullSyncNetwork, undefined, orchestratorData.waiterConfig)
@@ -56,6 +58,10 @@ export class ScenarioApi {
       const spawnConductor = trycp ? spawnRemote(trycp, stripPortFromUrl(machineEndpoint)) : spawnLocal
       const configs = machines[machineEndpoint]
 
+      if (trycp) {
+        // keep track of it so we can send a reset() at the end of this scenario
+        this._trycpClients.push(trycp)
+      }
       // // if passing an array, convert to an object with keys as stringified indices. Otherwise just get the key, value pairs
       // const entries: Array<[string, AnyConfigBuilder]> = _.isArray(configs)
       //   ? configs.map((v, i) => [String(i), v])
@@ -69,6 +75,7 @@ export class ScenarioApi {
         const configToml = await configSeed(configSeedArgs)
         const configJson = TOML.parse(configToml)
         configsJson.push(configJson)
+
 
         // this code will only be executed once it is determined that all configs are valid
         playerBuilders[playerName] = async () => {
@@ -112,7 +119,7 @@ export class ScenarioApi {
     assertUniqueTestAgentNames(configsJson)
 
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
-    this._players = players
+    this._localPlayers = players
     return players
   }
 
@@ -139,13 +146,13 @@ export class ScenarioApi {
   _restartTimer = () => {
     logger.debug('restarted timer')
     clearTimeout(this._activityTimer)
-    this._activityTimer = setTimeout(() => this._destroyConductors(), env.conductorTimeoutMs)
+    this._activityTimer = setTimeout(() => this._destroyLocalConductors(), env.conductorTimeoutMs)
   }
 
-  _destroyConductors = async () => {
+  _destroyLocalConductors = async () => {
     const kills = await this._cleanup('SIGKILL')
     this._clearTimer()
-    const names = _.values(this._players).filter((player, i) => kills[i]).map(player => player.name)
+    const names = _.values(this._localPlayers).filter((player, i) => kills[i]).map(player => player.name)
     names.sort()
     const msg = `
 The following conductors were forcefully shutdown after ${env.conductorTimeoutMs / 1000} seconds of no activity:
@@ -163,11 +170,12 @@ ${names.join(', ')}
    * to ensure that players/conductors have been properly cleaned up
    */
   _cleanup = async (signal?): Promise<Array<boolean>> => {
-    const kills = await Promise.all(
-      _.values(this._players).map(player => player.cleanup(signal))
+    const localKills = await Promise.all(
+      _.values(this._localPlayers).map(player => player.cleanup(signal))
     )
+    await Promise.all(this._trycpClients.map(async (trycp) => await trycp.reset()))
     this._clearTimer()
-    return kills
+    return localKills
   }
 
 }

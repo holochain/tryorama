@@ -18,6 +18,7 @@ export type TrycpClient = {
   spawn: (id) => Promise<any>,
   kill: (id, signal?) => Promise<any>,
   ping: (id) => Promise<string>,
+  reset: () => Promise<void>,
   closeSession: () => Promise<void>,
 }
 
@@ -30,6 +31,7 @@ export const trycpSession = async (url): Promise<TrycpClient> => {
     spawn: (id) => call('spawn')({ id }),
     kill: (id, signal?) => call('kill')({ id, signal }),
     ping: (id) => call('ping')({ id }),
+    reset: () => call('reset')({}),
     closeSession: () => close(),
   }
 }
@@ -42,7 +44,7 @@ const { spawn } = require('child_process')
 type MmmConfigItem = { service: string, region: string, image: string }
 type MmmConfig = Array<MmmConfigItem>
 
-const provisionLocalTrycpServer = (spawner): Promise<string> => new Promise(async resolve => {
+const provisionLocalTrycpServer = (port, spawner): Promise<string> => new Promise(async resolve => {
   const trycp = spawner();
   trycp.stdout.on('data', (data) => {
     var regex = new RegExp("waiting for connections on port " + port);
@@ -57,11 +59,11 @@ const provisionLocalTrycpServer = (spawner): Promise<string> => new Promise(asyn
 })
 
 const fakeTrycpServer = async (port: number): Promise<string> => new Promise(async resolve => {
-  return provisionLocalTrycpServer(() => spawn('trycp_server', ['-p', String(port)]));
+  return provisionLocalTrycpServer(port, () => spawn('trycp_server', ['-p', String(port)]));
 })
 
 const localDockerTrycpServer = async (dockerImage: string, port: number): Promise<string> => new Promise(async resolve => {
-  return provisionLocalTrycpServer(() => spawn('docker', ['--expose', `${port}:443`, dockerImage]));
+  return provisionLocalTrycpServer(port, () => spawn('docker', ['--expose', `${port}:443`, dockerImage]));
 })
 
 export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {
