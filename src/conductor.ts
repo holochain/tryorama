@@ -37,7 +37,7 @@ export class Conductor {
 
   constructor({ name, kill, onSignal, onActivity, adminWsUrl, zomeWsUrl }) {
     this.name = name
-    this.logger = makeLogger(`try-o-rama conductor ${name}`)
+    this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
     this.onSignal = onSignal
 

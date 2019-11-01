@@ -16,7 +16,7 @@ const mkdirIdempotent = dir => fs.access(dir).catch(() => {
   fs.mkdir(dir, { recursive: true })
 })
 
-const tempDirBase = path.join(env.tempStorage || os.tmpdir(), 'try-o-rama/')
+const tempDirBase = path.join(env.tempStorage || os.tmpdir(), 'tryorama/')
 mkdirIdempotent(tempDirBase)
 
 export const tempDir = async () => {

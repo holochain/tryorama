@@ -1,10 +1,10 @@
-# try-o-rama
+# tryorama
 
 An end-to-end/scenario testing framework for Holochain applications in JavaScript/TypeScript
 
 ## Installation
 
-    npm install @holochain/try-o-rama
+    npm install @holochain/tryorama
 
 ## Scenarios
 
@@ -46,7 +46,7 @@ Set up an Orchestrator and register your Scenarios with it. The Orchestrator spe
 - how to generate the configuration for each conductor
 - how each scenario actually gets executed, including possible integration with third-party test harnesses
 
-Try-o-rama comes with sensible defaults so you can get up and running with an Orchestrator with little or no configuration. It also includes some helpful Middleware to modify the behavior, such as adding functions to the Scenario API or integrating with a test harness.
+tryorama comes with sensible defaults so you can get up and running with an Orchestrator with little or no configuration. It also includes some helpful Middleware to modify the behavior, such as adding functions to the Scenario API or integrating with a test harness.
 
 ## Player Configuration
 
@@ -168,7 +168,7 @@ persistence_dir = ${configDir}
 
 ## Sample usage
 
-Check out this heavily commented example for a more complete idea of how to use Try-o-rama
+Check out this heavily commented example for a more complete idea of how to use tryorama
 
 ```javascript
 import { Orchestrator, Config } from '../../src'

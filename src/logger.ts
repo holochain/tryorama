@@ -21,7 +21,7 @@ export const makeLogger = (label?, plain?) => createLogger({
     format.splat(),
     format.colorize(),
     format.timestamp({ format: 'mediumTime' }),
-    format.label(label ? { label: plain ? label : `try-o-rama: ${label}` } : {}),
+    format.label(label ? { label: plain ? label : `tryorama: ${label}` } : {}),
     myFormat,
   ),
   transports: [
@@ -29,4 +29,4 @@ export const makeLogger = (label?, plain?) => createLogger({
   ]
 })
 
-export default makeLogger('try-o-rama', true)
+export default makeLogger('tryorama', true)

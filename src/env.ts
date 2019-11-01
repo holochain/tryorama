@@ -15,8 +15,8 @@ const float = (n) => {
 }
 
 export default {
-  adminInterfaceId: process.env['TRYORAMA_ADMIN_INTERFACE_ID'] || 'try-o-rama-admin-interface',
-  zomeInterfaceId: process.env['TRYORAMA_ZOME_INTERFACE_ID'] || 'try-o-rama-zome-interface',
+  adminInterfaceId: process.env['TRYORAMA_ADMIN_INTERFACE_ID'] || 'tryorama-admin-interface',
+  zomeInterfaceId: process.env['TRYORAMA_ZOME_INTERFACE_ID'] || 'tryorama-zome-interface',
   stateDumpOnError: process.env['TRYORAMA_STATE_DUMP'] || true,
   zomeCallTimeoutMs: int(process.env['TRYORAMA_ZOME_CALL_TIMEOUT_MS']) || 90000,
   conductorTimeoutMs: int(process.env['TRYORAMA_CONDUCTOR_TIMEOUT_MS']) || 120000,
