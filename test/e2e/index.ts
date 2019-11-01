@@ -21,7 +21,10 @@ const singleConductorOrchestrator = () => new Orchestrator({
 const trycpEndpoints = memoize(async () => {
   const NUM_MMM = 5
   const config = fakeMmmConfigs(NUM_MMM, 'holochain/holochain-rust:trycp')
-  return await spinupLocalCluster(config)
+  console.log('config:', config)
+  const endpoints = await spinupLocalCluster(config)
+  console.log('endpoints:', endpoints)
+  return endpoints
 })
 
 const trycpOrchestrator = async () => {
@@ -34,6 +37,6 @@ const trycpOrchestrator = async () => {
 }
 
 
-require('./test-always-on')(localOrchestrator)
-require('./test-always-on')(singleConductorOrchestrator)
+// require('./test-always-on')(localOrchestrator)
+// require('./test-always-on')(singleConductorOrchestrator)
 require('./test-always-on')(trycpOrchestrator)
