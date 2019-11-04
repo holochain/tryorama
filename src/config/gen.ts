@@ -39,7 +39,7 @@ export const dna = (location, id?, opts = {}): T.DnaConfig => {
   if (!id) {
     id = dnaPathToId(location)
   }
-  return { file: location, id, ...opts }
+  return { location, id, ...opts }
 }
 
 const downloadMutex = new Mutex()
@@ -52,27 +52,13 @@ const downloadMutex = new Mutex()
  */
 export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): Promise<T.DnaConfig> => {
   const dna = _.cloneDeep(inputDna)
-  if (!dna.file) {
-    throw new Error(`Invalid 'file' for dna: ${JSON.stringify(dna)}`)
-  }
-  if (dna.file.match(/^https?:/)) {
-    logger.warn("Specifying DNA urls is deprecated, and this ability will soon go away. Please download the file yourself.")
-    const dnaPath = path.join(await dnaDir(), dna.id + '.dna.json')
-    const release = await downloadMutex.acquire()
-    try {
-      await downloadFile({ url: dna.file, path: dnaPath, overwrite: false })
-    } finally {
-      dna.file = dnaPath
-      release()
-    }
-  }
 
   dna.id = dna.uuid ? `${dna.id}::${dna.uuid}` : dna.id
   dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
 
   if (!dna.hash) {
-    dna.hash = await getDnaHash(dna.file).catch(err => {
-      throw new Error(`Could not determine hash of DNA file '${dna.file}'. Does the file exist?\n\tOriginal error: ${err}`)
+    dna.hash = await getDnaHash(dna.location).catch(err => {
+      logger.warn(`Could not determine hash of DNA at '${dna.location}'. Note that tryorama cannot determine the hash of DNAs at URLs\n\tOriginal error: ${err}`)
     })
   }
   return dna
