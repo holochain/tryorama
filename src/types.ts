@@ -1,4 +1,4 @@
-const _ = require('lodash')
+import * as _ from 'lodash'
 import { ScenarioApi } from "./api"
 import * as t from "io-ts"
 import { reporter } from 'io-ts-reporters'
@@ -153,5 +153,21 @@ export const GlobalConfigPartialV = t.partial({
   logger: LoggerConfigV,
 })
 export type GlobalConfigPartial = t.TypeOf<typeof GlobalConfigPartialV>
+
+type RawInstanceConfig = {
+  id: string,
+  dna: string,
+  agent: string,
+}
+
+type RawInterfaceConfig = any
+
+export interface RawConductorConfig {
+  agents: Array<AgentConfig>
+  dnas: Array<DnaConfig>
+  instances: Array<RawInstanceConfig>
+  interfaces: Array<RawInterfaceConfig>
+  bridges: Array<BridgeConfig>
+}
 
 export type KillFn = (signal?: string) => Promise<void>

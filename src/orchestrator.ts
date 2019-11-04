@@ -1,6 +1,6 @@
-const _ = require('lodash')
 const uuidGen = require('uuid/v4')
 
+import * as _ from 'lodash'
 import * as T from "./types";
 import * as M from "./middleware";
 import * as R from "./reporter";

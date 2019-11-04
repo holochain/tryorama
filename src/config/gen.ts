@@ -1,11 +1,11 @@
 import * as T from "../types";
+import * as _ from 'lodash'
 import { downloadFile, trace } from "../util";
 import { Mutex } from 'async-mutex'
 import env from '../env';
 import logger from '../logger';
 import { saneLoggerConfig, quietLoggerConfig } from './logger';
 const TOML = require('@iarna/toml')
-const _ = require('lodash')
 
 const exec = require('util').promisify(require('child_process').exec)
 const fs = require('fs').promises
@@ -293,8 +293,8 @@ export const getDnaHash = async (dnaPath) => {
   return hash
 }
 
-export const assertUniqueTestAgentNames = (configs: Array<T.InstanceConfig>) => {
-  const agentNames = _.chain(configs).values().map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
+export const assertUniqueTestAgentNames = (configs: Array<T.RawConductorConfig>) => {
+  const agentNames = _.chain(configs).map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
   const frequencies = _.countBy(agentNames) as { [k: string]: number }
   const dupes = Object.entries(frequencies).filter(([k, v]) => v > 1)
   if (dupes.length > 0) {

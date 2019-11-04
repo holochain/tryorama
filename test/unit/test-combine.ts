@@ -1,7 +1,7 @@
-const _ = require('lodash')
 const sinon = require('sinon')
 const test = require('tape')
 const TOML = require('@iarna/toml')
+import * as _ from 'lodash'
 
 import * as T from '../../src/types'
 import * as C from '../../src/config';
