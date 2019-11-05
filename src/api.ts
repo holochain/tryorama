@@ -118,7 +118,9 @@ export class ScenarioApi {
     // this will throw an error if something is wrong
     assertUniqueTestAgentNames(configsJson)
 
+    logger.debug('player builders built')
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
+    logger.debug('players built')
     this._localPlayers = players
     return players
   }

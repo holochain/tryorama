@@ -85,6 +85,7 @@ export class Conductor {
     const url = this._adminWsUrl
     this.logger.debug(`connectAdmin :: connecting to ${url}`)
     const { call, onSignal, ws } = await this._hcConnect({ url })
+    this.logger.debug(`connectAdmin :: connected to ${url}`)
 
     this._wsClosePromise = (
       // Wait for a constant delay and for websocket to close, whichever happens *last*
@@ -125,6 +126,7 @@ export class Conductor {
     const url = this._zomeWsUrl
     this.logger.debug(`connectZome :: connecting to ${url}`)
     const { callZome, onSignal } = await this._hcConnect({ url })
+    this.logger.debug(`connectZome :: connected to ${url}`)
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
       this._onActivity()

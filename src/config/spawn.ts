@@ -10,6 +10,7 @@ import { Player } from "..";
 import { Conductor } from "../conductor";
 import { getConfigPath } from ".";
 import { trycpSession, TrycpClient } from "../trycp";
+import { delay } from "../util";
 
 export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
   return new Conductor({
@@ -96,6 +97,10 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
 
   const spawnResult = await trycp.spawn(name)
   logger.info(`TryCP spawn result: ${spawnResult}`)
+  logger.info('Waiting 30 seconds for remote conductor to be ready to receive websocket connections...')
+  logger.info('(TODO, get trycp_server to notify us when conductor is ready, then remove this delay)')
+  await delay(30000)
+  logger.info('Done waiting. Ready or not, here we come, remote conductor!')
 
   return new Conductor({
     name,

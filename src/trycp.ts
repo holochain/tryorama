@@ -26,13 +26,18 @@ export type TrycpClient = {
 export const trycpSession = async (url): Promise<TrycpClient> => {
   const { call, close } = await connect({ url })
 
+  const makeCall = (method) => (a) => {
+    logger.debug(`trycp client ${url}: ${method} => ${JSON.stringify(a, null, 2)}`)
+    return call(method)(a)
+  }
+
   return {
-    setup: (id) => call('setup')({ id }),
-    player: (id, configToml) => call('player')({ id, config: base64.encode(configToml) }),
-    spawn: (id) => call('spawn')({ id }),
-    kill: (id, signal?) => call('kill')({ id, signal }),
-    ping: (id) => call('ping')({ id }),
-    reset: () => call('reset')({}),
+    setup: (id) => makeCall('setup')({ id }),
+    player: (id, configToml) => makeCall('player')({ id, config: base64.encode(configToml) }),
+    spawn: (id) => makeCall('spawn')({ id }),
+    kill: (id, signal?) => makeCall('kill')({ id, signal }),
+    ping: (id) => makeCall('ping')({ id }),
+    reset: () => makeCall('reset')({}),
     closeSession: () => close(),
   }
 }
@@ -43,7 +48,7 @@ export const trycpSession = async (url): Promise<TrycpClient> => {
 type MmmConfigItem = { service: string, region: string, image: string }
 type MmmConfig = Array<MmmConfigItem>
 
-const provisionLocalTrycpServer = (port, spawner): Promise<string> => new Promise((resolve, reject) => {
+const provisionLocalTrycpServer = (name: string, port, spawner): Promise<string> => new Promise((resolve, reject) => {
   const trycp = spawner();
   setTimeout(() => reject(`Conductor on port ${port} took more than 60 seconds to get ready, aborting.`), 60000)
   trycp.stdout.on('data', (data) => {
@@ -52,21 +57,21 @@ const provisionLocalTrycpServer = (port, spawner): Promise<string> => new Promis
     if (regex.test(data)) {
       resolve(`ws://localhost:${port}`)
     }
-    console.log(`stdout: ${data}`);
+    console.log(`stdout ${name}: ${data}`);
   });
   trycp.stderr.on('data', (data) => {
-    console.error(`stderr: ${data}`);
+    console.error(`stderr ${name}: ${data}`);
   });
 })
 
-const fakeTrycpServer = async (_xxx, port: number): Promise<string> => {
-  return provisionLocalTrycpServer(port, () => spawn('trycp_server', ['-p', String(port)]));
+const fakeTrycpServer = async (config: MmmConfigItem, port: number): Promise<string> => {
+  return provisionLocalTrycpServer(config.service, port, () => spawn('trycp_server', ['-p', String(port)]));
 }
 
-const localDockerTrycpServer = async (dockerImage: string, port: number): Promise<string> => {
+const localDockerTrycpServer = async (config: MmmConfigItem, port: number): Promise<string> => {
   // console.log('DOCKER: ', execSync('which docker').toString('utf8'))
   // console.log('DOCKER: ', execSync('docker  --version').toString('utf8'))
-  return provisionLocalTrycpServer(port, () => spawn('docker', ['run', '-p', `${port}:80`, dockerImage]));
+  return provisionLocalTrycpServer(config.service, port, () => spawn('docker', ['run', '-p', `${port}:80`, config.image]));
 }
 
 export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {
@@ -77,9 +82,10 @@ export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {
   }))
 }
 
-export const spinupLocalCluster = async (mmmConfig: MmmConfig): Promise<Array<string>> => {
+export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean): Promise<Array<string>> => {
   let basePort = 40000
-  const endpointPromises = mmmConfig.map(({ image }, n) => localDockerTrycpServer(image, basePort + n))
+  const makeServer = docker ? localDockerTrycpServer : fakeTrycpServer
+  const endpointPromises = mmmConfig.map((config, n) => makeServer(config, basePort + n))
   const endpoints = Promise.all(endpointPromises)
   return endpoints
 }

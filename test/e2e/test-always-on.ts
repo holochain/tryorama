@@ -20,7 +20,9 @@ module.exports = (testOrchestrator) => {
       const { alice } = players
       await alice.call('blah', 'blah', 'blah', 'blah')
     })
+    console.debug('registered scenario.')
     const stats = await orchestrator.run()
+    console.debug('orchestrator runs')
     t.equal(stats.successes, 0)
     t.equal(stats.errors.length, 1)
     t.ok(stats.errors[0].error.message.match(/instance identifier invalid.*/))

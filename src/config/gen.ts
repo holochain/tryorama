@@ -1,7 +1,6 @@
 import * as T from "../types";
 import * as _ from 'lodash'
-import { downloadFile, trace } from "../util";
-import { Mutex } from 'async-mutex'
+import { trace } from "../util";
 import env from '../env';
 import logger from '../logger';
 import { saneLoggerConfig, quietLoggerConfig } from './logger';
@@ -42,8 +41,6 @@ export const dna = (location, id?, opts = {}): T.DnaConfig => {
   return { location, id, ...opts }
 }
 
-const downloadMutex = new Mutex()
-
 /**
  * 1. If a dna config object contains a URL in the path, download the file to a temp directory, 
  *     and rewrite the path to point to downloaded file.
@@ -59,6 +56,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   if (!dna.hash) {
     dna.hash = await getDnaHash(dna.location).catch(err => {
       logger.warn(`Could not determine hash of DNA at '${dna.location}'. Note that tryorama cannot determine the hash of DNAs at URLs\n\tOriginal error: ${err}`)
+      return "[UNKNOWN]"
     })
   }
   return dna
