@@ -66,7 +66,7 @@ const fakeTrycpServer = async (_xxx, port: number): Promise<string> => {
 const localDockerTrycpServer = async (dockerImage: string, port: number): Promise<string> => {
   // console.log('DOCKER: ', execSync('which docker').toString('utf8'))
   // console.log('DOCKER: ', execSync('docker  --version').toString('utf8'))
-  return provisionLocalTrycpServer(port, () => spawn('docker', ['run', '-p', `${port}:443`, dockerImage]));
+  return provisionLocalTrycpServer(port, () => spawn('docker', ['run', '-p', `${port}:80`, dockerImage]));
 }
 
 export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {

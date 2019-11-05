@@ -92,8 +92,6 @@ export const combine = (...ms) => ms.reduce(compose)
 
 
 
-type TapeExecutor = {}
-
 /**
  * Given the `tape` module, tapeExecutor produces a middleware 
  * that combines a scenario with a tape test. 
@@ -141,14 +139,14 @@ export const tapeExecutor = <A extends ScenarioApi>(tape: any): Middleware<Scena
  * Run tests in series rather than in parallel.
  * Needs to be invoked as a function so types can be inferred at moment of creation.
  */
-export const runSeries = (<A>(): Middleware<A, A> => {
+export const runSeries = <A>(): Middleware<A, A> => {
   let lastPromise = Promise.resolve()
   return async (run: Runner<A>, f: A) => {
     const result = run(f)
     lastPromise = lastPromise.catch(e => { /* TODO */ }).then(() => result)
     return result
   }
-})
+}
 
 /** 
  * Take all configs defined for all machines and all players,
