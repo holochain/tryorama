@@ -26,9 +26,11 @@ export type TrycpClient = {
 export const trycpSession = async (url): Promise<TrycpClient> => {
   const { call, close } = await connect({ url })
 
-  const makeCall = (method) => (a) => {
-    logger.debug(`trycp client ${url}: ${method} => ${JSON.stringify(a, null, 2)}`)
-    return call(method)(a)
+  const makeCall = (method) => async (a) => {
+    logger.debug(`trycp client request to ${url}: ${method} => ${JSON.stringify(a, null, 2)}`)
+    const result = await call(method)(a)
+    logger.debug('trycp client response: %j', result)
+    return result
   }
 
   return {
@@ -81,7 +83,7 @@ const fakeTrycpServer = async (config: MmmConfigItem, port: number): Promise<str
 
 const localDockerTrycpServer = () => {
   const rangeSize = 20
-  let nextRangeStart = 1000
+  let nextRangeStart = 10000
   return async (config: MmmConfigItem, port: number): Promise<string> => {
     // console.log('DOCKER: ', execSync('which docker').toString('utf8'))
     // console.log('DOCKER: ', execSync('docker  --version').toString('utf8'))
