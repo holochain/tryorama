@@ -45,7 +45,18 @@ export const trycpSession = async (url): Promise<TrycpClient> => {
 ///////////////////////////////////////////////////////////////////
 // Fake MMM stuff
 
-type MmmConfigItem = { service: string, region: string, image: string }
+/*
+e.g.
+{
+  "service": "test1",
+  "subnet": "SubnetAPublic",
+  "region": "eu-central-1",
+  "image": "holochain/holochain-rust:trycp",
+  "instance_type" : "m5.large"
+},
+*/
+
+type MmmConfigItem = { service: string, subnet: string, region: string, image: string, instance_type: string }
 type MmmConfig = Array<MmmConfigItem>
 
 const provisionLocalTrycpServer = (name: string, port, spawner): Promise<string> => new Promise((resolve, reject) => {
@@ -68,23 +79,33 @@ const fakeTrycpServer = async (config: MmmConfigItem, port: number): Promise<str
   return provisionLocalTrycpServer(config.service, port, () => spawn('trycp_server', ['-p', String(port), '--port-range', '1100-1200']));
 }
 
-const localDockerTrycpServer = async (config: MmmConfigItem, port: number): Promise<string> => {
-  // console.log('DOCKER: ', execSync('which docker').toString('utf8'))
-  // console.log('DOCKER: ', execSync('docker  --version').toString('utf8'))
-  return provisionLocalTrycpServer(config.service, port, () => spawn('docker', ['run', '-p', `${port}:80`, config.image]));
+const localDockerTrycpServer = () => {
+  const rangeSize = 20
+  let nextRangeStart = 1000
+  return async (config: MmmConfigItem, port: number): Promise<string> => {
+    // console.log('DOCKER: ', execSync('which docker').toString('utf8'))
+    // console.log('DOCKER: ', execSync('docker  --version').toString('utf8'))
+    const start = nextRangeStart
+    nextRangeStart += rangeSize
+    const rangeString = `${start}-${nextRangeStart-1}`
+    const command = ['trycp_server', '-p', `${port}`, '--port-range', rangeString]
+    return provisionLocalTrycpServer(config.service, port, () => spawn('docker', ['run', '-p', `${port}:${port}`, '-p', `${rangeString}:${rangeString}`, config.image, ...command]));
+  }
 }
 
 export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {
   return _.range(num).map(n => ({
     service: moniker.choose(),
-    region: 'whatever',
+    subnet: 'SubnetAPublic',
+    region: 'eu-central-1',
     image: dockerImage,
+    instance_type: "m5.large",
   }))
 }
 
 export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean): Promise<Array<string>> => {
   let basePort = 40000
-  const makeServer = docker ? localDockerTrycpServer : fakeTrycpServer
+  const makeServer = docker ? localDockerTrycpServer() : fakeTrycpServer
   const endpointPromises = mmmConfig.map((config, n) => makeServer(config, basePort + n))
   const endpoints = Promise.all(endpointPromises)
   return endpoints

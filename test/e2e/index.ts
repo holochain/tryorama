@@ -22,7 +22,7 @@ const trycpEndpoints = memoize(async () => {
   const NUM_MMM = 3
   const config = fakeMmmConfigs(NUM_MMM, 'holochain/holochain-rust:trycp')
   console.log('config:', config)
-  const endpoints = await spinupLocalCluster(config, false)
+  const endpoints = await spinupLocalCluster(config, true)
   console.log('endpoints:', endpoints)
   return endpoints
 })

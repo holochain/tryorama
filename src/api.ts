@@ -49,11 +49,13 @@ export class ScenarioApi {
   }
 
   players = async (machines: T.MachineConfigs, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
-    logger.debug('creating players')
+    logger.debug('api.players: creating players')
     const configsJson: Array<any> = []
     const playerBuilders: Record<string, Function> = {}
     for (const machineEndpoint in machines) {
+      logger.debug('api.players: establishing trycp client connection to %s', machineEndpoint)
       const trycp: TrycpClient | null = (machineEndpoint === LOCAL_MACHINE_ID) ? null : await trycpSession(machineEndpoint)
+      logger.debug('api.players: trycp client session established for %s', machineEndpoint)
       // choose our spwn method based on whether this is a local or remote machine
       const spawnConductor = trycp ? spawnRemote(trycp, stripPortFromUrl(machineEndpoint)) : spawnLocal
       const configs = machines[machineEndpoint]
@@ -72,6 +74,7 @@ export class ScenarioApi {
         const configSeedArgs = trycp
           ? _.assign(await trycp.setup(playerName), { playerName, uuid: this._uuid })
           : await localConfigSeedArgs(playerName, this._uuid)
+        logger.debug('api.players: seed args generated for %s', playerName)
         const configToml = await configSeed(configSeedArgs)
         const configJson = TOML.parse(configToml)
         configsJson.push(configJson)
@@ -86,6 +89,7 @@ export class ScenarioApi {
           } else {
             await fs.writeFile(getConfigPath(configDir), configToml)
           }
+          logger.debug('api.players: player config committed for %s', playerName)
 
           const player = new Player({
             name: playerName,
@@ -107,7 +111,9 @@ export class ScenarioApi {
           })
 
           if (spawnArgs) {
+            logger.debug('api.players: auto-spawning player %s', playerName)
             await player.spawn(spawnArgs)
+            logger.debug('api.players: spawn complete for %s', playerName)
           }
 
           return player
@@ -117,10 +123,9 @@ export class ScenarioApi {
 
     // this will throw an error if something is wrong
     assertUniqueTestAgentNames(configsJson)
-
-    logger.debug('player builders built')
+    logger.debug('api.players: unique agent name check passed')
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
-    logger.debug('players built')
+    logger.debug('api.players: players built')
     this._localPlayers = players
     return players
   }
