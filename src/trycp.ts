@@ -65,7 +65,7 @@ const provisionLocalTrycpServer = (name: string, port, spawner): Promise<string>
 })
 
 const fakeTrycpServer = async (config: MmmConfigItem, port: number): Promise<string> => {
-  return provisionLocalTrycpServer(config.service, port, () => spawn('trycp_server', ['-p', String(port)]));
+  return provisionLocalTrycpServer(config.service, port, () => spawn('trycp_server', ['-p', String(port), '--port-range', '1100-1200']));
 }
 
 const localDockerTrycpServer = async (config: MmmConfigItem, port: number): Promise<string> => {
