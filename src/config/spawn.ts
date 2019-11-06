@@ -97,10 +97,10 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
 
   const spawnResult = await trycp.spawn(name)
   logger.info(`TryCP spawn result: ${spawnResult}`)
-  logger.info('Waiting 30 seconds for remote conductor to be ready to receive websocket connections...')
-  logger.info('(TODO, get trycp_server to notify us when conductor is ready, then remove this delay)')
-  await delay(30000)
-  logger.info('Done waiting. Ready or not, here we come, remote conductor!')
+  // NB: trycp currently blocks until conductor is ready. It would be nice if it instead sent a notification asynchronously when the conductor is ready.
+  // logger.info('Waiting 30 seconds for remote conductor to be ready to receive websocket connections...')
+  // await delay(30000)
+  // logger.info('Done waiting. Ready or not, here we come, remote conductor!')
 
   return new Conductor({
     name,
