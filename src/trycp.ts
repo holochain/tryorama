@@ -112,3 +112,8 @@ export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean):
   const endpoints = Promise.all(endpointPromises)
   return endpoints
 }
+
+export const awsClusterConfig2Endpoints = (config): Array<string> => {
+    const endpoints = config.map((node) => `wss://${node.service}.${node.region}.holochain-aws.org`)
+    return endpoints
+}

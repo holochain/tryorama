@@ -1,7 +1,7 @@
 const memoize = require('memoizee')
 import { Orchestrator } from '../../src'
 import { runSeries, compose, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
-import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
+import { fakeMmmConfigs, spinupLocalCluster, awsClusterConfig2Endpoints } from '../../src/trycp'
 
 const localOrchestrator = () => new Orchestrator({
   middleware: compose(runSeries(), localOnly),
