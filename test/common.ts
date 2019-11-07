@@ -18,12 +18,12 @@ export const testConfig = () => {
   )
 
   ///////////////////////////////// For local tests
-  // const network = { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }
-  // console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")
+  const network = { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }
+  console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")
 
   //////////////////////////////// For local docker tests
-  const network = { type: 'sim2h', sim2h_url: 'ws://sim2h:9000' }
-  console.warn("Be sure to run a docker container named 'sim2h' on the 'trycp' network on port 9000 before running these tests!")
+  // const network = { type: 'sim2h', sim2h_url: 'ws://sim2h:9000' }
+  // console.warn("Be sure to run a docker container named 'sim2h' on the 'trycp' network on port 9000 before running these tests!")
 
 
   // const network = 'n3h'

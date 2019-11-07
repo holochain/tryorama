@@ -1,4 +1,4 @@
-const memoize = require('memoizee')
+import * as tape from 'tape'
 import { Orchestrator } from '../../src'
 import { runSeries, compose, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
 import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
@@ -24,17 +24,16 @@ const singleConductorOrchestrator = () => new Orchestrator({
 // This is just a simulation of how one might spin up trycp servers to connect to.
 // In reality, some other more complicated process would spin up machines and return
 // the endpoints.
-const trycpEndpoints = memoize(async () => {
+const trycpEndpoints = async () => {
   const NUM_MMM = 3
   const config = fakeMmmConfigs(NUM_MMM, 'holochain/holochain-rust:trycp')
   console.log('config:', config)
-  const endpoints = await spinupLocalCluster(config, true)
+  const endpoints = await spinupLocalCluster(config, false)
   console.log('endpoints:', endpoints)
   return endpoints
-})
+}
 
-const trycpOrchestrator = async () => {
-  const endpoints = await trycpEndpoints()
+const trycpOrchestrator = (endpoints) => () => {
   return new Orchestrator({
     middleware: compose(runSeries(), machinePerPlayer(endpoints)),
     reporter: true,
@@ -45,4 +44,11 @@ const trycpOrchestrator = async () => {
 
 // require('./test-always-on')(localOrchestrator)
 // require('./test-always-on')(singleConductorOrchestrator)
-require('./test-always-on')(trycpOrchestrator)
+
+trycpEndpoints().then(endpoints => {
+  require('./test-always-on')(trycpOrchestrator(endpoints))
+  tape('extra dummy test for cleanup', t => {
+    console.log("All done. TODO kill locally spawned processes.")
+    t.end()
+  })
+})

@@ -61,19 +61,26 @@ e.g.
 type MmmConfigItem = { service: string, subnet: string, region: string, image: string, instance_type: string }
 type MmmConfig = Array<MmmConfigItem>
 
+const spawnWithOutput = (name, spawner) => {
+  const proc = spawner()
+  proc.stdout.on('data', (data) => {
+    console.log(`stdout ${name}: ${data}`);
+  });
+  proc.stderr.on('data', (data) => {
+    console.error(`stderr ${name}: ${data}`);
+  });
+  return proc
+}
+
 const provisionLocalTrycpServer = (name: string, port, spawner): Promise<string> => new Promise((resolve, reject) => {
-  const trycp = spawner();
+  const trycp = spawnWithOutput(name, spawner);
   setTimeout(() => reject(`Conductor on port ${port} took more than 60 seconds to get ready, aborting.`), 60000)
   trycp.stdout.on('data', (data) => {
     // NB: the port on the machine may not be the port that we'll connect to, e.g. in the case of a docker container
-    var regex = new RegExp(/waiting for connections on port (\d{1,5})/);
+    const regex = new RegExp(/waiting for connections on port (\d{1,5})/);
     if (regex.test(data)) {
       resolve(`ws://localhost:${port}`)
     }
-    console.log(`stdout ${name}: ${data}`);
-  });
-  trycp.stderr.on('data', (data) => {
-    console.error(`stderr ${name}: ${data}`);
   });
 })
 
@@ -118,13 +125,12 @@ export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean):
   const makeServer = docker ? localDockerTrycpServer() : fakeTrycpServer
   const endpointPromises = mmmConfig.map((config, n) => makeServer(config, basePort + n))
   const endpoints = Promise.all(endpointPromises)
-  provisionLocalTrycpServer('sim2h', 9000, () => spawn('docker', [
-    'run', 
-    '-p', `9000:9000`,
-    '--name', 'sim2h',
-    '--network', 'trycp',
-    'holochain/holochain-rust:trycp', 
-    ...['nix-shell', '--run', 'hc-sim2h-server']
-  ]))
+  // spawnWithOutput('sim2h', () => spawn('docker', [
+  //   'run',
+  //   '-p', `9000:9000`,
+  //   '--name', 'sim2h',
+  //   '--network', 'trycp',
+  //   'holochain/sim2h_server:latest',
+  // ]))
   return endpoints
 }
