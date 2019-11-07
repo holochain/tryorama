@@ -15,6 +15,7 @@ type PartialConfigSeedArgs = {
 
 export type TrycpClient = {
   setup: (id) => Promise<PartialConfigSeedArgs>,
+  dna: (url: string) => Promise<{path: string}>,
   player: (id, configToml) => Promise<any>,
   spawn: (id) => Promise<any>,
   kill: (id, signal?) => Promise<any>,
@@ -35,6 +36,7 @@ export const trycpSession = async (url): Promise<TrycpClient> => {
 
   return {
     setup: (id) => makeCall('setup')({ id }),
+    dna: (url) => makeCall('dna')({ url }),
     player: (id, configToml) => makeCall('player')({ id, config: base64.encode(configToml) }),
     spawn: (id) => makeCall('spawn')({ id }),
     kill: (id, signal?) => makeCall('kill')({ id, signal }),

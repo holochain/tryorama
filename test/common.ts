@@ -11,9 +11,9 @@ export const testOrchestrator = () => new Orchestrator({
   }
 })
 
-export const testConfig = () => {
+export const testConfig = (dnaPath) => {
 
-  const dna = Config.dna( './dna/passthrough-dna.dna.json' )
+  const dna = Config.dna(dnaPath)
 
   ///////////////////////////////// For local tests
   const network = { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }

@@ -53,9 +53,9 @@ export class ScenarioApi {
     const configsJson: Array<any> = []
     const playerBuilders: Record<string, Function> = {}
     for (const machineEndpoint in machines) {
-      logger.debug('api.players: establishing trycp client connection to %s', machineEndpoint)
-      const trycp: TrycpClient | null = (machineEndpoint === LOCAL_MACHINE_ID) ? null : await trycpSession(machineEndpoint)
-      logger.debug('api.players: trycp client session established for %s', machineEndpoint)
+      
+      const trycp: TrycpClient | null = await this._getClient(machineEndpoint)
+
       // choose our spwn method based on whether this is a local or remote machine
       const spawnConductor = trycp ? spawnRemote(trycp, stripPortFromUrl(machineEndpoint)) : spawnLocal
       const configs = machines[machineEndpoint]
@@ -84,8 +84,10 @@ export class ScenarioApi {
         playerBuilders[playerName] = async () => {
           const { instances } = configJson
           const { configDir } = configSeedArgs
+          
           if (trycp) {
-            await trycp.player(playerName, configToml)
+            const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
+            await trycp.player(playerName, TOML.stringify(newConfigJson))
           } else {
             await fs.writeFile(getConfigPath(configDir), configToml)
           }
@@ -144,6 +146,17 @@ export class ScenarioApi {
 
   globalConfig = (): T.GlobalConfig => this._globalConfig
 
+  _getClient = async (machineEndpoint) => {
+    if (machineEndpoint === LOCAL_MACHINE_ID) {
+      return null
+    } else {
+      logger.debug('api.players: establishing trycp client connection to %s', machineEndpoint)
+      const trycp = await trycpSession(machineEndpoint)
+      logger.debug('api.players: trycp client session established for %s', machineEndpoint)
+      return trycp
+    }
+  }
+
   _clearTimer = () => {
     logger.debug('cleared timer')
     clearTimeout(this._activityTimer)
@@ -187,5 +200,23 @@ ${names.join(', ')}
     this._clearTimer()
     return localKills
   }
+}
 
+/**
+ * If URLs are present in the config, use TryCP 'dna' method to instruct the remote machine
+ * to download the dna, and then replace the URL in the config with the returned local path
+ */
+const interpolateConfigDnaUrls = async (trycp: TrycpClient, configJson: T.RawConductorConfig): Promise<any> => {
+  configJson = _.cloneDeep(configJson)
+  configJson.dnas = await Promise.all(
+    configJson.dnas.map(async (dna) => {
+      if (dna.location.match(/^https?:\/\//)) {
+        const {path} = await trycp.dna(dna.location)
+        return _.set(dna, 'location', path)
+      } else {
+        return dna
+      }
+    })
+  )
+  return configJson
 }

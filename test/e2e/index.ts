@@ -1,13 +1,17 @@
 import * as tape from 'tape'
 import { Orchestrator } from '../../src'
 import { runSeries, compose, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
-import { fakeMmmConfigs, spinupLocalCluster, awsClusterConfig2Endpoints } from '../../src/trycp'
+import { fakeMmmConfigs, spinupLocalCluster, awsClusterConfig2Endpoints, trycpSession } from '../../src/trycp'
+import { testConfig } from '../common';
 
 process.on('unhandledRejection', error => {
   console.error('****************************');
   console.error('got unhandledRejection:', error);
   console.error('****************************');
 });
+
+const dnaLocationLocal = './dna/passthrough-dna.dna.json'
+const dnaLocationRemote = 'https://github.com/holochain/passthrough-dna/releases/download/v0.0.6/passthrough-dna.dna.json'
 
 const localOrchestrator = () => new Orchestrator({
   middleware: compose(runSeries(), localOnly),
@@ -42,11 +46,11 @@ const trycpOrchestrator = (endpoints) => () => {
 }
 
 
-// require('./test-always-on')(localOrchestrator)
-// require('./test-always-on')(singleConductorOrchestrator)
+// require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
+// require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 
 trycpEndpoints().then(([endpoints, processes]) => {
-  require('./test-always-on')(trycpOrchestrator(endpoints))
+  require('./test-always-on')(trycpOrchestrator(endpoints), () => testConfig(dnaLocationRemote))
   tape('extra dummy test for cleanup', t => {
     console.log("All done. Killing locally spawned processes.")
     processes.forEach(p => p.kill())

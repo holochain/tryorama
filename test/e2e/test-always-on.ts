@@ -7,9 +7,8 @@ import { Orchestrator, Config } from '../../src'
 import { runSeries } from '../../src/middleware'
 import { delay } from '../../src/util';
 import { GlobalConfig } from '../../src/types';
-import { testConfig } from '../common';
 
-module.exports = (testOrchestrator) => {
+module.exports = (testOrchestrator, testConfig) => {
 
   test('test with error', async t => {
     const C = testConfig()
