@@ -142,9 +142,8 @@ export const tapeExecutor = <A extends ScenarioApi>(tape: any): Middleware<Scena
 export const runSeries = <A>(): Middleware<A, A> => {
   let lastPromise = Promise.resolve()
   return async (run: Runner<A>, f: A) => {
-    const result = run(f)
-    lastPromise = lastPromise.catch(e => { /* TODO */ }).then(() => result)
-    return result
+    lastPromise = lastPromise.then(() => run(f))
+    return lastPromise
   }
 }
 
