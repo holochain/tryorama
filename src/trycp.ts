@@ -63,6 +63,7 @@ type EndpointPair = [string, ChildProcess]
 type MmmConfigItem = { service: string, subnet: string, region: string, image: string, instance_type: string }
 type MmmConfig = Array<MmmConfigItem>
 
+/** Pipes process output to node stdout */
 const spawnWithOutput = (name, spawner) => {
   const proc = spawner()
   proc.stdout.on('data', (data) => {
@@ -74,6 +75,10 @@ const spawnWithOutput = (name, spawner) => {
   return proc
 }
 
+/** 
+ * Spawns trycp_server and awaits for it to be ready for connection 
+ * Returns the pair of endpoint URL as well as process handle
+ */
 const provisionLocalTrycpServer = (name: string, port, spawner): Promise<EndpointPair> => new Promise((resolve, reject) => {
   const trycp = spawnWithOutput(name, spawner);
   setTimeout(() => reject(`Conductor on port ${port} took more than 60 seconds to get ready, aborting.`), 60000)
@@ -86,10 +91,18 @@ const provisionLocalTrycpServer = (name: string, port, spawner): Promise<Endpoin
   });
 })
 
+/** 
+ * Spawns a local, uncontainerized trycp_server 
+ * Returns the pair of endpoint URL as well as process handle
+ */
 const fakeTrycpServer = async (config: MmmConfigItem, port: number): Promise<EndpointPair> => {
   return provisionLocalTrycpServer(config.service, port, () => spawn('trycp_server', ['-p', String(port), '--port-range', '1100-1200']));
 }
 
+/** 
+ * Spawns a local, docker-containerized trycp_server
+ * Returns the pair of endpoint URL as well as process handle
+ */
 const localDockerTrycpServer = () => {
   const rangeSize = 20
   let nextRangeStart = 10000
@@ -112,6 +125,7 @@ const localDockerTrycpServer = () => {
   }
 }
 
+/** Generates some fake config which resembles data that would be sent to the MMM EC2 node spinner upper */
 export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {
   return _.range(num).map(n => ({
     service: moniker.choose(),
@@ -122,6 +136,11 @@ export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {
   }))
 }
 
+/**
+ * Simulates MMM, taking a config and spawning a local cluster of trycp servers.
+ * Returns an array of endpoints which can be passed to try-o-rama machinePerPlayer middleware,
+ * as well as an array of child processes which can be used to kill the processes after testing is complete.
+ */
 export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean): Promise<[Array<string>, Array<ChildProcess>]> => {
   let basePort = 40000
   const makeServer = docker ? localDockerTrycpServer() : fakeTrycpServer
