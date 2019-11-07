@@ -3,7 +3,7 @@ import { connect } from '@holochain/hc-web-client'
 import logger from './logger'
 import * as T from './types'
 import { notImplemented } from './common'
-import { exec, execSync, spawn } from 'child_process'
+import { exec, execSync, spawn, ChildProcess } from 'child_process'
 const base64 = require('base-64')
 const moniker = require('moniker')
 
@@ -58,6 +58,8 @@ e.g.
 },
 */
 
+type EndpointPair = [string, ChildProcess]
+
 type MmmConfigItem = { service: string, subnet: string, region: string, image: string, instance_type: string }
 type MmmConfig = Array<MmmConfigItem>
 
@@ -72,26 +74,26 @@ const spawnWithOutput = (name, spawner) => {
   return proc
 }
 
-const provisionLocalTrycpServer = (name: string, port, spawner): Promise<string> => new Promise((resolve, reject) => {
+const provisionLocalTrycpServer = (name: string, port, spawner): Promise<EndpointPair> => new Promise((resolve, reject) => {
   const trycp = spawnWithOutput(name, spawner);
   setTimeout(() => reject(`Conductor on port ${port} took more than 60 seconds to get ready, aborting.`), 60000)
   trycp.stdout.on('data', (data) => {
     // NB: the port on the machine may not be the port that we'll connect to, e.g. in the case of a docker container
     const regex = new RegExp(/waiting for connections on port (\d{1,5})/);
     if (regex.test(data)) {
-      resolve(`ws://localhost:${port}`)
+      resolve([`ws://localhost:${port}`, trycp])
     }
   });
 })
 
-const fakeTrycpServer = async (config: MmmConfigItem, port: number): Promise<string> => {
+const fakeTrycpServer = async (config: MmmConfigItem, port: number): Promise<EndpointPair> => {
   return provisionLocalTrycpServer(config.service, port, () => spawn('trycp_server', ['-p', String(port), '--port-range', '1100-1200']));
 }
 
 const localDockerTrycpServer = () => {
   const rangeSize = 20
   let nextRangeStart = 10000
-  return async (config: MmmConfigItem, port: number): Promise<string> => {
+  return async (config: MmmConfigItem, port: number): Promise<EndpointPair> => {
     // console.log('DOCKER: ', execSync('which docker').toString('utf8'))
     // console.log('DOCKER: ', execSync('docker  --version').toString('utf8'))
     const start = nextRangeStart
@@ -120,11 +122,11 @@ export const fakeMmmConfigs = (num, dockerImage): MmmConfig => {
   }))
 }
 
-export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean): Promise<Array<string>> => {
+export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean): Promise<[Array<string>, Array<ChildProcess>]> => {
   let basePort = 40000
   const makeServer = docker ? localDockerTrycpServer() : fakeTrycpServer
   const endpointPromises = mmmConfig.map((config, n) => makeServer(config, basePort + n))
-  const endpoints = Promise.all(endpointPromises)
+  const pairs = await Promise.all(endpointPromises)
   // spawnWithOutput('sim2h', () => spawn('docker', [
   //   'run',
   //   '-p', `9000:9000`,
@@ -132,5 +134,6 @@ export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean):
   //   '--network', 'trycp',
   //   'holochain/sim2h_server:latest',
   // ]))
-  return endpoints
+  const unzipped = _.reduce(pairs, ([es, ps], [e, p]) => [_.concat(es, e), _.concat(ps, p)], [[], []])
+  return unzipped as [Array<string>, Array<ChildProcess>]
 }

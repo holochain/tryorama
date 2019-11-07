@@ -13,13 +13,12 @@ export const testOrchestrator = () => new Orchestrator({
 
 export const testConfig = () => {
 
-  const dna = Config.dna(
-    'https://github.com/holochain/passthrough-dna/releases/download/v0.0.5/passthrough-dna.dna.json'
-  )
+  const dna = Config.dna( './dna/passthrough-dna.dna.json' )
 
   ///////////////////////////////// For local tests
   const network = { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }
   console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")
+  console.warn("Also be sure that ./dna/passthrough-dna.dna.json is accessible. (Run `npm run fetch-dna` to download)")
 
   //////////////////////////////// For local docker tests
   // const network = { type: 'sim2h', sim2h_url: 'ws://sim2h:9000' }

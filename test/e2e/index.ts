@@ -45,10 +45,11 @@ const trycpOrchestrator = (endpoints) => () => {
 // require('./test-always-on')(localOrchestrator)
 // require('./test-always-on')(singleConductorOrchestrator)
 
-trycpEndpoints().then(endpoints => {
+trycpEndpoints().then(([endpoints, processes]) => {
   require('./test-always-on')(trycpOrchestrator(endpoints))
   tape('extra dummy test for cleanup', t => {
-    console.log("All done. TODO kill locally spawned processes.")
+    console.log("All done. Killing locally spawned processes.")
+    processes.forEach(p => p.kill())
     t.end()
   })
 })
