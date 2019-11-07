@@ -1,7 +1,7 @@
 import * as tape from 'tape'
 import { Orchestrator } from '../../src'
 import { runSeries, compose, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
-import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
+import { fakeMmmConfigs, spinupLocalCluster, awsClusterConfig2Endpoints } from '../../src/trycp'
 
 process.on('unhandledRejection', error => {
   console.error('****************************');
