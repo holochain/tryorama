@@ -16,7 +16,6 @@ module.exports = (testOrchestrator) => {
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('invalid instance', async s => {
       const players = await s.players({ alice: C.alice }, true)
-      console.log("players", players)
       const { alice } = players
       await alice.call('blah', 'blah', 'blah', 'blah')
     })

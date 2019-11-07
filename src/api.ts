@@ -180,7 +180,10 @@ ${names.join(', ')}
     const localKills = await Promise.all(
       _.values(this._localPlayers).map(player => player.cleanup(signal))
     )
-    await Promise.all(this._trycpClients.map(async (trycp) => await trycp.reset()))
+    await Promise.all(this._trycpClients.map(async (trycp) => { 
+      await trycp.reset()
+      await trycp.closeSession()
+    }))
     this._clearTimer()
     return localKills
   }

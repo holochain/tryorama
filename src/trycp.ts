@@ -91,7 +91,15 @@ const localDockerTrycpServer = () => {
     nextRangeStart += rangeSize
     const rangeString = `${start}-${nextRangeStart-1}`
     const command = ['trycp_server', '-p', `${port}`, '--port-range', rangeString]
-    return provisionLocalTrycpServer(config.service, port, () => spawn('docker', ['run', '-p', `${port}:${port}`, '-p', `${rangeString}:${rangeString}`, config.image, ...command]));
+    return provisionLocalTrycpServer(config.service, port, () => spawn('docker', [
+      'run', 
+      '-p', `${port}:${port}`, 
+      '-p', `${rangeString}:${rangeString}`, 
+      '--name', config.service,
+      '--network', 'trycp',
+      config.image, 
+      ...command
+    ]));
   }
 }
 
@@ -110,5 +118,13 @@ export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean):
   const makeServer = docker ? localDockerTrycpServer() : fakeTrycpServer
   const endpointPromises = mmmConfig.map((config, n) => makeServer(config, basePort + n))
   const endpoints = Promise.all(endpointPromises)
+  provisionLocalTrycpServer('sim2h', 9000, () => spawn('docker', [
+    'run', 
+    '-p', `9000:9000`,
+    '--name', 'sim2h',
+    '--network', 'trycp',
+    'holochain/holochain-rust:trycp', 
+    ...['nix-shell', '--run', 'hc-sim2h-server']
+  ]))
   return endpoints
 }

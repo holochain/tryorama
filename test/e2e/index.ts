@@ -3,6 +3,12 @@ import { Orchestrator } from '../../src'
 import { runSeries, compose, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
 import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
 
+process.on('unhandledRejection', error => {
+  console.error('****************************');
+  console.error('got unhandledRejection:', error);
+  console.error('****************************');
+});
+
 const localOrchestrator = () => new Orchestrator({
   middleware: compose(runSeries(), localOnly),
   reporter: true,
