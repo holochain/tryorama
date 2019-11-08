@@ -97,11 +97,40 @@ export const LoggerConfigV = t.union([
 ])
 export type LoggerConfig = t.TypeOf<typeof LoggerConfigV>
 
+export const MetricPublisherTypeV = t.union([
+    t.literal("cloudwatchlogs"),
+    t.literal("logger"),
+    t.literal("cloudwatchmetrics")
+])
+
+export const CloudWatchLogsConfigV = t.partial({
+    region: t.string,
+    log_group_name: t.string,
+    log_stream_name: t.string
+})
+
+export const LoggerV = t.null
+export const CloudWatchMetricsV = t.string
+
+export const MetricPublisherConfigVV = t.union([
+    LoggerV,
+    CloudWatchLogsConfigV,
+    CloudWatchMetricsV
+])
+
+export const MetricPublisherConfigV = t.intersection([
+    MetricPublisherTypeV,
+    MetricPublisherConfigVV
+])
+
+export type MetricPublisherConfig = t.TypeOf<typeof MetricPublisherConfigV>
+
 const ConductorConfigCommonV = t.partial({
   bridges: t.array(BridgeConfigV),
   dpki: DpkiConfigV,
   network: NetworkConfigV,
   logger: LoggerConfigV,
+  metric_publisher: MetricPublisherConfigV
 })
 
 /** Base representation of a Conductor */
@@ -134,12 +163,14 @@ export type AnyConductorConfig = EitherConductorConfig | GenConfigFn
 export const GlobalConfigV = t.type({
   network: NetworkConfigV,
   logger: LoggerConfigV,
+  metric_publisher: MetricPublisherConfigV,
 })
 export type GlobalConfig = t.TypeOf<typeof GlobalConfigV>
 
 export const GlobalConfigPartialV = t.partial({
   network: NetworkConfigV,
   logger: LoggerConfigV,
+  metric_publisher: MetricPublisherConfigV,
 })
 export type GlobalConfigPartial = t.TypeOf<typeof GlobalConfigPartialV>
 

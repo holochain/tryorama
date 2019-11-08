@@ -14,6 +14,7 @@ const defaultSpawnConductor = spawnUnique
 export const defaultGlobalConfig: T.GlobalConfig = {
   network: 'memory',
   logger: false,
+  metric_publisher: "logger"
 }
 
 type OrchestratorConstructorParams = {

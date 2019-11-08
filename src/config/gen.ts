@@ -135,6 +135,7 @@ export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig):
       await genSignalConfig(config),
       await genNetworkConfig(config, args, g),
       await genLoggerConfig(config, args, g),
+      await genMetricPublisherConfig(config, args, g),
     ]
     const json = Object.assign({},
       ...pieces
@@ -296,6 +297,12 @@ export const genLoggerConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) =>
     return { logger }
   }
 }
+
+export const genMetricPublisherConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) => {
+  const metric_publisher = c.metric_publisher || g.metric_publisher
+  return { metric_publisher }
+}
+
 
 export const getDnaHash = async (dnaPath) => {
   const { stdout, stderr } = await exec(`hc hash -p ${dnaPath}`)
