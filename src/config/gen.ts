@@ -34,11 +34,11 @@ const dnaDir = async () => {
   return dir
 }
 
-export const dna = (location, id?, opts = {}): T.DnaConfig => {
+export const dna = (file, id?, opts = {}): T.DnaConfig => {
   if (!id) {
-    id = dnaPathToId(location)
+    id = dnaPathToId(file)
   }
-  return { location, id, ...opts }
+  return { file, id, ...opts }
 }
 
 /**
@@ -54,8 +54,8 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
 
   if (!dna.hash) {
-    dna.hash = await getDnaHash(dna.location).catch(err => {
-      logger.warn(`Could not determine hash of DNA at '${dna.location}'. Note that tryorama cannot determine the hash of DNAs at URLs\n\tOriginal error: ${err}`)
+    dna.hash = await getDnaHash(dna.file).catch(err => {
+      logger.warn(`Could not determine hash of DNA at '${dna.file}'. Note that tryorama cannot determine the hash of DNAs at URLs\n\tOriginal error: ${err}`)
       return "[UNKNOWN]"
     })
   }

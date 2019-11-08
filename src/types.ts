@@ -60,7 +60,7 @@ export type AgentConfig = t.TypeOf<typeof AgentConfigV>
 export const DnaConfigV = t.intersection([
   t.type({
     id: t.string,
-    location: t.string,
+    file: t.string,
   }),
   t.partial({
     hash: t.string,

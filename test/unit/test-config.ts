@@ -35,7 +35,7 @@ export const { configPlain, configSugared } = (() => {
       },
       dna: {
         id: 'dna-id',
-        location: 'path/to/dna.json',
+        file: 'path/to/dna.json',
         uuid: 'uuid'
       }
     },
@@ -50,7 +50,7 @@ export const { configPlain, configSugared } = (() => {
       },
       dna: {
         id: 'dna-id',
-        location: 'path/to/dna.json',
+        file: 'path/to/dna.json',
         uuid: 'uuid'
       }
     }
@@ -86,25 +86,25 @@ test('resolveDna ids and uuids', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const dna1 = await Gen.resolveDna({
     id: 'x',
-    location: ' ',
+    file: ' ',
   }, 'A')
   const dna2 = await Gen.resolveDna({
     id: 'x',
-    location: ' ',
+    file: ' ',
   }, 'B')
   const dna3 = await Gen.resolveDna({
     id: 'y',
-    location: ' ',
+    file: ' ',
   }, 'C')
   const dna4 = await Gen.resolveDna({
     id: 'x',
     uuid: 'a',
-    location: ' ',
+    file: ' ',
   }, 'D')
   const dna5 = await Gen.resolveDna({
     id: 'y',
     uuid: 'b',
-    location: ' ',
+    file: ' ',
   }, 'E')
 
   t.equal(dna1.id, 'x')

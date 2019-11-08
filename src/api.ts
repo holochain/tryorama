@@ -210,9 +210,9 @@ const interpolateConfigDnaUrls = async (trycp: TrycpClient, configJson: T.RawCon
   configJson = _.cloneDeep(configJson)
   configJson.dnas = await Promise.all(
     configJson.dnas.map(async (dna) => {
-      if (dna.location.match(/^https?:\/\//)) {
-        const {path} = await trycp.dna(dna.location)
-        return _.set(dna, 'location', path)
+      if (dna.file.match(/^https?:\/\//)) {
+        const {path} = await trycp.dna(dna.file)
+        return _.set(dna, 'file', path)
       } else {
         return dna
       }
