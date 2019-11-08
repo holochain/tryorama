@@ -109,11 +109,11 @@ export const CloudWatchLogsConfigV = t.partial({
     log_stream_name: t.string
 })
 
-export const LoggerV = t.null
+export const LoggerMetricPublisherV = t.null
 export const CloudWatchMetricsV = t.string
 
 export const MetricPublisherConfigVV = t.union([
-    LoggerV,
+    LoggerMetricPublisherV,
     CloudWatchLogsConfigV,
     CloudWatchMetricsV
 ])
