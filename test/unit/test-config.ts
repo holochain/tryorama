@@ -200,9 +200,23 @@ pattern = ".*"
   t.end()
 })
 
+test('genMetricPublisherConfig', async t => {
+  const actual = await C.genMetricPublisherConfig({ metric_publisher: 'logger' } as CC, { configDir: '' }, blah)
+
+  const expected = TOML.parse(`
+[metric_publisher]
+type = "logger"
+  `)
+
+  console.log("actual" + JSON.stringify(actual) )
+  t.deepEqual(actual, expected)
+  t.end()
+})
+
+
 test('genConfig produces valid TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const builder = C.genConfig(configSugared, { logger: false, network: 'n3h' })
+  const builder = C.genConfig(configSugared, { logger: false, network: 'n3h', metric_publisher: 'logger' })
   const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
@@ -237,7 +251,7 @@ test('invalid config throws nice error', async t => {
       instances: [
         { id: 'what' }
       ]
-    } as any, { logger: false, network: 'n3h' })({
+    } as any, { logger: false, network: 'n3h', metric_publisher: 'logger'})({
       configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName'
     }),
       /Tried to use an invalid value/

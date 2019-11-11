@@ -9,8 +9,9 @@ export const testConfig = () => {
     'https://github.com/holochain/holochain-basic-chat/releases/download/0.0.15/holochain-basic-chat.dna.json'
   )
   const network = 'n3h'
+  const metric_publisher = 'logger'
   // const network = { type: 'sim1h', dynamo_url: 'http://localhost:8000' }
-  const args: T.GlobalConfig = { logger: false, network }
+  const args: T.GlobalConfig = { logger: false, network, metric_publisher }
 
   return {
     alice: Config.genConfig({
