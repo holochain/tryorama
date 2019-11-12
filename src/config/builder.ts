@@ -27,7 +27,7 @@ const genSignalConfig = ({ }) => ({
 })
 
 
-const genNetworkConfig = (network) => async ({ configDir }) => {
+const genNetworkConfig = (network: T.NetworkConfig) => async ({ configDir }): Promise<T.RawNetworkConfig> => {
   const dir = path.join(configDir, 'network-storage')
   await mkdirIdempotent(dir)
   const lib3hConfig = type => ({
@@ -51,19 +51,17 @@ const genNetworkConfig = (network) => async ({ configDir }) => {
     ]
   })
   if (network === 'memory' || network === 'websocket') {
-    return { network: lib3hConfig(network) }
+    return lib3hConfig(network)
   } else if (network === 'n3h') {
     return {
-      network: {
-        type: 'n3h',
-        n3h_log_level: 'e',
-        bootstrap_nodes: [],
-        n3h_mode: 'REAL',
-        n3h_persistence_path: dir,
-      }
+      type: 'n3h',
+      n3h_log_level: 'e',
+      bootstrap_nodes: [],
+      n3h_mode: 'REAL',
+      n3h_persistence_path: dir,
     }
   } else if (typeof network === 'object') {
-    return { network }
+    return network
   } else {
     throw new Error("Unsupported network type: " + network)
   }

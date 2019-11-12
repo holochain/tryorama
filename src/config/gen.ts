@@ -3,9 +3,43 @@ import * as _ from 'lodash'
 import { trace, stringify } from "../util";
 import env from '../env';
 import logger from '../logger';
+import { expand } from "./expand";
 
 const exec = require('util').promisify(require('child_process').exec)
 const path = require('path')
+
+/**
+ * The main purpose of this module. It is a helper function which accepts an object
+ * describing instances in shorthand, as well as a second object describing the additional
+ * more general config fields. It is usually the case that the first object will be vary
+ * between players, and the second field will be the same between different players.
+ */
+export const gen = 
+(instances: T.Fort<T.EitherInstancesConfig>, common?: T.Fort<T.ConductorConfigCommon>) => {
+  // This seems non-DRY, but it leads to more helpful error messages 
+  // to have this validation before creating the seed function
+  // TODO: type check of `common`
+  if (_.isArray(instances)) {
+    T.decodeOrThrow(T.DryInstancesConfigV, instances)
+  } else {
+    T.decodeOrThrow(T.SugaredInstancesConfigV, instances)
+  }
+
+  return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> =>
+  {
+    const instancesClone = T.collapseFort(_.cloneDeep(instances), args)
+    const instancesDry = _.isArray(instancesClone) 
+      ? _.cloneDeep(instancesClone) 
+      : desugarInstances(instancesClone, args)
+    const specific = await genPartialConfigFromDryInstances(instancesDry, args)
+    return _.merge(
+      {},
+      T.collapseFort(expand(common), args), 
+      specific
+    )
+  }
+}
+
 
 
 /**
@@ -107,33 +141,6 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
   config.interfaces = [adminInterface, zomeInterface]
   return config
 }
-
-export const gen = 
-(instances: T.EitherInstancesConfig, common?: T.Fort<T.ConductorConfigCommon>) => {
-  // This seems non-DRY, but it leads to more helpful error messages 
-  // to have this validation before creating the seed function
-  // TODO: type check of `common`
-  if (_.isArray(instances)) {
-    T.decodeOrThrow(T.DryInstancesConfigV, instances)
-  } else {
-    T.decodeOrThrow(T.SugaredInstancesConfigV, instances)
-  }
-
-  return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> =>
-  {
-    const instancesClone = _.cloneDeep(instances)
-    const instancesDry = _.isArray(instancesClone) 
-      ? _.cloneDeep(instancesClone) 
-      : desugarInstances(instancesClone, args)
-    const specific = await genPartialConfigFromDryInstances(instancesDry, args)
-    return _.merge(
-      {},
-      T.collapseFort(common, args), 
-      specific
-    )
-  }
-}
-
 
 
 export const getDnaHash = async (dnaPath) => {

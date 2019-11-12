@@ -6,6 +6,7 @@ const test = tapeP(tape)
 import { ScenarioApi } from '../../src/api'
 import { instancesDry } from './test-config';
 import * as C from '../../src/config';
+import Builder from '../../src/config/builder';
 import * as Gen from '../../src/config/gen';
 import { ConfigSeedArgs } from '../../src/types';
 import { trace } from '../../src/util';
@@ -22,8 +23,8 @@ test('API detects duplicate agent IDs', async t => {
   await t.rejects(
     api.players({
       local: {
-        alice: C.gen(instancesDry),
-        bob: C.gen(instancesDry)
+        alice: Builder.gen(instancesDry),
+        bob: Builder.gen(instancesDry)
       }
     }),
     /There are 2 non-unique test agent names specified/

@@ -56,6 +56,8 @@ export const { instancesDry, instancesSugared } = (() => {
   return { instancesDry, instancesSugared }
 })()
 
+const commonConfig = { logger: Builder.logger(false), network: Builder.network('n3h') }
+
 test('DNA id generation', t => {
   t.equal(C.dnaPathToId('path/to/file'), 'file')
   t.equal(C.dnaPathToId('path/to/file.dna'), 'file.dna')
@@ -155,10 +157,10 @@ test('genSignalConfig', async t => {
 test('genNetworkConfig', async t => {
   const c1 = await Builder.network('memory')({ configDir: '' })
   const c2 = await Builder.network('websocket')({ configDir: '' })
-  t.equal(c1.network.type, 'memory')
-  t.equal(c1.network.transport_configs[0].type, 'memory')
-  t.equal(c2.network.type, 'websocket')
-  t.equal(c2.network.transport_configs[0].type, 'websocket')
+  t.equal(c1.type, 'memory')
+  t.equal(c1.transport_configs[0].type, 'memory')
+  t.equal(c2.type, 'websocket')
+  t.equal(c2.transport_configs[0].type, 'websocket')
   t.end()
 })
 
@@ -180,11 +182,12 @@ pattern = ".*"
 
 test('genConfig produces JSON which can be serialized to TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const seed = Builder.gen(instancesSugared, { logger: false, network: 'n3h' })
+  const seed = Builder.gen(instancesSugared, commonConfig)
   const json = await seed({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName' })
   const toml = TOML.stringify(json)
   const json2 = TOML.parse(toml)
   t.deepEqual(json, json2)
+  t.equal(typeof json, 'object')
   t.end()
   stubGetDnaHash.restore()
 })
@@ -193,7 +196,7 @@ test('invalid config throws nice error', async t => {
   t.throws(() => {
     Builder.gen([
       { id: 'what' }
-    ] as any, { logger: false, network: 'n3h' })({
+    ] as any, commonConfig)({
       configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName'
     }),
       /Tried to use an invalid value/

@@ -12,7 +12,7 @@ const makeTestConfigs = async () => {
   const dna1a = Builder.dna('path/to/dna1.json', 'dna-1', { uuid: 'a' })
   const dna1b = Builder.dna('path/to/dna1.json', 'dna-1', { uuid: 'b' })
   const dna2 = Builder.dna('path/to/dna2.json', 'dna-2')
-  const providedUuid = 'UUID'
+  const commonConfig = {logger: Builder.logger(false), network: Builder.network('n3h')}
 
   const mkInstance = (playerName, id, dna) => ({
     id: adjoin(playerName)(id),
@@ -32,7 +32,7 @@ const makeTestConfigs = async () => {
     }, {
       bridges: [Builder.bridge('b', 'alice', 'bob')],
       dpki: Builder.dpki('alice', { well: 'hello' }),
-      logger: false, network: 'n3h'
+      ...commonConfig
     }),
     two: Builder.gen({
       xena: dna1a,
@@ -44,7 +44,7 @@ const makeTestConfigs = async () => {
         Builder.bridge('y', 'yancy', 'ziggy'),
       ],
       dpki: Builder.dpki('xena', { well: 'hello' }),
-      logger: false, network: 'n3h'
+      ...commonConfig
     }),
     three: Builder.gen({
       alice: dna2,
@@ -52,7 +52,7 @@ const makeTestConfigs = async () => {
     }, {
       bridges: [Builder.bridge('b', 'alice', 'bob')],
       dpki: Builder.dpki('bob', { well: 'hello' }),
-      logger: false, network: 'n3h'
+      ...commonConfig
     }),
   }
 
@@ -74,7 +74,7 @@ const makeTestConfigs = async () => {
         Builder.bridge('b', 'alice--three', 'bob--three')
       ],
       dpki: Builder.dpki('alice', { well: 'hello' }),
-      logger: false, network: 'n3h'
+      ...commonConfig
     }
   )
 
