@@ -11,7 +11,7 @@ export const testOrchestrator = () => new Orchestrator({
   }
 })
 
-export const testConfig = (dnaPath) => {
+export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed} => {
 
   const dna = Config.dna(dnaPath)
 
@@ -25,17 +25,10 @@ export const testConfig = (dnaPath) => {
   // console.warn("Be sure to run a docker container named 'sim2h' on the 'trycp' network on port 9000 before running these tests!")
 
 
-  // const network = 'n3h'
-  const common: T.ConductorConfigCommon = { logger: true, network }
-
-  return {
-    alice: Config.gen({
-        app: dna
-    }, common),
-    bob: Config.gen({
-        app: dna
-    }, common)
-  }
+  // const network = Config.network('n3h')
+  const common: T.ConductorConfigCommon = { logger: Config.logger(true), network }
+  const seed: T.ConfigSeed = Config.gen({ app: dna }, common)
+  return {alice: seed, bob: seed}
 }
 
 export const withClock = f => t => {

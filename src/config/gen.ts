@@ -1,10 +1,8 @@
 import * as T from "../types";
 import * as _ from 'lodash'
-import { trace } from "../util";
+import { trace, stringify } from "../util";
 import env from '../env';
 import logger from '../logger';
-import { saneLoggerConfig, quietLoggerConfig } from './logger';
-const TOML = require('@iarna/toml')
 
 const exec = require('util').promisify(require('child_process').exec)
 const path = require('path')
@@ -123,10 +121,16 @@ export const gen =
 
   return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> =>
   {
-    instances = _.isArray(instances) ? instances : desugarInstances(instances, args)
-    const specific = await genPartialConfigFromDryInstances(instances, args)
-    common = T.collapseFort(common, args)
-    return _.merge(common, specific)
+    const instancesClone = _.cloneDeep(instances)
+    const instancesDry = _.isArray(instancesClone) 
+      ? _.cloneDeep(instancesClone) 
+      : desugarInstances(instancesClone, args)
+    const specific = await genPartialConfigFromDryInstances(instancesDry, args)
+    return _.merge(
+      {},
+      T.collapseFort(common, args), 
+      specific
+    )
   }
 }
 

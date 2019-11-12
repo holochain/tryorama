@@ -6,6 +6,7 @@ import { ObjectS } from './types';
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
 export const trace = (x, msg = '{T}') => (console.log(msg, `<${typeof x}>`, x), x)
+export const stringify = x => JSON.stringify(x, null, 2)
 
 export const stripPortFromUrl = url => {
   const i = url.lastIndexOf(':')

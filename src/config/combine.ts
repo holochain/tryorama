@@ -63,7 +63,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, stand
     .flatten()
     .value()
 
-  const dnas = _.chain(trace(configs))
+  const dnas = _.chain(configs)
     .map(c => c.dnas)
     .flatten()
     .uniqBy(dna => dna.id)

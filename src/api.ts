@@ -8,7 +8,7 @@ import * as T from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
-import { promiseSerialObject, delay, stripPortFromUrl, trace } from './util';
+import { promiseSerialObject, stringify, stripPortFromUrl, trace } from './util';
 import { getConfigPath, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
 import { trycpSession, TrycpClient } from './trycp'
@@ -42,7 +42,7 @@ export class ScenarioApi {
 
   players = async (machines: T.MachineConfigs, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
     logger.debug('api.players: creating players')
-    const configsJson: Array<any> = []
+    const configsJson: Array<T.RawConductorConfig> = []
     const playerBuilders: Record<string, Function> = {}
     for (const machineEndpoint in machines) {
       
@@ -66,7 +66,7 @@ export class ScenarioApi {
         const configSeedArgs = trycp
           ? _.assign(await trycp.setup(playerName), { playerName, uuid: this._uuid })
           : await localConfigSeedArgs(playerName, this._uuid)
-        logger.debug('api.players: seed args generated for %s', playerName)
+        logger.debug('api.players: seed args generated for %s = %j', playerName, configSeedArgs)
         const configJson = await configSeed(configSeedArgs)
         configsJson.push(configJson)
 
@@ -77,7 +77,7 @@ export class ScenarioApi {
           
           if (trycp) {
             const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
-            await trycp.player(playerName, TOML.stringify(newConfigJson))
+            await trycp.player(playerName, newConfigJson)
           } else {
             await fs.writeFile(getConfigPath(configDir), TOML.stringify(configJson))
           }
@@ -116,8 +116,10 @@ export class ScenarioApi {
     // this will throw an error if something is wrong
     assertUniqueTestAgentNames(configsJson)
     logger.debug('api.players: unique agent name check passed')
+
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
     logger.debug('api.players: players built')
+    
     this._localPlayers = players
     return players
   }

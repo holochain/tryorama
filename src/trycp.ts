@@ -6,6 +6,7 @@ import { notImplemented } from './common'
 import { exec, execSync, spawn, ChildProcess } from 'child_process'
 const base64 = require('base-64')
 const moniker = require('moniker')
+const TOML = require('@iarna/toml')
 
 type PartialConfigSeedArgs = {
   adminPort: number,
@@ -16,7 +17,7 @@ type PartialConfigSeedArgs = {
 export type TrycpClient = {
   setup: (id) => Promise<PartialConfigSeedArgs>,
   dna: (url: string) => Promise<{path: string}>,
-  player: (id, configToml) => Promise<any>,
+  player: (id, config: T.RawConductorConfig) => Promise<any>,
   spawn: (id) => Promise<any>,
   kill: (id, signal?) => Promise<any>,
   ping: (id) => Promise<string>,
@@ -37,7 +38,7 @@ export const trycpSession = async (url): Promise<TrycpClient> => {
   return {
     setup: (id) => makeCall('setup')({ id }),
     dna: (url) => makeCall('dna')({ url }),
-    player: (id, configToml) => makeCall('player')({ id, config: base64.encode(configToml) }),
+    player: (id, config) => makeCall('player')({ id, config: base64.encode(TOML.stringify(config)) }),
     spawn: (id) => makeCall('spawn')({ id }),
     kill: (id, signal?) => makeCall('kill')({ id, signal }),
     ping: (id) => makeCall('ping')({ id }),

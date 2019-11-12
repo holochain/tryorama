@@ -130,9 +130,9 @@ export type LoggerConfig = t.TypeOf<typeof LoggerConfigV>
 
 export const ConductorConfigCommonV = t.partial({
   bridges: t.array(BridgeConfigV),
-  dpki: DpkiConfigV,
-  network: NetworkConfigV,
-  logger: LoggerConfigV,
+  dpki: DpkiConfigV,  // raw
+  network: RawNetworkConfigV,
+  logger: RawLoggerConfigV,
 })
 export type ConductorConfigCommon = t.TypeOf<typeof ConductorConfigCommonV>
 
@@ -149,18 +149,6 @@ export type SugaredInstancesConfig = t.TypeOf<typeof SugaredInstancesConfigV>
 /** For situations where we can accept either flavor of config */
 export const EitherInstancesConfigV = t.union([DryInstancesConfigV, SugaredInstancesConfigV])
 export type EitherInstancesConfig = t.TypeOf<typeof EitherInstancesConfigV>
-
-export const GlobalConfig1V = t.type({
-  network: NetworkConfigV,
-  logger: LoggerConfigV,
-})
-export type GlobalConfig1 = t.TypeOf<typeof GlobalConfig1V>
-
-export const GlobalConfig1PartialV = t.partial({
-  network: NetworkConfigV,
-  logger: LoggerConfigV,
-})
-export type GlobalConfig1Partial = t.TypeOf<typeof GlobalConfig1PartialV>
 
 type RawInterfaceConfig = any
 
