@@ -97,30 +97,21 @@ export const LoggerConfigV = t.union([
 ])
 export type LoggerConfig = t.TypeOf<typeof LoggerConfigV>
 
-export const MetricPublisherTypeV = t.union([
-    t.literal("cloudwatchlogs"),
-    t.literal("logger"),
-    t.literal("cloudwatchmetrics")
-])
-
 export const CloudWatchLogsConfigV = t.partial({
     region: t.string,
     log_group_name: t.string,
     log_stream_name: t.string
 })
 
-export const LoggerMetricPublisherV = t.null
-export const CloudWatchMetricsV = t.string
+export type CloudWatchLogsConfig = t.TypeOf<typeof CloudWatchLogsConfigV>
 
-export const MetricPublisherConfigVV = t.union([
+export const LoggerMetricPublisherV = t.literal('logger')
+
+export type LoggerMetricPublisher = t.TypeOf<typeof LoggerMetricPublisherV>
+
+export const MetricPublisherConfigV = t.union([
     LoggerMetricPublisherV,
     CloudWatchLogsConfigV,
-    CloudWatchMetricsV
-])
-
-export const MetricPublisherConfigV = t.intersection([
-    MetricPublisherTypeV,
-    MetricPublisherConfigVV
 ])
 
 export type MetricPublisherConfig = t.TypeOf<typeof MetricPublisherConfigV>

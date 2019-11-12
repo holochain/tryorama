@@ -200,7 +200,7 @@ pattern = ".*"
   t.end()
 })
 
-test('genMetricPublisherConfig', async t => {
+test('genMetricPublisherConfig: logger', async t => {
   const actual = await C.genMetricPublisherConfig({ metric_publisher: 'logger' } as CC, { configDir: '' }, blah)
 
   const expected = TOML.parse(`
@@ -208,10 +208,26 @@ test('genMetricPublisherConfig', async t => {
 type = "logger"
   `)
 
-  console.log("actual" + JSON.stringify(actual) )
   t.deepEqual(actual, expected)
   t.end()
 })
+
+test('genMetricPublisherConfig: cloudwatchlogs', async t => {
+    const actual = await C.genMetricPublisherConfig(
+        { metric_publisher: { log_group_name: 'group-123', log_stream_name: 'stream-123' region: 'eu-central-1' } } as CC, { configDir: '' }, blah)
+
+  const expected = TOML.parse(`
+[metric_publisher]
+type = "cloudwatchlogs"
+log_group_name = "group-123"
+log_stream_name = "stream-123"
+region = "eu-central-1"
+  `)
+
+  t.deepEqual(actual, expected)
+  t.end()
+})
+
 
 
 test('genConfig produces valid TOML', async t => {

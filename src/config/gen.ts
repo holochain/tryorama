@@ -300,7 +300,25 @@ export const genLoggerConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) =>
 
 export const genMetricPublisherConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) => {
   const metric_publisher = c.metric_publisher || g.metric_publisher
-  return { metric_publisher }
+
+  if (metric_publisher == 'logger') {
+      return {
+          metric_publisher: {
+              type: 'logger'
+          }
+      }
+  } else if (typeof metric_publisher === 'object') {
+      return {
+          metric_publisher: {
+              type: 'cloudwatchlogs',
+              log_group_name: metric_publisher.log_group_name,
+              log_stream_name: metric_publisher.log_stream_name,
+              region: metric_publisher.region
+          }
+      }
+  } else {
+    throw new Error("Unsupported metric publisher type: " + metric_publisher)
+  }
 }
 
 
