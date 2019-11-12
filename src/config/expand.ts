@@ -3,17 +3,19 @@ import * as R from 'ramda'
 
 export const expand = o => a => {
   const dispatch = (v) =>
-    (typeof v === 'object')
-    ? expand(v)(a)
-    : (typeof v === 'function')
+    (R.is(Function, v))
     ? expand(v(a))(a)
+    : (R.is(Object, v))
+    ? expand(v)(a)
     : v
   
-  return R.pipe(
-    R.toPairs,
-    R.map(([key, val]) => {
-      return [key, dispatch(val)]
-    }),
-    R.fromPairs
-  )(o)
+  return R.is(Array, o)
+  ? o.map(dispatch)
+  : R.pipe(
+      R.toPairs,
+      R.map(([key, val]) => {
+        return [key, dispatch(val)]
+      }),
+      R.fromPairs
+    )(o)
 }

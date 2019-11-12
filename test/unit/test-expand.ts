@@ -1,6 +1,6 @@
 const test = require('tape')
 const sinon = require('sinon')
-
+import * as _ from 'lodash'
 import { expand } from '../../src/config/expand'
 
 
@@ -72,5 +72,6 @@ test('basis2', t => {
       [1, 1, 1]
     ]
   })
+  t.ok(_.isArray(c1.b[0].d))
   t.end()
 })
