@@ -26,7 +26,9 @@ export type SpawnConductorFn = (player: Player, args: any) => Promise<Conductor>
 
 export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 
-export type ConfigSeed = (args: ConfigSeedArgs) => Promise<string>
+export type IntermediateConfig = RawConductorConfig  // TODO: constrain
+
+export type ConfigSeed = (args: ConfigSeedArgs) => Promise<IntermediateConfig>
 export type ConfigSeedArgs = {
   playerName: string,
   uuid: string,
@@ -35,13 +37,18 @@ export type ConfigSeedArgs = {
   zomePort: number,
 }
 
-export type AnyConfigBuilder = ConfigSeed | EitherConductorConfig
-// TODO: make this only take ConfigSeed
-export type PlayerConfigs = ObjectS<AnyConfigBuilder> | Array<AnyConfigBuilder>
+export type AnyConfigBuilder = ConfigSeed | EitherInstancesConfig
+export type PlayerConfigs = ObjectS<ConfigSeed>
 export type MachineConfigs = ObjectS<PlayerConfigs>
 
 export const adminWsUrl = ({ urlBase, adminPort }) => `${urlBase}:${adminPort}`
 export const zomeWsUrl = ({ urlBase, zomePort }) => `${urlBase}:${zomePort}`
+
+/** "F or T" */
+export type Fort<T> = T | ((ConfigSeedArgs) => T)
+
+export const collapseFort = <T>(fort: Fort<T>, args: ConfigSeedArgs): T =>
+  _.isFunction(fort) ? fort(args) : fort
 
 
 export const AgentConfigV = t.intersection([
@@ -69,12 +76,19 @@ export const DnaConfigV = t.intersection([
 ])
 export type DnaConfig = t.TypeOf<typeof DnaConfigV>
 
-export const InstanceConfigV = t.type({
+export const RawInstanceConfigV = t.type({
+  id: t.string,
+  agent: t.string,
+  dna: t.string,
+})
+export type RawInstanceConfig = t.TypeOf<typeof RawInstanceConfigV>
+
+export const DryInstanceConfigV = t.type({
   id: t.string,
   agent: AgentConfigV,
   dna: DnaConfigV,
 })
-export type InstanceConfig = t.TypeOf<typeof InstanceConfigV>
+export type DryInstanceConfig = t.TypeOf<typeof DryInstanceConfigV>
 
 export const BridgeConfigV = t.type({
   handle: t.string,
@@ -85,7 +99,7 @@ export type BridgeConfig = t.TypeOf<typeof BridgeConfigV>
 
 export const DpkiConfigV = t.type({
   instance_id: t.string,
-  init_params: t.UnknownRecord,
+  init_params: t.string,
 })
 export type DpkiConfig = t.TypeOf<typeof DpkiConfigV>
 
@@ -96,11 +110,17 @@ export const NetworkModeV = t.union([
 ])
 export type NetworkMode = t.TypeOf<typeof NetworkModeV>
 
+export const RawNetworkConfigV = t.record(t.string, t.any)
+export type RawNetworkConfig = t.TypeOf<typeof RawNetworkConfigV>
+
 export const NetworkConfigV = t.union([
   NetworkModeV,
-  t.record(t.string, t.any),  // TODO: could make this actually match the shape of networking
+  RawNetworkConfigV,  // TODO: could make this actually match the shape of networking
 ])
 export type NetworkConfig = t.TypeOf<typeof NetworkConfigV>
+
+export const RawLoggerConfigV = t.record(t.string, t.any)
+export type RawLoggerConfig = t.TypeOf<typeof RawLoggerConfigV>
 
 export const LoggerConfigV = t.union([
   t.boolean,
@@ -108,57 +128,39 @@ export const LoggerConfigV = t.union([
 ])
 export type LoggerConfig = t.TypeOf<typeof LoggerConfigV>
 
-const ConductorConfigCommonV = t.partial({
+export const ConductorConfigCommonV = t.partial({
   bridges: t.array(BridgeConfigV),
   dpki: DpkiConfigV,
   network: NetworkConfigV,
   logger: LoggerConfigV,
 })
+export type ConductorConfigCommon = t.TypeOf<typeof ConductorConfigCommonV>
 
 /** Base representation of a Conductor */
-export const ConductorConfigV = t.intersection([
-  ConductorConfigCommonV,
-  t.type({
-    instances: t.array(InstanceConfigV),
-  })
-])
-export type ConductorConfig = t.TypeOf<typeof ConductorConfigV>
+export const DryInstancesConfigV = t.array(DryInstanceConfigV)
+export type DryInstancesConfig = t.TypeOf<typeof DryInstancesConfigV>
 
 /** Shorthand representation of a Conductor, 
  *  where keys of `instance` are used as instance IDs as well as agent IDs
  */
-export const SugaredConductorConfigV = t.intersection([
-  ConductorConfigCommonV,
-  t.type({
-    instances: t.record(t.string, DnaConfigV),
-  })
-])
-export type SugaredConductorConfig = t.TypeOf<typeof SugaredConductorConfigV>
+export const SugaredInstancesConfigV = t.record(t.string, DnaConfigV)
+export type SugaredInstancesConfig = t.TypeOf<typeof SugaredInstancesConfigV>
 
 /** For situations where we can accept either flavor of config */
-export const EitherConductorConfigV = t.union([ConductorConfigV, SugaredConductorConfigV])
-export type EitherConductorConfig = t.TypeOf<typeof EitherConductorConfigV>
+export const EitherInstancesConfigV = t.union([DryInstancesConfigV, SugaredInstancesConfigV])
+export type EitherInstancesConfig = t.TypeOf<typeof EitherInstancesConfigV>
 
-/** For situations where we can accept either flavor of config */
-export type AnyConductorConfig = EitherConductorConfig | ConfigSeed
-
-export const GlobalConfigV = t.type({
+export const GlobalConfig1V = t.type({
   network: NetworkConfigV,
   logger: LoggerConfigV,
 })
-export type GlobalConfig = t.TypeOf<typeof GlobalConfigV>
+export type GlobalConfig1 = t.TypeOf<typeof GlobalConfig1V>
 
-export const GlobalConfigPartialV = t.partial({
+export const GlobalConfig1PartialV = t.partial({
   network: NetworkConfigV,
   logger: LoggerConfigV,
 })
-export type GlobalConfigPartial = t.TypeOf<typeof GlobalConfigPartialV>
-
-type RawInstanceConfig = {
-  id: string,
-  dna: string,
-  agent: string,
-}
+export type GlobalConfig1Partial = t.TypeOf<typeof GlobalConfig1PartialV>
 
 type RawInterfaceConfig = any
 
@@ -168,6 +170,9 @@ export interface RawConductorConfig {
   instances: Array<RawInstanceConfig>
   interfaces: Array<RawInterfaceConfig>
   bridges: Array<BridgeConfig>
+  dpki?: DpkiConfig
+  network?: RawNetworkConfig,
+  logger?: RawLoggerConfig,
 }
 
 export type KillFn = (signal?: string) => Promise<void>

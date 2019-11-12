@@ -26,19 +26,15 @@ export const testConfig = (dnaPath) => {
 
 
   // const network = 'n3h'
-  const args: T.GlobalConfig = { logger: true, network }
+  const common: T.ConductorConfigCommon = { logger: true, network }
 
   return {
-    alice: Config.genConfig({
-      instances: {
+    alice: Config.gen({
         app: dna
-      },
-    }, args),
-    bob: Config.genConfig({
-      instances: {
+    }, common),
+    bob: Config.gen({
         app: dna
-      }
-    }, args)
+    }, common)
   }
 }
 

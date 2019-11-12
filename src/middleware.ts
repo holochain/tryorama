@@ -158,7 +158,7 @@ export const singleConductor: MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> 
       // throw away machine info, flatten to just all player names
       const playerConfigs = unwrapMachineConfig(machineConfigs)
       const playerNames = _.keys(playerConfigs)
-      const combined = combineConfigs(machineConfigs, s.globalConfig())
+      const combined = combineConfigs(machineConfigs)
       const { combined: player } = await s.players({ local: { combined } }, true)
       const players = playerNames.map(name => {
         const modify = adjoin(name)

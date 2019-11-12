@@ -5,25 +5,23 @@ const TOML = require('@iarna/toml')
 import * as T from '../../src/types'
 import * as util from '../../src/util'
 import * as C from '../../src/config';
+import Builder from '../../src/config/builder';
 import * as Gen from '../../src/config/gen';
 import { genConfigArgs } from '../common';
-import { defaultGlobalConfig, Orchestrator } from '../../src/orchestrator'
+import { Orchestrator } from '../../src/orchestrator'
 
 const blah = {} as any
 
-type CC = T.ConductorConfig
+// type CC = T.ConductorConfig
 
-export const { configPlain, configSugared } = (() => {
-  const dna = C.dna('path/to/dna.json', 'dna-id', { uuid: 'uuid' })
-  const common = {
-    bridges: [C.bridge('b', 'alice', 'bob')],
-    dpki: C.dpki('alice', { well: 'hello' }),
-  }
-  const instancesSugared = {
+export const { instancesDry, instancesSugared } = (() => {
+  const dna = Builder.dna('path/to/dna.json', 'dna-id', { uuid: 'uuid' })
+
+  const instancesSugared: T.SugaredInstancesConfig = {
     alice: dna,
     bob: dna,
   }
-  const instancesDesugared: Array<T.InstanceConfig> = [
+  const instancesDry: T.DryInstancesConfig = [
     {
       id: 'alice',
       agent: {
@@ -55,14 +53,8 @@ export const { configPlain, configSugared } = (() => {
       }
     }
   ]
-  const configSugared = Object.assign({}, common, { instances: instancesSugared })
-  const configPlain = Object.assign({}, common, { instances: instancesDesugared })
-  return { configPlain, configSugared }
+  return { instancesDry, instancesSugared }
 })()
-
-const configEmpty: T.ConductorConfig = {
-  instances: []
-}
 
 test('DNA id generation', t => {
   t.equal(C.dnaPathToId('path/to/file'), 'file')
@@ -77,7 +69,11 @@ test('DNA id generation', t => {
 })
 
 test('Sugared config', async t => {
-  t.deepEqual(C.desugarConfig({ playerName: 'name', uuid: 'uuid' } as T.ConfigSeedArgs, configSugared), configPlain)
+  const args = { playerName: 'name', uuid: 'uuid' } as T.ConfigSeedArgs
+  t.deepEqual(
+    C.desugarInstances(instancesSugared, args), 
+    instancesDry
+  )
   t.end()
 })
 
@@ -127,9 +123,9 @@ test('resolveDna ids and uuids', async t => {
   stubGetDnaHash.restore()
 })
 
-test('genInstanceConfig', async t => {
+test('genPartialConfigFromDryInstances', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const { agents, dnas, instances, interfaces } = await C.genInstanceConfig(configPlain, await genConfigArgs())
+  const { agents, dnas, instances, interfaces } = await C.genPartialConfigFromDryInstances(instancesDry, await genConfigArgs())
   t.equal(agents.length, 2)
   t.equal(dnas.length, 1)
   t.equal(instances.length, 2)
@@ -143,31 +139,13 @@ test('genInstanceConfig', async t => {
 })
 
 test('genBridgeConfig', async t => {
-  const { bridges } = await C.genBridgeConfig(configPlain)
-  t.deepEqual(bridges, [{ handle: 'b', caller_id: 'alice', callee_id: 'bob' }])
-  t.end()
-})
-
-test('genBridgeConfig, empty', async t => {
-  const json = await C.genBridgeConfig(configEmpty)
-  t.notOk('bridges' in json)
-  t.end()
-})
-
-test('genDpkiConfig', async t => {
-  const { dpki } = await C.genDpkiConfig(configPlain)
-  t.deepEqual(dpki, { instance_id: 'alice', init_params: '{"well":"hello"}' })
-  t.end()
-})
-
-test('genDpkiConfig, empty', async t => {
-  const json = await C.genDpkiConfig(configEmpty)
-  t.notOk('dpki' in json)
+  const bridge = await Builder.bridge('b', 'alice', 'bob')
+  t.deepEqual(bridge, { handle: 'b', caller_id: 'alice', callee_id: 'bob' })
   t.end()
 })
 
 test('genSignalConfig', async t => {
-  const { signals } = await C.genSignalConfig(configPlain)
+  const signals = await Builder.signals({})
   t.ok('trace' in signals)
   t.ok('consistency' in signals)
   t.equal(signals.consistency, true)
@@ -175,8 +153,8 @@ test('genSignalConfig', async t => {
 })
 
 test('genNetworkConfig', async t => {
-  const c1 = await C.genNetworkConfig({ network: 'memory' } as CC, { configDir: '' }, blah)
-  const c2 = await C.genNetworkConfig({ network: 'websocket' } as CC, { configDir: '' }, blah)
+  const c1 = await Builder.network('memory')({ configDir: '' })
+  const c2 = await Builder.network('websocket')({ configDir: '' })
   t.equal(c1.network.type, 'memory')
   t.equal(c1.network.transport_configs[0].type, 'memory')
   t.equal(c2.network.type, 'websocket')
@@ -185,7 +163,7 @@ test('genNetworkConfig', async t => {
 })
 
 test('genLoggerConfig', async t => {
-  const loggerQuiet = await C.genLoggerConfig({ logger: false } as CC, { configDir: '' }, blah)
+  const loggerQuiet = await Builder.logger(false)
 
   const expectedQuiet = TOML.parse(`
 [logger]
@@ -200,44 +178,22 @@ pattern = ".*"
   t.end()
 })
 
-test('genConfig produces valid TOML', async t => {
+test('genConfig produces JSON which can be serialized to TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const builder = C.genConfig(configSugared, { logger: false, network: 'n3h' })
-  const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName' })
-  const json = TOML.parse(toml)
-  const toml2 = TOML.stringify(json)
-  t.equal(toml, toml2 + "\n")
-  t.end()
-  stubGetDnaHash.restore()
-})
-
-test('Orchestrator constructor allows partial GlobalConfig', async t => {
-  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-
-  const o1 = new Orchestrator({
-    globalConfig: { logger: { whatever: 'and ever' } }
-  })
-  t.equal((o1._globalConfig.logger as any).whatever, 'and ever')
-  t.deepEqual(o1._globalConfig.network, defaultGlobalConfig.network)
-
-  const o2 = new Orchestrator({
-    globalConfig: { network: { whatever: 'and ever' } }
-  })
-  t.equal((o1._globalConfig.network as any).whatever, 'and ever')
-  t.deepEqual(o1._globalConfig.logger, defaultGlobalConfig.logger)
-
-
+  const seed = Builder.gen(instancesSugared, { logger: false, network: 'n3h' })
+  const json = await seed({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName' })
+  const toml = TOML.stringify(json)
+  const json2 = TOML.parse(toml)
+  t.deepEqual(json, json2)
   t.end()
   stubGetDnaHash.restore()
 })
 
 test('invalid config throws nice error', async t => {
   t.throws(() => {
-    C.genConfig({
-      instances: [
-        { id: 'what' }
-      ]
-    } as any, { logger: false, network: 'n3h' })({
+    Builder.gen([
+      { id: 'what' }
+    ] as any, { logger: false, network: 'n3h' })({
       configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName'
     }),
       /Tried to use an invalid value/

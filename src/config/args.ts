@@ -1,4 +1,4 @@
-import { tempDir, getConfigPath } from "./gen"
+import { tempDir } from "./common"
 import { getPort } from './get-port-cautiously'
 import logger from '../logger'
 import * as T from '../types'

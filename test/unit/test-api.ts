@@ -3,9 +3,8 @@ import * as tape from 'tape'
 import tapeP from 'tape-promise'
 const test = tapeP(tape)
 
-import { Orchestrator } from '../../src';
 import { ScenarioApi } from '../../src/api'
-import { configSugared } from './test-config';
+import { instancesDry } from './test-config';
 import * as C from '../../src/config';
 import * as Gen from '../../src/config/gen';
 import { ConfigSeedArgs } from '../../src/types';
@@ -23,8 +22,8 @@ test('API detects duplicate agent IDs', async t => {
   await t.rejects(
     api.players({
       local: {
-        alice: C.desugarConfig(args, configSugared),
-        bob: C.desugarConfig(args, configSugared)
+        alice: C.gen(instancesDry),
+        bob: C.gen(instancesDry)
       }
     }),
     /There are 2 non-unique test agent names specified/

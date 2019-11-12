@@ -1,19 +1,18 @@
 const TOML = require('@iarna/toml')
 import * as _ from 'lodash'
 
-import { genConfig } from "./gen";
 import * as T from "../types";
 import { trace } from "../util";
 import env from '../env'
 
 
 export const combineConfigs =
-  (configs: T.MachineConfigs, g: T.GlobalConfig): T.ConfigSeed =>
+  (configs: T.MachineConfigs): T.ConfigSeed =>
     async (args: T.ConfigSeedArgs) => {
       const configsJson = await _.chain(configs)
         .values().map(x => _.toPairs(x)).flatten()  // throw away machine IDs
         .tap(trace)
-        .map(async ([name, c]) => [name, await genConfig(c, g)(args)])
+        .map(async ([name, c]) => [name, await c(args)])
         .thru(x => Promise.all(x))
         .value()
         .then(cs =>
@@ -64,7 +63,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, stand
     .flatten()
     .value()
 
-  const dnas = _.chain(configs)
+  const dnas = _.chain(trace(configs))
     .map(c => c.dnas)
     .flatten()
     .uniqBy(dna => dna.id)

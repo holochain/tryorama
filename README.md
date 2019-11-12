@@ -1,6 +1,6 @@
 # tryorama
 
-An end-to-end/scenario testing framework for Holochain applications in JavaScript/TypeScript
+An end-to-end/scenario testing framework for Holochain applications in TypeScript
 
 ## Installation
 
@@ -15,7 +15,7 @@ create players alice and bob
 alice.call("chat", "channels", "post_message_to_channel", "hello!")
 wait for consistency
 result = bob.call("chat", "channels", "get_messages_on_channel", {})
-assert result[0] === "hello!"
+assert result[0] == "hello!"
 ```
 
 Scenarios let you specify a fixed interaction between multiple Holochain nodes ("players") and make assertions about the resulting state changes. The previous pseudocode example scenario actually looks like this in Javascript:
@@ -23,9 +23,11 @@ Scenarios let you specify a fixed interaction between multiple Holochain nodes (
 ```javascript
 const myPlayerConfig = {
   instances: {
-    chat: Config.dna('chat', 'path/to/chat.dna.json')
+    chat: Config.dna('path/to/chat.dna.json', 'chat')
   }
 }
+
+const orchestrator = new Orchestrator()
 
 orchestator.registerScenario('messages are fetchable', async s => {
   const { alice, bob } = await s.players({ alice: myPlayerConfig, bob: myPlayerConfig }, true)
@@ -46,7 +48,12 @@ Set up an Orchestrator and register your Scenarios with it. The Orchestrator spe
 - how to generate the configuration for each conductor
 - how each scenario actually gets executed, including possible integration with third-party test harnesses
 
-tryorama comes with sensible defaults so you can get up and running with an Orchestrator with little or no configuration. It also includes some helpful Middleware to modify the behavior, such as adding functions to the Scenario API or integrating with a test harness.
+Tryorama comes with sensible defaults so you can get up and running with an Orchestrator with little or no configuration. **An Orchestrator with no configuration is set up to**:
+
+- Run scenarios and their assertions in the `tape` test harness
+- Create Holochain conductors on the local machine for each player
+
+By specifying Middleware, this default functionality can be altered, adding functions to the Scenario API, allowing scenarios to run a different test harness, or even to cause conductors to be spawned on remote machines rather than the local machine. We'll get into that later.
 
 ## Player Configuration
 

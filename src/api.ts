@@ -9,7 +9,7 @@ import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
 import { promiseSerialObject, delay, stripPortFromUrl, trace } from './util';
-import { getConfigPath, genConfig, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
+import { getConfigPath, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
 import { trycpSession, TrycpClient } from './trycp'
 
@@ -19,17 +19,10 @@ type Modifiers = {
 
 const LOCAL_MACHINE_ID = 'local'
 
-const standardizeConfigSeed = (configData: T.AnyConfigBuilder, globalConfig: T.GlobalConfig): T.ConfigSeed => {
-  return _.isFunction(configData)
-    ? (configData as T.ConfigSeed)
-    : genConfig(configData as T.EitherConductorConfig, globalConfig)
-}
-
 export class ScenarioApi {
 
   description: string
 
-  _globalConfig: T.GlobalConfig
   _localPlayers: Record<string, Player>
   _trycpClients: Array<TrycpClient>
   _uuid: string
@@ -42,7 +35,6 @@ export class ScenarioApi {
     this._localPlayers = {}
     this._trycpClients = []
     this._uuid = uuid
-    this._globalConfig = orchestratorData._globalConfig
     this._waiter = new Waiter(FullSyncNetwork, undefined, orchestratorData.waiterConfig)
     this._modifiers = modifiers
     this._activityTimer = null
@@ -70,15 +62,13 @@ export class ScenarioApi {
       //   : Object.entries(configs)
 
       for (const playerName in configs) {
-        const configSeed = standardizeConfigSeed(configs[playerName], this._globalConfig)
+        const configSeed = configs[playerName]
         const configSeedArgs = trycp
           ? _.assign(await trycp.setup(playerName), { playerName, uuid: this._uuid })
           : await localConfigSeedArgs(playerName, this._uuid)
         logger.debug('api.players: seed args generated for %s', playerName)
-        const configToml = await configSeed(configSeedArgs)
-        const configJson = TOML.parse(configToml)
+        const configJson = await configSeed(configSeedArgs)
         configsJson.push(configJson)
-
 
         // this code will only be executed once it is determined that all configs are valid
         playerBuilders[playerName] = async () => {
@@ -89,7 +79,7 @@ export class ScenarioApi {
             const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
             await trycp.player(playerName, TOML.stringify(newConfigJson))
           } else {
-            await fs.writeFile(getConfigPath(configDir), configToml)
+            await fs.writeFile(getConfigPath(configDir), TOML.stringify(configJson))
           }
           logger.debug('api.players: player config committed for %s', playerName)
 
@@ -143,8 +133,6 @@ export class ScenarioApi {
       reject,
     })
   })
-
-  globalConfig = (): T.GlobalConfig => this._globalConfig
 
   _getClient = async (machineEndpoint) => {
     if (machineEndpoint === LOCAL_MACHINE_ID) {

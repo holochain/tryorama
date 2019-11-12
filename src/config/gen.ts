@@ -7,39 +7,8 @@ import { saneLoggerConfig, quietLoggerConfig } from './logger';
 const TOML = require('@iarna/toml')
 
 const exec = require('util').promisify(require('child_process').exec)
-const fs = require('fs').promises
-const os = require('os')
 const path = require('path')
 
-const mkdirIdempotent = dir => fs.access(dir).catch(() => {
-  fs.mkdir(dir, { recursive: true })
-})
-
-const tempDirBase = path.join(env.tempStorage || os.tmpdir(), 'tryorama/')
-mkdirIdempotent(tempDirBase)
-
-export const tempDir = async () => {
-  await mkdirIdempotent(tempDirBase)
-  return fs.mkdtemp(tempDirBase)
-}
-
-/**
- * Directory to store downloaded DNAs in.
- * **NOTE**: this is currently shared among all runs over all time, for better caching.
- * TODO: change this to `tempDir` instead of `tempDirBase` to remove this overzealous caching!
- */
-const dnaDir = async () => {
-  const dir = path.join(tempDirBase, 'dnas-fetched')
-  await mkdirIdempotent(dir)
-  return dir
-}
-
-export const dna = (file, id?, opts = {}): T.DnaConfig => {
-  if (!id) {
-    id = dnaPathToId(file)
-  }
-  return { file, id, ...opts }
-}
 
 /**
  * 1. If a dna config object contains a URL in the path, download the file to a temp directory, 
@@ -62,64 +31,16 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   return dna
 }
 
-export const dnaPathToId = (dnaPath) => {
-  const matches = dnaPath.match(/([^/]+)$/g)
-  return matches[0].replace(/\.dna\.json$/, '')
-}
-
-export const bridge = (handle, caller_id, callee_id) => ({ handle, caller_id, callee_id })
-
-export const dpki = (instance_id, init_params?): T.DpkiConfig => ({
-  instance_id,
-  init_params: init_params ? init_params : {}
-})
-
 export const getConfigPath = configDir => path.join(configDir, 'conductor-config.toml')
 
-
-/**
- * Helper function to generate, from a simple object, a function that returns valid TOML config.
- * 
- * TODO: move debugLog into ConductorConfig
- */
-export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig): T.ConfigSeed => {
-  if (typeof inputConfig === 'function') {
-    // let an already-generated function just pass through
-    return inputConfig
-  }
-
-  T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
-
-  return async (args: T.ConfigSeedArgs) => {
-    const config = desugarConfig(args, inputConfig)
-    const pieces = [
-      await genInstanceConfig(config, args),
-      await genBridgeConfig(config),
-      await genDpkiConfig(config),
-      await genSignalConfig(config),
-      await genNetworkConfig(config, args, g),
-      await genLoggerConfig(config, args, g),
-    ]
-    const json = Object.assign({},
-      ...pieces
-    )
-    const toml = TOML.stringify(json) + "\n"
-    return toml
-  }
-}
-
-export const desugarConfig = (args: { playerName: string, uuid: string }, config: T.EitherConductorConfig): T.ConductorConfig => {
-  config = _.cloneDeep(config)
-  if (!_.isArray(config.instances)) {
-    // time to desugar the object
-    const { instances } = config
-    config.instances = Object.entries(instances).map(([id, dna]) => ({
-      id,
-      agent: makeTestAgent(id, args),
-      dna
-    } as T.InstanceConfig))
-  }
-  return config as T.ConductorConfig
+export const desugarInstances = (instances: T.SugaredInstancesConfig, args: T.ConfigSeedArgs): T.DryInstancesConfig => {
+  T.decodeOrThrow(T.SugaredInstancesConfigV, instances)
+  // time to desugar the object
+  return Object.entries(instances).map(([id, dna]) => ({
+    id,
+    agent: makeTestAgent(id, args),
+    dna
+  } as T.DryInstanceConfig))
 }
 
 export const makeTestAgent = (id, { playerName, uuid }) => ({
@@ -131,7 +52,9 @@ export const makeTestAgent = (id, { playerName, uuid }) => ({
   test_agent: true,
 })
 
-export const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort, uuid }) => {
+export const genPartialConfigFromDryInstances = async (instances: T.DryInstancesConfig, args: T.ConfigSeedArgs) => {
+
+  const { configDir, adminPort, zomePort, uuid } = args
 
   const config: any = {
     agents: [],
@@ -187,79 +110,27 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
   return config
 }
 
-export const genBridgeConfig = ({ bridges }: T.ConductorConfig) => (bridges ? { bridges } : {})
-
-export const genDpkiConfig = ({ dpki }: T.ConductorConfig) => {
-  if (dpki && _.isObject(dpki)) {
-    return {
-      dpki: {
-        instance_id: dpki.instance_id,
-        init_params: JSON.stringify(dpki.init_params)
-      }
-    }
+export const gen = 
+(instances: T.EitherInstancesConfig, common?: T.Fort<T.ConductorConfigCommon>) => {
+  // This seems non-DRY, but it leads to more helpful error messages 
+  // to have this validation before creating the seed function
+  // TODO: type check of `common`
+  if (_.isArray(instances)) {
+    T.decodeOrThrow(T.DryInstancesConfigV, instances)
   } else {
-    return {}
+    T.decodeOrThrow(T.SugaredInstancesConfigV, instances)
+  }
+
+  return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> =>
+  {
+    instances = _.isArray(instances) ? instances : desugarInstances(instances, args)
+    const specific = await genPartialConfigFromDryInstances(instances, args)
+    common = T.collapseFort(common, args)
+    return _.merge(common, specific)
   }
 }
 
-export const genSignalConfig = ({ }) => ({
-  signals: {
-    trace: false,
-    consistency: true,
-  }
-})
 
-export const genNetworkConfig = async (c: T.ConductorConfig, { configDir }, g: T.GlobalConfig) => {
-  const dir = path.join(configDir, 'network-storage')
-  await mkdirIdempotent(dir)
-  const network = c.network || g.network
-  const lib3hConfig = type => ({
-    type,
-    work_dir: '',
-    log_level: 'd',
-    bind_url: `http://0.0.0.0`,
-    dht_custom_config: [],
-    dht_timeout_threshold: 8000,
-    dht_gossip_interval: 500,
-    bootstrap_nodes: [],
-    network_id: {
-      nickname: 'app_spec',
-      id: 'app_spec_memory',
-    },
-    transport_configs: [
-      {
-        type,
-        data: type === 'memory' ? 'app-spec-memory' : 'Unencrypted',
-      }
-    ]
-  })
-  if (network === 'memory' || network === 'websocket') {
-    return { network: lib3hConfig(network) }
-  } else if (network === 'n3h') {
-    return {
-      network: {
-        type: 'n3h',
-        n3h_log_level: 'e',
-        bootstrap_nodes: [],
-        n3h_mode: 'REAL',
-        n3h_persistence_path: dir,
-      }
-    }
-  } else if (typeof network === 'object') {
-    return { network }
-  } else {
-    throw new Error("Unsupported network type: " + network)
-  }
-}
-
-export const genLoggerConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) => {
-  const logger = c.logger || g.logger || false
-  if (typeof logger === 'boolean') {
-    return logger ? saneLoggerConfig : quietLoggerConfig
-  } else {
-    return { logger }
-  }
-}
 
 export const getDnaHash = async (dnaPath) => {
   const { stdout, stderr } = await exec(`hc hash -p ${dnaPath}`)

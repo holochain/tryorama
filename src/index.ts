@@ -1,7 +1,7 @@
 
-import { dna, bridge, dpki, genConfig } from './config'
+import ConfigBuilder from './config/builder'
+export const Config = ConfigBuilder
 
-export const Config = { dna, bridge, dpki, genConfig }
 export { Orchestrator } from './orchestrator'
 export { Player } from './player'
 export { Instance } from './instance'
