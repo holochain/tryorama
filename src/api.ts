@@ -158,13 +158,13 @@ export class ScenarioApi {
   }
 
   _clearTimer = () => {
-    logger.debug('cleared timer')
+    logger.silly('cleared timer')
     clearTimeout(this._activityTimer)
     this._activityTimer = null
   }
 
   _restartTimer = () => {
-    logger.debug('restarted timer')
+    logger.silly('restarted timer')
     clearTimeout(this._activityTimer)
     this._activityTimer = setTimeout(() => this._destroyLocalConductors(), env.conductorTimeoutMs)
   }
