@@ -15,31 +15,47 @@ const path = require('path')
  * between players, and the second field will be the same between different players.
  */
 export const gen = 
-(instances: T.Fort<T.EitherInstancesConfig>, common?: T.Fort<T.ConductorConfigCommon>) => {
-  // This seems non-DRY, but it leads to more helpful error messages 
-  // to have this validation before creating the seed function
+(instancesFort: T.Fort<T.EitherInstancesConfig>, common?: T.Fort<T.ConductorConfigCommon>) => {
   // TODO: type check of `common`
-  if (_.isArray(instances)) {
-    T.decodeOrThrow(T.DryInstancesConfigV, instances)
+  
+  // If we get a function, we can't type check until after the function has been called
+  // ConfigSeedArgs
+  let typeCheckLater = false
+  
+  // It leads to more helpful error messages 
+  // to have this validation before creating the seed function
+  if (_.isFunction(instancesFort)) {
+    typeCheckLater = true
   } else {
-    T.decodeOrThrow(T.SugaredInstancesConfigV, instances)
+    validateInstancesType(instancesFort)
   }
 
   return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> =>
   {
-    const instancesClone = T.collapseFort(_.cloneDeep(instances), args)
-    const instancesDry = _.isArray(instancesClone) 
-      ? _.cloneDeep(instancesClone) 
-      : desugarInstances(instancesClone, args)
+    const instancesData = await T.collapseFort(instancesFort, args)
+    if (typeCheckLater) {
+      validateInstancesType(instancesData)
+    }
+    const instancesDry = _.isArray(instancesData) 
+      ? instancesData
+      : desugarInstances(instancesData, args)
     const specific = await genPartialConfigFromDryInstances(instancesDry, args)
+    const general = await T.collapseFort(expand(common), args)
     return _.merge(
       {},
-      T.collapseFort(expand(common), args), 
+      general, 
       specific
     )
   }
 }
 
+const validateInstancesType = (instances: T.EitherInstancesConfig, msg: string = '') => {
+  if (_.isArray(instances)) {
+    T.decodeOrThrow(T.DryInstancesConfigV, instances, 'Could not validate Instances Array')
+  } else if (_.isObject(instances)) {
+    T.decodeOrThrow(T.SugaredInstancesConfigV, instances, 'Could not validate Instances Object')
+  }
+}
 
 
 /**

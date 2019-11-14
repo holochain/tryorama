@@ -8,11 +8,11 @@ import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
 
-export const decodeOrThrow = (validator, value) => {
+export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
   const errors = reporter(result)
   if (errors.length > 0) {
-    const msg = `Tried to use an invalid value for a complex type and found the following problems:\n    - ${errors.join("\n    - ")}`
+    const msg = `${extraMsg ? extraMsg + '\n' : ''}Tried to use an invalid value for a complex type and found the following problems:\n    - ${errors.join("\n    - ")}`
     logger.error(msg)
     throw new Error(msg)
   }
@@ -45,10 +45,14 @@ export const adminWsUrl = ({ urlBase, adminPort }) => `${urlBase}:${adminPort}`
 export const zomeWsUrl = ({ urlBase, zomePort }) => `${urlBase}:${zomePort}`
 
 /** "F or T" */
-export type Fort<T> = T | ((ConfigSeedArgs) => T)
+// export const FortV = <T extends t.Mixed>(inner: T) => t.union([
+//   t.Function, inner
+// ])
+// export type Fort = t.TypeOf<typeof FortV>
+export type Fort<T> = T | ((ConfigSeedArgs) => T) | ((ConfigSeedArgs) => Promise<T>)
 
-export const collapseFort = <T>(fort: Fort<T>, args: ConfigSeedArgs): T =>
-  _.isFunction(fort) ? fort(args) : fort
+export const collapseFort = async <T>(fort: Fort<T>, args: ConfigSeedArgs): Promise<T> =>
+  await (_.isFunction(fort) ? fort(args) : _.cloneDeep(fort))
 
 
 export const AgentConfigV = t.intersection([

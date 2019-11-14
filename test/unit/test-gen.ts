@@ -2,6 +2,7 @@ const sinon = require('sinon')
 const test = require('tape')
 const TOML = require('@iarna/toml')
 
+import * as _ from 'lodash';
 import * as T from '../../src/types'
 import * as util from '../../src/util'
 import * as C from '../../src/config';
@@ -156,5 +157,38 @@ test('invalid config throws nice error', async t => {
     }),
       /Tried to use an invalid value/
   })
+  t.end()
+})
+
+test('Config.gen accepts function for instances', async t => {
+  const instances = ({playerName, zomePort}) => _.chain(instancesDry)
+    .set('0.agent.name', `${playerName} the great`)
+    .set('1.agent.name', `${playerName} the ${zomePort}`)
+    .value()
+  const instancesPromise = (a) => Promise.resolve(instances(a))
+  const seed = Builder.gen(instances)
+  const seed2 = Builder.gen(instancesPromise)
+  const args = {playerName: 'yolanda', zomePort: 1337} as T.ConfigSeedArgs
+  const config = await seed(args)
+  const config2 = await seed2(args)
+  t.equal(config.agents[0].name, 'yolanda the great')
+  t.equal(config.agents[1].name, 'yolanda the 1337')
+  t.deepEqual(config, config2)
+  t.end()
+})
+
+test('Config.gen accepts arbitrarily nested functions for common config', async t => {
+  const instances = _.cloneDeep(instancesDry)
+  const seed = Builder.gen(instances, ({zomePort}) => ({
+    network: {
+      thisIsInvalidNetworkConfig: zomePort
+    },
+    logger: ({playerName}) => ({
+      thisIsInvalidLoggerConfig: playerName
+    })
+  }))
+  const config = await seed({playerName: 'hubert', zomePort: 1337} as T.ConfigSeedArgs)
+  t.equal(config.network!.thisIsInvalidNetworkConfig, 1337)
+  t.equal(config.logger!.thisIsInvalidLoggerConfig, 'hubert')
   t.end()
 })
