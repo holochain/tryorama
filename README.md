@@ -1,6 +1,6 @@
 # tryorama
 
-![try-o-rama on npm](https://img.shields.io/node/v/@holochain/try-o-rama)
+![tryorama on npm](https://img.shields.io/node/v/@holochain/tryorama)
 
 An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
 
@@ -92,7 +92,7 @@ To understand Tryorama is to understand its components. Tryorama is a test *Orch
 Test suites are defined with an `Orchestrator` object. For most cases, you can get very far with an out-of-the-box orchestrator with no additional configuration, like so:
 
 ```typescript
-import {Orchestrator} from '@holochain/try-o-rama'
+import {Orchestrator} from '@holochain/tryorama'
 const orchestator = new Orchestrator()
 ```
 
@@ -147,7 +147,7 @@ Much of the purpose of Tryorama is to provide ways to generate conductor configu
 Let's look a common configuration. Here is an example of how you might set up three Players, all of which share the same conductor config which defines a single DNA instance named "chat" using a DNA file at a specified path -- a reasonable setup for writing scenario tests for a single DNA. It's made really easy with a helper called `Config.gen`.
 
 ```javascript
-import {Config, Orchestrator} from '@holochain/try-o-rama'
+import {Config, Orchestrator} from '@holochain/tryorama'
 
 const orchestrator = new Orchestrator()
 
