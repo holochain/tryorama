@@ -2,7 +2,7 @@
 
 [![Project](https://img.shields.io/badge/project-holochain-blue.svg?style=flat-square)](http://holochain.org/)
 [![Chat](https://img.shields.io/badge/chat-chat%2eholochain%2enet-blue.svg?style=flat-square)](https://chat.holochain.net)
-![tryorama on npm](https://img.shields.io/node/v/@holochain/tryorama)
+[![tryorama on npm](https://img.shields.io/node/v/@holochain/tryorama)](https://www.npmjs.com/package/@holochain/tryorama)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
