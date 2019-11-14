@@ -75,3 +75,20 @@ test('basis2', t => {
   t.ok(_.isArray(c1.b[0].d))
   t.end()
 })
+
+
+test('expand function at root', t => {
+  const seed = a => ({
+    x: a,
+    y: b => ({
+      z: b
+    })
+  })
+  t.deepEqual(expand(seed)(1), {
+    x: 1,
+    y: {
+      z: 1,
+    }
+  })
+  t.end()
+})
