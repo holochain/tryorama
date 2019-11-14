@@ -21,12 +21,6 @@ const genBridgeConfig = (handle, caller_id, callee_id): T.BridgeConfig => ({
   caller_id, callee_id, handle
 })
 
-const genSignalConfig = ({ }) => ({
-  trace: false,
-  consistency: true,
-})
-
-
 const genNetworkConfig = (network: T.NetworkConfig) => async ({ configDir }): Promise<T.RawNetworkConfig> => {
   const dir = path.join(configDir, 'network-storage')
   await mkdirIdempotent(dir)
@@ -67,7 +61,7 @@ const genNetworkConfig = (network: T.NetworkConfig) => async ({ configDir }): Pr
   }
 }
 
-export const genLoggerConfig = (logger) => {
+const genLoggerConfig = (logger) => {
   if (typeof logger === 'boolean') {
     return logger ? saneLoggerConfig : quietLoggerConfig
   } else {
@@ -80,7 +74,15 @@ export default {
   dna: genDnaConfig,
   dpki: genDpkiConfig,
   bridge: genBridgeConfig,
-  signals: genSignalConfig,
   network: genNetworkConfig,
   logger: genLoggerConfig,
+}
+
+// NB: very important! Consistency signals drive the hachiko Waiter,
+// which is the special sauce behind `await s.consistency()`
+export const defaultCommonConfig = {
+  signals: {
+    trace: false,
+    consistency: true,
+  }
 }

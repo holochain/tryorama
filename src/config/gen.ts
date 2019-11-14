@@ -1,6 +1,7 @@
 import * as T from "../types";
 import * as _ from 'lodash'
 import { trace, stringify } from "../util";
+import { defaultCommonConfig } from './builder';
 import env from '../env';
 import logger from '../logger';
 import { expand } from "./expand";
@@ -15,8 +16,8 @@ const path = require('path')
  * between players, and the second field will be the same between different players.
  */
 export const gen = 
-(instancesFort: T.Fort<T.EitherInstancesConfig>, common?: T.Fort<T.ConductorConfigCommon>) => {
-  // TODO: type check of `common`
+(instancesFort: T.Fort<T.EitherInstancesConfig>, commonFort?: T.Fort<T.ConductorConfigCommon>) => {
+  // TODO: type check of `commonFort`
   
   // If we get a function, we can't type check until after the function has been called
   // ConfigSeedArgs
@@ -39,11 +40,17 @@ export const gen =
     const instancesDry = _.isArray(instancesData) 
       ? instancesData
       : desugarInstances(instancesData, args)
+
     const specific = await genPartialConfigFromDryInstances(instancesDry, args)
-    const general = await T.collapseFort(expand(common), args)
+    const common = _.merge(
+      {}, 
+      defaultCommonConfig, 
+      await T.collapseFort(expand(commonFort), args)
+    )
+    
     return _.merge(
       {},
-      general, 
+      common, 
       specific
     )
   }
