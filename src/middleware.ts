@@ -198,6 +198,16 @@ export const callSync = (run, f) => run(s => {
   return f(s_)
 })
 
+// TODO: add test
+export const dumbWaiter = interval => (run, f): MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> => run(s =>
+  f(Object.assign({}, s, {
+    consistency: () => new Promise(resolve => {
+      console.log(`dumbWaiter is waiting ${interval}ms...`)
+      setTimeout(resolve, interval)
+    })
+  }))
+)
+
 /**
  * Allow a test to skip the level of machine configuration
  * This middleware wraps the player configs in the "local" machine
