@@ -1,8 +1,10 @@
 # tryorama
-
-![tryorama on npm](https://img.shields.io/node/v/@holochain/tryorama)
-
 An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
+
+[![Project](https://img.shields.io/badge/project-holochain-blue.svg?style=flat-square)](http://holochain.org/)
+[![Chat](https://img.shields.io/badge/chat-chat%2eholochain%2enet-blue.svg?style=flat-square)](https://chat.holochain.net)
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
 
 Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
@@ -17,13 +19,13 @@ Check out this heavily commented example for an idea of how to use tryorama
 ```javascript
 import { Orchestrator, Config } from '../../src'
 
-// Point to your DNA file and give it a nickname. 
+// Point to your DNA file and give it a nickname.
 // The DNA file can either be on your filesystem...
 const dnaBlog = Config.dna('~/project/dnas/blog.dna.json', 'blog')
 // ... or on the web
 const dnaChat = Config.dna('https://url.to/your/chat.dna.json', 'chat')
 
-// Set up a Conductor configuration using the handy `Conductor.config` helper. 
+// Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
 const mainConfig = Config.gen(
   {
@@ -36,7 +38,7 @@ const mainConfig = Config.gen(
   }
 })
 
-// Instatiate a test orchestrator. 
+// Instatiate a test orchestrator.
 // It comes loaded with a lot default behavior which can be overridden, including:
 // * custom conductor spawning
 // * custom test result reporting
@@ -45,13 +47,13 @@ const orchestrator = new Orchestrator()
 
 // Register a scenario, which is a function that gets a special API injected in
 orchestrator.registerScenario('proper zome call', async (s, t) => {
-  // Declare two players using the previously specified config, 
+  // Declare two players using the previously specified config,
   // and nickname them "alice" and "bob"
   const {alice, bob} = await s.players({alice: mainConfig, bob: mainConfig})
-  
+
   // You have to spawn the conductors yourself...
   await alice.spawn()
-  // ...unless you pass `true` as an extra parameter, 
+  // ...unless you pass `true` as an extra parameter,
   // in which case each conductor will auto-spawn
   const {carol} = await s.players({carol: mainConfig}, true)
 
@@ -98,7 +100,7 @@ const orchestator = new Orchestrator()
 
 The Orchestrator constructor also takes a few parameters which allow you change modes, and in particular allows you to specify Middleware, which can add new features, drastically alter the behavior of your tests, and even integrate with other testing harnesses. We'll get into those different options later.
 
-The default Orchestrator, as shown above, is set to use the local machine for test nodes, and integrates with the [`tape` test harness](https://github.com/substack/tape). The following examples will assume you've created a default orchestrator in this way. 
+The default Orchestrator, as shown above, is set to use the local machine for test nodes, and integrates with the [`tape` test harness](https://github.com/substack/tape). The following examples will assume you've created a default orchestrator in this way.
 
 ## Scenarios
 
@@ -113,10 +115,10 @@ orchestrator.registerScenario('description of this scenario', async (s, t) => {
 
   // start alice's conductor
   await alice.spawn()
-  
+
   // make a zome call
   const result = await alice.call('some-instance', 'some-zome', 'some-function', 'some-parameters')
-  
+
   // another use of the Scenario API is to automagically wait for the network to
   // reach a consistent state before continuing the test
   await s.consistency()
@@ -257,11 +259,11 @@ const config = ({playerName, uuid, configDir, adminPort, zomePort}) => {
     network: {/* ... */},
     // and so on...
     // basically, a complete Conductor configuration in JSON form
-  } 
+  }
 })
 ```
 
-Such a function is called a *config seed*, since the function is reusable across all scenarios. 
+Such a function is called a *config seed*, since the function is reusable across all scenarios.
 
 Config seeds take an object as a parameter, with five values:
 
@@ -304,3 +306,19 @@ Config.gen(
 
 You can also use seed functions in the first parameter of `Config.gen` *TODO: verify and document this*
 
+## License
+[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+
+Copyright (C) 2019, Holochain Foundation
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+[http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
