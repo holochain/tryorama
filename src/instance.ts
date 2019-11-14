@@ -20,8 +20,9 @@ export class Instance {
     this.dnaAddress = o.dnaAddress
   }
 
-  call = (zome, fn, params) => {
-    if (typeof zome !== 'string' && typeof fn !== 'string') {
+  call = (...args): Promise<any> => {
+    const [zome, fn, params] = args
+    if (args.length !== 3 || typeof zome !== 'string' || typeof fn !== 'string') {
       throw new Error("instance.call() must take 3 arguments: (zomeName, funcName, params)")
     }
     return this.callZome(zome, fn, params)

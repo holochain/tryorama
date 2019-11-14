@@ -2,7 +2,7 @@ const sinon = require('sinon')
 const test = require('tape')
 
 import { Orchestrator } from '../../src'
-import { tapeExecutor } from '../../src/middleware'
+import { tapeExecutor, runSeries } from '../../src/middleware'
 import { genConfigArgs, spawnConductor } from '../common'
 import logger from '../../src/logger';
 
@@ -19,11 +19,10 @@ const createMockTape = () => {
 const { runner: mockTape, api: mockT } = createMockTape()
 
 const orchestratorPlain = new Orchestrator({
-  spawnConductor, genConfigArgs
+  middleware: runSeries()
 })
 
 const orchestratorTape = new Orchestrator({
-  spawnConductor, genConfigArgs,
   middleware: tapeExecutor(mockTape)
 })
 

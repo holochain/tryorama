@@ -8,7 +8,6 @@ import logger from '../../src/logger';
 import { delay } from '../../src/util';
 
 const orchestrator = new Orchestrator({
-  spawnConductor, genConfigArgs,
   // NB: once, combine caused middleware to only be applied to the first test!
   // keep this in here.
   middleware: combine(tapeExecutor(test))

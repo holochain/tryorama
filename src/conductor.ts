@@ -2,21 +2,22 @@ const colors = require('colors/safe')
 const hcWebClient = require('@holochain/hc-web-client')
 
 import { Signal } from '@holochain/hachiko'
-import { ConductorConfig, Mortal, GenConfigArgs } from "./types";
+import { KillFn, ConfigSeedArgs } from "./types";
 import { notImplemented } from "./common";
 import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 
-
-const DEFAULT_ZOME_CALL_TIMEOUT = 90000
-const DEFAULT_CONDUCTOR_ACTIVITY_TIMEOUT = 120000
 // probably unnecessary, but it can't hurt
-const WS_CLOSE_DELAY_FUDGE = 1000
+// TODO: bump this gradually down to 0 until we can maybe remove it altogether
+const WS_CLOSE_DELAY_FUDGE = 500
+
+export type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
+export type CallZomeFunc = (instanceId: string, zomeName: string, fnName: string, params: Record<string, any>) => Promise<any>
 
 /**
  * Representation of a running Conductor instance.
- * A [Player] spawns a conductor process and uses the process handle to construct this class. 
+ * A [Player] spawns a conductor process locally or remotely and constructs this class accordingly. 
  * Though Conductor is spawned externally, this class is responsible for establishing WebSocket
  * connections to the various interfaces to enable zome calls as well as admin and signal handling.
  */
@@ -24,34 +25,37 @@ export class Conductor {
 
   name: string
   onSignal: ({ instanceId: string, signal: Signal }) => void
-  zomeCallTimeoutMs: number
-  conductorTimeoutMs: number
   logger: any
+  kill: KillFn
 
-  _ports: { adminPort: number, zomePort: number }
-  _handle: Mortal
+  _adminWsUrl: string
+  _zomeWsUrl: string
   _hcConnect: any
   _isInitialized: boolean
   _wsClosePromise: Promise<void>
-  _conductorTimer: any
+  _onActivity: () => void
 
-  constructor({ name, handle, onSignal, adminPort, zomePort }) {
+  constructor({ name, kill, onSignal, onActivity, adminWsUrl, zomeWsUrl }) {
     this.name = name
-    this.logger = makeLogger(`try-o-rama conductor ${name}`)
+    this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
     this.onSignal = onSignal
-    this.zomeCallTimeoutMs = DEFAULT_ZOME_CALL_TIMEOUT
-    this.conductorTimeoutMs = DEFAULT_CONDUCTOR_ACTIVITY_TIMEOUT
 
-    this._ports = { adminPort, zomePort }
-    this._handle = handle
+    this.kill = async (signal?): Promise<void> => {
+      this.logger.debug("Killing...")
+      await kill(signal)
+      return this._wsClosePromise
+    }
+
+    this._adminWsUrl = adminWsUrl
+    this._zomeWsUrl = zomeWsUrl
     this._hcConnect = hcWebClient.connect
     this._isInitialized = false
     this._wsClosePromise = Promise.resolve()
-    this._conductorTimer = null
+    this._onActivity = onActivity
   }
 
-  callAdmin: Function = (...a) => {
+  callAdmin: CallAdminFunc = (...a) => {
     // Not supporting admin functions because currently adding DNAs, instances, etc.
     // is undefined behavior, since the Waiter needs to know about all DNAs in existence,
     // and it's too much of a pain to track all of that with mutable conductor config.
@@ -60,19 +64,13 @@ export class Conductor {
     throw new Error("Admin functions are currently not supported.")
   }
 
-  callZome: Function = (...a) => {
+  callZome: CallZomeFunc = (...a) => {
     throw new Error("Attempting to call zome function before conductor was initialized")
   }
 
   initialize = async () => {
-    this._restartTimer()
+    this._onActivity()
     await this._makeConnections()
-  }
-
-  kill = (signal?): Promise<void> => {
-    this.logger.debug("Killing...")
-    this._handle.kill(signal)
-    return this._wsClosePromise
   }
 
   wsClosed = () => this._wsClosePromise
@@ -83,23 +81,22 @@ export class Conductor {
   }
 
   _connectAdmin = async () => {
-    this._restartTimer()
-    const url = this._adminInterfaceUrl()
+    this._onActivity()
+    const url = this._adminWsUrl
     this.logger.debug(`connectAdmin :: connecting to ${url}`)
     const { call, onSignal, ws } = await this._hcConnect({ url })
+    this.logger.debug(`connectAdmin :: connected to ${url}`)
 
     this._wsClosePromise = (
       // Wait for a constant delay and for websocket to close, whichever happens *last*
       Promise.all([
         new Promise(resolve => ws.on('close', resolve)),
         delay(WS_CLOSE_DELAY_FUDGE),
-      ]).then(() => {
-        this._clearTimer()
-      })
+      ]).then(() => { })
     )
 
     this.callAdmin = async (method, params) => {
-      this._restartTimer()
+      this._onActivity()
       if (!method.match(/^admin\/.*\/list$/)) {
         this.logger.warn("Calling admin functions which modify state during tests may result in unexpected behavior!")
       }
@@ -115,6 +112,8 @@ export class Conductor {
         return
       }
 
+      this._onActivity()
+
       this.onSignal({
         instanceId: instance_id,
         signal
@@ -122,42 +121,24 @@ export class Conductor {
     })
   }
 
-  _clearTimer = () => {
-    clearTimeout(this._conductorTimer)
-    this._conductorTimer = null
-  }
-
-  _restartTimer = () => {
-    clearTimeout(this._conductorTimer)
-    this._conductorTimer = setTimeout(() => this._onConductorTimeout(), this.conductorTimeoutMs)
-  }
-
-  _onConductorTimeout = () => {
-    this.kill('SIGKILL')
-    const msg = `Conductor '${this.name}' self-destructed after ${this.conductorTimeoutMs / 1000} seconds of no activity!`
-    if (env.strictConductorTimeout) {
-      throw new Error(msg)
-    } else {
-      this.logger.error(msg)
-    }
-  }
-
   _connectZome = async () => {
-    this._restartTimer()
-    const url = this._zomeInterfaceUrl()
+    this._onActivity()
+    const url = this._zomeWsUrl
     this.logger.debug(`connectZome :: connecting to ${url}`)
     const { callZome, onSignal } = await this._hcConnect({ url })
+    this.logger.debug(`connectZome :: connected to ${url}`)
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
-      this._restartTimer()
+      this._onActivity()
       this.logger.debug(`${colors.cyan.bold("zome call [%s]:")} ${colors.cyan.underline("{id: %s, zome: %s, fn: %s}")}`,
         this.name, instanceId, zomeName, fnName
       )
       this.logger.debug(`${colors.cyan.bold("params:")} ${colors.cyan.underline("%s")}`, JSON.stringify(params, null, 2))
-      const timeoutSoft = this.zomeCallTimeoutMs / 2
-      const timeoutHard = this.zomeCallTimeoutMs
+      const timeoutSoft = env.zomeCallTimeoutMs / 2
+      const timeoutHard = env.zomeCallTimeoutMs
+      const callInfo = `${zomeName}/${fnName}`
       const timerSoft = setTimeout(
-        () => this.logger.warn(`Zome call has been running for more than ${timeoutSoft / 1000} seconds. Continuing to wait...`),
+        () => this.logger.warn(`Zome call '${callInfo}' has been running for more than ${timeoutSoft / 1000} seconds. Continuing to wait...`),
         timeoutSoft
       )
       const timerHard = setTimeout(
@@ -176,16 +157,16 @@ export class Conductor {
         timeoutHard
       )
       callZome(instanceId, zomeName, fnName)(params).then(json => {
-        clearTimeout(timerSoft)
-        clearTimeout(timerHard)
-        this._restartTimer()
+        this._onActivity()
         const result = JSON.parse(json)
         this.logger.debug(`${colors.cyan.bold('->')} %o`, result)
         resolve(result)
-      }).catch(reject)
+      })
+        .catch(reject)
+        .finally(() => {
+          clearTimeout(timerSoft)
+          clearTimeout(timerHard)
+        })
     })
   }
-
-  _adminInterfaceUrl = () => `ws://localhost:${this._ports.adminPort}`
-  _zomeInterfaceUrl = () => `ws://localhost:${this._ports.zomePort}`
 }

@@ -8,89 +8,125 @@ import * as T from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
-import { promiseSerialObject, delay } from './util';
-import { getConfigPath, genConfig, assertUniqueTestAgentNames } from './config';
+import { promiseSerialObject, stringify, stripPortFromUrl, trace } from './util';
+import { getConfigPath, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
+import env from './env'
+import { trycpSession, TrycpClient } from './trycp'
 
 type Modifiers = {
   singleConductor: boolean
 }
 
-type AnyConfig = T.GenConfigFn | T.EitherConductorConfig
+const LOCAL_MACHINE_ID = 'local'
 
 export class ScenarioApi {
 
   description: string
 
-  _players: Array<Player>
+  _localPlayers: Record<string, Player>
+  _trycpClients: Array<TrycpClient>
   _uuid: string
-  _orchestrator: Orchestrator
   _waiter: Waiter
   _modifiers: Modifiers
+  _activityTimer: any
 
-  constructor(description: string, orchestrator: Orchestrator, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
+  constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
-    this._players = []
+    this._localPlayers = {}
+    this._trycpClients = []
     this._uuid = uuid
-    this._orchestrator = orchestrator
-    this._waiter = new Waiter(FullSyncNetwork, undefined, orchestrator.waiterConfig)
+    this._waiter = new Waiter(FullSyncNetwork, undefined, orchestratorData.waiterConfig)
     this._modifiers = modifiers
+    this._activityTimer = null
   }
 
-  players = async (configs: T.ObjectS<AnyConfig> | Array<AnyConfig>, start?: boolean): Promise<T.ObjectS<Player>> => {
-    const players = {}
-    // if passing an array, convert to an object with keys as stringified indices. Otherwise just get the key, value pairs
-    const entries: Array<[string, AnyConfig]> = _.isArray(configs)
-      ? configs.map((v, i) => [String(i), v])
-      : Object.entries(configs)
-    const configsIntermediate = await Promise.all(entries.map(async ([name, config]) => {
-      const genConfigArgs = await this._orchestrator._genConfigArgs(name, this._uuid)
-      const { configDir } = genConfigArgs
-      // If an object was passed in, run it through genConfig first. Otherwise use the given function.
-      const configBuilder = _.isFunction(config)
-        ? (config as T.GenConfigFn)
-        : genConfig(config as T.EitherConductorConfig, this._orchestrator._globalConfig)
-      const configToml = await configBuilder(genConfigArgs)
-      const configJson = TOML.parse(configToml)
-      return { name, configDir, configJson, configToml, genConfigArgs }
-    }))
+  players = async (machines: T.MachineConfigs, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
+    logger.debug('api.players: creating players')
+    const configsJson: Array<T.RawConductorConfig> = []
+    const playerBuilders: Record<string, Function> = {}
+    for (const machineEndpoint in machines) {
 
-    assertUniqueTestAgentNames(configsIntermediate.map(c => c.configJson))
+      const trycp: TrycpClient | null = await this._getClient(machineEndpoint)
 
-    configsIntermediate.forEach(({ name, configDir, configJson, configToml, genConfigArgs }) => {
-      players[name] = (async () => {
-        const { instances } = configJson
-        await fs.writeFile(getConfigPath(configDir), configToml)
+      // choose our spwn method based on whether this is a local or remote machine
+      const spawnConductor = trycp ? spawnRemote(trycp, stripPortFromUrl(machineEndpoint)) : spawnLocal
+      const configs = machines[machineEndpoint]
 
-        const player = new Player({
-          name,
-          genConfigArgs,
-          spawnConductor: this._orchestrator._spawnConductor,
-          onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, name)),
-          onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, name)),
-          onSignal: ({ instanceId, signal }) => {
-            const instance = instances.find(c => c.id === instanceId)
-            const dnaId = instance!.dna
-            const observation = {
-              dna: dnaId,
-              node: name,
-              signal
-            }
-            this._waiter.handleObservation(observation)
-          },
+      if (trycp) {
+        // keep track of it so we can send a reset() at the end of this scenario
+        this._trycpClients.push(trycp)
+      }
+      // // if passing an array, convert to an object with keys as stringified indices. Otherwise just get the key, value pairs
+      // const entries: Array<[string, AnyConfigBuilder]> = _.isArray(configs)
+      //   ? configs.map((v, i) => [String(i), v])
+      //   : Object.entries(configs)
+
+      for (const playerName in configs) {
+        const configSeed = configs[playerName]
+        const partialConfigSeedArgs = trycp
+          ? await trycp.setup(playerName)
+          : await localConfigSeedArgs()
+        const configSeedArgs: T.ConfigSeedArgs = _.assign(partialConfigSeedArgs, {
+          scenarioName: this.description,
+          playerName,
+          uuid: this._uuid
         })
-        if (start) {
-          await player.spawn()
+        logger.debug('api.players: seed args generated for %s = %j', playerName, configSeedArgs)
+        const configJson = await configSeed(configSeedArgs)
+        configsJson.push(configJson)
+
+        // this code will only be executed once it is determined that all configs are valid
+        playerBuilders[playerName] = async () => {
+          const { instances } = configJson
+          const { configDir } = configSeedArgs
+
+          if (trycp) {
+            const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
+            await trycp.player(playerName, newConfigJson)
+          } else {
+            await fs.writeFile(getConfigPath(configDir), TOML.stringify(configJson))
+          }
+          logger.debug('api.players: player config committed for %s', playerName)
+
+          const player = new Player({
+            name: playerName,
+            configSeedArgs,
+            spawnConductor,
+            onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
+            onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
+            onActivity: () => this._restartTimer(),
+            onSignal: ({ instanceId, signal }) => {
+              const instance = instances.find(c => c.id === instanceId)
+              const dnaId = instance!.dna
+              const observation = {
+                dna: dnaId,
+                node: playerName,
+                signal
+              }
+              this._waiter.handleObservation(observation)
+            },
+          })
+
+          if (spawnArgs) {
+            logger.debug('api.players: auto-spawning player %s', playerName)
+            await player.spawn(spawnArgs)
+            logger.debug('api.players: spawn complete for %s', playerName)
+          }
+
+          return player
         }
-        this._players.push(player)
-        return player
-      })()
-    })
-    const ps = await promiseSerialObject<Player>(players)
-    if (start) {
-      logger.warn("Waiting for conductors to settle... (TODO check back later to see if this is necessary)")
-      await delay(100)
+      }
     }
-    return ps
+
+    // this will throw an error if something is wrong
+    assertUniqueTestAgentNames(configsJson)
+    logger.debug('api.players: unique agent name check passed')
+
+    const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
+    logger.debug('api.players: players built')
+
+    this._localPlayers = players
+    return players
   }
 
   consistency = (players?: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
@@ -105,16 +141,77 @@ export class ScenarioApi {
     })
   })
 
-  globalConfig = (): T.GlobalConfig => this._orchestrator._globalConfig
+  _getClient = async (machineEndpoint) => {
+    if (machineEndpoint === LOCAL_MACHINE_ID) {
+      return null
+    } else {
+      logger.debug('api.players: establishing trycp client connection to %s', machineEndpoint)
+      const trycp = await trycpSession(machineEndpoint)
+      logger.debug('api.players: trycp client session established for %s', machineEndpoint)
+      return trycp
+    }
+  }
+
+  _clearTimer = () => {
+    logger.silly('cleared timer')
+    clearTimeout(this._activityTimer)
+    this._activityTimer = null
+  }
+
+  _restartTimer = () => {
+    logger.silly('restarted timer')
+    clearTimeout(this._activityTimer)
+    this._activityTimer = setTimeout(() => this._destroyLocalConductors(), env.conductorTimeoutMs)
+  }
+
+  _destroyLocalConductors = async () => {
+    const kills = await this._cleanup('SIGKILL')
+    this._clearTimer()
+    const names = _.values(this._localPlayers).filter((player, i) => kills[i]).map(player => player.name)
+    names.sort()
+    const msg = `
+The following conductors were forcefully shutdown after ${env.conductorTimeoutMs / 1000} seconds of no activity:
+${names.join(', ')}
+`
+    if (env.strictConductorTimeout) {
+      throw new Error(msg)
+    } else {
+      logger.error(msg)
+    }
+  }
 
   /**
    * Only called externally when there is a test failure, 
    * to ensure that players/conductors have been properly cleaned up
    */
-  _cleanup = (): Promise<void> => {
-    return Promise.all(
-      this._players.map(player => player.kill())
-    ).then(() => { })
+  _cleanup = async (signal?): Promise<Array<boolean>> => {
+    const localKills = await Promise.all(
+      _.values(this._localPlayers).map(player => player.cleanup(signal))
+    )
+    await Promise.all(this._trycpClients.map(async (trycp) => {
+      await trycp.reset()
+      await trycp.closeSession()
+    }))
+    this._clearTimer()
+    return localKills
   }
+}
 
+/**
+ * If URLs are present in the config, use TryCP 'dna' method to instruct the remote machine
+ * to download the dna, and then replace the URL in the config with the returned local path
+ */
+const interpolateConfigDnaUrls = async (trycp: TrycpClient, configJson: T.RawConductorConfig): Promise<any> => {
+  configJson = _.cloneDeep(configJson)
+  configJson.dnas = await Promise.all(
+    configJson.dnas.map(async (dna) => {
+      if (dna.file.match(/^https?:\/\//)) {
+        const { path } = await trycp.dna(dna.file)
+        return _.set(dna, 'file', path)
+      } else {
+        return dna
+      }
+    })
+  )
+  return configJson
 }

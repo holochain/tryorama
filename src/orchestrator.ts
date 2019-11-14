@@ -1,32 +1,39 @@
-const _ = require('lodash')
 const uuidGen = require('uuid/v4')
 
+import * as _ from 'lodash'
 import * as T from "./types";
 import * as M from "./middleware";
 import * as R from "./reporter";
 import { WaiterOptions } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
-import { defaultGenConfigArgs, spawnUnique } from "./config";
 
-const defaultSpawnConductor = spawnUnique
 
-export const defaultGlobalConfig: T.GlobalConfig = {
-  network: 'memory',
-  logger: false,
-  metric_publisher: "logger"
-}
-
-type OrchestratorConstructorParams = {
-  spawnConductor?: T.SpawnConductorFn,
-  genConfigArgs?: GenConfigArgsFn,
+type OrchestratorConstructorParams<S> = {
   reporter?: boolean | R.Reporter,
-  middleware?: any,
-  globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
+  middleware?: M.Middleware<S, M.Scenario<ScenarioApi>>,
+  mode?: ModeOpts,
 }
 
-type GenConfigArgsFn = (conductorName: string, uuid: string) => Promise<T.GenConfigArgs>
+type ModeOpts = {
+  executor: 'none' | 'tape' | { tape: any },
+  spawning: 'local' | 'remote' | T.SpawnConductorFn,
+}
+
+const defaultModeOpts: ModeOpts = {
+  executor: { tape: require('tape') },
+  spawning: 'local',
+}
+
+const modeToMiddleware = (mode: ModeOpts): M.Middleware<any, M.Scenario<ScenarioApi>> => {
+  const executor = (mode.executor === 'none')
+    ? M.runSeries()
+    : mode.executor === 'tape'
+      ? M.tapeExecutor(require('tape'))
+      : M.tapeExecutor(mode.executor.tape)
+  return M.compose(executor, M.localOnly)
+}
 
 type ScenarioModifier = 'only' | 'skip' | null
 type RegisteredScenario = {
@@ -45,23 +52,21 @@ type TestError = { description: string, error: any }
 
 type ScenarioExecutor = () => Promise<void>
 
-export class Orchestrator {
+export class Orchestrator<S> {
 
   registerScenario: Register & { only: Register, skip: Register }
   waiterConfig?: WaiterOptions
 
-  _genConfigArgs: GenConfigArgsFn
-  _middleware: M.Middleware
-  _globalConfig: T.GlobalConfig
+  _middleware: M.Middleware<S, M.Scenario<ScenarioApi>>
   _scenarios: Array<RegisteredScenario>
-  _spawnConductor: T.SpawnConductorFn
   _reporter: R.Reporter
 
-  constructor(o: OrchestratorConstructorParams = {}) {
-    this._genConfigArgs = o.genConfigArgs || defaultGenConfigArgs
-    this._spawnConductor = o.spawnConductor || defaultSpawnConductor
-    this._middleware = o.middleware || M.runSeries
-    this._globalConfig = _.merge(defaultGlobalConfig, o.globalConfig || {})
+  constructor(o: OrchestratorConstructorParams<S> = {}) {
+    if (o.mode && o.middleware) {
+      throw new Error("Cannot set both `mode` and `middleware` in the orchestrator params. Pick one or the others.")
+    }
+
+    this._middleware = o.middleware || modeToMiddleware(o.mode || defaultModeOpts)
     this._scenarios = []
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))
@@ -155,8 +160,12 @@ export class Orchestrator {
   //   return stats
   // }
 
-  _registerScenario = (desc: string, scenario: Function, modifier: ScenarioModifier): void => {
-    const api = new ScenarioApi(desc, this, uuidGen())
+  _registerScenario = (desc: string, scenario: S, modifier: ScenarioModifier): void => {
+    const orchestratorData = _.pick(this, [
+      '_globalConfig',
+      'waiterConfig',
+    ])
+    const api = new ScenarioApi(desc, orchestratorData, uuidGen())
     const runner = async scenario => scenario(api)
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })
