@@ -267,7 +267,7 @@ Such a function is called a *config seed*, since the function is reusable across
 
 Config seeds take an object as a parameter, with five values:
 
-* `scenarioName` **(TODO)**: the name of the current scenario, i.e. `registerScenario(scenarioName, ...)`
+* `scenarioName`: the name of the current scenario, i.e. `registerScenario(scenarioName, ...)`
 * `playerName`: the name of the player for this conductor, e.g. `"alice"`
 * `uuid`: a UUID which is guaranteed to be the same within a scenario but unique between different scenarios
 * `configDir`: a temp dir created specifically for this conductor
@@ -304,7 +304,17 @@ Config.gen(
 )
 ```
 
-You can also use seed functions in the first parameter of `Config.gen` *TODO: verify and document this*
+You can also use a seed function in the first parameter of `Config.gen`, as long as the function returns a valid value, e.g.:
+
+```js
+Config.gen(
+  ({playerName}) => ({ 
+    [`${playerName}-1`]: dnaConfig,
+    [`${playerName}-2`]: dnaConfig,
+  })
+)
+```
+
 
 ## License
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
