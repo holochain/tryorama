@@ -1,181 +1,18 @@
 # tryorama
 
-An end-to-end/scenario testing framework for Holochain applications in TypeScript
+![try-o-rama on npm](https://img.shields.io/node/v/@holochain/try-o-rama)
 
-## Installation
+An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
+
+Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
     npm install @holochain/tryorama
 
-## Scenarios
-
-Tryorama lets you write scenarios involving multiple DNA instances on multiple conductors. The scenarios read like a script in a play. In very loose pseudocode, a scenario looks something like this:
-
-```
-create players alice and bob
-alice.call("chat", "channels", "post_message_to_channel", "hello!")
-wait for consistency
-result = bob.call("chat", "channels", "get_messages_on_channel", {})
-assert result[0] == "hello!"
-```
-
-Scenarios let you specify a fixed interaction between multiple Holochain nodes ("players") and make assertions about the resulting state changes. The previous pseudocode example scenario actually looks like this in Javascript:
-
-```javascript
-const myPlayerConfig = {
-  instances: {
-    chat: Config.dna('path/to/chat.dna.json', 'chat')
-  }
-}
-
-const orchestrator = new Orchestrator()
-
-orchestator.registerScenario('messages are fetchable', async s => {
-  const { alice, bob } = await s.players({ alice: myPlayerConfig, bob: myPlayerConfig }, true)
-  await alice.call('chat', 'channels', 'post_message_to_channel', 'hello!')
-  await s.consistency() // wait long enough for network propagation to reach bob
-  const result = await bob.call('chat', 'channels', 'get_messages_on_channel', {})
-  assert(result.Ok[0] === 'hello!')
-})
-
-orchestrator.run()
-```
-
-## Orchestrators
-
-Set up an Orchestrator and register your Scenarios with it. The Orchestrator specifies things like:
-
-- how to spawn new conductor processes
-- how to generate the configuration for each conductor
-- how each scenario actually gets executed, including possible integration with third-party test harnesses
-
-Tryorama comes with sensible defaults so you can get up and running with an Orchestrator with little or no configuration. **An Orchestrator with no configuration is set up to**:
-
-- Run scenarios and their assertions in the `tape` test harness
-- Create Holochain conductors on the local machine for each player
-
-By specifying Middleware, this default functionality can be altered, adding functions to the Scenario API, allowing scenarios to run a different test harness, or even to cause conductors to be spawned on remote machines rather than the local machine. We'll get into that later.
-
-## Player Configuration
-
-Each scenario specifies how many "players", or nodes, are participating, and how to configure them. A very simple example of configuration can be seen in the leading example, in the variable `myPlayerConfig`. There are two basic ways to specify player configuration: as an object or as a function. The object-based approach has two flavors, "sugared" and "plain"
-
-### As an object
-
-#### Sugared
-
-The "sugared" config flavor is the most concise way to specify a full conductor config for the purpose of scenario tests, which is suitable for a typical app developer's scenario tests. It looks like this:
-
-```javascript
-const mySugaredConfig = {
-  // this is the sugared part
-  instances: {
-    [instanceId1]: dnaConfig1,
-    [instanceId2]: dnaConfig2,
-  },
-
-  // optional
-  bridges: [
-    Config.bridge('bridge-name', instanceId1, instanceId2)
-  ],
-
-  // optional
-  dpki: {
-    instance_id: instanceId1,
-    init_params: {}
-  },
-}
-```
-
-The only required field is `instances`. In the above example, `instances` is an object, where the keys are instance IDs and the values are DNA configs. Incidentally, the keys of this object are also used as Agent IDs to create TestAgents for each instance.
-
-#### Plain
-
-In many cases, sugared config is all you need. If you need more control over instance configuration, you can drop down to the more verbose "plain" flavor, where `instances` is an Array instead of an Object. The rest of the configuration remains the same.
-
-```javascript
-const myPlainConfig = {
-  // now it's an Array instead of an Object
-  instances: [
-    {
-      id: instanceId1,
-      agent: {
-        id: agentId1,
-        name: 'name1', // NB: it's necessary for agent names to be distinct across all conductors
-        public_address: 'HcS----------...',
-        keystore_file: 'path/to/keystore',
-      },
-      dna: {
-        id: dnaId1,
-        file: dnaPath1,
-      }
-    },
-    {
-      id: instanceId2,
-      agent: {
-        id: agentId2,
-        name: 'name2', // NB: it's necessary for agent names to be distinct across all conductors
-        public_address: 'HcS----------...',
-        keystore_file: 'path/to/keystore',
-      },
-      dna: {
-        id: dnaId2,
-        file: dnaPath2,
-      }
-    }
-  ],
-
-  // still optional
-  bridges: [
-    Config.bridge('bridge-name', instanceId1, instanceId2)
-  ],
-
-  // still optional
-  dpki: {
-    instance_id: instanceId1,
-    init_params: {}
-  },
-}
-```
-
-### As a function
-
-If you need even absolute control over the generated conductor config because you're doing something tricky, you can pass in a function that takes a few parameters and returns a fully-formed string of TOML. You must write the config correctly and meet the following requirements:
-
-* There must be an admin interface running over WebSockets at `adminPort`
-* There must be an interface running over WebSockets at `zomePort` including all instances
-* All agents must have a unique name
-* You must incorporate the UUID or some other source of uniqueness into the DNA config's `uuid` field, to ensure that conductors in different tests do not attempt to connect to each other on the same network
-
-Basically, you really have to know what you're doing to make this work! It looks like this:
-
-```javascript
-const myConfigFunction = ({
-  conductorName,
-  configDir,
-  uuid,
-  adminPort,
-  zomePort,
-}) => `
-persistence_dir = ${configDir}
-
-[agents]
-# etc...
-
-[dnas]
-# etc...
-
-[instances]
-# etc...
-
-[[interfaces]]
-# etc...
-`
-```
-
+Take a look at the sample below, or skip to the [Conceptual Overview](#conceptual-overview) for a more in depth look.
 
 ## Sample usage
 
-Check out this heavily commented example for a more complete idea of how to use tryorama
+Check out this heavily commented example for an idea of how to use tryorama
 
 ```javascript
 import { Orchestrator, Config } from '../../src'
@@ -188,13 +25,15 @@ const dnaChat = Config.dna('https://url.to/your/chat.dna.json', 'chat')
 
 // Set up a Conductor configuration using the handy `Conductor.config` helper. 
 // Read the docs for more on configuration.
-const mainConfig = Config.genConfig({
-  instances: {
+const mainConfig = Config.gen(
+  {
     blog: dnaBlog,  // agent_id="blog", instance_id="blog", dna=dnaBlog
     chat: dnaChat,  // agent_id="chat", instance_id="chat", dna=dnaChat
   },
-  // specify a bridge from chat to blog
-  bridges: [Config.bridge('bridge-name', 'chat', 'blog')],
+  {
+    // specify a bridge from chat to blog
+    bridges: [Config.bridge('bridge-name', 'chat', 'blog')],
+  }
 })
 
 // Instatiate a test orchestrator. 
@@ -205,7 +44,7 @@ const mainConfig = Config.genConfig({
 const orchestrator = new Orchestrator()
 
 // Register a scenario, which is a function that gets a special API injected in
-orchestrator.registerScenario('proper zome call', async s => {
+orchestrator.registerScenario('proper zome call', async (s, t) => {
   // Declare two players using the previously specified config, 
   // and nickname them "alice" and "bob"
   const {alice, bob} = await s.players({alice: mainConfig, bob: mainConfig})
@@ -230,14 +69,238 @@ orchestrator.registerScenario('proper zome call', async s => {
   // you can wait for total consistency of network activity,
   await s.consistency()
 
-  // and you can make assertions using your assertion library of choice
+  // and you can make assertions using tape by default
   const messages = await carol.call('chat', 'messages', 'list_messages', {})
-  assert(messages.length === 1)
+  t.equal(messages.length, 1)
 })
 
-// Run all registered scenarios as a final step, and gather the report
+// Run all registered scenarios as a final step, and gather the report,
+// if you set up a reporter
 const report = await orchestrator.run()
 
-// Note: when using middleware, you can hook up a test harness to do reporting for you
+// Note: by default, there will be no report
 console.log(report)
 ```
+
+
+# Conceptual overview
+
+To understand Tryorama is to understand its components. Tryorama is a test *Orchestrator* for writing tests about the behavior of multiple Holochain nodes which are networked together. It allows the test writer to write *Scenarios*, which specify a fixed set of actions taken by one or more *Players*, which represent Holochain nodes that may come online or offline at any point in the scenario. Actions taken by Players include making zome calls and turning on or off their Holochain Conductor.
+
+## Orchestrators
+
+Test suites are defined with an `Orchestrator` object. For most cases, you can get very far with an out-of-the-box orchestrator with no additional configuration, like so:
+
+```typescript
+import {Orchestrator} from '@holochain/try-o-rama'
+const orchestator = new Orchestrator()
+```
+
+The Orchestrator constructor also takes a few parameters which allow you change modes, and in particular allows you to specify Middleware, which can add new features, drastically alter the behavior of your tests, and even integrate with other testing harnesses. We'll get into those different options later.
+
+The default Orchestrator, as shown above, is set to use the local machine for test nodes, and integrates with the [`tape` test harness](https://github.com/substack/tape). The following examples will assume you've created a default orchestrator in this way. 
+
+## Scenarios
+
+A Tryorama test is called a *scenario*. Each scenario makes use of a simple API for creating Players, and by default includes an object for making [tape assertions](https://github.com/substack/tape#methods), like `t.equal()`. Here's a very simple scenario which demonstrates the use of both objects.
+
+```typescript
+// `s` is an instance of the Scenario API
+// `t` is the tape assertion API
+orchestrator.registerScenario('description of this scenario', async (s, t) => {
+  // Use the Scenario API to create two players, alice and bob (we'll cover this more later)
+  const {alice, bob} = await s.players({alice: config, bob: config})
+
+  // start alice's conductor
+  await alice.spawn()
+  
+  // make a zome call
+  const result = await alice.call('some-instance', 'some-zome', 'some-function', 'some-parameters')
+  
+  // another use of the Scenario API is to automagically wait for the network to
+  // reach a consistent state before continuing the test
+  await s.consistency()
+
+  // make a test assertion with tape
+  t.equal(result.Ok, 'the expected value')
+})
+```
+
+Each scenario will automatically kill all running conductors as well as automatically end the underlying tape test (no need to run `t.end()`).
+
+## Players
+
+A Player represents a Holochain user running a Conductor. Therefore, the main concern in configuring a Player is providing configuration for its underlying Conductor.
+
+## Conductor configuration
+
+Much of the purpose of Tryorama is to provide ways to generate conductor configurations (TODO: we need documentation on conductor configs) that meet the following criteria:
+
+1. Common configs should be easy to generate
+2. Any conductor config should be possible
+3. Conductors from different scenarios must remain independent and invisible to each other
+
+### Simple config with the `Config` helper
+
+> 1. Common configs should be easy to generate
+
+Let's look a common configuration. Here is an example of how you might set up three Players, all of which share the same conductor config which defines a single DNA instance named "chat" using a DNA file at a specified path -- a reasonable setup for writing scenario tests for a single DNA. It's made really easy with a helper called `Config.gen`.
+
+```javascript
+import {Config, Orchestrator} from '@holochain/try-o-rama'
+
+const orchestrator = new Orchestrator()
+
+// Config.gen is a handy shortcut for creating a full-fledged conductor config
+// from as little information as possible
+const commonConfig = Config.gen({
+  // `Config.dna` generates a valid DNA config object, i.e. with fields
+  // "id", "file", "hash", and so on
+  chat: Config.dna('path/to/chat.dna.json')
+})
+
+orchestrator.registerScenario(async (s, t) => {
+  const {alice, bob, carol} = await s.players({
+    alice: commonConfig,
+    bob: commonConfig,
+    carol: commonConfig,
+  })
+})
+```
+
+`Config.gen` also takes an optional second parameter. The first parameter allows you to specify the parts of the config which are concerned with DNA instances, namely "agents", "dnas", "instances", and "interfaces". The second parameter allows you to specific how the rest of the config is generated. `Config` also has other helpers for generating other parts. For instance, to turn off logging, there is an easy way to do it like so:
+
+```typescript
+const commonConfig = Config.gen(
+  {
+    chat: Config.dna('path/to/chat.dna.json')
+  },
+  {
+    logger: Config.logger(false)
+  }
+)
+```
+
+`Config.gen` offers a lot of flexibility, which we'll explore more in the next sections.
+
+
+### More fine-grained instance setup with `Config.gen`
+
+> 2. Any conductor config should be possible
+
+`Config.gen` can be used in a slightly more explicit way. The first argument can take an object, as shown, which is a handy shorthand for quickly specifying instances with DNA files. If you need more control, you can define instances in a more fine-grained way using an array:
+
+```typescript
+const dnaConfig = Config.dna('path/to/chat.dna.json', 'chat')
+
+// this
+Config.gen({
+  myInstance: dnaConfig
+  myOtherInstance: dnaConfig
+})
+
+// is equivalent to this
+Config.gen([
+  {
+    id: 'myInstance',
+    agent: {
+      id: 'myInstance',
+      name: name1, // NB: actually generated by Tryorama, it's necessary for agent names to be distinct across all conductors...
+      public_address: 'HcS----------...',
+      keystore_file: 'path/to/keystore',
+    },
+    dna: {
+      id: 'chat',
+      file: 'path/to/chat.dna.json',
+    }
+  },
+  {
+    id: 'myOtherInstance',
+    agent: {
+      id: 'myOtherInstance,
+      name: name2, // NB: actually generated by Tryorama, it's necessary for agent names to be distinct across all conductors...
+      public_address: 'HcS----------...',
+      keystore_file: 'path/to/keystore',
+    },
+    dna: {
+      id: 'chat',
+      file: 'path/to/chat.dna.json',
+    }
+  }
+])
+```
+
+### Advanced setup with *configuration seeds*
+
+> 2. *Any* conductor config should be possible
+
+If you need your conductor to be configured in a really specific way, fear not, Tryorama can handle that. However, you'd better have a good understanding of how Holochain conductor configuration works, as well as what requirements Tryorama has in order to run tests. In the previous example we used `Config.gen` to create configuration with as little hassle as possible. Let's see what's going on under the hood and how we can write a fully customized conductor config. But, let's also remember the third point:
+
+> 3. Conductors from different scenarios must remain independent and invisible to each other
+
+To achieve the independence of conductors, Tryorama ensure that various values are unique. It uses UUIDs during DNA config as well as for Agent IDs to ensure unique values; it ensures that it automatically creates temp directories for file storage when necessary, adding the paths to the config. So how can we let Tryorama handle these concerns while still generating a custom config? The answer is in a key concept:
+
+**Players are configured by giving them *functions* that generate their config**. For instance, when you call `Config.gen`, it's actually creating a function for you like this:
+
+```typescript
+// this
+const config = Config.gen({alice: dnaConfig})
+
+// becomes this
+const config = ({playerName, uuid, configDir, adminPort, zomePort}) => {
+  return {
+    persistence_dir: configDir,
+    agents: [/* ... */],
+    dnas: [/* ... */],
+    instances: [/* ... */],
+    interfaces: [/* ... */],
+    network: {/* ... */},
+    // and so on...
+    // basically, a complete Conductor configuration in JSON form
+  } 
+})
+```
+
+Such a function is called a *config seed*, since the function is reusable across all scenarios. 
+
+Config seeds take an object as a parameter, with five values:
+
+* `scenarioName` **(TODO)**: the name of the current scenario, i.e. `registerScenario(scenarioName, ...)`
+* `playerName`: the name of the player for this conductor, e.g. `"alice"`
+* `uuid`: a UUID which is guaranteed to be the same within a scenario but unique between different scenarios
+* `configDir`: a temp dir created specifically for this conductor
+* `adminPort`: a free port on the machine which is used for the admin Websocket interface, used to get privileged info from the conductor
+* `zomePort`: a free port on the machine which is used for the normal Websocket interface, used to e.g. make zome calls
+
+#### The constraints generated configs must abide by
+
+Under the hood, Tryorama generates unique and valid values for these parameters and generates unique configurations by injecting these values into the seed functions. If you are writing your own config seed, you can use or ignore these values as needed, but you must be careful to set things up in a way that Tryorama can work with to drive the test scenarios:
+
+* There must be an admin interface running over WebSockets at `adminPort`
+* There must be an interface running over WebSockets at `zomePort` including all instances
+* *All* agents within a scenario must have a unique name (even across different conductors!)
+* You must incorporate the UUID or some other source of uniqueness into the DNA config's `uuid` field, to ensure that conductors in different tests do not attempt to connect to each other on the same network
+
+#### Using seed functions in `Config.gen`
+
+Since configuring a full config that properly uses these injected values is really tedious and error-prone, especially for the part concerning agents and instances, `Config.gen` also accepts functions using the usual seed arguments. So if you need to set up your dpki config using some of these values, you could do so:
+
+```js
+Config.gen(
+  {alice: dnaConfig},
+  ({playerName, uuid}) => {
+    return {
+      dpki: {
+        instance_id: 'my-instance',
+        init_params: JSON.stringify({
+          someValueThatNeedsToBeUnique: uuid,
+          someValueThatWantsToBeThePlayerName: playerName,
+        })
+      }
+    }
+  }
+)
+```
+
+You can also use seed functions in the first parameter of `Config.gen` *TODO: verify and document this*
+
