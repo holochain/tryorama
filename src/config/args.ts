@@ -12,9 +12,9 @@ const fs = require('fs').promises
  * when multiple conductors are attempting to secure ports for their interfaces.
  * In the future it would be great to move to domain socket based interfaces.
  */
-export const localConfigSeedArgs = async (playerName: string, uuid: string): Promise<T.ConfigSeedArgs> => {
+export const localConfigSeedArgs = async (): Promise<T.PartialConfigSeedArgs> => {
   const adminPort = await getPort()
   const zomePort = await getPort()
   const configDir = await tempDir()
-  return { playerName, configDir, adminPort, zomePort, uuid }
+  return { configDir, adminPort, zomePort }
 }

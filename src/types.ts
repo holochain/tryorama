@@ -29,12 +29,17 @@ export type ScenarioFn = (s: ScenarioApi) => Promise<void>
 export type IntermediateConfig = RawConductorConfig  // TODO: constrain
 
 export type ConfigSeed = (args: ConfigSeedArgs) => Promise<IntermediateConfig>
-export type ConfigSeedArgs = {
-  playerName: string,
-  uuid: string,
-  configDir: string,
+
+export type PartialConfigSeedArgs = {
   adminPort: number,
   zomePort: number,
+  configDir: string,
+}
+
+export type ConfigSeedArgs = PartialConfigSeedArgs & {
+  scenarioName: string,
+  playerName: string,
+  uuid: string,
 }
 
 export type AnyConfigBuilder = ConfigSeed | EitherInstancesConfig

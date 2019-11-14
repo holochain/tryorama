@@ -8,14 +8,8 @@ const base64 = require('base-64')
 const moniker = require('moniker')
 const TOML = require('@iarna/toml')
 
-type PartialConfigSeedArgs = {
-  adminPort: number,
-  zomePort: number,
-  configDir: string,
-}
-
 export type TrycpClient = {
-  setup: (id) => Promise<PartialConfigSeedArgs>,
+  setup: (id) => Promise<T.PartialConfigSeedArgs>,
   dna: (url: string) => Promise<{path: string}>,
   player: (id, config: T.RawConductorConfig) => Promise<any>,
   spawn: (id) => Promise<any>,

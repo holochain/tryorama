@@ -45,7 +45,7 @@ export class ScenarioApi {
     const configsJson: Array<T.RawConductorConfig> = []
     const playerBuilders: Record<string, Function> = {}
     for (const machineEndpoint in machines) {
-      
+
       const trycp: TrycpClient | null = await this._getClient(machineEndpoint)
 
       // choose our spwn method based on whether this is a local or remote machine
@@ -63,9 +63,14 @@ export class ScenarioApi {
 
       for (const playerName in configs) {
         const configSeed = configs[playerName]
-        const configSeedArgs = trycp
-          ? _.assign(await trycp.setup(playerName), { playerName, uuid: this._uuid })
-          : await localConfigSeedArgs(playerName, this._uuid)
+        const partialConfigSeedArgs = trycp
+          ? await trycp.setup(playerName)
+          : await localConfigSeedArgs()
+        const configSeedArgs: T.ConfigSeedArgs = _.assign(partialConfigSeedArgs, {
+          scenarioName: this.description,
+          playerName,
+          uuid: this._uuid
+        })
         logger.debug('api.players: seed args generated for %s = %j', playerName, configSeedArgs)
         const configJson = await configSeed(configSeedArgs)
         configsJson.push(configJson)
@@ -74,7 +79,7 @@ export class ScenarioApi {
         playerBuilders[playerName] = async () => {
           const { instances } = configJson
           const { configDir } = configSeedArgs
-          
+
           if (trycp) {
             const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
             await trycp.player(playerName, newConfigJson)
@@ -119,7 +124,7 @@ export class ScenarioApi {
 
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
     logger.debug('api.players: players built')
-    
+
     this._localPlayers = players
     return players
   }
@@ -183,7 +188,7 @@ ${names.join(', ')}
     const localKills = await Promise.all(
       _.values(this._localPlayers).map(player => player.cleanup(signal))
     )
-    await Promise.all(this._trycpClients.map(async (trycp) => { 
+    await Promise.all(this._trycpClients.map(async (trycp) => {
       await trycp.reset()
       await trycp.closeSession()
     }))
@@ -201,7 +206,7 @@ const interpolateConfigDnaUrls = async (trycp: TrycpClient, configJson: T.RawCon
   configJson.dnas = await Promise.all(
     configJson.dnas.map(async (dna) => {
       if (dna.file.match(/^https?:\/\//)) {
-        const {path} = await trycp.dna(dna.file)
+        const { path } = await trycp.dna(dna.file)
         return _.set(dna, 'file', path)
       } else {
         return dna
