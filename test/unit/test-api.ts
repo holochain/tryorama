@@ -4,8 +4,7 @@ import tapeP from 'tape-promise'
 const test = tapeP(tape)
 
 import { ScenarioApi } from '../../src/api'
-import { instancesDry } from './test-config';
-import * as C from '../../src/config';
+import { instancesDry } from './test-gen';
 import Builder from '../../src/config/builder';
 import * as Gen from '../../src/config/gen';
 import { ConfigSeedArgs } from '../../src/types';

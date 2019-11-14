@@ -8,11 +8,6 @@ import * as C from '../../src/config';
 import Builder from '../../src/config/builder';
 import * as Gen from '../../src/config/gen';
 import { genConfigArgs } from '../common';
-import { Orchestrator } from '../../src/orchestrator'
-
-const blah = {} as any
-
-// type CC = T.ConductorConfig
 
 export const { instancesDry, instancesSugared } = (() => {
   const dna = Builder.dna('path/to/dna.json', 'dna-id', { uuid: 'uuid' })
@@ -127,7 +122,7 @@ test('resolveDna ids and uuids', async t => {
 
 test('genPartialConfigFromDryInstances', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const { agents, dnas, instances, interfaces } = await C.genPartialConfigFromDryInstances(instancesDry, await genConfigArgs())
+  const { agents, dnas, instances, interfaces } = await Gen.genPartialConfigFromDryInstances(instancesDry, await genConfigArgs())
   t.equal(agents.length, 2)
   t.equal(dnas.length, 1)
   t.equal(instances.length, 2)
@@ -138,46 +133,6 @@ test('genPartialConfigFromDryInstances', async t => {
   t.equal(interfaces[1].instances.length, 2)
   t.end()
   stubGetDnaHash.restore()
-})
-
-test('genBridgeConfig', async t => {
-  const bridge = await Builder.bridge('b', 'alice', 'bob')
-  t.deepEqual(bridge, { handle: 'b', caller_id: 'alice', callee_id: 'bob' })
-  t.end()
-})
-
-test('genSignalConfig', async t => {
-  const signals = await Builder.signals({})
-  t.ok('trace' in signals)
-  t.ok('consistency' in signals)
-  t.equal(signals.consistency, true)
-  t.end()
-})
-
-test('genNetworkConfig', async t => {
-  const c1 = await Builder.network('memory')({ configDir: '' })
-  const c2 = await Builder.network('websocket')({ configDir: '' })
-  t.equal(c1.type, 'memory')
-  t.equal(c1.transport_configs[0].type, 'memory')
-  t.equal(c2.type, 'websocket')
-  t.equal(c2.transport_configs[0].type, 'websocket')
-  t.end()
-})
-
-test('genLoggerConfig', async t => {
-  const loggerQuiet = await Builder.logger(false)
-
-  const expectedQuiet = TOML.parse(`
-[logger]
-type = "debug"
-state_dump = false
-[[logger.rules.rules]]
-exclude = true
-pattern = ".*"
-  `)
-
-  t.deepEqual(loggerQuiet, expectedQuiet)
-  t.end()
 })
 
 test('genConfig produces JSON which can be serialized to TOML', async t => {
