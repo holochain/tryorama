@@ -53,6 +53,7 @@ export const { instancesDry, instancesSugared } = (() => {
 })()
 
 const commonConfig = { logger: Builder.logger(false), network: Builder.network('n3h') }
+const testSeedArgs = { configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName', scenarioName: 'scenarioName' }
 
 test('DNA id generation', t => {
   t.equal(C.dnaPathToId('path/to/file'), 'file')
@@ -139,7 +140,7 @@ test('genPartialConfigFromDryInstances', async t => {
 test('genConfig produces JSON which can be serialized to TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const seed = Builder.gen(instancesSugared, commonConfig)
-  const json = await seed({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName' })
+  const json = await seed(testSeedArgs)
   const toml = TOML.stringify(json)
   const json2 = TOML.parse(toml)
   t.deepEqual(json, json2)
@@ -152,9 +153,7 @@ test('invalid config throws nice error', async t => {
   t.throws(() => {
     Builder.gen([
       { id: 'what' }
-    ] as any, commonConfig)({
-      configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName'
-    }),
+    ] as any, commonConfig)(testSeedArgs),
       /Tried to use an invalid value/
   })
   t.end()

@@ -55,8 +55,8 @@ test('genBridgeConfig', async t => {
   t.end()
 })
 
-test('genSignalConfig', async t => {
-  const signals = await Builder.signals({})
+test('consistency signals are on by default', async t => {
+  const { signals } = await Builder.gen({})({} as any)
   t.ok('trace' in signals)
   t.ok('consistency' in signals)
   t.equal(signals.consistency, true)

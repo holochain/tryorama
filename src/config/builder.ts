@@ -77,12 +77,3 @@ export default {
   network: genNetworkConfig,
   logger: genLoggerConfig,
 }
-
-// NB: very important! Consistency signals drive the hachiko Waiter,
-// which is the special sauce behind `await s.consistency()`
-export const defaultCommonConfig = {
-  signals: {
-    trace: false,
-    consistency: true,
-  }
-}

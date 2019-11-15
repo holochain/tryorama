@@ -137,6 +137,11 @@ export const LoggerConfigV = t.union([
 ])
 export type LoggerConfig = t.TypeOf<typeof LoggerConfigV>
 
+export type RawSignalsConfig = {
+  trace: boolean,
+  consistency: boolean,
+}
+
 export const ConductorConfigCommonV = t.partial({
   bridges: t.array(BridgeConfigV),
   dpki: DpkiConfigV,  // raw
@@ -166,7 +171,8 @@ export interface RawConductorConfig {
   dnas: Array<DnaConfig>
   instances: Array<RawInstanceConfig>
   interfaces: Array<RawInterfaceConfig>
-  bridges: Array<BridgeConfig>
+  signals: RawSignalsConfig,
+  bridges?: Array<BridgeConfig>
   dpki?: DpkiConfig
   network?: RawNetworkConfig,
   logger?: RawLoggerConfig,

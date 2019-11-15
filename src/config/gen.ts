@@ -1,7 +1,6 @@
 import * as T from "../types";
 import * as _ from 'lodash'
 import { trace, stringify } from "../util";
-import { defaultCommonConfig } from './builder';
 import env from '../env';
 import logger from '../logger';
 import { expand } from "./expand";
@@ -56,6 +55,14 @@ export const gen =
   }
 }
 
+// NB: very important! Consistency signals drive the hachiko Waiter,
+// which is the special sauce behind `await s.consistency()`
+const defaultCommonConfig = {
+  signals: {
+    trace: false,
+    consistency: true,
+  }
+}
 const validateInstancesType = (instances: T.EitherInstancesConfig, msg: string = '') => {
   if (_.isArray(instances)) {
     T.decodeOrThrow(T.DryInstancesConfigV, instances, 'Could not validate Instances Array')

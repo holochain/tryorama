@@ -47,6 +47,7 @@ export const genConfigArgs: () => Promise<T.ConfigSeedArgs> = async () => ({
   adminPort: 1000,
   zomePort: 2000,
   playerName: 'playerName',
+  scenarioName: 'scenarioName',
   uuid: 'uuid',
 })
 export const spawnConductor = (() => { }) as unknown as T.SpawnConductorFn
