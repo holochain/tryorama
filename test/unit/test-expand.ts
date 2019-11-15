@@ -4,7 +4,7 @@ import * as _ from 'lodash'
 import { expand } from '../../src/config/expand'
 
 
-test('expand 1', t => {
+test('expand 1', async t => {
   const seed = {
     a: 1,
     b: x => ({
@@ -12,7 +12,7 @@ test('expand 1', t => {
       d: x,
     })
   }
-  t.deepEqual(expand(seed)(2), {
+  t.deepEqual(await expand(seed)(2), {
     a: 1,
     b: {
       c: 2,
@@ -23,9 +23,9 @@ test('expand 1', t => {
 })
 
 
-test('basis1', t => {
+test('expand 2', async t => {
 
-  const basis1 = {
+  const seed = {
     cx: 11,
     vx: a => ({
       cy: 2 * a,
@@ -35,8 +35,8 @@ test('basis1', t => {
     })
   }
 
-  const c1 = expand(basis1)(111)
-  t.deepEqual(c1, {
+  const tree = await expand(seed)(111)
+  t.deepEqual(tree, {
     cx: 11,
     vx: {
       cy: 222,
@@ -48,21 +48,21 @@ test('basis1', t => {
   t.end()
 })
 
-test('basis2', t => {
+test('expand 3', async t => {
 
-  const basis2 = {
+  const seed = {
     a: 11,
     b: [
       {
         c: 22,
-        d: [{}, x => [x, x], { e: [] }]
+        d: [{}, async x => [x, x], { e: [] }]
       },
       x => [x, x, x]
     ]
   }
 
-  const c1 = expand(basis2)(1)
-  t.deepEqual(c1, {
+  const tree = await expand(seed)(1)
+  t.deepEqual(tree, {
     a: 11,
     b: [
       {
@@ -72,19 +72,19 @@ test('basis2', t => {
       [1, 1, 1]
     ]
   })
-  t.ok(_.isArray(c1.b[0].d))
+  t.ok(_.isArray(tree.b[0].d))
   t.end()
 })
 
 
-test('expand function at root', t => {
-  const seed = a => ({
+test('expand function at root', async t => {
+  const seed = async a => ({
     x: a,
     y: b => ({
       z: b
     })
   })
-  t.deepEqual(expand(seed)(1), {
+  t.deepEqual(await expand(seed)(1), {
     x: 1,
     y: {
       z: 1,
