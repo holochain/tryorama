@@ -41,8 +41,11 @@ export const trycpSession = async (url): Promise<TrycpClient> => {
   }
 }
 
+
 ///////////////////////////////////////////////////////////////////
 // Fake MMM stuff
+// This stuff is useful for testing the Holochain team's implementation of TryCP, 
+// but strictly speaking should not be part of this repo.
 
 /*
 e.g.
@@ -152,9 +155,4 @@ export const spinupLocalCluster = async (mmmConfig: MmmConfig, docker: boolean):
   // ]))
   const unzipped = _.reduce(pairs, ([es, ps], [e, p]) => [_.concat(es, e), _.concat(ps, p)], [[], []])
   return unzipped as [Array<string>, Array<ChildProcess>]
-}
-
-export const awsClusterConfig2Endpoints = (config): Array<string> => {
-    const endpoints = config.map((node) => `wss://${node.service}.${node.region}.holochain-aws.org`)
-    return endpoints
 }
