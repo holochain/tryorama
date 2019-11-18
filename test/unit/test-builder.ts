@@ -88,3 +88,28 @@ pattern = ".*"
   t.deepEqual(loggerQuiet, expectedQuiet)
   t.end()
 })
+
+test('genMetricPublisherConfig: logger', async t => {
+  const actual = await Builder.metricPublisher('logger')
+  const expected = { type: 'logger' }
+  t.deepEqual(actual, expected)
+  t.end()
+})
+
+test('genMetricPublisherConfig: cloudwatchlogs', async t => {
+  const actual = await Builder.metricPublisher({
+    log_group_name: 'group-123',
+    log_stream_name: 'stream-123',
+    region: 'eu-central-1'
+  })
+  const expected = TOML.parse(`
+type = "cloudwatchlogs"
+log_group_name = "group-123"
+log_stream_name = "stream-123"
+region = "eu-central-1"
+`)
+
+  t.deepEqual(actual, expected)
+  t.end()
+})
+

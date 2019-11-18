@@ -137,6 +137,35 @@ export const LoggerConfigV = t.union([
 ])
 export type LoggerConfig = t.TypeOf<typeof LoggerConfigV>
 
+export const CloudWatchLogsConfigV = t.partial({
+    region: t.string,
+    log_group_name: t.string,
+    log_stream_name: t.string
+})
+export type CloudWatchLogsConfig = t.TypeOf<typeof CloudWatchLogsConfigV>
+
+export const RawCloudWatchLogsConfigV = t.intersection([CloudWatchLogsConfigV, t.type({
+  type: t.literal('cloudwatchlogs')
+})])
+export type RawCloudWatchLogsConfig = t.TypeOf<typeof RawCloudWatchLogsConfigV>
+
+export const LoggerMetricPublisherV = t.literal('logger')
+export type LoggerMetricPublisher = t.TypeOf<typeof LoggerMetricPublisherV>
+
+export const RawLoggerMetricPublisherV = t.type({
+  type: LoggerMetricPublisherV
+})
+export type RawLoggerMetricPublisher = t.TypeOf<typeof RawLoggerMetricPublisherV>
+
+export const MetricPublisherConfigV = t.union([
+    LoggerMetricPublisherV,
+    CloudWatchLogsConfigV,
+])
+export type MetricPublisherConfig = t.TypeOf<typeof MetricPublisherConfigV>
+
+export const RawMetricPublisherConfigV = t.union([RawCloudWatchLogsConfigV, RawLoggerMetricPublisherV])
+export type RawMetricPublisherConfig = t.TypeOf<typeof RawMetricPublisherConfigV>
+
 export type RawSignalsConfig = {
   trace: boolean,
   consistency: boolean,
@@ -147,6 +176,7 @@ export const ConductorConfigCommonV = t.partial({
   dpki: DpkiConfigV,  // raw
   network: RawNetworkConfigV,
   logger: RawLoggerConfigV,
+  metric_publisher: RawMetricPublisherConfigV,
 })
 export type ConductorConfigCommon = t.TypeOf<typeof ConductorConfigCommonV>
 
@@ -161,6 +191,7 @@ export const SugaredInstancesConfigV = t.record(t.string, DnaConfigV)
 export type SugaredInstancesConfig = t.TypeOf<typeof SugaredInstancesConfigV>
 
 /** For situations where we can accept either flavor of config */
+
 export const EitherInstancesConfigV = t.union([DryInstancesConfigV, SugaredInstancesConfigV])
 export type EitherInstancesConfig = t.TypeOf<typeof EitherInstancesConfigV>
 
@@ -176,6 +207,7 @@ export interface RawConductorConfig {
   dpki?: DpkiConfig
   network?: RawNetworkConfig,
   logger?: RawLoggerConfig,
+  metric_publisher?: RawMetricPublisherConfig,
 }
 
 export type KillFn = (signal?: string) => Promise<void>

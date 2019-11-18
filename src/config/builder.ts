@@ -69,6 +69,24 @@ const genLoggerConfig = (logger) => {
   }
 }
 
+const genMetricPublisherConfig = (mp: T.MetricPublisherConfig): T.RawMetricPublisherConfig => {
+
+  if (mp == 'logger') {
+    return {
+      type: 'logger'
+    }
+  } else if (_.isObject(mp)) {
+    return {
+      type: 'cloudwatchlogs',
+      log_group_name: mp.log_group_name,
+      log_stream_name: mp.log_stream_name,
+      region: mp.region
+    }
+  } else {
+    throw new Error("Unsupported metric publisher type: " + mp)
+  }
+}
+
 export default {
   gen,
   dna: genDnaConfig,
@@ -76,4 +94,5 @@ export default {
   bridge: genBridgeConfig,
   network: genNetworkConfig,
   logger: genLoggerConfig,
+  metricPublisher: genMetricPublisherConfig,
 }
