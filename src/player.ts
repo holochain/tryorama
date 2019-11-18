@@ -1,20 +1,21 @@
-const _ = require('lodash')
+import * as _ from 'lodash'
 
 import { Signal, DnaId } from '@holochain/hachiko'
 
-import { notImplemented } from './common'
-import { Conductor } from './conductor'
+import { Conductor, CallZomeFunc, CallAdminFunc } from './conductor'
 import { Instance } from './instance'
-import { GenConfigArgs, SpawnConductorFn, ObjectS } from './types';
+import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
+import { unparkPort } from './config/get-port-cautiously'
 
 type ConstructorArgs = {
   name: string,
-  genConfigArgs: GenConfigArgs,
+  configSeedArgs: ConfigSeedArgs,
   onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
+  onActivity: () => void,
   spawnConductor: SpawnConductorFn,
 }
 
@@ -37,33 +38,36 @@ export class Player {
   onJoin: () => void
   onLeave: () => void
   onSignal: ({ instanceId: string, signal: Signal }) => void
+  onActivity: () => void
 
   _conductor: Conductor | null
-  _instances: ObjectS<Instance>
+  _instances: ObjectS<Instance> | ObjectN<Instance>
   _dnaIds: Array<DnaId>
-  _genConfigArgs: GenConfigArgs
+  _configSeedArgs: ConfigSeedArgs
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, genConfigArgs, onJoin, onLeave, onSignal, spawnConductor }: ConstructorArgs) {
+  constructor({ name, configSeedArgs, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
     this.onLeave = onLeave
     this.onSignal = onSignal
+    this.onActivity = onActivity
 
     this._conductor = null
     this._instances = {}
-    this._genConfigArgs = genConfigArgs
+    this._configSeedArgs = configSeedArgs
     this._spawnConductor = spawnConductor
   }
 
-  admin = (method, params) => {
+  admin: CallAdminFunc = (method, params): Promise<any> => {
     this._conductorGuard(`admin(${method}, ${JSON.stringify(params)})`)
     return this._conductor!.callAdmin(method, params)
   }
 
-  call = (instanceId, zome, fn, params) => {
-    if (typeof instanceId !== 'string' && typeof zome !== 'string' && typeof fn !== 'string') {
+  call: CallZomeFunc = (...args): Promise<any> => {
+    const [instanceId, zome, fn, params] = args
+    if (args.length != 4 || typeof instanceId !== 'string' || typeof zome !== 'string' || typeof fn !== 'string') {
       throw new Error("player.call() must take 4 arguments: (instanceId, zomeName, funcName, params)")
     }
     this._conductorGuard(`call(${instanceId}, ${zome}, ${fn}, ${JSON.stringify(params)})`)
@@ -81,6 +85,10 @@ export class Player {
     return _.clone(this._instances[instanceId])
   }
 
+  instances = (filterPredicate?): Array<Instance> => {
+    return _.flow(_.values, _.filter(filterPredicate), _.cloneDeep)(this._instances)
+  }
+
   /**
    * @deprecated in 0.1.2
    * Use `player.instance(instanceId)` instead
@@ -93,7 +101,7 @@ export class Player {
    * has fully started up. Otherwise, by default, you will have to wait for 
    * the proper output to be seen before this promise resolves.
    */
-  spawn = async (f?: Function) => {
+  spawn = async (spawnArgs: any) => {
     if (this._conductor) {
       this.logger.warn(`Attempted to spawn conductor '${this.name}' twice!`)
       return
@@ -101,23 +109,10 @@ export class Player {
 
     await this.onJoin()
     this.logger.debug("spawning")
-    const path = getConfigPath(this._genConfigArgs.configDir)
-    const handle = await this._spawnConductor(this.name, path)
-
-    if (f) {
-      this.logger.info('running spawned handle hack. TODO: document this :)')
-      f(handle)
-    }
-
-    await this._awaitConductorInterfaceStartup(handle, this.name)
+    const conductor = await this._spawnConductor(this, spawnArgs)
 
     this.logger.debug("spawned")
-    this._conductor = new Conductor({
-      name: this.name,
-      handle,
-      onSignal: this.onSignal.bind(this),
-      ...this._genConfigArgs
-    })
+    this._conductor = conductor
 
     this.logger.debug("initializing")
     await this._conductor.initialize()
@@ -125,16 +120,32 @@ export class Player {
     this.logger.debug("initialized")
   }
 
-  kill = async (): Promise<void> => {
+  kill = async (signal = 'SIGINT'): Promise<boolean> => {
     if (this._conductor) {
       const c = this._conductor
       this._conductor = null
       this.logger.debug("Killing...")
-      await c.kill('SIGINT')
+      await c.kill(signal)
       this.logger.debug("Killed.")
       await this.onLeave()
+      return true
     } else {
       this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
+      return false
+    }
+  }
+
+  /** Runs at the end of a test run */
+  cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
+    if (this._conductor) {
+      await this.kill(signal)
+      unparkPort(this._configSeedArgs.adminPort)
+      unparkPort(this._configSeedArgs.zomePort)
+      return true
+    } else {
+      unparkPort(this._configSeedArgs.adminPort)
+      unparkPort(this._configSeedArgs.zomePort)
+      return false
     }
   }
 
@@ -170,24 +181,4 @@ export class Player {
     }
   }
 
-  _awaitConductorInterfaceStartup = (handle, name) => {
-    return new Promise((resolve, reject) => {
-      handle.on('close', code => {
-        this.logger.info(`conductor '${name}' exited with code ${code}`)
-        // this rejection will have no effect if the promise already resolved,
-        // which happens below
-        reject(`Conductor exited before fully starting (code ${code})`)
-      })
-      handle.stdout.on('data', data => {
-        // wait for the logs to convey that the interfaces have started
-        // because the consumer of this function needs those interfaces
-        // to be started so that it can initiate, and form,
-        // the websocket connections
-        if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
-          this.logger.info(`Conductor '${name}' process spawning successful`)
-          resolve(handle)
-        }
-      })
-    })
-  }
 }

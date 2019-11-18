@@ -1,66 +1,63 @@
-const _ = require('lodash')
 const sinon = require('sinon')
 const test = require('tape')
 const TOML = require('@iarna/toml')
+import * as _ from 'lodash'
 
 import * as T from '../../src/types'
-import * as C from '../../src/config';
+import Builder from '../../src/config/builder';
 import * as Gen from '../../src/config/gen';
 import { combineConfigs, mergeJsonConfigs, adjoin } from '../../src/config/combine';
-import { genConfigArgs } from '../common';
-import { promiseSerialObject, trace } from '../../src/util';
 
 const makeTestConfigs = async () => {
-  const dna1a = C.dna('path/to/dna1.json', 'dna-1', { uuid: 'a' })
-  const dna1b = C.dna('path/to/dna1.json', 'dna-1', { uuid: 'b' })
-  const dna2 = C.dna('path/to/dna2.json', 'dna-2')
-  const providedUuid = 'UUID'
+  const dna1a = Builder.dna('path/to/dna1.json', 'dna-1', { uuid: 'a' })
+  const dna1b = Builder.dna('path/to/dna1.json', 'dna-1', { uuid: 'b' })
+  const dna2 = Builder.dna('path/to/dna2.json', 'dna-2')
+  const commonConfig = {logger: Builder.logger(false), network: Builder.network('n3h')}
 
-  const mkInstance = (conductorName, id, dna) => ({
-    id: adjoin(conductorName)(id),
+  const mkInstance = (playerName, id, dna) => ({
+    id: adjoin(playerName)(id),
     dna,
     agent: {
-      name: adjoin(conductorName)(`${conductorName}::${id}::uuid`),
-      id: adjoin(conductorName)(id),
+      name: adjoin(playerName)(`${playerName}::${id}::uuid`),
+      id: adjoin(playerName)(id),
       keystore_file: '[UNUSED]',
       public_address: '[SHOULD BE REWRITTEN]',
       test_agent: true,
     }
   })
-
   const configs = {
-    one: {
-      instances: {
-        alice: dna1a,
-        bob: dna1b,
-      },
-      bridges: [C.bridge('b', 'alice', 'bob')],
-      dpki: C.dpki('alice', { well: 'hello' }),
-    },
-    two: {
-      instances: {
-        xena: dna1a,
-        yancy: dna1b,
-        ziggy: dna2,
-      },
+    one: Builder.gen({
+      alice: dna1a,
+      bob: dna1b,
+    }, {
+      bridges: [Builder.bridge('b', 'alice', 'bob')],
+      dpki: Builder.dpki('alice', { well: 'hello' }),
+      ...commonConfig
+    }),
+    two: Builder.gen({
+      xena: dna1a,
+      yancy: dna1b,
+      ziggy: dna2,
+    }, {
       bridges: [
-        C.bridge('x', 'xena', 'yancy'),
-        C.bridge('y', 'yancy', 'ziggy'),
+        Builder.bridge('x', 'xena', 'yancy'),
+        Builder.bridge('y', 'yancy', 'ziggy'),
       ],
-      dpki: C.dpki('xena', { well: 'hello' }),
-    },
-    three: {
-      instances: {
-        alice: dna2,
-        bob: dna2,
-      },
-      bridges: [C.bridge('b', 'alice', 'bob')],
-      dpki: C.dpki('bob', { well: 'hello' }),
-    },
+      dpki: Builder.dpki('xena', { well: 'hello' }),
+      ...commonConfig
+    }),
+    three: Builder.gen({
+      alice: dna2,
+      bob: dna2,
+    }, {
+      bridges: [Builder.bridge('b', 'alice', 'bob')],
+      dpki: Builder.dpki('bob', { well: 'hello' }),
+      ...commonConfig
+    }),
   }
 
-  const expected = {
-    instances: [
+  const expected = Builder.gen(
+    [
       mkInstance('one', 'alice', dna1a),
       mkInstance('one', 'bob', dna1b),
       mkInstance('two', 'xena', dna1a),
@@ -69,14 +66,17 @@ const makeTestConfigs = async () => {
       mkInstance('three', 'alice', dna2),
       mkInstance('three', 'bob', dna2),
     ],
-    bridges: [
-      C.bridge('b', 'alice--one', 'bob--one'),
-      C.bridge('x', 'xena--two', 'yancy--two'),
-      C.bridge('y', 'yancy--two', 'ziggy--two'),
-      C.bridge('b', 'alice--three', 'bob--three')
-    ],
-    dpki: C.dpki('alice', { well: 'hello' })
-  }
+    {
+      bridges: [
+        Builder.bridge('b', 'alice--one', 'bob--one'),
+        Builder.bridge('x', 'xena--two', 'yancy--two'),
+        Builder.bridge('y', 'yancy--two', 'ziggy--two'),
+        Builder.bridge('b', 'alice--three', 'bob--three')
+      ],
+      dpki: Builder.dpki('alice', { well: 'hello' }),
+      ...commonConfig
+    }
+  )
 
   return {
     configs: await (
@@ -91,16 +91,14 @@ const makeTestConfigs = async () => {
   }
 }
 
-const expandConfig = async (config, conductorName): Promise<any> => {
-  const builder = C.genConfig(config, { logger: false, network: 'n3h' })
-  const toml = await builder({
+const expandConfig = async (config, playerName): Promise<T.RawConductorConfig> => {
+  return config({
     configDir: 'dir',
     adminPort: 1111,
     zomePort: 2222,
     uuid: 'uuid',
-    conductorName
+    playerName
   })
-  return TOML.parse(toml)
 }
 
 test('test configs are valid', async t => {

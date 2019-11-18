@@ -32,13 +32,13 @@ test('single middleware', t => {
 test('middleware combinations', t => {
   const run = runner('', { v: 0 })
   combine(triple, increment, increment)(run, s => {
-    t.equal(s.v, 2)
+    t.equal(s.v, 6)
   })
   combine(increment, triple, increment)(run, s => {
     t.equal(s.v, 4)
   })
   combine(increment, increment, triple)(run, s => {
-    t.equal(s.v, 6)
+    t.equal(s.v, 2)
   })
   t.end()
 })
@@ -46,8 +46,8 @@ test('middleware combinations', t => {
 test('middleware combination, multiple applications', t => {
   const run = runner('', { v: 0 })
   const m = combine(triple, increment, increment)
-  m(run, s => { t.equal(s.v, 2) })
-  m(run, s => { t.equal(s.v, 2) })
+  m(run, s => { t.equal(s.v, 6) })
+  m(run, s => { t.equal(s.v, 6) })
   t.end()
 })
 
@@ -68,13 +68,13 @@ test('middleware combinations with failure (is this right?)', async t => {
   await t.rejects(
     combine(spier(spy3), spier(spy4))(run, s => { throw new Error('final failure') })
   )
-  t.ok(spy1.calledOnce)
-  t.ok(spy2.notCalled)
+  t.ok(spy1.notCalled)
+  t.ok(spy2.calledOnce)
   t.ok(spy3.calledOnce)
   t.ok(spy4.calledOnce)
   t.ok(spy5.notCalled)
   t.ok(spy6.notCalled)
-  t.ok(spy3.calledImmediatelyBefore(spy4))
+  t.ok(spy3.calledImmediatelyAfter(spy4))
 
   t.end()
 })

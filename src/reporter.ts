@@ -16,11 +16,11 @@ export const unit = ({
 })
 
 export const basic = log => ({
-  before: total => log(`(try-o-rama)  Running ${total} scenarios`),
+  before: total => log(`(tryorama)  Running ${total} scenarios`),
   each: desc => log(`τ  ${desc}`),
   after: ({ successes, errors }) => {
     const total = successes + errors.length
-    log(`(try-o-rama)  Orchestrator test run complete:
+    log(`(tryorama)  Orchestrator test run complete:
 ${total} total scenarios
 ${successes} successes
 ${errors.length > 0 ? `${errors.length} errors:` : '0 errors'}

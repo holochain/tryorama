@@ -1,52 +1,77 @@
 import * as T from "../types";
-import { downloadFile, trace } from "../util";
-import { Mutex } from 'async-mutex'
+import * as _ from 'lodash'
+import { trace, stringify } from "../util";
 import env from '../env';
 import logger from '../logger';
-import { saneLoggerConfig, quietLoggerConfig } from './logger';
-const TOML = require('@iarna/toml')
-const _ = require('lodash')
+import { expand } from "./expand";
 
 const exec = require('util').promisify(require('child_process').exec)
-const fs = require('fs').promises
-const os = require('os')
 const path = require('path')
-const getPort = require('get-port')
 
-export const ADMIN_INTERFACE_ID = 'try-o-rama-admin-interface'
-export const ZOME_INTERFACE_ID = 'try-o-rama-zome-interface'
-
-const mkdirIdempotent = dir => fs.access(dir).catch(() => {
-  fs.mkdir(dir, { recursive: true })
-})
-
-const tempDirBase = path.join(env.tempStorage || os.tmpdir(), 'try-o-rama/')
-mkdirIdempotent(tempDirBase)
-
-const tempDir = async () => {
-  await mkdirIdempotent(tempDirBase)
-  return fs.mkdtemp(tempDirBase)
+// NB: very important! Consistency signals drive the hachiko Waiter,
+// which is the special sauce behind `await s.consistency()`
+const defaultCommonConfig = {
+  signals: {
+    trace: false,
+    consistency: true,
+  }
 }
 
 /**
- * Directory to store downloaded DNAs in.
- * **NOTE**: this is currently shared among all runs over all time, for better caching.
- * TODO: change this to `tempDir` instead of `tempDirBase` to remove this overzealous caching!
+ * The main purpose of this module. It is a helper function which accepts an object
+ * describing instances in shorthand, as well as a second object describing the additional
+ * more general config fields. It is usually the case that the first object will be vary
+ * between players, and the second field will be the same between different players.
  */
-const dnaDir = async () => {
-  const dir = path.join(tempDirBase, 'dnas-fetched')
-  await mkdirIdempotent(dir)
-  return dir
-}
-
-export const dna = (location, id?, opts = {}): T.DnaConfig => {
-  if (!id) {
-    id = dnaPathToId(location)
+export const gen = 
+(instancesFort: T.Fort<T.EitherInstancesConfig>, commonFort?: T.Fort<T.ConductorConfigCommon>) => {
+  // TODO: type check of `commonFort`
+  
+  // If we get a function, we can't type check until after the function has been called
+  // ConfigSeedArgs
+  let typeCheckLater = false
+  
+  // It leads to more helpful error messages 
+  // to have this validation before creating the seed function
+  if (_.isFunction(instancesFort)) {
+    typeCheckLater = true
+  } else {
+    validateInstancesType(instancesFort)
   }
-  return { file: location, id, ...opts }
+
+  return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> =>
+  {
+    const instancesData = await T.collapseFort(instancesFort, args)
+    if (typeCheckLater) {
+      validateInstancesType(instancesData)
+    }
+    const instancesDry = _.isArray(instancesData) 
+      ? instancesData
+      : desugarInstances(instancesData, args)
+
+    const specific = await genPartialConfigFromDryInstances(instancesDry, args)
+    const common = _.merge(
+      {}, 
+      defaultCommonConfig, 
+      await T.collapseFort(expand(commonFort), args)
+    )
+    
+    return _.merge(
+      {},
+      specific,
+      common,
+    )
+  }
 }
 
-const downloadMutex = new Mutex()
+const validateInstancesType = (instances: T.EitherInstancesConfig, msg: string = '') => {
+  if (_.isArray(instances)) {
+    T.decodeOrThrow(T.DryInstancesConfigV, instances, 'Could not validate Instances Array')
+  } else if (_.isObject(instances)) {
+    T.decodeOrThrow(T.SugaredInstancesConfigV, instances, 'Could not validate Instances Object')
+  }
+}
+
 
 /**
  * 1. If a dna config object contains a URL in the path, download the file to a temp directory, 
@@ -56,118 +81,43 @@ const downloadMutex = new Mutex()
  */
 export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): Promise<T.DnaConfig> => {
   const dna = _.cloneDeep(inputDna)
-  if (!dna.file) {
-    throw new Error(`Invalid 'file' for dna: ${JSON.stringify(dna)}`)
-  }
-  if (dna.file.match(/^https?:/)) {
-    const dnaPath = path.join(await dnaDir(), dna.id + '.dna.json')
-    const release = await downloadMutex.acquire()
-    try {
-      await downloadFile({ url: dna.file, path: dnaPath, overwrite: false })
-    } finally {
-      dna.file = dnaPath
-      release()
-    }
-  }
 
   dna.id = dna.uuid ? `${dna.id}::${dna.uuid}` : dna.id
   dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
 
   if (!dna.hash) {
     dna.hash = await getDnaHash(dna.file).catch(err => {
-      throw new Error(`Could not determine hash of DNA file '${dna.file}'. Does the file exist?\n\tOriginal error: ${err}`)
+      logger.warn(`Could not determine hash of DNA at '${dna.file}'. Note that tryorama cannot determine the hash of DNAs at URLs\n\tOriginal error: ${err}`)
+      return "[UNKNOWN]"
     })
   }
   return dna
 }
 
-export const dnaPathToId = (dnaPath) => {
-  const matches = dnaPath.match(/([^/]+)$/g)
-  return matches[0].replace(/\.dna\.json$/, '')
-}
-
-export const bridge = (handle, caller_id, callee_id) => ({ handle, caller_id, callee_id })
-
-export const dpki = (instance_id, init_params?): T.DpkiConfig => ({
-  instance_id,
-  init_params: init_params ? init_params : {}
-})
-
 export const getConfigPath = configDir => path.join(configDir, 'conductor-config.toml')
 
-/**
- * Function to generate the default args for genConfig functions.
- * This can be overridden as part of Orchestrator config.
- * NB: Since we are using ports, there is a small chance of a race condition
- * when multiple conductors are attempting to secure ports for their interfaces.
- * In the future it would be great to move to domain socket based interfaces.
- */
-export const defaultGenConfigArgs = async (conductorName: string, uuid: string) => {
-  const adminPort = await getPort()
-  const configDir = await tempDir()
-  let zomePort = adminPort
-  while (zomePort == adminPort) {
-    zomePort = await getPort()
-  }
-  return { conductorName, configDir, adminPort, zomePort, uuid }
+export const desugarInstances = (instances: T.SugaredInstancesConfig, args: T.ConfigSeedArgs): T.DryInstancesConfig => {
+  T.decodeOrThrow(T.SugaredInstancesConfigV, instances)
+  // time to desugar the object
+  return Object.entries(instances).map(([id, dna]) => ({
+    id,
+    agent: makeTestAgent(id, args),
+    dna
+  } as T.DryInstanceConfig))
 }
 
-
-/**
- * Helper function to generate, from a simple object, a function that returns valid TOML config.
- * 
- * TODO: move debugLog into ConductorConfig
- */
-export const genConfig = (inputConfig: T.AnyConductorConfig, g: T.GlobalConfig): T.GenConfigFn => {
-  if (typeof inputConfig === 'function') {
-    // let an already-generated function just pass through
-    return inputConfig
-  }
-
-  T.decodeOrThrow(T.EitherConductorConfigV, inputConfig)
-
-  return async (args: T.GenConfigArgs) => {
-    const config = desugarConfig(args, inputConfig)
-    const pieces = [
-      await genInstanceConfig(config, args),
-      await genBridgeConfig(config),
-      await genDpkiConfig(config),
-      await genSignalConfig(config),
-      await genNetworkConfig(config, args, g),
-      await genLoggerConfig(config, args, g),
-    ]
-    const json = Object.assign({},
-      ...pieces
-    )
-    const toml = TOML.stringify(json) + "\n"
-    return toml
-  }
-}
-
-export const desugarConfig = (args: T.GenConfigArgs, config: T.EitherConductorConfig): T.ConductorConfig => {
-  config = _.cloneDeep(config)
-  if (!_.isArray(config.instances)) {
-    // time to desugar the object
-    const { instances } = config
-    config.instances = Object.entries(instances).map(([id, dna]) => ({
-      id,
-      agent: makeTestAgent(id, args),
-      dna
-    } as T.InstanceConfig))
-  }
-  return config as T.ConductorConfig
-}
-
-export const makeTestAgent = (id, { conductorName, uuid }: T.GenConfigArgs) => ({
+export const makeTestAgent = (id, { playerName, uuid }) => ({
   // NB: very important that agents have different names on different conductors!!
-  name: `${conductorName}::${id}::${uuid}`,
+  name: `${playerName}::${id}::${uuid}`,
   id: id,
   keystore_file: '[UNUSED]',
   public_address: '[SHOULD BE REWRITTEN]',
   test_agent: true,
 })
 
-export const genInstanceConfig = async ({ instances }, { configDir, adminPort, zomePort, uuid }) => {
+export const genPartialConfigFromDryInstances = async (instances: T.DryInstancesConfig, args: T.ConfigSeedArgs) => {
+
+  const { configDir, adminPort, zomePort, uuid } = args
 
   const config: any = {
     agents: [],
@@ -178,7 +128,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
 
   const adminInterface = {
     admin: true,
-    id: ADMIN_INTERFACE_ID,
+    id: env.adminInterfaceId,
     driver: {
       type: 'websocket',
       port: adminPort,
@@ -187,7 +137,7 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
   }
 
   const zomeInterface = {
-    id: ZOME_INTERFACE_ID,
+    id: env.zomeInterfaceId,
     driver: {
       type: 'websocket',
       port: zomePort,
@@ -223,80 +173,6 @@ export const genInstanceConfig = async ({ instances }, { configDir, adminPort, z
   return config
 }
 
-export const genBridgeConfig = ({ bridges }: T.ConductorConfig) => (bridges ? { bridges } : {})
-
-export const genDpkiConfig = ({ dpki }: T.ConductorConfig) => {
-  if (dpki && _.isObject(dpki)) {
-    return {
-      dpki: {
-        instance_id: dpki.instance_id,
-        init_params: JSON.stringify(dpki.init_params)
-      }
-    }
-  } else {
-    return {}
-  }
-}
-
-export const genSignalConfig = ({ }) => ({
-  signals: {
-    trace: false,
-    consistency: true,
-  }
-})
-
-export const genNetworkConfig = async (c: T.ConductorConfig, { configDir }, g: T.GlobalConfig) => {
-  const dir = path.join(configDir, 'network-storage')
-  await mkdirIdempotent(dir)
-  const network = c.network || g.network
-  const lib3hConfig = type => ({
-    type,
-    work_dir: '',
-    log_level: 'd',
-    bind_url: `http://0.0.0.0`,
-    dht_custom_config: [],
-    dht_timeout_threshold: 8000,
-    dht_gossip_interval: 500,
-    bootstrap_nodes: [],
-    network_id: {
-      nickname: 'app_spec',
-      id: 'app_spec_memory',
-    },
-    transport_configs: [
-      {
-        type,
-        data: type === 'memory' ? 'app-spec-memory' : 'Unencrypted',
-      }
-    ]
-  })
-  if (network === 'memory' || network === 'websocket') {
-    return { network: lib3hConfig(network) }
-  } else if (network === 'n3h') {
-    return {
-      network: {
-        type: 'n3h',
-        n3h_log_level: 'e',
-        bootstrap_nodes: [],
-        n3h_mode: 'REAL',
-        n3h_persistence_path: dir,
-      }
-    }
-  } else if (typeof network === 'object') {
-    return { network }
-  } else {
-    throw new Error("Unsupported network type: " + network)
-  }
-}
-
-export const genLoggerConfig = (c: T.ConductorConfig, { }, g: T.GlobalConfig) => {
-  const logger = c.logger || g.logger || false
-  if (typeof logger === 'boolean') {
-    return logger ? saneLoggerConfig : quietLoggerConfig
-  } else {
-    return { logger }
-  }
-}
-
 export const getDnaHash = async (dnaPath) => {
   const { stdout, stderr } = await exec(`hc hash -p ${dnaPath}`)
   if (!stdout) {
@@ -313,8 +189,8 @@ export const getDnaHash = async (dnaPath) => {
   return hash
 }
 
-export const assertUniqueTestAgentNames = (configs: Array<T.InstanceConfig>) => {
-  const agentNames = _.chain(configs).values().map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
+export const assertUniqueTestAgentNames = (configs: Array<T.RawConductorConfig>) => {
+  const agentNames = _.chain(configs).map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
   const frequencies = _.countBy(agentNames) as { [k: string]: number }
   const dupes = Object.entries(frequencies).filter(([k, v]) => v > 1)
   if (dupes.length > 0) {
