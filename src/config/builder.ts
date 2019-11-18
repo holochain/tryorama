@@ -65,7 +65,7 @@ const genLoggerConfig = (logger) => {
   if (typeof logger === 'boolean') {
     return logger ? saneLoggerConfig : quietLoggerConfig
   } else {
-    return { logger }
+    return logger
   }
 }
 
