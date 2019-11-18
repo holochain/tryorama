@@ -26,7 +26,11 @@ export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed} =>
 
 
   // const network = Config.network('n3h')
-  const common: T.ConductorConfigCommon = { logger: Config.logger(true), network }
+  const common: T.ConductorConfigCommon = { 
+    logger: Config.logger(true),
+    metric_publisher: Config.metricPublisher('logger'), 
+    network,
+  }
   const seed: T.ConfigSeed = Config.gen({ app: dna }, common)
   return {alice: seed, bob: seed}
 }

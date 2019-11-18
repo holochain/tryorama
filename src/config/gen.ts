@@ -8,6 +8,15 @@ import { expand } from "./expand";
 const exec = require('util').promisify(require('child_process').exec)
 const path = require('path')
 
+// NB: very important! Consistency signals drive the hachiko Waiter,
+// which is the special sauce behind `await s.consistency()`
+const defaultCommonConfig = {
+  signals: {
+    trace: false,
+    consistency: true,
+  }
+}
+
 /**
  * The main purpose of this module. It is a helper function which accepts an object
  * describing instances in shorthand, as well as a second object describing the additional
@@ -55,14 +64,6 @@ export const gen =
   }
 }
 
-// NB: very important! Consistency signals drive the hachiko Waiter,
-// which is the special sauce behind `await s.consistency()`
-const defaultCommonConfig = {
-  signals: {
-    trace: false,
-    consistency: true,
-  }
-}
 const validateInstancesType = (instances: T.EitherInstancesConfig, msg: string = '') => {
   if (_.isArray(instances)) {
     T.decodeOrThrow(T.DryInstancesConfigV, instances, 'Could not validate Instances Array')
@@ -171,7 +172,6 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
   config.interfaces = [adminInterface, zomeInterface]
   return config
 }
-
 
 export const getDnaHash = async (dnaPath) => {
   const { stdout, stderr } = await exec(`hc hash -p ${dnaPath}`)
