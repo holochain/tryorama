@@ -46,14 +46,14 @@ const trycpOrchestrator = (endpoints) => () => {
 }
 
 
-// require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
+require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
 // require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 
-trycpEndpoints().then(([endpoints, processes]) => {
-  require('./test-always-on')(trycpOrchestrator(endpoints), () => testConfig(dnaLocationRemote))
-  tape('extra dummy test for cleanup', t => {
-    console.log("All done. Killing locally spawned processes.")
-    processes.forEach(p => p.kill())
-    t.end()
-  })
-})
+// trycpEndpoints().then(([endpoints, processes]) => {
+//   require('./test-always-on')(trycpOrchestrator(endpoints), () => testConfig(dnaLocationRemote))
+//   tape('extra dummy test for cleanup', t => {
+//     console.log("All done. Killing locally spawned processes.")
+//     processes.forEach(p => p.kill())
+//     t.end()
+//   })
+// })

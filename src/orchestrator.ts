@@ -8,14 +8,9 @@ import { WaiterOptions } from "@holochain/hachiko";
 import logger from "./logger";
 import { ScenarioApi } from "./api";
 
-export const defaultGlobalConfig: T.GlobalConfig = {
-  network: 'memory',
-  logger: false,
-}
 
 type OrchestratorConstructorParams<S> = {
   reporter?: boolean | R.Reporter,
-  globalConfig?: T.GlobalConfigPartial,
   waiter?: WaiterOptions,
   middleware?: M.Middleware<S, M.Scenario<ScenarioApi>>,
   mode?: ModeOpts,
@@ -63,7 +58,6 @@ export class Orchestrator<S> {
   waiterConfig?: WaiterOptions
 
   _middleware: M.Middleware<S, M.Scenario<ScenarioApi>>
-  _globalConfig: T.GlobalConfig
   _scenarios: Array<RegisteredScenario>
   _reporter: R.Reporter
 
@@ -73,7 +67,6 @@ export class Orchestrator<S> {
     }
 
     this._middleware = o.middleware || modeToMiddleware(o.mode || defaultModeOpts)
-    this._globalConfig = _.merge(defaultGlobalConfig, o.globalConfig || {})
     this._scenarios = []
     this._reporter = o.reporter === true
       ? R.basic(x => console.log(x))

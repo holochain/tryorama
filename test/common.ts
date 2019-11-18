@@ -11,7 +11,7 @@ export const testOrchestrator = () => new Orchestrator({
   }
 })
 
-export const testConfig = (dnaPath) => {
+export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed} => {
 
   const dna = Config.dna(dnaPath)
 
@@ -25,21 +25,14 @@ export const testConfig = (dnaPath) => {
   // console.warn("Be sure to run a docker container named 'sim2h' on the 'trycp' network on port 9000 before running these tests!")
 
 
-  // const network = 'n3h'
-  const args: T.GlobalConfig = { logger: true, network }
-
-  return {
-    alice: Config.genConfig({
-      instances: {
-        app: dna
-      },
-    }, args),
-    bob: Config.genConfig({
-      instances: {
-        app: dna
-      }
-    }, args)
+  // const network = Config.network('n3h')
+  const common: T.ConductorConfigCommon = { 
+    logger: Config.logger(true),
+    metric_publisher: Config.metricPublisher('logger'), 
+    network,
   }
+  const seed: T.ConfigSeed = Config.gen({ app: dna }, common)
+  return {alice: seed, bob: seed}
 }
 
 export const withClock = f => t => {
@@ -58,6 +51,7 @@ export const genConfigArgs: () => Promise<T.ConfigSeedArgs> = async () => ({
   adminPort: 1000,
   zomePort: 2000,
   playerName: 'playerName',
+  scenarioName: 'scenarioName',
   uuid: 'uuid',
 })
 export const spawnConductor = (() => { }) as unknown as T.SpawnConductorFn

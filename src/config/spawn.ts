@@ -23,7 +23,7 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
   })
 }
 
-export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook }): Promise<Conductor> => {
+export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook } = {}): Promise<Conductor> => {
   const name = player.name
   const configPath = getConfigPath(player._configSeedArgs.configDir)
   let handle

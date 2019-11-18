@@ -77,7 +77,7 @@ test('DNA id generation', t => {
 })
 
 test('Sugared config', async t => {
-  t.deepEqual(C.desugarConfig({ playerName: 'name', uuid: 'uuid' } as T.ConfigSeedArgs, configSugared), configPlain)
+  t.deepEqual(C.desugarConfig({ conductorName: 'name', uuid: 'uuid' } as T.GenConfigArgs, configSugared), configPlain)
   t.end()
 })
 
@@ -200,10 +200,40 @@ pattern = ".*"
   t.end()
 })
 
+test('genMetricPublisherConfig: logger', async t => {
+  const actual = await C.genMetricPublisherConfig({ metric_publisher: 'logger' } as CC, { configDir: '' }, blah)
+
+  const expected = TOML.parse(`
+[metric_publisher]
+type = "logger"
+  `)
+
+  t.deepEqual(actual, expected)
+  t.end()
+})
+
+test('genMetricPublisherConfig: cloudwatchlogs', async t => {
+    const actual = await C.genMetricPublisherConfig(
+        { metric_publisher: { log_group_name: 'group-123', log_stream_name: 'stream-123' region: 'eu-central-1' } } as CC, { configDir: '' }, blah)
+
+  const expected = TOML.parse(`
+[metric_publisher]
+type = "cloudwatchlogs"
+log_group_name = "group-123"
+log_stream_name = "stream-123"
+region = "eu-central-1"
+  `)
+
+  t.deepEqual(actual, expected)
+  t.end()
+})
+
+
+
 test('genConfig produces valid TOML', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
-  const builder = C.genConfig(configSugared, { logger: false, network: 'n3h' })
-  const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName' })
+  const builder = C.genConfig(configSugared, { logger: false, network: 'n3h', metric_publisher: 'logger' })
+  const toml = await builder({ configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName' })
   const json = TOML.parse(toml)
   const toml2 = TOML.stringify(json)
   t.equal(toml, toml2 + "\n")
@@ -237,8 +267,8 @@ test('invalid config throws nice error', async t => {
       instances: [
         { id: 'what' }
       ]
-    } as any, { logger: false, network: 'n3h' })({
-      configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName'
+    } as any, { logger: false, network: 'n3h', metric_publisher: 'logger'})({
+      configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', conductorName: 'conductorName'
     }),
       /Tried to use an invalid value/
   })

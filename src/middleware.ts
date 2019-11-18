@@ -158,7 +158,7 @@ export const singleConductor: MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> 
       // throw away machine info, flatten to just all player names
       const playerConfigs = unwrapMachineConfig(machineConfigs)
       const playerNames = _.keys(playerConfigs)
-      const combined = combineConfigs(machineConfigs, s.globalConfig())
+      const combined = combineConfigs(machineConfigs)
       const { combined: player } = await s.players({ local: { combined } }, true)
       const players = playerNames.map(name => {
         const modify = adjoin(name)
@@ -197,6 +197,16 @@ export const callSync = (run, f) => run(s => {
   })
   return f(s_)
 })
+
+// TODO: add test
+export const dumbWaiter = interval => (run, f): MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> => run(s =>
+  f(Object.assign({}, s, {
+    consistency: () => new Promise(resolve => {
+      console.log(`dumbWaiter is waiting ${interval}ms...`)
+      setTimeout(resolve, interval)
+    })
+  }))
+)
 
 /**
  * Allow a test to skip the level of machine configuration

@@ -5,8 +5,7 @@ const test = tapeP(tape)
 
 import { Orchestrator, Config } from '../../src'
 import { runSeries } from '../../src/middleware'
-import { delay } from '../../src/util';
-import { GlobalConfig } from '../../src/types';
+import { delay, trace } from '../../src/util';
 
 module.exports = (testOrchestrator, testConfig) => {
 
