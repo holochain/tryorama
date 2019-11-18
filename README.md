@@ -35,6 +35,12 @@ const mainConfig = Config.gen(
   {
     // specify a bridge from chat to blog
     bridges: [Config.bridge('bridge-name', 'chat', 'blog')],
+    // use a sim2h network (see conductor config options for all valid network types)
+    network: {
+      type: 'sim2h',
+      sim2h_url: 'ws://localhost:9000',
+    },
+    // etc., any other valid conductor config items can go here
   }
 })
 
@@ -132,9 +138,9 @@ Each scenario will automatically kill all running conductors as well as automati
 
 ## Players
 
-A Player represents a Holochain user running a Conductor. Therefore, the main concern in configuring a Player is providing configuration for its underlying Conductor.
+A Player represents a Holochain user running a Conductor. That conductor may run on the same machine as the Tryorama test orchestrator, or it may be a remote machine (See [Remote Players with TryCP](#remote-players-with-trycp)). Either way, the main concern in configuring a Player is providing configuration for its underlying Conductor.
 
-## Conductor configuration
+# Conductor configuration
 
 Much of the purpose of Tryorama is to provide ways to generate conductor configurations (TODO: we need documentation on conductor configs) that meet the following criteria:
 
@@ -142,7 +148,7 @@ Much of the purpose of Tryorama is to provide ways to generate conductor configu
 2. Any conductor config should be possible
 3. Conductors from different scenarios must remain independent and invisible to each other
 
-### Simple config with the `Config` helper
+## Simple config with the `Config` helper
 
 > 1. Common configs should be easy to generate
 
@@ -186,7 +192,7 @@ const commonConfig = Config.gen(
 `Config.gen` offers a lot of flexibility, which we'll explore more in the next sections.
 
 
-### More fine-grained instance setup with `Config.gen`
+## More fine-grained instance setup with `Config.gen`
 
 > 2. Any conductor config should be possible
 
@@ -232,7 +238,7 @@ Config.gen([
 ])
 ```
 
-### Advanced setup with *configuration seeds*
+## Advanced setup with *configuration seeds*
 
 > 2. *Any* conductor config should be possible
 
@@ -274,7 +280,7 @@ Config seeds take an object as a parameter, with five values:
 * `adminPort`: a free port on the machine which is used for the admin Websocket interface, used to get privileged info from the conductor
 * `zomePort`: a free port on the machine which is used for the normal Websocket interface, used to e.g. make zome calls
 
-#### The constraints generated configs must abide by
+### What Tryorama expects from generated configs
 
 Under the hood, Tryorama generates unique and valid values for these parameters and generates unique configurations by injecting these values into the seed functions. If you are writing your own config seed, you can use or ignore these values as needed, but you must be careful to set things up in a way that Tryorama can work with to drive the test scenarios:
 
@@ -283,7 +289,7 @@ Under the hood, Tryorama generates unique and valid values for these parameters 
 * *All* agents within a scenario must have a unique name (even across different conductors!)
 * You must incorporate the UUID or some other source of uniqueness into the DNA config's `uuid` field, to ensure that conductors in different tests do not attempt to connect to each other on the same network
 
-#### Using seed functions in `Config.gen`
+### Using seed functions in `Config.gen`
 
 Since configuring a full config that properly uses these injected values is really tedious and error-prone, especially for the part concerning agents and instances, `Config.gen` also accepts functions using the usual seed arguments. So if you need to set up your dpki config using some of these values, you could do so:
 
@@ -315,8 +321,81 @@ Config.gen(
 )
 ```
 
+# Middlewares and Modes
 
-## License
+Tryorama includes a very flexible Middleware system. A tryorama middleware is a complicated little function which modifies the Scenario API (`s`) for each scenario. Middlewares can be composed together, to add layers of functionality.
+
+For most common use cases, middleware is not necessary. If no middleware is specified, a tryorama Orchestrator is configured to use the combination of two middlewares:
+
+- `tapeExecutor`, which integrates scenarios with the `tape` test harness and injects an extra `t` argument into scenario functions
+- `localOnly`, which specifies that players are to be run on the local machine. This can be swapped out with other middleware to cause players to run on remote machines! (See the section on TryCP for more on this.)
+
+i.e., the following two are equivalent:
+
+```js
+const {Orchestrator, tapeExecutor, localOnly, combine} = require('@holochain/tryorama')
+
+// this (the default):
+new Orchestrator()
+
+// is equivalent to this:
+new Orchestrator({
+  middleware: combine(
+    tapeExecutor(require('tape')), 
+    localOnly
+  )
+})
+```
+
+If you want to use custom middleware to add new layers of functionality, you will have to explicitly include these two middlewares in your `combine` chain to retain the default functionality.
+
+Writing middleware is a bit complicated, but you can see a range of middleware specimens and combinators in [src/middlewares.ts](src/middlewares.ts), all of which are available for import.
+
+# Remote Players with TryCP
+
+Tryorama natively supports running conductors on remote machines. As mentioned in the section on Middlewares, by default the Orchestrator includes `localOnly` middleware, which specifies that all players should run on a local machine. It does this by actually modifying the config passed into `s.players`. All player config examples shown in this README up until now are actually not valid unless the `localOnly` or other middleware is present to transform it into the proper shape.
+
+What `localOnly` actually does is to transform this:
+
+```js
+const config = Config.gen({instance: dna})
+s.players({
+  alice: config,
+  bob: config,
+})
+```
+
+into this:
+
+```js
+s.players({
+  local: {
+    alice: config,
+    bob: config,
+  }
+})
+```
+
+Without any middlewares, `s.players` actually expects the config passed to it to specify the machine that this player should run upon. The above code is showing that two conductors should be spawned on the `"local"` machine, which is a special-case string meaning that a conductor process will be spawned on this machine.
+
+To specify a remote machine, instead of `"local"`, you use a WebSocket URL pointing to a machine running a [TryCP server](https://github.com/holochain/holochain-rust/tree/develop/crates/trycp_server). (TryCP, the Tryorama Control Protocol, is a simple protocol which allows a client, like an Orchestrator, to ask a server, like a remote machine, to spin up and configure conductors on its behalf.) So, if you have two machines running TryCP servers, and you're *not* using any middleware, you can do the following to run each player on a separate machine:
+
+```js
+s.players({
+  "ws://location.of.machine.org:1234": {
+    alice: config,
+  },
+  "ws://location.of.other.machine.org:9876": {
+    bob: config,
+  }
+})
+```
+
+There is also a middleware which can be swapped out for `localConfig` called `machinePerPlayer`, which will perform this automatically, given player config that is not wrapped up with machine info. This allows you to write player config without regard for the machine name, and then by swapping the middleware, you can quickly switch between local and remote testing without altering your scenario code.
+
+In the above example, alice and bob will be on two different machines. The Holochain core team is using this functionality to stress-test networking capabilities with hundreds of remote machines orchestrated by Tryorama.
+
+# License
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
 Copyright (C) 2019, Holochain Foundation

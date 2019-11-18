@@ -58,8 +58,8 @@ export const gen =
     
     return _.merge(
       {},
-      common, 
-      specific
+      specific,
+      common,
     )
   }
 }

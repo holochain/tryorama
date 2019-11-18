@@ -1,13 +1,12 @@
 import * as R from 'ramda'
-import { trace } from '../util'
 
-export const expand = o => a => {
+export const expand = o => (a): Promise<any> => {
 
-  const go = o =>
+  const go = async o =>
     R.is(Function, o)
-    ? go(o(a))
+    ? go(await o(a))
     : R.is(Array, o)
-    ? o.map(go)
+    ? mapArray(o, go)
     : R.is(Object, o)
     ? mapObject(o, go)
     : o
@@ -15,10 +14,12 @@ export const expand = o => a => {
   return go(o)
 }
 
-const mapObject = (o, f) => R.pipe(
+const mapArray = (a, f): Promise<Array<any>> => Promise.all(a.map(f))
+
+const mapObject = (o, f): Promise<Record<any, any>> => R.pipe(
   R.toPairs,
-  R.map(([key, val]) => {
-    return [key, f(val)]
+  R.map(async ([key, val]) => {
+    return [key, await f(val)]
   }),
-  R.fromPairs
+  x => Promise.all(x).then(R.fromPairs),
 )(o)

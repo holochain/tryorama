@@ -9,12 +9,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 
 - `spawnRemote` added for remotely spawning a conductor via TryCP
+- added `dumbWaiter` middleware, which bypasses the Hachiko waiter and causes `s.consistency()` to simply wait for a specified delay
+- added `scenarioName` to ConfigSeedArgs, making it possible to use this value in custom conductor configurations
 - `makeRemoteConfigSeedArgs` added for creating config generation args obtained from a remote machine
 - added `mode` orchestrator config option as a more ergonomic alternative to manually specifying middlewares
 
 ### Changed
 
-- **BREAKING**: Middlewares now compose in the reverse order! (fb1e95ef)
+- **BREAKING**: `globalConfig` argument to Orchestrator is no more. Now this data gets passed into the second argument of the `Config.gen` helper method. See README.
+- **BREAKING**: Middlewares now compose in the reverse order! ([fb1e95ef](https://github.com/holochain/tryorama/commit/fb1e95ef78c9025c857310c7ea403c27a07ad42b))
+- **BREAKING**: The fundamental structure of `s.players()` config has changed. If using middleware, you must include either `localOnly` or `machinePerPlayer` middleware to convert the player config into the correct structure, or you must manually specify the local or remote machines your tests will run on. See README.
+- Orchestrator includes `tapeExecutor` and `localOnly` middleware by default if none specified
 - `ConfigSeedArgs` now includes `baseUrl` along with ports, to facilitate remote connections to other than localhost
 - `SpawnConductorFn` signature has changed. Now it takes a `Player` and some user data, and returns a fully constructed `Conductor`
 - `SpawnConductorFn` now is expected to handle awaiting the Conductor's readiness for websocket connections. Previously that was handled internally during `player.spawn`

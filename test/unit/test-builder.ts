@@ -55,6 +55,14 @@ test('genBridgeConfig', async t => {
   t.end()
 })
 
+test('consistency signals are on by default', async t => {
+  const { signals } = await Builder.gen({})({} as any)
+  t.ok('trace' in signals)
+  t.ok('consistency' in signals)
+  t.equal(signals.consistency, true)
+  t.end()
+})
+
 test('genNetworkConfig', async t => {
   const c1 = await Builder.network('memory')({ configDir: '' })
   const c2 = await Builder.network('websocket')({ configDir: '' })

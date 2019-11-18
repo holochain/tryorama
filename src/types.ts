@@ -166,6 +166,11 @@ export type MetricPublisherConfig = t.TypeOf<typeof MetricPublisherConfigV>
 export const RawMetricPublisherConfigV = t.union([RawCloudWatchLogsConfigV, RawLoggerMetricPublisherV])
 export type RawMetricPublisherConfig = t.TypeOf<typeof RawMetricPublisherConfigV>
 
+export type RawSignalsConfig = {
+  trace: boolean,
+  consistency: boolean,
+}
+
 export const ConductorConfigCommonV = t.partial({
   bridges: t.array(BridgeConfigV),
   dpki: DpkiConfigV,  // raw
@@ -197,7 +202,8 @@ export interface RawConductorConfig {
   dnas: Array<DnaConfig>
   instances: Array<RawInstanceConfig>
   interfaces: Array<RawInterfaceConfig>
-  bridges: Array<BridgeConfig>
+  signals: RawSignalsConfig,
+  bridges?: Array<BridgeConfig>
   dpki?: DpkiConfig
   network?: RawNetworkConfig,
   logger?: RawLoggerConfig,
