@@ -62,7 +62,12 @@ export class ScenarioApi {
       //   : Object.entries(configs)
 
       for (const playerName in configs) {
-        const configSeed = configs[playerName]
+        const configSeed: T.ConfigSeed = configs[playerName]
+
+        if (!_.isFunction(configSeed)) {
+          throw new Error(`Config for player '${playerName}' contains something other than a function. Either use Config.gen to create a seed function, or supply one manually.`)
+        }
+
         const partialConfigSeedArgs = trycp
           ? await trycp.setup(playerName)
           : await localConfigSeedArgs()

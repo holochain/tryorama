@@ -9,6 +9,7 @@ import Builder from '../../src/config/builder';
 import * as Gen from '../../src/config/gen';
 import { ConfigSeedArgs } from '../../src/types';
 import { trace } from '../../src/util';
+import { Orchestrator } from '../../src';
 import { testOrchestrator } from '../common';
 
 test('API detects duplicate agent IDs', async t => {
@@ -27,6 +28,26 @@ test('API detects duplicate agent IDs', async t => {
       }
     }),
     /There are 2 non-unique test agent names specified/
+  )
+  stubGetDnaHash.restore()
+})
+
+test('API complains if a non-function was used', async t => {
+  const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
+  const orchestrator = new Orchestrator({ middleware: undefined })
+  const api = new ScenarioApi("description", orchestrator, "uuid")
+  const args = {
+    playerName: 'same',
+    uuid: 'also-same',
+  } as ConfigSeedArgs
+  await t.rejects(
+    api.players({
+      local: {
+        alice: Builder.gen(instancesDry),
+        bob: instancesDry as any
+      }
+    }),
+    /Config for player 'bob' contains something other than a function/
   )
   stubGetDnaHash.restore()
 })
