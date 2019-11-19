@@ -1,3 +1,5 @@
+import logger from "./logger"
+
 const int = (n) => {
   try {
     return parseInt(n, 10)
@@ -14,7 +16,7 @@ const float = (n) => {
   }
 }
 
-export default {
+const VARS = {
   adminInterfaceId: process.env['TRYORAMA_ADMIN_INTERFACE_ID'] || 'tryorama-admin-interface',
   zomeInterfaceId: process.env['TRYORAMA_ZOME_INTERFACE_ID'] || 'tryorama-zome-interface',
   stateDumpOnError: process.env['TRYORAMA_STATE_DUMP'] || true,
@@ -24,3 +26,8 @@ export default {
   tempStorage: process.env['TRYORAMA_STORAGE'],
   portRange: [33000, 34000],  // not hooked up to env var yet
 }
+
+logger.info("Using the following settings from environment variables:")
+logger.info("%j", VARS)
+
+export default VARS
