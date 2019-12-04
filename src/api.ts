@@ -22,6 +22,7 @@ const LOCAL_MACHINE_ID = 'local'
 export class ScenarioApi {
 
   description: string
+  fail: Function
 
   _localPlayers: Record<string, Player>
   _trycpClients: Array<TrycpClient>
@@ -32,6 +33,8 @@ export class ScenarioApi {
 
   constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
+    this.fail = (reason) => { throw new Error(`s.fail: ${reason}`) }
+
     this._localPlayers = {}
     this._trycpClients = []
     this._uuid = uuid
@@ -179,6 +182,7 @@ The following conductors were forcefully shutdown after ${env.conductorTimeoutMs
 ${names.join(', ')}
 `
     if (env.strictConductorTimeout) {
+      this.fail(msg)
       throw new Error(msg)
     } else {
       logger.error(msg)

@@ -117,6 +117,7 @@ export const tapeExecutor = <A extends ScenarioApi>(tape: any): Middleware<Scena
   }
   run(s => {
     tape(s.description, t => {
+      s.fail = t.fail
       const p = async () => await f(s, t)
       p()
         .then(() => {
