@@ -28,6 +28,6 @@ const VARS = {
 }
 
 logger.info("Using the following settings from environment variables:")
-logger.info("%j", VARS)
+logger.info(JSON.stringify(VARS, null, 2))
 
 export default VARS
