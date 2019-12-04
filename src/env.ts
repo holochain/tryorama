@@ -22,7 +22,7 @@ const VARS = {
   stateDumpOnError: process.env['TRYORAMA_STATE_DUMP'] || true,
   zomeCallTimeoutMs: int(process.env['TRYORAMA_ZOME_CALL_TIMEOUT_MS']) || 90000,
   conductorTimeoutMs: int(process.env['TRYORAMA_CONDUCTOR_TIMEOUT_MS']) || 125000,
-  strictConductorTimeout: process.env['TRYORAMA_STRICT_CONDUCTOR_TIMEOUT'] || false,
+  strictConductorTimeout: Boolean(process.env['TRYORAMA_STRICT_CONDUCTOR_TIMEOUT']),
   tempStorage: process.env['TRYORAMA_STORAGE'],
   portRange: [33000, 34000],  // not hooked up to env var yet
 }

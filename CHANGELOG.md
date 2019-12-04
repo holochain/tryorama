@@ -4,6 +4,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [UNRELEASED]
 
+### Added
+
+`ScenarioApi.fail` method, used internally to abort a test, can be integrated with third-party harnesses (like tape) to give better errors in the case of an internal error during a test run, e.g. a conductor timeout
+
 ## [0.2.0]
 
 ### Added
