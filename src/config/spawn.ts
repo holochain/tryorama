@@ -18,8 +18,7 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     kill: async () => { },
     onSignal: () => { },
     onActivity: () => { },
-    adminWsUrl: '',
-    zomeWsUrl: '',
+    interfaceWsUrl: '',
   })
 }
 
@@ -55,17 +54,13 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      adminWsUrl: `ws://localhost:${player._configSeedArgs.adminPort}`,
-      zomeWsUrl: `ws://localhost:${player._configSeedArgs.zomePort}`,
+      interfaceWsUrl: `ws://localhost:${player._configSeedArgs.interfacePort}`,
     })
 
     await awaitConductorInterfaceStartup(handle, player.name)
 
     return conductor
-    // NB: the code to await for the interfaces to start up has been moved
-    // to Player::_awaitConductorInterfaceStartup, so that we have access
-    // to the handle immediately. Consequently this no longer needs to be
-    // a Promise that's returned. So, kind of a TODO.
+
   } catch (err) {
     return Promise.reject(err)
   }
@@ -106,8 +101,7 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    adminWsUrl: `${machineUrl}:${player._configSeedArgs.adminPort}`,
-    zomeWsUrl: `${machineUrl}:${player._configSeedArgs.zomePort}`,
+    interfaceWsUrl: `${machineUrl}:${player._configSeedArgs.interfacePort}`,
   })
 }
 

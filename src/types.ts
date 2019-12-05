@@ -31,8 +31,7 @@ export type IntermediateConfig = RawConductorConfig  // TODO: constrain
 export type ConfigSeed = (args: ConfigSeedArgs) => Promise<IntermediateConfig>
 
 export type PartialConfigSeedArgs = {
-  adminPort: number,
-  zomePort: number,
+  interfacePort: number,
   configDir: string,
 }
 
@@ -46,8 +45,7 @@ export type AnyConfigBuilder = ConfigSeed | EitherInstancesConfig
 export type PlayerConfigs = ObjectS<ConfigSeed>
 export type MachineConfigs = ObjectS<PlayerConfigs>
 
-export const adminWsUrl = ({ urlBase, adminPort }) => `${urlBase}:${adminPort}`
-export const zomeWsUrl = ({ urlBase, zomePort }) => `${urlBase}:${zomePort}`
+export const interfaceWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
 
 /** "F or T" */
 // export const FortV = <T extends t.Mixed>(inner: T) => t.union([

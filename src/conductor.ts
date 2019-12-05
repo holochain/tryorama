@@ -1,9 +1,7 @@
 const colors = require('colors/safe')
 const hcWebClient = require('@holochain/hc-web-client')
 
-import { Signal } from '@holochain/hachiko'
 import { KillFn, ConfigSeedArgs } from "./types";
-import { notImplemented } from "./common";
 import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
@@ -28,14 +26,13 @@ export class Conductor {
   logger: any
   kill: KillFn
 
-  _adminWsUrl: string
-  _zomeWsUrl: string
+  _interfaceWsUrl: string
   _hcConnect: any
   _isInitialized: boolean
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, kill, onSignal, onActivity, adminWsUrl, zomeWsUrl }) {
+  constructor({ name, kill, onSignal, onActivity, interfaceWsUrl }) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -47,8 +44,7 @@ export class Conductor {
       return this._wsClosePromise
     }
 
-    this._adminWsUrl = adminWsUrl
-    this._zomeWsUrl = zomeWsUrl
+    this._interfaceWsUrl = interfaceWsUrl
     this._hcConnect = hcWebClient.connect
     this._isInitialized = false
     this._wsClosePromise = Promise.resolve()
@@ -70,22 +66,17 @@ export class Conductor {
 
   initialize = async () => {
     this._onActivity()
-    await this._makeConnections()
+    await this._connectInterface()
   }
 
   wsClosed = () => this._wsClosePromise
 
-  _makeConnections = async () => {
-    await this._connectAdmin()
-    await this._connectZome()
-  }
-
-  _connectAdmin = async () => {
+  _connectInterface = async () => {
     this._onActivity()
-    const url = this._adminWsUrl
-    this.logger.debug(`connectAdmin :: connecting to ${url}`)
-    const { call, onSignal, ws } = await this._hcConnect({ url })
-    this.logger.debug(`connectAdmin :: connected to ${url}`)
+    const url = this._interfaceWsUrl
+    this.logger.debug(`connectInterface :: connecting to ${url}`)
+    const { call, callZome, onSignal, ws } = await this._hcConnect({ url })
+    this.logger.debug(`connectInterface :: connected to ${url}`)
 
     this._wsClosePromise = (
       // Wait for a constant delay and for websocket to close, whichever happens *last*
@@ -119,14 +110,6 @@ export class Conductor {
         signal
       })
     })
-  }
-
-  _connectZome = async () => {
-    this._onActivity()
-    const url = this._zomeWsUrl
-    this.logger.debug(`connectZome :: connecting to ${url}`)
-    const { callZome } = await this._hcConnect({ url })
-    this.logger.debug(`connectZome :: connected to ${url}`)
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {
       this._onActivity()

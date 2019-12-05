@@ -114,12 +114,12 @@ export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, stand
 
   const first = standard ? configs[standard] : _.values(configs)[0]
 
-  const zomeInterfaceIndex = _.findIndex(first.interfaces, i => i.id === env.zomeInterfaceId)
-  const zomeInterfaceInstances = _.chain(configs)
+  const interfaceIndex = _.findIndex(first.interfaces, i => i.id === env.interfaceId)
+  const interfaceInstances = _.chain(configs)
     .toPairs()
     .map(([name, c]) =>
       _.map(
-        c.interfaces[zomeInterfaceIndex].instances,
+        c.interfaces[interfaceIndex].instances,
         i => _.update(i, 'id', adjoin(name))
       )
     )
@@ -128,8 +128,8 @@ export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, stand
 
   const interfaces = _.set(
     first.interfaces,
-    [zomeInterfaceIndex, 'instances'],
-    zomeInterfaceInstances
+    [interfaceIndex, 'instances'],
+    interfaceInstances
   )
 
   const combined = _.assign(first, {

@@ -53,7 +53,7 @@ export const { instancesDry, instancesSugared } = (() => {
 })()
 
 const commonConfig = { logger: Builder.logger(false), network: Builder.network('n3h') }
-const testSeedArgs = { configDir: 'dir', adminPort: 1111, zomePort: 2222, uuid: 'uuid', playerName: 'playerName', scenarioName: 'scenarioName' }
+const testSeedArgs = { configDir: 'dir', interfacePort: 1111, uuid: 'uuid', playerName: 'playerName', scenarioName: 'scenarioName' }
 
 test('DNA id generation', t => {
   t.equal(C.dnaPathToId('path/to/file'), 'file')
@@ -128,11 +128,9 @@ test('genPartialConfigFromDryInstances', async t => {
   t.equal(agents.length, 2)
   t.equal(dnas.length, 1)
   t.equal(instances.length, 2)
-  t.equal(interfaces.length, 2)
+  t.equal(interfaces.length, 1)
   t.ok(interfaces[0].admin, true)
-  t.equal(interfaces[0].instances.length, 0)
-  t.notOk(interfaces[1].admin)
-  t.equal(interfaces[1].instances.length, 2)
+  t.equal(interfaces[0].instances.length, 2)
   t.end()
   stubGetDnaHash.restore()
 })
@@ -160,14 +158,14 @@ test('invalid config throws nice error', async t => {
 })
 
 test('Config.gen accepts function for instances', async t => {
-  const instances = ({playerName, zomePort}) => _.chain(instancesDry)
+  const instances = ({playerName, interfacePort}) => _.chain(instancesDry)
     .set('0.agent.name', `${playerName} the great`)
-    .set('1.agent.name', `${playerName} the ${zomePort}`)
+    .set('1.agent.name', `${playerName} the ${interfacePort}`)
     .value()
   const instancesPromise = (a) => Promise.resolve(instances(a))
   const seed = Builder.gen(instances)
   const seed2 = Builder.gen(instancesPromise)
-  const args = {playerName: 'yolanda', zomePort: 1337} as T.ConfigSeedArgs
+  const args = {playerName: 'yolanda', interfacePort: 1337} as T.ConfigSeedArgs
   const config = await seed(args)
   const config2 = await seed2(args)
   t.equal(config.agents[0].name, 'yolanda the great')
@@ -178,15 +176,15 @@ test('Config.gen accepts function for instances', async t => {
 
 test('Config.gen accepts arbitrarily nested functions for common config', async t => {
   const instances = _.cloneDeep(instancesDry)
-  const seed = Builder.gen(instances, ({zomePort}) => ({
+  const seed = Builder.gen(instances, ({interfacePort}) => ({
     network: {
-      thisIsInvalidNetworkConfig: zomePort
+      thisIsInvalidNetworkConfig: interfacePort
     },
     logger: ({playerName}) => ({
       thisIsInvalidLoggerConfig: playerName
     })
   }))
-  const config = await seed({playerName: 'hubert', zomePort: 1337} as T.ConfigSeedArgs)
+  const config = await seed({playerName: 'hubert', interfacePort: 1337} as T.ConfigSeedArgs)
   t.equal(config.network!.thisIsInvalidNetworkConfig, 1337)
   t.equal(config.logger!.thisIsInvalidLoggerConfig, 'hubert')
   t.end()

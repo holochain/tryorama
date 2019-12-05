@@ -117,7 +117,7 @@ export const makeTestAgent = (id, { playerName, uuid }) => ({
 
 export const genPartialConfigFromDryInstances = async (instances: T.DryInstancesConfig, args: T.ConfigSeedArgs) => {
 
-  const { configDir, adminPort, zomePort, uuid } = args
+  const { configDir, interfacePort, uuid } = args
 
   const config: any = {
     agents: [],
@@ -125,22 +125,13 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
     instances: [],
     persistence_dir: configDir,
   }
-
-  const adminInterface = {
+  
+  const interfaceConfig = {
     admin: true,
-    id: env.adminInterfaceId,
+    id: env.interfaceId,
     driver: {
       type: 'websocket',
-      port: adminPort,
-    },
-    instances: []
-  }
-
-  const zomeInterface = {
-    id: env.zomeInterfaceId,
-    driver: {
-      type: 'websocket',
-      port: zomePort,
+      port: interfacePort,
     },
     instances: [] as Array<{ id: string }>
   }
@@ -166,10 +157,10 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
         type: 'memory'
       }
     })
-    zomeInterface.instances.push({ id: instance.id })
+    interfaceConfig.instances.push({ id: instance.id })
   }
 
-  config.interfaces = [adminInterface, zomeInterface]
+  config.interfaces = [interfaceConfig]
   return config
 }
 

@@ -2,6 +2,14 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [UNRELEASED]
+
+### Changed
+
+- **BREAKING:** Now the generated conductor config uses only one admin interface to communicate with all instances as well as perform admin functions, rather than having separate interfaces for admin calls and instance interaction
+
+
 ## [0.2.1]
 
 ### Added

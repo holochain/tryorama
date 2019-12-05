@@ -141,12 +141,10 @@ export class Player {
   cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
     if (this._conductor) {
       await this.kill(signal)
-      unparkPort(this._configSeedArgs.adminPort)
-      unparkPort(this._configSeedArgs.zomePort)
+      unparkPort(this._configSeedArgs.interfacePort)
       return true
     } else {
-      unparkPort(this._configSeedArgs.adminPort)
-      unparkPort(this._configSeedArgs.zomePort)
+      unparkPort(this._configSeedArgs.interfacePort)
       return false
     }
   }

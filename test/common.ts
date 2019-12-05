@@ -48,8 +48,7 @@ export const withClock = f => t => {
 export const genConfigArgs: () => Promise<T.ConfigSeedArgs> = async () => ({
   configDir: 'config/dir',
   urlBase: 'http://localhost',
-  adminPort: 1000,
-  zomePort: 2000,
+  interfacePort: 1000,
   playerName: 'playerName',
   scenarioName: 'scenarioName',
   uuid: 'uuid',
