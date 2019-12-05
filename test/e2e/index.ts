@@ -47,7 +47,7 @@ const trycpOrchestrator = (endpoints) => () => {
 
 
 require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
-// require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
+require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 
 // trycpEndpoints().then(([endpoints, processes]) => {
 //   require('./test-always-on')(trycpOrchestrator(endpoints), () => testConfig(dnaLocationRemote))
