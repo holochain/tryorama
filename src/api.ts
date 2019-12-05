@@ -114,13 +114,6 @@ export class ScenarioApi {
               this._waiter.handleObservation(observation)
             },
           })
-
-          if (spawnArgs) {
-            logger.debug('api.players: auto-spawning player %s', playerName)
-            await player.spawn(spawnArgs)
-            logger.debug('api.players: spawn complete for %s', playerName)
-          }
-
           return player
         }
       }
@@ -132,6 +125,17 @@ export class ScenarioApi {
 
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
     logger.debug('api.players: players built')
+
+    // Do auto-spawning if that was requested
+    if (spawnArgs) {
+      for (const player of Object.values(players)) {
+        logger.info('api.players: auto-spawning player %s', player.name)
+        await player.spawn(spawnArgs)
+        logger.info('api.players: awaiting consistency while spawning player %s', player.name)
+        await this.consistency()
+        logger.info('api.players: spawn complete for %s', player.name)
+      }
+    }
 
     this._localPlayers = players
     return players

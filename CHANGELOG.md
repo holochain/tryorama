@@ -6,7 +6,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 
-`ScenarioApi.fail` method, used internally to abort a test, can be integrated with third-party harnesses (like tape) to give better errors in the case of an internal error during a test run, e.g. a conductor timeout
+- `ScenarioApi.fail` method, used internally to abort a test, can be integrated with third-party harnesses (like tape) to give better errors in the case of an internal error during a test run, e.g. a conductor timeout
+- Improved auto-spawning of conductors when using `s.players(..., true)`, which awaits consistency in between each new spawn
+- Exposed `s.stateDump()`, which can be used to get the state dump from the conductor during a test, for debugging purposes or even to write tests against.
 
 ## [0.2.0]
 
