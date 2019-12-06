@@ -143,7 +143,7 @@ export class ScenarioApi {
     return players
   }
 
-  consistency = (players?: Array<Player>): Promise<void> => new Promise((resolve, reject) => {
+  consistency = (players?: Array<Player>): Promise<number> => new Promise((resolve, reject) => {
     if (players) {
       throw new Error("Calling `consistency` with parameters is currently unsupported. See https://github.com/holochain/hachiko/issues/10")
     }
@@ -196,7 +196,7 @@ ${names.join(', ')}
   }
 
   /**
-   * Only called externally when there is a test failure, 
+   * Only called externally when there is a test failure,
    * to ensure that players/conductors have been properly cleaned up
    */
   _cleanup = async (signal?): Promise<Array<boolean>> => {
