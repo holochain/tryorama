@@ -24,7 +24,7 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
 
 export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook } = {}): Promise<Conductor> => {
   const name = player.name
-  const configPath = getConfigPath(player._configSeedArgs.configDir)
+  const configPath = getConfigPath(player._configDir)
   let handle
   try {
     const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
@@ -42,7 +42,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
     let plainLogger = makeLogger()
 
     handle.stdout.on('data', data => plainLogger.info(getFancy(`[[[CONDUCTOR ${name}]]]\n${data.toString('utf8')}`)))
-    handle.stderr.on('data', data => plainLogger.error(getFancy(`{{{CONDUCTOR ${name}}}}\n${data.toString('utf8')}`)))
+    handle.stderr.on('data', data => plainLogger.info(getFancy(`{{{CONDUCTOR ${name}}}}\n${data.toString('utf8')}`)))
 
     if (handleHook) {
       player.logger.info('running spawned handle hack. TODO: document this.')
@@ -54,7 +54,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      interfaceWsUrl: `ws://localhost:${player._configSeedArgs.interfacePort}`,
+      interfaceWsUrl: `ws://localhost:${player._interfacePort}`,
     })
 
     await awaitConductorInterfaceStartup(handle, player.name)
@@ -101,7 +101,7 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    interfaceWsUrl: `${machineUrl}:${player._configSeedArgs.interfacePort}`,
+    interfaceWsUrl: `${machineUrl}:${player._interfacePort}`,
   })
 }
 

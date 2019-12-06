@@ -86,7 +86,7 @@ export class ScenarioApi {
         // this code will only be executed once it is determined that all configs are valid
         playerBuilders[playerName] = async () => {
           const { instances } = configJson
-          const { configDir } = configSeedArgs
+          const { configDir, interfacePort } = configSeedArgs
 
           if (trycp) {
             const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
@@ -96,9 +96,11 @@ export class ScenarioApi {
           }
           logger.debug('api.players: player config committed for %s', playerName)
 
+
           const player = new Player({
             name: playerName,
-            configSeedArgs,
+            configDir,
+            interfacePort,
             spawnConductor,
             onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
             onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),

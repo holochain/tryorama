@@ -11,7 +11,8 @@ import { unparkPort } from './config/get-port-cautiously'
 
 type ConstructorArgs = {
   name: string,
-  configSeedArgs: ConfigSeedArgs,
+  configDir: string,
+  interfacePort: number,
   onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
@@ -43,10 +44,11 @@ export class Player {
   _conductor: Conductor | null
   _instances: ObjectS<Instance> | ObjectN<Instance>
   _dnaIds: Array<DnaId>
-  _configSeedArgs: ConfigSeedArgs
+  _configDir: string
+  _interfacePort: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, configSeedArgs, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ name, configDir, interfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
@@ -56,7 +58,8 @@ export class Player {
 
     this._conductor = null
     this._instances = {}
-    this._configSeedArgs = configSeedArgs
+    this._configDir = configDir
+    this._interfacePort = interfacePort
     this._spawnConductor = spawnConductor
   }
 
@@ -141,10 +144,10 @@ export class Player {
   cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
     if (this._conductor) {
       await this.kill(signal)
-      unparkPort(this._configSeedArgs.interfacePort)
+      unparkPort(this._interfacePort)
       return true
     } else {
-      unparkPort(this._configSeedArgs.interfacePort)
+      unparkPort(this._interfacePort)
       return false
     }
   }
