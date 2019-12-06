@@ -128,7 +128,7 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
   
   const interfaceConfig = {
     admin: true,
-    choose_free_port: true,
+    choose_free_port: env.chooseFreePort,
     id: env.interfaceId,
     driver: {
       type: 'websocket',

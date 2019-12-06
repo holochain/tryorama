@@ -193,7 +193,16 @@ export type SugaredInstancesConfig = t.TypeOf<typeof SugaredInstancesConfigV>
 export const EitherInstancesConfigV = t.union([DryInstancesConfigV, SugaredInstancesConfigV])
 export type EitherInstancesConfig = t.TypeOf<typeof EitherInstancesConfigV>
 
-type RawInterfaceConfig = any
+type RawInterfaceConfig = {
+  admin: boolean,
+  choose_free_port: boolean,
+  id: string,
+  driver: {
+    type: string,
+    port: number,
+  },
+  instances: Array<{ id: string }>
+}
 
 export interface RawConductorConfig {
   agents: Array<AgentConfig>
