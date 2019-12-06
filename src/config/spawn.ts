@@ -11,6 +11,7 @@ import { Conductor } from "../conductor";
 import { getConfigPath } from ".";
 import { trycpSession, TrycpClient } from "../trycp";
 import { delay } from "../util";
+import env from '../env'
 
 export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
   return new Conductor({
@@ -45,8 +46,15 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
     handle.stderr.on('data', data => plainLogger.info(getFancy(`{{{CONDUCTOR ${name}}}}\n${data.toString('utf8')}`)))
 
     if (handleHook) {
-      player.logger.info('running spawned handle hack. TODO: document this.')
+      // TODO: document this
+      player.logger.info('running spawned handle hack.')
       handleHook(handle)
+    }
+
+    const newPort = await getTrueInterfacePort(handle, player.name)
+
+    if (newPort) {
+      player._interfacePort = newPort
     }
 
     const conductor = new Conductor({
@@ -57,8 +65,6 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       interfaceWsUrl: `ws://localhost:${player._interfacePort}`,
     })
 
-    await awaitConductorInterfaceStartup(handle, player.name)
-
     return conductor
 
   } catch (err) {
@@ -66,22 +72,52 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
   }
 }
 
-const awaitConductorInterfaceStartup = (handle, name) => {
-  return new Promise((resolve, reject) => {
+const getTrueInterfacePort = (handle, name): Promise<number | null> => {
+
+  // This is a magic string output by the conductor when using the "choose_free_port"
+  // Interface conductor config, to alert the client as to which port the interface chose.
+  // This check only happens in tryorama once, whenever the conductor is spawned.
+  // 
+  // # NB: HOWEVER, if tryorama ever calls an admin function which causes the interface to
+  // restart, this port will change, and tryorama will not know about it!!
+  // If we ever do something like that, we'll have to constantly monitor stdout
+  // and update the interface port accordingly
+  let portPattern = new RegExp(`\\*\\*\\* Bound interface '${env.interfaceId}' to port: (\\d+)`)
+  console.log("here's the portPattern", portPattern)
+  
+  return new Promise((fulfill, reject) => {
+    let resolved = false
     handle.on('close', code => {
+      resolved = true
       logger.info(`conductor '${name}' exited with code ${code}`)
       // this rejection will have no effect if the promise already resolved,
       // which happens below
-      reject(`Conductor exited before fully starting (code ${code})`)
+      reject(`Conductor exited before starting interface (code ${code})`)
     })
     handle.stdout.on('data', data => {
+      if (resolved) {
+        return
+      }
       // wait for the logs to convey that the interfaces have started
       // because the consumer of this function needs those interfaces
       // to be started so that it can initiate, and form,
       // the websocket connections
-      if (data.toString('utf8').indexOf('Starting interfaces...') >= 0) {
-        logger.info(`Conductor '${name}' process spawning successful`)
-        resolve(handle)
+      const line = data.toString('utf8')
+      const match = line.match(portPattern)
+
+      if (match && match.length >= 2) {
+        // If we find the magic string that identifies the correct port, let's use that
+        const port = match[1]
+        logger.info(`Conductor '${name}' process spawning successful. Interface port detected: ${port}`)
+        logger.debug(`(stdout line parsed: ${line})`)
+        resolved = true
+        fulfill(port)
+      } else if (line.indexOf("Done. All interfaces started.") >= 0) {
+        // If we don't see the magic string, we'll see this line first instead
+        logger.info(`Conductor '${name}' process spawning successful. No interface port detected.`)
+        logger.debug(`(stdout line parsed: ${line})`)
+        resolved = true
+        fulfill(null)
       }
     })
   })

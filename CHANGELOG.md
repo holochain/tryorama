@@ -5,6 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [0.3.0]
 
+### Added
+
+- Adds support for experimental Holochain conductor interface config `choose_free_port`, which dynamically assigns an interface port at startup. Tryorama now knows how to listen for this change, but only at initial conductor startup.
+
 ### Changed
 
 - **BREAKING:** Now the generated conductor config uses only one admin interface to communicate with all instances as well as perform admin functions, rather than having separate interfaces for admin calls and instance interaction
