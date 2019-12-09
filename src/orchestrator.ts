@@ -42,7 +42,7 @@ type RegisteredScenario = {
   execute: ScenarioExecutor,
   modifier: ScenarioModifier,
 }
-type Register = (desc: string, scenario: Function) => void
+export type Register = (desc: string, scenario: Function) => void
 
 export type TestStats = {
   successes: number,
