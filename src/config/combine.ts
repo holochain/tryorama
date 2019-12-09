@@ -1,29 +1,44 @@
-const TOML = require('@iarna/toml')
 import * as _ from 'lodash'
 
 import * as T from "../types";
-import { trace } from "../util";
 import env from '../env'
+import logger from '../logger';
 
+export const unsupportedMergeConfigs = (() => {
+  let messageDisplayed = false
+  return (name) => {
+    if (!messageDisplayed) {
+      logger.warn(`
+
+The config merging capability, as used by ${name}, is currently not maintained and not recommended for use.
+The main use case for using this feature is to run a test designed for multiple Players
+within a single Conductor using in-memory networking. Holochain in-memory networking is
+currently unsupported, and so this middleware will remain so until that changes.
+
+      `)
+    }
+    messageDisplayed = true
+  }
+})()
 
 export const combineConfigs =
-  (configs: T.MachineConfigs): T.ConfigSeed =>
-    async (args: T.ConfigSeedArgs) => {
+  (configs: T.MachineConfigs): T.ConfigSeed => {
+    unsupportedMergeConfigs('combineConfigs')
+    return async (args: T.ConfigSeedArgs) => {
       const configsJson = await _.chain(configs)
         .values().map(x => _.toPairs(x)).flatten()  // throw away machine IDs
-        .tap(trace)
         .map(async ([name, c]) => [name, await c(args)])
         .thru(x => Promise.all(x))
         .value()
         .then(cs =>
           _.chain(cs)
             .fromPairs()
-            .mapValues(TOML.parse)
             .value()
         )
       const merged = mergeJsonConfigs(configsJson)
-      return TOML.stringify(merged)
+      return merged
     }
+  }
 
 /**
  * Define a standard way to add extra string to ID identifiers for use in combining configs
@@ -51,6 +66,7 @@ export const adjoin = tag => {
  * specify, by conductor name, which config to use to pull these other values from.
  */
 export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, standard?: string) => {
+  unsupportedMergeConfigs('mergeJsonConfigs')
 
   const agents = _.chain(configs)
     .toPairs()

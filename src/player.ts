@@ -74,6 +74,8 @@ export class Player {
     return this._conductor!.callZome(instanceId, zome, fn, params)
   }
 
+  stateDump = (id: string): Promise<any> => this.instance(id).stateDump()
+
   /** 
    * Get a particular Instance of this conductor.
    * The reason for supplying a getter rather than allowing direct access to the collection
@@ -82,7 +84,7 @@ export class Player {
    */
   instance = (instanceId) => {
     this._conductorGuard(`instance(${instanceId})`)
-    return _.clone(this._instances[instanceId])
+    return _.cloneDeep(this._instances[instanceId])
   }
 
   instances = (filterPredicate?): Array<Instance> => {
@@ -166,6 +168,7 @@ export class Player {
         id: i.id,
         agentAddress: agent.public_address,
         dnaAddress: dna.hash,
+        callAdmin: (method, params) => this._conductor!.callAdmin(method, params),
         callZome: (zome, fn, params) => this._conductor!.callZome(i.id, zome, fn, params)
       })
     })

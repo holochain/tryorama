@@ -125,7 +125,7 @@ export class Conductor {
     this._onActivity()
     const url = this._zomeWsUrl
     this.logger.debug(`connectZome :: connecting to ${url}`)
-    const { callZome, onSignal } = await this._hcConnect({ url })
+    const { callZome } = await this._hcConnect({ url })
     this.logger.debug(`connectZome :: connected to ${url}`)
 
     this.callZome = (instanceId, zomeName, fnName, params) => new Promise((resolve, reject) => {

@@ -1,5 +1,14 @@
 
-type InstanceConstructorParams = { id: string, callZome: any, dnaAddress: string, agentAddress: string }
+type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
+type CallZomeFunc = (zome: string, fn: string, params: any) => Promise<any>
+
+type InstanceConstructorParams = { 
+  id: string, 
+  dnaAddress: string, 
+  agentAddress: string,
+  callAdmin: CallAdminFunc, 
+  callZome: CallZomeFunc, 
+}
 
 /**
  * Handy reference to an instance within a Conductor.
@@ -9,13 +18,15 @@ type InstanceConstructorParams = { id: string, callZome: any, dnaAddress: string
 export class Instance {
 
   id: string
-  callZome: any
+  _callAdmin: CallAdminFunc
+  _callZome: CallZomeFunc
   agentAddress: string
   dnaAddress: string
 
   constructor(o: InstanceConstructorParams) {
     this.id = o.id
-    this.callZome = o.callZome
+    this._callAdmin = o.callAdmin
+    this._callZome = o.callZome
     this.agentAddress = o.agentAddress
     this.dnaAddress = o.dnaAddress
   }
@@ -25,6 +36,10 @@ export class Instance {
     if (args.length !== 3 || typeof zome !== 'string' || typeof fn !== 'string') {
       throw new Error("instance.call() must take 3 arguments: (zomeName, funcName, params)")
     }
-    return this.callZome(zome, fn, params)
+    return this._callZome(zome, fn, params)
+  }
+
+  stateDump = (): Promise<any> => {
+    return this._callAdmin('debug/state_dump', { instance_id: this.id })
   }
 }

@@ -1,7 +1,7 @@
 import * as tape from 'tape'
 import { Orchestrator } from '../../src'
 import { runSeries, compose, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
-import { fakeMmmConfigs, spinupLocalCluster, awsClusterConfig2Endpoints, trycpSession } from '../../src/trycp'
+import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
 import { testConfig } from '../common';
 
 process.on('unhandledRejection', error => {
@@ -47,7 +47,7 @@ const trycpOrchestrator = (endpoints) => () => {
 
 
 require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
-// require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
+require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 
 // trycpEndpoints().then(([endpoints, processes]) => {
 //   require('./test-always-on')(trycpOrchestrator(endpoints), () => testConfig(dnaLocationRemote))

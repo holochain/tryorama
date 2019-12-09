@@ -22,6 +22,7 @@ const LOCAL_MACHINE_ID = 'local'
 export class ScenarioApi {
 
   description: string
+  fail: Function
 
   _localPlayers: Record<string, Player>
   _trycpClients: Array<TrycpClient>
@@ -32,6 +33,8 @@ export class ScenarioApi {
 
   constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
+    this.fail = (reason) => { throw new Error(`s.fail: ${reason}`) }
+
     this._localPlayers = {}
     this._trycpClients = []
     this._uuid = uuid
@@ -111,13 +114,6 @@ export class ScenarioApi {
               this._waiter.handleObservation(observation)
             },
           })
-
-          if (spawnArgs) {
-            logger.debug('api.players: auto-spawning player %s', playerName)
-            await player.spawn(spawnArgs)
-            logger.debug('api.players: spawn complete for %s', playerName)
-          }
-
           return player
         }
       }
@@ -129,6 +125,17 @@ export class ScenarioApi {
 
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
     logger.debug('api.players: players built')
+
+    // Do auto-spawning if that was requested
+    if (spawnArgs) {
+      for (const player of Object.values(players)) {
+        logger.info('api.players: auto-spawning player %s', player.name)
+        await player.spawn(spawnArgs)
+        logger.info('api.players: awaiting consistency while spawning player %s', player.name)
+        await this.consistency()
+        logger.info('api.players: spawn complete for %s', player.name)
+      }
+    }
 
     this._localPlayers = players
     return players
@@ -179,6 +186,7 @@ The following conductors were forcefully shutdown after ${env.conductorTimeoutMs
 ${names.join(', ')}
 `
     if (env.strictConductorTimeout) {
+      this.fail(msg)
       throw new Error(msg)
     } else {
       logger.error(msg)

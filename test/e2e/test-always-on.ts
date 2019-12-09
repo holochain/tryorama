@@ -22,6 +22,7 @@ module.exports = (testOrchestrator, testConfig) => {
     console.debug('orchestrator runs')
     t.equal(stats.successes, 0)
     t.equal(stats.errors.length, 1)
+    console.log(stats)
     t.ok(stats.errors[0].error.message.match(/instance identifier invalid.*/))
     t.end()
   })

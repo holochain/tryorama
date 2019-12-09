@@ -1,4 +1,4 @@
-import { combineConfigs, adjoin } from "./config/combine";
+import { combineConfigs, adjoin, unsupportedMergeConfigs } from "./config/combine";
 import { ScenarioApi } from "./api";
 import { trace } from "./util";
 import * as T from "./types";
@@ -117,6 +117,7 @@ export const tapeExecutor = <A extends ScenarioApi>(tape: any): Middleware<Scena
   }
   run(s => {
     tape(s.description, t => {
+      s.fail = t.fail
       const p = async () => await f(s, t)
       p()
         .then(() => {
@@ -151,8 +152,10 @@ export const runSeries = <A>(): Middleware<A, A> => {
  * Take all configs defined for all machines and all players,
  * merge the configs into one big TOML file, 
  * and create a single player on the local machine to run it.
+ * TODO: currently BROKEN.
 */
 export const singleConductor: MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> = (run: RunnerS<ApiMachineConfigs>, f: Scenario<ApiMachineConfigs>) => run((s: ScenarioApi) => {
+  unsupportedMergeConfigs('singleConductor middleware')
   const s_ = _.assign({}, s, {
     players: async (machineConfigs: T.MachineConfigs, ...a) => {
       // throw away machine info, flatten to just all player names
