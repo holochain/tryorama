@@ -155,7 +155,7 @@ test('groupPlayersByMachine middleware', t => {
 })
 
 
-test.only('groupPlayersByMachine failure', t => {
+test('groupPlayersByMachine failure', t => {
   const endpoints = ['e0', 'e1', 'e2', 'e3', 'e4', 'e5']
   const m = M.groupPlayersByMachine(endpoints, 3)
   const oldApi = { players: (configs) => configs }
