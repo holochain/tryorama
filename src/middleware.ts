@@ -11,6 +11,12 @@ interface ApiPlayers<Config> {
 type ApiMachineConfigs = ApiPlayers<T.MachineConfigs>
 type ApiPlayerConfigs = ApiPlayers<T.PlayerConfigs>
 
+// Bare minimum API expected by tapeExecutor
+interface ExecutorApi {
+  players: any,
+  description: string,
+  fail: Function,
+}
 
 /**
  * A Runner is provided by the [Orchestrator], but it is exposed to the middleware
@@ -91,7 +97,6 @@ export const compose5 = <A, B, C, D, E, F>(
 export const combine = (...ms) => ms.reduce(compose)
 
 
-
 /**
  * Given the `tape` module, tapeExecutor produces a middleware
  * that combines a scenario with a tape test.
@@ -110,7 +115,7 @@ export const combine = (...ms) => ms.reduce(compose)
  * entire test suite to await the end of all tape tests. It could be done by specifying
  * a parallel vs. serial mode for test running.
  */
-export const tapeExecutor = <A extends ScenarioApi>(tape: any): Middleware<Scenario2<A, any>, Scenario<A>> => (run, f) => new Promise((resolve, reject) => {
+export const tapeExecutor = <A extends ExecutorApi>(tape: any): Middleware<Scenario2<A, any>, Scenario<A>> => (run, f) => new Promise((resolve, reject) => {
   if (f.length !== 2) {
     reject("tapeExecutor middleware requires scenario functions to take 2 arguments, please check your scenario definitions.")
     return
