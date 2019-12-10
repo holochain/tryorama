@@ -33,7 +33,7 @@ export type Scenario4<S, T, U, V> = (s: S, t: T, u: U, v: V) => Promise<void>
  * Middleware is a composable decorator for scenario functions. A MiddlewareS takes two functions:
  * - the function which will run the scenario
  * - the scenario function itself
- * 
+ *
  * With these, as a middleware author, you are free to create a new scenario function
  * that wraps the original one, and then use the `run` function to eventually execute
  * that scenario. The purpose of exposing the `run` function is to allow the middleware
@@ -93,18 +93,18 @@ export const combine = (...ms) => ms.reduce(compose)
 
 
 /**
- * Given the `tape` module, tapeExecutor produces a middleware 
- * that combines a scenario with a tape test. 
+ * Given the `tape` module, tapeExecutor produces a middleware
+ * that combines a scenario with a tape test.
  * It registers a tape test with the same description as the scenario itself.
  * Rather than the usual single ScenarioApi parameter, it expands the scenario function
  * signature to also accept tape's `t` object for making assertions
  * If the test throws an error, it registers the error with tape and does not abort
  * the entire test suite.
- * 
+ *
  * NB: This has had intermittent problems that seemed to fix themselves magically.
  * Tape is a bit brittle when it comes to dynamically specifying tests.
  * Beware...
- * 
+ *
  * If problems persist, it may be necessary to resolve this promise immediately so that
  * all tape tests can be registered synchronously. Then it is a matter of getting the
  * entire test suite to await the end of all tape tests. It could be done by specifying
@@ -136,7 +136,7 @@ export const tapeExecutor = <A extends ScenarioApi>(tape: any): Middleware<Scena
   })
 })
 
-/** 
+/**
  * Run tests in series rather than in parallel.
  * Needs to be invoked as a function so types can be inferred at moment of creation.
  */
@@ -148,9 +148,9 @@ export const runSeries = <A>(): Middleware<A, A> => {
   }
 }
 
-/** 
+/**
  * Take all configs defined for all machines and all players,
- * merge the configs into one big TOML file, 
+ * merge the configs into one big TOML file,
  * and create a single player on the local machine to run it.
  * TODO: currently BROKEN.
 */
@@ -224,17 +224,20 @@ export const localOnly: MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> = (run,
 
 /**
  * Allow a test to skip the level of machine configuration
- * This middleware finds a new machine for each player, and returns the
+ * This middleware finds a new machine for each N players, and returns the
  * properly wrapped config specifying the acquired machine endpoints
  */
-export const machinePerPlayer = (trycpEndpoints: Array<string>): MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
+export const groupPlayersByMachine = (trycpEndpoints: Array<string>, playersPer: number): MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
   let urlIndex = 0
   const s_ = _.assign({}, s, {
     players: async (configs: T.PlayerConfigs, ...a) => {
       const pairs = await _.chain(configs)
         .toPairs()
-        .map(async ([playerName, config]) => {
-          const endpoint = trycpEndpoints[urlIndex++]
+        .map(async ([playerName, config], i) => {
+          const endpoint = trycpEndpoints[urlIndex]
+          if ((i + 1) % playersPer === 0) {
+            urlIndex += 1
+          }
           return [endpoint, { [playerName]: config }]
         })
         .thru(x => Promise.all(x))
@@ -245,6 +248,14 @@ export const machinePerPlayer = (trycpEndpoints: Array<string>): MiddlewareS<Api
   })
   return f(s_)
 })
+
+
+/**
+ * Allow a test to skip the level of machine configuration
+ * This middleware finds a new machine for each player, and returns the
+ * properly wrapped config specifying the acquired machine endpoints
+ */
+export const machinePerPlayer = (endpoints) => groupPlayersByMachine(endpoints, 1)
 
 
 const unwrapMachineConfig = (machineConfigs: T.MachineConfigs): T.PlayerConfigs =>

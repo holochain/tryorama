@@ -2,6 +2,10 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [UNRELEASED]
+
+* Adds `groupPlayersByMachine` middleware, a generalization of `machinePerPlayer` which allows multiple conductors to be grouped onto each remote machine
+
 
 ## [0.3.0]
 
@@ -59,10 +63,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - There is now an `Instance` object which represents an instance inside a conductor. It can be accessed like so:
 ```javascript
 const instance = player.instances['instanceId']
- 
+
 // the following two lines are equivalent
 await instance.call('zome', 'fn', params)
-await player.call('instanceId', 'zome', 'fn', params) 
+await player.call('instanceId', 'zome', 'fn', params)
 ```
 
 ### Changed
