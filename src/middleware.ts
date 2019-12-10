@@ -236,19 +236,34 @@ export const groupPlayersByMachine = (trycpEndpoints: Array<string>, playersPer:
   let urlIndex = 0
   const s_ = _.assign({}, s, {
     players: async (configs: T.PlayerConfigs, ...a) => {
-      const pairs = await _.chain(configs)
-        .toPairs()
-        .map(async ([playerName, config], i) => {
-          const endpoint = trycpEndpoints[urlIndex]
-          if ((i + 1) % playersPer === 0) {
-            urlIndex += 1
+      const numConfigs = _.keys(configs).length
+      if (numConfigs > trycpEndpoints.length * playersPer) {
+        throw new Error(
+          `Error while applying groupPlayersByMachine middleware: Can't fit ${numConfigs} conductors on ${trycpEndpoints.length} machines in groups of ${playersPer}!`
+        )
+      }
+
+      const machines = {}
+      for (const e of _.range(0, trycpEndpoints.length)) {
+        const endpoint = trycpEndpoints[e]
+        const machine = {}
+        let config
+        for (const p of _.range(0, playersPer)) {
+          const index = String(e * playersPer + p)
+          config = configs[index]
+          if (!config) {
+            break
           }
-          return [endpoint, { [playerName]: config }]
-        })
-        .thru(x => Promise.all(x))
-        .value()
-      const wrappedConfig = _.fromPairs(pairs)
-      return s.players(wrappedConfig, ...a)
+          machine[index] = config
+        }
+        if (!_.isEmpty(machine)) {
+          machines[endpoint] = machine
+        }
+        if (!config) {
+          break
+        }
+      }
+      return s.players(machines, ...a)
     }
   })
   return f(s_)

@@ -1,9 +1,11 @@
 const sinon = require('sinon')
 import * as tape from 'tape'
+import * as R from 'ramda'
 import tapeP from 'tape-promise'
 const test = tapeP(tape)
 
-import { combine } from '../../src/middleware'
+import * as M from '../../src/middleware'
+import { ConfigSeed, RawConductorConfig } from '../../src'
 
 const increment = (run, f) => run(s => f({ v: s.v + 1 }))
 const triple = (run, f) => run(s => f({ v: s.v * 3 }))
@@ -31,13 +33,13 @@ test('single middleware', t => {
 
 test('middleware combinations', t => {
   const run = runner('', { v: 0 })
-  combine(triple, increment, increment)(run, s => {
+  M.compose3(triple, increment, increment)(run, s => {
     t.equal(s.v, 6)
   })
-  combine(increment, triple, increment)(run, s => {
+  M.compose3(increment, triple, increment)(run, s => {
     t.equal(s.v, 4)
   })
-  combine(increment, increment, triple)(run, s => {
+  M.compose3(increment, increment, triple)(run, s => {
     t.equal(s.v, 2)
   })
   t.end()
@@ -45,7 +47,7 @@ test('middleware combinations', t => {
 
 test('middleware combination, multiple applications', t => {
   const run = runner('', { v: 0 })
-  const m = combine(triple, increment, increment)
+  const m = M.compose3(triple, increment, increment)
   m(run, s => { t.equal(s.v, 6) })
   m(run, s => { t.equal(s.v, 6) })
   t.end()
@@ -60,13 +62,13 @@ test('middleware combinations with failure (is this right?)', async t => {
   const spy5 = sinon.spy()
   const spy6 = sinon.spy()
   await t.rejects(
-    combine(spier(spy1), thrower)(run, s => spy5())
+    M.compose(spier(spy1), thrower)(run, s => spy5())
   )
   await t.rejects(
-    combine(thrower, spier(spy2))(run, s => spy6())
+    M.compose(thrower, spier(spy2))(run, s => spy6())
   )
   await t.rejects(
-    combine(spier(spy3), spier(spy4))(run, s => { throw new Error('final failure') })
+    M.compose(spier(spy3), spier(spy4))(run, s => { throw new Error('final failure') })
   )
   t.ok(spy1.notCalled)
   t.ok(spy2.calledOnce)
@@ -94,6 +96,76 @@ test('function signature modification', t => {
 test('description modification', t => {
   bangs(runner('description', {}, 2), s => {
     t.equal(s.description, 'description!!!')
+  })
+  t.end()
+})
+
+test('groupPlayersByMachine middleware', t => {
+  const endpoints = ['e0', 'e1', 'e2', 'e3', 'e4', 'e5']
+  const m1 = M.groupPlayersByMachine(endpoints, 1)
+  const m2 = M.groupPlayersByMachine(endpoints, 2)
+  const m3 = M.groupPlayersByMachine(endpoints, 3)
+  const m4 = M.groupPlayersByMachine(endpoints, 4)
+  const m6 = M.groupPlayersByMachine(endpoints, 6)
+  const oldApi = {
+    players: (configs) => configs
+  }
+  const fakeSeed = ({}) => Promise.resolve({})
+  const input = R.repeat(fakeSeed, 6)
+  m1(runner('1 player per machine', oldApi), async s => {
+    const ps = await s.players(input as any)
+    t.deepEqual(ps, {
+      e0: { '0': fakeSeed },
+      e1: { '1': fakeSeed },
+      e2: { '2': fakeSeed },
+      e3: { '3': fakeSeed },
+      e4: { '4': fakeSeed },
+      e5: { '5': fakeSeed },
+    })
+  })
+  m2(runner('2 players per machine', oldApi), async s => {
+    const ps = await s.players(input as any)
+    t.deepEqual(ps, {
+      e0: { '0': fakeSeed, '1': fakeSeed },
+      e1: { '2': fakeSeed, '3': fakeSeed },
+      e2: { '4': fakeSeed, '5': fakeSeed },
+    })
+  })
+  m3(runner('3 players per machine', oldApi), async s => {
+    const ps = await s.players(input as any)
+    t.deepEqual(ps, {
+      e0: { '0': fakeSeed, '1': fakeSeed, '2': fakeSeed },
+      e1: { '3': fakeSeed, '4': fakeSeed, '5': fakeSeed },
+    })
+  })
+  m4(runner('4 players per machine (with leftovers)', oldApi), async s => {
+    const ps = await s.players(input as any)
+    t.deepEqual(ps, {
+      e0: { '0': fakeSeed, '1': fakeSeed, '2': fakeSeed, '3': fakeSeed },
+      e1: { '4': fakeSeed, '5': fakeSeed },
+    })
+  })
+  m6(runner('6 players per machine', oldApi), async s => {
+    const ps = await s.players(input as any)
+    t.deepEqual(ps, {
+      e0: { '0': fakeSeed, '1': fakeSeed, '2': fakeSeed, '3': fakeSeed, '4': fakeSeed, '5': fakeSeed },
+    })
+  })
+  t.end()
+})
+
+
+test.only('groupPlayersByMachine failure', t => {
+  const endpoints = ['e0', 'e1', 'e2', 'e3', 'e4', 'e5']
+  const m = M.groupPlayersByMachine(endpoints, 3)
+  const oldApi = { players: (configs) => configs }
+  const fakeSeed = ({}) => Promise.resolve({})
+  const input = R.repeat(fakeSeed, 100)
+  m(runner('1 player per machine', oldApi), async s => {
+    t.rejects(
+      () => s.players(input as any),
+      /Can't fit 100 conductors on 6 machines in groups of 3!/
+    )
   })
   t.end()
 })
