@@ -63,12 +63,12 @@ export class Player {
     this._spawnConductor = spawnConductor
   }
 
-  admin: CallAdminFunc = (method, params): Promise<any> => {
+  admin: CallAdminFunc = async (method, params): Promise<any> => {
     this._conductorGuard(`admin(${method}, ${JSON.stringify(params)})`)
     return this._conductor!.callAdmin(method, params)
   }
 
-  call: CallZomeFunc = (...args): Promise<any> => {
+  call: CallZomeFunc = async (...args): Promise<any> => {
     const [instanceId, zome, fn, params] = args
     if (args.length != 4 || typeof instanceId !== 'string' || typeof zome !== 'string' || typeof fn !== 'string') {
       throw new Error("player.call() must take 4 arguments: (instanceId, zomeName, funcName, params)")
@@ -79,7 +79,7 @@ export class Player {
 
   stateDump = (id: string): Promise<any> => this.instance(id).stateDump()
 
-  /** 
+  /**
    * Get a particular Instance of this conductor.
    * The reason for supplying a getter rather than allowing direct access to the collection
    * of instances is to allow middlewares to modify the instanceId being retrieved,
@@ -103,7 +103,7 @@ export class Player {
   /**
    * Spawn can take a function as an argument, which allows the caller
    * to do something with the child process handle, even before the conductor
-   * has fully started up. Otherwise, by default, you will have to wait for 
+   * has fully started up. Otherwise, by default, you will have to wait for
    * the proper output to be seen before this promise resolves.
    */
   spawn = async (spawnArgs: any) => {

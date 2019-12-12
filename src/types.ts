@@ -42,7 +42,7 @@ export type ConfigSeedArgs = PartialConfigSeedArgs & {
 }
 
 export type AnyConfigBuilder = ConfigSeed | EitherInstancesConfig
-export type PlayerConfigs = ObjectS<ConfigSeed>
+export type PlayerConfigs = ObjectS<ConfigSeed> | Array<ConfigSeed>
 export type MachineConfigs = ObjectS<PlayerConfigs>
 
 export const interfaceWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
@@ -182,7 +182,7 @@ export type ConductorConfigCommon = t.TypeOf<typeof ConductorConfigCommonV>
 export const DryInstancesConfigV = t.array(DryInstanceConfigV)
 export type DryInstancesConfig = t.TypeOf<typeof DryInstancesConfigV>
 
-/** Shorthand representation of a Conductor, 
+/** Shorthand representation of a Conductor,
  *  where keys of `instance` are used as instance IDs as well as agent IDs
  */
 export const SugaredInstancesConfigV = t.record(t.string, DnaConfigV)
