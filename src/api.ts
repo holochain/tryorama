@@ -139,7 +139,7 @@ export class ScenarioApi {
       }
     }
 
-    this._localPlayers = players
+    this._localPlayers = { ...this._localPlayers, ...players }
     return players
   }
 

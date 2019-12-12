@@ -11,7 +11,7 @@ export const testOrchestrator = () => new Orchestrator({
   }
 })
 
-export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed} => {
+export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed, carol: T.ConfigSeed} => {
 
   const dna = Config.dna(dnaPath)
 
@@ -26,13 +26,13 @@ export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed} =>
 
 
   // const network = Config.network('n3h')
-  const common: T.ConductorConfigCommon = { 
+  const common: T.ConductorConfigCommon = {
     logger: Config.logger(true),
-    metric_publisher: Config.metricPublisher('logger'), 
+    metric_publisher: Config.metricPublisher('logger'),
     network,
   }
   const seed: T.ConfigSeed = Config.gen({ app: dna }, common)
-  return {alice: seed, bob: seed}
+  return {alice: seed, bob: seed, carol: seed}
 }
 
 export const withClock = f => t => {

@@ -17,7 +17,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 - **BREAKING:** Now the generated conductor config uses only one admin interface to communicate with all instances as well as perform admin functions, rather than having separate interfaces for admin calls and instance interaction
 
-## Removed
+### Fixed
+
+- Fixed bug in scenarios that contain multiple `s.spawn()` statements, where only the conductors in the most recent spawn would get cleaned up after the test. Now all conductors spawned throughout the test are tracked and cleaned up at the end.
+
+### Removed
 
 - Removed some helper functions around local testing of TryCP, [they now live in @holochain/tryorama-stress-utils](https://github.com/holochain/tryorama-stress-utils/commit/3d47984454215a3a7069c5bc3e7f13db19f5659c)
 
