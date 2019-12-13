@@ -255,7 +255,7 @@ To achieve the independence of conductors, Tryorama ensure that various values a
 const config = Config.gen({alice: dnaConfig})
 
 // becomes this
-const config = ({playerName, uuid, configDir, adminPort, zomePort}) => {
+const config = ({playerName, uuid, configDir, interfacePort}) => {
   return {
     persistence_dir: configDir,
     agents: [/* ... */],
@@ -277,15 +277,13 @@ Config seeds take an object as a parameter, with five values:
 * `playerName`: the name of the player for this conductor, e.g. `"alice"`
 * `uuid`: a UUID which is guaranteed to be the same within a scenario but unique between different scenarios
 * `configDir`: a temp dir created specifically for this conductor
-* `adminPort`: a free port on the machine which is used for the admin Websocket interface, used to get privileged info from the conductor
-* `zomePort`: a free port on the machine which is used for the normal Websocket interface, used to e.g. make zome calls
+* `interfacePort`: a free port on the machine which is used for the admin Websocket interface, as well as to make zome calls
 
 ### What Tryorama expects from generated configs
 
 Under the hood, Tryorama generates unique and valid values for these parameters and generates unique configurations by injecting these values into the seed functions. If you are writing your own config seed, you can use or ignore these values as needed, but you must be careful to set things up in a way that Tryorama can work with to drive the test scenarios:
 
-* There must be an admin interface running over WebSockets at `adminPort`
-* There must be an interface running over WebSockets at `zomePort` including all instances
+* There must be an admin interface running over WebSockets at `interfacePort` which includes all instances that are part of this test
 * *All* agents within a scenario must have a unique name (even across different conductors!)
 * You must incorporate the UUID or some other source of uniqueness into the DNA config's `uuid` field, to ensure that conductors in different tests do not attempt to connect to each other on the same network
 
