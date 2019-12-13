@@ -15,7 +15,7 @@ export type CallZomeFunc = (instanceId: string, zomeName: string, fnName: string
 
 /**
  * Representation of a running Conductor instance.
- * A [Player] spawns a conductor process locally or remotely and constructs this class accordingly. 
+ * A [Player] spawns a conductor process locally or remotely and constructs this class accordingly.
  * Though Conductor is spawned externally, this class is responsible for establishing WebSocket
  * connections to the various interfaces to enable zome calls as well as admin and signal handling.
  */
@@ -99,7 +99,8 @@ export class Conductor {
     }
 
     onSignal(({ signal, instance_id }) => {
-      if (signal.signal_type !== 'Consistency') {
+      if (!signal || signal.signal_type !== 'Consistency') {
+        // not a consistency signal, or some other kind of data being sent down the pipe
         return
       }
 
