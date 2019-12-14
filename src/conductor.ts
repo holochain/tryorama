@@ -98,7 +98,9 @@ export class Conductor {
       return result
     }
 
-    onSignal(({ signal, instance_id }) => {
+    onSignal(data => {
+      const { signal, instance_id } = data
+      this.logger.silly('onSignal:', data)
       if (!signal || signal.signal_type !== 'Consistency') {
         // not a consistency signal, or some other kind of data being sent down the pipe
         return

@@ -24,6 +24,7 @@ const VARS = {
   strictConductorTimeout: Boolean(process.env['TRYORAMA_STRICT_CONDUCTOR_TIMEOUT']),
   tempStorage: process.env['TRYORAMA_STORAGE'],
   chooseFreePort: Boolean(process.env['TRYORAMA_CHOOSE_FREE_PORT']),
+  logLevel: process.env['TRYORAMA_LOG_LEVEL'],
   portRange: [33000, 34000],  // not hooked up to env var yet
 }
 
