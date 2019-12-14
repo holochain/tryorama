@@ -1,4 +1,3 @@
-import logger from "./logger"
 
 const int = (n) => {
   try {
@@ -27,8 +26,5 @@ const VARS = {
   logLevel: process.env['TRYORAMA_LOG_LEVEL'],
   portRange: [33000, 34000],  // not hooked up to env var yet
 }
-
-logger.info("Using the following settings from environment variables:")
-logger.info(JSON.stringify(VARS, null, 2))
 
 export default VARS

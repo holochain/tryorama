@@ -7,3 +7,9 @@ export { Player } from './player'
 export { Instance } from './instance'
 export * from './middleware'
 export * from './types'
+
+import logger from './logger'
+import env from './env'
+
+logger.info("Using the following settings from environment variables:")
+logger.info(JSON.stringify(env, null, 2))
