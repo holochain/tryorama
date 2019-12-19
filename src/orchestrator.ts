@@ -115,11 +115,12 @@ export class Orchestrator<S> {
           successes += 1
         })
         .catch(e => {
-          console.error("got an error for ", desc, e)
+          console.error('got an error for ', desc, e)
+          api.fail(e)
           errors.push({ description: desc, error: e })
         })
         .then(() => {
-          logger.debug("Done with test: %s", desc)
+          logger.debug('Done with test: %s', desc)
           return api._cleanup()
         })
     })

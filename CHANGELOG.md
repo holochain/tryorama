@@ -4,6 +4,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [UNRELEASED]
 
+### Added
+
+- Adds `s.onFail`, allowing you to register a callback that runs when the scenario fails for unexpected reasons, e.g. due to an exception or conductor timeout
+
+### Changed
+
+- Changes `TRYORAMA_STRICT_CONDUCTOR_TIMEOUT` to `TRYORAMA_LAX_CONDUCTOR_TIMEOUT`, keeping `false` as the default but reversing the logic
 
 ## [0.3.0]
 

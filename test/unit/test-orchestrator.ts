@@ -14,3 +14,15 @@ test('Scenario API constructed properly', async t => {
   })
   orchestrator.run()
 })
+
+test.only('API onFail gets called', async t => {
+  t.plan(1)
+  const spy = sinon.spy()
+  const orchestrator = testOrchestrator()
+  orchestrator.registerScenario('test scenario 2', async s => {
+    s.onFail(spy)
+    throw new Error('this test fails')
+  })
+  await orchestrator.run()
+  t.deepEqual(spy.firstCall.args[0].message, 'this test fails')
+})

@@ -33,7 +33,7 @@ export class ScenarioApi {
 
   constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
-    this.fail = (reason) => { throw new Error(`s.fail: ${reason}`) }
+    this.fail = (reason) => { logger.error(`s.fail: ${reason}`) }
 
     this._localPlayers = {}
     this._trycpClients = []
@@ -155,6 +155,14 @@ export class ScenarioApi {
     })
   })
 
+  onFail = (extraFail) => {
+    const f = this.fail
+    this.fail = (...a) => {
+      f(...a)
+      extraFail(...a)
+    }
+  }
+
   _getClient = async (machineEndpoint) => {
     if (machineEndpoint === LOCAL_MACHINE_ID) {
       return null
@@ -187,7 +195,7 @@ export class ScenarioApi {
 The following conductors were forcefully shutdown after ${env.conductorTimeoutMs / 1000} seconds of no activity:
 ${names.join(', ')}
 `
-    if (env.strictConductorTimeout) {
+    if (!env.laxConductorTimeout) {
       this.fail(msg)
       throw new Error(msg)
     } else {
