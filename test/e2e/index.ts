@@ -13,15 +13,17 @@ process.on('unhandledRejection', error => {
 const dnaLocationLocal = './dna/passthrough-dna.dna.json'
 const dnaLocationRemote = 'https://github.com/holochain/passthrough-dna/releases/download/v0.0.6/passthrough-dna.dna.json'
 
-const localOrchestrator = () => new Orchestrator({
+const localOrchestrator = (extra = {}) => new Orchestrator({
   middleware: compose(runSeries(), localOnly),
   reporter: true,
+  ...extra
   // globalConfig is specified explicitly in common::testConfig in this case
 })
 
-const singleConductorOrchestrator = () => new Orchestrator({
+const singleConductorOrchestrator = (extra = {}) => new Orchestrator({
   middleware: compose(compose(runSeries(), localOnly), singleConductor),
   reporter: true,
+  ...extra
   // globalConfig is specified explicitly in common::testConfig in this case
 })
 
@@ -50,6 +52,7 @@ require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal
 require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 
 require('./test-dynamic-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
+require('./test-timeout')(localOrchestrator, () => testConfig(dnaLocationLocal))
 
 // trycpEndpoints().then(([endpoints, processes]) => {
 //   require('./test-always-on')(trycpOrchestrator(endpoints), () => testConfig(dnaLocationRemote))
