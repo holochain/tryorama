@@ -83,6 +83,9 @@ export const DnaConfigV = t.intersection([
 ])
 export type DnaConfig = t.TypeOf<typeof DnaConfigV>
 
+export const StorageConfigV = t.any  // TODO
+export type StorageConfig = t.TypeOf<typeof StorageConfigV>
+
 export const RawInstanceConfigV = t.type({
   id: t.string,
   agent: t.string,
@@ -90,11 +93,16 @@ export const RawInstanceConfigV = t.type({
 })
 export type RawInstanceConfig = t.TypeOf<typeof RawInstanceConfigV>
 
-export const DryInstanceConfigV = t.type({
-  id: t.string,
-  agent: AgentConfigV,
-  dna: DnaConfigV,
-})
+export const DryInstanceConfigV = t.intersection([
+  t.type({
+    id: t.string,
+    agent: AgentConfigV,
+    dna: DnaConfigV,
+  }),
+  t.partial({
+    storage: StorageConfigV,
+  })
+])
 export type DryInstanceConfig = t.TypeOf<typeof DryInstanceConfigV>
 
 export const BridgeConfigV = t.type({

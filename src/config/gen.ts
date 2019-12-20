@@ -23,15 +23,15 @@ const defaultCommonConfig = {
  * more general config fields. It is usually the case that the first object will be vary
  * between players, and the second field will be the same between different players.
  */
-export const gen = 
+export const gen =
 (instancesFort: T.Fort<T.EitherInstancesConfig>, commonFort?: T.Fort<T.ConductorConfigCommon>) => {
   // TODO: type check of `commonFort`
-  
+
   // If we get a function, we can't type check until after the function has been called
   // ConfigSeedArgs
   let typeCheckLater = false
-  
-  // It leads to more helpful error messages 
+
+  // It leads to more helpful error messages
   // to have this validation before creating the seed function
   if (_.isFunction(instancesFort)) {
     typeCheckLater = true
@@ -45,17 +45,17 @@ export const gen =
     if (typeCheckLater) {
       validateInstancesType(instancesData)
     }
-    const instancesDry = _.isArray(instancesData) 
+    const instancesDry = _.isArray(instancesData)
       ? instancesData
       : desugarInstances(instancesData, args)
 
     const specific = await genPartialConfigFromDryInstances(instancesDry, args)
     const common = _.merge(
-      {}, 
-      defaultCommonConfig, 
+      {},
+      defaultCommonConfig,
       await T.collapseFort(expand(commonFort), args)
     )
-    
+
     return _.merge(
       {},
       specific,
@@ -74,7 +74,7 @@ const validateInstancesType = (instances: T.EitherInstancesConfig, msg: string =
 
 
 /**
- * 1. If a dna config object contains a URL in the path, download the file to a temp directory, 
+ * 1. If a dna config object contains a URL in the path, download the file to a temp directory,
  *     and rewrite the path to point to downloaded file.
  * 2. Then, if the hash is not set, calculate the hash and set it.
  * 3. Add the UUID for this scenario
@@ -125,7 +125,7 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
     instances: [],
     persistence_dir: configDir,
   }
-  
+
   const interfaceConfig = {
     admin: true,
     choose_free_port: env.chooseFreePort,
@@ -154,7 +154,7 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
       id: instance.id,
       agent: instance.agent.id,
       dna: resolvedDna.id,
-      storage: {
+      storage: instance.storage || {
         type: 'memory'
       }
     })
