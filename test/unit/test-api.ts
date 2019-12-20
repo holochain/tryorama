@@ -16,10 +16,6 @@ test('API detects duplicate agent IDs', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const orchestrator = testOrchestrator()
   const api = new ScenarioApi("description", orchestrator, "uuid")
-  const args = {
-    playerName: 'same',
-    uuid: 'also-same',
-  } as ConfigSeedArgs
   await t.rejects(
     api.players({
       local: {
@@ -36,10 +32,6 @@ test('API complains if a non-function was used', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const orchestrator = new Orchestrator({ middleware: undefined })
   const api = new ScenarioApi("description", orchestrator, "uuid")
-  const args = {
-    playerName: 'same',
-    uuid: 'also-same',
-  } as ConfigSeedArgs
   await t.rejects(
     api.players({
       local: {

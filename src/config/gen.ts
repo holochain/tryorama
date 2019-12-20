@@ -17,6 +17,16 @@ const defaultCommonConfig = {
   }
 }
 
+const defaultStorage = (configDir, instanceId) => {
+  if (!configDir) {
+    throw new Error("cannot set storage dir without configDir")
+  }
+  return {
+    type: 'lmdb',
+    path: path.join(configDir, instanceId)
+  }
+}
+
 /**
  * The main purpose of this module. It is a helper function which accepts an object
  * describing instances in shorthand, as well as a second object describing the additional
@@ -154,9 +164,7 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
       id: instance.id,
       agent: instance.agent.id,
       dna: resolvedDna.id,
-      storage: instance.storage || {
-        type: 'memory'
-      }
+      storage: instance.storage || defaultStorage(configDir, instance.id)
     })
     interfaceConfig.instances.push({ id: instance.id })
   }
