@@ -16,7 +16,7 @@ export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed, ca
   const dna = Config.dna(dnaPath)
 
   ///////////////////////////////// For local tests
-  const network = { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }
+  const network = { type: 'sim2h', sim2h_url: 'wss://localhost:9000' }
   console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")
   console.warn("Also be sure that ./dna/passthrough-dna.dna.json is accessible. (Run `npm run fetch-dna` to download)")
 
@@ -47,7 +47,6 @@ export const withClock = f => t => {
 
 export const genConfigArgs: () => Promise<T.ConfigSeedArgs> = async () => ({
   configDir: 'config/dir',
-  urlBase: 'http://localhost',
   interfacePort: 1000,
   playerName: 'playerName',
   scenarioName: 'scenarioName',

@@ -43,7 +43,7 @@ export const combineConfigs =
 /**
  * Define a standard way to add extra string to ID identifiers for use in combining configs
  * This is used to modify file paths as well, so it should result in a valid path.
- * i.e.: 
+ * i.e.:
  *     adjoin('x')('path/to/foo') === 'path/to/foo--x'   // OK
  *     adjoin('x')('path/to/foo') === 'x::path/to/foo'   // BAD
  */
@@ -60,7 +60,7 @@ export const adjoin = tag => {
  * Basically, each agent ID is adjoined by the conductor name, and references updated
  * to preserve uniqueness. Then all agents, dnas, instances, and bridges are merged
  * together.
- * 
+ *
  * All other options, like logging, interfaces, etc. are taken from one particular config,
  * with the assumption that the others are the same. The `standard` param allows you to
  * specify, by conductor name, which config to use to pull these other values from.
@@ -92,7 +92,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, stand
         _.chain(inst)
           .update('id', adjoin(name))
           .update('agent', adjoin(name))
-          // .update('storage.path', adjoin(name))  // not used for in-memory storage
+          .thru(c => c.storage && c.storage.path ? _.update(c, 'storage.path', adjoin(name)) : c)
           .value()
       )
     )
