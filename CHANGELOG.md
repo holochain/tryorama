@@ -2,8 +2,16 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [UNRELEASED]
+## [0.3.1]
 
+### Changed
+
+- Default storage config for instances is now `lmdb`, before it was `memory`
+
+### Fixed
+
+- When using explicit instance config, it was not possible to set the storage configuration. Now it is.
+- Due to default storage config of `memory`, killing and respawning a conductor would cause its persisted state to be wiped out! With the switch to `lmdb`, this is no longer the case.
 
 ## [0.3.0]
 

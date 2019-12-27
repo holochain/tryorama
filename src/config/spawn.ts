@@ -77,14 +77,13 @@ const getTrueInterfacePort = (handle, name): Promise<number | null> => {
   // This is a magic string output by the conductor when using the "choose_free_port"
   // Interface conductor config, to alert the client as to which port the interface chose.
   // This check only happens in tryorama once, whenever the conductor is spawned.
-  // 
+  //
   // # NB: HOWEVER, if tryorama ever calls an admin function which causes the interface to
   // restart, this port will change, and tryorama will not know about it!!
   // If we ever do something like that, we'll have to constantly monitor stdout
   // and update the interface port accordingly
   let portPattern = new RegExp(`\\*\\*\\* Bound interface '${env.interfaceId}' to port: (\\d+)`)
-  console.log("here's the portPattern", portPattern)
-  
+
   return new Promise((fulfill, reject) => {
     let resolved = false
     handle.on('close', code => {
@@ -151,7 +150,7 @@ const getFancy = (output) => {
   return `\n${bullet}${bullet}${bullet} ${indented}`
 }
 
-/** 
+/**
  * Only spawn one conductor per "name", to be used for entire test suite
  * Unused.
  * TODO: disable `.kill()` and `.spawn()` in scenario API

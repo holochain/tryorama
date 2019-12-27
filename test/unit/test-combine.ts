@@ -111,6 +111,7 @@ test('test configs are valid', async t => {
   t.end()
 })
 
+// TODO: this broke when setting default storage config to lmdb
 test('can combine configs', async t => {
   const stubGetDnaHash = sinon.stub(Gen, 'getDnaHash').resolves('fakehash')
   const { configs, expected } = await makeTestConfigs()

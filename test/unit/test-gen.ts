@@ -70,7 +70,7 @@ test('DNA id generation', t => {
 test('Sugared config', async t => {
   const args = { playerName: 'name', uuid: 'uuid' } as T.ConfigSeedArgs
   t.deepEqual(
-    C.desugarInstances(instancesSugared, args), 
+    C.desugarInstances(instancesSugared, args),
     instancesDry
   )
   t.end()
@@ -165,7 +165,7 @@ test('Config.gen accepts function for instances', async t => {
   const instancesPromise = (a) => Promise.resolve(instances(a))
   const seed = Builder.gen(instances)
   const seed2 = Builder.gen(instancesPromise)
-  const args = {playerName: 'yolanda', interfacePort: 1337} as T.ConfigSeedArgs
+  const args = {playerName: 'yolanda', interfacePort: 1337, configDir: 'dir'} as T.ConfigSeedArgs
   const config = await seed(args)
   const config2 = await seed2(args)
   t.equal(config.agents[0].name, 'yolanda the great')
@@ -184,7 +184,7 @@ test('Config.gen accepts arbitrarily nested functions for common config', async 
       thisIsInvalidLoggerConfig: playerName
     })
   }))
-  const config = await seed({playerName: 'hubert', interfacePort: 1337} as T.ConfigSeedArgs)
+  const config = await seed({playerName: 'hubert', interfacePort: 1337, configDir: 'config/dir'} as T.ConfigSeedArgs)
   t.equal(config.network!.thisIsInvalidNetworkConfig, 1337)
   t.equal(config.logger!.thisIsInvalidLoggerConfig, 'hubert')
   t.end()
