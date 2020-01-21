@@ -9,7 +9,7 @@ import { delay } from '../../src/util'
 
 module.exports = (testOrchestrator, testConfig) => {
 
-  test.only('test ends properly on hachiko strict timeout', async t => {
+  test('test ends properly on hachiko strict timeout', async t => {
     const C = testConfig()
     const orchestrator = await testOrchestrator({
       waiter: {
