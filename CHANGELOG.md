@@ -2,6 +2,14 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.2]
+
+### Fixed
+
+- Config.logger(false) now produces valid logger config
+- Fixed some bad logic where certain values, like the interfacePort, were pulled from the ConfigSeedArgs, rather than the actual generated config. i.e., config generation assumed that the user would use the provided values as-is without modifying or ignoring them.
+
+
 ## [0.3.1]
 
 ### Changed

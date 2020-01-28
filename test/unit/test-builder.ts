@@ -85,7 +85,7 @@ exclude = true
 pattern = ".*"
   `)
 
-  t.deepEqual(loggerQuiet, expectedQuiet)
+  t.deepEqual({logger: loggerQuiet}, expectedQuiet)
   t.end()
 })
 
