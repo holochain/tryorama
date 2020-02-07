@@ -1,7 +1,4 @@
-
-import ConfigBuilder from './config/builder'
-export const Config = ConfigBuilder
-
+export * as Config from './config/builder'
 export { Orchestrator, Register } from './orchestrator'
 export { Player } from './player'
 export { Instance } from './instance'
