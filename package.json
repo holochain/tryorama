@@ -1,6 +1,6 @@
 {
   "name": "@holochain/tryorama",
-  "version": "0.3.2-dev.3",
+  "version": "0.3.2",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
