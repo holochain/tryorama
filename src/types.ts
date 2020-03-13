@@ -137,6 +137,9 @@ export type NetworkConfig = t.TypeOf<typeof NetworkConfigV>
 export const RawLoggerConfigV = t.record(t.string, t.any)
 export type RawLoggerConfig = t.TypeOf<typeof RawLoggerConfigV>
 
+export const RawTracingConfigV = t.record(t.string, t.any)
+export type RawTracingConfig = t.TypeOf<typeof RawTracingConfigV>
+
 export const LoggerConfigV = t.union([
   t.boolean,
   t.record(t.string, t.any),
@@ -213,6 +216,7 @@ type RawInterfaceConfig = {
 }
 
 export interface RawConductorConfig {
+  persistence_dir: string,
   agents: Array<AgentConfig>
   dnas: Array<DnaConfig>
   instances: Array<RawInstanceConfig>
@@ -222,6 +226,7 @@ export interface RawConductorConfig {
   dpki?: DpkiConfig
   network?: RawNetworkConfig,
   logger?: RawLoggerConfig,
+  tracing?: RawTracingConfig,
   metric_publisher?: RawMetricPublisherConfig,
 }
 

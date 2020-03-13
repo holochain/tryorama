@@ -83,10 +83,19 @@ export class ScenarioApi {
         const configJson = await configSeed(configSeedArgs)
         configsJson.push(configJson)
 
+        if (!configJson.persistence_dir) {
+          throw new Error("Generated config does not have persistence_dir set")
+        }
+
+        if (configJson.interfaces[0].driver.type !== 'websocket') {
+          throw new Error("Generated config must contain a single admin websocket interface")
+        }
+
         // this code will only be executed once it is determined that all configs are valid
         playerBuilders[playerName] = async () => {
           const { instances } = configJson
-          const { configDir, interfacePort } = configSeedArgs
+          const configDir = configJson.persistence_dir
+          const interfacePort = configJson.interfaces[0].driver.port
 
           if (trycp) {
             const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
