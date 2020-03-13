@@ -71,7 +71,7 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   // now you can make zome calls,
   await alice.call('chat', 'messages', 'direct_message', {
     content: 'hello world',
-    target: carol.agentAddress('chat')
+    target: carol.instance('chat').agentAddress
   })
 
   // you can wait for total consistency of network activity,
