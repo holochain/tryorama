@@ -138,6 +138,8 @@ export class ScenarioApi {
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
     logger.debug('api.players: players built')
 
+    this._localPlayers = { ...this._localPlayers, ...players }
+
     // Do auto-spawning if that was requested
     if (spawnArgs) {
       for (const player of Object.values(players)) {
@@ -149,7 +151,6 @@ export class ScenarioApi {
       }
     }
 
-    this._localPlayers = { ...this._localPlayers, ...players }
     return players
   }
 
@@ -210,6 +211,7 @@ ${names.join(', ')}
    * to ensure that players/conductors have been properly cleaned up
    */
   _cleanup = async (signal?): Promise<Array<boolean>> => {
+    logger.debug("Calling Api._cleanup. _localPlayers: %j", this._localPlayers)
     const localKills = await Promise.all(
       _.values(this._localPlayers).map(player => player.cleanup(signal))
     )

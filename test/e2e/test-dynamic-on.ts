@@ -64,17 +64,17 @@ module.exports = (testOrchestrator, testConfig) => {
     t.equal(stats.errors.length, 1)
   })
 
-  test('late joiners', async t => {
+  test.skip('late joiners', async t => {
     const C = testConfig()
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('attempted call with unspawned conductor', async s => {
       const { alice } = await s.players({ alice: C.alice }, true)
 
       const commit1 = await alice.call('app', 'main', 'commit_entry', {
-        content: 'content'
+        content: 'content1'
       })
       const commit2 = await alice.call('app', 'main', 'commit_entry', {
-        content: 'content'
+        content: 'content2'
       })
       const hash1 = commit1.Ok
       const hash2 = commit2.Ok

@@ -122,6 +122,9 @@ export class Orchestrator<S> {
           logger.debug("Done with test: %s", desc)
           return api._cleanup()
         })
+        .then(() => {
+          logger.debug("Done with _cleanup")
+        })
     })
     await Promise.all(all)
 

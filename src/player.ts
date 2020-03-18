@@ -140,6 +140,7 @@ export class Player {
 
   /** Runs at the end of a test run */
   cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
+    this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
       await this.kill(signal)
       unparkPort(this._interfacePort)
