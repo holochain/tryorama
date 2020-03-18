@@ -96,7 +96,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
 
   if (!dna.hash) {
-    dna.hash = await getDnaHash(dna.file).catch(err => {
+    dna.hash = await getDnaHash(dna.file, dna.uuid).catch(err => {
       logger.warn(`Could not determine hash of DNA at '${dna.file}'. Note that tryorama cannot determine the hash of DNAs at URLs\n\tOriginal error: ${err}`)
       return "[UNKNOWN]"
     })
@@ -173,8 +173,8 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
   return config
 }
 
-export const getDnaHash = async (dnaPath) => {
-  const { stdout, stderr } = await exec(`hc hash -p ${dnaPath}`)
+export const getDnaHash = async (dnaPath, uuid) => {
+  const { stdout, stderr } = await exec(`hc hash -p ${dnaPath} -u ${uuid}`)
   if (!stdout) {
     throw new Error("Error while getting hash: " + stderr)
   }

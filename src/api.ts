@@ -108,6 +108,7 @@ export class ScenarioApi {
 
           const player = new Player({
             name: playerName,
+            config: configJson,
             configDir,
             interfacePort,
             spawnConductor,

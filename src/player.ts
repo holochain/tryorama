@@ -4,13 +4,14 @@ import { Signal, DnaId } from '@holochain/hachiko'
 
 import { Conductor, CallZomeFunc, CallAdminFunc } from './conductor'
 import { Instance } from './instance'
-import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN } from './types';
+import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN, RawConductorConfig } from './types';
 import { getConfigPath } from './config';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
 
 type ConstructorArgs = {
   name: string,
+  config: RawConductorConfig,
   configDir: string,
   interfacePort: number,
   onSignal: ({ instanceId: string, signal: Signal }) => void,
@@ -31,6 +32,7 @@ export class Player {
 
   name: string
   logger: any
+  config: RawConductorConfig
   onJoin: () => void
   onLeave: () => void
   onSignal: ({ instanceId: string, signal: Signal }) => void
@@ -43,13 +45,14 @@ export class Player {
   _interfacePort: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, configDir, interfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ name, config, configDir, interfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
     this.onLeave = onLeave
     this.onSignal = onSignal
     this.onActivity = onActivity
+    this.config = config
 
     this._conductor = null
     this._instances = {}
