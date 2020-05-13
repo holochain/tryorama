@@ -19,7 +19,8 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     kill: async () => { },
     onSignal: () => { },
     onActivity: () => { },
-    interfaceWsUrl: '',
+    appWsUrl: '',
+    rawConfig: player.config
   })
 }
 
@@ -32,7 +33,9 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
     const version = execSync(`${binPath} --version`)
     logger.info("Using conductor path: %s", binPath)
     logger.info("Holochain version: %s", version)
-    handle = spawn(binPath, ['-c', configPath], {
+
+    const flag = env.legacy ? '-c' : '--legacy-tryorama-config'
+    handle = spawn(binPath, [flag, configPath], {
       env: {
         "N3H_QUIET": "1",
         "RUST_BACKTRACE": "1",
@@ -62,7 +65,8 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      interfaceWsUrl: `ws://localhost:${player._interfacePort}`,
+      appWsUrl: `ws://localhost:${player._interfacePort}`,
+      rawConfig: player.config
     })
 
     return conductor
@@ -136,7 +140,8 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    interfaceWsUrl: `${machineUrl}:${player._interfacePort}`,
+    appWsUrl: `${machineUrl}:${player._interfacePort}`,
+    rawConfig: 'TODO',
   })
 }
 
