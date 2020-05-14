@@ -21,9 +21,9 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@holochain/conductor-api": "^0.0.1-dev.1",
     "@holochain/hachiko": "^0.5.2",
     "@holochain/hc-web-client": "^0.5.0",
-    "@holochain/conductor-api": "^0.0.1",
     "@iarna/toml": "^2.2.3",
     "async-mutex": "^0.1.4",
     "axios": "^0.19.0",

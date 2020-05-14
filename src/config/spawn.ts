@@ -1,7 +1,5 @@
 
 import { spawn, execSync, ChildProcess } from "child_process";
-import { Ws } from 'ws'
-import axios from "axios"
 
 import logger, { makeLogger } from "../logger";
 import * as T from '../types'
@@ -34,7 +32,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
     logger.info("Using conductor path: %s", binPath)
     logger.info("Holochain version:    %s", version)
 
-    const flag = env.legacy ? '-c' : '--legacy-tryorama-config'
+    const flag = env.legacy ? '-c' : '--legacy-tryorama-config-path'
     logger.debug('running: %s %s %s', binPath, flag, configPath)
     handle = spawn(binPath, [flag, configPath], {
       env: {
@@ -55,7 +53,11 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       handleHook(handle)
     }
 
-    const newPort = await getTrueInterfacePort(handle, player.name)
+    // TODO: revisit for non-legacy
+    const newPort = await (!env.legacy
+      ? delay(1000).then(() => null)
+      : getTrueInterfacePort(handle, player.name)
+    )
 
     if (newPort) {
       player._interfacePort = newPort

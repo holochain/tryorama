@@ -82,8 +82,8 @@ export class Conductor {
   _connectInterfaces = async () => {
     this._onActivity()
 
-    const adminClient = await AdminWebsocket.connect(this._adminWsUrl)
-    this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
+    // const adminClient = await AdminWebsocket.connect(this._adminWsUrl)
+    // this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
 
     const appClient = await AppWebsocket.connect(this._appWsUrl, signal => {
       // TODO: do something meaningful with signals
@@ -105,7 +105,9 @@ export class Conductor {
       })
     }
 
-    // TODO: hook up callAdmin
+    this.callAdmin = async () => {
+      this.logger.error("admin functions are noops for now")
+    }
   }
 
   _connectInterfaceLegacy = async () => {

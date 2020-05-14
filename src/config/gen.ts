@@ -34,45 +34,44 @@ const defaultStorage = (configDir, instanceId) => {
  * between players, and the second field will be the same between different players.
  */
 export const gen =
-(instancesFort: T.Fort<T.EitherInstancesConfig>, commonFort?: T.Fort<T.ConductorConfigCommon>) => {
-  // TODO: type check of `commonFort`
+  (instancesFort: T.Fort<T.EitherInstancesConfig>, commonFort?: T.Fort<T.ConductorConfigCommon>) => {
+    // TODO: type check of `commonFort`
 
-  // If we get a function, we can't type check until after the function has been called
-  // ConfigSeedArgs
-  let typeCheckLater = false
+    // If we get a function, we can't type check until after the function has been called
+    // ConfigSeedArgs
+    let typeCheckLater = false
 
-  // It leads to more helpful error messages
-  // to have this validation before creating the seed function
-  if (_.isFunction(instancesFort)) {
-    typeCheckLater = true
-  } else {
-    validateInstancesType(instancesFort)
-  }
-
-  return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> =>
-  {
-    const instancesData = await T.collapseFort(instancesFort, args)
-    if (typeCheckLater) {
-      validateInstancesType(instancesData)
+    // It leads to more helpful error messages
+    // to have this validation before creating the seed function
+    if (_.isFunction(instancesFort)) {
+      typeCheckLater = true
+    } else {
+      validateInstancesType(instancesFort)
     }
-    const instancesDry = _.isArray(instancesData)
-      ? instancesData
-      : desugarInstances(instancesData, args)
 
-    const specific = await genPartialConfigFromDryInstances(instancesDry, args)
-    const common = _.merge(
-      {},
-      defaultCommonConfig,
-      await T.collapseFort(expand(commonFort), args)
-    )
+    return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> => {
+      const instancesData = await T.collapseFort(instancesFort, args)
+      if (typeCheckLater) {
+        validateInstancesType(instancesData)
+      }
+      const instancesDry = _.isArray(instancesData)
+        ? instancesData
+        : desugarInstances(instancesData, args)
 
-    return _.merge(
-      {},
-      specific,
-      common,
-    )
+      const specific = await genPartialConfigFromDryInstances(instancesDry, args)
+      const common = _.merge(
+        {},
+        defaultCommonConfig,
+        await T.collapseFort(expand(commonFort), args)
+      )
+
+      return _.merge(
+        {},
+        specific,
+        common,
+      )
+    }
   }
-}
 
 const validateInstancesType = (instances: T.EitherInstancesConfig, msg: string = '') => {
   if (_.isArray(instances)) {
@@ -96,7 +95,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
 
   if (!dna.hash) {
-    dna.hash = await getDnaHash(dna.file, dna.uuid).catch(err => {
+    dna.hash = !env.legacy ? "" : await getDnaHash(dna.file, dna.uuid).catch(err => {
       logger.warn(`Could not determine hash of DNA at '${dna.file}'. Note that tryorama cannot determine the hash of DNAs at URLs\n\tOriginal error: ${err}`)
       return "[UNKNOWN]"
     })
