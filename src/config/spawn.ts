@@ -29,12 +29,13 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
   const configPath = getConfigPath(player._configDir)
   let handle
   try {
-    const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
+    const binPath = env.holochainPath
     const version = execSync(`${binPath} --version`)
     logger.info("Using conductor path: %s", binPath)
-    logger.info("Holochain version: %s", version)
+    logger.info("Holochain version:    %s", version)
 
     const flag = env.legacy ? '-c' : '--legacy-tryorama-config'
+    logger.debug('running: %s %s %s', binPath, flag, configPath)
     handle = spawn(binPath, [flag, configPath], {
       env: {
         "N3H_QUIET": "1",

@@ -82,10 +82,10 @@ export class Conductor {
   _connectInterfaces = async () => {
     this._onActivity()
 
-    const adminClient = AdminWebsocket.connect(this._adminWsUrl)
+    const adminClient = await AdminWebsocket.connect(this._adminWsUrl)
     this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
 
-    const appClient = AppWebsocket.connect(this._appWsUrl, signal => {
+    const appClient = await AppWebsocket.connect(this._appWsUrl, signal => {
       // TODO: do something meaningful with signals
       this.logger.info("received app signal: %o", signal)
     })
