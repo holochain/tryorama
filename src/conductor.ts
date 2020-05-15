@@ -27,6 +27,7 @@ export class Conductor {
   onSignal: ({ instanceId: string, signal: Signal }) => void
   logger: any
   kill: KillFn
+  admin: AdminWebsocket | null
 
   _adminWsUrl: string
   _appWsUrl: string
@@ -35,7 +36,7 @@ export class Conductor {
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, kill, onSignal, onActivity, appWsUrl, rawConfig }) {
+  constructor({ name, kill, onSignal, onActivity, appWsUrl, adminWsUrl, rawConfig }) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -47,7 +48,9 @@ export class Conductor {
       return this._wsClosePromise
     }
 
-    this._adminWsUrl = 'FIXME' // FIXME
+    // TODO: note this isn't intended to work for legacy
+    this.admin = null
+    this._adminWsUrl = adminWsUrl
     this._appWsUrl = appWsUrl
     this._isInitialized = false
     this._rawConfig = rawConfig
@@ -82,31 +85,34 @@ export class Conductor {
   _connectInterfaces = async () => {
     this._onActivity()
 
-    // const adminClient = await AdminWebsocket.connect(this._adminWsUrl)
-    // this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
+    this.admin = await AdminWebsocket.connect(this._adminWsUrl)
+    this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
 
-    const appClient = await AppWebsocket.connect(this._appWsUrl, signal => {
-      // TODO: do something meaningful with signals
-      this.logger.info("received app signal: %o", signal)
-    })
-    this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
+    // FIXME
+    // const appClient = await AppWebsocket.connect(this._appWsUrl, signal => {
+    //   // TODO: do something meaningful with signals
+    //   this.logger.info("received app signal: %o", signal)
+    // })
+    // this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
 
-    this.callZome = (instanceId, zomeName, fnName, payload) => {
+    // this.callZome = (instanceId, zomeName, fnName, payload) => {
 
-      const cellId = cellIdFromInstanceId(this._rawConfig, instanceId)
+    //   const cellId = cellIdFromInstanceId(this._rawConfig, instanceId)
 
-      return appClient.callZome({
-        cell_id: cellId,
-        zome_name: zomeName,
-        cap: 'TODO',
-        fn_name: fnName,
-        payload: payload,
-        provenance: 'TODO'
-      })
-    }
+    //   return appClient.callZome({
+    //     cell_id: cellId,
+    //     zome_name: zomeName,
+    //     cap: 'TODO',
+    //     fn_name: fnName,
+    //     payload: payload,
+    //     provenance: 'TODO'
+    //   })
+    // }
 
-    this.callAdmin = async () => {
-      this.logger.error("admin functions are noops for now")
+    this.callAdmin = async (...args) => {
+      this.logger.error("admin functions are noops for now. attempted call: %j", args)
+      // return empty list to appease the various list/* methods
+      return []
     }
   }
 

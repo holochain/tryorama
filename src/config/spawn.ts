@@ -17,6 +17,7 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     kill: async () => { },
     onSignal: () => { },
     onActivity: () => { },
+    adminWsUrl: '',
     appWsUrl: '',
     rawConfig: player.config
   })
@@ -55,8 +56,8 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
 
     // TODO: revisit for non-legacy
     const newPort = await (!env.legacy
-      ? delay(1000).then(() => null)
-      : getTrueInterfacePort(handle, player.name)
+      ? awaitInterfaceReady(handle, player.name)
+      : getTrueInterfacePortLegacy(handle, player.name)
     )
 
     if (newPort) {
@@ -68,7 +69,8 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      appWsUrl: `ws://localhost:${player._interfacePort}`,
+      adminWsUrl: `ws://localhost:${player._interfacePort}`,
+      appWsUrl: 'FIXME',
       rawConfig: player.config
     })
 
@@ -79,7 +81,31 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
   }
 }
 
-const getTrueInterfacePort = (handle, name): Promise<number | null> => {
+const awaitInterfaceReady = (handle, name): Promise<null> => new Promise((fulfill, reject) => {
+  const pattern = 'Conductor ready.'
+  let resolved = false
+  handle.on('close', code => {
+    resolved = true
+    logger.info(`conductor '${name}' exited with code ${code}`)
+    // this rejection will have no effect if the promise already resolved,
+    // which happens below
+    reject(`Conductor exited before starting interface (code ${code})`)
+  })
+  handle.stdout.on('data', data => {
+    if (resolved) {
+      return
+    }
+
+    const line = data.toString('utf8')
+    if (line.match(pattern)) {
+      logger.info(`Conductor '${name}' process spawning completed.`)
+      resolved = true
+      fulfill()
+    }
+  })
+})
+
+const getTrueInterfacePortLegacy = (handle, name): Promise<number | null> => {
 
   // This is a magic string output by the conductor when using the "choose_free_port"
   // Interface conductor config, to alert the client as to which port the interface chose.
@@ -143,7 +169,8 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    appWsUrl: `${machineUrl}:${player._interfacePort}`,
+    adminWsUrl: `${machineUrl}:${player._interfacePort}`,
+    appWsUrl: 'FIXME',
     rawConfig: 'TODO',
   })
 }
