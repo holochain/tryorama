@@ -61,7 +61,15 @@ export class Player {
     this._spawnConductor = spawnConductor
   }
 
-  admin: CallAdminFunc = async (method, params): Promise<any> => {
+  admin = () => {
+    if (this._conductor) {
+      return this._conductor.admin
+    } else {
+      throw new Error("Conductor is not spawned: admin interface unavailable")
+    }
+  }
+
+  adminLegacy: CallAdminFunc = async (method, params): Promise<any> => {
     this._conductorGuard(`admin(${method}, ${JSON.stringify(params)})`)
     return this._conductor!.callAdmin(method, params)
   }

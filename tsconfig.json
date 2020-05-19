@@ -4,11 +4,14 @@
     "rootDir": "src",
     "outDir": "lib",
     "module": "commonjs",
-    "target": "es6",
+    "target": "ES2015",
     "sourceMap": true,
-    "lib": ["esnext.array", "es2018"],
+    "lib": [
+      "esnext.array",
+      "es2018"
+    ],
+    "esModuleInterop": true,
     // "downlevelIteration": true,
-
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": false,
     "noImplicitThis": true,

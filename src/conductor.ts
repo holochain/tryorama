@@ -1,10 +1,12 @@
 const colors = require('colors/safe')
-const hcWebClient = require('@holochain/hc-web-client')
 
 import { KillFn, ConfigSeedArgs } from "./types";
 import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
+import { connect as legacyConnect } from '@holochain/hc-web-client'
+import { AdminWebsocket, AppWebsocket } from '@holochain/conductor-api'
+import * as T from './types'
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -25,14 +27,16 @@ export class Conductor {
   onSignal: ({ instanceId: string, signal: Signal }) => void
   logger: any
   kill: KillFn
+  admin: AdminWebsocket | null
 
-  _interfaceWsUrl: string
-  _hcConnect: any
+  _adminWsUrl: string
+  _appWsUrl: string
   _isInitialized: boolean
+  _rawConfig: T.RawConductorConfig
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, kill, onSignal, onActivity, interfaceWsUrl }) {
+  constructor({ name, kill, onSignal, onActivity, appWsUrl, adminWsUrl, rawConfig }) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -44,9 +48,12 @@ export class Conductor {
       return this._wsClosePromise
     }
 
-    this._interfaceWsUrl = interfaceWsUrl
-    this._hcConnect = hcWebClient.connect
+    // TODO: note this isn't intended to work for legacy
+    this.admin = null
+    this._adminWsUrl = adminWsUrl
+    this._appWsUrl = appWsUrl
     this._isInitialized = false
+    this._rawConfig = rawConfig
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
   }
@@ -66,16 +73,54 @@ export class Conductor {
 
   initialize = async () => {
     this._onActivity()
-    await this._connectInterface()
+    if (env.legacy) {
+      await this._connectInterfaceLegacy()
+    } else {
+      await this._connectInterfaces()
+    }
   }
 
-  wsClosed = () => this._wsClosePromise
+  awaitClosed = () => this._wsClosePromise
 
-  _connectInterface = async () => {
+  _connectInterfaces = async () => {
     this._onActivity()
-    const url = this._interfaceWsUrl
+
+    this.admin = await AdminWebsocket.connect(this._adminWsUrl)
+    this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
+
+    // FIXME
+    // const appClient = await AppWebsocket.connect(this._appWsUrl, signal => {
+    //   // TODO: do something meaningful with signals
+    //   this.logger.info("received app signal: %o", signal)
+    // })
+    // this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
+
+    // this.callZome = (instanceId, zomeName, fnName, payload) => {
+
+    //   const cellId = cellIdFromInstanceId(this._rawConfig, instanceId)
+
+    //   return appClient.callZome({
+    //     cell_id: cellId,
+    //     zome_name: zomeName,
+    //     cap: 'TODO',
+    //     fn_name: fnName,
+    //     payload: payload,
+    //     provenance: 'TODO'
+    //   })
+    // }
+
+    this.callAdmin = async (...args) => {
+      this.logger.error("admin functions are noops for now. attempted call: %j", args)
+      // return empty list to appease the various list/* methods
+      return []
+    }
+  }
+
+  _connectInterfaceLegacy = async () => {
+    this._onActivity()
+    const url = this._adminWsUrl
     this.logger.debug(`connectInterface :: connecting to ${url}`)
-    const { call, callZome, onSignal, ws } = await this._hcConnect({ url })
+    const { call, callZome, onSignal, ws } = await legacyConnect({ url })
     this.logger.debug(`connectInterface :: connected to ${url}`)
 
     this._wsClosePromise = (
@@ -155,4 +200,12 @@ export class Conductor {
         })
     })
   }
+}
+
+
+export const cellIdFromInstanceId = (config: T.RawConductorConfig, instanceId: string): T.CellId => {
+  const instance = config.instances.find(i => i.id === instanceId)!
+  const dnaHash = config.dnas.find(d => d.id === instance.dna)!.hash!
+  const agentKey = config.agents.find(a => a.id === instance.agent)!.public_address
+  return [dnaHash, agentKey]
 }
