@@ -31,7 +31,8 @@ export type IntermediateConfig = RawConductorConfig  // TODO: constrain
 export type ConfigSeed = (args: ConfigSeedArgs) => Promise<IntermediateConfig>
 
 export type PartialConfigSeedArgs = {
-  interfacePort: number,
+  adminInterfacePort: number,
+  appInterfacePort: number,
   configDir: string,
 }
 

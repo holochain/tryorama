@@ -13,7 +13,8 @@ const fs = require('fs').promises
  * In the future it would be great to move to domain socket based interfaces.
  */
 export const localConfigSeedArgs = async (): Promise<T.PartialConfigSeedArgs> => {
-  const interfacePort = await getPort()
+  const adminInterfacePort = await getPort()
+  const appInterfacePort = await getPort()
   const configDir = await tempDir()
-  return { configDir, interfacePort }
+  return { configDir, adminInterfacePort, appInterfacePort }
 }

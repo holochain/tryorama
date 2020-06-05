@@ -61,7 +61,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
     )
 
     if (newPort) {
-      player._interfacePort = newPort
+      player._adminInterfacePort = newPort
     }
 
     const conductor = new Conductor({
@@ -69,8 +69,8 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      adminWsUrl: `ws://localhost:${player._interfacePort}`,
-      appWsUrl: 'FIXME',
+      adminWsUrl: `ws://localhost:${player._adminInterfacePort}`,
+      appWsUrl: `ws://localhost:${player._appInterfacePort}`,
       rawConfig: player.config
     })
 
@@ -115,7 +115,7 @@ const getTrueInterfacePortLegacy = (handle, name): Promise<number | null> => {
   // restart, this port will change, and tryorama will not know about it!!
   // If we ever do something like that, we'll have to constantly monitor stdout
   // and update the interface port accordingly
-  let portPattern = new RegExp(`\\*\\*\\* Bound interface '${env.interfaceId}' to port: (\\d+)`)
+  let portPattern = new RegExp(`\\*\\*\\* Bound interface '${env.adminInterfaceId}' to port: (\\d+)`)
 
   return new Promise((fulfill, reject) => {
     let resolved = false
@@ -169,8 +169,8 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    adminWsUrl: `${machineUrl}:${player._interfacePort}`,
-    appWsUrl: 'FIXME',
+    adminWsUrl: `${machineUrl}:${player._adminInterfacePort}`,
+    appWsUrl: `${machineUrl}:${player._appInterfacePort}`,
     rawConfig: 'TODO',
   })
 }

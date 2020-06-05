@@ -11,7 +11,7 @@ export const testOrchestrator = () => new Orchestrator({
   }
 })
 
-export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed, carol: T.ConfigSeed} => {
+export const testConfig = (dnaPath): { alice: T.ConfigSeed, bob: T.ConfigSeed, carol: T.ConfigSeed } => {
 
   const dna = Config.dna(dnaPath)
 
@@ -32,7 +32,7 @@ export const testConfig = (dnaPath): {alice: T.ConfigSeed, bob: T.ConfigSeed, ca
     network,
   }
   const seed: T.ConfigSeed = Config.gen({ app: dna }, common)
-  return {alice: seed, bob: seed, carol: seed}
+  return { alice: seed, bob: seed, carol: seed }
 }
 
 export const withClock = f => t => {
@@ -47,7 +47,8 @@ export const withClock = f => t => {
 
 export const genConfigArgs: () => Promise<T.ConfigSeedArgs> = async () => ({
   configDir: 'config/dir',
-  interfacePort: 1000,
+  adminInterfacePort: 1000,
+  appInterfacePort: 1001,
   playerName: 'playerName',
   scenarioName: 'scenarioName',
   uuid: 'uuid',

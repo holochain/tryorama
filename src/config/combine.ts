@@ -114,7 +114,7 @@ export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, stand
 
   const first = standard ? configs[standard] : _.values(configs)[0]
 
-  const interfaceIndex = _.findIndex(first.interfaces, i => i.id === env.interfaceId)
+  const interfaceIndex = _.findIndex(first.interfaces, i => i.id === env.adminInterfaceId)
   const interfaceInstances = _.chain(configs)
     .toPairs()
     .map(([name, c]) =>

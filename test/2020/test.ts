@@ -10,12 +10,12 @@ const { Orchestrator, Config } = require('../../src')
 const testDna = Config.dna("test.dna.gz")
 
 const config = Config.gen({
-  test: testDna,
+  tester: testDna,
 })
 
 const orchestrator = new Orchestrator()
 
-orchestrator.registerScenario('basic test', async (s, t) => {
+orchestrator.registerScenario('list dnas', async (s, t) => {
   const { antony } = await s.players({ antony: config })
   await antony.spawn()
 
@@ -23,6 +23,16 @@ orchestrator.registerScenario('basic test', async (s, t) => {
   console.log('dnas', dnas)
 
   t.equal(dnas.length, 1)
+})
+
+orchestrator.registerScenario.only('call zome', async (s, t) => {
+  const { antony } = await s.players({ antony: config })
+  await antony.spawn()
+
+  const result = await antony.call('tester', 'foo', 'foo', { anything: 'goes' })
+  console.log('result', result)
+
+  t.equal(result, 'foo')
 })
 
 orchestrator.run()

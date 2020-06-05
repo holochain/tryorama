@@ -126,7 +126,7 @@ export const makeTestAgent = (id, { playerName, uuid }) => ({
 
 export const genPartialConfigFromDryInstances = async (instances: T.DryInstancesConfig, args: T.ConfigSeedArgs) => {
 
-  const { configDir, interfacePort, uuid } = args
+  const { configDir, adminInterfacePort, appInterfacePort, uuid } = args
 
   const config: any = {
     agents: [],
@@ -135,13 +135,24 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
     persistence_dir: configDir,
   }
 
-  const interfaceConfig = {
+  const adminInterfaceConfig = {
     admin: true,
     choose_free_port: env.chooseFreePort,
-    id: env.interfaceId,
+    id: env.adminInterfaceId,
     driver: {
       type: 'websocket',
-      port: interfacePort,
+      port: adminInterfacePort,
+    },
+    instances: [] as Array<{ id: string }>
+  }
+
+  const appInterfaceConfig = {
+    admin: false,
+    choose_free_port: env.chooseFreePort,
+    id: env.appInterfaceId,
+    driver: {
+      type: 'websocket',
+      port: appInterfacePort,
     },
     instances: [] as Array<{ id: string }>
   }
@@ -165,10 +176,10 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
       dna: resolvedDna.id,
       storage: instance.storage || defaultStorage(configDir, instance.id)
     })
-    interfaceConfig.instances.push({ id: instance.id })
+    appInterfaceConfig.instances.push({ id: instance.id })
   }
 
-  config.interfaces = [interfaceConfig]
+  config.interfaces = [adminInterfaceConfig, appInterfaceConfig]
   return config
 }
 

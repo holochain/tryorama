@@ -115,7 +115,7 @@ export class Orchestrator<S> {
           successes += 1
         })
         .catch(e => {
-          console.error("got an error for ", desc, e)
+          console.error(`got an error for test '${desc}':`, e)
           errors.push({ description: desc, error: e })
         })
         .then(() => {

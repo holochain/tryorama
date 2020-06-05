@@ -1,13 +1,13 @@
+import { AdminApi } from '@holochain/conductor-api'
 
-type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
 type CallZomeFunc = (zome: string, fn: string, params: any) => Promise<any>
 
-type InstanceConstructorParams = { 
-  id: string, 
-  dnaAddress: string, 
+type InstanceConstructorParams = {
+  id: string,
+  dnaAddress: string,
   agentAddress: string,
-  callAdmin: CallAdminFunc, 
-  callZome: CallZomeFunc, 
+  adminClient: AdminApi,
+  callZome: CallZomeFunc,
 }
 
 /**
@@ -18,14 +18,14 @@ type InstanceConstructorParams = {
 export class Instance {
 
   id: string
-  _callAdmin: CallAdminFunc
+  admin: AdminApi
   _callZome: CallZomeFunc
   agentAddress: string
   dnaAddress: string
 
   constructor(o: InstanceConstructorParams) {
     this.id = o.id
-    this._callAdmin = o.callAdmin
+    this.admin = o.adminClient
     this._callZome = o.callZome
     this.agentAddress = o.agentAddress
     this.dnaAddress = o.dnaAddress
@@ -40,6 +40,7 @@ export class Instance {
   }
 
   stateDump = (): Promise<any> => {
-    return this._callAdmin('debug/state_dump', { instance_id: this.id })
+    return Promise.resolve('TODO')
+    // return this.admin.stateDump({ cell_id: this.id })
   }
 }
