@@ -25,7 +25,7 @@ orchestrator.registerScenario('list dnas', async (s, t) => {
   t.equal(dnas.length, 1)
 })
 
-orchestrator.registerScenario.only('call zome', async (s, t) => {
+orchestrator.registerScenario('call zome', async (s, t) => {
   const { antony } = await s.players({ antony: config })
   await antony.spawn()
 
