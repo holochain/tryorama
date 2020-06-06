@@ -1,4 +1,18 @@
 # tryorama
+
+- - -
+
+> # ⚠️ NOTE: Tryorama is in a transitional phase ⚠️
+>
+> Tryorama is being rewritten to work with the brand-new Holochain RSM. Most functionality
+> is missing, tests are no longer expected to work, and this README cannot be guaranteed to be accurate. As progress is made, this codebase will be unified into a cohesive whole, and Tryorama
+> will eventually become a user-friendly testing framework once again.
+>
+> For now, see [test/2020](test/2020) for some tests that DO work.
+
+- - -
+
+
 An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
 
 [![Project](https://img.shields.io/badge/project-holochain-blue.svg?style=flat-square)](http://holochain.org/)
