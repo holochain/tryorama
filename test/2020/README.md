@@ -2,13 +2,38 @@
 
 As Holochain RSM evolves, so will Tryorama. The new version of Tryorama is still a work in progress, but the new test suite will exist here. Tryorama will be ready for a full new release once all existing tests work against the new Holochain, after which this package.json will be merged with the root level package.json.
 
-## How to run tests
 
 Prerequisites:
 
-- Have a `holochain-2020` on the path, built from commit `7297ffbf7c9f814f434b384ddf96209c847afc03` or later.
-- must have a valid test.dna.gz present in this directory which contains the "foo" wasm from Holochain's `crates/test_utils/wasm/foo` crate.
+### Holochain binary
 
-Then, just fire off the tests from this directory:
+You must have a `holochain-2020` on the path, built from commit `7297ffbf7c9f814f434b384ddf96209c847afc03` or later.
+
+### Test DNA
+
+You must have a valid `test.dna.gz` present in this directory which contains at least the "foo" wasm from Holochain's `crates/test_utils/wasm/foo` crate.
+
+If you are building this DNA using `dna-util`, then you should have a `test.dna.workdir/dna.json` that looks something like this:
+
+```json
+{
+  "name": "test-dna",
+  "uuid": "",
+  "properties": null,
+  "zomes": {
+    "foo": {
+      "wasm_path": "./foo.wasm"
+    }
+  }
+}
+```
+
+## Running tests
+
+When prerequisites are met, be sure to install dependencies:
+
+    npm install
+
+Then, you can fire off the tests (make sure you are in this directory):
 
     npm test
