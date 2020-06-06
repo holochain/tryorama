@@ -1,9 +1,4 @@
-// Works with:
-// - holochain-2020 branch='legacy-tryorama-config' commit='e502e309dfd3e27bab0a2578833deeaa13dca7b3'
-// - tryorama-2020 branch='bolt-on' commit='338548c174e06adb60445e541c36d1e3d0a1de04'
-// - must have a valid test.dna.gz present in this directory
-
-// Just do `npm test` in this directory to run
+// See README.md for prerequisites for this to run
 
 const { Orchestrator, Config } = require('../../src')
 
