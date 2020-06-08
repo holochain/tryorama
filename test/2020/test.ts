@@ -30,5 +30,16 @@ orchestrator.registerScenario('call zome', async (s, t) => {
   t.equal(result, 'foo')
 })
 
+orchestrator.registerScenario('state dump', async (s, t) => {
+  const { antony } = await s.players({ antony: config })
+  await antony.spawn()
+
+  const dump = await antony.stateDump('tester')
+  t.equal(dump.length, 3)
+  t.ok(typeof dump[0].element === 'object')
+  t.ok(typeof dump[1].element === 'object')
+  t.ok(typeof dump[2].element === 'object')
+})
+
 orchestrator.run()
 

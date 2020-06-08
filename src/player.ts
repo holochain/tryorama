@@ -7,7 +7,7 @@ import { Instance } from './instance'
 import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN, RawConductorConfig } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 const fs = require('fs').promises
 
@@ -44,8 +44,7 @@ export class Player {
   onActivity: () => void
 
   _conductor: Conductor | null
-  _cellNicks: ObjectS<CellId>
-  _dnaIds: Array<DnaId>
+  _cellIds: ObjectS<CellId>
   _configDir: string
   _adminInterfacePort: number
   _appInterfacePort: number
@@ -61,16 +60,16 @@ export class Player {
     this.config = config
 
     this._conductor = null
-    this._cellNicks = {}
+    this._cellIds = {}
     this._configDir = configDir
     this._adminInterfacePort = adminInterfacePort
     this._appInterfacePort = appInterfacePort
     this._spawnConductor = spawnConductor
   }
 
-  admin = () => {
+  admin = (): AdminWebsocket => {
     if (this._conductor) {
-      return this._conductor.adminClient
+      return this._conductor.adminClient!
     } else {
       throw new Error("Conductor is not spawned: admin interface unavailable")
     }
@@ -79,10 +78,10 @@ export class Player {
   call = async (...args: CallArgs) => {
     if (args.length === 4) {
       const [cellNick, zome_name, fn_name, payload] = args
-      if (!this._cellNicks[cellNick]) {
+      if (!this._cellIds[cellNick]) {
         throw new Error("Unknown cell nick: " + cellNick)
       }
-      const cell_id = this._cellNicks[cellNick]
+      const cell_id = this._cellIds[cellNick]
       return this.call({
         cap: 'TODO',
         cell_id,
@@ -99,17 +98,19 @@ export class Player {
     }
   }
 
-
-  callLegacy: CallZomeFunc = async (...args): Promise<any> => {
-    const [instanceId, zome, fn, params] = args
-    if (args.length != 4 || typeof instanceId !== 'string' || typeof zome !== 'string' || typeof fn !== 'string') {
-      throw new Error("player.call() must take 4 arguments: (instanceId, zomeName, funcName, params)")
+  cellId = (nick: CellNick): CellId => {
+    const cellId = this._cellIds[nick]
+    if (!cellId) {
+      throw new Error(`Unknown cell nickname: ${nick}`)
     }
-    this._conductorGuard(`call(${instanceId}, ${zome}, ${fn}, ${JSON.stringify(params)})`)
-    return this._conductor!.callZome(instanceId, zome, fn, params)
+    return cellId
   }
 
-  stateDump = (id: string): Promise<any> => unimplemented("Player.stateDump")
+  stateDump = async (nick: CellNick): Promise<any> => {
+    return this.admin()!.dumpState({
+      cell_id: this.cellId(nick)
+    })
+  }
 
   /**
    * Get a particular Instance of this conductor.
@@ -187,7 +188,7 @@ export class Player {
   _setCellNicks = async () => {
     const { cell_data } = await this._conductor!.appClient!.appInfo({ app_id: 'LEGACY' })
     for (const [cellId, cellNick] of cell_data) {
-      this._cellNicks[cellNick] = cellId
+      this._cellIds[cellNick] = cellId
     }
   }
 
