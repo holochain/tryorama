@@ -7,7 +7,7 @@ Prerequisites:
 
 ### Holochain binary
 
-You must have a `holochain-2020` on the path, built from commit `7297ffbf7c9f814f434b384ddf96209c847afc03` or later.
+You must have a `holochain` binary on the path, built from commit `7297ffbf7c9f814f434b384ddf96209c847afc03` or later.
 
 ### Test DNA
 

@@ -78,17 +78,19 @@ export class Player {
   call = async (...args: CallArgs) => {
     if (args.length === 4) {
       const [cellNick, zome_name, fn_name, payload] = args
-      if (!this._cellIds[cellNick]) {
+      const cell_id = this._cellIds[cellNick]
+      if (!cell_id) {
         throw new Error("Unknown cell nick: " + cellNick)
       }
-      const cell_id = this._cellIds[cellNick]
+      const [_dnaHash, provenance] = cell_id
+      console.log("call provenance: ", provenance)
       return this.call({
         cap: 'TODO',
         cell_id,
         zome_name,
         fn_name,
         payload,
-        provenance: 'TODO',
+        provenance,
       })
     } else if (args.length === 1) {
       this._conductorGuard(`call(${JSON.stringify(args[0])})`)
@@ -187,6 +189,7 @@ export class Player {
 
   _setCellNicks = async () => {
     const { cell_data } = await this._conductor!.appClient!.appInfo({ app_id: 'LEGACY' })
+    console.log('cell_data', cell_data)
     for (const [cellId, cellNick] of cell_data) {
       this._cellIds[cellNick] = cellId
     }
