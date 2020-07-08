@@ -83,7 +83,6 @@ export class Player {
         throw new Error("Unknown cell nick: " + cellNick)
       }
       const [_dnaHash, provenance] = cell_id
-      console.log("call provenance: ", provenance)
       return this.call({
         cap: 'TODO',
         cell_id,
@@ -189,7 +188,6 @@ export class Player {
 
   _setCellNicks = async () => {
     const { cell_data } = await this._conductor!.appClient!.appInfo({ app_id: 'LEGACY' })
-    console.log('cell_data', cell_data)
     for (const [cellId, cellNick] of cell_data) {
       this._cellIds[cellNick] = cellId
     }
