@@ -134,7 +134,7 @@ export const tapeExecutor = <A extends ExecutorApi>(tape: any): Middleware<Scena
           // Include stack trace from actual test function, but all on one line.
           // This is the best we can do for now without messing with tape internals
           const repr = err.stack ? err.stack : err
-          logger.debug("Test error: %o", repr)
+          logger.error("Test error: %o", repr)
           t.fail("Test threw an exception. See output for details.")
           t.end()
           reject(err)
