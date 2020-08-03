@@ -76,7 +76,10 @@ export class Conductor {
     this.adminClient = await AdminWebsocket.connect(this._adminWsUrl)
     this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
 
-    this.appClient = await AppWebsocket.connect(this._appWsUrl, (signal) => console.info("got signal, doing nothing with it: %o", signal))
+    this.appClient = await AppWebsocket.connect(this._appWsUrl, (signal) => {
+      this._onActivity()
+      console.info("got signal, doing nothing with it: %o", signal)
+    })
     this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
 
     // FIXME
@@ -87,6 +90,7 @@ export class Conductor {
     this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
 
     this.callZome = (instanceId, zomeName, fnName, payload) => {
+      this._onActivity()
 
       const cellId: T.CellId = cellIdFromInstanceId(this._rawConfig, instanceId)
 
