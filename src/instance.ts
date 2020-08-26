@@ -1,13 +1,12 @@
-
 type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
 type CallZomeFunc = (zome: string, fn: string, params: any) => Promise<any>
 
-type InstanceConstructorParams = { 
-  id: string, 
-  dnaAddress: string, 
+type InstanceConstructorParams = {
+  id: string,
+  dnaAddress: string,
   agentAddress: string,
-  callAdmin: CallAdminFunc, 
-  callZome: CallZomeFunc, 
+  callAdmin: CallAdminFunc,
+  callZome: CallZomeFunc,
 }
 
 /**
@@ -41,5 +40,13 @@ export class Instance {
 
   stateDump = (): Promise<any> => {
     return this._callAdmin('debug/state_dump', { instance_id: this.id })
+  }
+
+  getMeta = (...args): Promise<any> => {
+    const [hash] = args
+    if (args.length !== 1 || typeof hash !== 'string') {
+      throw new Error("instance.getMeta() takes 1 argument: (hash)")
+    }
+    return this._callAdmin('admin/instance/get_meta', {id: this.id, hash: hash})
   }
 }

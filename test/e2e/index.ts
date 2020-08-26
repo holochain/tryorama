@@ -11,7 +11,7 @@ process.on('unhandledRejection', error => {
 });
 
 const dnaLocationLocal = './dna/passthrough-dna.dna.json'
-const dnaLocationRemote = 'https://github.com/holochain/passthrough-dna/releases/download/v0.0.6/passthrough-dna.dna.json'
+const dnaLocationRemote = 'https://github.com/holochain/passthrough-dna/releases/download/v0.0.9-pre/passthrough-dna.dna.json'
 
 const localOrchestrator = (extra = {}) => new Orchestrator({
   middleware: compose(runSeries(), localOnly),
