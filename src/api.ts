@@ -8,9 +8,10 @@ import * as T from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
-import { promiseSerialObject, stringify, stripPortFromUrl, trace } from './util';
+import { promiseSerialObject, stringify, stripPortFromUrl, trace, delay } from './util';
 import { getConfigPath, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
+import { isConsistent, getMetas as _getMetas } from './consistency'
 import { trycpSession, TrycpClient } from './trycp'
 
 type Modifiers = {
@@ -163,6 +164,21 @@ export class ScenarioApi {
       reject,
     })
   })
+
+    // waits 30 seconds for consistency
+   simpleConsistency = async (instance_id, players: Array<Player>): Promise<Boolean> => {
+      var retries = 3
+      while (!await isConsistent(instance_id, players)) {
+        retries--
+        if (retries == 0) {
+          return false
+        }
+        await delay(10000)
+      }
+      return true
+    }
+
+  getMetas = _getMetas
 
   _getClient = async (machineEndpoint) => {
     if (machineEndpoint === LOCAL_MACHINE_ID) {
