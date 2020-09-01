@@ -166,9 +166,9 @@ export class ScenarioApi {
   })
 
     // waits 30 seconds for consistency
-   simpleConsistency = async (instance_id, players: Array<Player>): Promise<Boolean> => {
+   simpleConsistency = async (instance_id, players: Array<Player>, hosted_players: Array<HostedPlayer>): Promise<Boolean> => {
       var retries = 3
-      while (!await isConsistent(instance_id, players)) {
+      while (!await isConsistent(instance_id, players, hosted_players)) {
         retries--
         if (retries == 0) {
           return false
