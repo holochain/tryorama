@@ -6,6 +6,7 @@ const TOML = require('@iarna/toml')
 import { Waiter, FullSyncNetwork } from '@holochain/hachiko'
 import * as T from "./types"
 import { Player } from "./player"
+import { HostedPlayer, HostedPlayerConstructorParams } from "./hostedPlayer"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
 import { promiseSerialObject, stringify, stripPortFromUrl, trace, delay } from './util';
@@ -153,6 +154,12 @@ export class ScenarioApi {
     return players
   }
 
+  // TODO: update to take in an array of hosted players
+  hostedPlayers = async (hostedPlayerArgs: HostedPlayerConstructorParams): Promise<HostedPlayer> => {
+    const hostedPlayer = new HostedPlayer()
+    return await hostedPlayer.init(hostedPlayerArgs)
+  }
+
   consistency = (players?: Array<Player>): Promise<number> => new Promise((resolve, reject) => {
     if (players) {
       throw new Error("Calling `consistency` with parameters is currently unsupported. See https://github.com/holochain/hachiko/issues/10")
@@ -166,7 +173,7 @@ export class ScenarioApi {
   })
 
     // waits 30 seconds for consistency
-   simpleConsistency = async (instance_id, players: Array<Player>, hosted_players: Array<HostedPlayer>): Promise<Boolean> => {
+   simpleConsistency = async (instance_id: string, players: Array<Player>, hosted_players: Array<HostedPlayer>): Promise<Boolean> => {
       var retries = 3
       while (!await isConsistent(instance_id, players, hosted_players)) {
         retries--

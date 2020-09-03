@@ -7,6 +7,7 @@ import { ChildProcess } from 'child_process';
 import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
+import { HostedPlayer } from "./hostedPlayer"
 
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
@@ -231,3 +232,38 @@ export interface RawConductorConfig {
 }
 
 export type KillFn = (signal?: string) => Promise<void>
+
+// TODO: better define type. Reference keypair from Rust Crate ed25519_dalek (https://docs.rs/ed25519-dalek/1.0.0/ed25519_dalek/)
+export type Keypair = any
+
+interface URL {
+  hash: string;
+  host: string;
+  hostname: string;
+  href: string;
+  readonly origin: string;
+  password: string;
+  pathname: string;
+  port: string;
+  protocol: string;
+  search: string;
+  username: string;
+  toString(): string;
+}
+
+export declare var URL: {
+  prototype: URL;
+  new(url: string, base?: string): URL;
+}
+
+interface URLSearchParams {
+  append(name: string, value: string): void;
+  sort(): void;
+}
+
+export declare var URLSearchParams: {
+  prototype: URLSearchParams;
+  new (init?: string | URLSearchParams): URLSearchParams;
+}
+
+export type AllPlayers = Array<Player|HostedPlayer>
