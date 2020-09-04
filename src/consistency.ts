@@ -48,6 +48,8 @@ function areHeadersEqualSets(metas) {
 }
 
 export const getMetas = async (instance_id: string, all_players: AllPlayers, hash: string): Promise<any> => {
+	console.log("Hashes: ", hash);
+
 	return Promise.all(all_players.map(player => player.getMeta(instance_id, hash)))
 }
 
