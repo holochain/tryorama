@@ -39,20 +39,16 @@ export class HostedPlayer {
   _keypair: Keypair
 
   stateDump = async (): Promise<any> => {
-    const host_state_dump = await callAdmin(this._host_connection.call, 'admin/debug/state_dump', { instance_id: this.id })
-    return host_state_dump
-    // return this._host_connection.call('admin/debug/state_dump')({ instance_id: this.id })
+    return await callAdmin(this._host_connection.call, 'debug/state_dump', { instance_id: this.id })
   }
 
-  getMeta = async (...args): Promise<any> => {
+  getMeta = async (_instanceId, ...args): Promise<any> => {
     const [hash] = args
     if (args.length !== 1 || typeof hash !== 'string') {
       throw new Error("hosted_instance.getMeta() takes 1 argument: (hash)")
     }
 
-    const host_state_dump = await callAdmin(this._host_connection.call, 'admin/instance/get_meta', { id: this.id, hash: hash })
-    return host_state_dump
-    // return this._host_connection.call('admin/instance/get_meta')({ id: this.id, hash: hash })
+    return await callAdmin(this._host_connection.call, 'admin/instance/get_meta', { id: this.id, hash: hash })
   }
   close = () => {
     this._host_connection.close()
@@ -65,15 +61,11 @@ export class HostedPlayer {
     this.host_email = host_email
     this.host_password = host_password
 
-    console.log("Generate Keys");
-    
     // generate host keypair
     this._keypair = await getHostKeyPair(this.host_id, this.host_email, this.host_password)
 
-    console.log("Keys", this._keypair);
-    
     // structure host signed url
-    const url = 'wss://' + this.host_id + '.holohost.net/api/v1/ws/'
+    const url = 'wss://' + this.host_id + '.holohost.net/hc/master/'
     const node_url = await import('url')
     const urlObj = new node_url.URL(url)
     const params = new node_url.URLSearchParams(urlObj.search.slice(1))
@@ -82,7 +74,7 @@ export class HostedPlayer {
     urlObj.search = params.toString()
     this.ws_url = urlObj.toString()
 
-    // make connection with the host    
+    // make connection with the host
     await Promise.race([
       hcWebClient.connect({
         url: this.ws_url,

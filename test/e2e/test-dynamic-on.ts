@@ -79,7 +79,7 @@ module.exports = (testOrchestrator, testConfig) => {
         base: hash1,
         target: hash2,
       })
-    
+
       const linkHash = linkResult.Ok
 
       // bob and carol join later
@@ -110,8 +110,8 @@ module.exports = (testOrchestrator, testConfig) => {
       })
 
       // TODO: Determine why links are returned in stateDump, but not returned by get_links
-      // t.equal(bobLinks.Ok.links.length, 1)      
-      // t.equal(carolLinks.Ok.links.length, 1)      
+      // t.equal(bobLinks.Ok.links.length, 1)
+      // t.equal(carolLinks.Ok.links.length, 1)
     })
 
     const stats = await orchestrator.run()
@@ -120,8 +120,8 @@ module.exports = (testOrchestrator, testConfig) => {
     t.end()
   })
 
-  test('test with hostedPlayers', async t => {
-    t.plan(1)
+  test('test with hostedPlayers instances and run consistency', async t => {
+    t.plan(2)
     const C = testConfig()
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('test with hostedPlayers', async s => {
@@ -134,75 +134,21 @@ module.exports = (testOrchestrator, testConfig) => {
         host_password: 'asdfasdf' // test host #1 pwd
       }
       try{
-        const alice = await s.hostedPlayers(hostedAliceDetails) 
+        const alice = await s.hostedPlayers(hostedAliceDetails)
         t.ok(alice)
-        alice.close()     
+
+        if (!await s.simpleConsistency('holofuel', [], [alice])) {
+          t.fail("failed to reach consistency")
+        }
+
+        alice.close()
       } catch(e) {
-        console.log("ERROR>>>>", e)
-        throw e 
+        console.log("Failed to spin up hostedPlayer", e);
+        t.fail()
       }
     })
 
     const stats = await orchestrator.run()
-
     t.equal(stats.successes, 1)
   })
-
-  // // NOTE: this test must use holofuel, as the test server uses holofuel
-  // // This test is postponed until we determine whether we want to add another dna to repo
-  // // ...or add passthrough dna to the test hosts
-  // // TODO: Hold discusssion with team
-  // test('hosted player consistency', async t => {
-  //   const C = testConfig()
-  //   const orchestrator = testOrchestrator()
-  //   orchestrator.registerScenario('hosted player consistency', async s => {
-  //     // register alice as holochain player
-  //     const { alice } = await s.players({ alice: C.alice }, true)
-
-  //     // register bob as holo hosted player (right now this uses the holofuel dna)
-  //     const bobHostedDetails = {
-  //       id: 'holofuel', // hosted agent instance_id
-  //       agent_address: 'HcScivWRCRMeky9xa7k87tpuF5wnEzy5hOUUTphyIa5kw4i7s5dXyJ7ddrxyahz', //hosted agent address
-  //       host_id: ' https://2zwc1vwrjav2199fwmrmirbyyhlj6hyxmkn1m0rojz98c259gq.holohost.net', // test host #1 uri
-  //       host_email: 'joel+hpos1@holo.host', // test host #1 email
-  //       host_password: 'asdfasdf' // test host #1 pwd
-  //     }
-  //     const bob = await s.hostedPlayers(bobHostedDetails)
-
-
-  //     // initiate alice zome calls (right now this uses the passthrough dna)
-  //     const commit1 = await alice.call('app', 'main', 'commit_entry', {
-  //       content: 'content'
-  //     })
-  //     const commit2 = await alice.call('app', 'main', 'commit_entry', {
-  //       content: 'content'
-  //     })
-  //     const hash1 = commit1.Ok
-  //     const hash2 = commit2.Ok
-
-  //     const linkResult = await alice.call('app', 'main', 'link_entries', {
-  //       base: hash1,
-  //       target: hash2,
-  //     })
-    
-  //     const linkHash = linkResult.Ok
-
-  //     // wait for DHT consistency
-  //     if (!await s.simpleConsistency("app", [alice], [bob])) {
-  //       t.fail("failed to reach consistency")
-  //     }
-
-  //     // check to see whether bob holds alice's entries following consistency waiting
-  //     const bobDump = await bob.stateDump('app')
-
-  //     t.ok(hash1 in bobDump.held_aspects)
-  //     t.ok(hash2 in bobDump.held_aspects)
-  //     t.ok(linkHash in bobDump.held_aspects)   
-  //   })
-
-  //   const stats = await orchestrator.run()
-
-  //   t.equal(stats.successes, 1)
-  //   t.end()
-  // })
 }
