@@ -48,11 +48,11 @@ const singleConductorOrchestrator = (extra = {}) => new Orchestrator({
 // }
 
 
-// require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
-// require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
+require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
+require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 
 require('./test-dynamic-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
-// require('./test-timeout')(localOrchestrator, () => testConfig(dnaLocationLocal))
+require('./test-timeout')(localOrchestrator, () => testConfig(dnaLocationLocal))
 
 // trycpEndpoints().then(([endpoints, processes]) => {
 //   require('./test-always-on')(trycpOrchestrator(endpoints), () => testConfig(dnaLocationRemote))
