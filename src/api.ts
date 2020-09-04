@@ -154,7 +154,6 @@ export class ScenarioApi {
     return players
   }
 
-  // TODO: update to take in an array of hosted players
   hostedPlayers = async (hostedPlayerArgs: HostedPlayerConstructorParams): Promise<HostedPlayer> => {
     const hostedPlayer = new HostedPlayer()
     return await hostedPlayer.init(hostedPlayerArgs)
