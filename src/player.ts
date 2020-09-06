@@ -84,7 +84,7 @@ export class Player {
       }
       const [_dnaHash, provenance] = cell_id
       return this.call({
-        cap: 'TODO',
+        cap: Buffer.from(Array(64).fill('aa').join(''), 'hex'),
         cell_id,
         zome_name,
         fn_name,
