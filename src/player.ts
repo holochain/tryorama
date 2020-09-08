@@ -1,14 +1,13 @@
 import * as _ from 'lodash'
 
-import { Signal, DnaId } from '@holochain/hachiko'
-
-import { Conductor, CallZomeFunc, CallAdminFunc } from './conductor'
+import { Conductor } from './conductor'
 import { Instance } from './instance'
-import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN, RawConductorConfig } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
 import { CellId, CallZomeRequest, CellNick, AdminWebsocket } from '@holochain/conductor-api';
 import { unimplemented } from './util';
+import { fakeCapSecret } from './common';
 const fs = require('fs').promises
 
 type ConstructorArgs = {
@@ -84,7 +83,7 @@ export class Player {
       }
       const [_dnaHash, provenance] = cell_id
       return this.call({
-        cap: 'TODO',
+        cap: fakeCapSecret(),
         cell_id,
         zome_name,
         fn_name,

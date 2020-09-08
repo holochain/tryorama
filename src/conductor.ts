@@ -7,6 +7,7 @@ import env from './env';
 import { connect as legacyConnect } from '@holochain/hc-web-client'
 import { AdminWebsocket, AppWebsocket } from '@holochain/conductor-api'
 import * as T from './types'
+import { fakeCapSecret } from "./common";
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -97,7 +98,7 @@ export class Conductor {
       return this.appClient!.callZome({
         cell_id: cellId as any,
         zome_name: zomeName,
-        cap: 'TODO',
+        cap: fakeCapSecret(),
         fn_name: fnName,
         payload: payload,
         provenance: 'TODO' as any
