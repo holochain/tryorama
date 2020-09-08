@@ -7,8 +7,9 @@ import { Instance } from './instance'
 import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN, RawConductorConfig } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CapSecret, CellNick, AdminWebsocket } from '@holochain/conductor-api';
 import { unimplemented } from './util';
+import { fakeCapSecret } from './common';
 const fs = require('fs').promises
 
 type ConstructorArgs = {
@@ -84,7 +85,7 @@ export class Player {
       }
       const [_dnaHash, provenance] = cell_id
       return this.call({
-        cap: Buffer.from(Array(64).fill('aa').join(''), 'hex'),
+        cap: fakeCapSecret(),
         cell_id,
         zome_name,
         fn_name,
