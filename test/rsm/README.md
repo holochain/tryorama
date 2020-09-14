@@ -7,7 +7,9 @@ Prerequisites:
 
 ### Holochain binary
 
-You must have a `holochain` binary on the path, built from commit `7297ffbf7c9f814f434b384ddf96209c847afc03` or later.
+You must have a `holochain` binary on the path:
+- Clone the [Holochain repo](https://github.com/holochain/holochain)
+- Get the correct holochain build environment with: `cd holochain && nix-shell`
 
 ### Test DNA
 
