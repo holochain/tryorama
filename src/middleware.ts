@@ -3,6 +3,7 @@ import { ScenarioApi } from "./api";
 import { trace } from "./util";
 import * as T from "./types";
 import * as _ from 'lodash'
+import logger from "./logger";
 
 interface ApiPlayers<Config> {
   players: (config: Config, data?: any) => Promise<any>
@@ -132,7 +133,9 @@ export const tapeExecutor = <A extends ExecutorApi>(tape: any): Middleware<Scena
         .catch((err) => {
           // Include stack trace from actual test function, but all on one line.
           // This is the best we can do for now without messing with tape internals
-          t.fail(err.stack ? err.stack : err)
+          const repr = err.stack ? err.stack : err
+          logger.error("Test error: %o", repr)
+          t.fail("Test threw an exception. See output for details.")
           t.end()
           reject(err)
         })

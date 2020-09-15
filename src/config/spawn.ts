@@ -1,7 +1,5 @@
 
 import { spawn, execSync, ChildProcess } from "child_process";
-import { Ws } from 'ws'
-import axios from "axios"
 
 import logger, { makeLogger } from "../logger";
 import * as T from '../types'
@@ -19,7 +17,9 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     kill: async () => { },
     onSignal: () => { },
     onActivity: () => { },
-    interfaceWsUrl: '',
+    adminWsUrl: '',
+    appWsUrl: '',
+    rawConfig: player.config
   })
 }
 
@@ -28,11 +28,15 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
   const configPath = getConfigPath(player._configDir)
   let handle
   try {
-    const binPath = process.env.TRYORAMA_HOLOCHAIN_PATH || 'holochain'
+    const binPath = env.holochainPath
     const version = execSync(`${binPath} --version`)
-    logger.info("Using conductor path: %s", binPath)
-    logger.info("Holochain version: %s", version)
-    handle = spawn(binPath, ['-c', configPath], {
+    logger.info("Using conductor path:  %s", binPath)
+    logger.info("Holochain version:     %s", version)
+    logger.info("Conductor config path: %s", configPath)
+
+    const flag = env.legacy ? '-c' : '--legacy-tryorama-config-path'
+    logger.debug('running: %s %s %s', binPath, flag, configPath)
+    handle = spawn(binPath, [flag, configPath], {
       env: {
         "N3H_QUIET": "1",
         "RUST_BACKTRACE": "1",
@@ -51,10 +55,14 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       handleHook(handle)
     }
 
-    const newPort = await getTrueInterfacePort(handle, player.name)
+    // TODO: revisit for non-legacy
+    const newPort = await (!env.legacy
+      ? awaitInterfaceReady(handle, player.name)
+      : getTrueInterfacePortLegacy(handle, player.name)
+    )
 
     if (newPort) {
-      player._interfacePort = newPort
+      player._adminInterfacePort = newPort
     }
 
     const conductor = new Conductor({
@@ -62,7 +70,9 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      interfaceWsUrl: `ws://localhost:${player._interfacePort}`,
+      adminWsUrl: `ws://localhost:${player._adminInterfacePort}`,
+      appWsUrl: `ws://localhost:${player._appInterfacePort}`,
+      rawConfig: player.config
     })
 
     return conductor
@@ -72,7 +82,31 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
   }
 }
 
-const getTrueInterfacePort = (handle, name): Promise<number | null> => {
+const awaitInterfaceReady = (handle, name): Promise<null> => new Promise((fulfill, reject) => {
+  const pattern = 'Conductor ready.'
+  let resolved = false
+  handle.on('close', code => {
+    resolved = true
+    logger.info(`conductor '${name}' exited with code ${code}`)
+    // this rejection will have no effect if the promise already resolved,
+    // which happens below
+    reject(`Conductor exited before starting interface (code ${code})`)
+  })
+  handle.stdout.on('data', data => {
+    if (resolved) {
+      return
+    }
+
+    const line = data.toString('utf8')
+    if (line.match(pattern)) {
+      logger.info(`Conductor '${name}' process spawning completed.`)
+      resolved = true
+      fulfill()
+    }
+  })
+})
+
+const getTrueInterfacePortLegacy = (handle, name): Promise<number | null> => {
 
   // This is a magic string output by the conductor when using the "choose_free_port"
   // Interface conductor config, to alert the client as to which port the interface chose.
@@ -82,7 +116,7 @@ const getTrueInterfacePort = (handle, name): Promise<number | null> => {
   // restart, this port will change, and tryorama will not know about it!!
   // If we ever do something like that, we'll have to constantly monitor stdout
   // and update the interface port accordingly
-  let portPattern = new RegExp(`\\*\\*\\* Bound interface '${env.interfaceId}' to port: (\\d+)`)
+  let portPattern = new RegExp(`\\*\\*\\* Bound interface '${env.adminInterfaceId}' to port: (\\d+)`)
 
   return new Promise((fulfill, reject) => {
     let resolved = false
@@ -136,7 +170,9 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    interfaceWsUrl: `${machineUrl}:${player._interfacePort}`,
+    adminWsUrl: `${machineUrl}:${player._adminInterfacePort}`,
+    appWsUrl: `${machineUrl}:${player._appInterfacePort}`,
+    rawConfig: 'TODO',
   })
 }
 

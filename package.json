@@ -1,6 +1,6 @@
 {
   "name": "@holochain/tryorama",
-  "version": "0.3.4-dev.0",
+  "version": "0.3.4",
   "description": "",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -21,6 +21,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@holochain/conductor-api": "^0.0.1-dev.8",
     "@holochain/hachiko": "^0.5.2",
     "@holochain/hc-web-client": "^0.5.0",
     "@iarna/toml": "^2.2.3",

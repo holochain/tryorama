@@ -15,16 +15,26 @@ const float = (n) => {
   }
 }
 
+const bool = Boolean
+
+const legacy = bool(process.env['TRYORAMA_LEGACY'] || false)
+const defaultHolochainPath = 'holochain'
+const interfaceIdPrefix = process.env['TRYORAMA_INTERFACE_ID'] || 'tryorama-interface'
+
 const VARS = {
-  interfaceId: process.env['TRYORAMA_INTERFACE_ID'] || 'tryorama-interface',
-  stateDumpOnError: process.env['TRYORAMA_STATE_DUMP'] || true,
+  adminInterfaceId: `${interfaceIdPrefix}-admin`,
+  appInterfaceId: `${interfaceIdPrefix}-app`,
+  stateDumpOnError: bool(process.env['TRYORAMA_STATE_DUMP'] || true),
   zomeCallTimeoutMs: int(process.env['TRYORAMA_ZOME_CALL_TIMEOUT_MS']) || 90000,
   conductorTimeoutMs: int(process.env['TRYORAMA_CONDUCTOR_TIMEOUT_MS']) || 125000,
-  strictConductorTimeout: Boolean(process.env['TRYORAMA_STRICT_CONDUCTOR_TIMEOUT']),
+  strictConductorTimeout: bool(process.env['TRYORAMA_STRICT_CONDUCTOR_TIMEOUT']),
   tempStorage: process.env['TRYORAMA_STORAGE'],
-  chooseFreePort: Boolean(process.env['TRYORAMA_CHOOSE_FREE_PORT']),
+  chooseFreePort: bool(process.env['TRYORAMA_CHOOSE_FREE_PORT']),
   logLevel: process.env['TRYORAMA_LOG_LEVEL'],
   portRange: [33000, 34000],  // not hooked up to env var yet
+  legacy,
+  holochainPath: process.env.TRYORAMA_HOLOCHAIN_PATH || defaultHolochainPath
 }
+
 
 export default VARS

@@ -34,45 +34,44 @@ const defaultStorage = (configDir, instanceId) => {
  * between players, and the second field will be the same between different players.
  */
 export const gen =
-(instancesFort: T.Fort<T.EitherInstancesConfig>, commonFort?: T.Fort<T.ConductorConfigCommon>) => {
-  // TODO: type check of `commonFort`
+  (instancesFort: T.Fort<T.EitherInstancesConfig>, commonFort?: T.Fort<T.ConductorConfigCommon>) => {
+    // TODO: type check of `commonFort`
 
-  // If we get a function, we can't type check until after the function has been called
-  // ConfigSeedArgs
-  let typeCheckLater = false
+    // If we get a function, we can't type check until after the function has been called
+    // ConfigSeedArgs
+    let typeCheckLater = false
 
-  // It leads to more helpful error messages
-  // to have this validation before creating the seed function
-  if (_.isFunction(instancesFort)) {
-    typeCheckLater = true
-  } else {
-    validateInstancesType(instancesFort)
-  }
-
-  return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> =>
-  {
-    const instancesData = await T.collapseFort(instancesFort, args)
-    if (typeCheckLater) {
-      validateInstancesType(instancesData)
+    // It leads to more helpful error messages
+    // to have this validation before creating the seed function
+    if (_.isFunction(instancesFort)) {
+      typeCheckLater = true
+    } else {
+      validateInstancesType(instancesFort)
     }
-    const instancesDry = _.isArray(instancesData)
-      ? instancesData
-      : desugarInstances(instancesData, args)
 
-    const specific = await genPartialConfigFromDryInstances(instancesDry, args)
-    const common = _.merge(
-      {},
-      defaultCommonConfig,
-      await T.collapseFort(expand(commonFort), args)
-    )
+    return async (args: T.ConfigSeedArgs): Promise<T.RawConductorConfig> => {
+      const instancesData = await T.collapseFort(instancesFort, args)
+      if (typeCheckLater) {
+        validateInstancesType(instancesData)
+      }
+      const instancesDry = _.isArray(instancesData)
+        ? instancesData
+        : desugarInstances(instancesData, args)
 
-    return _.merge(
-      {},
-      specific,
-      common,
-    )
+      const specific = await genPartialConfigFromDryInstances(instancesDry, args)
+      const common = _.merge(
+        {},
+        defaultCommonConfig,
+        await T.collapseFort(expand(commonFort), args)
+      )
+
+      return _.merge(
+        {},
+        specific,
+        common,
+      )
+    }
   }
-}
 
 const validateInstancesType = (instances: T.EitherInstancesConfig, msg: string = '') => {
   if (_.isArray(instances)) {
@@ -96,7 +95,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
 
   if (!dna.hash) {
-    dna.hash = await getDnaHash(dna.file, dna.uuid).catch(err => {
+    dna.hash = !env.legacy ? "" : await getDnaHash(dna.file, dna.uuid).catch(err => {
       logger.warn(`Could not determine hash of DNA at '${dna.file}'. Note that tryorama cannot determine the hash of DNAs at URLs\n\tOriginal error: ${err}`)
       return "[UNKNOWN]"
     })
@@ -127,7 +126,7 @@ export const makeTestAgent = (id, { playerName, uuid }) => ({
 
 export const genPartialConfigFromDryInstances = async (instances: T.DryInstancesConfig, args: T.ConfigSeedArgs) => {
 
-  const { configDir, interfacePort, uuid } = args
+  const { configDir, adminInterfacePort, appInterfacePort, uuid } = args
 
   const config: any = {
     agents: [],
@@ -136,13 +135,24 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
     persistence_dir: configDir,
   }
 
-  const interfaceConfig = {
+  const adminInterfaceConfig = {
     admin: true,
     choose_free_port: env.chooseFreePort,
-    id: env.interfaceId,
+    id: env.adminInterfaceId,
     driver: {
       type: 'websocket',
-      port: interfacePort,
+      port: adminInterfacePort,
+    },
+    instances: [] as Array<{ id: string }>
+  }
+
+  const appInterfaceConfig = {
+    admin: false,
+    choose_free_port: env.chooseFreePort,
+    id: env.appInterfaceId,
+    driver: {
+      type: 'websocket',
+      port: appInterfacePort,
     },
     instances: [] as Array<{ id: string }>
   }
@@ -166,10 +176,10 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
       dna: resolvedDna.id,
       storage: instance.storage || defaultStorage(configDir, instance.id)
     })
-    interfaceConfig.instances.push({ id: instance.id })
+    appInterfaceConfig.instances.push({ id: instance.id })
   }
 
-  config.interfaces = [interfaceConfig]
+  config.interfaces = [adminInterfaceConfig, appInterfaceConfig]
   return config
 }
 

@@ -1,25 +1,29 @@
 import * as _ from 'lodash'
 
-import { Signal, DnaId } from '@holochain/hachiko'
-
-import { Conductor, CallZomeFunc, CallAdminFunc } from './conductor'
+import { Conductor } from './conductor'
 import { Instance } from './instance'
-import { ConfigSeedArgs, SpawnConductorFn, ObjectS, ObjectN, RawConductorConfig } from './types';
-import { getConfigPath } from './config';
+import { SpawnConductorFn, ObjectS, RawConductorConfig } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket } from '@holochain/conductor-api';
+import { unimplemented } from './util';
+import { fakeCapSecret } from './common';
+const fs = require('fs').promises
 
 type ConstructorArgs = {
   name: string,
   config: RawConductorConfig,
   configDir: string,
-  interfacePort: number,
+  adminInterfacePort: number,
+  appInterfacePort: number,
   onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
   onActivity: () => void,
   spawnConductor: SpawnConductorFn,
 }
+
+type CallArgs = [CallZomeRequest] | [string, string, string, any]
 
 /**
  * Representation of a Conductor user.
@@ -39,13 +43,13 @@ export class Player {
   onActivity: () => void
 
   _conductor: Conductor | null
-  _instances: ObjectS<Instance> | ObjectN<Instance>
-  _dnaIds: Array<DnaId>
+  _cellIds: ObjectS<CellId>
   _configDir: string
-  _interfacePort: number
+  _adminInterfacePort: number
+  _appInterfacePort: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, config, configDir, interfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ name, config, configDir, adminInterfacePort, appInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
@@ -55,27 +59,58 @@ export class Player {
     this.config = config
 
     this._conductor = null
-    this._instances = {}
+    this._cellIds = {}
     this._configDir = configDir
-    this._interfacePort = interfacePort
+    this._adminInterfacePort = adminInterfacePort
+    this._appInterfacePort = appInterfacePort
     this._spawnConductor = spawnConductor
   }
 
-  admin: CallAdminFunc = async (method, params): Promise<any> => {
-    this._conductorGuard(`admin(${method}, ${JSON.stringify(params)})`)
-    return this._conductor!.callAdmin(method, params)
-  }
-
-  call: CallZomeFunc = async (...args): Promise<any> => {
-    const [instanceId, zome, fn, params] = args
-    if (args.length != 4 || typeof instanceId !== 'string' || typeof zome !== 'string' || typeof fn !== 'string') {
-      throw new Error("player.call() must take 4 arguments: (instanceId, zomeName, funcName, params)")
+  admin = (): AdminWebsocket => {
+    if (this._conductor) {
+      return this._conductor.adminClient!
+    } else {
+      throw new Error("Conductor is not spawned: admin interface unavailable")
     }
-    this._conductorGuard(`call(${instanceId}, ${zome}, ${fn}, ${JSON.stringify(params)})`)
-    return this._conductor!.callZome(instanceId, zome, fn, params)
   }
 
-  stateDump = (id: string): Promise<any> => this.instance(id).stateDump()
+  call = async (...args: CallArgs) => {
+    if (args.length === 4) {
+      const [cellNick, zome_name, fn_name, payload] = args
+      const cell_id = this._cellIds[cellNick]
+      if (!cell_id) {
+        throw new Error("Unknown cell nick: " + cellNick)
+      }
+      const [_dnaHash, provenance] = cell_id
+      return this.call({
+        cap: fakeCapSecret(),
+        cell_id,
+        zome_name,
+        fn_name,
+        payload,
+        provenance,
+      })
+    } else if (args.length === 1) {
+      this._conductorGuard(`call(${JSON.stringify(args[0])})`)
+      return this._conductor!.appClient!.callZome(args[0])
+    } else {
+      throw new Error("Must use either 1 or 4 arguments with `player.call`")
+    }
+  }
+
+  cellId = (nick: CellNick): CellId => {
+    const cellId = this._cellIds[nick]
+    if (!cellId) {
+      throw new Error(`Unknown cell nickname: ${nick}`)
+    }
+    return cellId
+  }
+
+  stateDump = async (nick: CellNick): Promise<any> => {
+    return this.admin()!.dumpState({
+      cell_id: this.cellId(nick)
+    })
+  }
 
   /**
    * Get a particular Instance of this conductor.
@@ -85,18 +120,15 @@ export class Player {
    */
   instance = (instanceId) => {
     this._conductorGuard(`instance(${instanceId})`)
-    return _.cloneDeep(this._instances[instanceId])
+    unimplemented("Player.instance")
+    // return _.cloneDeep(this._instances[instanceId])
   }
 
   instances = (filterPredicate?): Array<Instance> => {
-    return _.flow(_.values, _.filter(filterPredicate), _.cloneDeep)(this._instances)
+    unimplemented("Player.instances")
+    return []
+    // return _.flow(_.values, _.filter(filterPredicate), _.cloneDeep)(this._instances)
   }
-
-  /**
-   * @deprecated in 0.1.2
-   * Use `player.instance(instanceId)` instead
-   */
-  info = (instanceId) => this.instance(instanceId)
 
   /**
    * Spawn can take a function as an argument, which allows the caller
@@ -119,7 +151,7 @@ export class Player {
 
     this.logger.debug("initializing")
     await this._conductor.initialize()
-    await this._setInstances()
+    await this._setCellNicks()
     this.logger.debug("initialized")
   }
 
@@ -143,35 +175,21 @@ export class Player {
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
       await this.kill(signal)
-      unparkPort(this._interfacePort)
+      unparkPort(this._adminInterfacePort)
+      unparkPort(this._appInterfacePort)
       return true
     } else {
-      unparkPort(this._interfacePort)
+      unparkPort(this._adminInterfacePort)
+      unparkPort(this._appInterfacePort)
       return false
     }
   }
 
-  _setInstances = async () => {
-    const agentList = await this._conductor!.callAdmin("admin/agent/list", {})
-    const dnaList = await this._conductor!.callAdmin("admin/dna/list", {})
-    const instanceList = await this._conductor!.callAdmin("admin/instance/list", {})
-    instanceList.forEach(i => {
-      const agent = agentList.find(a => a.id === i.agent)
-      const dna = dnaList.find(d => d.id === i.dna)
-      if (!agent) {
-        throw new Error(`Instance '${i.id}' refers to nonexistant agent id '${i.agent}'`)
-      }
-      if (!dna) {
-        throw new Error(`Instance '${i.id}' refers to nonexistant dna id '${i.dna}'`)
-      }
-      this._instances[i.id] = new Instance({
-        id: i.id,
-        agentAddress: agent.public_address,
-        dnaAddress: dna.hash,
-        callAdmin: (method, params) => this._conductor!.callAdmin(method, params),
-        callZome: (zome, fn, params) => this._conductor!.callZome(i.id, zome, fn, params)
-      })
-    })
+  _setCellNicks = async () => {
+    const { cell_data } = await this._conductor!.appClient!.appInfo({ app_id: 'LEGACY' })
+    for (const [cellId, cellNick] of cell_data) {
+      this._cellIds[cellNick] = cellId
+    }
   }
 
   _conductorGuard = (context) => {

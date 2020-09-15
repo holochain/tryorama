@@ -89,3 +89,7 @@ const parseAxiosError = e => {
     return e
   }
 }
+
+export const unimplemented = (reason: string) => {
+  throw new Error("UNIMPLEMENTED: " + reason)
+}

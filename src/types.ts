@@ -31,7 +31,8 @@ export type IntermediateConfig = RawConductorConfig  // TODO: constrain
 export type ConfigSeed = (args: ConfigSeedArgs) => Promise<IntermediateConfig>
 
 export type PartialConfigSeedArgs = {
-  interfacePort: number,
+  adminInterfacePort: number,
+  appInterfacePort: number,
   configDir: string,
 }
 
@@ -45,7 +46,7 @@ export type AnyConfigBuilder = ConfigSeed | EitherInstancesConfig
 export type PlayerConfigs = ObjectS<ConfigSeed> | Array<ConfigSeed>
 export type MachineConfigs = ObjectS<PlayerConfigs>
 
-export const interfaceWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
+export const adminWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
 
 /** "F or T" */
 // export const FortV = <T extends t.Mixed>(inner: T) => t.union([
@@ -147,9 +148,9 @@ export const LoggerConfigV = t.union([
 export type LoggerConfig = t.TypeOf<typeof LoggerConfigV>
 
 export const CloudWatchLogsConfigV = t.partial({
-    region: t.string,
-    log_group_name: t.string,
-    log_stream_name: t.string
+  region: t.string,
+  log_group_name: t.string,
+  log_stream_name: t.string
 })
 export type CloudWatchLogsConfig = t.TypeOf<typeof CloudWatchLogsConfigV>
 
@@ -167,8 +168,8 @@ export const RawLoggerMetricPublisherV = t.type({
 export type RawLoggerMetricPublisher = t.TypeOf<typeof RawLoggerMetricPublisherV>
 
 export const MetricPublisherConfigV = t.union([
-    LoggerMetricPublisherV,
-    CloudWatchLogsConfigV,
+  LoggerMetricPublisherV,
+  CloudWatchLogsConfigV,
 ])
 export type MetricPublisherConfig = t.TypeOf<typeof MetricPublisherConfigV>
 
@@ -231,3 +232,7 @@ export interface RawConductorConfig {
 }
 
 export type KillFn = (signal?: string) => Promise<void>
+
+export type CellId = [DnaHash, AgentId]
+export type DnaHash = string
+export type AgentId = string

@@ -88,14 +88,15 @@ export class ScenarioApi {
         }
 
         if (configJson.interfaces[0].driver.type !== 'websocket') {
-          throw new Error("Generated config must contain a single admin websocket interface")
+          throw new Error("Generated config must contain an admin websocket interface")
         }
 
         // this code will only be executed once it is determined that all configs are valid
         playerBuilders[playerName] = async () => {
           const { instances } = configJson
           const configDir = configJson.persistence_dir
-          const interfacePort = configJson.interfaces[0].driver.port
+          const adminInterfacePort = configJson.interfaces[0].driver.port
+          const appInterfacePort = configJson.interfaces[1].driver.port
 
           if (trycp) {
             const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
@@ -110,7 +111,8 @@ export class ScenarioApi {
             name: playerName,
             config: configJson,
             configDir,
-            interfacePort,
+            adminInterfacePort,
+            appInterfacePort,
             spawnConductor,
             onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
             onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),

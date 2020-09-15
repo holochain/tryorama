@@ -1,4 +1,18 @@
 # tryorama
+
+- - -
+
+> # ⚠️ NOTE: Tryorama is in a transitional phase ⚠️
+>
+> Tryorama is being rewritten. Most functionality
+> is missing, tests are no longer expected to work, and this README cannot be guaranteed to be accurate. As progress is made, this codebase will be unified into a cohesive whole, and Tryorama
+> will eventually become a user-friendly testing framework once again.
+>
+> For now, see [test/rsm](test/rsm) for some tests that DO work.
+
+- - -
+
+
 An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
 
 [![Project](https://img.shields.io/badge/project-holochain-blue.svg?style=flat-square)](http://holochain.org/)
@@ -255,7 +269,7 @@ To achieve the independence of conductors, Tryorama ensure that various values a
 const config = Config.gen({alice: dnaConfig})
 
 // becomes this
-const config = ({playerName, uuid, configDir, interfacePort}) => {
+const config = ({playerName, uuid, configDir, adminInterfacePort}) => {
   return {
     persistence_dir: configDir,
     agents: [/* ... */],
@@ -277,13 +291,14 @@ Config seeds take an object as a parameter, with five values:
 * `playerName`: the name of the player for this conductor, e.g. `"alice"`
 * `uuid`: a UUID which is guaranteed to be the same within a scenario but unique between different scenarios
 * `configDir`: a temp dir created specifically for this conductor
-* `interfacePort`: a free port on the machine which is used for the admin Websocket interface, as well as to make zome calls
+* `adminInterfacePort`: a free port on the machine which is used for the admin Websocket interface
+* `appInterfacePort`: a free port on the machine which is used to make zome calls
 
 ### What Tryorama expects from generated configs
 
 Under the hood, Tryorama generates unique and valid values for these parameters and generates unique configurations by injecting these values into the seed functions. If you are writing your own config seed, you can use or ignore these values as needed, but you must be careful to set things up in a way that Tryorama can work with to drive the test scenarios:
 
-* There must be an admin interface running over WebSockets at `interfacePort` which includes all instances that are part of this test
+* There must be an admin interface running over WebSockets at `adminInterfacePort` which includes all instances that are part of this test
 * *All* agents within a scenario must have a unique name (even across different conductors!)
 * You must incorporate the UUID or some other source of uniqueness into the DNA config's `uuid` field, to ensure that conductors in different tests do not attempt to connect to each other on the same network
 
@@ -312,7 +327,7 @@ You can also use a seed function in the first parameter of `Config.gen`, as long
 
 ```js
 Config.gen(
-  ({playerName}) => ({ 
+  ({playerName}) => ({
     [`${playerName}-1`]: dnaConfig,
     [`${playerName}-2`]: dnaConfig,
   })
@@ -339,7 +354,7 @@ new Orchestrator()
 // is equivalent to this:
 new Orchestrator({
   middleware: combine(
-    tapeExecutor(require('tape')), 
+    tapeExecutor(require('tape')),
     localOnly
   )
 })
