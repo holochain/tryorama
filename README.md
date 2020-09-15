@@ -8,7 +8,7 @@
 > is missing, tests are no longer expected to work, and this README cannot be guaranteed to be accurate. As progress is made, this codebase will be unified into a cohesive whole, and Tryorama
 > will eventually become a user-friendly testing framework once again.
 >
-> For now, see [test/2020](test/2020) for some tests that DO work.
+> For now, see [test/rsm](test/rsm) for some tests that DO work.
 
 - - -
 
