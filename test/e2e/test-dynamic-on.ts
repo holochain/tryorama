@@ -1,6 +1,9 @@
 import * as tape from 'tape'
 import tapeP from 'tape-promise'
 
+import { Config } from '../../src'
+import * as T from '../../src/types'
+
 const test = tapeP(tape)
 
 module.exports = (testOrchestrator, testConfig) => {
@@ -86,7 +89,7 @@ module.exports = (testOrchestrator, testConfig) => {
       const { bob, carol } = await s.players({ bob: C.bob, carol: C.carol }, true)
 
       // wait for DHT consistency
-      if (!await s.simpleConsistency("app", [alice, bob, carol])) {
+      if (!await s.simpleConsistency("app", [alice, bob, carol], [])) {
         t.fail("failed to reach consistency")
       }
 
@@ -121,8 +124,15 @@ module.exports = (testOrchestrator, testConfig) => {
   })
 
   test('test with hostedPlayers instances and run consistency', async t => {
-    t.plan(2)
-    const C = testConfig()
+    const dna = Config.dna("./dna/holofuel.dna.json")
+    const common: T.ConductorConfigCommon = {
+      logger: Config.logger(true),
+      metric_publisher: Config.metricPublisher('logger'),
+      network: { type: 'sim2h', sim2h_url: 'ws://holofuel-hc45.sim2h.net:9001' }
+      // network: { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }
+    }
+    const C: T.ConfigSeed = Config.gen({ holofuel: dna }, common)
+
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('test with hostedPlayers', async s => {
       const hostedAliceDetails = {
@@ -133,18 +143,23 @@ module.exports = (testOrchestrator, testConfig) => {
         host_email: 'joel+hpos1@holo.host', // test host #1 email
         host_password: 'asdfasdf' // test host #1 pwd
       }
+      const { bob } = await s.players({ bob: C }, true)
       try{
         const alice = await s.hostedPlayers(hostedAliceDetails)
         t.ok(alice)
 
-        if (!await s.simpleConsistency('holofuel', [], [alice])) {
-          t.fail("failed to reach consistency")
+        try {
+          if (!await s.simpleConsistency('holofuel', [bob], [])) {
+              t.fail("failed to reach consistency")
+            }
+        } catch (error) {
+          t.fail("Error while running consistency")
         }
-
         alice.close()
+
       } catch(e) {
         console.log("Failed to spin up hostedPlayer", e);
-        t.fail()
+        t.fail("Failed to spin up hostedPlayer")
       }
     })
 
