@@ -80,6 +80,7 @@ export const DnaConfigV = t.intersection([
   t.partial({
     hash: t.string,
     uuid: t.string,
+    fixed_uuid: t.boolean,
   })
 ])
 export type DnaConfig = t.TypeOf<typeof DnaConfigV>

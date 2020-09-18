@@ -93,7 +93,9 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   const dna = _.cloneDeep(inputDna)
 
   dna.id = dna.uuid ? `${dna.id}::${dna.uuid}` : dna.id
-  dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
+  if (!dna.fixed_uuid) {
+    dna.uuid = dna.uuid ? `${dna.uuid}::${providedUuid}` : providedUuid
+  }
 
   if (!dna.hash) {
     dna.hash = await getDnaHash(dna.file).catch(err => {
