@@ -16,12 +16,13 @@
     "prepublishOnly": "npm test",
     "test": "ts-node test | tap-diff",
     "test:unit": "ts-node test/unit | tap-diff",
-    "test:e2e": "ts-node test/e2e"
+    "test:e2e": "ts-node test/e2e",
+    "postinstall": "npm run build"
   },
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@holochain/conductor-api": "^0.0.1-dev.8",
+    "@holochain/conductor-api": "0.0.1-dev.10",
     "@holochain/hachiko": "^0.5.2",
     "@holochain/hc-web-client": "^0.5.0",
     "@iarna/toml": "^2.2.3",
