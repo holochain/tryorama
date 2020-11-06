@@ -32,7 +32,7 @@ export class Conductor {
   appClient: AppWebsocket | null
 
   _adminInterfacePort: number
-  _: string
+  _machineHost: string
   _isInitialized: boolean
   _rawConfig: T.RawConductorConfig
   _wsClosePromise: Promise<void>
