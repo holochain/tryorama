@@ -74,7 +74,7 @@ export class Conductor {
   _connectInterfaces = async () => {
     this._onActivity()
 
-    const adminWsUrl = `${this._machineUrl}:${this._adminInterfacePort}`,
+    const adminWsUrl = `${this._machineUrl}:${this._adminInterfacePort}`
 
     this.adminClient = await AdminWebsocket.connect(adminWsUrl)
     this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)

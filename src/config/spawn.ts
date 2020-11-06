@@ -1,4 +1,3 @@
-
 import { spawn, execSync, ChildProcess } from "child_process";
 
 import logger, { makeLogger } from "../logger";
@@ -17,8 +16,8 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     kill: async () => { },
     onSignal: () => { },
     onActivity: () => { },
-    adminWsUrl: '',
-    appWsUrl: '',
+    machineUrl: '',
+    adminPort: 0,
     rawConfig: player.config
   })
 }
@@ -71,8 +70,8 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      adminWsUrl: `ws://localhost:${player._adminInterfacePort}`,
-      appWsUrl: `ws://localhost:${player._appInterfacePort}`,
+      machineUrl: `localhost`,
+      adminPort: 0,
       rawConfig: player.config
     })
 
@@ -172,6 +171,7 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
     machineUrl,
+    adminPort: 0,
     rawConfig: 'TODO',
   })
 }
