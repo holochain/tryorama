@@ -16,7 +16,7 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     kill: async () => { },
     onSignal: () => { },
     onActivity: () => { },
-    machineUrl: '',
+    machineHost: '',
     adminPort: 0,
     rawConfig: player.config
   })
@@ -70,7 +70,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       kill: async (...args) => handle.kill(...args),
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
-      machineUrl: `localhost`,
+      machineHost: `localhost`,
       adminPort: 0,
       rawConfig: player.config
     })
@@ -156,7 +156,7 @@ const getTrueInterfacePortLegacy = (handle, name): Promise<number | null> => {
   })
 }
 
-export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
+export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
   const name = player.name
   const spawnResult = await trycp.spawn(name)
   logger.debug(`TryCP spawn result: ${spawnResult}`)
@@ -170,7 +170,7 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    machineUrl,
+    machineHost,
     adminPort: 0,
     rawConfig: 'TODO',
   })

@@ -32,13 +32,13 @@ export class Conductor {
   appClient: AppWebsocket | null
 
   _adminInterfacePort: number
-  _machineUrl: string
+  _: string
   _isInitialized: boolean
   _rawConfig: T.RawConductorConfig
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, kill, onSignal, onActivity, machineUrl, adminPort, rawConfig }) {
+  constructor({ name, kill, onSignal, onActivity, machineHost, adminPort, rawConfig }) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -52,7 +52,7 @@ export class Conductor {
 
     this.adminClient = null
     this.appClient = null
-    this._machineUrl = machineUrl
+    this._machineHost = machineHost
     this._adminInterfacePort = adminPort
     this._isInitialized = false
     this._rawConfig = rawConfig
@@ -74,13 +74,13 @@ export class Conductor {
   _connectInterfaces = async () => {
     this._onActivity()
 
-    const adminWsUrl = `${this._machineUrl}:${this._adminInterfacePort}`
+    const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
 
     this.adminClient = await AdminWebsocket.connect(adminWsUrl)
     this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
 
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
-    const appWsUrl = `${this._machineUrl}:${appInterfacePort}`
+    const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
 
     this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {
       this._onActivity()
