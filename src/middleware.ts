@@ -161,7 +161,8 @@ export const runSeries = <A>(): Middleware<A, A> => {
  * merge the configs into one big TOML file,
  * and create a single player on the local machine to run it.
  * TODO: currently BROKEN.
-*/
+ */
+/*
 export const singleConductor: MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> = (run: RunnerS<ApiMachineConfigs>, f: Scenario<ApiMachineConfigs>) => run((s: ScenarioApi) => {
   unsupportedMergeConfigs('singleConductor middleware')
   const s_ = _.assign({}, s, {
@@ -186,7 +187,7 @@ export const singleConductor: MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> 
     }
   })
   return f(s_)
-})
+})*/
 
 // TODO: add test
 export const callSync = (run, f) => run(s => {

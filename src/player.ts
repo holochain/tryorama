@@ -24,7 +24,7 @@ type ConstructorArgs = {
   spawnConductor: SpawnConductorFn,
 }
 
-type CallArgs = [CallZomeRequest] | [string, string, string, any]
+type CallArgs = [CallZomeRequest] | [string, string, string, string, any]
 
 /**
  * Representation of a Conductor user.
@@ -44,7 +44,7 @@ export class Player {
   onActivity: () => void
 
   _conductor: Conductor | null
-  _cellIds: ObjectS<CellId>
+  _cellIds: ObjectS<ObjectS<CellId>>
   _configDir: string
   _adminInterfacePort: number
   _appInterfacePort: number
@@ -76,9 +76,9 @@ export class Player {
   }
 
   call = async (...args: CallArgs) => {
-    if (args.length === 4) {
-      const [cellNick, zome_name, fn_name, payload] = args
-      const cell_id = this._cellIds[cellNick]
+    if (args.length === 5) {
+      const [appId, cellNick, zome_name, fn_name, payload] = args
+      const cell_id = this._cellIds[appId][cellNick]
       if (!cell_id) {
         throw new Error("Unknown cell nick: " + cellNick)
       }
@@ -100,21 +100,21 @@ export class Player {
       this._conductorGuard(`call(${JSON.stringify(args[0])})`)
       return this._conductor!.appClient!.callZome(args[0])
     } else {
-      throw new Error("Must use either 1 or 4 arguments with `player.call`")
+      throw new Error("Must use either 1 or 5 arguments with `player.call`")
     }
   }
 
-  cellId = (nick: CellNick): CellId => {
-    const cellId = this._cellIds[nick]
+  cellId = (appId: string, nick: CellNick): CellId => {
+    const cellId = this._cellIds[appId][nick]
     if (!cellId) {
-      throw new Error(`Unknown cell nickname: ${nick}`)
+      throw new Error(`Unknown cell nickname: ${nick} in app: ${appId}`)
     }
     return cellId
   }
 
-  stateDump = async (nick: CellNick): Promise<any> => {
+  stateDump = async (appId: string, nick: CellNick): Promise<any> => {
     return this.admin()!.dumpState({
-      cell_id: this.cellId(nick)
+      cell_id: this.cellId(appId, nick)
     })
   }
 
@@ -163,7 +163,6 @@ export class Player {
     // Make admin interface calls to actually create cells and app interfaces
     await this._setupConductorViaAdminInterface()
 
-    await this._setCellNicks()
     this.logger.debug("initialized")
   }
 
@@ -197,17 +196,6 @@ export class Player {
     }
   }
 
-  _setCellNicks = async () => {
-    // TODO:
-    // When we expand this to allow multiple apps installed per tryorama scenario,
-    // we need another layer of nesting, and need to accept app id as a parameter to this fn.
-    // For now, use a single app id for all cells.
-    const { cell_data } = await this._conductor!.appClient!.appInfo({ app_id: env.singletonAppId })
-    for (const [cellId, cellNick] of cell_data) {
-      this._cellIds[cellNick] = cellId
-    }
-  }
-
   /**
    * Generate agent pub keys and install apps based on player config
    */
@@ -227,7 +215,11 @@ export class Player {
 
     for (const app of apps) {
       const agent_key = agentIdToKey[app.agentId]
-      await admin.installApp({ app_id: app.id, agent_key, dnas: app.dnas })
+      const {cell_data: cellData} = await admin.installApp({ app_id: app.id, agent_key, dnas: app.dnas })
+      for (const installedCell of cellData) {
+        const [cellId, cellNick] = installedCell
+        this._cellIds[app.id][cellNick] = cellId
+      }
     }
   }
 
