@@ -217,7 +217,7 @@ type RawInterfaceConfig = {
 }
 
 export interface RawConductorConfig {
-  persistence_dir: string,
+  environment_path: string,
   agents: Array<AgentConfig>
   dnas: Array<DnaConfig>
   instances: Array<RawInstanceConfig>

@@ -31,14 +31,14 @@ export class Conductor {
   adminClient: AdminWebsocket | null
   appClient: AppWebsocket | null
 
-  _adminWsUrl: string
-  _appWsUrl: string
+  _adminInterfacePort: number
+  _machineUrl: string
   _isInitialized: boolean
   _rawConfig: T.RawConductorConfig
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, kill, onSignal, onActivity, appWsUrl, adminWsUrl, rawConfig }) {
+  constructor({ name, kill, onSignal, onActivity, machineUrl, adminPort, rawConfig }) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -52,8 +52,8 @@ export class Conductor {
 
     this.adminClient = null
     this.appClient = null
-    this._adminWsUrl = adminWsUrl
-    this._appWsUrl = appWsUrl
+    this._machineUrl = machineUrl
+    this._adminInterfacePort = adminPort
     this._isInitialized = false
     this._rawConfig = rawConfig
     this._wsClosePromise = Promise.resolve()
@@ -74,21 +74,19 @@ export class Conductor {
   _connectInterfaces = async () => {
     this._onActivity()
 
-    this.adminClient = await AdminWebsocket.connect(this._adminWsUrl)
-    this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
+    const adminWsUrl = `${this._machineUrl}:${this._adminInterfacePort}`,
 
-    this.appClient = await AppWebsocket.connect(this._appWsUrl, (signal) => {
+    this.adminClient = await AdminWebsocket.connect(adminWsUrl)
+    this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+
+    const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
+    const appWsUrl = `${this._machineUrl}:${appInterfacePort}`
+
+    this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {
       this._onActivity()
       console.info("got signal, doing nothing with it: %o", signal)
     })
-    this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
-
-    // FIXME
-    this.appClient = await AppWebsocket.connect(this._appWsUrl, signal => {
-      // TODO: do something meaningful with signals
-      this.logger.info("received app signal: %o", signal)
-    })
-    this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
+    this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
 
     this.callZome = (instanceId, zomeName, fnName, payload) => {
       this._onActivity()
@@ -98,10 +96,10 @@ export class Conductor {
       return this.appClient!.callZome({
         cell_id: cellId as any,
         zome_name: zomeName,
-        cap: fakeCapSecret(),
+        cap: fakeCapSecret(), // FIXME (see Player.ts)
         fn_name: fnName,
         payload: payload,
-        provenance: 'TODO' as any
+        provenance: 'TODO' as any, // FIXME (see Player.ts)
       })
     }
   }

@@ -34,15 +34,16 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
     logger.info("Holochain version:     %s", version)
     logger.info("Conductor config path: %s", configPath)
 
-    const flag = env.legacy ? '-c' : '--legacy-tryorama-config-path'
+    const flag = '-c'
     logger.debug('running: %s %s %s', binPath, flag, configPath)
-    handle = spawn(binPath, [flag, configPath], {
+    handle = spawn(binPath, [flag,], {
       env: {
-        "N3H_QUIET": "1",
+        // TODO: maybe put this behind a flag?
         "RUST_BACKTRACE": "1",
         ...process.env,
       }
     })
+
 
     let plainLogger = makeLogger()
 
@@ -170,8 +171,7 @@ export const spawnRemote = (trycp: TrycpClient, machineUrl: string): T.SpawnCond
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    adminWsUrl: `${machineUrl}:${player._adminInterfacePort}`,
-    appWsUrl: `${machineUrl}:${player._appInterfacePort}`,
+    machineUrl,
     rawConfig: 'TODO',
   })
 }

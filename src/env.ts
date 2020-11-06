@@ -33,6 +33,7 @@ const VARS = {
   logLevel: process.env['TRYORAMA_LOG_LEVEL'],
   portRange: [33000, 34000],  // not hooked up to env var yet
   legacy,
+  singletonAppId: 'TRYORAMA_APP',
   holochainPath: process.env.TRYORAMA_HOLOCHAIN_PATH || defaultHolochainPath
 }
 

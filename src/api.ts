@@ -55,6 +55,8 @@ export class ScenarioApi {
       const spawnConductor = trycp ? spawnRemote(trycp, stripPortFromUrl(machineEndpoint)) : spawnLocal
       const configs = machines[machineEndpoint]
 
+
+
       if (trycp) {
         // keep track of it so we can send a reset() at the end of this scenario
         this._trycpClients.push(trycp)
@@ -83,8 +85,8 @@ export class ScenarioApi {
         const configJson = await configSeed(configSeedArgs)
         configsJson.push(configJson)
 
-        if (!configJson.persistence_dir) {
-          throw new Error("Generated config does not have persistence_dir set")
+        if (!configJson.environment_path) {
+          throw new Error("Generated config does not have environment_path set")
         }
 
         if (configJson.interfaces[0].driver.type !== 'websocket') {
@@ -94,7 +96,7 @@ export class ScenarioApi {
         // this code will only be executed once it is determined that all configs are valid
         playerBuilders[playerName] = async () => {
           const { instances } = configJson
-          const configDir = configJson.persistence_dir
+          const configDir = configJson.environment_path
           const adminInterfacePort = configJson.interfaces[0].driver.port
           const appInterfacePort = configJson.interfaces[1].driver.port
 

@@ -126,13 +126,17 @@ export const makeTestAgent = (id, { playerName, uuid }) => ({
 
 export const genPartialConfigFromDryInstances = async (instances: T.DryInstancesConfig, args: T.ConfigSeedArgs) => {
 
+  // Here we:
+  // - generate (much smaller) config
+  // -
+
   const { configDir, adminInterfacePort, appInterfacePort, uuid } = args
 
   const config: any = {
     agents: [],
     dnas: [],
     instances: [],
-    persistence_dir: configDir,
+    environment_path: configDir,
   }
 
   const adminInterfaceConfig = {

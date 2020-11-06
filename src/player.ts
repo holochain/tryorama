@@ -8,6 +8,7 @@ import { unparkPort } from './config/get-port-cautiously'
 import { CellId, CallZomeRequest, CellNick, AdminWebsocket } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
+import env from './env';
 const fs = require('fs').promises
 
 type ConstructorArgs = {
@@ -81,14 +82,19 @@ export class Player {
       if (!cell_id) {
         throw new Error("Unknown cell nick: " + cellNick)
       }
+      // FIXME: don't just use provenance from CellId that we're calling,
+      //        (because this always grants Authorship)
+      //        for now, it makes sense to use the AgentPubKey of the *caller*,
+      //        but in the future, Holochain will inject the provenance itself
+      //        and you won't even be able to pass it in here.
       const [_dnaHash, provenance] = cell_id
       return this.call({
-        cap: fakeCapSecret(),
+        cap: fakeCapSecret(), // FIXME
         cell_id,
         zome_name,
         fn_name,
         payload,
-        provenance,
+        provenance, // FIXME
       })
     } else if (args.length === 1) {
       this._conductorGuard(`call(${JSON.stringify(args[0])})`)
@@ -151,6 +157,12 @@ export class Player {
 
     this.logger.debug("initializing")
     await this._conductor.initialize()
+
+    // At this moment we have an admin client, but not an app client
+
+    // Make admin interface calls to actually create cells and app interfaces
+    await this._setupConductorViaAdminInterface()
+
     await this._setCellNicks()
     this.logger.debug("initialized")
   }
@@ -186,9 +198,36 @@ export class Player {
   }
 
   _setCellNicks = async () => {
-    const { cell_data } = await this._conductor!.appClient!.appInfo({ app_id: 'LEGACY' })
+    // TODO:
+    // When we expand this to allow multiple apps installed per tryorama scenario,
+    // we need another layer of nesting, and need to accept app id as a parameter to this fn.
+    // For now, use a single app id for all cells.
+    const { cell_data } = await this._conductor!.appClient!.appInfo({ app_id: env.singletonAppId })
     for (const [cellId, cellNick] of cell_data) {
       this._cellIds[cellNick] = cellId
+    }
+  }
+
+  /**
+   * Generate agent pub keys and install apps based on player config
+   */
+  _setupConductorViaAdminInterface = async () => {
+    this._conductorGuard('_setupConductorViaAdminInterface')
+    const config = this.config  // TODO: this is where we do a big change
+    const admin: AdminWebsocket = this._conductor!.adminClient!
+
+    // this comes from some new reimagined PlayerConfig
+    const apps: any = {}  // see example.ts
+
+    // determine what agents we need to generate keys for
+    const agents = []
+    const agentIdToKey = _.fromPairs(await Promise.all(
+      agents.map(async name => [name, await admin.generateAgentPubKey()])
+    ))
+
+    for (const app of apps) {
+      const agent_key = agentIdToKey[app.agentId]
+      await admin.installApp({ app_id: app.id, agent_key, dnas: app.dnas })
     }
   }
 
@@ -201,5 +240,4 @@ export class Player {
       this.logger.debug(context)
     }
   }
-
 }

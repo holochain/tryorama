@@ -271,7 +271,7 @@ const config = Config.gen({alice: dnaConfig})
 // becomes this
 const config = ({playerName, uuid, configDir, adminInterfacePort}) => {
   return {
-    persistence_dir: configDir,
+    environment_path: configDir,
     agents: [/* ... */],
     dnas: [/* ... */],
     instances: [/* ... */],
