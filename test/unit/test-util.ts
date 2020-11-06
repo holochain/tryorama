@@ -1,8 +1,9 @@
 const sinon = require('sinon')
-import * as tape from 'tape'
+import { test } from 'tape'
 import * as U from '../../src/util'
 
-tape('stripPortFromUrl', t => {
+
+test('stripPortFromUrl', t => {
   t.equal(U.stripPortFromUrl('holo.host:1'), 'holo.host')
   t.equal(U.stripPortFromUrl('holo.host:12'), 'holo.host')
   t.equal(U.stripPortFromUrl('holo.host:123'), 'holo.host')

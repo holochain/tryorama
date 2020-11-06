@@ -1,6 +1,6 @@
 import * as tape from 'tape'
 import { Orchestrator } from '../../src'
-import { runSeries, compose, singleConductor, machinePerPlayer, localOnly } from '../../src/middleware'
+import { runSeries, compose, /*singleConductor,*/ machinePerPlayer, localOnly } from '../../src/middleware'
 // import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
 import { testConfig } from '../common';
 
@@ -20,12 +20,12 @@ const localOrchestrator = (extra = {}) => new Orchestrator({
   // globalConfig is specified explicitly in common::testConfig in this case
 })
 
-const singleConductorOrchestrator = (extra = {}) => new Orchestrator({
-  middleware: compose(compose(runSeries(), localOnly), singleConductor),
-  reporter: true,
-  ...extra
-  // globalConfig is specified explicitly in common::testConfig in this case
-})
+// const singleConductorOrchestrator = (extra = {}) => new Orchestrator({
+//   middleware: compose(compose(runSeries(), localOnly), singleConductor),
+//   reporter: true,
+//   ...extra
+//   // globalConfig is specified explicitly in common::testConfig in this case
+// })
 
 // This is just a simulation of how one might spin up trycp servers to connect to.
 // In reality, some other more complicated process would spin up machines and return
@@ -50,7 +50,7 @@ const singleConductorOrchestrator = (extra = {}) => new Orchestrator({
 
 require('./test-timeout')(localOrchestrator, () => testConfig(dnaLocationLocal))
 require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
-require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
+// require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 require('./test-dynamic-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
 
 // trycpEndpoints().then(([endpoints, processes]) => {

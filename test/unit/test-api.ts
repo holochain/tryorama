@@ -1,7 +1,6 @@
 const sinon = require('sinon')
 import * as tape from 'tape'
-import tapeP from 'tape-promise'
-const test = tapeP(tape)
+import test from 'tape-promise/tape'
 
 import { ScenarioApi } from '../../src/api'
 import { instancesDry } from './test-gen';

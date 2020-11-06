@@ -1,7 +1,6 @@
 import * as tape from 'tape'
-import tapeP from 'tape-promise'
+import test from 'tape-promise/tape'
 
-const test = tapeP(tape)
 
 import { Orchestrator, Config } from '../../src'
 import { runSeries } from '../../src/middleware'

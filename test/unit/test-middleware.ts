@@ -1,8 +1,7 @@
 const sinon = require('sinon')
 import * as tape from 'tape'
 import * as R from 'ramda'
-import tapeP from 'tape-promise'
-const test = tapeP(tape)
+import test from 'tape-promise/tape'
 
 import * as M from '../../src/middleware'
 import { ConfigSeed, RawConductorConfig } from '../../src'
@@ -110,7 +109,7 @@ test('groupPlayersByMachine middleware', t => {
   const oldApi = {
     players: (configs) => configs
   }
-  const fakeSeed = ({}) => Promise.resolve({})
+  const fakeSeed = ({ }) => Promise.resolve({})
   const input = R.repeat(fakeSeed, 6)
   m1(runner('1 player per machine', oldApi), async s => {
     const ps = await s.players(input as any)
@@ -159,7 +158,7 @@ test('groupPlayersByMachine failure', t => {
   const endpoints = ['e0', 'e1', 'e2', 'e3', 'e4', 'e5']
   const m = M.groupPlayersByMachine(endpoints, 3)
   const oldApi = { players: (configs) => configs }
-  const fakeSeed = ({}) => Promise.resolve({})
+  const fakeSeed = ({ }) => Promise.resolve({})
   const input = R.repeat(fakeSeed, 100)
   m(runner('1 player per machine', oldApi), async s => {
     t.rejects(
