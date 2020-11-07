@@ -49,6 +49,7 @@ export const { instancesDry, instancesSugared } = (() => {
 
 const commonConfig = { logger: Builder.logger(false), network: Builder.network('n3h') }
 
+/*
 test('genBridgeConfig', async t => {
   const bridge = await Builder.bridge('b', 'alice', 'bob')
   t.deepEqual(bridge, { handle: 'b', caller_id: 'alice', callee_id: 'bob' })
@@ -113,3 +114,4 @@ region = "eu-central-1"
   t.end()
 })
 
+*/

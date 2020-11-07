@@ -20,7 +20,7 @@ currently unsupported, and so this middleware will remain so until that changes.
     messageDisplayed = true
   }
 })()
-
+/*
 export const combineConfigs =
   (configs: T.MachineConfigs): T.ConfigSeed => {
     unsupportedMergeConfigs('combineConfigs')
@@ -39,6 +39,7 @@ export const combineConfigs =
       return merged
     }
   }
+*/
 
 /**
  * Define a standard way to add extra string to ID identifiers for use in combining configs
@@ -65,6 +66,7 @@ export const adjoin = tag => {
  * with the assumption that the others are the same. The `standard` param allows you to
  * specify, by conductor name, which config to use to pull these other values from.
  */
+/*
 export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, standard?: string) => {
   unsupportedMergeConfigs('mergeJsonConfigs')
 
@@ -139,6 +141,6 @@ export const mergeJsonConfigs = (configs: T.ObjectS<T.RawConductorConfig>, stand
     instances,
     interfaces,
   })
-
   return combined
 }
+*/

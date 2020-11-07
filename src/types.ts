@@ -32,7 +32,6 @@ export type ConfigSeed = (args: ConfigSeedArgs) => Promise<IntermediateConfig>
 
 export type PartialConfigSeedArgs = {
   adminInterfacePort: number,
-  appInterfacePort: number,
   configDir: string,
 }
 
@@ -218,7 +217,16 @@ type RawInterfaceConfig = {
 
 export interface RawConductorConfig {
   environment_path: string,
-  agents: Array<AgentConfig>
+  use_dangerous_test_keystore: boolean,
+  signing_service_uri?: string,
+  encryption_service_uri?: string,
+  decryption_service_uri?: string,
+  keystore_path?: string,
+  // TODO:
+  // passphrase_service?: PassphraseServiceConfig,
+  // admin_interfaces?: Array<AdminInterfaceConfig>
+  // netowrk?: KitsuneP2pConfig,
+/*  agents: Array<AgentConfig>
   dnas: Array<DnaConfig>
   instances: Array<RawInstanceConfig>
   interfaces: Array<RawInterfaceConfig>
@@ -229,6 +237,7 @@ export interface RawConductorConfig {
   logger?: RawLoggerConfig,
   tracing?: RawTracingConfig,
   metric_publisher?: RawMetricPublisherConfig,
+*/
 }
 
 export type KillFn = (signal?: string) => Promise<void>
@@ -236,3 +245,8 @@ export type KillFn = (signal?: string) => Promise<void>
 export type CellId = [DnaHash, AgentId]
 export type DnaHash = string
 export type AgentId = string
+export type HappBundle = {
+    id: string,
+    agentId: string,
+    dnas: Array<DnaConfig>,
+}

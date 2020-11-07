@@ -26,6 +26,7 @@
     "@holochain/hachiko": "^0.5.2",
     "@holochain/hc-web-client": "^0.5.3",
     "@iarna/toml": "^2.2.5",
+    "yaml": "^1.10.0",
     "async-mutex": "^0.1.4",
     "axios": "^0.19.2",
     "base-64": "^0.1.0",

@@ -152,14 +152,14 @@ Each scenario will automatically kill all running conductors as well as automati
 
 ## Players
 
-A Player represents a Holochain user running a Conductor. That conductor may run on the same machine as the Tryorama test orchestrator, or it may be a remote machine (See [Remote Players with TryCP](#remote-players-with-trycp)). Either way, the main concern in configuring a Player is providing configuration for its underlying Conductor.
+A Player represents a Holochain user running a Conductor. That conductor may run on the same machine as the Tryorama test orchestrator, or it may be a remote machine (See [Remote Players with TryCP](#remote-players-with-trycp)). Either way, the main concern in configuring a Player is providing configuration and initialization for its underlying Conductor.
 
-# Conductor configuration
+# Conductor setup
 
-Much of the purpose of Tryorama is to provide ways to generate conductor configurations (TODO: we need documentation on conductor configs) that meet the following criteria:
+Much of the purpose of Tryorama is to provide ways to setup conductors for tests, which means generating their boot configuration files, and initializing them to known states (installing hApps) for scenarios.
 
-1. Common configs should be easy to generate
-2. Any conductor config should be possible
+1. Common setups should be easy to generate
+2. Any conductor setups should be possible
 3. Conductors from different scenarios must remain independent and invisible to each other
 
 ## Simple config with the `Config` helper
@@ -292,7 +292,6 @@ Config seeds take an object as a parameter, with five values:
 * `uuid`: a UUID which is guaranteed to be the same within a scenario but unique between different scenarios
 * `configDir`: a temp dir created specifically for this conductor
 * `adminInterfacePort`: a free port on the machine which is used for the admin Websocket interface
-* `appInterfacePort`: a free port on the machine which is used to make zome calls
 
 ### What Tryorama expects from generated configs
 

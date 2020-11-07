@@ -14,7 +14,6 @@ const fs = require('fs').promises
  */
 export const localConfigSeedArgs = async (): Promise<T.PartialConfigSeedArgs> => {
   const adminInterfacePort = await getPort()
-  const appInterfacePort = await getPort()
   const configDir = await tempDir()
-  return { configDir, adminInterfacePort, appInterfacePort }
+  return { configDir, adminInterfacePort }
 }

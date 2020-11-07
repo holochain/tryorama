@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
-const TOML = require('@iarna/toml')
+const YAML = require('yaml')
 
 import { Waiter, FullSyncNetwork } from '@holochain/hachiko'
 import * as T from "./types"
@@ -9,7 +9,7 @@ import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
 import { promiseSerialObject, stringify, stripPortFromUrl, trace } from './util';
-import { getConfigPath, assertUniqueTestAgentNames, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
+import { getConfigPath, /*assertUniqueTestAgentNames,*/ localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
 import { trycpSession, TrycpClient } from './trycp'
 
@@ -68,7 +68,6 @@ export class ScenarioApi {
 
       for (const playerName in configs) {
         const configSeed: T.ConfigSeed = configs[playerName]
-
         if (!_.isFunction(configSeed)) {
           throw new Error(`Config for player '${playerName}' contains something other than a function. Either use Config.gen to create a seed function, or supply one manually.`)
         }
@@ -83,28 +82,26 @@ export class ScenarioApi {
         })
         logger.debug('api.players: seed args generated for %s = %j', playerName, configSeedArgs)
         const configJson = await configSeed(configSeedArgs)
+        logger.debug("built config: %s", JSON.stringify(configJson))
         configsJson.push(configJson)
 
         if (!configJson.environment_path) {
           throw new Error("Generated config does not have environment_path set")
         }
 
-        if (configJson.interfaces[0].driver.type !== 'websocket') {
-          throw new Error("Generated config must contain an admin websocket interface")
-        }
-
         // this code will only be executed once it is determined that all configs are valid
         playerBuilders[playerName] = async () => {
-          const { instances } = configJson
+//          const { instances } = configJson
           const configDir = configJson.environment_path
-          const adminInterfacePort = configJson.interfaces[0].driver.port
-          const appInterfacePort = configJson.interfaces[1].driver.port
+
+          // FIXME: can we get this from somewhere?
+          const adminInterfacePort = 0
 
           if (trycp) {
             const newConfigJson = await interpolateConfigDnaUrls(trycp, configJson)
             await trycp.player(playerName, newConfigJson)
           } else {
-            await fs.writeFile(getConfigPath(configDir), TOML.stringify(configJson))
+            await fs.writeFile(getConfigPath(configDir), YAML.stringify(configJson))
           }
           logger.debug('api.players: player config committed for %s', playerName)
 
@@ -114,13 +111,13 @@ export class ScenarioApi {
             config: configJson,
             configDir,
             adminInterfacePort,
-            appInterfacePort,
             spawnConductor,
-            onJoin: () => instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
-            onLeave: () => instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
+            onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
+            onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
             onActivity: () => this._restartTimer(),
-            onSignal: ({ instanceId, signal }) => {
-              const instance = instances.find(c => c.id === instanceId)
+            onSignal: (signal_data) => {
+              console.log("ignoring signal:", signal_data)
+/*              const instance = instances.find(c => c.id === instanceId)
               const dnaId = instance!.dna
               const observation = {
                 dna: dnaId,
@@ -128,6 +125,7 @@ export class ScenarioApi {
                 signal
               }
               this._waiter.handleObservation(observation)
+*/
             },
           })
           return player
@@ -136,8 +134,8 @@ export class ScenarioApi {
     }
 
     // this will throw an error if something is wrong
-    assertUniqueTestAgentNames(configsJson)
-    logger.debug('api.players: unique agent name check passed')
+    // assertUniqueTestAgentNames(configsJson)
+    // logger.debug('api.players: unique agent name check passed')
 
     const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
     logger.debug('api.players: players built')
@@ -232,8 +230,10 @@ ${names.join(', ')}
  * If URLs are present in the config, use TryCP 'dna' method to instruct the remote machine
  * to download the dna, and then replace the URL in the config with the returned local path
  */
+// FIXME: convert this for when we get trycp working for RSM
 const interpolateConfigDnaUrls = async (trycp: TrycpClient, configJson: T.RawConductorConfig): Promise<any> => {
   configJson = _.cloneDeep(configJson)
+  /*
   configJson.dnas = await Promise.all(
     configJson.dnas.map(async (dna) => {
       if (dna.file.match(/^https?:\/\//)) {
@@ -243,6 +243,6 @@ const interpolateConfigDnaUrls = async (trycp: TrycpClient, configJson: T.RawCon
         return dna
       }
     })
-  )
+  )*/
   return configJson
 }

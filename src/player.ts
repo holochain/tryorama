@@ -2,10 +2,10 @@ import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
 import { Instance } from './instance'
-import { SpawnConductorFn, ObjectS, RawConductorConfig } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig, HappBundle } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -16,7 +16,6 @@ type ConstructorArgs = {
   config: RawConductorConfig,
   configDir: string,
   adminInterfacePort: number,
-  appInterfacePort: number,
   onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
@@ -44,13 +43,11 @@ export class Player {
   onActivity: () => void
 
   _conductor: Conductor | null
-  _cellIds: ObjectS<ObjectS<CellId>>
   _configDir: string
   _adminInterfacePort: number
-  _appInterfacePort: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, config, configDir, adminInterfacePort, appInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
@@ -60,10 +57,8 @@ export class Player {
     this.config = config
 
     this._conductor = null
-    this._cellIds = {}
     this._configDir = configDir
     this._adminInterfacePort = adminInterfacePort
-    this._appInterfacePort = appInterfacePort
     this._spawnConductor = spawnConductor
   }
 
@@ -77,39 +72,30 @@ export class Player {
 
   call = async (...args: CallArgs) => {
     if (args.length === 5) {
+      this._conductorGuard(`Player.call(${JSON.stringify(args)})`)
       const [appId, cellNick, zome_name, fn_name, payload] = args
-      const cell_id = this._cellIds[appId][cellNick]
-      if (!cell_id) {
-        throw new Error("Unknown cell nick: " + cellNick)
-      }
-      // FIXME: don't just use provenance from CellId that we're calling,
-      //        (because this always grants Authorship)
-      //        for now, it makes sense to use the AgentPubKey of the *caller*,
-      //        but in the future, Holochain will inject the provenance itself
-      //        and you won't even be able to pass it in here.
-      const [_dnaHash, provenance] = cell_id
-      return this.call({
-        cap: fakeCapSecret(), // FIXME
-        cell_id,
+      return this._conductor!.callZome(
+        appId,
+        cellNick,
         zome_name,
         fn_name,
         payload,
-        provenance, // FIXME
-      })
+      )
     } else if (args.length === 1) {
-      this._conductorGuard(`call(${JSON.stringify(args[0])})`)
-      return this._conductor!.appClient!.callZome(args[0])
+      throw new Error("deprecated")
+//      this._conductorGuard(`call(${JSON.stringify(args[0])})`)
+//      return this._conductor!.appClient!.callZome(args[0])
     } else {
       throw new Error("Must use either 1 or 5 arguments with `player.call`")
     }
   }
 
+  /**
+   * Get a particular cellId given a CellNick from the conductor instance
+   */
   cellId = (appId: string, nick: CellNick): CellId => {
-    const cellId = this._cellIds[appId][nick]
-    if (!cellId) {
-      throw new Error(`Unknown cell nickname: ${nick} in app: ${appId}`)
-    }
-    return cellId
+    this._conductorGuard(`cellId(${appId}, ${nick})`)
+    return this._conductor!.cellId(appId, nick)
   }
 
   stateDump = async (appId: string, nick: CellNick): Promise<any> => {
@@ -187,13 +173,19 @@ export class Player {
     if (this._conductor) {
       await this.kill(signal)
       unparkPort(this._adminInterfacePort)
-      unparkPort(this._appInterfacePort)
       return true
     } else {
       unparkPort(this._adminInterfacePort)
-      unparkPort(this._appInterfacePort)
       return false
     }
+  }
+
+  /**
+   * expose installApp at the player level for in-scenario dynamic installation of apps
+   */
+  installApp = async (agent_key: AgentPubKey, app: HappBundle) => {
+    this._conductorGuard(`Player.installApp(${agent_key})`)
+    this._conductor!.installApp(agent_key, app)
   }
 
   /**
@@ -215,11 +207,7 @@ export class Player {
 
     for (const app of apps) {
       const agent_key = agentIdToKey[app.agentId]
-      const {cell_data: cellData} = await admin.installApp({ app_id: app.id, agent_key, dnas: app.dnas })
-      for (const installedCell of cellData) {
-        const [cellId, cellNick] = installedCell
-        this._cellIds[app.id][cellNick] = cellId
-      }
+      this._conductor!.installApp(agent_key, app)
     }
   }
 

@@ -35,7 +35,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
 
     const flag = '-c'
     logger.debug('running: %s %s %s', binPath, flag, configPath)
-    handle = spawn(binPath, [flag,], {
+    handle = spawn(binPath, [flag, configPath], {
       env: {
         // TODO: maybe put this behind a flag?
         "RUST_BACKTRACE": "1",

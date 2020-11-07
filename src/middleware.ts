@@ -1,4 +1,4 @@
-import { combineConfigs, adjoin, unsupportedMergeConfigs } from "./config/combine";
+// import { combineConfigs, adjoin, unsupportedMergeConfigs } from "./config/combine";
 import { ScenarioApi } from "./api";
 import { trace } from "./util";
 import * as T from "./types";

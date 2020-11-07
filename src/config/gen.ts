@@ -33,6 +33,7 @@ const defaultStorage = (configDir, instanceId) => {
  * more general config fields. It is usually the case that the first object will be vary
  * between players, and the second field will be the same between different players.
  */
+// FIXME: this shouldn't take Instances any more!!
 export const gen =
   (instancesFort: T.Fort<T.EitherInstancesConfig>, commonFort?: T.Fort<T.ConductorConfigCommon>) => {
     // TODO: type check of `commonFort`
@@ -58,7 +59,12 @@ export const gen =
         ? instancesData
         : desugarInstances(instancesData, args)
 
-      const specific = await genPartialConfigFromDryInstances(instancesDry, args)
+      const { configDir, adminInterfacePort, uuid } = args
+
+      const specific: any = {
+        environment_path: configDir,
+      }
+      // const specific = await genPartialConfigFromDryInstances(instancesDry, args)
       const common = _.merge(
         {},
         defaultCommonConfig,
@@ -103,7 +109,7 @@ export const resolveDna = async (inputDna: T.DnaConfig, providedUuid: string): P
   return dna
 }
 
-export const getConfigPath = configDir => path.join(configDir, 'conductor-config.toml')
+export const getConfigPath = configDir => path.join(configDir, 'conductor-config.yaml')
 
 export const desugarInstances = (instances: T.SugaredInstancesConfig, args: T.ConfigSeedArgs): T.DryInstancesConfig => {
   T.decodeOrThrow(T.SugaredInstancesConfigV, instances)
@@ -124,13 +130,15 @@ export const makeTestAgent = (id, { playerName, uuid }) => ({
   test_agent: true,
 })
 
+/*
+TODO: useful for dry happBudles?
 export const genPartialConfigFromDryInstances = async (instances: T.DryInstancesConfig, args: T.ConfigSeedArgs) => {
 
   // Here we:
   // - generate (much smaller) config
   // -
 
-  const { configDir, adminInterfacePort, appInterfacePort, uuid } = args
+  const { configDir, adminInterfacePort, uuid } = args
 
   const config: any = {
     agents: [],
@@ -186,6 +194,7 @@ export const genPartialConfigFromDryInstances = async (instances: T.DryInstances
   config.interfaces = [adminInterfaceConfig, appInterfaceConfig]
   return config
 }
+*/
 
 export const getDnaHash = async (dnaPath, uuid) => {
   const { stdout, stderr } = await exec(`hc hash -p ${dnaPath} -u ${uuid}`)
@@ -203,6 +212,7 @@ export const getDnaHash = async (dnaPath, uuid) => {
   return hash
 }
 
+/*
 export const assertUniqueTestAgentNames = (configs: Array<T.RawConductorConfig>) => {
   const agentNames = _.chain(configs).map(n => n.agents.filter(a => a.test_agent).map(a => a.name)).flatten().value()
   const frequencies = _.countBy(agentNames) as { [k: string]: number }
@@ -214,3 +224,4 @@ export const assertUniqueTestAgentNames = (configs: Array<T.RawConductorConfig>)
     throw new Error(msg)
   }
 }
+*/

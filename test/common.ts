@@ -16,8 +16,8 @@ export const testConfig = (dnaPath): { alice: T.ConfigSeed, bob: T.ConfigSeed, c
   const dna = Config.dna(dnaPath)
 
   ///////////////////////////////// For local tests
-  const network = { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }
-  console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")
+/*  const network = { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }
+  console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")*/
   console.warn("Also be sure that ./dna/passthrough-dna.dna.json is accessible. (Run `npm run fetch-dna` to download)")
 
   //////////////////////////////// For local docker tests
@@ -27,10 +27,11 @@ export const testConfig = (dnaPath): { alice: T.ConfigSeed, bob: T.ConfigSeed, c
 
   // const network = Config.network('n3h')
   const common: T.ConductorConfigCommon = {
-    logger: Config.logger(true),
-    metric_publisher: Config.metricPublisher('logger'),
-    network,
+//    logger: Config.logger(true),
+//    metric_publisher: Config.metricPublisher('logger'),
+//    network,
   }
+
   const seed: T.ConfigSeed = Config.gen({ app: dna }, common)
   return { alice: seed, bob: seed, carol: seed }
 }
@@ -48,7 +49,6 @@ export const withClock = f => t => {
 export const genConfigArgs: () => Promise<T.ConfigSeedArgs> = async () => ({
   configDir: 'config/dir',
   adminInterfacePort: 1000,
-  appInterfacePort: 1001,
   playerName: 'playerName',
   scenarioName: 'scenarioName',
   uuid: 'uuid',
