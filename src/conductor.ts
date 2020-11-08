@@ -7,7 +7,7 @@ import env from './env';
 import { connect as legacyConnect } from '@holochain/hc-web-client'
 import * as T from './types'
 import { fakeCapSecret } from "./common";
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
+import { AppId, CellId, CallZomeRequest, CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -95,6 +95,13 @@ export class Conductor {
     }
   }
 
+  _loadCellNicks = async (app_id: AppId) => {
+    const { cell_data } = await this.appClient!.appInfo({ app_id })
+    for (const [cellId, cellNick] of cell_data) {
+      this._cellIds[app_id][cellNick] = cellId
+    }
+  }
+
   _connectInterfaces = async () => {
     this._onActivity()
 
@@ -112,7 +119,11 @@ export class Conductor {
     })
     this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
 
-    //TODO: get the currently existing cell nick/id mapping
+    // get the currently existing apps and cell nick/id mapping
+    const apps = await this.adminClient.listActiveAppIds()
+    for (const app_id of apps) {
+      await this._loadCellNicks(app_id)
+    }
 
     // now that we are connected updated the callZome function
     this.callZome = (appId, cellNick, zomeName, fnName, payload) => {
@@ -139,12 +150,3 @@ export class Conductor {
     }
   }
 }
-
-/*
-export const cellIdFromInstanceId = (config: T.RawConductorConfig, instanceId: string): T.CellId => {
-  const instance = config.instances.find(i => i.id === instanceId)!
-  const dnaHash = config.dnas.find(d => d.id === instance.dna)!.hash!
-  const agentKey = config.agents.find(a => a.id === instance.agent)!.public_address
-  return [dnaHash, agentKey]
-}
-*/
