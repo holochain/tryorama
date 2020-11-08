@@ -39,14 +39,29 @@ const dnaBlog = Config.dna('~/project/dnas/blog.dna.json', 'blog')
 // ... or on the web
 const dnaChat = Config.dna('https://url.to/your/chat.dna.json', 'chat')
 
+// Create a hApp Bundles for your dna(s)
+const chat = {
+  id: "chat",
+  agentId: "theAgent",
+  dnas: [{
+    path: dnaChat,
+    nick: "chat:cell"
+    }]
+}
+const blog = {
+  id: "blog",
+  agentId: "theAgent",
+  dnas: [{
+    path: blogChat,
+    nick: "blog:cell"
+    }]
+}
+
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
 const mainConfig = Config.gen(
   {
-    blog: dnaBlog,  // agent_id="blog", instance_id="blog", dna=dnaBlog
-    chat: dnaChat,  // agent_id="chat", instance_id="chat", dna=dnaChat
-  },
-  {
+    // FIXME!
     // specify a bridge from chat to blog
     bridges: [Config.bridge('bridge-name', 'chat', 'blog')],
     // use a sim2h network (see conductor config options for all valid network types)
@@ -68,14 +83,21 @@ const orchestrator = new Orchestrator()
 // Register a scenario, which is a function that gets a special API injected in
 orchestrator.registerScenario('proper zome call', async (s, t) => {
   // Declare two players using the previously specified config,
-  // and nickname them "alice" and "bob"
-  const {alice, bob} = await s.players({alice: mainConfig, bob: mainConfig})
+  // and nickname them "alice" and "bob" and auto-spawning and initizalize them both with the hApps
+  const {alice, bob} = await s.players({alice: mainConfig, bob: mainConfig}, [blog,chat])
 
-  // You have to spawn the conductors yourself...
+  // You can create players with unspawned conductors by passing in false as the second param:
+  const {alice, bob} = await s.players({alice: mainConfig, bob: mainConfig}, false)
+
+  // and then spawn conductors with:
   await alice.spawn()
-  // ...unless you pass `true` as an extra parameter,
-  // in which case each conductor will auto-spawn
-  const {carol} = await s.players({carol: mainConfig}, true)
+
+  // and install a set of happs creating agent keys
+  await alice.initializeApps([blog,chat])
+
+  // or install a happ with a previously generated key
+  const {carol} = await s.players({carol: mainConfig}, false)
+  await carol.installApp(agent_key, chat)
 
   // You can also kill them...
   await alice.kill()
@@ -83,12 +105,13 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   await alice.spawn()
 
   // now you can make zome calls,
-  await alice.call('chat', 'messages', 'direct_message', {
+  await alice.call('chat', 'chat:cell', 'messages', 'direct_message', {
     content: 'hello world',
-    target: carol.instance('chat').agentAddress
+    target: carol.cell('chat:cell').agentAddress
   })
 
   // you can wait for total consistency of network activity,
+  // FIXME!
   await s.consistency()
 
   // and you can make assertions using tape by default
@@ -131,16 +154,14 @@ A Tryorama test is called a *scenario*. Each scenario makes use of a simple API 
 // `t` is the tape assertion API
 orchestrator.registerScenario('description of this scenario', async (s, t) => {
   // Use the Scenario API to create two players, alice and bob (we'll cover this more later)
-  const {alice, bob} = await s.players({alice: config, bob: config})
-
-  // start alice's conductor
-  await alice.spawn()
+  const {alice, bob} = await s.players({alice: config, bob: config}, initialization)
 
   // make a zome call
-  const result = await alice.call('some-instance', 'some-zome', 'some-function', 'some-parameters')
+  const result = await alice.call('some-happ', 'some-cell-nick', 'some-zome', 'some-function', 'some-parameters')
 
   // another use of the Scenario API is to automagically wait for the network to
   // reach a consistent state before continuing the test
+  // FIXME
   await s.consistency()
 
   // make a test assertion with tape
@@ -175,6 +196,7 @@ const orchestrator = new Orchestrator()
 
 // Config.gen is a handy shortcut for creating a full-fledged conductor config
 // from as little information as possible
+//FIXME!
 const commonConfig = Config.gen({
   // `Config.dna` generates a valid DNA config object, i.e. with fields
   // "id", "file", "hash", and so on
@@ -186,7 +208,9 @@ orchestrator.registerScenario(async (s, t) => {
     alice: commonConfig,
     bob: commonConfig,
     carol: commonConfig,
-  })
+  },
+  initialization
+  )
 })
 ```
 
