@@ -8,6 +8,17 @@ import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
 
+// TODO fix when exported by conductor-api
+import { AppId/*, InstallAppDnaPayload*/ } from '@holochain/conductor-api';
+
+import { DnaProperties, MembraneProof, CellNick } from '@holochain/conductor-api';
+export type InstallAppDnaPayload = {
+  path: string,
+  nick: CellNick,
+  properties?: DnaProperties,
+  membrane_proof?: MembraneProof
+}
+
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
   const errors = reporter(result)
@@ -44,6 +55,11 @@ export type ConfigSeedArgs = PartialConfigSeedArgs & {
 export type AnyConfigBuilder = ConfigSeed | EitherInstancesConfig
 export type PlayerConfigs = ObjectS<ConfigSeed> | Array<ConfigSeed>
 export type MachineConfigs = ObjectS<PlayerConfigs>
+
+export type ScenarioConfig = {
+  players: PlayerConfigs,
+  initialization?: Initialization,
+}
 
 export const adminWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
 
@@ -246,7 +262,8 @@ export type CellId = [DnaHash, AgentId]
 export type DnaHash = string
 export type AgentId = string
 export type HappBundle = {
-    id: string,
-    agentId: string,
-    dnas: Array<DnaConfig>,
+  id: AppId,
+  agentId: AgentId,
+  dnas: Array<InstallAppDnaPayload>,
 }
+export type Initialization = Array<HappBundle>

@@ -1,4 +1,3 @@
-
 orchestrator.registerScenario('invalid instance', async s => {
   const conductorConfig = {
     // yaml info
@@ -60,26 +59,20 @@ orchestrator.registerScenario('invalid instance', async s => {
     hp5: conductorConfig,
   }
 
-  // initialize 3 players, spawn them with playerConfig
-  const { hp1, hp2, hp3 } = await s.players(playerConfigs1, {
-    installApps: initialization,
-    spawn: true,  // default
-  })
+  // initialize 3 players, spawn them with an initialization
+  const { hp1, hp2, hp3 } = await s.players(playerConfigs1, initialization)
 
   // create two players, unspawned
-  const { hp4, hp5 } = await s.players(playerConfigs2, {
-    installApps: null,
-    spawn: false,
-  })
+  const { hp4, hp5 } = await s.players(playerConfigs2, false)
 
-  // A
+  // Start up hp4 with no Apps installed
   await hp4.spawn()
-  await hp4.installApps(initialization)
+  // and install a set of happs creating agent keys
+  await hp4.initializeApps(initialization)
 
-  // B
-  await hp4.spawn({ initialization })
-
+  // Start up hp4 with no Apps installed
   await hp5.spawn()
-  await hp5.installApp(initialization[0])
+  // Install a single app with a custom agent key
+  const agent_key: AgentPubKey = get_key_from_somewhere()
+  await hp5.installApp(agent_key, initialization[0])
 })
-

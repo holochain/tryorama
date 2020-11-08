@@ -12,9 +12,9 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('invalid instance', async s => {
-      const players = await s.players({ alice: C.alice }, true)
+      const players = await s.players({ alice: C.players.alice }, C.initialization)
       const { alice } = players
-      await alice.call('blah', 'blah', 'blah', 'blah')
+      await alice.call('blah','blah', 'blah', 'blah', 'blah')
     })
     console.debug('registered scenario.')
     const stats = await orchestrator.run()
@@ -31,9 +31,9 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('simple zome call', async s => {
-      const players = await s.players({ alice: C.alice }, true)
+      const players = await s.players({ alice: C.players.alice }, C.initialization)
       const { alice } = players
-      const hash = await alice.call('app', 'main', 'commit_entry', { content: 'content' }).then(x => x.Ok)
+      const hash = await alice.call('app', 'app:cell', 'main', 'commit_entry', { content: 'content' }).then(x => x.Ok)
       t.equal(hash.length, 46, 'zome call succeeded')
     })
     const stats = await orchestrator.run()
@@ -47,7 +47,7 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('simple zome call', async s => {
-      const players = await s.players({ alice: C.alice }, true)
+      const players = await s.players({ alice: C.players.alice }, C.initialization)
       const { alice } = players
       const instance = alice.instance('app')
       const hash = await instance.call('main', 'commit_entry', { content: 'content' }).then(x => x.Ok)
@@ -64,25 +64,25 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('zome call with consistency', async s => {
-      const { alice, bob } = await s.players({ alice: C.alice, bob: C.bob }, true)
+      const { alice, bob } = await s.players({ alice: C.players.alice, bob: C.players.bob }, C.initialization)
 
       // TODO: this sometimes does not properly await...
       await s.consistency()
 
       // ... i.e., sometimes this fails with "base for link not found"
-      const baseHash = await alice.call('app', 'main', 'commit_entry', { content: 'base' }).then(x => x.Ok)
-      const targetHash = await alice.call('app', 'main', 'commit_entry', { content: 'target' }).then(x => x.Ok)
+      const baseHash = await alice.call('app', 'app:cell', 'main', 'commit_entry', { content: 'base' }).then(x => x.Ok)
+      const targetHash = await alice.call('app', 'app:cell', 'main', 'commit_entry', { content: 'target' }).then(x => x.Ok)
       t.equal(baseHash.length, 46, 'alice creates base')
       t.equal(targetHash.length, 46, 'alice creates target')
       await s.consistency()
 
-      const messageResult = await alice.call('app', 'main', 'link_entries', {
+      const messageResult = await alice.call('app', 'app:cell', 'main', 'link_entries', {
         base: baseHash,
         target: targetHash,
       })
       await s.consistency()
 
-      const links = await bob.call('app', 'main', 'get_links', { base: baseHash }).then(x => x.Ok)
+      const links = await bob.call('app', 'app:cell', 'main', 'get_links', { base: baseHash }).then(x => x.Ok)
       t.ok(links, 'bob gets links')
       // TODO: have bob check that he can see alice's stream
     })
@@ -96,8 +96,8 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('check addresses', async s => {
-      const { alice } = await s.players({ alice: C.alice }, true)
-      const agentAddress = await alice.call('app', 'main', 'whoami', {})
+      const { alice } = await s.players({ alice: C.players.alice }, C.initialization)
+      const agentAddress = await alice.call('app', 'app:cell', 'main', 'whoami', {})
       t.equal(alice.info('app').agentAddress, agentAddress.Ok)
       t.equal(alice.info('app').dnaAddress.length, 46)
     })

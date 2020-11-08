@@ -43,7 +43,7 @@ export class ScenarioApi {
     this._activityTimer = null
   }
 
-  players = async (machines: T.MachineConfigs, spawnArgs?: any): Promise<T.ObjectS<Player>> => {
+  players = async (machines: T.MachineConfigs, spawnArgs?: T.Initialization | boolean): Promise<T.ObjectS<Player>> => {
     logger.debug('api.players: creating players')
     const configsJson: Array<T.RawConductorConfig> = []
     const playerBuilders: Record<string, Function> = {}
@@ -117,7 +117,7 @@ export class ScenarioApi {
             onActivity: () => this._restartTimer(),
             onSignal: (signal_data) => {
               console.log("ignoring signal:", signal_data)
-/*              const instance = instances.find(c => c.id === instanceId)
+/*              const instance = instances.find(c => c.id === instanced)
               const dnaId = instance!.dna
               const observation = {
                 dna: dnaId,
@@ -142,20 +142,28 @@ export class ScenarioApi {
 
     this._localPlayers = { ...this._localPlayers, ...players }
 
-    // Do auto-spawning if that was requested
-    if (spawnArgs) {
+    // if no spawnArgs provided default is to spawn
+    const autoSpawn: boolean = (spawnArgs === undefined) || ((typeof spawnArgs === "boolean") && spawnArgs) || (typeof spawnArgs === "object")
+
+    // Do auto-spawning.  The spawn args can be a bool or an object which will be passed
+    // into the conductor spawn function for any special spawning instructions, which
+    // is not the same thing as app initialization which must be done separately.
+    if (autoSpawn) {
       for (const player of Object.values(players)) {
         logger.info('api.players: auto-spawning player %s', player.name)
-        await player.spawn(spawnArgs)
-        logger.info('api.players: awaiting consistency while spawning player %s', player.name)
-        await this.consistency()
+        await player.spawn({}) //FIXME actual spawn args for conductor spawning (not initialziation)
         logger.info('api.players: spawn complete for %s', player.name)
+        if (spawnArgs && (typeof spawnArgs === "object")) {
+          await player.initializeApps(spawnArgs!)
+          logger.info('api.players: initializedApps for %s', player.name)
+        }
       }
     }
 
     return players
   }
 
+  // FIXME!!!  probably need to rip out hachiko
   consistency = (players?: Array<Player>): Promise<number> => new Promise((resolve, reject) => {
     if (players) {
       throw new Error("Calling `consistency` with parameters is currently unsupported. See https://github.com/holochain/hachiko/issues/10")

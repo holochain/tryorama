@@ -1,4 +1,3 @@
-
 const sinon = require('sinon')
 const test = require('tape')
 
@@ -18,7 +17,7 @@ module.exports = (testOrchestrator, testConfig) => {
       }
     })
     orchestrator.registerScenario('test ends properly on hachiko strict timeout', async s => {
-      const players = await s.players({ alice: C.alice, bob: C.bob }, true)
+      const players = await s.players({ alice: C.players.alice, bob: C.players.bob }, C.initialization)
       const { alice } = players
 
       alice.onSignal({

@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
 import { Instance } from './instance'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, HappBundle } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig, HappBundle, Initialization, AgentId } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
 import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey } from '@holochain/conductor-api';
@@ -46,6 +46,7 @@ export class Player {
   _configDir: string
   _adminInterfacePort: number
   _spawnConductor: SpawnConductorFn
+  _agentIdToKey: ObjectS<AgentPubKey>
 
   constructor({ name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
@@ -60,6 +61,7 @@ export class Player {
     this._configDir = configDir
     this._adminInterfacePort = adminInterfacePort
     this._spawnConductor = spawnConductor
+    this._agentIdToKey = {}
   }
 
   admin = (): AdminWebsocket => {
@@ -144,11 +146,6 @@ export class Player {
     this.logger.debug("initializing")
     await this._conductor.initialize()
 
-    // At this moment we have an admin client, but not an app client
-
-    // Make admin interface calls to actually create cells and app interfaces
-    await this._setupConductorViaAdminInterface()
-
     this.logger.debug("initialized")
   }
 
@@ -181,34 +178,49 @@ export class Player {
   }
 
   /**
+   * helper to create agent pub keys and install multiple apps for scenario initialization
+   */
+  initializeApps = async (init: Initialization) => {
+    this._conductorGuard(`Player.initializeApps`)
+    const admin: AdminWebsocket = this._conductor!.adminClient!
+
+    // collect all the agent-ids from the initialization removing duplicates
+    const agents = [...new Set(init.map(app => app.agentId))]
+
+    for (const agent_id of agents) {
+      if (this._agentIdToKey[agent_id]) {
+        throw new Error(`Player.initializeApps: agent key already exists for ${agent_id}!`)
+      }
+    }
+
+    // create keys for all the agent_ids and store them for later reference
+    const agentIdToKey = _.fromPairs(await Promise.all(
+      agents.map(async name => [name, await admin.generateAgentPubKey()])
+    ))
+    for (const id in agentIdToKey) {
+      this._agentIdToKey[id] = agentIdToKey[id]
+    }
+
+    // install each app in the initialization with it's agent
+    for (const app of init) {
+      const agent_key = this._agentIdToKey[app.agentId]
+      this._conductor!.installApp(agent_key, app)
+    }
+  }
+
+  /**
+   * retrieve the pub key of an agent by id
+   */
+  getAgentKey = (agent_id: AgentId): AgentPubKey | undefined => {
+    return this._agentIdToKey[agent_id]
+  }
+
+  /**
    * expose installApp at the player level for in-scenario dynamic installation of apps
    */
   installApp = async (agent_key: AgentPubKey, app: HappBundle) => {
     this._conductorGuard(`Player.installApp(${agent_key})`)
     this._conductor!.installApp(agent_key, app)
-  }
-
-  /**
-   * Generate agent pub keys and install apps based on player config
-   */
-  _setupConductorViaAdminInterface = async () => {
-    this._conductorGuard('_setupConductorViaAdminInterface')
-    const config = this.config  // TODO: this is where we do a big change
-    const admin: AdminWebsocket = this._conductor!.adminClient!
-
-    // this comes from some new reimagined PlayerConfig
-    const apps: any = {}  // see example.ts
-
-    // determine what agents we need to generate keys for
-    const agents = []
-    const agentIdToKey = _.fromPairs(await Promise.all(
-      agents.map(async name => [name, await admin.generateAgentPubKey()])
-    ))
-
-    for (const app of apps) {
-      const agent_key = agentIdToKey[app.agentId]
-      this._conductor!.installApp(agent_key, app)
-    }
   }
 
   _conductorGuard = (context) => {

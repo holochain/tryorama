@@ -13,8 +13,9 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('attempted call with killed conductor', async s => {
-      const { alice } = await s.players({ alice: C.alice })
+        const { alice } = await s.players({ alice: C.players.alice }, false)
       await alice.spawn()
+      await alice.initializeApps(C.initialization)
 
       await t.doesNotReject(
         alice.call('app', 'main', 'commit_entry', {
@@ -33,8 +34,9 @@ module.exports = (testOrchestrator, testConfig) => {
     })
 
     orchestrator.registerScenario('spawn-kill-spawn', async s => {
-      const { alice } = await s.players({ alice: C.alice })
+      const { alice } = await s.players({ alice: C.players.alice }, false)
       await alice.spawn()
+      await alice.initializeApps(C.initialization)
       await alice.kill()
       await alice.spawn()
       const agentAddress = await alice.call('app', 'main', 'commit_entry', {
@@ -52,7 +54,7 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('attempted call with unspawned conductor', async s => {
-      const { alice } = await s.players({ alice: C.alice })
+      const { alice } = await s.players({ alice: C.players.alice }, false)
       await alice.call('app', 'main', 'commit_entry', {
         content: 'content'
       })
@@ -67,7 +69,7 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('attempted call with unspawned conductor', async s => {
-      const { alice } = await s.players({ alice: C.alice }, true)
+      const { alice } = await s.players({ alice: C.players.alice }, C.initialziation)
 
       const commit1 = await alice.call('app', 'main', 'commit_entry', {
         content: 'content1'
@@ -86,7 +88,7 @@ module.exports = (testOrchestrator, testConfig) => {
       await s.consistency()
 
       // bob and carol join later
-      const { bob, carol } = await s.players({ bob: C.bob, carol: C.carol }, true)
+      const { bob, carol } = await s.players({ bob: C.players.bob, carol: C.players.carol }, C.initialziation)
 
       // after the consistency waiting inherent in auto-spawning the new players, their state dumps
       // should immediately show that they are holding alice's entries

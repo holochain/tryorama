@@ -7,7 +7,7 @@ import env from './env';
 import { connect as legacyConnect } from '@holochain/hc-web-client'
 import * as T from './types'
 import { fakeCapSecret } from "./common";
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AppWebsocket, AgentPubKey } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -82,15 +82,12 @@ export class Conductor {
   }
 
   installApp = async (agent_key: AgentPubKey, app: T.HappBundle) => {
-    // TODO: convert happBundle to dna install payload
-
-    const dnas = [{
-      path: "x/y",
-      nick: "x",
-//      properties?: DnaProperties,
-//      membrane_proof?: MembraneProof
-    }]
-    const {cell_data: cellData} = await this.adminClient!.installApp({ app_id: app.id, agent_key, dnas })
+    const installAppReq : InstallAppRequest = {
+      app_id: app.id,
+      agent_key,
+      dnas: app.dnas
+    }
+    const {cell_data: cellData} = await this.adminClient!.installApp(installAppReq)
     // save the returned cellIds and cellNicks for later reference
     for (const installedCell of cellData) {
       const [cellId, cellNick] = installedCell
