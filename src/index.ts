@@ -1,10 +1,9 @@
-
 import ConfigBuilder from './config/builder'
 export const Config = ConfigBuilder
 
 export { Orchestrator, Register } from './orchestrator'
 export { Player } from './player'
-export { Instance } from './instance'
+export { Cell } from './cell'
 export * from './middleware'
 export * from './types'
 

@@ -1,7 +1,7 @@
 import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
-import { Instance } from './instance'
+import { Cell } from './cell'
 import { SpawnConductorFn, ObjectS, RawConductorConfig, HappBundle, Initialization, AgentId } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
@@ -47,6 +47,7 @@ export class Player {
   _adminInterfacePort: number
   _spawnConductor: SpawnConductorFn
   _agentIdToKey: ObjectS<AgentPubKey>
+  _cells: ObjectS<Cell>
 
   constructor({ name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
@@ -62,6 +63,7 @@ export class Player {
     this._adminInterfacePort = adminInterfacePort
     this._spawnConductor = spawnConductor
     this._agentIdToKey = {}
+    this._cells = {}
   }
 
   admin = (): AdminWebsocket => {
@@ -107,21 +109,18 @@ export class Player {
   }
 
   /**
-   * Get a particular Instance of this conductor.
+   * Get a particular Cell of this conductor by cellNick
    * The reason for supplying a getter rather than allowing direct access to the collection
-   * of instances is to allow middlewares to modify the instanceId being retrieved,
+   * of cells is to allow middlewares to modify the instanceId being retrieved,
    * especially for singleConductor middleware
    */
-  instance = (instanceId) => {
-    this._conductorGuard(`instance(${instanceId})`)
-    unimplemented("Player.instance")
-    // return _.cloneDeep(this._instances[instanceId])
+  cell = (cellNick: CellNick) => {
+    this._conductorGuard(`cell(${cellNick})`)
+    return _.cloneDeep(this._cells[cellNick])
   }
 
-  instances = (filterPredicate?): Array<Instance> => {
-    unimplemented("Player.instances")
-    return []
-    // return _.flow(_.values, _.filter(filterPredicate), _.cloneDeep)(this._instances)
+  cells = (filterPredicate?): Array<Cell> => {
+    return _.flow(_.values, _.filter(filterPredicate), _.cloneDeep)(this._cells)
   }
 
   /**

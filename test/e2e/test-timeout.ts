@@ -20,6 +20,7 @@ module.exports = (testOrchestrator, testConfig) => {
       const players = await s.players({ alice: C.players.alice, bob: C.players.bob }, C.initialization)
       const { alice } = players
 
+      // FIXME: signals
       alice.onSignal({
         instanceId: 'app',
         signal: {

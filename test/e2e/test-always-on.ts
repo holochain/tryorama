@@ -11,7 +11,7 @@ module.exports = (testOrchestrator, testConfig) => {
   test('test with error', async t => {
     const C = testConfig()
     const orchestrator = await testOrchestrator()
-    orchestrator.registerScenario('invalid instance', async s => {
+    orchestrator.registerScenario('invalid happ', async s => {
       const players = await s.players({ alice: C.players.alice }, C.initialization)
       const { alice } = players
       await alice.call('blah','blah', 'blah', 'blah', 'blah')
@@ -22,7 +22,7 @@ module.exports = (testOrchestrator, testConfig) => {
     t.equal(stats.successes, 0)
     t.equal(stats.errors.length, 1)
     console.log(stats)
-    t.ok(stats.errors[0].error.message.match(/instance identifier invalid.*/))
+    t.ok(stats.errors[0].error.message.match(/instance identifier invalid.*/)) // FIXME
     t.end()
   })
 
@@ -42,15 +42,15 @@ module.exports = (testOrchestrator, testConfig) => {
     console.log(stats)
   })
 
-  test('test with simple zome call via instance', async t => {
+  test('test with simple zome call via cell', async t => {
     t.plan(3)
     const C = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('simple zome call', async s => {
       const players = await s.players({ alice: C.players.alice }, C.initialization)
       const { alice } = players
-      const instance = alice.instance('app')
-      const hash = await instance.call('main', 'commit_entry', { content: 'content' }).then(x => x.Ok)
+      const cell = alice.cell('app:cell')
+      const hash = await cell.call('main', 'commit_entry', { content: 'content' }).then(x => x.Ok)
       t.equal(hash.length, 46, 'zome call succeeded')
     })
     const stats = await orchestrator.run()

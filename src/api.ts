@@ -91,7 +91,6 @@ export class ScenarioApi {
 
         // this code will only be executed once it is determined that all configs are valid
         playerBuilders[playerName] = async () => {
-//          const { instances } = configJson
           const configDir = configJson.environment_path
 
           // FIXME: can we get this from somewhere?
