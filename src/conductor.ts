@@ -4,7 +4,6 @@ import { KillFn, ConfigSeedArgs } from "./types";
 import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
-import { connect as legacyConnect } from '@holochain/hc-web-client'
 import * as T from './types'
 import { fakeCapSecret } from "./common";
 import { AppId, CellId, CallZomeRequest, CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
