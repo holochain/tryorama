@@ -150,7 +150,7 @@ export class ScenarioApi {
     if (autoSpawn) {
       for (const player of Object.values(players)) {
         logger.info('api.players: auto-spawning player %s', player.name)
-        await player.spawn({}) //FIXME actual spawn args for conductor spawning (not initialziation)
+        await player.spawn({}) //FIXME actual spawn args for conductor spawning (not initialization)
         logger.info('api.players: spawn complete for %s', player.name)
         if (spawnArgs && (typeof spawnArgs === "object")) {
           await player.initializeApps(spawnArgs!)
