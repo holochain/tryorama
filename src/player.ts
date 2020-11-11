@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
 import { Cell } from './cell'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, HappBundle, Initialization, AgentId } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig, HappBundle, Initialization } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
 import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey } from '@holochain/conductor-api';

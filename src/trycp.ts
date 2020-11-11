@@ -16,8 +16,9 @@ export type TrycpClient = {
   closeSession: () => Promise<void>,
 }
 
-export const trycpSession = async (url): Promise<TrycpClient> => {
+export const trycpSession = async (url: string): Promise<TrycpClient> => {
   // const { call, close } = await connect({ url })
+  // TODO: fix me and redefine
   let call, close
 
   const makeCall = (method) => async (a) => {

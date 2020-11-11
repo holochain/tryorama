@@ -26,7 +26,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@holochain/conductor-api": "0.0.1-dev.10",
+    "@holochain/conductor-api": "holochain/holochain-conductor-api#tester-branch",
     "@holochain/hachiko": "^0.5.2",
     "@iarna/toml": "^2.2.5",
     "yaml": "^1.10.0",
