@@ -3,3 +3,7 @@ lib/
 docs/
 dna/
 .vscode/
+
+# rust stuff
+.cargo
+target
