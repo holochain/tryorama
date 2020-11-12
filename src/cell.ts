@@ -1,34 +1,27 @@
-import { AdminApi } from '@holochain/conductor-api'
+import { AdminApi, AppApi, CellId } from '@holochain/conductor-api'
+import { fakeCapSecret } from './common'
 
 type CallZomeFunc = (zome: string, fn: string, params: any) => Promise<any>
 
 type CellConstructorParams = {
-  nick: string,
-  dnaAddress: string,
-  agentAddress: string,
+  cellId: CellId,
   adminClient: AdminApi,
-  callZome: CallZomeFunc,
+  appClient: AppApi,
 }
 
 /**
- * Handy reference to an cell within a Conductor.
- * Rather than using conductor.call('appId', 'cellNick', 'zomeName', 'funcName', params), you can:
- * `conductor.cells[cellNick].call('zomeName', 'funcName', params)`
+ * Make zome calls from Cells.
+ * `cell.call('zomeName', 'funcName', params)`
  */
 export class Cell {
-
-  nick: string
+  cellId: CellId
   admin: AdminApi
-  _callZome: CallZomeFunc
-  agentAddress: string
-  dnaAddress: string
+  app: AppApi
 
   constructor(o: CellConstructorParams) {
-    this.nick = o.nick
+    this.cellId = o.cellId
+    this.app = o.appClient
     this.admin = o.adminClient
-    this._callZome = o.callZome
-    this.agentAddress = o.agentAddress
-    this.dnaAddress = o.dnaAddress
   }
 
   call = (...args): Promise<any> => {
@@ -39,8 +32,24 @@ export class Cell {
     return this._callZome(zome, fn, params)
   }
 
+  _callZome: CallZomeFunc = async (zome: string, fn: string, payload: any): Promise<any> => {
+    // FIXME: don't just use provenance from CellId that we're calling,
+    //        (because this always grants Authorship)
+    //        for now, it makes sense to use the AgentPubKey of the *caller*,
+    //        but in the future, Holochain will inject the provenance itself
+    //        and you won't even be able to pass it in here.
+    const [_dnaHash, provenance] = this.cellId
+    return this.app!.callZome({
+      cell_id: this.cellId,
+      zome_name: zome,
+      cap: fakeCapSecret(), // FIXME (see Player.ts)
+      fn_name: fn,
+      payload,
+      provenance, // FIXME
+    })
+  }
+
   stateDump = (): Promise<any> => {
-    return Promise.resolve('TODO')
-    // return this.admin.stateDump({ cell_id: this.id })
+    return this.admin.dumpState({ cell_id: this.cellId })
   }
 }

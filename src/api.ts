@@ -1,3 +1,4 @@
+import uuidGen from 'uuid/v4'
 import * as _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
@@ -8,7 +9,7 @@ import * as T from "./types"
 import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
-import { promiseSerialObject, stringify, stripPortFromUrl, trace } from './util';
+import { promiseSerialArray, promiseSerialObject, stringify, stripPortFromUrl, trace } from './util';
 import { getConfigPath, /*assertUniqueTestAgentNames,*/ localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
 import { trycpSession, TrycpClient } from './trycp'
@@ -26,7 +27,7 @@ export class ScenarioApi {
   description: string
   fail: Function
 
-  _localPlayers: Record<string, Player>
+  _localPlayers: Array<Player>
   _trycpClients: Array<TrycpClient>
   _uuid: string
   _waiter: Waiter
@@ -37,7 +38,7 @@ export class ScenarioApi {
     this.description = description
     this.fail = (reason) => { throw new Error(`s.fail: ${reason}`) }
 
-    this._localPlayers = {}
+    this._localPlayers = []
     this._trycpClients = []
     this._uuid = uuid
     this._waiter = new Waiter(FullSyncNetwork, undefined, orchestratorData.waiterConfig)
@@ -45,56 +46,62 @@ export class ScenarioApi {
     this._activityTimer = null
   }
 
-  players = async (machines: T.MachineConfigs, spawnArgs?: T.Initialization | boolean): Promise<T.ObjectS<Player>> => {
+  players = async (playerConfigs: Array<T.PlayerConfig>): Promise<Array<T.PlayerResult>> => {
     logger.debug('api.players: creating players')
-    // const configsJson: Array<T.RawConductorConfig> = []
-    const playerBuilders: Record<string, PlayerBuilder> = {}
-    for (const machineEndpoint in machines) {
-      const trycp = machineEndpoint === LOCAL_MACHINE_ID
-      const playerConfigs = machines[machineEndpoint]
-      for (const playerName in playerConfigs) {
-        const playerConfigSeed: T.ConfigSeed = playerConfigs[playerName]
-        if (!_.isFunction(playerConfigSeed)) {
-          throw new Error(`Config for player '${playerName}' contains something other than a function. Either use Config.gen to create a seed function, or supply one manually.`)
-        }
-        playerBuilders[playerName] = trycp
-          // local machine
-          ? (await this._createLocalPlayerBuilder(machineEndpoint, playerName, playerConfigSeed))
-          // trycp
-          : (await this._createTrycpPlayerBuilder(machineEndpoint, playerName, playerConfigSeed))
+    // create all the promise *creators* which will
+    // create the players
+    const playerBuilders: Array<PlayerBuilder> = []
+    for (const [configSeed] of playerConfigs) {
+      const playerName = uuidGen()
+      if (!_.isFunction(configSeed)) {
+        throw new Error(`Config for player '${playerName}' contains something other than a function. Either use Config.gen to create a seed function, or supply one manually.`)
       }
+      // local machine
+      playerBuilders.push(await this._createLocalPlayerBuilder(playerName, configSeed))
+      // TODO: trycp
+      // await this._createTrycpPlayerBuilder(machineEndpoint, playerName, playerConfigSeed)
     }
 
     // this will throw an error if something is wrong
     // assertUniqueTestAgentNames(configsJson)
     // logger.debug('api.players: unique agent name check passed')
 
-    const players = await promiseSerialObject<Player>(_.mapValues(playerBuilders, c => c()))
+
+    const players = await promiseSerialArray<Player>(playerBuilders.map(pb => pb()))
     logger.debug('api.players: players built')
 
     // since this function can be called multiple times, make sure
     // to keep any existing _localPlayers while adding the new ones
-    this._localPlayers = { ...this._localPlayers, ...players }
+    this._localPlayers = this._localPlayers.concat(players)
 
-    // if no spawnArgs provided default is to spawn
-    const autoSpawn: boolean = (spawnArgs === undefined) || ((typeof spawnArgs === "boolean") && spawnArgs) || (typeof spawnArgs === "object")
+    // initialize the array of results to return
+    const playerResults: T.PlayerResult[] = []
 
-    // Do auto-spawning.  The spawn args can be a bool or an object which will be passed
-    // into the conductor spawn function for any special spawning instructions, which
-    // is not the same thing as app initialization which must be done separately.
-    if (autoSpawn) {
-      for (const player of Object.values(players)) {
-        logger.info('api.players: auto-spawning player %s', player.name)
-        await player.spawn({}) //FIXME actual spawn args for conductor spawning (not initialization)
-        logger.info('api.players: spawn complete for %s', player.name)
-        if (spawnArgs && (typeof spawnArgs === "object")) {
-          await player.initializeApps(spawnArgs!)
-          logger.info('api.players: initializedApps for %s', player.name)
+    // use players.entries() to obtain indexes
+    // during iteration
+    for (const [index, player] of players.entries()) {
+      let playerResult: T.PlayerResult
+      let installedHapps: T.InstalledHapps = []
+      // go back to the PlayerConfig for this player
+      // TODO: CHECK IF THIS IS BUG PRONE, e.g. points to wrong config
+      const playerConfig: T.PlayerConfig = playerConfigs[index]
+      // if no startupArg provided default is to startup (true)
+      const startupArg: T.StartupArg = _.isArray(playerConfig) ? playerConfig[1] : true
+      if (startupArg) {
+        // logger.info('api.players: auto-starting-up player %s', player.name)
+        await player.startup({})
+        // logger.info('api.players: startup complete for %s', player.name)
+        if (typeof startupArg === "object") { // spawnArg is InstallHapps
+          installedHapps = await player.installHapps(startupArg)
+          // logger.info('api.players: installed Happs for %s', player.name)
         }
       }
+      // mirror the input back to the output, for intuitive destructuring
+      playerResult = [player, installedHapps]
+      playerResults.push(playerResult)
     }
 
-    return players
+    return playerResults
   }
 
   // FIXME!!!  probably need to rip out hachiko
@@ -110,6 +117,7 @@ export class ScenarioApi {
     })
   })
 
+  // TODO: re-implement a way to create a trycp player
   _createTrycpPlayerBuilder = async (machineEndpoint: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
     // keep track of it so we can send a reset() at the end of this scenario
@@ -137,7 +145,7 @@ export class ScenarioApi {
     }
   }
 
-  _createLocalPlayerBuilder = async (machineEndpoint: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
+  _createLocalPlayerBuilder = async (playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     return async () => {
       const partialConfigSeedArgs = await localConfigSeedArgs()
       const configJson = this._generateConfigFromSeed(partialConfigSeedArgs, playerName, configSeed)

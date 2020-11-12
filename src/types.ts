@@ -7,6 +7,7 @@ import { reporter } from 'io-ts-reporters'
 import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
+import { Cell } from './cell';
 
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
@@ -41,8 +42,26 @@ export type ConfigSeedArgs = PartialConfigSeedArgs & {
   uuid: string,
 }
 
-export type PlayerConfigs = ObjectS<ConfigSeed>
-export type MachineConfigs = ObjectS<PlayerConfigs>
+// export type PlayerConfigs = ObjectS<PlayerConfig>
+export type PlayerConfig = [ConfigSeed, StartupArg?]
+// if undefined, default to true
+// if boolean, use that
+// if InstallHapps, startup and then immediately install these happs
+export type StartupArg = undefined | boolean | InstallHapps
+export type InstallHapps = AgentHapp[]
+export type AgentHapp = DnaPath[]
+export type DnaPath = string
+
+// the mirror of PlayerConfigs, once all up and running
+// export type PlayerResults = PlayerResult[]
+// the mirror of PlayerConfig
+export type PlayerResult = [Player, InstalledHapps]
+// the mirror of InstallHapps
+export type InstalledHapps = InstalledAgentHapp[]
+// the mirror of AgentHapp
+export type InstalledAgentHapp = Cell[]
+
+// export type MachineConfigs = ObjectS<PlayerConfigs>
 
 export const adminWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
 
@@ -61,7 +80,3 @@ export interface RawConductorConfig {
 
 export type KillFn = (signal?: string) => Promise<void>
 
-export type DnaPath = string
-export type AgentDnas = Array<DnaPath>
-export type HappBundle = Array<AgentDnas>
-export type Initialization = Array<HappBundle>
