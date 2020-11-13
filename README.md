@@ -31,7 +31,8 @@ Take a look at the sample below, or skip to the [Conceptual Overview](#conceptua
 Check out this heavily commented example for an idea of how to use tryorama
 
 ```javascript
-import { Orchestrator, Config, InstallAgentsHapps } from '../../src'
+import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama
+'
 
 
 // Get path for your DNAs using Config.dna helper
@@ -113,7 +114,7 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   await s.consistency()
 
   // and you can make assertions using tape by default
-  const messages = await carol.call('chat', 'messages', 'list_messages', {})
+  const messages = await bobs_blog.call('messages', 'list_messages', {})
   t.equal(messages.length, 1)
 })
 
