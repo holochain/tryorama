@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
 import { Cell } from './cell'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, HappBundle, Initialization, AgentId } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
 import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey } from '@holochain/conductor-api';
@@ -46,7 +46,6 @@ export class Player {
   _configDir: string
   _adminInterfacePort: number
   _spawnConductor: SpawnConductorFn
-  _agentIdToKey: ObjectS<AgentPubKey>
   _cells: ObjectS<Cell>
 
   constructor({ name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
@@ -62,7 +61,6 @@ export class Player {
     this._configDir = configDir
     this._adminInterfacePort = adminInterfacePort
     this._spawnConductor = spawnConductor
-    this._agentIdToKey = {}
     this._cells = {}
   }
 
@@ -74,72 +72,23 @@ export class Player {
     }
   }
 
-  call = async (...args: CallArgs) => {
-    if (args.length === 5) {
-      this._conductorGuard(`Player.call(${JSON.stringify(args)})`)
-      const [appId, cellNick, zome_name, fn_name, payload] = args
-      return this._conductor!.callZome(
-        appId,
-        cellNick,
-        zome_name,
-        fn_name,
-        payload,
-      )
-    } else if (args.length === 1) {
-      throw new Error("deprecated")
-//      this._conductorGuard(`call(${JSON.stringify(args[0])})`)
-//      return this._conductor!.appClient!.callZome(args[0])
-    } else {
-      throw new Error("Must use either 1 or 5 arguments with `player.call`")
-    }
-  }
-
   /**
-   * Get a particular cellId given a CellNick from the conductor instance
-   */
-  cellId = (appId: string, nick: CellNick): CellId => {
-    this._conductorGuard(`cellId(${appId}, ${nick})`)
-    return this._conductor!.cellId(appId, nick)
-  }
-
-  stateDump = async (appId: string, nick: CellNick): Promise<any> => {
-    return this.admin()!.dumpState({
-      cell_id: this.cellId(appId, nick)
-    })
-  }
-
-  /**
-   * Get a particular Cell of this conductor by cellNick
-   * The reason for supplying a getter rather than allowing direct access to the collection
-   * of cells is to allow middlewares to modify the instanceId being retrieved,
-   * especially for singleConductor middleware
-   */
-  cell = (cellNick: CellNick) => {
-    this._conductorGuard(`cell(${cellNick})`)
-    return _.cloneDeep(this._cells[cellNick])
-  }
-
-  cells = (filterPredicate?): Array<Cell> => {
-    return _.flow(_.values, _.filter(filterPredicate), _.cloneDeep)(this._cells)
-  }
-
-  /**
-   * Spawn can take a function as an argument, which allows the caller
+   * `startup` can take a function as an argument, which allows the caller
    * to do something with the child process handle, even before the conductor
    * has fully started up. Otherwise, by default, you will have to wait for
    * the proper output to be seen before this promise resolves.
    */
-  spawn = async (spawnArgs: any) => {
+  startup = async (spawnArgs: any) => {
     if (this._conductor) {
-      this.logger.warn(`Attempted to spawn conductor '${this.name}' twice!`)
+      this.logger.warn(`Attempted to start up conductor '${this.name}' twice!`)
       return
     }
 
-    await this.onJoin()
-    this.logger.debug("spawning")
+    this.onJoin()
+    this.logger.debug("starting up")
     const conductor = await this._spawnConductor(this, spawnArgs)
 
-    this.logger.debug("spawned")
+    this.logger.debug("started up")
     this._conductor = conductor
 
     this.logger.debug("initializing")
@@ -148,17 +97,17 @@ export class Player {
     this.logger.debug("initialized")
   }
 
-  kill = async (signal = 'SIGINT'): Promise<boolean> => {
+  shutdown = async (signal = 'SIGINT'): Promise<boolean> => {
     if (this._conductor) {
       const c = this._conductor
       this._conductor = null
-      this.logger.debug("Killing...")
+      this.logger.debug("Shutting down...")
       await c.kill(signal)
-      this.logger.debug("Killed.")
-      await this.onLeave()
+      this.logger.debug("Shut down.")
+      this.onLeave()
       return true
     } else {
-      this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
+      this.logger.warn(`Attempted to shut down conductor '${this.name}' twice`)
       return false
     }
   }
@@ -167,7 +116,7 @@ export class Player {
   cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
-      await this.kill(signal)
+      await this.shutdown(signal)
       unparkPort(this._adminInterfacePort)
       return true
     } else {
@@ -179,52 +128,32 @@ export class Player {
   /**
    * helper to create agent pub keys and install multiple apps for scenario initialization
    */
-  initializeApps = async (init: Initialization) => {
-    this._conductorGuard(`Player.initializeApps`)
+  installAgentsHapps = async (agentsHapps: InstallAgentsHapps): Promise<InstalledAgentHapps> => {
+    this._conductorGuard(`Player.installHapps`)
     const admin: AdminWebsocket = this._conductor!.adminClient!
-
-    // collect all the agent-ids from the initialization removing duplicates
-    const agents = [...new Set(init.map(app => app.agentId))]
-
-    for (const agent_id of agents) {
-      if (this._agentIdToKey[agent_id]) {
-        throw new Error(`Player.initializeApps: agent key already exists for ${agent_id}!`)
-      }
-    }
-
-    // create keys for all the agent_ids and store them for later reference
-    const agentIdToKey = _.fromPairs(await Promise.all(
-      agents.map(async name => [name, await admin.generateAgentPubKey()])
-    ))
-    for (const id in agentIdToKey) {
-      this._agentIdToKey[id] = agentIdToKey[id]
-    }
-
-    // install each app in the initialization with it's agent
-    for (const app of init) {
-      const agent_key = this._agentIdToKey[app.agentId]
-      this._conductor!.installApp(agent_key, app)
-    }
-  }
-
-  /**
-   * retrieve the pub key of an agent by id
-   */
-  getAgentKey = (agent_id: AgentId): AgentPubKey | undefined => {
-    return this._agentIdToKey[agent_id]
+    return await Promise.all(agentsHapps.map(async agentHapps => {
+      let agentPubKey = await admin.generateAgentPubKey()
+      return await Promise.all(agentHapps.map(happ => this.installHapp(happ, agentPubKey)))
+    }))
   }
 
   /**
    * expose installApp at the player level for in-scenario dynamic installation of apps
+   * optionally takes an AgentPubKey so that you can control who's who if you need to
+   * otherwise will be a new and different agent every time you call it
    */
-  installApp = async (agent_key: AgentPubKey, app: HappBundle) => {
-    this._conductorGuard(`Player.installApp(${agent_key})`)
-    this._conductor!.installApp(agent_key, app)
+  installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey})`)
+    const admin: AdminWebsocket = this._conductor!.adminClient!
+    if (!agentPubKey) {
+      agentPubKey = await admin.generateAgentPubKey()
+    }
+    return this._conductor!.installHapp(agentPubKey, happ)
   }
 
   _conductorGuard = (context) => {
     if (this._conductor === null) {
-      const msg = `Attempted conductor action when no conductor is running! You must \`.spawn()\` first.\nAction: ${context}`
+      const msg = `Attempted conductor action when no conductor is running! You must \`.startup()\` first.\nAction: ${context}`
       this.logger.error(msg)
       throw new Error(msg)
     } else {

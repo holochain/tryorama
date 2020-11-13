@@ -1,13 +1,13 @@
 const colors = require('colors/safe')
+import uuidGen from 'uuid/v4'
 
-import { KillFn, ConfigSeedArgs } from "./types";
+import { KillFn } from "./types";
 import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
-import { connect as legacyConnect } from '@holochain/hc-web-client'
 import * as T from './types'
-import { fakeCapSecret } from "./common";
-import { AppId, CellId, CallZomeRequest, CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
+import { Cell } from "./cell";
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -37,7 +37,6 @@ export class Conductor {
   _rawConfig: T.RawConductorConfig
   _wsClosePromise: Promise<void>
   _onActivity: () => void
-  _cellIds: T.ObjectS<T.ObjectS<CellId>>
 
   constructor({ name, kill, onSignal, onActivity, machineHost, adminPort, rawConfig }) {
     this.name = name
@@ -59,11 +58,6 @@ export class Conductor {
     this._rawConfig = rawConfig
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
-    this._cellIds = {}
-  }
-
-  callZome: CallZomeFunc = (...a) => {
-    throw new Error("Attempting to call zome function before conductor was initialized")
   }
 
   initialize = async () => {
@@ -73,80 +67,49 @@ export class Conductor {
 
   awaitClosed = () => this._wsClosePromise
 
-  cellId = (appId: string, nick: CellNick): CellId => {
-    const cellId = this._cellIds[appId][nick]
-    if (!cellId) {
-      throw new Error(`Unknown cell nickname: ${nick} in app: ${appId}`)
+  // this function will auto-generate an `app_id` and
+  // `dna.nick` for you, to allow simplicity
+  installHapp = async (agentPubKey: AgentPubKey, agentHapp: T.InstallHapp): Promise<T.InstalledHapp> => {
+    const dnaPaths: T.DnaPath[] = agentHapp
+    const installAppReq: InstallAppRequest = {
+      app_id: `app-${uuidGen()}`,
+      agent_key: agentPubKey,
+      dnas: dnaPaths.map((dnaPath, index) => ({
+        path: dnaPath,
+        nick: `${index}${dnaPath}-${uuidGen()}`
+      }))
     }
-    return cellId
-  }
+    const {cell_data} = await this.adminClient!.installApp(installAppReq)
+    // must be activated to be callable
+    await this.adminClient!.activateApp({ app_id: installAppReq.app_id })
 
-  installApp = async (agent_key: AgentPubKey, app: T.HappBundle) => {
-    const installAppReq : InstallAppRequest = {
-      app_id: app.id,
-      agent_key,
-      dnas: app.dnas
+    // prepare the result, and create Cell instances
+    const installedAgentHapp: T.InstalledHapp = {
+      agent: agentPubKey,
+      // construct Cell instances which are the most useful class to the client
+      cells: cell_data.map(installedCell => new Cell({
+        // installedCell[0] is the CellId, installedCell[1] is the CellNick
+        // which we don't need
+        cellId: installedCell[0],
+        adminClient: this.adminClient!,
+        appClient: this.appClient!
+      }))
     }
-    const {cell_data: cellData} = await this.adminClient!.installApp(installAppReq)
-    // save the returned cellIds and cellNicks for later reference
-    for (const installedCell of cellData) {
-      const [cellId, cellNick] = installedCell
-      this._cellIds[app.id][cellNick] = cellId
-    }
-  }
-
-  _loadCellNicks = async (app_id: AppId) => {
-    const { cell_data } = await this.appClient!.appInfo({ app_id })
-    for (const [cellId, cellNick] of cell_data) {
-      this._cellIds[app_id][cellNick] = cellId
-    }
+    return installedAgentHapp
   }
 
   _connectInterfaces = async () => {
     this._onActivity()
-
     const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
-
     this.adminClient = await AdminWebsocket.connect(adminWsUrl)
     this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
-
+    // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
     const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
-
     this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {
       this._onActivity()
       console.info("got signal, doing nothing with it: %o", signal)
     })
     this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
-
-    // get the currently existing apps and cell nick/id mapping
-    const apps = await this.adminClient.listActiveAppIds()
-    for (const app_id of apps) {
-      await this._loadCellNicks(app_id)
-    }
-
-    // now that we are connected updated the callZome function
-    this.callZome = (appId, cellNick, zomeName, fnName, payload) => {
-      this._onActivity()
-
-      const cellId = this.cellId(appId, cellNick)
-      if (!cellId) {
-        throw new Error("Unknown cell nick: " + cellNick)
-      }
-      // FIXME: don't just use provenance from CellId that we're calling,
-      //        (because this always grants Authorship)
-      //        for now, it makes sense to use the AgentPubKey of the *caller*,
-      //        but in the future, Holochain will inject the provenance itself
-      //        and you won't even be able to pass it in here.
-      const [_dnaHash, provenance] = cellId
-      return this.appClient!.callZome({
-        cell_id: cellId as any,
-        zome_name: zomeName,
-        cap: fakeCapSecret(), // FIXME (see Player.ts)
-        fn_name: fnName,
-        payload: payload,
-        provenance, // FIXME
-      })
-    }
   }
 }

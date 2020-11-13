@@ -69,7 +69,7 @@ module.exports = (testOrchestrator, testConfig) => {
     const C = testConfig()
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('attempted call with unspawned conductor', async s => {
-      const { alice } = await s.players({ alice: C.players.alice }, C.initialziation)
+      const { alice } = await s.players({ alice: C.players.alice }, C.initialization)
 
       const commit1 = await alice.call('app', 'main', 'commit_entry', {
         content: 'content1'
@@ -88,7 +88,7 @@ module.exports = (testOrchestrator, testConfig) => {
       await s.consistency()
 
       // bob and carol join later
-      const { bob, carol } = await s.players({ bob: C.players.bob, carol: C.players.carol }, C.initialziation)
+      const { bob, carol } = await s.players({ bob: C.players.bob, carol: C.players.carol }, C.initialization)
 
       // after the consistency waiting inherent in auto-spawning the new players, their state dumps
       // should immediately show that they are holding alice's entries

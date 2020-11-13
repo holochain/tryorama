@@ -9,8 +9,8 @@ interface ApiPlayers<Config> {
   players: (config: Config, data?: any) => Promise<any>
 }
 
-type ApiMachineConfigs = ApiPlayers<T.MachineConfigs>
-type ApiPlayerConfigs = ApiPlayers<T.PlayerConfigs>
+// type ApiMachineConfigs = ApiPlayers<T.MachineConfigs>
+// type ApiPlayerConfigs = ApiPlayers<T.PlayerConfigs>
 
 // Bare minimum API expected by tapeExecutor
 interface ExecutorApi {
@@ -211,24 +211,25 @@ export const callSync = (run, f) => run(s => {
 })
 
 // TODO: add test
-export const dumbWaiter = interval => (run, f): MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> => run(s =>
-  f(Object.assign({}, s, {
-    consistency: () => new Promise(resolve => {
-      console.log(`dumbWaiter is waiting ${interval}ms...`)
-      setTimeout(resolve, interval)
-    })
-  }))
-)
+// export const dumbWaiter = interval => (run, f): MiddlewareS<ApiMachineConfigs, ApiMachineConfigs> => run(s =>
+//   f(Object.assign({}, s, {
+//     consistency: () => new Promise(resolve => {
+//       console.log(`dumbWaiter is waiting ${interval}ms...`)
+//       setTimeout(resolve, interval)
+//     })
+//   }))
+// )
 
 /**
  * Allow a test to skip the level of machine configuration
  * This middleware wraps the player configs in the "local" machine
  */
-export const localOnly: MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> = (run, f) => run(s => {
-  const s_ = _.assign({}, s, {
-    players: (configs, ...a) => s.players({ local: configs }, ...a)
-  })
-  return f(s_)
+export const localOnly = (run, f) => run(s => {
+  // const s_ = _.assign({}, s, {
+  //   players: (configs, ...a) => s.players({ local: configs }, ...a)
+  // })
+  // return f(s_)
+  return f(s)
 })
 
 /**
@@ -236,42 +237,42 @@ export const localOnly: MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> = (run,
  * This middleware finds a new machine for each N players, and returns the
  * properly wrapped config specifying the acquired machine endpoints
  */
-export const groupPlayersByMachine = (trycpEndpoints: Array<string>, playersPer: number): MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
-  let urlIndex = 0
-  const s_ = _.assign({}, s, {
-    players: async (configs: T.PlayerConfigs, ...a) => {
-      const numConfigs = _.keys(configs).length
-      if (numConfigs > trycpEndpoints.length * playersPer) {
-        throw new Error(
-          `Error while applying groupPlayersByMachine middleware: Can't fit ${numConfigs} conductors on ${trycpEndpoints.length} machines in groups of ${playersPer}!`
-        )
-      }
+// export const groupPlayersByMachine = (trycpEndpoints: Array<string>, playersPer: number): MiddlewareS<ApiPlayerConfigs, ApiMachineConfigs> => (run, f) => run(s => {
+//   let urlIndex = 0
+//   const s_ = _.assign({}, s, {
+//     players: async (configs: T.PlayerConfigs, ...a) => {
+//       const numConfigs = _.keys(configs).length
+//       if (numConfigs > trycpEndpoints.length * playersPer) {
+//         throw new Error(
+//           `Error while applying groupPlayersByMachine middleware: Can't fit ${numConfigs} conductors on ${trycpEndpoints.length} machines in groups of ${playersPer}!`
+//         )
+//       }
 
-      const machines = {}
-      for (const e of _.range(0, trycpEndpoints.length)) {
-        const endpoint = trycpEndpoints[e]
-        const machine = {}
-        let config
-        for (const p of _.range(0, playersPer)) {
-          const index = String(e * playersPer + p)
-          config = configs[index]
-          if (!config) {
-            break
-          }
-          machine[index] = config
-        }
-        if (!_.isEmpty(machine)) {
-          machines[endpoint] = machine
-        }
-        if (!config) {
-          break
-        }
-      }
-      return s.players(machines, ...a)
-    }
-  })
-  return f(s_)
-})
+//       const machines = {}
+//       for (const e of _.range(0, trycpEndpoints.length)) {
+//         const endpoint = trycpEndpoints[e]
+//         const machine = {}
+//         let config
+//         for (const p of _.range(0, playersPer)) {
+//           const index = String(e * playersPer + p)
+//           config = configs[index]
+//           if (!config) {
+//             break
+//           }
+//           machine[index] = config
+//         }
+//         if (!_.isEmpty(machine)) {
+//           machines[endpoint] = machine
+//         }
+//         if (!config) {
+//           break
+//         }
+//       }
+//       return s.players(machines, ...a)
+//     }
+//   })
+//   return f(s_)
+// })
 
 
 /**
@@ -279,13 +280,13 @@ export const groupPlayersByMachine = (trycpEndpoints: Array<string>, playersPer:
  * This middleware finds a new machine for each player, and returns the
  * properly wrapped config specifying the acquired machine endpoints
  */
-export const machinePerPlayer = (endpoints) => groupPlayersByMachine(endpoints, 1)
+// export const machinePerPlayer = (endpoints) => groupPlayersByMachine(endpoints, 1)
 
 
-const unwrapMachineConfig = (machineConfigs: T.MachineConfigs): T.PlayerConfigs =>
-  _.chain(machineConfigs)
-    .values()
-    .map(_.toPairs)
-    .flatten()
-    .fromPairs()
-    .value()
+// const unwrapMachineConfig = (machineConfigs: T.MachineConfigs): T.PlayerConfigs =>
+//   _.chain(machineConfigs)
+//     .values()
+//     .map(_.toPairs)
+//     .flatten()
+//     .fromPairs()
+//     .value()
