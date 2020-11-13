@@ -33,6 +33,7 @@ export class ScenarioApi {
   _waiter: Waiter
   _modifiers: Modifiers
   _activityTimer: any
+  _conductorIndex: number
 
   constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
@@ -44,6 +45,7 @@ export class ScenarioApi {
     this._waiter = new Waiter(FullSyncNetwork, undefined, orchestratorData.waiterConfig)
     this._modifiers = modifiers
     this._activityTimer = null
+    this._conductorIndex = 0
   }
 
   players = async (playerConfigs: Array<T.PlayerConfig>, startupArg: boolean = true): Promise<Array<Player>> => {
@@ -60,7 +62,8 @@ export class ScenarioApi {
     // create the players
     const playerBuilders: Array<PlayerBuilder> = await Promise.all(playerConfigs.map(
       async configSeed => {
-        const playerName = uuidGen()
+        // use the _conductorIndex and then increment it
+        const playerName = `c${this._conductorIndex++}`
         // local machine
         return await this._createLocalPlayerBuilder(playerName, configSeed)
         // TODO: trycp

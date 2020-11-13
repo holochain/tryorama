@@ -69,10 +69,8 @@ export class Conductor {
 
   // this function will auto-generate an `app_id` and
   // `dna.nick` for you, to allow simplicity
-  installHapp = async (agentPubKey: AgentPubKey, agentHapp: T.AgentHapp): Promise<T.InstalledAgentHapp> => {
-    // account for simple case where AgentHapp is just a single DNA
-    // and thus putting it into an array feels bloated
-    const dnaPaths: T.DnaPath[] = typeof agentHapp === 'string' ? [agentHapp] : agentHapp
+  installHapp = async (agentPubKey: AgentPubKey, agentHapp: T.InstallHapp): Promise<T.InstalledHapp> => {
+    const dnaPaths: T.DnaPath[] = agentHapp
     const installAppReq: InstallAppRequest = {
       app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
@@ -86,7 +84,7 @@ export class Conductor {
     await this.adminClient!.activateApp({ app_id: installAppReq.app_id })
 
     // prepare the result, and create Cell instances
-    const installedAgentHapp: T.InstalledAgentHapp = {
+    const installedAgentHapp: T.InstalledHapp = {
       agent: agentPubKey,
       // construct Cell instances which are the most useful class to the client
       cells: cell_data.map(installedCell => new Cell({

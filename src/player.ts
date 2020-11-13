@@ -2,7 +2,7 @@ import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
 import { Cell } from './cell'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstalledAgentHapp, AgentHapp } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
 import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey } from '@holochain/conductor-api';
@@ -128,9 +128,13 @@ export class Player {
   /**
    * helper to create agent pub keys and install multiple apps for scenario initialization
    */
-  installHapps = (happs: InstallHapps): Promise<InstalledHapps> => {
+  installAgentsHapps = async (agentsHapps: InstallAgentsHapps): Promise<InstalledAgentHapps> => {
     this._conductorGuard(`Player.installHapps`)
-    return Promise.all(happs.map(h => this.installHapp(h)))
+    const admin: AdminWebsocket = this._conductor!.adminClient!
+    return await Promise.all(agentsHapps.map(async agentHapps => {
+      let agentPubKey = await admin.generateAgentPubKey()
+      return await Promise.all(agentHapps.map(happ => this.installHapp(happ, agentPubKey)))
+    }))
   }
 
   /**
@@ -138,13 +142,13 @@ export class Player {
    * optionally takes an AgentPubKey so that you can control who's who if you need to
    * otherwise will be a new and different agent every time you call it
    */
-  installHapp = async (agentHapp: AgentHapp, agentPubKey?: AgentPubKey): Promise<InstalledAgentHapp> => {
-    this._conductorGuard(`Player.installHapp(${JSON.stringify(agentHapp)}, ${agentPubKey})`)
+  installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey})`)
     const admin: AdminWebsocket = this._conductor!.adminClient!
     if (!agentPubKey) {
       agentPubKey = await admin.generateAgentPubKey()
     }
-    return this._conductor!.installHapp(agentPubKey, agentHapp)
+    return this._conductor!.installHapp(agentPubKey, happ)
   }
 
   _conductorGuard = (context) => {

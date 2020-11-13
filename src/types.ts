@@ -45,16 +45,39 @@ export type ConfigSeedArgs = PartialConfigSeedArgs & {
 
 // export type PlayerConfigs = ObjectS<PlayerConfig>
 export type PlayerConfig = ConfigSeed
-export type InstallHapps = AgentHapp[]
-export type AgentHapp = DnaPath | DnaPath[]
+
+// there will be one agent generated per each in this list
+
+
+
+// one agent, one happ, 4 dnas
+// [[['dna1', 'dna2', 'dna3', 'dna4']]]
+
+// two agents, one happ, two dnas each
+// [['dna1', 'dna2'], ['dna3', 'dna4']]
+
+// one agent
+// [
+  //   [
+    //     ['dna1', 'dna2'], ['dna3', 'dna4']
+    //   ]
+    // ]
+    // 
+    
+// happ contains shared Agent
+export type InstallAgentsHapps = InstallHapps[]
+export type InstallHapps = InstallHapp[]
+export type InstallHapp = DnaPath[]
 export type DnaPath = string
 
+// the mirror of InstallAgentHapps
+export type InstalledAgentHapps = InstalledHapps[]
 // the mirror of InstallHapps
-export type InstalledHapps = InstalledAgentHapp[]
+export type InstalledHapps = InstalledHapp[]
 
 // the mirror of AgentHapp, but more javascripty
 // and could eventually become a class
-export type InstalledAgentHapp = {
+export type InstalledHapp = {
   // the agent shared by all the Cell instances in `.cells`
   agent: AgentPubKey
   // the instantiated cells, which allow

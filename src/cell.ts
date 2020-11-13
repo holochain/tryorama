@@ -15,13 +15,13 @@ type CellConstructorParams = {
  */
 export class Cell {
   cellId: CellId
-  admin: AdminApi
-  app: AppApi
+  adminClient: AdminApi
+  appClient: AppApi
 
   constructor(o: CellConstructorParams) {
     this.cellId = o.cellId
-    this.app = o.appClient
-    this.admin = o.adminClient
+    this.appClient = o.appClient
+    this.adminClient = o.adminClient
   }
 
   call = (...args): Promise<any> => {
@@ -39,7 +39,7 @@ export class Cell {
     //        but in the future, Holochain will inject the provenance itself
     //        and you won't even be able to pass it in here.
     const [_dnaHash, provenance] = this.cellId
-    return this.app!.callZome({
+    return this.appClient!.callZome({
       cell_id: this.cellId,
       zome_name: zome,
       cap: fakeCapSecret(), // FIXME (see Player.ts)
@@ -50,6 +50,6 @@ export class Cell {
   }
 
   stateDump = (): Promise<any> => {
-    return this.admin.dumpState({ cell_id: this.cellId })
+    return this.adminClient.dumpState({ cell_id: this.cellId })
   }
 }
