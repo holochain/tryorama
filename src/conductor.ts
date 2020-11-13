@@ -68,25 +68,36 @@ export class Conductor {
 
   awaitClosed = () => this._wsClosePromise
 
+  // this function will auto-generate an `app_id` and
+  // `dna.nick` for you, to allow simplicity
   installHapp = async (agentKey: AgentPubKey, agentHapp: T.AgentHapp): Promise<T.InstalledAgentHapp> => {
+    // account for simple case where AgentHapp is just a single DNA
+    // and thus putting it into an array feels bloated
+    const dnaPaths: T.DnaPath[] = typeof agentHapp === 'string' ? [agentHapp] : agentHapp
     const installAppReq: InstallAppRequest = {
       app_id: `app-${uuidGen()}`,
       agent_key: agentKey,
-      dnas: agentHapp.map((dnaPath, index) => ({
+      dnas: dnaPaths.map((dnaPath, index) => ({
         path: dnaPath,
         nick: `${index}${dnaPath}-${uuidGen()}`
       }))
     }
     const {cell_data} = await this.adminClient!.installApp(installAppReq)
+    // must be activated to be callable
     await this.adminClient!.activateApp({ app_id: installAppReq.app_id })
-    // construct Cells which are the most useful class to the client
-    return cell_data.map(installedCell => new Cell({
-      // installedCell[0] is the CellId, installedCell[1] is the CellNick
-      // which we don't need
-      cellId: installedCell[0],
-      adminClient: this.adminClient!,
-      appClient: this.appClient!
-    }))
+
+    // prepare the result, and create Cell instances
+    const installedAgentHapp: T.InstalledAgentHapp = {
+      // construct Cell instances which are the most useful class to the client
+      cells: cell_data.map(installedCell => new Cell({
+        // installedCell[0] is the CellId, installedCell[1] is the CellNick
+        // which we don't need
+        cellId: installedCell[0],
+        adminClient: this.adminClient!,
+        appClient: this.appClient!
+      }))
+    }
+    return installedAgentHapp
   }
 
   _connectInterfaces = async () => {

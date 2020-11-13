@@ -128,18 +128,15 @@ export class Player {
   /**
    * helper to create agent pub keys and install multiple apps for scenario initialization
    */
-  installHapps = async (happs: InstallHapps): Promise<InstalledHapps> => {
+  installHapps = (happs: InstallHapps): Promise<InstalledHapps> => {
     this._conductorGuard(`Player.installHapps`)
-    const installedHapps: InstalledHapps = []
-    for (const agentHapp of happs) {
-      const installedHapp = await this.installHapp(agentHapp)
-      installedHapps.push(installedHapp)
-    }
-    return installedHapps
+    return Promise.all(happs.map(h => this.installHapp(h)))
   }
 
   /**
    * expose installApp at the player level for in-scenario dynamic installation of apps
+   * optionally takes an AgentPubKey so that you can control who's who if you need to
+   * otherwise will be a new and different agent every time you call it
    */
   installHapp = async (agentHapp: AgentHapp, agentPubKey?: AgentPubKey): Promise<InstalledAgentHapp> => {
     this._conductorGuard(`Player.installHapp(${JSON.stringify(agentHapp)}, ${agentPubKey})`)

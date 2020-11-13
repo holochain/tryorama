@@ -43,23 +43,21 @@ export type ConfigSeedArgs = PartialConfigSeedArgs & {
 }
 
 // export type PlayerConfigs = ObjectS<PlayerConfig>
-export type PlayerConfig = [ConfigSeed, StartupArg?]
-// if undefined, default to true
-// if boolean, use that
-// if InstallHapps, startup and then immediately install these happs
-export type StartupArg = undefined | boolean | InstallHapps
+export type PlayerConfig = ConfigSeed
 export type InstallHapps = AgentHapp[]
-export type AgentHapp = DnaPath[]
+export type AgentHapp = DnaPath | DnaPath[]
 export type DnaPath = string
 
 // the mirror of PlayerConfigs, once all up and running
 // export type PlayerResults = PlayerResult[]
 // the mirror of PlayerConfig
-export type PlayerResult = [Player, InstalledHapps]
 // the mirror of InstallHapps
 export type InstalledHapps = InstalledAgentHapp[]
-// the mirror of AgentHapp
-export type InstalledAgentHapp = Cell[]
+// the mirror of AgentHapp, but more javascripty
+// and could eventually become a class
+export type InstalledAgentHapp = {
+  cells: Cell[]
+}
 
 // export type MachineConfigs = ObjectS<PlayerConfigs>
 

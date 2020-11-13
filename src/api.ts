@@ -46,27 +46,33 @@ export class ScenarioApi {
     this._activityTimer = null
   }
 
-  players = async (playerConfigs: Array<T.PlayerConfig>): Promise<Array<T.PlayerResult>> => {
+  players = async (playerConfigs: Array<T.PlayerConfig>, startupArg: boolean = true): Promise<Array<Player>> => {
     logger.debug('api.players: creating players')
+
+    // validation
+    playerConfigs.forEach((pc, i) => {
+      if (!_.isFunction(pc)) {
+        throw new Error(`Config for player at index ${i} contains something other than a function. Either use Config.gen to create a seed function, or supply one manually.`)
+      }
+    })
+
     // create all the promise *creators* which will
     // create the players
-    const playerBuilders: Array<PlayerBuilder> = []
-    for (const [configSeed] of playerConfigs) {
-      const playerName = uuidGen()
-      if (!_.isFunction(configSeed)) {
-        throw new Error(`Config for player '${playerName}' contains something other than a function. Either use Config.gen to create a seed function, or supply one manually.`)
+    const playerBuilders: Array<PlayerBuilder> = await Promise.all(playerConfigs.map(
+      async configSeed => {
+        const playerName = uuidGen()
+        // local machine
+        return await this._createLocalPlayerBuilder(playerName, configSeed)
+        // TODO: trycp
+        // await this._createTrycpPlayerBuilder(machineEndpoint, playerName, playerConfigSeed)
       }
-      // local machine
-      playerBuilders.push(await this._createLocalPlayerBuilder(playerName, configSeed))
-      // TODO: trycp
-      // await this._createTrycpPlayerBuilder(machineEndpoint, playerName, playerConfigSeed)
-    }
+    ))
 
     // this will throw an error if something is wrong
     // assertUniqueTestAgentNames(configsJson)
     // logger.debug('api.players: unique agent name check passed')
 
-
+    // now sequentially build the players
     const players = await promiseSerialArray<Player>(playerBuilders.map(pb => pb()))
     logger.debug('api.players: players built')
 
@@ -74,34 +80,16 @@ export class ScenarioApi {
     // to keep any existing _localPlayers while adding the new ones
     this._localPlayers = this._localPlayers.concat(players)
 
-    // initialize the array of results to return
-    const playerResults: T.PlayerResult[] = []
-
-    // use players.entries() to obtain indexes
-    // during iteration
-    for (const [index, player] of players.entries()) {
-      let playerResult: T.PlayerResult
-      let installedHapps: T.InstalledHapps = []
-      // go back to the PlayerConfig for this player
-      // TODO: CHECK IF THIS IS BUG PRONE, e.g. points to wrong config
-      const playerConfig: T.PlayerConfig = playerConfigs[index]
-      // if no startupArg provided default is to startup (true)
-      const startupArg: T.StartupArg = _.isArray(playerConfig) ? playerConfig[1] : true
-      if (startupArg) {
+    // spawn/startup the players if instructed to
+    if (startupArg) {
+      for (const player of players) {
         // logger.info('api.players: auto-starting-up player %s', player.name)
         await player.startup({})
         // logger.info('api.players: startup complete for %s', player.name)
-        if (typeof startupArg === "object") { // spawnArg is InstallHapps
-          installedHapps = await player.installHapps(startupArg)
-          // logger.info('api.players: installed Happs for %s', player.name)
-        }
       }
-      // mirror the input back to the output, for intuitive destructuring
-      playerResult = [player, installedHapps]
-      playerResults.push(playerResult)
     }
 
-    return playerResults
+    return players
   }
 
   // FIXME!!!  probably need to rip out hachiko
