@@ -31,8 +31,7 @@ Take a look at the sample below, or skip to the [Conceptual Overview](#conceptua
 Check out this heavily commented example for an idea of how to use tryorama
 
 ```javascript
-import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama
-'
+import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 
 
 // Get path for your DNAs using Config.dna helper
