@@ -13,21 +13,14 @@ You must have a `holochain` binary on the path:
 
 ### Test DNA
 
-You must have a valid `test.dna.gz` present in this directory which contains at least the "foo" wasm from Holochain's `crates/test_utils/wasm/foo` crate.
+The test DNA included is from holochain's `crates/test_utils/wasm` and was generated like this:
 
-If you are building this DNA using `dna-util`, then you should have a `test.dna.workdir/dna.json` that looks something like this:
-
-```json
-{
-  "name": "test-dna",
-  "uuid": "",
-  "properties": null,
-  "zomes": {
-    "foo": {
-      "wasm_path": "./foo.wasm"
-    }
-  }
-}
+``` sh
+cd /path/to/holochain-repo/crates/test_utils/wasm/wasm_works
+cargo build -p test_wasm_foo --release --target wasm32-unknown-unknown --target-dir ./target
+cp test_wasm_foo.wasm /path/to/tryorama-repo/test/rsm/test.dna.workdir
+cd /path/to/tryorama-repo/test/rsm
+dna-util -c test.dna.workdir
 ```
 
 ## Running tests
