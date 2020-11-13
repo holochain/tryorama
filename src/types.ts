@@ -8,6 +8,7 @@ import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
 import { Cell } from './cell';
+import { AgentPubKey } from '@holochain/conductor-api';
 
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
@@ -48,14 +49,16 @@ export type InstallHapps = AgentHapp[]
 export type AgentHapp = DnaPath | DnaPath[]
 export type DnaPath = string
 
-// the mirror of PlayerConfigs, once all up and running
-// export type PlayerResults = PlayerResult[]
-// the mirror of PlayerConfig
 // the mirror of InstallHapps
 export type InstalledHapps = InstalledAgentHapp[]
+
 // the mirror of AgentHapp, but more javascripty
 // and could eventually become a class
 export type InstalledAgentHapp = {
+  // the agent shared by all the Cell instances in `.cells`
+  agent: AgentPubKey
+  // the instantiated cells, which allow
+  // for actual zome calls
   cells: Cell[]
 }
 
