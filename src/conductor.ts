@@ -105,6 +105,7 @@ export class Conductor {
     const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
     this.adminClient = await AdminWebsocket.connect(adminWsUrl)
     this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+    // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
     const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
     this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {

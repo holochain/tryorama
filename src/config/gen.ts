@@ -17,7 +17,7 @@ export const gen = (): T.ConfigSeed => (
       {
         driver: {
           type: 'websocket',
-          port: 8000,
+          port: adminInterfacePort,
         },
       },
     ],

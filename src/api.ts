@@ -137,9 +137,7 @@ export class ScenarioApi {
     return async () => {
       const partialConfigSeedArgs = await localConfigSeedArgs()
       const configJson = this._generateConfigFromSeed(partialConfigSeedArgs, playerName, configSeed)
-      const configDir = configJson.environment_path
-      // FIXME: can we get this from somewhere?
-      const adminInterfacePort = 0
+      const { adminInterfacePort, configDir } = partialConfigSeedArgs
       await fs.writeFile(getConfigPath(configDir), YAML.stringify(configJson))
       logger.debug('api.players: player config committed for %s', playerName)
       return new Player({

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "P2P_BOOTSTRAP_URL=\"\" RUST_LOG=debug TRYORAMA_LOG_LEVEL=debug TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node test.ts"
+    "test": "P2P_BOOTSTRAP_URL=\"\" RUST_LOG=info TRYORAMA_LOG_LEVEL=debug TRYORAMA_HOLOCHAIN_PATH=\"holochain\" ts-node test.ts"
   },
   "author": "",
   "license": "ISC",

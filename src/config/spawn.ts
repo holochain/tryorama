@@ -63,7 +63,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
       machineHost: `localhost`,
-      adminPort: 8000, // TODO: make this dynamic
+      adminPort: player._adminInterfacePort,
       rawConfig: player.config
     })
 
