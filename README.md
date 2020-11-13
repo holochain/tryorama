@@ -180,6 +180,17 @@ A Player represents a Holochain user running a Conductor. That conductor may run
 
 Much of the purpose of Tryorama is to provide ways to setup conductors for tests, which means generating their boot configuration files, and initializing them to known states (installing hApps) for scenarios.
 
+
+## Goals
+1. Common setups should be easy to generate
+2. Any conductor setups should be possible
+3. Conductors from different scenarios must remain independent and invisible to each other
+
+Setting up a conductor for a test consists of two main parts:
+1. Creating a conductor config and starting it up
+2. Installing hApps into the running conductor
+
+## Conductor Configuration
 You don't have to think about conductor configuration (networking, bootstrap server, lair directory etc) if you don't want to by simply using the `Config.gen()` helper:
 
 ``` js
@@ -188,13 +199,46 @@ orchestrator.registerScenario('my scenario dnas', async (s: ScenarioApi, t) => {
   const [alice] = await s.players([config])
 }
 ```
+See below for more complicated ways to generate config files.
+
+## Happ Installation
+
+Tryoroma's provides the `InstallAgentsHapps` abstraction to making it simple to install any combination of hApps and create agents for them with minimal configuration file building naming.  `InstallAgentsHapps` does this as an agents/happ/dna tree just using DNA paths as the leaves of a nested array.
+
+A simple example:
+
+``` js
+const installation: InstallAgentsHapps = [
+  // agent 0 ...
+  [
+    // happ 1
+    [
+      // dna 1
+      path.join(__dirname, 'test.dna.gz')
+    ]
+  ],
+]
+```
+
+When this installation is passed into the scenario `players` function, what's returned is an identically structured array of installed happs, where tryorama takes care of generating all the agent Ids, happ Ids and cell nicks, so you don't have to manually do that work in a config file, you can simply destructure the results into variables with semantic names relevant to your tests.  E.g, from the initialization above:
+
+``` js
+  const [[test_happ]] = await alice.installAgentsHapps(initialization)
+```
+where `test_happ` is an `InstalledHapp` object that looks like this:
+
+``` js
+export type InstalledHapp = {
+  // the agent shared by all the Cell instances in `.cells`
+  agent: AgentPubKey
+  // the instantiated cells, which allow
+  // for actual zome calls
+  cells: Cell[]
+}
+```
 
 TODO: Config.dna
 
-
-1. Common setups should be easy to generate
-2. Any conductor setups should be possible
-3. Conductors from different scenarios must remain independent and invisible to each other
 
 ## Simple config with the `Config` helper
 
