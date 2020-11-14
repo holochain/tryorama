@@ -93,13 +93,13 @@ export class Conductor {
 
     // prepare the result, and create Cell instances
     const installedAgentHapp: T.InstalledHapp = {
-      appId:  installAppReq.app_id,
+      hAppId:  installAppReq.app_id,
       agent: agentPubKey,
       // construct Cell instances which are the most useful class to the client
       cells: cell_data.map(installedCell => new Cell({
         // installedCell[0] is the CellId, installedCell[1] is the CellNick
         cellId: installedCell[0],
-        cellNick: installedCell[1]
+        cellNick: installedCell[1],
         adminClient: this.adminClient!,
         appClient: this.appClient!
       }))
