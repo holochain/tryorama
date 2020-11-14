@@ -62,8 +62,8 @@ export type PlayerConfig = ConfigSeed
     //     ['dna1', 'dna2'], ['dna3', 'dna4']
     //   ]
     // ]
-    // 
-    
+    //
+
 // happ contains shared Agent
 export type InstallAgentsHapps = InstallHapps[]
 export type InstallHapps = InstallHapp[]
@@ -77,7 +77,9 @@ export type InstalledHapps = InstalledHapp[]
 
 // the mirror of AgentHapp, but more javascripty
 // and could eventually become a class
+// also includes the hAppId as it is needed in some cases
 export type InstalledHapp = {
+  hAppId: string,
   // the agent shared by all the Cell instances in `.cells`
   agent: AgentPubKey
   // the instantiated cells, which allow
@@ -103,4 +105,3 @@ export interface RawConductorConfig {
 }
 
 export type KillFn = (signal?: string) => Promise<void>
-

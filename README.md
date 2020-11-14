@@ -229,6 +229,7 @@ where `test_happ` is an `InstalledHapp` object that looks like this:
 
 ``` js
 export type InstalledHapp = {
+  hAppId: string,
   // the agent shared by all the Cell instances in `.cells`
   agent: AgentPubKey
   // the instantiated cells, which allow
