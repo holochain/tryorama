@@ -6,7 +6,7 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, DnaProperties } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 
 // probably unnecessary, but it can't hurt
@@ -69,7 +69,7 @@ export class Conductor {
 
   // this function will auto-generate an `app_id` and
   // `dna.nick` for you, to allow simplicity
-  installHapp = async (agentPubKey: AgentPubKey, agentHapp: T.InstallHapp): Promise<T.InstalledHapp> => {
+  installHapp = async (agentPubKey: AgentPubKey, agentHapp: T.InstallHapp ): Promise<T.InstalledHapp> => {
     const dnaPaths: T.DnaPath[] = agentHapp
     const installAppReq: InstallAppRequest = {
       app_id: `app-${uuidGen()}`,
@@ -79,6 +79,14 @@ export class Conductor {
         nick: `${index}${dnaPath}-${uuidGen()}`
       }))
     }
+
+    return await this._installHapp(agentPubKey, installAppReq)
+  }
+
+  // install a hApp using the InstallAppRequest struct from conductor-admin-api
+  // you must create your own app_id and dnas list, this is usefull also if you
+  // need to pass in properties or membrane-proof
+  _installHapp = async (agentPubKey: AgentPubKey, installAppReq: InstallAppRequest ): Promise<T.InstalledHapp> => {
     const {cell_data} = await this.adminClient!.installApp(installAppReq)
     // must be activated to be callable
     await this.adminClient!.activateApp({ app_id: installAppReq.app_id })
@@ -89,8 +97,8 @@ export class Conductor {
       // construct Cell instances which are the most useful class to the client
       cells: cell_data.map(installedCell => new Cell({
         // installedCell[0] is the CellId, installedCell[1] is the CellNick
-        // which we don't need
         cellId: installedCell[0],
+        cellNick: installedCell[1]
         adminClient: this.adminClient!,
         appClient: this.appClient!
       }))

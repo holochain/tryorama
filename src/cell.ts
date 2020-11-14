@@ -1,10 +1,11 @@
-import { AdminApi, AppApi, CellId } from '@holochain/conductor-api'
+import { AdminApi, AppApi, CellId, CellNick } from '@holochain/conductor-api'
 import { fakeCapSecret } from './common'
 
 type CallZomeFunc = (zome: string, fn: string, params: any) => Promise<any>
 
 type CellConstructorParams = {
   cellId: CellId,
+  cellNick: CellNick,
   adminClient: AdminApi,
   appClient: AppApi,
 }
@@ -15,11 +16,13 @@ type CellConstructorParams = {
  */
 export class Cell {
   cellId: CellId
+  cellNick: CellNick
   adminClient: AdminApi
   appClient: AppApi
 
   constructor(o: CellConstructorParams) {
     this.cellId = o.cellId
+    this.cellNick = o.cellNick
     this.appClient = o.appClient
     this.adminClient = o.adminClient
   }
