@@ -1,8 +1,9 @@
 import * as tape from 'tape'
 import { Orchestrator } from '../../src'
-import { runSeries, compose, /*singleConductor,*/ machinePerPlayer, localOnly } from '../../src/middleware'
+import { runSeries, compose, /*singleConductor, machinePerPlayer,*/ localOnly } from '../../src/middleware'
 // import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
 import { testConfig } from '../common';
+import path from 'path'
 
 process.on('unhandledRejection', error => {
   console.error('****************************');
@@ -10,7 +11,9 @@ process.on('unhandledRejection', error => {
   console.error('****************************');
 });
 
-const dnaLocationLocal = './dna/passthrough-dna.dna.json'
+//const dnaLocationLocal = './link.dna.gz'
+const dnaLocationLocal = path.join(__dirname, 'link.dna.gz')
+// FIXME!
 const dnaLocationRemote = 'https://github.com/holochain/passthrough-dna/releases/download/v0.0.6/passthrough-dna.dna.json'
 
 const localOrchestrator = (extra = {}) => new Orchestrator({
@@ -48,8 +51,8 @@ const localOrchestrator = (extra = {}) => new Orchestrator({
 // }
 
 
-require('./test-timeout')(localOrchestrator, () => testConfig(dnaLocationLocal))
-require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
+//require('./test-timeout')(localOrchestrator, () => testConfig(dnaLocationLocal))
+//require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
 // require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 require('./test-dynamic-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
 
