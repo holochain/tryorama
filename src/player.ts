@@ -5,7 +5,7 @@ import { Cell } from './cell'
 import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -46,7 +46,6 @@ export class Player {
   _configDir: string
   _adminInterfacePort: number
   _spawnConductor: SpawnConductorFn
-  _cells: ObjectS<Cell>
 
   constructor({ name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
@@ -61,7 +60,6 @@ export class Player {
     this._configDir = configDir
     this._adminInterfacePort = adminInterfacePort
     this._spawnConductor = spawnConductor
-    this._cells = {}
   }
 
   admin = (): AdminWebsocket => {
@@ -126,29 +124,32 @@ export class Player {
   }
 
   /**
-   * helper to create agent pub keys and install multiple apps for scenario initialization
+   * helper to create agent keys and install multiple apps for scenario initialization
    */
   installAgentsHapps = async (agentsHapps: InstallAgentsHapps): Promise<InstalledAgentHapps> => {
     this._conductorGuard(`Player.installHapps`)
-    const admin: AdminWebsocket = this._conductor!.adminClient!
     return await Promise.all(agentsHapps.map(async agentHapps => {
-      let agentPubKey = await admin.generateAgentPubKey()
-      return await Promise.all(agentHapps.map(happ => this.installHapp(happ, agentPubKey)))
+      return await Promise.all(agentHapps.map(happ => this.installHapp(happ)))
     }))
   }
 
   /**
-   * expose installApp at the player level for in-scenario dynamic installation of apps
+   * expose installHapp at the player level for in-scenario dynamic installation of apps
    * optionally takes an AgentPubKey so that you can control who's who if you need to
    * otherwise will be a new and different agent every time you call it
    */
   installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
     this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey})`)
-    const admin: AdminWebsocket = this._conductor!.adminClient!
-    if (!agentPubKey) {
-      agentPubKey = await admin.generateAgentPubKey()
-    }
-    return this._conductor!.installHapp(agentPubKey, happ)
+      return this._conductor!.installHapp(happ, agentPubKey)
+  }
+
+  /**
+   * expose _installHapp at the player level for in-scenario dynamic installation of apps
+   * using admin api's InstallAppRequest for more detailed control
+   */
+  _installHapp = async (happ: InstallAppRequest): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player._installHapp(${JSON.stringify(happ)})`)
+    return this._conductor!._installHapp(happ)
   }
 
   _conductorGuard = (context) => {

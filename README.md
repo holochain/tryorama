@@ -103,6 +103,22 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   // or a happ with a previously generated key
   const [carol_test_happ_with_bobs_test_key] = await carol.installHapp([dnaTest], bob_blog_happ.agent)
 
+  // for complete control, i.e. if you need to add properties or a membrane-proof to
+  // you can also install a happ using the holochain-conductor-app InstallAppRequest data structure:
+  import { InstallAppRequest } from '@holochain/conductor-api'
+  import * as msgpack from '@msgpack/msgpack';
+  const req: InstallAppRequest = {
+      app_id: `my_app`,
+      agent_key: carol.admin().generateAgentPubKey(),
+      dnas: [{
+        path: path.join(__dirname, 'my_app.dna.gz'),
+        nick: `my_cell_nick`,
+        properties: Array.from(msgpack.encode({my_property:"override_default_value"})),
+        membrane_proof: Array.from(msgpack.encode({role:"steward", signature:"..."})),
+      }]
+  }
+  const installedHapp = await carol._installHapp(req)
+
   // You can also shutdown conductors:
   await alice.shutdown()
   // ...and re-start the same conductor you just stopped

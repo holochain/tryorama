@@ -69,7 +69,10 @@ export class Conductor {
 
   // this function will auto-generate an `app_id` and
   // `dna.nick` for you, to allow simplicity
-  installHapp = async (agentPubKey: AgentPubKey, agentHapp: T.InstallHapp ): Promise<T.InstalledHapp> => {
+  installHapp = async (agentHapp: T.InstallHapp, agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
+    if (!agentPubKey) {
+      agentPubKey = await this.adminClient!.generateAgentPubKey()
+    }
     const dnaPaths: T.DnaPath[] = agentHapp
     const installAppReq: InstallAppRequest = {
       app_id: `app-${uuidGen()}`,
@@ -80,13 +83,13 @@ export class Conductor {
       }))
     }
 
-    return await this._installHapp(agentPubKey, installAppReq)
+    return await this._installHapp(installAppReq)
   }
 
   // install a hApp using the InstallAppRequest struct from conductor-admin-api
   // you must create your own app_id and dnas list, this is usefull also if you
   // need to pass in properties or membrane-proof
-  _installHapp = async (agentPubKey: AgentPubKey, installAppReq: InstallAppRequest ): Promise<T.InstalledHapp> => {
+  _installHapp = async (installAppReq: InstallAppRequest): Promise<T.InstalledHapp> => {
     const {cell_data} = await this.adminClient!.installApp(installAppReq)
     // must be activated to be callable
     await this.adminClient!.activateApp({ app_id: installAppReq.app_id })
@@ -94,7 +97,7 @@ export class Conductor {
     // prepare the result, and create Cell instances
     const installedAgentHapp: T.InstalledHapp = {
       hAppId:  installAppReq.app_id,
-      agent: agentPubKey,
+      agent: installAppReq.agent_key,
       // construct Cell instances which are the most useful class to the client
       cells: cell_data.map(installedCell => new Cell({
         // installedCell[0] is the CellId, installedCell[1] is the CellNick
