@@ -54,15 +54,16 @@ export type PlayerConfig = ConfigSeed
 // [[['dna1', 'dna2', 'dna3', 'dna4']]]
 
 // two agents, one happ, two dnas each
-// [['dna1', 'dna2'], ['dna3', 'dna4']]
+// [[['dna1', 'dna2']], [['dna3', 'dna4']]]
 
-// one agent
 // [
-  //   [
-    //     ['dna1', 'dna2'], ['dna3', 'dna4']
-    //   ]
-    // ]
-    //
+//     agent one
+//     [
+//        happ one, two dnas
+//        ['dna1', 'dna2']
+//     ]
+// ]
+//
 
 // happ contains shared Agent
 export type InstallAgentsHapps = InstallHapps[]
