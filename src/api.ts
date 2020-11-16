@@ -10,7 +10,7 @@ import { Player } from "./player"
 import logger from './logger';
 import { Orchestrator } from './orchestrator';
 import { promiseSerialArray, promiseSerialObject, stringify, stripPortFromUrl, trace } from './util';
-import { getConfigPath, /*assertUniqueTestAgentNames,*/ localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
+import { getConfigPath, localConfigSeedArgs, spawnRemote, spawnLocal } from './config';
 import env from './env'
 import { trycpSession, TrycpClient } from './trycp'
 
