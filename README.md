@@ -34,14 +34,8 @@ Check out this heavily commented example for an idea of how to use tryorama
 import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 
 
-// Get path for your DNAs using Config.dna helper
-// The DNA file can either be on your filesystem...
-const dnaBlog = Config.dna('~/project/dnas/blog.dna.gz')
-// ... or on the web
-const dnaChat = Config.dna('https://url.to/your/chat.dna.gz')
-// or manually:
+// Get path for your DNAs
 const testDna = path.join(__dirname, 'test.dna.gz')
-
 
 // create an InstallAgentsHapps array with your DNA to tell tryorama what
 // to install into the conductor.
@@ -58,7 +52,7 @@ const installation: InstallAgentsHapps = [
     // test happ
     [testDna]
   ]
-}
+]
 
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
@@ -253,9 +247,6 @@ export type InstalledHapp = {
   cells: Cell[]
 }
 ```
-
-TODO: Config.dna
-
 # License
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 

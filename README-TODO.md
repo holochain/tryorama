@@ -1,5 +1,6 @@
 # TODO
 
+
 These are Config options from the redux compatible version of tryorama.  A number of them are
 still available in the code-base, but they just aren't that useful anymore.
 
@@ -14,6 +15,15 @@ Let's look a common configuration. Here is an example of how you might set up th
 import {Config, Orchestrator} from '@holochain/tryorama'
 
 const orchestrator = new Orchestrator()
+
+// Get path for your DNAs using Config.dna helper
+// The DNA file can either be on your filesystem...
+const dnaBlog = Config.dna('~/project/dnas/blog.dna.gz')
+// ... or on the web
+const dnaChat = Config.dna('https://url.to/your/chat.dna.gz')
+// or manually:
+const testDna = path.join(__dirname, 'test.dna.gz')
+
 
 // Config.gen is a handy shortcut for creating a full-fledged conductor config
 // from as little information as possible
