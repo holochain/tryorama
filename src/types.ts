@@ -46,26 +46,29 @@ export type ConfigSeedArgs = PartialConfigSeedArgs & {
 // export type PlayerConfigs = ObjectS<PlayerConfig>
 export type PlayerConfig = ConfigSeed
 
-// there will be one agent generated per each in this list
 
 
+/*
+InstallAgentsHapps
+there will be one agent generated per each in this list
+## example 1
+one agent, one happ, 4 dnas
+[[['dna1', 'dna2', 'dna3', 'dna4']]]
 
-// one agent, one happ, 4 dnas
-// [[['dna1', 'dna2', 'dna3', 'dna4']]]
+## example 2
+two agents, one happ, two dnas each
+[[['dna1', 'dna2']], [['dna3', 'dna4']]]
 
-// two agents, one happ, two dnas each
-// [[['dna1', 'dna2']], [['dna3', 'dna4']]]
-
-// [
-//     agent one
-//     [
-//        happ one, two dnas
-//        ['dna1', 'dna2']
-//     ]
-// ]
-//
-
-// happ contains shared Agent
+## example 3
+sometimes we can write it like this to make it easier to read
+[
+  agent one
+  [
+    happ one, two dnas
+    ['dna1', 'dna2']
+  ]
+]
+*/
 export type InstallAgentsHapps = InstallHapps[]
 export type InstallHapps = InstallHapp[]
 export type InstallHapp = DnaPath[]
