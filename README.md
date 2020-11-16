@@ -109,7 +109,7 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   import * as msgpack from '@msgpack/msgpack';
   const req: InstallAppRequest = {
       app_id: `my_app`,
-      agent_key: carol.admin().generateAgentPubKey(),
+      agent_key: await carol.admin().generateAgentPubKey(),
       dnas: [{
         path: path.join(__dirname, 'my_app.dna.gz'),
         nick: `my_cell_nick`,

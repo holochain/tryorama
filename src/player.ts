@@ -128,7 +128,9 @@ export class Player {
   installAgentsHapps = async (agentsHapps: InstallAgentsHapps): Promise<InstalledAgentHapps> => {
     this._conductorGuard(`Player.installHapps`)
     return await Promise.all(agentsHapps.map(async agentHapps => {
-      return await Promise.all(agentHapps.map(happ => this.installHapp(happ)))
+      // for each agent, create one key and install all the happs under that key
+      const agentPubKey: AgentPubKey = await this.admin().generateAgentPubKey()
+      return await Promise.all(agentHapps.map(happ => this.installHapp(happ, agentPubKey)))
     }))
   }
 
