@@ -72,8 +72,6 @@ export class ScenarioApi {
     ))
 
     // this will throw an error if something is wrong
-    // assertUniqueTestAgentNames(configsJson)
-    // logger.debug('api.players: unique agent name check passed')
 
     // now sequentially build the players
     const players = await promiseSerialArray<Player>(playerBuilders.map(pb => pb()))

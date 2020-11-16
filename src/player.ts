@@ -23,7 +23,6 @@ type ConstructorArgs = {
   spawnConductor: SpawnConductorFn,
 }
 
-type CallArgs = [CallZomeRequest] | [string, string, string, string, any]
 
 /**
  * Representation of a Conductor user.

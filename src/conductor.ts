@@ -14,7 +14,6 @@ import { Cell } from "./cell";
 const WS_CLOSE_DELAY_FUDGE = 500
 
 export type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
-export type CallZomeFunc = (appId: string, nick: CellNick, zomeName: string, fnName: string, params: Record<string, any>) => Promise<any>
 
 /**
  * Representation of a running Conductor instance.

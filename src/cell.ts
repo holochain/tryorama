@@ -1,7 +1,7 @@
 import { AdminApi, AppApi, CellId, CellNick } from '@holochain/conductor-api'
 import { fakeCapSecret } from './common'
 
-type CallZomeFunc = (zome: string, fn: string, params: any) => Promise<any>
+type CallZomeFunc = (zome: string, fn: string, params?: any) => Promise<any>
 
 type CellConstructorParams = {
   cellId: CellId,
@@ -27,15 +27,10 @@ export class Cell {
     this.adminClient = o.adminClient
   }
 
-  call = (...args): Promise<any> => {
-    const [zome, fn, params] = args
-    if (args.length !== 3 || typeof zome !== 'string' || typeof fn !== 'string') {
-      throw new Error("cell.call() must take 3 arguments: (zomeName, funcName, params)")
+  call: CallZomeFunc = (zome: string, fn: string, params?: any): Promise<any> => {
+    if (typeof zome !== 'string' || typeof fn !== 'string') {
+      throw new Error("cell.call() must take at least `zome` and `fn` args")
     }
-    return this._callZome(zome, fn, params)
-  }
-
-  _callZome: CallZomeFunc = async (zome: string, fn: string, payload: any): Promise<any> => {
     // FIXME: don't just use provenance from CellId that we're calling,
     //        (because this always grants Authorship)
     //        for now, it makes sense to use the AgentPubKey of the *caller*,
@@ -47,7 +42,7 @@ export class Cell {
       zome_name: zome,
       cap: fakeCapSecret(), // FIXME (see Player.ts)
       fn_name: fn,
-      payload,
+      payload: params,
       provenance, // FIXME
     })
   }
