@@ -4,8 +4,8 @@
     "type": "git",
     "url": "https://github.com/holochain/tryorama"
   },
-  "version": "0.3.4",
-  "description": "",
+  "version": "0.4.0-dev.0",
+  "description": "test framework for holochain hApps",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
   "directories": {
@@ -20,11 +20,10 @@
     "prepublishOnly": "npm test",
     "test": "ts-node test | tap-diff",
     "test:unit": "ts-node test/unit | tap-diff",
-    "test:e2e": "ts-node test/e2e",
-    "postinstall": "npm run build"
+    "test:e2e": "ts-node test/e2e"
   },
   "author": "",
-  "license": "ISC",
+  "license": "Apache-2.0",
   "dependencies": {
     "@holochain/conductor-api": "0.0.1-dev.11",
     "@holochain/hachiko": "^0.5.2",
