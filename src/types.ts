@@ -98,17 +98,24 @@ export type InstalledHapp = {
 
 export const adminWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
 
+export interface AdminInterfaceConfig {
+  driver: {
+    type: string
+    port: number
+  }
+}
+
 export interface RawConductorConfig {
   environment_path: string,
-  use_dangerous_test_keystore: boolean,
+  use_dangerous_test_keystore?: boolean,
   signing_service_uri?: string,
   encryption_service_uri?: string,
   decryption_service_uri?: string,
   keystore_path?: string,
+  admin_interfaces?: AdminInterfaceConfig[],
   network?: KitsuneP2pConfig,
   // TODO:
   // passphrase_service?: PassphraseServiceConfig,
-  // admin_interfaces?: Array<AdminInterfaceConfig>
 }
 
 export type Url2 = string

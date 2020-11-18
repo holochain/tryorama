@@ -10,7 +10,7 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
   args: T.ConfigSeedArgs
 ): T.RawConductorConfig => {
   const { configDir, adminInterfacePort, uuid } = args
-  const specific: any = {
+  const specific: T.RawConductorConfig = {
     environment_path: configDir,
     admin_interfaces: [
       {
@@ -20,7 +20,7 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
         },
       },
     ],
-    network: commonConfig.network || null
+    network: commonConfig.network
   }
 
   return _.merge({}, specific, defaultCommonConfig)
