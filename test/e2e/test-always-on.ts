@@ -40,6 +40,38 @@ module.exports = (testOrchestrator, testConfig) => {
     console.log(stats)
   })
 
+  test('test installAgentsHapps', async t => {
+    t.plan(5)
+    const [conductorConfig, _installApp] = testConfig()
+    const orchestrator = await testOrchestrator()
+    orchestrator.registerScenario('installAgentsHapps correctly shares agentPubKey', async (s: ScenarioApi) => {
+      const [alice] = await s.players([conductorConfig])
+      const installAppsOverride = [
+        // agent 0
+        [[], []],
+        // agent 1
+        [[], []]
+      ]
+      // note that hApps can still be installed
+      // without any DNAs in them
+      const [
+        [happ1, happ2],
+        [happ3, happ4]
+      ] = await alice.installAgentsHapps(installAppsOverride)
+
+      // happ1 and happ2 share "agent 0"
+      t.deepEqual(happ1.agent, happ2.agent)
+      // happ3 and happ4 share "agent 1"
+      t.deepEqual(happ3.agent, happ4.agent)
+      // "agent 0" and "agent 1" are in fact different
+      t.notDeepEqual(happ1.agent, happ3.agent)
+    })
+    const stats = await orchestrator.run()
+    t.equal(stats.successes, 1, 'only success')
+    t.equal(stats.errors.length, 0, 'no errors')
+    console.log(stats)
+  })
+
   // test('test with consistency awaiting', async t => {
   //   t.plan(5)
   //   const [conductorConfig, installApps] = testConfig()
