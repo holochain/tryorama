@@ -51,10 +51,6 @@ const installation: InstallAgentsHapps = [
   ],
 ]
 
-// Set up a Conductor configuration using the handy `Conductor.config` helper.
-// Read the docs for more on configuration.
-const conductorConfig = Config.gen()
-
 // Instatiate your test's orchestrator.
 // It comes loaded with a lot default behavior which can be overridden, including:
 // * custom conductor startup
@@ -265,7 +261,7 @@ export type InstalledHapp = {
 }
 ```
 
-### Advanced Usage 
+### Advanced Usage
 
 ```javascript
 // for complete control, i.e. if you need to add properties or a membrane-proof to
