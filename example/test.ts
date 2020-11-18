@@ -29,13 +29,14 @@ const orchestrator = new Orchestrator()
 // }
 
 // Exampe of use for Mem TransportConfigType
-const network = {
-  transport_pool: [{
-    type: TransportConfigType.Mem,
-  }]
-}
+// const network = {
+//   transport_pool: [{
+//     type: TransportConfigType.Mem,
+//   }]
+// }
+// const conductorConfig = Config.gen({ network })
 
-const conductorConfig = Config.gen({ network })
+const conductorConfig = Config.gen()
 
 const conductorHapps: InstallAgentsHapps = [
   // agent 0 ...
