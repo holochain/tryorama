@@ -61,13 +61,13 @@ export class Player {
     this._spawnConductor = spawnConductor
   }
 
-  app = (context?: string): AppWebsocket => {
-    this._conductorGuard(context || `Player.app()`)
+  appWs = (context?: string): AppWebsocket => {
+    this._conductorGuard(context || `Player.appWs()`)
     return this._conductor!.appClient!
   }
 
-  admin = (context?: string): AdminWebsocket => {
-    this._conductorGuard(context || `Player.admin()`)
+  adminWs = (context?: string): AdminWebsocket => {
+    this._conductorGuard(context || `Player.adminWs()`)
     return this._conductor!.adminClient!
   }
 
@@ -131,7 +131,7 @@ export class Player {
     this._conductorGuard(`Player.installHapps`)
     return Promise.all(agentsHapps.map(async agentHapps => {
       // for each agent, create one key and install all the happs under that key
-      const agentPubKey: AgentPubKey = await this.admin().generateAgentPubKey()
+      const agentPubKey: AgentPubKey = await this.adminWs().generateAgentPubKey()
       return Promise.all(agentHapps.map(happ => this.installHapp(happ, agentPubKey)))
     }))
   }

@@ -36,7 +36,7 @@ export class Cell {
     //        but in the future, Holochain will inject the provenance itself
     //        and you won't even be able to pass it in here.
     const [_dnaHash, provenance] = this.cellId
-    return this._player.app(`cell.call()`).callZome({
+    return this._player.appWs(`cell.call()`).callZome({
       cell_id: this.cellId,
       zome_name: zome,
       cap: fakeCapSecret(), // FIXME (see Player.ts)
@@ -47,6 +47,6 @@ export class Cell {
   }
 
   stateDump = (): Promise<any> => {
-    return this._player.admin(`cell.stateDump()`).dumpState({ cell_id: this.cellId })
+    return this._player.adminWs(`cell.stateDump()`).dumpState({ cell_id: this.cellId })
   }
 }

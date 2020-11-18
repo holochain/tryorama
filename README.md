@@ -277,7 +277,7 @@ orchestrator.registerScenario('description of this scenario', async (s, t) => {
 
   const req: InstallAppRequest = {
     app_id: `my_app`,
-    agent_key: await carol.admin().generateAgentPubKey(),
+    agent_key: await carol.adminWs().generateAgentPubKey(),
     dnas: [{
       path: path.join(__dirname, 'my_app.dna.gz'),
       nick: `my_cell_nick`,

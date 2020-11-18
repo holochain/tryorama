@@ -12,7 +12,7 @@ module.exports = (testOrchestrator, testConfig) => {
       const [alice] = await s.players([conductorConfig])
       await alice.shutdown()
       // this will throw
-      alice.admin()
+      alice.adminWs()
     })
     console.debug('registered scenario.')
     const stats = await orchestrator.run()
