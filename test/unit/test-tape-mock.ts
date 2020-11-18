@@ -57,8 +57,11 @@ test('unit executor failure modes', async t => {
 test('tapeExecutor failure modes', async t => {
   await orchestratorTape.run().then(stats => {
     t.ok(badTestRunTape.notCalled)
+    // the two t.ok's trigger this
     t.equal(mockT.ok.callCount, 2)
-    // t.ok(mockT.fail.calledOnceWith(sinon.match('this gets caught')))
+    // the error thrown triggers this
+    t.equal(mockT.fail.callCount, 1)
+    // both tests do this
     t.equal(mockT.end.callCount, 2)
     t.equal(stats.successes, 1)
     t.equal(stats.errors.length, 3)
