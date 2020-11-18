@@ -79,7 +79,7 @@ export type InstalledAgentHapps = InstalledHapps[]
 // the mirror of InstallHapps
 export type InstalledHapps = InstalledHapp[]
 
-// the mirror of AgentHapp, but more javascripty
+// the mirror of InstallHapp, but more javascripty
 // and could eventually become a class
 // also includes the hAppId as it is needed in some cases
 export type InstalledHapp = {
