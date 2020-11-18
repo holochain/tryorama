@@ -3,17 +3,39 @@
 import { Orchestrator, Config, InstallAgentsHapps } from "../src"
 import { ScenarioApi } from "../src/api"
 import path from 'path'
+import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from "../src/types"
 
 const orchestrator = new Orchestrator()
 
-const conductorConfig = Config.gen({
-  network: {
-    transport_pool: [{
-      type: 'quic',
-    }],
-    bootstrap_service: "https://bootstrap.holo.host"
-  }
-})
+// Exampe of use for Proxy TransportConfigType
+// const network = {
+//   transport_pool: [{
+//     type: TransportConfigType.Proxy,
+//     sub_transport: {type: TransportConfigType.Quic},
+//     proxy_config: {
+//       type: ProxyConfigType.LocalProxyServer,
+//       proxy_accept_config: ProxyAcceptConfig.AcceptAll
+//     }
+//   }],
+//   bootstrap_service: "https://bootstrap.holo.host"
+// }
+
+// Exampe of use for Quic TransportConfigType
+// const network = {
+//   transport_pool: [{
+//     type: TransportConfigType.Quic,
+//   }],
+//   bootstrap_service: "https://bootstrap.holo.host"
+// }
+
+// Exampe of use for Mem TransportConfigType
+const network = {
+  transport_pool: [{
+    type: TransportConfigType.Mem,
+  }]
+}
+
+const conductorConfig = Config.gen({ network })
 
 const conductorHapps: InstallAgentsHapps = [
   // agent 0 ...

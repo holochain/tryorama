@@ -112,33 +112,40 @@ export interface RawConductorConfig {
 }
 
 export type Url2 = string
+export enum TransportConfigType {
+  Mem = 'mem',
+  Quic = 'quic',
+  Proxy = 'proxy'
+}
 export interface Mem {
-  type: string
+  type: TransportConfigType
 }
 export interface Quic {
-  type: string,
+  type: TransportConfigType,
   bind_to?: Url2,
   override_host?: string,
   override_port?: number
 }
 export interface Proxy {
-  type: string,
-  sub_transport: TransportConfig, // should be Box
-  proxy_config: ProxyConfig
+  type: TransportConfigType,
+  sub_transport: TransportConfig,
+  proxy_config: RemoteProxyClient | LocalProxyServer
 }
-export enum ProxyConfig {
-  RemoteProxyClient,
-  LocalProxyServer
+export enum ProxyConfigType {
+  RemoteProxyClient = 'remote_proxy_client',
+  LocalProxyServer = 'local_proxy_server'
 }
 export interface RemoteProxyClient {
+  type: ProxyConfigType,
   proxy_url: Url2
 }
 export interface LocalProxyServer {
+  type: ProxyConfigType,
   proxy_accept_config?: ProxyAcceptConfig
 }
 export enum ProxyAcceptConfig {
-    AcceptAll,
-    RejectAll
+  AcceptAll = "accept_all",
+  RejectAll = "reject_all"
 }
 
 export type TransportConfig = ( Mem | Quic | Proxy )

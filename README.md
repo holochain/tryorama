@@ -56,7 +56,7 @@ const installation: InstallAgentsHapps = [
 
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
-const conductorConfig = Config.gen()
+const conductorConfig = Config.gen({})
 
 // Instatiate your test's orchestrator.
 // It comes loaded with a lot default behavior which can be overridden, including:
@@ -135,6 +135,45 @@ const report = await orchestrator.run()
 console.log(report)
 ```
 
+### How to set networking:
+
+To set networking add it as a commonConfig in gen()
+
+#### Exampe of use for  TransportConfigType `Proxy`
+```javascript=
+const network = {
+  transport_pool: [{
+    type: TransportConfigType.Proxy,
+    sub_transport: {type: TransportConfigType.Quic},
+    proxy_config: {
+      type: ProxyConfigType.LocalProxyServer,
+      proxy_accept_config: ProxyAcceptConfig.AcceptAll
+    }
+  }],
+  bootstrap_service: "https://bootstrap.holo.host"
+}
+Config.gen({network})
+```
+#### Exampe of use for TransportConfigType `Quic`
+```javascript=
+const network = {
+  transport_pool: [{
+    type: TransportConfigType.Quic,
+  }],
+  bootstrap_service: "https://bootstrap.holo.host"
+}
+Config.gen({network})
+```
+
+#### Exampe of use for TransportConfigType `Mem`
+```javascript=
+const network = {
+  transport_pool: [{
+    type: TransportConfigType.Mem,
+  }]
+}
+Config.gen({network})
+```
 
 # Conceptual overview
 
