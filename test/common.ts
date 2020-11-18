@@ -11,37 +11,16 @@ export const testOrchestrator = () => new Orchestrator({
   }
 })
 
-export const testConfig = (dnaPath) => {
-
-//  const dna = Config.dna(dnaPath)
-
-  ///////////////////////////////// For local tests
-/*  const network = { type: 'sim2h', sim2h_url: 'ws://localhost:9000' }
-  console.warn("Be sure to run a local sim2h server on port 9000 before running these tests!")*/
-  console.warn("Also be sure that ./dna/passthrough-dna.dna.json is accessible. (Run `npm run fetch-dna` to download)")
-
-  //////////////////////////////// For local docker tests
-  // const network = { type: 'sim2h', sim2h_url: 'ws://sim2h:9000' }
-  // console.warn("Be sure to run a docker container named 'sim2h' on the 'trycp' network on port 9000 before running these tests!")
-
-
-  // const network = Config.network('n3h')
-//  const common: T.ConductorConfigCommon = {
-//    logger: Config.logger(true),
-//    metric_publisher: Config.metricPublisher('logger'),
-//    network,
-//  }
-
+export const testConfig = (dnaPath: string) => {
   const seed: T.ConfigSeed = Config.gen()
-
-  const init: T.InstallAgentsHapps = [
+  const install: T.InstallAgentsHapps = [
     // agent 0
-    [[dnaPath]]
+    [
+      // happ 0
+      [dnaPath]
+    ]
   ]
-
-  return { players: { alice: seed, bob: seed, carol: seed },
-           initialization: init
-         }
+  return [seed, install]
 }
 
 export const withClock = f => t => {

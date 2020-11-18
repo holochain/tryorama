@@ -5,7 +5,7 @@ import { Cell } from './cell'
 import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -61,12 +61,14 @@ export class Player {
     this._spawnConductor = spawnConductor
   }
 
-  admin = (): AdminWebsocket => {
-    if (this._conductor) {
-      return this._conductor.adminClient!
-    } else {
-      throw new Error("Conductor is not spawned: admin interface unavailable")
-    }
+  app = (context?: string): AppWebsocket => {
+    this._conductorGuard(context || `Player.app()`)
+    return this._conductor!.appClient!
+  }
+
+  admin = (context?: string): AdminWebsocket => {
+    this._conductorGuard(context || `Player.admin()`)
+    return this._conductor!.adminClient!
   }
 
   /**
@@ -140,7 +142,7 @@ export class Player {
    * otherwise will be a new and different agent every time you call it
    */
   installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
-    this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey})`)
+    this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
       return this._conductor!.installHapp(happ, agentPubKey)
   }
 
