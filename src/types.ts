@@ -144,8 +144,8 @@ export interface LocalProxyServer {
   proxy_accept_config?: ProxyAcceptConfig
 }
 export enum ProxyAcceptConfig {
-  AcceptAll = "accept_all",
-  RejectAll = "reject_all"
+  AcceptAll = 'accept_all',
+  RejectAll = 'reject_all'
 }
 
 export type TransportConfig = ( Mem | Quic | Proxy )
