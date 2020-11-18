@@ -3,13 +3,43 @@
 import { Orchestrator, Config, InstallAgentsHapps } from "../src"
 import { ScenarioApi } from "../src/api"
 import path from 'path'
+import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from "../src/types"
 
 const orchestrator = new Orchestrator()
+
+// Exampe of use for Proxy TransportConfigType
+// const network = {
+//   transport_pool: [{
+//     type: TransportConfigType.Proxy,
+//     sub_transport: {type: TransportConfigType.Quic},
+//     proxy_config: {
+//       type: ProxyConfigType.LocalProxyServer,
+//       proxy_accept_config: ProxyAcceptConfig.AcceptAll
+//     }
+//   }],
+//   bootstrap_service: "https://bootstrap.holo.host"
+// }
+
+// Exampe of use for Quic TransportConfigType
+// const network = {
+//   transport_pool: [{
+//     type: TransportConfigType.Quic,
+//   }],
+//   bootstrap_service: "https://bootstrap.holo.host"
+// }
+
+// Exampe of use for Mem TransportConfigType
+// const network = {
+//   transport_pool: [{
+//     type: TransportConfigType.Mem,
+//   }]
+// }
+// const conductorConfig = Config.gen({ network })
 
 const conductorConfig = Config.gen()
 
 const conductorHapps: InstallAgentsHapps = [
-  // agent 0 ... 
+  // agent 0 ...
   [
     // happ 0
     [
@@ -36,10 +66,9 @@ orchestrator.registerScenario('basic test', async (s: ScenarioApi, t) => {
   const FN_NAME = 'foo'
   const PAYLOAD = null
   const res = await agent0happ0cell0.call(ZOME_NAME, FN_NAME, PAYLOAD)
-  // or 
+  // or
   // const res = await agent0happ0.cells[0].call(ZOME_NAME, FN_NAME, PAYLOAD)
   t.equal(res, 'foo')
 })
 
 orchestrator.run()
-
