@@ -93,19 +93,6 @@ export class ScenarioApi {
     return players
   }
 
-  // FIXME!!!  probably need to rip out hachiko
-  consistency = (players?: Array<Player>): Promise<number> => new Promise((resolve, reject) => {
-    if (players) {
-      throw new Error("Calling `consistency` with parameters is currently unsupported. See https://github.com/holochain/hachiko/issues/10")
-    }
-    this._waiter.registerCallback({
-      // nodes: players ? players.map(p => p.name) : null,
-      nodes: null,
-      resolve,
-      reject,
-    })
-  })
-
   // TODO: re-implement a way to create a trycp player
   _createTrycpPlayerBuilder = async (machineEndpoint: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)

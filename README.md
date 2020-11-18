@@ -1,18 +1,5 @@
 # tryorama
 
-- - -
-
-> # ⚠️ NOTE: Tryorama is in a transitional phase ⚠️
->
-> Tryorama is being rewritten. Most functionality
-> is missing, tests are no longer expected to work, and this README cannot be guaranteed to be accurate. As progress is made, this codebase will be unified into a cohesive whole, and Tryorama
-> will eventually become a user-friendly testing framework once again.
->
-> For now, see [test/rsm](test/rsm) for some tests that DO work.
-
-- - -
-
-
 An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
 
 [![Project](https://img.shields.io/badge/project-holochain-blue.svg?style=flat-square)](http://holochain.org/)
@@ -22,7 +9,9 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 
 Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
-    npm install @holochain/tryorama
+```bash
+npm install @holochain/tryorama
+```
 
 Take a look at the sample below, or skip to the [Conceptual Overview](#conceptual-overview) for a more in depth look.
 
@@ -30,33 +19,37 @@ Take a look at the sample below, or skip to the [Conceptual Overview](#conceptua
 
 Check out this heavily commented example for an idea of how to use tryorama
 
+You can also check out the [example](./example) folder.
+
 ```javascript
 import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
-
-
-// Get path for your DNAs
-const testDna = path.join(__dirname, 'test.dna.gz')
-
-// create an InstallAgentsHapps array with your DNA to tell tryorama what
-// to install into the conductor.
-const installation: InstallAgentsHapps = [
-  // agent 0
-  [
-    // blog happ
-    [dnaBlog],
-    // chat happ
-    [dnaChat]
-  ],
-  // agent 1
-  [
-    // test happ
-    [testDna]
-  ]
-]
+import path from 'path'
 
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
 const conductorConfig = Config.gen()
+
+// Construct proper paths for your DNAs
+const testDna = path.join(__dirname, 'test.dna.gz')
+const dnaBlog = path.join(__dirname, 'blog.dna.gz')
+const dnaChat = path.join(__dirname, 'chat.dna.gz')
+
+// create an InstallAgentsHapps array with your DNAs to tell tryorama what
+// to install into the conductor.
+const installation: InstallAgentsHapps = [
+  // agent 0
+  [
+    // happ 0
+    [testDna] // contains 1 dna, the "test" dna
+  ]
+  // agent 1
+  [
+    // happ 0
+    [dnaBlog], // contains 1 dna, the blog dna
+    // happ 1
+    [dnaChat] // contains 1 dna, the chat dna
+  ],
+]
 
 // Instatiate your test's orchestrator.
 // It comes loaded with a lot default behavior which can be overridden, including:
@@ -74,17 +67,23 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
 
   // install your happs into the coductors and destructuring the returned happ data using the same
   // array structure as you created in your installation array.
-  const [[alice_blog_happ, alice_chat_happ], [alice_test_happ]] = await alice.installAgentsHapps(installation)
-  const [[bob_blog_happ, bob_chat_happ], [bob_test_happ]] = await bob.installAgentsHapps(installation)
+  const [
+    [alice_test_happ],
+    [alice_blog_happ, alice_chat_happ]
+  ] = await alice.installAgentsHapps(installation)
+  const [
+    [bob_test_happ],
+    [bob_blog_happ, bob_chat_happ]
+  ] = await bob.installAgentsHapps(installation)
 
   // then you can start making zome calls either on the cells in the order in which the dnas
   // where defined, with params: zomeName, fnName, and arguments:
-  const res = await alice_blog_happ.cells[0].call('messages, 'list_messages', {})
+  const res = await alice_blog_happ.cells[0].call('messages', 'list_messages', {})
 
   // or you can destructure the cells for more semantic references (this is most usefull
   // for multi-dna happs):
-  const [bobs_blog] = bob_blog_happ.cells
-  const res = await bobs_blog.call('blog', 'post', {body:'hello world'})
+  const [bobs_blog_cell] = bob_blog_happ.cells
+  const res = await bobs_blog_cell.call('blog', 'post', {body:'hello world'})
 
   // You can create players with unspawned conductors by passing in false as the second param:
   const [carol] = await s.players([conductorConfig], false)
@@ -93,37 +92,17 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   await carol.startup()
 
   // and install a single happ
-  const [carol_blog_happ] = await carol.installHapp([dnaBlog])
+  const carol_blog_happ = await carol.installHapp([dnaBlog])
   // or a happ with a previously generated key
-  const [carol_test_happ_with_bobs_test_key] = await carol.installHapp([dnaTest], bob_blog_happ.agent)
-
-  // for complete control, i.e. if you need to add properties or a membrane-proof to
-  // you can also install a happ using the holochain-conductor-app InstallAppRequest data structure:
-  import { InstallAppRequest } from '@holochain/conductor-api'
-  import * as msgpack from '@msgpack/msgpack';
-  const req: InstallAppRequest = {
-      app_id: `my_app`,
-      agent_key: await carol.admin().generateAgentPubKey(),
-      dnas: [{
-        path: path.join(__dirname, 'my_app.dna.gz'),
-        nick: `my_cell_nick`,
-        properties: Array.from(msgpack.encode({my_property:"override_default_value"})),
-        membrane_proof: Array.from(msgpack.encode({role:"steward", signature:"..."})),
-      }]
-  }
-  const installedHapp = await carol._installHapp(req)
+  const carol_test_happ_with_bobs_test_key = await carol.installHapp([dnaTest], bob_blog_happ.agent)
 
   // You can also shutdown conductors:
   await alice.shutdown()
   // ...and re-start the same conductor you just stopped
   await alice.startup()
 
-  // you can wait for total consistency of network activity,
-  // FIXME!
-  await s.consistency()
-
   // and you can make assertions using tape by default
-  const messages = await bobs_blog.call('messages', 'list_messages', {})
+  const messages = await bobs_blog_cell.call('messages', 'list_messages', {})
   t.equal(messages.length, 1)
 })
 
@@ -158,9 +137,11 @@ The default Orchestrator, as shown above, is set to use the local machine for te
 A Tryorama test is called a *scenario*. Each scenario makes use of a simple API for creating Players, and by default includes an object for making [tape assertions](https://github.com/substack/tape#methods), like `t.equal()`. Here's a very simple scenario which demonstrates the use of both objects.
 
 ```typescript
+
 // `s` is an instance of the Scenario API
 // `t` is the tape assertion API
 orchestrator.registerScenario('description of this scenario', async (s, t) => {
+  const config = Config.gen()
   // Use the Scenario API to create two players, alice and bob (we'll cover this more later)
   const [alice, bob] = await s.players([config, config])
 
@@ -169,11 +150,6 @@ orchestrator.registerScenario('description of this scenario', async (s, t) => {
 
   // make a zome call
   const result = await the_happ.cells[0].call('some-zome', 'some-function', 'some-parameters')
-
-  // another use of the Scenario API is to automagically wait for the network to
-  // reach a consistent state before continuing the test
-  // FIXME
-  await s.consistency()
 
   // make a test assertion with tape
   t.equal(result.Ok, 'the expected value')
@@ -184,12 +160,11 @@ Each scenario will automatically shutdown all running conductors as well as auto
 
 ## Players
 
-A Player represents a Holochain user running a Conductor. That conductor may run on the same machine as the Tryorama test orchestrator, or it may be a remote machine (See [Remote Players with TryCP](#remote-players-with-trycp)). Either way, the main concern in configuring a Player is providing configuration and initialization for its underlying Conductor.
+A Player represents a Holochain user running a Conductor. That conductor will run on the same machine as the Tryorama test orchestrator. Either way, the main concern in configuring a Player is providing configuration and initialization for its underlying Conductor.
 
 # Conductor setup
 
 Much of the purpose of Tryorama is to provide ways to setup conductors for tests, which means generating their boot configuration files, and initializing them to known states (installing hApps) for scenarios.
-
 
 ## Goals
 1. Common setups should be easy to generate
@@ -209,7 +184,6 @@ orchestrator.registerScenario('my scenario dnas', async (s: ScenarioApi, t) => {
   const [alice] = await s.players([config])
 }
 ```
-See below for more complicated ways to generate config files.
 
 ## Happ Installation
 
@@ -221,9 +195,9 @@ A simple example:
 const installation: InstallAgentsHapps = [
   // agent 0 ...
   [
-    // happ 1
+    // happ 0
     [
-      // dna 1
+      // dna 0
       path.join(__dirname, 'test.dna.gz')
     ]
   ],
@@ -247,6 +221,34 @@ export type InstalledHapp = {
   cells: Cell[]
 }
 ```
+
+### Advanced Usage 
+
+```javascript
+// for complete control, i.e. if you need to add properties or a membrane-proof to
+// you can also install a happ using the holochain-conductor-app InstallAppRequest data structure:
+import { InstallAppRequest } from '@holochain/conductor-api'
+import * as msgpack from '@msgpack/msgpack';
+
+orchestrator.registerScenario('description of this scenario', async (s, t) => {
+  const config = Config.gen()
+  // Use the Scenario API to create two players, alice and bob (we'll cover this more later)
+  const [alice, bob] = await s.players([config, config])
+
+  const req: InstallAppRequest = {
+    app_id: `my_app`,
+    agent_key: await carol.admin().generateAgentPubKey(),
+    dnas: [{
+      path: path.join(__dirname, 'my_app.dna.gz'),
+      nick: `my_cell_nick`,
+      properties: Array.from(msgpack.encode({my_property:"override_default_value"})),
+      membrane_proof: Array.from(msgpack.encode({role:"steward", signature:"..."})),
+    }]
+  }
+  const installedHapp = await carol._installHapp(req)
+})
+```
+
 # License
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
