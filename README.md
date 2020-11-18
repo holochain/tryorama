@@ -119,7 +119,8 @@ console.log(report)
 To set networking add it as a commonConfig in gen()
 
 #### Exampe of use for  TransportConfigType `Proxy`
-```javascript=
+```javascript
+import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from '@holochain/tryorama'
 const network = {
   transport_pool: [{
     type: TransportConfigType.Proxy,
