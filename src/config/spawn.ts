@@ -12,6 +12,7 @@ import env from '../env'
 
 export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
   return new Conductor({
+    player,
     name: 'test-conductor',
     kill: async () => { },
     onSignal: () => { },
@@ -58,8 +59,16 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
     await awaitInterfaceReady(handle, player.name)
 
     const conductor = new Conductor({
+      player,
       name,
-      kill: async (...args) => handle.kill(...args),
+      kill: async (...args) => {
+        // wait for it to be finished off before resolving
+        const killPromise = new Promise((resolve) => {
+          handle.once('close', resolve)
+        })
+        handle.kill(...args)
+        return killPromise
+      },
       onSignal: player.onSignal.bind(player),
       onActivity: player.onActivity,
       machineHost: `localhost`,
@@ -108,6 +117,7 @@ export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnCon
   // logger.info('Done waiting. Ready or not, here we come, remote conductor!')
 
   return new Conductor({
+    player,
     name,
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),

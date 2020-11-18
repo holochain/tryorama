@@ -1,10 +1,7 @@
 const sinon = require('sinon')
-import * as tape from 'tape'
-import * as R from 'ramda'
 import test from 'tape-promise/tape'
 
 import * as M from '../../src/middleware'
-import { ConfigSeed, RawConductorConfig } from '../../src'
 
 const increment = (run, f) => run(s => f({ v: s.v + 1 }))
 const triple = (run, f) => run(s => f({ v: s.v * 3 }))
@@ -95,76 +92,6 @@ test('function signature modification', t => {
 test('description modification', t => {
   bangs(runner('description', {}, 2), s => {
     t.equal(s.description, 'description!!!')
-  })
-  t.end()
-})
-
-test('groupPlayersByMachine middleware', t => {
-  const endpoints = ['e0', 'e1', 'e2', 'e3', 'e4', 'e5']
-  const m1 = M.groupPlayersByMachine(endpoints, 1)
-  const m2 = M.groupPlayersByMachine(endpoints, 2)
-  const m3 = M.groupPlayersByMachine(endpoints, 3)
-  const m4 = M.groupPlayersByMachine(endpoints, 4)
-  const m6 = M.groupPlayersByMachine(endpoints, 6)
-  const oldApi = {
-    players: (configs) => configs
-  }
-  const fakeSeed = ({ }) => Promise.resolve({})
-  const input = R.repeat(fakeSeed, 6)
-  m1(runner('1 player per machine', oldApi), async s => {
-    const ps = await s.players(input as any)
-    t.deepEqual(ps, {
-      e0: { '0': fakeSeed },
-      e1: { '1': fakeSeed },
-      e2: { '2': fakeSeed },
-      e3: { '3': fakeSeed },
-      e4: { '4': fakeSeed },
-      e5: { '5': fakeSeed },
-    })
-  })
-  m2(runner('2 players per machine', oldApi), async s => {
-    const ps = await s.players(input as any)
-    t.deepEqual(ps, {
-      e0: { '0': fakeSeed, '1': fakeSeed },
-      e1: { '2': fakeSeed, '3': fakeSeed },
-      e2: { '4': fakeSeed, '5': fakeSeed },
-    })
-  })
-  m3(runner('3 players per machine', oldApi), async s => {
-    const ps = await s.players(input as any)
-    t.deepEqual(ps, {
-      e0: { '0': fakeSeed, '1': fakeSeed, '2': fakeSeed },
-      e1: { '3': fakeSeed, '4': fakeSeed, '5': fakeSeed },
-    })
-  })
-  m4(runner('4 players per machine (with leftovers)', oldApi), async s => {
-    const ps = await s.players(input as any)
-    t.deepEqual(ps, {
-      e0: { '0': fakeSeed, '1': fakeSeed, '2': fakeSeed, '3': fakeSeed },
-      e1: { '4': fakeSeed, '5': fakeSeed },
-    })
-  })
-  m6(runner('6 players per machine', oldApi), async s => {
-    const ps = await s.players(input as any)
-    t.deepEqual(ps, {
-      e0: { '0': fakeSeed, '1': fakeSeed, '2': fakeSeed, '3': fakeSeed, '4': fakeSeed, '5': fakeSeed },
-    })
-  })
-  t.end()
-})
-
-
-test('groupPlayersByMachine failure', t => {
-  const endpoints = ['e0', 'e1', 'e2', 'e3', 'e4', 'e5']
-  const m = M.groupPlayersByMachine(endpoints, 3)
-  const oldApi = { players: (configs) => configs }
-  const fakeSeed = ({ }) => Promise.resolve({})
-  const input = R.repeat(fakeSeed, 100)
-  m(runner('1 player per machine', oldApi), async s => {
-    t.rejects(
-      () => s.players(input as any),
-      /Can't fit 100 conductors on 6 machines in groups of 3!/
-    )
   })
   t.end()
 })

@@ -1,11 +1,6 @@
-
 require('./test-api')
+require('./test-middleware')
+require('./test-orchestrator')
 require('./test-tape-mock')
 require('./test-tape-real')
-require('./test-builder')
-require('./test-combine')
-require('./test-expand')
-require('./test-gen')
-require('./test-orchestrator')
-require('./test-middleware')
 require('./test-util')

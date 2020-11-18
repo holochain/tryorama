@@ -8,6 +8,7 @@ import env from './env';
 import * as T from './types'
 import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, DnaProperties } from '@holochain/conductor-api';
 import { Cell } from "./cell";
+import { Player } from './player';
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -30,6 +31,7 @@ export class Conductor {
   adminClient: AdminWebsocket | null
   appClient: AppWebsocket | null
 
+  _player: Player
   _adminInterfacePort: number
   _machineHost: string
   _isInitialized: boolean
@@ -37,7 +39,7 @@ export class Conductor {
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, kill, onSignal, onActivity, machineHost, adminPort, rawConfig }) {
+  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, rawConfig }) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -51,6 +53,7 @@ export class Conductor {
 
     this.adminClient = null
     this.appClient = null
+    this._player = player
     this._machineHost = machineHost
     this._adminInterfacePort = adminPort
     this._isInitialized = false
@@ -102,8 +105,7 @@ export class Conductor {
         // installedCell[0] is the CellId, installedCell[1] is the CellNick
         cellId: installedCell[0],
         cellNick: installedCell[1],
-        adminClient: this.adminClient!,
-        appClient: this.appClient!
+        player: this._player
       }))
     }
     return installedAgentHapp

@@ -1,8 +1,6 @@
-const sinon = require('sinon')
 const test = require('tape')
 
-import { Orchestrator } from '../../src'
-import { genConfigArgs, spawnConductor, testOrchestrator } from '../common'
+import { testOrchestrator } from '../common'
 
 test('Scenario API constructed properly', async t => {
   t.plan(3)

@@ -3,7 +3,6 @@ const test = require('tape')
 
 import { Orchestrator } from '../../src'
 import { tapeExecutor, combine } from '../../src/middleware'
-import { genConfigArgs, spawnConductor } from '../common'
 import logger from '../../src/logger';
 import { delay } from '../../src/util';
 
