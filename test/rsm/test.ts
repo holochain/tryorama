@@ -6,11 +6,18 @@ import path from 'path'
 
 const orchestrator = new Orchestrator()
 
-const conductor1Config = Config.gen()
-const conductor2Config = Config.gen()
+const conductor1Config = Config.gen({})
+const conductor2Config = Config.gen({
+  network: {
+    transport_pool: [{
+      type: 'quic',
+    }],
+    bootstrap_service: "https://bootstrap.holo.host"
+  }
+})
 
 const conductor2Happs: InstallAgentsHapps = [
-  // agent 0 ... 
+  // agent 0 ...
   [
     // happ 1
     [
@@ -43,7 +50,7 @@ orchestrator.registerScenario('list dnas', async (s: ScenarioApi, t) => {
   const [[agent2happ1]] = await player2.installAgentsHapps(conductor2Happs)
   const [player2happ1cell1] = agent2happ1.cells
   const res = await player2happ1cell1.call('foo', 'foo', null)
-  // or 
+  // or
   // const res = await player2happ2.cells[0].call('foo', 'foo', null)
 
   // console.log('result!', res)
@@ -51,4 +58,3 @@ orchestrator.registerScenario('list dnas', async (s: ScenarioApi, t) => {
 })
 
 orchestrator.run()
-

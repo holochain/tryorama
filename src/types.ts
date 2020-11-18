@@ -36,6 +36,9 @@ export type PartialConfigSeedArgs = {
   adminInterfacePort: number,
   configDir: string,
 }
+export type CommonConfig = {
+  network?: KitsuneP2pConfig
+}
 
 export type ConfigSeedArgs = PartialConfigSeedArgs & {
   scenarioName: string,
@@ -102,10 +105,46 @@ export interface RawConductorConfig {
   encryption_service_uri?: string,
   decryption_service_uri?: string,
   keystore_path?: string,
+  network?: KitsuneP2pConfig,
   // TODO:
   // passphrase_service?: PassphraseServiceConfig,
   // admin_interfaces?: Array<AdminInterfaceConfig>
-  // network?: KitsuneP2pConfig,
 }
 
+export type Url2 = string
+export interface Mem {
+  type: string
+}
+export interface Quic {
+  type: string,
+  bind_to?: Url2,
+  override_host?: string,
+  override_port?: number
+}
+export interface Proxy {
+  type: string,
+  sub_transport: TransportConfig, // should be Box
+  proxy_config: ProxyConfig
+}
+export enum ProxyConfig {
+  RemoteProxyClient,
+  LocalProxyServer
+}
+export interface RemoteProxyClient {
+  proxy_url: Url2
+}
+export interface LocalProxyServer {
+  proxy_accept_config?: ProxyAcceptConfig
+}
+export enum ProxyAcceptConfig {
+    AcceptAll,
+    RejectAll
+}
+
+export type TransportConfig = ( Mem | Quic | Proxy )
+
+export interface KitsuneP2pConfig {
+  transport_pool: TransportConfig[],
+  bootstrap_service?: Url2
+}
 export type KillFn = (signal?: string) => Promise<void>
