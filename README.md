@@ -193,7 +193,7 @@ A simple example:
 
 ``` js
 const installation: InstallAgentsHapps = [
-  // agent 0 ...
+  // agent 0 ... ) a unique agent key will be generated that will be shared by any happs, and cells under this
   [
     // happ 0
     [
@@ -204,7 +204,7 @@ const installation: InstallAgentsHapps = [
 ]
 ```
 
-When this installation is passed into the scenario `players` function, what's returned is an identically structured array of installed happs, where tryorama takes care of generating all the agent Ids, happ Ids and cell nicks, so you don't have to manually do that work in a config file, you can simply destructure the results into variables with semantic names relevant to your tests.  E.g, from the initialization above:
+When this installation is passed into the player `installAgentsHapps` function, what's returned is an identically structured array of installed happs, where tryorama takes care of generating all the agent Ids, happ Ids and cell nicks, so you don't have to manually do that work in a config file, you can simply destructure the results into variables with semantic names relevant to your tests.  E.g, from the initialization above:
 
 ``` js
   const [[test_happ]] = await alice.installAgentsHapps(initialization)
