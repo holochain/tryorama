@@ -1,13 +1,14 @@
 import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
-import { Instance } from './instance'
-import { SpawnConductorFn, ObjectS, RawConductorConfig } from './types';
+import { Cell } from './cell'
+import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
+import env from './env';
 const fs = require('fs').promises
 
 type ConstructorArgs = {
@@ -15,7 +16,6 @@ type ConstructorArgs = {
   config: RawConductorConfig,
   configDir: string,
   adminInterfacePort: number,
-  appInterfacePort: number,
   onSignal: ({ instanceId: string, signal: Signal }) => void,
   onJoin: () => void,
   onLeave: () => void,
@@ -23,7 +23,6 @@ type ConstructorArgs = {
   spawnConductor: SpawnConductorFn,
 }
 
-type CallArgs = [CallZomeRequest] | [string, string, string, any]
 
 /**
  * Representation of a Conductor user.
@@ -43,13 +42,11 @@ export class Player {
   onActivity: () => void
 
   _conductor: Conductor | null
-  _cellIds: ObjectS<CellId>
   _configDir: string
   _adminInterfacePort: number
-  _appInterfacePort: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, config, configDir, adminInterfacePort, appInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
@@ -59,113 +56,57 @@ export class Player {
     this.config = config
 
     this._conductor = null
-    this._cellIds = {}
     this._configDir = configDir
     this._adminInterfacePort = adminInterfacePort
-    this._appInterfacePort = appInterfacePort
     this._spawnConductor = spawnConductor
   }
 
-  admin = (): AdminWebsocket => {
-    if (this._conductor) {
-      return this._conductor.adminClient!
-    } else {
-      throw new Error("Conductor is not spawned: admin interface unavailable")
-    }
+  appWs = (context?: string): AppWebsocket => {
+    this._conductorGuard(context || `Player.appWs()`)
+    return this._conductor!.appClient!
   }
 
-  call = async (...args: CallArgs) => {
-    if (args.length === 4) {
-      const [cellNick, zome_name, fn_name, payload] = args
-      const cell_id = this._cellIds[cellNick]
-      if (!cell_id) {
-        throw new Error("Unknown cell nick: " + cellNick)
-      }
-      const [_dnaHash, provenance] = cell_id
-      return this.call({
-        cap: fakeCapSecret(),
-        cell_id,
-        zome_name,
-        fn_name,
-        payload,
-        provenance,
-      })
-    } else if (args.length === 1) {
-      this._conductorGuard(`call(${JSON.stringify(args[0])})`)
-      return this._conductor!.appClient!.callZome(args[0])
-    } else {
-      throw new Error("Must use either 1 or 4 arguments with `player.call`")
-    }
-  }
-
-  cellId = (nick: CellNick): CellId => {
-    const cellId = this._cellIds[nick]
-    if (!cellId) {
-      throw new Error(`Unknown cell nickname: ${nick}`)
-    }
-    return cellId
-  }
-
-  stateDump = async (nick: CellNick): Promise<any> => {
-    return this.admin()!.dumpState({
-      cell_id: this.cellId(nick)
-    })
+  adminWs = (context?: string): AdminWebsocket => {
+    this._conductorGuard(context || `Player.adminWs()`)
+    return this._conductor!.adminClient!
   }
 
   /**
-   * Get a particular Instance of this conductor.
-   * The reason for supplying a getter rather than allowing direct access to the collection
-   * of instances is to allow middlewares to modify the instanceId being retrieved,
-   * especially for singleConductor middleware
-   */
-  instance = (instanceId) => {
-    this._conductorGuard(`instance(${instanceId})`)
-    unimplemented("Player.instance")
-    // return _.cloneDeep(this._instances[instanceId])
-  }
-
-  instances = (filterPredicate?): Array<Instance> => {
-    unimplemented("Player.instances")
-    return []
-    // return _.flow(_.values, _.filter(filterPredicate), _.cloneDeep)(this._instances)
-  }
-
-  /**
-   * Spawn can take a function as an argument, which allows the caller
+   * `startup` can take a function as an argument, which allows the caller
    * to do something with the child process handle, even before the conductor
    * has fully started up. Otherwise, by default, you will have to wait for
    * the proper output to be seen before this promise resolves.
    */
-  spawn = async (spawnArgs: any) => {
+  startup = async (spawnArgs: any) => {
     if (this._conductor) {
-      this.logger.warn(`Attempted to spawn conductor '${this.name}' twice!`)
+      this.logger.warn(`Attempted to start up conductor '${this.name}' twice!`)
       return
     }
 
-    await this.onJoin()
-    this.logger.debug("spawning")
+    this.onJoin()
+    this.logger.debug("starting up")
     const conductor = await this._spawnConductor(this, spawnArgs)
 
-    this.logger.debug("spawned")
+    this.logger.debug("started up")
     this._conductor = conductor
 
     this.logger.debug("initializing")
     await this._conductor.initialize()
-    await this._setCellNicks()
+
     this.logger.debug("initialized")
   }
 
-  kill = async (signal = 'SIGINT'): Promise<boolean> => {
+  shutdown = async (signal = 'SIGINT'): Promise<boolean> => {
     if (this._conductor) {
       const c = this._conductor
       this._conductor = null
-      this.logger.debug("Killing...")
+      this.logger.debug("Shutting down...")
       await c.kill(signal)
-      this.logger.debug("Killed.")
-      await this.onLeave()
+      this.logger.debug("Shut down.")
+      this.onLeave()
       return true
     } else {
-      this.logger.warn(`Attempted to kill conductor '${this.name}' twice`)
+      this.logger.warn(`Attempted to shut down conductor '${this.name}' twice`)
       return false
     }
   }
@@ -174,32 +115,53 @@ export class Player {
   cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
-      await this.kill(signal)
+      await this.shutdown(signal)
       unparkPort(this._adminInterfacePort)
-      unparkPort(this._appInterfacePort)
       return true
     } else {
       unparkPort(this._adminInterfacePort)
-      unparkPort(this._appInterfacePort)
       return false
     }
   }
 
-  _setCellNicks = async () => {
-    const { cell_data } = await this._conductor!.appClient!.appInfo({ app_id: 'LEGACY' })
-    for (const [cellId, cellNick] of cell_data) {
-      this._cellIds[cellNick] = cellId
-    }
+  /**
+   * helper to create agent keys and install multiple apps for scenario initialization
+   */
+  installAgentsHapps = (agentsHapps: InstallAgentsHapps): Promise<InstalledAgentHapps> => {
+    this._conductorGuard(`Player.installHapps`)
+    return Promise.all(agentsHapps.map(async agentHapps => {
+      // for each agent, create one key and install all the happs under that key
+      const agentPubKey: AgentPubKey = await this.adminWs().generateAgentPubKey()
+      return Promise.all(agentHapps.map(happ => this.installHapp(happ, agentPubKey)))
+    }))
+  }
+
+  /**
+   * expose installHapp at the player level for in-scenario dynamic installation of apps
+   * optionally takes an AgentPubKey so that you can control who's who if you need to
+   * otherwise will be a new and different agent every time you call it
+   */
+  installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
+      return this._conductor!.installHapp(happ, agentPubKey)
+  }
+
+  /**
+   * expose _installHapp at the player level for in-scenario dynamic installation of apps
+   * using admin api's InstallAppRequest for more detailed control
+   */
+  _installHapp = async (happ: InstallAppRequest): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player._installHapp(${JSON.stringify(happ)})`)
+    return this._conductor!._installHapp(happ)
   }
 
   _conductorGuard = (context) => {
     if (this._conductor === null) {
-      const msg = `Attempted conductor action when no conductor is running! You must \`.spawn()\` first.\nAction: ${context}`
+      const msg = `Attempted conductor action when no conductor is running! You must \`.startup()\` first.\nAction: ${context}`
       this.logger.error(msg)
       throw new Error(msg)
     } else {
       this.logger.debug(context)
     }
   }
-
 }

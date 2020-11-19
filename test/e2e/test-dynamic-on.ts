@@ -1,115 +1,66 @@
 import * as tape from 'tape'
-import tapeP from 'tape-promise'
+import test from 'tape-promise/tape'
 
-const test = tapeP(tape)
 
-import { Orchestrator, Config } from '../../src'
-import { runSeries } from '../../src/middleware'
+import { Orchestrator, Config, InstallAgentsHapps } from '../../src'
 import { delay, trace } from '../../src/util';
 
 module.exports = (testOrchestrator, testConfig) => {
 
-  test('test with kill and respawn', async t => {
-    t.plan(4)
-    const C = testConfig()
+  test('test with shutdown and startup', async t => {
+    const [aliceConfig, installApps] = testConfig()
     const orchestrator = testOrchestrator()
-    orchestrator.registerScenario('attempted call with killed conductor', async s => {
-      const { alice } = await s.players({ alice: C.alice })
-      await alice.spawn()
 
+    orchestrator.registerScenario('attempted call with stopped conductor', async s => {
+      const [alice] = await s.players([aliceConfig], false)
+      await alice.startup()
+      const [[alice_happ]] = await alice.installAgentsHapps(installApps)
+      const [link_cell] = alice_happ.cells
       await t.doesNotReject(
-        alice.call('app', 'main', 'commit_entry', {
-          content: 'content'
-        })
+        link_cell.call('link', 'create_link')
       )
-
-      await alice.kill()
-
+      await alice.shutdown()
       await t.rejects(
-        alice.call('app', 'main', 'commit_entry', {
-          content: 'content'
-        }),
-        /.*no conductor is running.*/
+        link_cell.call('link', 'create_link')
+        /* no conductor is running.*/
       )
     })
 
-    orchestrator.registerScenario('spawn-kill-spawn', async s => {
-      const { alice } = await s.players({ alice: C.alice })
-      await alice.spawn()
-      await alice.kill()
-      await alice.spawn()
-      const agentAddress = await alice.call('app', 'main', 'commit_entry', {
-        content: 'content'
-      })
-      t.equal(agentAddress.Ok.length, 46)
+    orchestrator.registerScenario('start-stop-start', async s => {
+      const [alice] = await s.players([aliceConfig], false)
+      await alice.startup()
+      const [[alice_happ]] = await alice.installAgentsHapps(installApps)
+      await alice.shutdown()
+      await alice.startup()
+      const agentAddress = await alice_happ.cells[0].call('link', 'create_link')
+      t.equal(agentAddress.length, 39)
     })
 
     const stats = await orchestrator.run()
 
     t.equal(stats.successes, 2)
+    t.end()
   })
 
-  test('test with no conductor', async t => {
-    const C = testConfig()
+  test('late joiners', async t => {
+    const [conductorConfig, installApps] = testConfig()
     const orchestrator = testOrchestrator()
-    orchestrator.registerScenario('attempted call with unspawned conductor', async s => {
-      const { alice } = await s.players({ alice: C.alice })
-      await alice.call('app', 'main', 'commit_entry', {
-        content: 'content'
-      })
-    })
 
-    const stats = await orchestrator.run()
-
-    t.equal(stats.errors.length, 1)
-  })
-
-  test.skip('late joiners', async t => {
-    const C = testConfig()
-    const orchestrator = testOrchestrator()
-    orchestrator.registerScenario('attempted call with unspawned conductor', async s => {
-      const { alice } = await s.players({ alice: C.alice }, true)
-
-      const commit1 = await alice.call('app', 'main', 'commit_entry', {
-        content: 'content1'
-      })
-      const commit2 = await alice.call('app', 'main', 'commit_entry', {
-        content: 'content2'
-      })
-      const hash1 = commit1.Ok
-      const hash2 = commit2.Ok
-
-      const linkResult = await alice.call('app', 'main', 'link_entries', {
-        base: hash1,
-        target: hash2,
-      })
-      const linkHash = linkResult.Ok
-      await s.consistency()
+    orchestrator.registerScenario('other agents join after an initial one', async s => {
+      const [ alice ] = await s.players([conductorConfig])
+      const [[alice_happ]] = await alice.installAgentsHapps(installApps)
+      const linkResult = await alice_happ.cells[0].call('link', 'create_link')
 
       // bob and carol join later
-      const { bob, carol } = await s.players({ bob: C.bob, carol: C.carol }, true)
-
-      // after the consistency waiting inherent in auto-spawning the new players, their state dumps
-      // should immediately show that they are holding alice's entries
-      const bobDump = await bob.stateDump('app')
-      const carolDump = await bob.stateDump('app')
-
-      t.ok(hash1 in bobDump.held_aspects)
-      t.ok(hash2 in bobDump.held_aspects)
-      t.ok(linkHash in bobDump.held_aspects)
-      t.ok(hash1 in carolDump.held_aspects)
-      t.ok(hash2 in carolDump.held_aspects)
-      t.ok(linkHash in carolDump.held_aspects)
-
-      const bobLinks = await bob.call('app', 'main', 'get_links', {
-        base: hash1
-      })
-      const carolLinks = await carol.call('app', 'main', 'get_links', {
-        base: hash1
-      })
-
-      t.equal(bobLinks.Ok.links.length, 1)
-      t.equal(carolLinks.Ok.links.length, 1)
+      const [bob, carol] = await s.players([conductorConfig, conductorConfig])
+      const [[bob_happ]] = await bob.installAgentsHapps(installApps)
+      const [[carol_happ]] = await carol.installAgentsHapps(installApps)
+      const bobLinks = await bob_happ.cells[0].call('link', 'get_links')
+      const carolLinks = await carol_happ.cells[0].call('link', 'get_links')
+      // TODO: re-enable when multiple conductors can
+      // talk to each other
+      // t.equal(bobLinks.links.length, 1)
+      // t.equal(carolLinks.links.length, 1)
     })
 
     const stats = await orchestrator.run()

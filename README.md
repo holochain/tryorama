@@ -1,18 +1,5 @@
 # tryorama
 
-- - -
-
-> # ⚠️ NOTE: Tryorama is in a transitional phase ⚠️
->
-> Tryorama is being rewritten. Most functionality
-> is missing, tests are no longer expected to work, and this README cannot be guaranteed to be accurate. As progress is made, this codebase will be unified into a cohesive whole, and Tryorama
-> will eventually become a user-friendly testing framework once again.
->
-> For now, see [test/rsm](test/rsm) for some tests that DO work.
-
-- - -
-
-
 An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
 
 [![Project](https://img.shields.io/badge/project-holochain-blue.svg?style=flat-square)](http://holochain.org/)
@@ -22,7 +9,9 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 
 Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
-    npm install @holochain/tryorama
+```bash
+npm install @holochain/tryorama
+```
 
 Take a look at the sample below, or skip to the [Conceptual Overview](#conceptual-overview) for a more in depth look.
 
@@ -30,69 +19,90 @@ Take a look at the sample below, or skip to the [Conceptual Overview](#conceptua
 
 Check out this heavily commented example for an idea of how to use tryorama
 
-```javascript
-import { Orchestrator, Config } from '../../src'
+You can also check out the [example](./example) folder.
 
-// Point to your DNA file and give it a nickname.
-// The DNA file can either be on your filesystem...
-const dnaBlog = Config.dna('~/project/dnas/blog.dna.json', 'blog')
-// ... or on the web
-const dnaChat = Config.dna('https://url.to/your/chat.dna.json', 'chat')
+```javascript
+import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
+import path from 'path'
 
 // Set up a Conductor configuration using the handy `Conductor.config` helper.
 // Read the docs for more on configuration.
-const mainConfig = Config.gen(
-  {
-    blog: dnaBlog,  // agent_id="blog", instance_id="blog", dna=dnaBlog
-    chat: dnaChat,  // agent_id="chat", instance_id="chat", dna=dnaChat
-  },
-  {
-    // specify a bridge from chat to blog
-    bridges: [Config.bridge('bridge-name', 'chat', 'blog')],
-    // use a sim2h network (see conductor config options for all valid network types)
-    network: {
-      type: 'sim2h',
-      sim2h_url: 'ws://localhost:9000',
-    },
-    // etc., any other valid conductor config items can go here
-  }
-})
+const conductorConfig = Config.gen()
 
-// Instatiate a test orchestrator.
+// Construct proper paths for your DNAs
+const testDna = path.join(__dirname, 'test.dna.gz')
+const dnaBlog = path.join(__dirname, 'blog.dna.gz')
+const dnaChat = path.join(__dirname, 'chat.dna.gz')
+
+// create an InstallAgentsHapps array with your DNAs to tell tryorama what
+// to install into the conductor.
+const installation: InstallAgentsHapps = [
+  // agent 0
+  [
+    // happ 0
+    [testDna] // contains 1 dna, the "test" dna
+  ]
+  // agent 1
+  [
+    // happ 0
+    [dnaBlog], // contains 1 dna, the blog dna
+    // happ 1
+    [dnaChat] // contains 1 dna, the chat dna
+  ],
+]
+
+// Instatiate your test's orchestrator.
 // It comes loaded with a lot default behavior which can be overridden, including:
-// * custom conductor spawning
+// * custom conductor startup
 // * custom test result reporting
 // * scenario middleware, including integration with other test harnesses
 const orchestrator = new Orchestrator()
 
 // Register a scenario, which is a function that gets a special API injected in
 orchestrator.registerScenario('proper zome call', async (s, t) => {
-  // Declare two players using the previously specified config,
-  // and nickname them "alice" and "bob"
-  const {alice, bob} = await s.players({alice: mainConfig, bob: mainConfig})
+  // Declare two players using the previously specified config, nicknaming them "alice" and "bob"
+  // note that the first argument to players is just an array conductor configs that that will
+  // be used to spin up the conductor processes which are returned in a matching array.
+  const [alice, bob] = await s.players([conductorConfig, conductorConfig])
 
-  // You have to spawn the conductors yourself...
-  await alice.spawn()
-  // ...unless you pass `true` as an extra parameter,
-  // in which case each conductor will auto-spawn
-  const {carol} = await s.players({carol: mainConfig}, true)
+  // install your happs into the coductors and destructuring the returned happ data using the same
+  // array structure as you created in your installation array.
+  const [
+    [alice_test_happ],
+    [alice_blog_happ, alice_chat_happ]
+  ] = await alice.installAgentsHapps(installation)
+  const [
+    [bob_test_happ],
+    [bob_blog_happ, bob_chat_happ]
+  ] = await bob.installAgentsHapps(installation)
 
-  // You can also kill them...
-  await alice.kill()
-  // ...and re-spawn the same conductor you just killed
-  await alice.spawn()
+  // then you can start making zome calls either on the cells in the order in which the dnas
+  // where defined, with params: zomeName, fnName, and arguments:
+  const res = await alice_blog_happ.cells[0].call('messages', 'list_messages', {})
 
-  // now you can make zome calls,
-  await alice.call('chat', 'messages', 'direct_message', {
-    content: 'hello world',
-    target: carol.instance('chat').agentAddress
-  })
+  // or you can destructure the cells for more semantic references (this is most usefull
+  // for multi-dna happs):
+  const [bobs_blog_cell] = bob_blog_happ.cells
+  const res = await bobs_blog_cell.call('blog', 'post', {body:'hello world'})
 
-  // you can wait for total consistency of network activity,
-  await s.consistency()
+  // You can create players with unspawned conductors by passing in false as the second param:
+  const [carol] = await s.players([conductorConfig], false)
+
+  // and then start the conductor for them explicitly with:
+  await carol.startup()
+
+  // and install a single happ
+  const carol_blog_happ = await carol.installHapp([dnaBlog])
+  // or a happ with a previously generated key
+  const carol_test_happ_with_bobs_test_key = await carol.installHapp([dnaTest], bob_blog_happ.agent)
+
+  // You can also shutdown conductors:
+  await alice.shutdown()
+  // ...and re-start the same conductor you just stopped
+  await alice.startup()
 
   // and you can make assertions using tape by default
-  const messages = await carol.call('chat', 'messages', 'list_messages', {})
+  const messages = await bobs_blog_cell.call('messages', 'list_messages', {})
   t.equal(messages.length, 1)
 })
 
@@ -104,6 +114,46 @@ const report = await orchestrator.run()
 console.log(report)
 ```
 
+### How to set networking:
+
+To set networking add it as a commonConfig in gen()
+
+#### Exampe of use for  TransportConfigType `Proxy`
+```javascript
+import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from '@holochain/tryorama'
+const network = {
+  transport_pool: [{
+    type: TransportConfigType.Proxy,
+    sub_transport: {type: TransportConfigType.Quic},
+    proxy_config: {
+      type: ProxyConfigType.LocalProxyServer,
+      proxy_accept_config: ProxyAcceptConfig.AcceptAll
+    }
+  }],
+  bootstrap_service: "https://bootstrap.holo.host"
+}
+Config.gen({network})
+```
+#### Exampe of use for TransportConfigType `Quic`
+```javascript
+const network = {
+  transport_pool: [{
+    type: TransportConfigType.Quic,
+  }],
+  bootstrap_service: "https://bootstrap.holo.host"
+}
+Config.gen({network})
+```
+
+#### Exampe of use for TransportConfigType `Mem`
+```javascript
+const network = {
+  transport_pool: [{
+    type: TransportConfigType.Mem,
+  }]
+}
+Config.gen({network})
+```
 
 # Conceptual overview
 
@@ -127,291 +177,122 @@ The default Orchestrator, as shown above, is set to use the local machine for te
 A Tryorama test is called a *scenario*. Each scenario makes use of a simple API for creating Players, and by default includes an object for making [tape assertions](https://github.com/substack/tape#methods), like `t.equal()`. Here's a very simple scenario which demonstrates the use of both objects.
 
 ```typescript
+
 // `s` is an instance of the Scenario API
 // `t` is the tape assertion API
 orchestrator.registerScenario('description of this scenario', async (s, t) => {
+  const config = Config.gen()
   // Use the Scenario API to create two players, alice and bob (we'll cover this more later)
-  const {alice, bob} = await s.players({alice: config, bob: config})
+  const [alice, bob] = await s.players([config, config])
 
-  // start alice's conductor
-  await alice.spawn()
+  // install happs in the conductors
+  const [[the_happ]] = await alice.installAgentsHapps(installation)
 
   // make a zome call
-  const result = await alice.call('some-instance', 'some-zome', 'some-function', 'some-parameters')
-
-  // another use of the Scenario API is to automagically wait for the network to
-  // reach a consistent state before continuing the test
-  await s.consistency()
+  const result = await the_happ.cells[0].call('some-zome', 'some-function', 'some-parameters')
 
   // make a test assertion with tape
   t.equal(result.Ok, 'the expected value')
 })
 ```
 
-Each scenario will automatically kill all running conductors as well as automatically end the underlying tape test (no need to run `t.end()`).
+Each scenario will automatically shutdown all running conductors as well as automatically end the underlying tape test (no need to run `t.end()`).
 
 ## Players
 
-A Player represents a Holochain user running a Conductor. That conductor may run on the same machine as the Tryorama test orchestrator, or it may be a remote machine (See [Remote Players with TryCP](#remote-players-with-trycp)). Either way, the main concern in configuring a Player is providing configuration for its underlying Conductor.
+A Player represents a Holochain user running a Conductor. That conductor will run on the same machine as the Tryorama test orchestrator. Either way, the main concern in configuring a Player is providing configuration and initialization for its underlying Conductor.
 
-# Conductor configuration
+# Conductor setup
 
-Much of the purpose of Tryorama is to provide ways to generate conductor configurations (TODO: we need documentation on conductor configs) that meet the following criteria:
+Much of the purpose of Tryorama is to provide ways to setup conductors for tests, which means generating their boot configuration files, and initializing them to known states (installing hApps) for scenarios.
 
-1. Common configs should be easy to generate
-2. Any conductor config should be possible
+## Goals
+1. Common setups should be easy to generate
+2. Any conductor setups should be possible
 3. Conductors from different scenarios must remain independent and invisible to each other
 
-## Simple config with the `Config` helper
+Setting up a conductor for a test consists of two main parts:
+1. Creating a conductor config and starting it up
+2. Installing hApps into the running conductor
 
-> 1. Common configs should be easy to generate
+## Conductor Configuration
+You don't have to think about conductor configuration (networking, bootstrap server, lair directory etc) if you don't want to by simply using the `Config.gen()` helper:
 
-Let's look a common configuration. Here is an example of how you might set up three Players, all of which share the same conductor config which defines a single DNA instance named "chat" using a DNA file at a specified path -- a reasonable setup for writing scenario tests for a single DNA. It's made really easy with a helper called `Config.gen`.
+``` js
+const config = Config.gen()
+orchestrator.registerScenario('my scenario dnas', async (s: ScenarioApi, t) => {
+  const [alice] = await s.players([config])
+}
+```
+
+## Happ Installation
+
+Tryoroma's provides the `InstallAgentsHapps` abstraction to making it simple to install any combination of hApps and create agents for them with minimal configuration file building naming.  `InstallAgentsHapps` does this as an agents/happ/dna tree just using DNA paths as the leaves of a nested array.
+
+A simple example:
+
+``` js
+const installation: InstallAgentsHapps = [
+  // agent 0 ... ) a unique agent key will be generated that will be shared by any happs, and cells under this
+  [
+    // happ 0
+    [
+      // dna 0
+      path.join(__dirname, 'test.dna.gz')
+    ]
+  ],
+]
+```
+
+When this installation is passed into the player `installAgentsHapps` function, what's returned is an identically structured array of installed happs, where tryorama takes care of generating all the agent Ids, happ Ids and cell nicks, so you don't have to manually do that work in a config file, you can simply destructure the results into variables with semantic names relevant to your tests.  E.g, from the initialization above:
+
+``` js
+  const [[test_happ]] = await alice.installAgentsHapps(initialization)
+```
+where `test_happ` is an `InstalledHapp` object that looks like this:
+
+``` js
+export type InstalledHapp = {
+  hAppId: string,
+  // the agent shared by all the Cell instances in `.cells`
+  agent: AgentPubKey
+  // the instantiated cells, which allow
+  // for actual zome calls
+  cells: Cell[]
+}
+```
+
+### Advanced Usage
 
 ```javascript
-import {Config, Orchestrator} from '@holochain/tryorama'
+// for complete control, i.e. if you need to add properties or a membrane-proof to
+// you can also install a happ using the holochain-conductor-app InstallAppRequest data structure:
+import { InstallAppRequest } from '@holochain/conductor-api'
+import * as msgpack from '@msgpack/msgpack';
 
-const orchestrator = new Orchestrator()
+orchestrator.registerScenario('description of this scenario', async (s, t) => {
+  const config = Config.gen()
+  // Use the Scenario API to create two players, alice and bob (we'll cover this more later)
+  const [alice, bob] = await s.players([config, config])
 
-// Config.gen is a handy shortcut for creating a full-fledged conductor config
-// from as little information as possible
-const commonConfig = Config.gen({
-  // `Config.dna` generates a valid DNA config object, i.e. with fields
-  // "id", "file", "hash", and so on
-  chat: Config.dna('path/to/chat.dna.json')
-})
-
-orchestrator.registerScenario(async (s, t) => {
-  const {alice, bob, carol} = await s.players({
-    alice: commonConfig,
-    bob: commonConfig,
-    carol: commonConfig,
-  })
-})
-```
-
-`Config.gen` also takes an optional second parameter. The first parameter allows you to specify the parts of the config which are concerned with DNA instances, namely "agents", "dnas", "instances", and "interfaces". The second parameter allows you to specific how the rest of the config is generated. `Config` also has other helpers for generating other parts. For instance, to turn off logging, there is an easy way to do it like so:
-
-```typescript
-const commonConfig = Config.gen(
-  {
-    chat: Config.dna('path/to/chat.dna.json')
-  },
-  {
-    logger: Config.logger(false)
+  const req: InstallAppRequest = {
+    app_id: `my_app`,
+    agent_key: await carol.adminWs().generateAgentPubKey(),
+    dnas: [{
+      path: path.join(__dirname, 'my_app.dna.gz'),
+      nick: `my_cell_nick`,
+      properties: Array.from(msgpack.encode({my_property:"override_default_value"})),
+      membrane_proof: Array.from(msgpack.encode({role:"steward", signature:"..."})),
+    }]
   }
-)
-```
-
-`Config.gen` offers a lot of flexibility, which we'll explore more in the next sections.
-
-
-## More fine-grained instance setup with `Config.gen`
-
-> 2. Any conductor config should be possible
-
-`Config.gen` can be used in a slightly more explicit way. The first argument can take an object, as shown, which is a handy shorthand for quickly specifying instances with DNA files. If you need more control, you can define instances in a more fine-grained way using an array:
-
-```typescript
-const dnaConfig = Config.dna('path/to/chat.dna.json', 'chat')
-
-// this
-Config.gen({
-  myInstance: dnaConfig
-  myOtherInstance: dnaConfig
-})
-
-// is equivalent to this
-Config.gen([
-  {
-    id: 'myInstance',
-    agent: {
-      id: 'myInstance',
-      name: name1, // NB: actually generated by Tryorama, it's necessary for agent names to be distinct across all conductors...
-      public_address: 'HcS----------...',
-      keystore_file: 'path/to/keystore',
-    },
-    dna: {
-      id: 'chat',
-      file: 'path/to/chat.dna.json',
-    }
-  },
-  {
-    id: 'myOtherInstance',
-    agent: {
-      id: 'myOtherInstance,
-      name: name2, // NB: actually generated by Tryorama, it's necessary for agent names to be distinct across all conductors...
-      public_address: 'HcS----------...',
-      keystore_file: 'path/to/keystore',
-    },
-    dna: {
-      id: 'chat',
-      file: 'path/to/chat.dna.json',
-    }
-  }
-])
-```
-
-## Advanced setup with *configuration seeds*
-
-> 2. *Any* conductor config should be possible
-
-If you need your conductor to be configured in a really specific way, fear not, Tryorama can handle that. However, you'd better have a good understanding of how Holochain conductor configuration works, as well as what requirements Tryorama has in order to run tests. In the previous example we used `Config.gen` to create configuration with as little hassle as possible. Let's see what's going on under the hood and how we can write a fully customized conductor config. But, let's also remember the third point:
-
-> 3. Conductors from different scenarios must remain independent and invisible to each other
-
-To achieve the independence of conductors, Tryorama ensure that various values are unique. It uses UUIDs during DNA config as well as for Agent IDs to ensure unique values; it ensures that it automatically creates temp directories for file storage when necessary, adding the paths to the config. So how can we let Tryorama handle these concerns while still generating a custom config? The answer is in a key concept:
-
-**Players are configured by giving them *functions* that generate their config**. For instance, when you call `Config.gen`, it's actually creating a function for you like this:
-
-```typescript
-// this
-const config = Config.gen({alice: dnaConfig})
-
-// becomes this
-const config = ({playerName, uuid, configDir, adminInterfacePort}) => {
-  return {
-    persistence_dir: configDir,
-    agents: [/* ... */],
-    dnas: [/* ... */],
-    instances: [/* ... */],
-    interfaces: [/* ... */],
-    network: {/* ... */},
-    // and so on...
-    // basically, a complete Conductor configuration in JSON form
-  }
+  const installedHapp = await carol._installHapp(req)
 })
 ```
-
-Such a function is called a *config seed*, since the function is reusable across all scenarios.
-
-Config seeds take an object as a parameter, with five values:
-
-* `scenarioName`: the name of the current scenario, i.e. `registerScenario(scenarioName, ...)`
-* `playerName`: the name of the player for this conductor, e.g. `"alice"`
-* `uuid`: a UUID which is guaranteed to be the same within a scenario but unique between different scenarios
-* `configDir`: a temp dir created specifically for this conductor
-* `adminInterfacePort`: a free port on the machine which is used for the admin Websocket interface
-* `appInterfacePort`: a free port on the machine which is used to make zome calls
-
-### What Tryorama expects from generated configs
-
-Under the hood, Tryorama generates unique and valid values for these parameters and generates unique configurations by injecting these values into the seed functions. If you are writing your own config seed, you can use or ignore these values as needed, but you must be careful to set things up in a way that Tryorama can work with to drive the test scenarios:
-
-* There must be an admin interface running over WebSockets at `adminInterfacePort` which includes all instances that are part of this test
-* *All* agents within a scenario must have a unique name (even across different conductors!)
-* You must incorporate the UUID or some other source of uniqueness into the DNA config's `uuid` field, to ensure that conductors in different tests do not attempt to connect to each other on the same network
-
-### Using seed functions in `Config.gen`
-
-Since configuring a full config that properly uses these injected values is really tedious and error-prone, especially for the part concerning agents and instances, `Config.gen` also accepts functions using the usual seed arguments. So if you need to set up your dpki config using some of these values, you could do so:
-
-```js
-Config.gen(
-  {alice: dnaConfig},
-  ({playerName, uuid}) => {
-    return {
-      dpki: {
-        instance_id: 'my-instance',
-        init_params: JSON.stringify({
-          someValueThatNeedsToBeUnique: uuid,
-          someValueThatWantsToBeThePlayerName: playerName,
-        })
-      }
-    }
-  }
-)
-```
-
-You can also use a seed function in the first parameter of `Config.gen`, as long as the function returns a valid value, e.g.:
-
-```js
-Config.gen(
-  ({playerName}) => ({
-    [`${playerName}-1`]: dnaConfig,
-    [`${playerName}-2`]: dnaConfig,
-  })
-)
-```
-
-# Middlewares and Modes
-
-Tryorama includes a very flexible Middleware system. A tryorama middleware is a complicated little function which modifies the Scenario API (`s`) for each scenario. Middlewares can be composed together, to add layers of functionality.
-
-For most common use cases, middleware is not necessary. If no middleware is specified, a tryorama Orchestrator is configured to use the combination of two middlewares:
-
-- `tapeExecutor`, which integrates scenarios with the `tape` test harness and injects an extra `t` argument into scenario functions
-- `localOnly`, which specifies that players are to be run on the local machine. This can be swapped out with other middleware to cause players to run on remote machines! (See the section on TryCP for more on this.)
-
-i.e., the following two are equivalent:
-
-```js
-const {Orchestrator, tapeExecutor, localOnly, combine} = require('@holochain/tryorama')
-
-// this (the default):
-new Orchestrator()
-
-// is equivalent to this:
-new Orchestrator({
-  middleware: combine(
-    tapeExecutor(require('tape')),
-    localOnly
-  )
-})
-```
-
-If you want to use custom middleware to add new layers of functionality, you will have to explicitly include these two middlewares in your `combine` chain to retain the default functionality.
-
-Writing middleware is a bit complicated, but you can see a range of middleware specimens and combinators in [src/middlewares.ts](src/middlewares.ts), all of which are available for import.
-
-# Remote Players with TryCP
-
-Tryorama natively supports running conductors on remote machines. As mentioned in the section on Middlewares, by default the Orchestrator includes `localOnly` middleware, which specifies that all players should run on a local machine. It does this by actually modifying the config passed into `s.players`. All player config examples shown in this README up until now are actually not valid unless the `localOnly` or other middleware is present to transform it into the proper shape.
-
-What `localOnly` actually does is to transform this:
-
-```js
-const config = Config.gen({instance: dna})
-s.players({
-  alice: config,
-  bob: config,
-})
-```
-
-into this:
-
-```js
-s.players({
-  local: {
-    alice: config,
-    bob: config,
-  }
-})
-```
-
-Without any middlewares, `s.players` actually expects the config passed to it to specify the machine that this player should run upon. The above code is showing that two conductors should be spawned on the `"local"` machine, which is a special-case string meaning that a conductor process will be spawned on this machine.
-
-To specify a remote machine, instead of `"local"`, you use a WebSocket URL pointing to a machine running a [TryCP server](https://github.com/holochain/holochain-rust/tree/develop/crates/trycp_server). (TryCP, the Tryorama Control Protocol, is a simple protocol which allows a client, like an Orchestrator, to ask a server, like a remote machine, to spin up and configure conductors on its behalf.) So, if you have two machines running TryCP servers, and you're *not* using any middleware, you can do the following to run each player on a separate machine:
-
-```js
-s.players({
-  "ws://location.of.machine.org:1234": {
-    alice: config,
-  },
-  "ws://location.of.other.machine.org:9876": {
-    bob: config,
-  }
-})
-```
-
-There is also a middleware which can be swapped out for `localConfig` called `machinePerPlayer`, which will perform this automatically, given player config that is not wrapped up with machine info. This allows you to write player config without regard for the machine name, and then by swapping the middleware, you can quickly switch between local and remote testing without altering your scenario code.
-
-In the above example, alice and bob will be on two different machines. The Holochain core team is using this functionality to stress-test networking capabilities with hundreds of remote machines orchestrated by Tryorama.
 
 # License
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Copyright (C) 2019, Holochain Foundation
+Copyright (C) 2019-2020, Holochain Foundation
 
 Licensed under the Apache License, Version 2.0 (the "License");
 you may not use this file except in compliance with the License.

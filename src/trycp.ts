@@ -1,5 +1,5 @@
 import * as _ from 'lodash'
-import { connect } from '@holochain/hc-web-client'
+// import connect from ... @holochain/conductor-api?
 import logger from './logger'
 import * as T from './types'
 const base64 = require('base-64')
@@ -16,8 +16,10 @@ export type TrycpClient = {
   closeSession: () => Promise<void>,
 }
 
-export const trycpSession = async (url): Promise<TrycpClient> => {
-  const { call, close } = await connect({ url })
+export const trycpSession = async (url: string): Promise<TrycpClient> => {
+  // const { call, close } = await connect({ url })
+  // TODO: fix me and redefine
+  let call, close
 
   const makeCall = (method) => async (a) => {
     logger.debug(`trycp client request to ${url}: ${method} => ${JSON.stringify(a, null, 2)}`)

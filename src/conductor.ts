@@ -1,20 +1,20 @@
 const colors = require('colors/safe')
+import uuidGen from 'uuid/v4'
 
-import { KillFn, ConfigSeedArgs } from "./types";
+import { KillFn } from "./types";
 import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
-import { connect as legacyConnect } from '@holochain/hc-web-client'
-import { AdminWebsocket, AppWebsocket } from '@holochain/conductor-api'
 import * as T from './types'
-import { fakeCapSecret } from "./common";
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, DnaProperties } from '@holochain/conductor-api';
+import { Cell } from "./cell";
+import { Player } from './player';
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
 const WS_CLOSE_DELAY_FUDGE = 500
 
 export type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
-export type CallZomeFunc = (instanceId: string, zomeName: string, fnName: string, params: Record<string, any>) => Promise<any>
 
 /**
  * Representation of a running Conductor instance.
@@ -31,14 +31,15 @@ export class Conductor {
   adminClient: AdminWebsocket | null
   appClient: AppWebsocket | null
 
-  _adminWsUrl: string
-  _appWsUrl: string
+  _player: Player
+  _adminInterfacePort: number
+  _machineHost: string
   _isInitialized: boolean
   _rawConfig: T.RawConductorConfig
   _wsClosePromise: Promise<void>
   _onActivity: () => void
 
-  constructor({ name, kill, onSignal, onActivity, appWsUrl, adminWsUrl, rawConfig }) {
+  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, rawConfig }) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -52,16 +53,13 @@ export class Conductor {
 
     this.adminClient = null
     this.appClient = null
-    this._adminWsUrl = adminWsUrl
-    this._appWsUrl = appWsUrl
+    this._player = player
+    this._machineHost = machineHost
+    this._adminInterfacePort = adminPort
     this._isInitialized = false
     this._rawConfig = rawConfig
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
-  }
-
-  callZome: CallZomeFunc = (...a) => {
-    throw new Error("Attempting to call zome function before conductor was initialized")
   }
 
   initialize = async () => {
@@ -71,46 +69,60 @@ export class Conductor {
 
   awaitClosed = () => this._wsClosePromise
 
+  // this function will auto-generate an `app_id` and
+  // `dna.nick` for you, to allow simplicity
+  installHapp = async (agentHapp: T.InstallHapp, agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
+    if (!agentPubKey) {
+      agentPubKey = await this.adminClient!.generateAgentPubKey()
+    }
+    const dnaPaths: T.DnaPath[] = agentHapp
+    const installAppReq: InstallAppRequest = {
+      app_id: `app-${uuidGen()}`,
+      agent_key: agentPubKey,
+      dnas: dnaPaths.map((dnaPath, index) => ({
+        path: dnaPath,
+        nick: `${index}${dnaPath}-${uuidGen()}`
+      }))
+    }
+
+    return await this._installHapp(installAppReq)
+  }
+
+  // install a hApp using the InstallAppRequest struct from conductor-admin-api
+  // you must create your own app_id and dnas list, this is usefull also if you
+  // need to pass in properties or membrane-proof
+  _installHapp = async (installAppReq: InstallAppRequest): Promise<T.InstalledHapp> => {
+    const {cell_data} = await this.adminClient!.installApp(installAppReq)
+    // must be activated to be callable
+    await this.adminClient!.activateApp({ app_id: installAppReq.app_id })
+
+    // prepare the result, and create Cell instances
+    const installedAgentHapp: T.InstalledHapp = {
+      hAppId:  installAppReq.app_id,
+      agent: installAppReq.agent_key,
+      // construct Cell instances which are the most useful class to the client
+      cells: cell_data.map(installedCell => new Cell({
+        // installedCell[0] is the CellId, installedCell[1] is the CellNick
+        cellId: installedCell[0],
+        cellNick: installedCell[1],
+        player: this._player
+      }))
+    }
+    return installedAgentHapp
+  }
+
   _connectInterfaces = async () => {
     this._onActivity()
-
-    this.adminClient = await AdminWebsocket.connect(this._adminWsUrl)
-    this.logger.debug(`connectInterfaces :: connected admin interface at ${this._adminWsUrl}`)
-
-    this.appClient = await AppWebsocket.connect(this._appWsUrl, (signal) => {
+    const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
+    this.adminClient = await AdminWebsocket.connect(adminWsUrl)
+    this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+    // 0 in this case means use any open port
+    const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
+    const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
+    this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {
       this._onActivity()
       console.info("got signal, doing nothing with it: %o", signal)
     })
-    this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
-
-    // FIXME
-    this.appClient = await AppWebsocket.connect(this._appWsUrl, signal => {
-      // TODO: do something meaningful with signals
-      this.logger.info("received app signal: %o", signal)
-    })
-    this.logger.debug(`connectInterfaces :: connected app interface at ${this._appWsUrl}`)
-
-    this.callZome = (instanceId, zomeName, fnName, payload) => {
-      this._onActivity()
-
-      const cellId: T.CellId = cellIdFromInstanceId(this._rawConfig, instanceId)
-
-      return this.appClient!.callZome({
-        cell_id: cellId as any,
-        zome_name: zomeName,
-        cap: fakeCapSecret(),
-        fn_name: fnName,
-        payload: payload,
-        provenance: 'TODO' as any
-      })
-    }
+    this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
   }
-}
-
-
-export const cellIdFromInstanceId = (config: T.RawConductorConfig, instanceId: string): T.CellId => {
-  const instance = config.instances.find(i => i.id === instanceId)!
-  const dnaHash = config.dnas.find(d => d.id === instance.dna)!.hash!
-  const agentKey = config.agents.find(a => a.id === instance.agent)!.public_address
-  return [dnaHash, agentKey]
 }
