@@ -135,7 +135,7 @@ const network = {
 Config.gen({network})
 ```
 #### Exampe of use for TransportConfigType `Quic`
-```javascript=
+```javascript
 const network = {
   transport_pool: [{
     type: TransportConfigType.Quic,
