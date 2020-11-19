@@ -146,7 +146,7 @@ Config.gen({network})
 ```
 
 #### Exampe of use for TransportConfigType `Mem`
-```javascript=
+```javascript
 const network = {
   transport_pool: [{
     type: TransportConfigType.Mem,
