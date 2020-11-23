@@ -4,7 +4,7 @@
     "type": "git",
     "url": "https://github.com/holochain/tryorama"
   },
-  "version": "0.4.0-dev.0",
+  "version": "0.4.0-dev.1",
   "description": "test framework for holochain hApps",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -25,7 +25,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@holochain/conductor-api": "0.0.1-dev.11",
+    "@holochain/conductor-api": "0.0.1-dev.12",
     "@holochain/hachiko": "^0.5.2",
     "@iarna/toml": "^2.2.5",
     "yaml": "^1.10.0",

@@ -69,7 +69,7 @@ export class Conductor {
 
   awaitClosed = () => this._wsClosePromise
 
-  // this function will auto-generate an `app_id` and
+  // this function will auto-generate an `installed_app_id` and
   // `dna.nick` for you, to allow simplicity
   installHapp = async (agentHapp: T.InstallHapp, agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
     if (!agentPubKey) {
@@ -77,7 +77,7 @@ export class Conductor {
     }
     const dnaPaths: T.DnaPath[] = agentHapp
     const installAppReq: InstallAppRequest = {
-      app_id: `app-${uuidGen()}`,
+      installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
       dnas: dnaPaths.map((dnaPath, index) => ({
         path: dnaPath,
@@ -94,11 +94,11 @@ export class Conductor {
   _installHapp = async (installAppReq: InstallAppRequest): Promise<T.InstalledHapp> => {
     const {cell_data} = await this.adminClient!.installApp(installAppReq)
     // must be activated to be callable
-    await this.adminClient!.activateApp({ app_id: installAppReq.app_id })
+    await this.adminClient!.activateApp({ installed_app_id: installAppReq.installed_app_id })
 
     // prepare the result, and create Cell instances
     const installedAgentHapp: T.InstalledHapp = {
-      hAppId:  installAppReq.app_id,
+      hAppId:  installAppReq.installed_app_id,
       agent: installAppReq.agent_key,
       // construct Cell instances which are the most useful class to the client
       cells: cell_data.map(installedCell => new Cell({
