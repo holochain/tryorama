@@ -281,7 +281,7 @@ orchestrator.registerScenario('description of this scenario', async (s, t) => {
     dnas: [{
       path: path.join(__dirname, 'my_app.dna.gz'),
       nick: `my_cell_nick`,
-      properties: Array.from(msgpack.encode({my_property:"override_default_value"})),
+      properties: {my_property:"override_default_value"},
       membrane_proof: Array.from(msgpack.encode({role:"steward", signature:"..."})),
     }]
   }
