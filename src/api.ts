@@ -93,6 +93,25 @@ export class ScenarioApi {
     return players
   }
 
+  shareAllNodes = async (players: Array<Player>)  => {
+    const agentInfos = await Promise.all(players.map(
+      player => player.adminWs().requestAgentInfo({cell_id: null})
+    ))
+    var player_nodes = {}
+    for (const player of players) {
+      player_nodes[player.name] = await player.adminWs().requestAgentInfo({cell_id: null})
+    }
+    for (const player of players) {
+      for (const name in player_nodes) {
+        if (player.name != name) {
+          await player.adminWs().addAgentInfo({ agent_infos: player_nodes[name] })
+        }
+      }
+    }
+ //   return x
+//    return new Promise(() => {return x})
+  }
+
   // TODO: re-implement a way to create a trycp player
   _createTrycpPlayerBuilder = async (machineEndpoint: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)

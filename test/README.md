@@ -1,4 +1,4 @@
-# Tests for Holochain
+# Running the tryoram tests
 
 Prerequisites:
 
@@ -10,13 +10,13 @@ You must have a `holochain` binary on the path:
 
 ### Test DNA
 
-The test DNA included is from holochain's `crates/test_utils/wasm` and was generated like this:
+The test DNA included in e2e is from holochain's `crates/test_utils/wasm` and was generated like this:
 
 ``` sh
-cd /path/to/holochain-repo/crates/test_utils/wasm/wasm_works
-cargo build -p test_wasm_foo --release --target wasm32-unknown-unknown --target-dir ./target
-cp test_wasm_foo.wasm /path/to/tryorama-repo/test/rsm/test.dna.workdir
-cd /path/to/tryorama-repo/test/rsm
+cd /path/to/holochain-repo/crates/test_utils/wasm/wasm_workspace
+cargo build -p test_wasm_link --release --target wasm32-unknown-unknown --target-dir ./target
+cp target/wasm 32-unknown-unknown/release/test_wasm_link.wasm  /path/to/tryorama-repo/test/e2e/link.dna.workdir/
+cd /path/to/tryorama-repo/test/e2e
 dna-util -c test.dna.workdir
 ```
 

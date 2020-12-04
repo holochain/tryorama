@@ -4,7 +4,6 @@ import { runSeries, compose, /*singleConductor, machinePerPlayer,*/ localOnly } 
 // import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
 import { testConfig } from '../common';
 import path from 'path'
-
 process.on('unhandledRejection', error => {
   console.error('****************************');
   console.error('got unhandledRejection:', error);
