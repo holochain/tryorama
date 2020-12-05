@@ -30,6 +30,7 @@ When updating tryorama against a new version of holochain please replace the old
 ```
 ./README.md
  test/e2e/fixture/zomes/link/Cargo.toml
+ci_scripts/install-holochain.sh
 ```
 
 Also, remember that [holochain-conductor-api](https://github.com/holochain/holochain-conductor-api) must be compatible with which-ever version of Holochain being used.
