@@ -49,31 +49,33 @@ module.exports = (testOrchestrator, testConfig) => {
     orchestrator.registerScenario('other agents join after an initial one', async s => {
       const [ alice ] = await s.players([conductorConfig])
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
-      //      const linkResult = await alice_happ.cells[0].call('link', 'create_link')
+      var aliceLinks = await alice_happ.cells[0].call('link', 'get_links')
+      t.equal(aliceLinks.length, 0)
+      const linkResult = await alice_happ.cells[0].call('link', 'create_link')
+      aliceLinks = await alice_happ.cells[0].call('link', 'get_links')
+      t.equal(aliceLinks.length, 1)
 
       // bob and carol join later
       const [bob, carol] = await s.players([conductorConfig, conductorConfig])
       const [[bob_happ]] = await bob.installAgentsHapps(installApps)
       const [[carol_happ]] = await carol.installAgentsHapps(installApps)
+
+      // now use admin node injection so all the conductors know about each-other
       const r = await s.shareAllNodes([alice, bob, carol])
-      //      t.fail(JSON.stringify(r))
+      // allow 1 second for gossiping
+      await delay(1000)
 
-
-      const linkResult = await alice_happ.cells[0].call('link', 'create_link')
-      const aliceLinks = await alice_happ.cells[0].call('link', 'get_links')
-      await delay(5000)
-
+      // confirm that bob and carol have the links
       const bobLinks = await bob_happ.cells[0].call('link', 'get_links')
       const carolLinks = await carol_happ.cells[0].call('link', 'get_links')
-//      t.fail(JSON.stringify(aliceLinks))
-      t.equal(aliceLinks.length, 1)
+      //t.fail(JSON.stringify(carolLinks))
       t.equal(bobLinks.length, 1)
       t.equal(carolLinks.length, 1)
     })
 
     const stats = await orchestrator.run()
 
-    t.equal(stats.successes, 3)
+    t.equal(stats.successes, 1)
     t.end()
   })
 
