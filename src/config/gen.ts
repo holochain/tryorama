@@ -2,8 +2,14 @@ import * as T from '../types'
 import _ from 'lodash'
 import path from 'path'
 
+// default networking is for local Quic (no bootstrap) so that
+// shareAllNodes works out of the box
 const defaultCommonConfig = {
-  // what goes in here?
+  network: {
+    transport_pool: [{
+      type: T.TransportConfigType.Quic,
+    }],
+  }
 }
 
 export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
