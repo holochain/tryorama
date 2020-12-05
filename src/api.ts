@@ -94,9 +94,6 @@ export class ScenarioApi {
   }
 
   shareAllNodes = async (players: Array<Player>)  => {
-    const agentInfos = await Promise.all(players.map(
-      player => player.adminWs().requestAgentInfo({cell_id: null})
-    ))
     let player_nodes = {}
     for (const player of players) {
       player_nodes[player.name] = await player.adminWs().requestAgentInfo({cell_id: null})
