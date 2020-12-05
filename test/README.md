@@ -10,22 +10,26 @@ You must have a `holochain` binary on the path:
 
 ### Test DNA
 
-The test DNA included in e2e is from holochain's `crates/test_utils/wasm` and was generated like this:
+There is a test dna that is included as a fixture in the repo.  This only needs to be recompiled if the version of holochain/hdk tryorama is being tested against, changes.  Assuming you already have the `holochain` and `dna-util` binary installed, you can simply run:
 
 ``` sh
-cd /path/to/holochain-repo/crates/test_utils/wasm/wasm_workspace
-cargo build -p test_wasm_link --release --target wasm32-unknown-unknown --target-dir ./target
-cp target/wasm 32-unknown-unknown/release/test_wasm_link.wasm  /path/to/tryorama-repo/test/e2e/link.dna.workdir/
-cd /path/to/tryorama-repo/test/e2e
-dna-util -c test.dna.workdir
+ci_scripts/run-test.sh
 ```
 
-## Running tests
+which will both compile and assemble the DNA as well as run the tests.  Otherwise you can just do the usual:
 
-When prerequisites are met, be sure to install dependencies:
+``` sh
+npm install
+npm test
+```
 
-    npm install
+### Note to tryorama devs
 
-Then, you can fire off the tests (make sure you are in this directory):
+When updating tryorama against a new version of holochain please replace the old holochain sha in all of these places:
 
-    npm test
+```
+./README.md
+ test/e2e/fixture/zomes/link/Cargo.toml
+```
+
+Also, remember that [holochain-conductor-api](https://github.com/holochain/holochain-conductor-api) must be compatible with which-ever version of Holochain being used.
