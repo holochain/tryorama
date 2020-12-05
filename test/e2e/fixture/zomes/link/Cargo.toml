@@ -1,0 +1,14 @@
+[package]
+name = "test_wasm_link"
+version = "0.0.1"
+authors = [ "thedavidmeister", "thedavidmeister@gmail.com" ]
+edition = "2018"
+
+[lib]
+name = "test_wasm_link"
+crate-type = [ "cdylib", "rlib" ]
+
+[dependencies]
+hdk3 = { git = "https://github.com/holochain/holochain", rev = "37875db509b27952eba6cc965eeefc92dfd93370", package = "hdk3" }
+serde = "1.0.104"
+test_wasm_common = { git = "https://github.com/holochain/holochain", rev = "37875db509b27952eba6cc965eeefc92dfd93370", package = "test_wasm_common" }
