@@ -98,6 +98,10 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   // or a happ with a previously generated key
   const carol_test_happ_with_bobs_test_key = await carol.installHapp([dnaTest], bob_blog_happ.agent)
 
+  // assuming default network configuration, use `shareAllNodes` helper
+  // to make sure that all conductors know about eachother so they can communicate
+  await s.shareAllNodes([alice, bob, carol])
+
   // You can also shutdown conductors:
   await alice.shutdown()
   // ...and re-start the same conductor you just stopped
@@ -116,9 +120,13 @@ const report = await orchestrator.run()
 console.log(report)
 ```
 
-### How to set networking:
+### Networking and tests:
 
-To set networking add it as a commonConfig in gen()
+By default tryorama assumes un-bootstrapped `Quic` networking.
+
+For most cases where you are testing out single-conductor tests (including multi-agent on one conductor) this should work out of the box.  If you are doing multi-conductor tests, you will need to handle how conductors discover nodes.  For testing the simplest case is to use node-injection provided by the conductor-api to do this.  Tryorama makes this easy with the `shareAllNodes` support method of the `ScenarioApi` that takes an array of players and injects all of the player nodes into the peer table of all the other nodes, as shown in the examples above. For other network configurations, see the examples below.
+
+Custom networking settings are passed as a `commonConfig` in `Config.gen()`
 
 #### Exampe of use for  TransportConfigType `Proxy`
 ```javascript
@@ -136,7 +144,7 @@ const network = {
 }
 Config.gen({network})
 ```
-#### Exampe of use for TransportConfigType `Quic`
+#### Exampe of use for TransportConfigType `Quic` with a bootstrap server
 ```javascript
 const network = {
   transport_pool: [{
@@ -156,6 +164,7 @@ const network = {
 }
 Config.gen({network})
 ```
+Note that in this configuration, if you are using multiple conductors in your tests, they will never be able to see eachother!
 
 # Conceptual overview
 
