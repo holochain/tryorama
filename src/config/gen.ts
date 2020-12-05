@@ -16,6 +16,8 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
   args: T.ConfigSeedArgs
 ): T.RawConductorConfig => {
   const { configDir, adminInterfacePort, uuid } = args
+  
+  // don't put any keys on this object that you want to fall back to defaults
   const specific: T.RawConductorConfig = {
     environment_path: configDir,
     admin_interfaces: [
@@ -26,7 +28,7 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
         },
       },
     ],
-    network: commonConfig.network
+    ...(commonConfig.network ? { network: commonConfig.network } : {})
   }
 
   // apply from left to right, in order of precedence
