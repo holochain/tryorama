@@ -29,7 +29,10 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
     network: commonConfig.network
   }
 
-  return _.merge({}, specific, defaultCommonConfig)
+  // apply from left to right, in order of precedence
+  // so this will override defaults with specifically set values
+  // https://lodash.com/docs/4.17.15#merge
+  return _.merge({}, defaultCommonConfig, specific)
 }
 
 export const getConfigPath = (configDir: string) =>
