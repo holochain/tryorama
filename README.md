@@ -164,7 +164,7 @@ const network = {
 }
 Config.gen({network})
 ```
-Note that in this configuration, if you are using multiple conductors in your tests, they will never be able to see eachother!
+Note that in this configuration, if you are using multiple conductors in your tests, they will never be able to see each other!
 
 # Conceptual overview
 
