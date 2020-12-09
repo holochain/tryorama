@@ -82,10 +82,10 @@ export class Conductor {
       dnas: dnaPaths.map((dnaPath, index) => ({
         path: dnaPath,
         nick: `${index}${dnaPath}-${uuidGen()}`,
-        uuid: this._player.scenarioUUID,
+        properties: {uuid: this._player.scenarioUUID},
       }))
     }
-
+    console.log("INSTALLING: ", installAppReq)
     return await this._installHapp(installAppReq)
   }
 
