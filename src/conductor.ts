@@ -81,7 +81,8 @@ export class Conductor {
       agent_key: agentPubKey,
       dnas: dnaPaths.map((dnaPath, index) => ({
         path: dnaPath,
-        nick: `${index}${dnaPath}-${uuidGen()}`
+        nick: `${index}${dnaPath}-${uuidGen()}`,
+        uuid: this._player.scenarioUUID,
       }))
     }
 

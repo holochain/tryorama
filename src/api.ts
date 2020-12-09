@@ -124,6 +124,7 @@ export class ScenarioApi {
       await trycpClient.player(playerName, newConfigJson)
       logger.debug('api.players: player config committed for %s', playerName)
       return new Player({
+        scenarioUUID: this._uuid,
         name: playerName,
         config: configJson,
         configDir,
@@ -144,7 +145,8 @@ export class ScenarioApi {
       const { adminInterfacePort, configDir } = partialConfigSeedArgs
       await fs.writeFile(getConfigPath(configDir), YAML.stringify(configJson))
       logger.debug('api.players: player config committed for %s', playerName)
-      return new Player({
+        return new Player({
+        scenarioUUID: this._uuid,
         name: playerName,
         config: configJson,
         configDir,

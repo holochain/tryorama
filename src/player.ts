@@ -12,6 +12,7 @@ import env from './env';
 const fs = require('fs').promises
 
 type ConstructorArgs = {
+  scenarioUUID: string,
   name: string,
   config: RawConductorConfig,
   configDir: string,
@@ -40,13 +41,14 @@ export class Player {
   onLeave: () => void
   onSignal: ({ instanceId: string, signal: Signal }) => void
   onActivity: () => void
+  scenarioUUID: string
 
   _conductor: Conductor | null
   _configDir: string
   _adminInterfacePort: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ scenarioUUID, name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
@@ -54,6 +56,7 @@ export class Player {
     this.onSignal = onSignal
     this.onActivity = onActivity
     this.config = config
+    this.scenarioUUID = scenarioUUID,
 
     this._conductor = null
     this._configDir = configDir
