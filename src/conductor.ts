@@ -85,7 +85,6 @@ export class Conductor {
         properties: {uuid: this._player.scenarioUUID},
       }))
     }
-    console.log("INSTALLING: ", installAppReq)
     return await this._installHapp(installAppReq)
   }
 
