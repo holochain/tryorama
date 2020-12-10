@@ -93,6 +93,22 @@ export class ScenarioApi {
     return players
   }
 
+  shareAllNodes = async (players: Array<Player>)  => {
+    let player_nodes = {}
+    for (const player of players) {
+      player_nodes[player.name] = await player.adminWs().requestAgentInfo({cell_id: null})
+    }
+    for (const player of players) {
+      for (const name in player_nodes) {
+        if (player.name != name) {
+          await player.adminWs().addAgentInfo({ agent_infos: player_nodes[name] })
+        }
+      }
+    }
+ //   return x
+//    return new Promise(() => {return x})
+  }
+
   // TODO: re-implement a way to create a trycp player
   _createTrycpPlayerBuilder = async (machineEndpoint: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
@@ -108,6 +124,7 @@ export class ScenarioApi {
       await trycpClient.player(playerName, newConfigJson)
       logger.debug('api.players: player config committed for %s', playerName)
       return new Player({
+        scenarioUUID: this._uuid,
         name: playerName,
         config: configJson,
         configDir,
@@ -128,7 +145,8 @@ export class ScenarioApi {
       const { adminInterfacePort, configDir } = partialConfigSeedArgs
       await fs.writeFile(getConfigPath(configDir), YAML.stringify(configJson))
       logger.debug('api.players: player config committed for %s', playerName)
-      return new Player({
+        return new Player({
+        scenarioUUID: this._uuid,
         name: playerName,
         config: configJson,
         configDir,
