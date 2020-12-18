@@ -17,7 +17,7 @@ type ConstructorArgs = {
   config: RawConductorConfig,
   configDir: string,
   adminInterfacePort: number,
-  onSignal: ({ instanceId: string, signal: Signal }) => void,
+  onSignal: (Signal) => void,
   onJoin: () => void,
   onLeave: () => void,
   onActivity: () => void,
@@ -39,7 +39,7 @@ export class Player {
   config: RawConductorConfig
   onJoin: () => void
   onLeave: () => void
-  onSignal: ({ instanceId: string, signal: Signal }) => void
+  onSignal: (Signal) => void
   onActivity: () => void
   scenarioUUID: string
 
@@ -156,6 +156,13 @@ export class Player {
   _installHapp = async (happ: InstallAppRequest): Promise<InstalledHapp> => {
     this._conductorGuard(`Player._installHapp(${JSON.stringify(happ)})`)
     return this._conductor!._installHapp(happ)
+  }
+
+  setSignalHandler = (handler) => {
+    this.onSignal = handler
+    if (this._conductor) {
+      this._conductor.onSignal = handler
+    }
   }
 
   _conductorGuard = (context) => {

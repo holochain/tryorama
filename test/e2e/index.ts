@@ -21,3 +21,4 @@ const localOrchestrator = (extra = {}) => new Orchestrator({
 require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
 // require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 require('./test-dynamic-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
+require('./test-signal')(localOrchestrator, () => testConfig(dnaLocationLocal))

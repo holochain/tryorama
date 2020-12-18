@@ -120,6 +120,22 @@ const report = await orchestrator.run()
 console.log(report)
 ```
 
+### Signals:
+You can add signal handling to your tryorama tests by calling `setSignalHandler` on a player.  Here is an example from tryorama's own test suite with a zome that emits a signal with value it's called:
+
+``` javascript
+        orchestrator.registerScenario('loopback signal zome call', async (s: ScenarioApi) => {
+            const sentPayload = {value: "foo"};
+            const [alice] = await s.players([conductorConfig])
+            alice.setSignalHandler((signal) => {
+                console.log("Received Signal:",signal)
+                t.deepEqual(signal.data.payload, sentPayload)
+            })
+            const [[alice_happ]] = await alice.installAgentsHapps(installApps)
+            await alice_happ.cells[0].call('test', 'signal_loopback', sentPayload);
+        })
+```
+
 ### Networking and tests:
 
 By default tryorama assumes un-bootstrapped `Quic` networking.

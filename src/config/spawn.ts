@@ -69,7 +69,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
         handle.kill(...args)
         return killPromise
       },
-      onSignal: player.onSignal.bind(player),
+      onSignal: player.onSignal,//player.onSignal.bind(player),
       onActivity: player.onActivity,
       machineHost: `localhost`,
       adminPort: player._adminInterfacePort,
