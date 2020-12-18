@@ -10,7 +10,7 @@ process.on('unhandledRejection', error => {
   console.error('****************************');
 });
 
-const dnaLocationLocal = path.join(__dirname, 'link.dna.gz')
+const dnaLocationLocal = path.join(__dirname, 'test.dna.gz')
 
 const localOrchestrator = (extra = {}) => new Orchestrator({
   middleware: compose(runSeries(), localOnly),
