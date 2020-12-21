@@ -25,7 +25,7 @@ export type CallAdminFunc = (method: string, params: Record<string, any>) => Pro
 export class Conductor {
 
   name: string
-  onSignal: ({ instanceId: string, signal: Signal }) => void
+  onSignal: (Signal) => void
   logger: any
   kill: KillFn
   adminClient: AdminWebsocket | null
@@ -120,8 +120,8 @@ export class Conductor {
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
     const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
     this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {
-      this._onActivity()
-      console.info("got signal, doing nothing with it: %o", signal)
+      this._onActivity();
+      this.onSignal(signal);
     })
     this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
   }

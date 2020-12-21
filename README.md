@@ -9,7 +9,7 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 
 Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
-Note: this version of tryorama is tested against holochain rev cf4e72416e5afbf29b86d66a3d47ab2f9f6a65d2.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
+Note: this version of tryorama is tested against holochain rev 60a906212c17ee067b31511e6b2957746d86297b.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
 
 ```bash
 npm install @holochain/tryorama
@@ -118,6 +118,22 @@ const report = await orchestrator.run()
 
 // Note: by default, there will be no report
 console.log(report)
+```
+
+### Signals:
+You can add signal handling to your tryorama tests by calling `setSignalHandler` on a player.  Here is an example from tryorama's own test suite with a zome that emits a signal with value it's called:
+
+``` javascript
+        orchestrator.registerScenario('loopback signal zome call', async (s: ScenarioApi) => {
+            const sentPayload = {value: "foo"};
+            const [alice] = await s.players([conductorConfig])
+            alice.setSignalHandler((signal) => {
+                console.log("Received Signal:",signal)
+                t.deepEqual(signal.data.payload, sentPayload)
+            })
+            const [[alice_happ]] = await alice.installAgentsHapps(installApps)
+            await alice_happ.cells[0].call('test', 'signal_loopback', sentPayload);
+        })
 ```
 
 ### Networking and tests:

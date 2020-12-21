@@ -17,11 +17,11 @@ module.exports = (testOrchestrator, testConfig) => {
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
       const [link_cell] = alice_happ.cells
       await t.doesNotReject(
-        link_cell.call('link', 'create_link')
+        link_cell.call('test', 'create_link')
       )
       await alice.shutdown()
       await t.rejects(
-        link_cell.call('link', 'create_link')
+        link_cell.call('test', 'create_link')
         /* no conductor is running.*/
       )
     })
@@ -32,7 +32,7 @@ module.exports = (testOrchestrator, testConfig) => {
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
       await alice.shutdown()
       await alice.startup()
-      const agentAddress = await alice_happ.cells[0].call('link', 'create_link')
+      const agentAddress = await alice_happ.cells[0].call('test', 'create_link')
       t.equal(agentAddress.length, 39)
     })
 
@@ -49,10 +49,10 @@ module.exports = (testOrchestrator, testConfig) => {
     orchestrator.registerScenario('other agents join after an initial one', async s => {
       const [ alice ] = await s.players([conductorConfig])
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
-      var aliceLinks = await alice_happ.cells[0].call('link', 'get_links')
+      var aliceLinks = await alice_happ.cells[0].call('test', 'get_links')
       t.equal(aliceLinks.length, 0)
-      const linkResult = await alice_happ.cells[0].call('link', 'create_link')
-      aliceLinks = await alice_happ.cells[0].call('link', 'get_links')
+      const linkResult = await alice_happ.cells[0].call('test', 'create_link')
+      aliceLinks = await alice_happ.cells[0].call('test', 'get_links')
       t.equal(aliceLinks.length, 1)
 
       // bob and carol join later
@@ -66,8 +66,8 @@ module.exports = (testOrchestrator, testConfig) => {
       await delay(1000)
 
       // confirm that bob and carol have the links
-      const bobLinks = await bob_happ.cells[0].call('link', 'get_links')
-      const carolLinks = await carol_happ.cells[0].call('link', 'get_links')
+      const bobLinks = await bob_happ.cells[0].call('test', 'get_links')
+      const carolLinks = await carol_happ.cells[0].call('test', 'get_links')
       //t.fail(JSON.stringify(carolLinks))
       t.equal(bobLinks.length, 1)
       t.equal(carolLinks.length, 1)

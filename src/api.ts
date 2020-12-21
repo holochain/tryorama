@@ -141,21 +141,22 @@ export class ScenarioApi {
   _createLocalPlayerBuilder = async (playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     return async () => {
       const partialConfigSeedArgs = await localConfigSeedArgs()
-      const configJson = this._generateConfigFromSeed(partialConfigSeedArgs, playerName, configSeed)
+      const configYaml = this._generateConfigFromSeed(partialConfigSeedArgs, playerName, configSeed)
       const { adminInterfacePort, configDir } = partialConfigSeedArgs
-      await fs.writeFile(getConfigPath(configDir), YAML.stringify(configJson))
+      await fs.writeFile(getConfigPath(configDir), YAML.stringify(configYaml))
+
       logger.debug('api.players: player config committed for %s', playerName)
         return new Player({
-        scenarioUUID: this._uuid,
-        name: playerName,
-        config: configJson,
-        configDir,
-        adminInterfacePort,
-        spawnConductor: spawnLocal,
-        onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
-        onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
-        onActivity: () => this._restartTimer(),
-        onSignal: (signal_data) => {},
+          scenarioUUID: this._uuid,
+          name: playerName,
+          config: configYaml,
+          configDir,
+          adminInterfacePort,
+          spawnConductor: spawnLocal,
+          onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
+          onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
+          onActivity: () => this._restartTimer(),
+          onSignal: (signal) => {console.info("got signal, doing nothing with it: %o", signal)},
       })
     }
   }

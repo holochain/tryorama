@@ -29,7 +29,7 @@ When updating tryorama against a new version of holochain please replace the old
 
 ```
 ./README.md
- test/e2e/fixture/zomes/link/Cargo.toml
+ test/e2e/fixture/zomes/test/Cargo.toml
 ci_scripts/install-holochain.sh
 ```
 

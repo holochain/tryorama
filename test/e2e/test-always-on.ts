@@ -31,7 +31,7 @@ module.exports = (testOrchestrator, testConfig) => {
     orchestrator.registerScenario('simple zome call', async (s: ScenarioApi) => {
       const [alice] = await s.players([conductorConfig])
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
-      const hash = await alice_happ.cells[0].call('link', 'create_link')
+      const hash = await alice_happ.cells[0].call('test', 'create_link')
       t.equal(hash.length, 39, 'zome call succeeded')
     })
     const stats = await orchestrator.run()

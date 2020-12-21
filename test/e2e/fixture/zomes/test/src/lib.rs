@@ -38,3 +38,14 @@ fn delete_all_links(_: ()) -> ExternResult<()> {
     }
     Ok(())
 }
+
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct LoopBack {
+    value: String,
+}
+
+#[hdk_extern]
+fn signal_loopback(value: LoopBack) -> ExternResult<()> {
+    emit_signal(&value)?;
+    Ok(())
+}

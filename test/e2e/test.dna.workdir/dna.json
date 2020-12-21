@@ -1,0 +1,10 @@
+{
+  "name": "test-dna",
+  "uuid": "",
+  "properties": null,
+  "zomes": {
+    "test": {
+      "wasm_path": "./test.wasm"
+    }
+  }
+}
