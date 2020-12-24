@@ -81,11 +81,15 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       player,
       name,
       kill: async (...args) => {
-        lairHandle.kill()
         // wait for it to be finished off before resolving
-        const killPromise = new Promise((resolve) => {
+        const conductorKillPromise = new Promise((resolve) => {
           handle.once('close', resolve)
         })
+        const lairKillPromise = new Promise((resolve) => {
+          lairHandle.once('close', resolve)
+        })
+        const killPromise = Promise.all([conductorKillPromise,lairKillPromise])
+        lairHandle.kill()
         handle.kill(...args)
         return killPromise
       },
