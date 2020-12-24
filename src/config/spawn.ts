@@ -28,6 +28,17 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
   const configPath = getConfigPath(player._configDir)
   let handle
   try {
+
+    logger.info("Spawining lair for test with keystore at:  %s", `${configPath}/keystore`)
+
+    spawn("lair-keystore", ["-d", `${configPath}/keystore`], {
+      env: {
+        // TODO: maybe put this behind a flag?
+        "RUST_BACKTRACE": "1",
+        ...process.env,
+      }
+    })
+
     const binPath = env.holochainPath
     const version = execSync(`${binPath} --version`)
     logger.info("Using conductor path:  %s", binPath)
