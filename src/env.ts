@@ -18,7 +18,7 @@ const bool = Boolean
 
 const legacy = bool(process.env['TRYORAMA_LEGACY'] || false)
 const defaultHolochainPath = 'holochain'
-const defaultLairPath = 'lair-keystre'
+const defaultLairPath = 'lair-keystore'
 const interfaceIdPrefix = process.env['TRYORAMA_INTERFACE_ID'] || 'tryorama-interface'
 
 const VARS = {
