@@ -8,3 +8,5 @@ cargo install --force holochain \
 cargo install --force dna_util \
   --git https://github.com/holochain/holochain.git \
   --rev $REV
+cargo install --force lair-keystore \
+      --git https://github.com/holochain/lair.git
