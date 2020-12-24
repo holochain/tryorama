@@ -27,11 +27,15 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
   const name = player.name
   const configPath = getConfigPath(player._configDir)
   let handle
+  let lairHandle
   try {
 
-    logger.info("Spawining lair for test with keystore at:  %s", `${configPath}/keystore`)
-
-    spawn("lair-keystore", ["-d", `${configPath}/keystore`], {
+    const lairDir = `${configPath}/keystore`
+    if (!fs.existsSync(lairDir)){
+      fs.mkdirSync(lairDir);
+    }
+    logger.info("Spawining lair for test with keystore at:  %s", lairDir)
+    lairHandle = spawn("lair-keystore", ["-d", lairDir], {
       env: {
         // TODO: maybe put this behind a flag?
         "RUST_BACKTRACE": "1",
@@ -73,6 +77,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       player,
       name,
       kill: async (...args) => {
+        lairHandle.kill()
         // wait for it to be finished off before resolving
         const killPromise = new Promise((resolve) => {
           handle.once('close', resolve)
