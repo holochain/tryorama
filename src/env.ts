@@ -1,4 +1,3 @@
-
 const int = (n) => {
   try {
     return parseInt(n, 10)
@@ -19,6 +18,7 @@ const bool = Boolean
 
 const legacy = bool(process.env['TRYORAMA_LEGACY'] || false)
 const defaultHolochainPath = 'holochain'
+const defaultLairPath = 'lair-keystre'
 const interfaceIdPrefix = process.env['TRYORAMA_INTERFACE_ID'] || 'tryorama-interface'
 
 const VARS = {
@@ -34,7 +34,8 @@ const VARS = {
   portRange: [33000, 34000],  // not hooked up to env var yet
   legacy,
   singletonAppId: 'TRYORAMA_APP',
-  holochainPath: process.env.TRYORAMA_HOLOCHAIN_PATH || defaultHolochainPath
+  holochainPath: process.env.TRYORAMA_HOLOCHAIN_PATH || defaultHolochainPath,
+  lairPath: process.env.TRYORAMA_LAIR_PATH || defaultLairPath
 }
 
 

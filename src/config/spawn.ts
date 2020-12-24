@@ -37,7 +37,8 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       fs.mkdirSync(lairDir);
     }
     logger.info("Spawining lair for test with keystore at:  %s", lairDir)
-    lairHandle = await spawn("lair-keystore", ["-d", lairDir], {
+    const lairBinPath = env.lairPath
+    lairHandle = await spawn(lairBinPath, ["-d", lairDir], {
       env: {
         // TODO: maybe put this behind a flag?
         "RUST_BACKTRACE": "1",
