@@ -9,6 +9,8 @@ import { getConfigPath } from ".";
 import { trycpSession, TrycpClient } from "../trycp";
 import { delay } from "../util";
 import env from '../env'
+var fs = require('fs');
+
 
 export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
   return new Conductor({
@@ -27,7 +29,24 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
   const name = player.name
   const configPath = getConfigPath(player._configDir)
   let handle
+  let lairHandle
   try {
+
+    const lairDir = `${player._configDir}/keystore`
+    if (!fs.existsSync(lairDir)){
+      fs.mkdirSync(lairDir);
+    }
+    logger.info("Spawning lair for test with keystore at:  %s", lairDir)
+    const lairBinPath = env.lairPath
+    lairHandle = await spawn(lairBinPath, ["-d", lairDir], {
+      env: {
+        // TODO: maybe put this behind a flag?
+        "RUST_BACKTRACE": "1",
+        ...process.env,
+      }
+    })
+    await delay(500)
+
     const binPath = env.holochainPath
     const version = execSync(`${binPath} --version`)
     logger.info("Using conductor path:  %s", binPath)
@@ -63,9 +82,14 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       name,
       kill: async (...args) => {
         // wait for it to be finished off before resolving
-        const killPromise = new Promise((resolve) => {
+        const conductorKillPromise = new Promise((resolve) => {
           handle.once('close', resolve)
         })
+        const lairKillPromise = new Promise((resolve) => {
+          lairHandle.once('close', resolve)
+        })
+        const killPromise = Promise.all([conductorKillPromise,lairKillPromise])
+        lairHandle.kill()
         handle.kill(...args)
         return killPromise
       },
