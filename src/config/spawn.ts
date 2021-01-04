@@ -36,7 +36,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
     if (!fs.existsSync(lairDir)){
       fs.mkdirSync(lairDir);
     }
-    logger.info("Spawining lair for test with keystore at:  %s", lairDir)
+    logger.info("Spawning lair for test with keystore at:  %s", lairDir)
     const lairBinPath = env.lairPath
     lairHandle = await spawn(lairBinPath, ["-d", lairDir], {
       env: {
