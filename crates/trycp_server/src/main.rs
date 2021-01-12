@@ -17,7 +17,6 @@ use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
 };
-use regex::Regex;
 use reqwest::{self, Url};
 use serde_json::map::Map;
 use std::{
@@ -320,22 +319,15 @@ fn save_file(file_path: PathBuf, content: &[u8]) -> Result<(), jsonrpc_core::typ
 }
 
 fn get_info_as_json() -> Value {
-    let output = Command::new("holochain").args(&["-i"]).output();
+    let output = Command::new("holochain").args(&["-V"]).output();
     if output.is_err() {
         return Value::String("failed to execute holochain".into());
     }
     let output = output.unwrap();
     let info_str = String::from_utf8(output.stdout).unwrap();
 
-    // poor man's JSON convert
-    let re = Regex::new(r"(?P<key>[^:]+):\s+(?P<val>.*)\n").unwrap();
     let mut map: Map<String, Value> = Map::new();
-    for caps in re.captures_iter(&info_str) {
-        map.insert(
-            caps["key"].to_string(),
-            Value::String(caps["val"].to_string()),
-        );
-    }
+    map.insert("version".to_string(), Value::String(info_str));
     Value::Object(map)
 }
 
@@ -492,7 +484,11 @@ fn main() {
         });
     }
 
-    io.add_method("ping", |_params: Params| Ok(get_info_as_json()));
+    io.add_method("ping", |_params: Params| {
+        let info = get_info_as_json();
+        Ok(info)
+    }
+    );
 
     io.add_method("dna", move |params: Params| {
         let params_map = unwrap_params_map(params)?;
