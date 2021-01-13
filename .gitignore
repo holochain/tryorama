@@ -4,3 +4,4 @@ lib/
 docs/
 dna/
 .vscode/
+**/target/
