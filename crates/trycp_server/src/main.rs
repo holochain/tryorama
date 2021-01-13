@@ -34,9 +34,9 @@ use url2::prelude::*;
 use serde_derive::Serialize;
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
-const MAGIC_STRING: &str = "*** Done. All interfaces started.";
+const MAGIC_STRING: &str = "Conductor ready.";
 
-const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.toml";
+const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
 const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "stderr.txt";
 const DNAS_DIRNAME: &str = "dnas";
@@ -400,14 +400,14 @@ fn main() {
         Arc::new(RwLock::new(TrycpServer::new(conductor_port_range)));
     let state_setup = state.clone();
     let state_player = state.clone();
-    let state_spawn = state.clone();
-    let state_kill = state.clone();
+    let state_startup = state.clone();
+    let state_shutdown = state.clone();
     let state_dna = state.clone();
 
     let players_arc: Arc<RwLock<HashMap<String, Child>>> = Arc::new(RwLock::new(HashMap::new()));
-    let players_arc_kill = players_arc.clone();
+    let players_arc_shutdown = players_arc.clone();
     let players_arc_reset = players_arc.clone();
-    let players_arc_spawn = players_arc;
+    let players_arc_startup = players_arc;
 
     if let Some(connection_uri) = args.register {
         let result = send_json_rpc(
@@ -458,7 +458,7 @@ fn main() {
             let mut state = state_request.write().expect("should_lock");
 
             // build up a list of confirmed available endpoints
-            // TODO make confirmation happen anynchronosly so it's faster
+            // TODO make confirmation happen asynchronously so it's faster
             if state.registered.len() >= count {
                 while count > 0 {
                     match state.registered.pop() {
@@ -487,9 +487,9 @@ fn main() {
     io.add_method("ping", |_params: Params| {
         let info = get_info_as_json();
         Ok(info)
-    }
-    );
+    });
 
+    // Given a DNA URL, ensures that the DNA is downloaded, and returns the path at which it is stored.
     io.add_method("dna", move |params: Params| {
         let params_map = unwrap_params_map(params)?;
         let url_str = get_as_string("url", &params_map)?;
@@ -522,6 +522,10 @@ fn main() {
         Ok(json!({ "path": local_path }))
     });
 
+    // Shuts down all running conductors.
+    //
+    // If passed `killall: true`, uses the `killall` command to shutdown conductors,
+    // rather than killing each spawned conductor individually.
     io.add_method("reset", move |params: Params| {
         let params_map = unwrap_params_map(params)?;
         let killall = get_as_bool("killall", &params_map, Some(false))?;
@@ -535,7 +539,7 @@ fn main() {
                 println!("killall result: {:?}", output);
             } else {
                 for (id, child) in &*players {
-                    let _ = do_kill(id, child, "SIGKILL"); //ignore any errors
+                    let _ = do_shutdown(id, child, "SIGKILL"); //ignore any errors
                 }
             }
             players.clear();
@@ -590,13 +594,13 @@ fn main() {
         Ok(Value::String(response))
     });
 
-    io.add_method("spawn", move |params: Params| {
+    io.add_method("startup", move |params: Params| {
         let params_map = unwrap_params_map(params)?;
         let id = get_as_string("id", &params_map)?;
 
-        let state = state_spawn.read().unwrap();
+        let state = state_startup.read().unwrap();
         check_player_config(&state, &id)?;
-        let mut players = players_arc_spawn.write().expect("should_lock");
+        let mut players = players_arc_startup.write().expect("should_lock");
         if players.contains_key(&id) {
             return Err(invalid_request(format!("{} is already running", id)));
         };
@@ -614,11 +618,10 @@ fn main() {
         let mut conductor = Command::new("holochain")
             .args(&["-c", &config_path])
             .env("RUST_BACKTRACE", "full")
-            .env("HC_IGNORE_SIM2H_URL_PROPERTY", "true")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()
-            .map_err(|e| internal_error(format!("unable to spawn conductor: {:?}", e)))?;
+            .map_err(|e| internal_error(format!("unable to startup conductor: {:?}", e)))?;
 
         let mut log_stdout = Command::new("tee")
             .arg(stdout_log_path)
@@ -643,8 +646,8 @@ fn main() {
                     }
                 }
 
-                players.insert(id.clone(), conductor);
-                let response = format!("conductor spawned for {}", id);
+                let response = format!("conductor startuped for {}", id);
+                players.insert(id, conductor);
                 Ok(Value::String(response))
             }
             None => {
@@ -656,22 +659,22 @@ fn main() {
         }
     });
 
-    io.add_method("kill", move |params: Params| {
+    io.add_method("shutdown", move |params: Params| {
         let params_map = unwrap_params_map(params)?;
         let id = get_as_string("id", &params_map)?;
         let signal = get_as_string("signal", &params_map)?; // TODO: make optional?
 
-        check_player_config(&state_kill.read().unwrap(), &id)?;
-        let mut players = players_arc_kill.write().unwrap();
+        check_player_config(&state_shutdown.read().unwrap(), &id)?;
+        let mut players = players_arc_shutdown.write().unwrap();
         match players.remove(&id) {
             None => {
                 return Err(invalid_request(format!("no conductor spawned for {}", id)));
             }
             Some(ref mut child) => {
-                do_kill(&id, child, signal.as_str())?;
+                do_shutdown(&id, child, signal.as_str())?;
             }
         }
-        let response = format!("killed conductor for {}", id);
+        let response = format!("shut down conductor for {}", id);
         Ok(Value::String(response))
     });
 
@@ -697,7 +700,11 @@ fn main() {
     server.wait().expect("server should wait");
 }
 
-fn do_kill(id: &str, child: &Child, signal: &str) -> Result<(), jsonrpc_core::types::error::Error> {
+fn do_shutdown(
+    id: &str,
+    child: &Child,
+    signal: &str,
+) -> Result<(), jsonrpc_core::types::error::Error> {
     let sig = match signal {
         "SIGKILL" => Signal::SIGKILL,
         "SIGTERM" => Signal::SIGTERM,
@@ -705,7 +712,7 @@ fn do_kill(id: &str, child: &Child, signal: &str) -> Result<(), jsonrpc_core::ty
     };
     signal::kill(Pid::from_raw(child.id() as i32), sig).map_err(|e| {
         internal_error(format!(
-            "unable to run kill conductor for {} script: {:?}",
+            "unable to shut down conductor for {} script: {:?}",
             id, e
         ))
     })

@@ -96,18 +96,18 @@ sim2h_url = "wss://localhost:9001"
         result = await ws.call('player', {"id": "my-player2", "config": config})
         console.log(result)
 
-        console.log("making spawn call")
-        result = await ws.call('spawn', {"id": "my-player"})
+        console.log("making startup call")
+        result = await ws.call('startup', {"id": "my-player"})
         console.log(result)
 
-/*        console.log("making kill call")
-        result = await ws.call('kill', {"id": "my-player"})
+        console.log("making shutdown call")
+        result = await ws.call('shutdown', {"id": "my-player"})
         console.log(result)
 
-        console.log("making spawn call2")
-        result = await ws.call('spawn', {"id": "my-player"})
+        console.log("making startup call2")
+        result = await ws.call('startup', {"id": "my-player"})
         console.log(result)
-*/
+
         console.log("making reset call")
         result = await ws.call('reset', {})
         console.log(result)
