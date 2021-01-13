@@ -607,8 +607,9 @@ fn main() {
         #[derive(serde_derive::Deserialize)]
         struct ShutdownParams {
             id: String,
-            signal: String, // TODO: make optional?
+            signal: Option<String>,
         }
+
         let ShutdownParams { id, signal } = params.parse()?;
 
         check_player_config(&state_shutdown.read().unwrap(), &id)?;
@@ -618,7 +619,11 @@ fn main() {
                 return Err(invalid_request(format!("no conductor spawned for {}", id)));
             }
             Some(ref mut child) => {
-                do_shutdown(&id, child, signal.as_str())?;
+                let signal = match &signal {
+                    Some(signal) => signal,
+                    None => "SIGTERM",
+                };
+                do_shutdown(&id, child, signal)?;
             }
         }
         let response = format!("shut down conductor for {}", id);
@@ -640,9 +645,9 @@ fn main() {
                 file_name,
             } = params.parse()?;
             Ok(Value::String(os_eval(&format!(
-                "curl -L -k https://github.com/holochain/{}/releases/download/{}/{} -o holochain.tar.gz\
-                && tar -xzvf holochain.tar.gz\
-                && mv holochain /holochain/.cargo/bin/holochain\
+                "curl -L -k https://github.com/holochain/{}/releases/download/{}/{} -o holochain.tar.gz \
+                && tar -xzvf holochain.tar.gz \
+                && mv holochain /holochain/.cargo/bin/holochain \
                 && rm holochain.tar.gz",
                 repo, tag, file_name
             ))))
