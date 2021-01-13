@@ -14,7 +14,7 @@ use nix::{
     unistd::Pid,
 };
 use reqwest::{self, Url};
-use serde_derive::Serialize;
+use serde_derive::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
     fs::File,
@@ -363,7 +363,7 @@ fn main() {
 
         // command for other trycp server to register themselves as available
         io.add_method("register", move |params: Params| {
-            #[derive(serde_derive::Deserialize)]
+            #[derive(Deserialize)]
             struct RegisterParams {
                 url: String,
                 ram: usize,
@@ -387,7 +387,7 @@ fn main() {
 
         // command to request a list of available trycp_servers
         io.add_method("request", move |params: Params| {
-            #[derive(serde_derive::Deserialize)]
+            #[derive(Deserialize)]
             struct RequestParams {
                 count: usize,
             }
@@ -429,7 +429,7 @@ fn main() {
 
     // Given a DNA URL, ensures that the DNA is downloaded, and returns the path at which it is stored.
     io.add_method("dna", move |params: Params| {
-        #[derive(serde_derive::Deserialize)]
+        #[derive(Deserialize)]
         struct DnaParams {
             url: String,
         }
@@ -460,7 +460,7 @@ fn main() {
     // If passed `killall: true`, uses the `killall` command to shutdown conductors,
     // rather than killing each spawned conductor individually.
     io.add_method("reset", move |params: Params| {
-        #[derive(serde_derive::Deserialize)]
+        #[derive(Deserialize)]
         struct ResetParams {
             #[serde(default)]
             killall: bool,
@@ -493,7 +493,7 @@ fn main() {
     // i.e. ensure ports are open, and ensure that configDir is the same one
     // that the actual config will be written to
     io.add_method("setup", move |params: Params| {
-        #[derive(serde_derive::Deserialize)]
+        #[derive(Deserialize)]
         struct SetupParams {
             id: String,
         }
@@ -508,7 +508,7 @@ fn main() {
     });
 
     io.add_method("player", move |params: Params| {
-        #[derive(serde_derive::Deserialize)]
+        #[derive(Deserialize)]
         struct PlayerParams {
             id: String,
             config: String,
@@ -541,7 +541,7 @@ fn main() {
     });
 
     io.add_method("startup", move |params: Params| {
-        #[derive(serde_derive::Deserialize)]
+        #[derive(Deserialize)]
         struct StartupParams {
             id: String,
         }
@@ -604,7 +604,7 @@ fn main() {
     });
 
     io.add_method("shutdown", move |params: Params| {
-        #[derive(serde_derive::Deserialize)]
+        #[derive(Deserialize)]
         struct ShutdownParams {
             id: String,
             signal: Option<String>,
@@ -632,7 +632,7 @@ fn main() {
 
     let allow_replace_conductor = args.allow_replace_conductor;
     io.add_method("replace_conductor", move |params: Params| {
-        #[derive(serde_derive::Deserialize)]
+        #[derive(Deserialize)]
         struct ReplaceConductorParams {
             repo: String,
             tag: String,
