@@ -247,17 +247,19 @@ fn save_file(file_path: PathBuf, content: &[u8]) -> Result<(), jsonrpc_core::typ
     Ok(())
 }
 
-fn get_info_as_json() -> Value {
-    let output = Command::new("holochain").args(&["-V"]).output();
-    if output.is_err() {
-        return Value::String("failed to execute holochain".into());
-    }
-    let output = output.unwrap();
-    let info_str = String::from_utf8(output.stdout).unwrap();
+fn get_holochain_version() -> Result<String, String> {
+    let output = Command::new("holochain")
+        .arg("-V")
+        .output()
+        .map_err(|e| format!("failed to execute `holochain -V`: {}", e))?;
+    let version = String::from_utf8(output.stdout)
+        .map_err(|e| format!("failed to parse holochain output as utf-8: {}", e))?;
 
-    let mut map: Map<String, Value> = Map::new();
-    map.insert("version".to_string(), Value::String(info_str));
-    Value::Object(map)
+    Ok(version
+        .strip_prefix("holochain")
+        .unwrap_or(&version)
+        .trim()
+        .to_string())
 }
 
 /// very dangerous, runs whatever strings come in from the internet directly in bash
@@ -421,8 +423,8 @@ fn main() {
     }
 
     io.add_method("ping", |_params: Params| {
-        let info = get_info_as_json();
-        Ok(info)
+        let info = get_holochain_version().map_err(|e| internal_error(e))?;
+        Ok(Value::String(info))
     });
 
     // Given a DNA URL, ensures that the DNA is downloaded, and returns the path at which it is stored.
