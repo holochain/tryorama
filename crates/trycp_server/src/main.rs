@@ -85,25 +85,25 @@ struct Cli {
     host: String,
 }
 
-type PortRange = (u16, u16);
+type PortRange = Range<u16>;
 
 fn parse_port_range(s: String) -> Result<PortRange, String> {
-    let segments: Vec<u16> = s
+    let segments = s
         .split('-')
         .map(|seg| {
             seg.parse()
                 .map_err(|e: std::num::ParseIntError| e.to_string())
         })
         .collect::<Result<Vec<u16>, String>>()?;
-    if segments.len() == 2 {
-        let (lo, hi) = (segments[0], segments[1]);
-        if hi <= lo {
-            Err("Port range must go from a lower port to a higher one.".into())
-        } else {
-            Ok((lo, hi))
+    match segments.as_slice() {
+        &[lo, hi] => {
+            if lo < hi {
+                Ok(lo..hi)
+            } else {
+                Err("Port range must go from a lower port to a higher one.".into())
+            }
         }
-    } else {
-        Err("Port range must be in the format 'xxxx-yyyy'".into())
+        _ => Err("Port range must be in the format 'xxxx-yyyy'".into()),
     }
 }
 
@@ -171,27 +171,27 @@ impl TrycpServer {
         TrycpServer {
             dir: make_conductor_dir().expect("should create conductor dir"),
             dna_dir: make_dna_dir().expect("should create dna dir"),
-            next_port: port_range.0,
+            next_port: port_range.start,
             port_range,
             registered: ServerList::new(),
         }
     }
 
     pub fn acquire_port(&mut self) -> Result<u16, String> {
-        let port = self.next_port;
-        self.next_port += 1;
-        if port >= self.port_range.1 {
+        if self.next_port < self.port_range.end {
+            let port = self.next_port;
+            self.next_port += 1;
+            Ok(port)
+        } else {
             Err(format!(
                 "All available ports have been used up! Range: {:?}",
                 self.port_range
             ))
-        } else {
-            Ok(port)
         }
     }
 
     pub fn reset(&mut self) {
-        self.next_port = self.port_range.0;
+        self.next_port = self.port_range.start;
         match make_conductor_dir() {
             Err(err) => println!("reset failed creating conductor dir: {:?}", err),
             Ok(dir) => self.dir = dir,
