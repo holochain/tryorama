@@ -3,8 +3,6 @@ extern crate tempfile;
 #[macro_use]
 extern crate serde_json;
 
-//use log::error;
-//use std::process::exit;
 use in_stream::{
     json_rpc::{JsonRpcRequest, JsonRpcResponse},
     *,
@@ -18,20 +16,19 @@ use nix::{
     unistd::Pid,
 };
 use reqwest::{self, Url};
+use serde_derive::Serialize;
 use serde_json::map::Map;
 use std::{
     collections::HashMap,
     fs::File,
     io::{BufRead, BufReader, Write},
+    ops::Range,
     path::PathBuf,
     process::{Child, Command, Stdio},
     sync::{Arc, RwLock},
 };
 use structopt::StructOpt;
 use url2::prelude::*;
-//use jsonrpc_lite::JsonRpc;
-//use snowflake::ProcessUniqueId;
-use serde_derive::Serialize;
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
 const MAGIC_STRING: &str = "Conductor ready.";
@@ -114,8 +111,8 @@ fn parse_port_range(s: String) -> Result<PortRange, String> {
 // characteristics and set up tests based on the nodes capacities
 #[derive(Serialize, Debug, PartialEq)]
 struct ServerInfo {
-    pub url: String,
-    pub ram: usize, // MB of ram
+    url: String,
+    ram: usize, // MB of ram
 }
 
 #[derive(Serialize, Debug, PartialEq)]
@@ -132,11 +129,11 @@ impl ServerList {
     pub fn pop(&mut self) -> Option<ServerInfo> {
         self.servers.pop()
     }
-    pub fn remove(&mut self, url: String) {
+    pub fn remove(&mut self, url: &str) {
         self.servers.retain(|i| i.url != url);
     }
     pub fn insert(&mut self, info: ServerInfo) {
-        self.remove(info.url.clone());
+        self.remove(&info.url);
         self.servers.push(info);
     }
     pub fn len(&self) -> usize {
@@ -199,62 +196,6 @@ impl TrycpServer {
             Err(err) => println!("reset failed creating conductor dir: {:?}", err),
             Ok(dir) => self.dir = dir,
         }
-    }
-}
-
-fn unwrap_params_map(params: Params) -> Result<Map<String, Value>, jsonrpc_core::Error> {
-    match params {
-        Params::Map(map) => Ok(map),
-        _ => Err(jsonrpc_core::Error::invalid_params("expected params map")),
-    }
-}
-
-fn get_as_string<T: Into<String>>(
-    key: T,
-    params_map: &Map<String, Value>,
-) -> Result<String, jsonrpc_core::Error> {
-    let key = key.into();
-    Ok(params_map
-        .get(&key)
-        .ok_or_else(|| {
-            jsonrpc_core::Error::invalid_params(format!("`{}` param not provided", &key))
-        })?
-        .as_str()
-        .ok_or_else(|| {
-            jsonrpc_core::Error::invalid_params(format!("`{}` is not a valid json string", &key))
-        })?
-        .to_string())
-}
-
-fn get_as_int<T: Into<String>>(
-    key: T,
-    params_map: &Map<String, Value>,
-) -> Result<i64, jsonrpc_core::Error> {
-    let key = key.into();
-    Ok(params_map
-        .get(&key)
-        .ok_or_else(|| {
-            jsonrpc_core::Error::invalid_params(format!("`{}` param not provided", &key))
-        })?
-        .as_i64()
-        .ok_or_else(|| {
-            jsonrpc_core::Error::invalid_params(format!("`{}` has to be an integer", &key))
-        })?)
-}
-
-fn get_as_bool<T: Into<String>>(
-    key: T,
-    params_map: &Map<String, Value>,
-    default: Option<bool>,
-) -> Result<bool, jsonrpc_core::Error> {
-    let key = key.into();
-    match params_map.get(&key) {
-        Some(value) => value.as_bool().ok_or_else(|| {
-            jsonrpc_core::Error::invalid_params(format!("`{}` has to be a boolean", &key))
-        }),
-        None => default.ok_or_else(|| {
-            jsonrpc_core::Error::invalid_params(format!("required param `{}` not provided", &key))
-        }),
     }
 }
 
@@ -433,27 +374,35 @@ fn main() {
 
         // command for other trycp server to register themselves as available
         io.add_method("register", move |params: Params| {
-            let params_map = unwrap_params_map(params)?;
-            let url_str = get_as_string("url", &params_map)?;
-            let _url = Url::parse(&url_str).map_err(|e| {
-                invalid_request(format!("unable to parse url:{} got error: {}", url_str, e))
+            #[derive(serde_derive::Deserialize)]
+            struct RegisterParams {
+                url: String,
+                ram: usize,
+            }
+            let params: RegisterParams = params.parse()?;
+            // Validate the URL
+            let _url = Url::parse(&params.url).map_err(|e| {
+                invalid_request(format!(
+                    "unable to parse url:{} got error: {}",
+                    params.url, e
+                ))
             })?;
-            let ram = get_as_int("ram", &params_map).unwrap_or_default();
-            let ram = ram as usize;
 
             let mut state = state_registered.write().expect("should_lock");
             state.registered.insert(ServerInfo {
-                url: url_str.clone(),
-                ram,
+                url: params.url.clone(),
+                ram: params.ram,
             });
-            Ok(Value::String(format!("registered {}", url_str)))
+            Ok(Value::String(format!("registered {}", params.url)))
         });
 
         // command to request a list of available trycp_servers
         io.add_method("request", move |params: Params| {
-            let params_map = unwrap_params_map(params)?;
-            let count = get_as_int("count", &params_map)?;
-            let mut count = count as usize;
+            #[derive(serde_derive::Deserialize)]
+            struct RequestParams {
+                count: usize,
+            }
+            let RequestParams { mut count } = params.parse()?;
             let mut endpoints: Vec<ServerInfo> = Vec::new();
             let mut state = state_request.write().expect("should_lock");
 
@@ -491,8 +440,11 @@ fn main() {
 
     // Given a DNA URL, ensures that the DNA is downloaded, and returns the path at which it is stored.
     io.add_method("dna", move |params: Params| {
-        let params_map = unwrap_params_map(params)?;
-        let url_str = get_as_string("url", &params_map)?;
+        #[derive(serde_derive::Deserialize)]
+        struct DnaParams {
+            url: String,
+        }
+        let DnaParams { url: url_str } = params.parse()?;
         let url = Url::parse(&url_str).map_err(|e| {
             invalid_request(format!("unable to parse url:{} got error: {}", url_str, e))
         })?;
@@ -527,8 +479,12 @@ fn main() {
     // If passed `killall: true`, uses the `killall` command to shutdown conductors,
     // rather than killing each spawned conductor individually.
     io.add_method("reset", move |params: Params| {
-        let params_map = unwrap_params_map(params)?;
-        let killall = get_as_bool("killall", &params_map, Some(false))?;
+        #[derive(serde_derive::Deserialize)]
+        struct ResetParams {
+            #[serde(default)]
+            killall: bool,
+        }
+        let ResetParams { killall } = params.parse()?;
         {
             let mut players = players_arc_reset.write().expect("should_lock");
             if killall {
@@ -556,8 +512,11 @@ fn main() {
     // i.e. ensure ports are open, and ensure that configDir is the same one
     // that the actual config will be written to
     io.add_method("setup", move |params: Params| {
-        let params_map = unwrap_params_map(params)?;
-        let id = get_as_string("id", &params_map)?;
+        #[derive(serde_derive::Deserialize)]
+        struct SetupParams {
+            id: String,
+        }
+        let SetupParams { id } = params.parse()?;
         let mut state = state_setup.write().unwrap();
         let file_path = get_dir(&state, &id);
         let interface_port = state.acquire_port().map_err(internal_error)?;
@@ -568,9 +527,15 @@ fn main() {
     });
 
     io.add_method("player", move |params: Params| {
-        let params_map = unwrap_params_map(params)?;
-        let id = get_as_string("id", &params_map)?;
-        let config_base64 = get_as_string("config", &params_map)?;
+        #[derive(serde_derive::Deserialize)]
+        struct PlayerParams {
+            id: String,
+            config: String,
+        }
+        let PlayerParams {
+            id,
+            config: config_base64,
+        } = params.parse()?;
         let content = base64::decode(&config_base64)
             .map_err(|e| invalid_request(format!("error decoding config: {:?}", e)))?;
         let file_path = {
@@ -595,8 +560,11 @@ fn main() {
     });
 
     io.add_method("startup", move |params: Params| {
-        let params_map = unwrap_params_map(params)?;
-        let id = get_as_string("id", &params_map)?;
+        #[derive(serde_derive::Deserialize)]
+        struct StartupParams {
+            id: String,
+        }
+        let StartupParams { id } = params.parse()?;
 
         let state = state_startup.read().unwrap();
         check_player_config(&state, &id)?;
@@ -605,7 +573,7 @@ fn main() {
             return Err(invalid_request(format!("{} is already running", id)));
         };
 
-        let config_path = get_config_path(&state, &id).to_str().unwrap().to_string();
+        let config_path = get_config_path(&state, &id);
         let stdout_log_path = get_stdout_log_path(&state, &id)
             .to_str()
             .unwrap()
@@ -616,7 +584,8 @@ fn main() {
             .to_string();
 
         let mut conductor = Command::new("holochain")
-            .args(&["-c", &config_path])
+            .arg("-c")
+            .arg(&config_path)
             .env("RUST_BACKTRACE", "full")
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
@@ -646,7 +615,7 @@ fn main() {
                     }
                 }
 
-                let response = format!("conductor startuped for {}", id);
+                let response = format!("conductor started up for {}", id);
                 players.insert(id, conductor);
                 Ok(Value::String(response))
             }
@@ -660,9 +629,12 @@ fn main() {
     });
 
     io.add_method("shutdown", move |params: Params| {
-        let params_map = unwrap_params_map(params)?;
-        let id = get_as_string("id", &params_map)?;
-        let signal = get_as_string("signal", &params_map)?; // TODO: make optional?
+        #[derive(serde_derive::Deserialize)]
+        struct ShutdownParams {
+            id: String,
+            signal: String, // TODO: make optional?
+        }
+        let ShutdownParams { id, signal } = params.parse()?;
 
         check_player_config(&state_shutdown.read().unwrap(), &id)?;
         let mut players = players_arc_shutdown.write().unwrap();
@@ -680,11 +652,25 @@ fn main() {
 
     let allow_replace_conductor = args.allow_replace_conductor;
     io.add_method("replace_conductor", move |params: Params| {
+        #[derive(serde_derive::Deserialize)]
+        struct ReplaceConductorParams {
+            repo: String,
+            tag: String,
+            file_name: String,
+        }
         if allow_replace_conductor {
-            Ok(Value::String(os_eval(&format!("curl -L -k https://github.com/holochain/{}/releases/download/{}/{} -o holochain.tar.gz && tar -xzvf holochain.tar.gz && mv holochain /holochain/.cargo/bin/holochain && rm holochain.tar.gz",
-             get_as_string("repo", &unwrap_params_map(params.clone())?)?,
-             get_as_string("tag", &unwrap_params_map(params.clone())?)?,
-             get_as_string("file_name", &unwrap_params_map(params)?)?))))
+            let ReplaceConductorParams {
+                repo,
+                tag,
+                file_name,
+            } = params.parse()?;
+            Ok(Value::String(os_eval(&format!(
+                "curl -L -k https://github.com/holochain/{}/releases/download/{}/{} -o holochain.tar.gz\
+                && tar -xzvf holochain.tar.gz\
+                && mv holochain /holochain/.cargo/bin/holochain\
+                && rm holochain.tar.gz",
+                repo, tag, file_name
+            ))))
         } else {
             println!("replace not allowed (-c to enable)");
             Ok(Value::String("replace not allowed".to_string()))
