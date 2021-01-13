@@ -126,7 +126,7 @@ const awaitInterfaceReady = (handle, name): Promise<null> => new Promise((fulfil
     if (line.match(pattern)) {
       logger.info(`Conductor '${name}' process spawning completed.`)
       resolved = true
-      fulfill()
+      fulfill(null)
     }
   })
 })
