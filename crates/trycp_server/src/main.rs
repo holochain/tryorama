@@ -188,21 +188,21 @@ impl TrycpServer {
         }
     }
 
-    fn get_conductors_dir(&self, id: &str) -> PathBuf {
+    fn get_conductor_dir(&self, id: &str) -> PathBuf {
         self.conductors_dir.join(id)
     }
 
     fn get_config_path(&self, id: &str) -> PathBuf {
-        self.get_conductors_dir(id).join(CONDUCTOR_CONFIG_FILENAME)
+        self.get_conductor_dir(id).join(CONDUCTOR_CONFIG_FILENAME)
     }
 
     fn get_stdout_log_path(&self, id: &str) -> PathBuf {
-        self.get_conductors_dir(id)
+        self.get_conductor_dir(id)
             .join(CONDUCTOR_STDOUT_LOG_FILENAME)
     }
 
     fn get_stderr_log_path(&self, id: &str) -> PathBuf {
-        self.get_conductors_dir(id)
+        self.get_conductor_dir(id)
             .join(CONDUCTOR_STDERR_LOG_FILENAME)
     }
 }
@@ -227,13 +227,13 @@ fn invalid_request(message: String) -> jsonrpc_core::types::error::Error {
     }
 }
 
-fn save_file(file_path: PathBuf, content: &[u8]) -> Result<(), jsonrpc_core::types::error::Error> {
-    File::create(&file_path)
+fn save_file(file_path: &Path, content: &[u8]) -> Result<(), jsonrpc_core::types::error::Error> {
+    File::create(file_path)
         .map_err(|e| {
             internal_error(format!(
                 "unable to create file: {:?} {}",
                 e,
-                file_path.to_string_lossy()
+                file_path.display()
             ))
         })?
         .write_all(&content[..])
@@ -241,7 +241,7 @@ fn save_file(file_path: PathBuf, content: &[u8]) -> Result<(), jsonrpc_core::typ
             internal_error(format!(
                 "unable to write file: {:?} {}",
                 e,
-                file_path.to_string_lossy()
+                file_path.display()
             ))
         })?;
     Ok(())
@@ -329,8 +329,7 @@ fn main() {
 
     let state: Arc<RwLock<TrycpServer>> =
         Arc::new(RwLock::new(TrycpServer::new(conductor_port_range)));
-    let state_setup = state.clone();
-    let state_player = state.clone();
+    let state_configure_player = state.clone();
     let state_startup = state.clone();
     let state_shutdown = state.clone();
 
@@ -377,7 +376,7 @@ fn main() {
                 ))
             })?;
 
-            let mut state = state_registered.write().expect("should_lock");
+            let mut state = state_registered.write().unwrap();
             state.registered.insert(ServerInfo {
                 url: params.url.clone(),
                 ram: params.ram,
@@ -393,7 +392,7 @@ fn main() {
             }
             let RequestParams { mut count } = params.parse()?;
             let mut endpoints: Vec<ServerInfo> = Vec::new();
-            let mut state = state_request.write().expect("should_lock");
+            let mut state = state_request.write().unwrap();
 
             // build up a list of confirmed available endpoints
             // TODO make confirmation happen asynchronously so it's faster
@@ -447,7 +446,7 @@ fn main() {
                 .text()
                 .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
             println!("Finished downloading dna from {}", url_str);
-            save_file(file_path.clone(), &content.as_bytes())?;
+            save_file(&file_path, &content.as_bytes())?;
         }
         let local_path = file_path.to_string_lossy();
         let response = format!("dna for {} at {}", &url_str, local_path,);
@@ -467,7 +466,7 @@ fn main() {
         }
         let ResetParams { killall } = params.parse()?;
         {
-            let mut players = players_arc_reset.write().expect("should_lock");
+            let mut players = players_arc_reset.write().unwrap();
             if killall {
                 let output = Command::new("killall")
                     .args(&["holochain", "-s", "SIGKILL"])
@@ -482,59 +481,88 @@ fn main() {
             players.clear();
         }
         {
-            let mut temp_path = state.write().expect("should_lock");
+            let mut temp_path = state.write().unwrap();
             temp_path.reset();
         }
 
         Ok(Value::String("reset".into()))
     });
 
-    // Return to try-o-rama information it can use to build config files
-    // i.e. ensure ports are open, and ensure that configDir is the same one
-    // that the actual config will be written to
-    io.add_method("setup", move |params: Params| {
+    io.add_method("configure_player", move |params: Params| {
         #[derive(Deserialize)]
-        struct SetupParams {
+        struct ConfigurePlayerParams {
             id: String,
+            /// The Holochain configuration data that is not provided by trycp.
+            ///
+            /// For example:
+            /// ```yaml
+            /// signing_service_uri: ~
+            /// encryption_service_uri: ~
+            /// decryption_service_uri: ~
+            /// dpki: ~
+            /// network: ~
+            /// ```
+            partial_config: String,
         }
-        let SetupParams { id } = params.parse()?;
-        let mut state = state_setup.write().unwrap();
-        let file_path = state.get_conductors_dir(&id);
-        let interface_port = state.acquire_port().map_err(internal_error)?;
-        Ok(json!({
-            "interfacePort": interface_port,
-            "configDir": file_path.to_string_lossy(),
-        }))
-    });
+        let ConfigurePlayerParams { id, partial_config } = params.parse()?;
 
-    io.add_method("player", move |params: Params| {
-        #[derive(Deserialize)]
-        struct PlayerParams {
-            id: String,
-            config: String,
-        }
-        let PlayerParams {
-            id,
-            config: config_base64,
-        } = params.parse()?;
-        let content = base64::decode(&config_base64)
-            .map_err(|e| invalid_request(format!("error decoding config: {:?}", e)))?;
-        let file_path = {
-            let state = state_player.read().unwrap();
-            let dir_path = state.get_conductors_dir(&id);
-            std::fs::create_dir_all(dir_path.clone()).map_err(|e| {
-                invalid_request(format!(
-                    "error making temporary directory for config: {:?} {:?}",
-                    e, dir_path
-                ))
-            })?;
-            state.get_config_path(&id)
+        let (conductor_dir, config_path) = {
+            let state = state_configure_player.read().unwrap();
+            (state.get_conductor_dir(&id), state.get_config_path(&id))
         };
-        save_file(file_path.clone(), &content)?;
+
+        std::fs::create_dir_all(&conductor_dir).map_err(|e| {
+            internal_error(format!(
+                "failed to create directory ({}) for player: {:?}",
+                conductor_dir.display(),
+                e
+            ))
+        })?;
+
+        let mut config_file = File::create(&config_path).map_err(|e| {
+            internal_error(format!(
+                "unable to create file: {:?} {}",
+                e,
+                config_path.display()
+            ))
+        })?;
+
+        let port = state_configure_player
+            .write()
+            .unwrap()
+            .acquire_port()
+            .map_err(internal_error)?;
+
+        writeln!(
+            config_file,
+            "\
+---
+environment_path: environment
+use_dangerous_test_keystore: false
+keystore_path: keystore
+passphrase_service:
+  type: fromconfig
+  passphrase: password
+admin_interfaces:
+  -
+    driver:
+      type: websocket
+      port: {}
+{}",
+            port, partial_config
+        )
+        .map_err(|e| {
+            internal_error(format!(
+                "unable to write file: {:?} {}",
+                e,
+                config_path.display()
+            ))
+        })?;
+
         let response = format!(
             "wrote config for player {} to {}",
             id,
-            file_path.to_string_lossy()
+            config_path.display()
         );
         println!("player {}: {:?}", id, response);
         Ok(Value::String(response))
@@ -548,8 +576,8 @@ fn main() {
         let StartupParams { id } = params.parse()?;
 
         let state = state_startup.read().unwrap();
-        check_player_config(&state, &id)?;
-        let mut players = players_arc_startup.write().expect("should_lock");
+        check_player_config_exists(&state, &id)?;
+        let mut players = players_arc_startup.write().unwrap();
         if players.contains_key(&id) {
             return Err(invalid_request(format!("{} is already running", id)));
         };
@@ -612,7 +640,7 @@ fn main() {
 
         let ShutdownParams { id, signal } = params.parse()?;
 
-        check_player_config(&state_shutdown.read().unwrap(), &id)?;
+        check_player_config_exists(&state_shutdown.read().unwrap(), &id)?;
         let mut players = players_arc_shutdown.write().unwrap();
         match players.remove(&id) {
             None => {
@@ -684,7 +712,7 @@ fn do_shutdown(
     })
 }
 
-fn check_player_config(
+fn check_player_config_exists(
     state: &TrycpServer,
     id: &str,
 ) -> Result<(), jsonrpc_core::types::error::Error> {
