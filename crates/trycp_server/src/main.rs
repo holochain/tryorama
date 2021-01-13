@@ -7,8 +7,6 @@ use in_stream::{
     json_rpc::{JsonRpcRequest, JsonRpcResponse},
     *,
 };
-
-use self::tempfile::Builder;
 use jsonrpc_core::{IoHandler, Params, Value};
 use jsonrpc_ws_server::ServerBuilder;
 use nix::{
@@ -17,13 +15,12 @@ use nix::{
 };
 use reqwest::{self, Url};
 use serde_derive::Serialize;
-use serde_json::map::Map;
 use std::{
     collections::HashMap,
     fs::File,
     io::{BufRead, BufReader, Write},
     ops::Range,
-    path::PathBuf,
+    path::{Path, PathBuf},
     process::{Child, Command, Stdio},
     sync::{Arc, RwLock},
 };
@@ -36,9 +33,8 @@ const MAGIC_STRING: &str = "Conductor ready.";
 const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
 const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "stderr.txt";
-const DNAS_DIRNAME: &str = "dnas";
-const CONDUCTORS_DIRNAME: &str = "conductors";
-const TRYCP_DIRNAME: &str = "/tmp/trycp";
+const CONDUCTORS_DIR_PATH: &str = "/tmp/trycp/conductors";
+const DNA_DIR_PATH: &str = "/tmp/trycp/dnas";
 
 #[derive(StructOpt)]
 struct Cli {
@@ -121,63 +117,57 @@ struct ServerList {
 }
 
 impl ServerList {
-    pub fn new() -> Self {
+    fn new() -> Self {
         ServerList {
             servers: Vec::new(),
         }
     }
-    pub fn pop(&mut self) -> Option<ServerInfo> {
+    fn pop(&mut self) -> Option<ServerInfo> {
         self.servers.pop()
     }
-    pub fn remove(&mut self, url: &str) {
+    fn remove(&mut self, url: &str) {
         self.servers.retain(|i| i.url != url);
     }
-    pub fn insert(&mut self, info: ServerInfo) {
+    fn insert(&mut self, info: ServerInfo) {
         self.remove(&info.url);
         self.servers.push(info);
     }
-    pub fn len(&self) -> usize {
+    fn len(&self) -> usize {
         self.servers.len()
     }
 }
 
 struct TrycpServer {
-    // dir: tempfile::TempDir,
-    dir: PathBuf,
-    dna_dir: PathBuf,
+    conductors_dir: PathBuf,
     next_port: u16,
     port_range: PortRange,
     registered: ServerList,
 }
 
-fn make_conductor_dir() -> Result<PathBuf, String> {
-    let conductor_path = PathBuf::new().join(TRYCP_DIRNAME).join(CONDUCTORS_DIRNAME);
-    std::fs::create_dir_all(conductor_path.clone()).map_err(|err| format!("{:?}", err))?;
-    let dir = Builder::new()
-        .tempdir_in(conductor_path)
+fn make_conductors_dir() -> Result<PathBuf, String> {
+    std::fs::create_dir_all(CONDUCTORS_DIR_PATH).map_err(|err| format!("{:?}", err))?;
+    let dir = tempfile::tempdir_in(CONDUCTORS_DIR_PATH)
         .map_err(|err| format!("{:?}", err))?
         .into_path();
     Ok(dir)
 }
 
-fn make_dna_dir() -> Result<PathBuf, String> {
-    let dna_path = PathBuf::new().join(TRYCP_DIRNAME).join(DNAS_DIRNAME);
-    std::fs::create_dir_all(dna_path.clone()).map_err(|err| format!("{:?}", err))?;
-    Ok(dna_path)
+fn make_dna_dir() -> Result<(), String> {
+    std::fs::create_dir_all(DNA_DIR_PATH).map_err(|err| format!("{:?}", err))
 }
 
 impl TrycpServer {
-    pub fn new(port_range: PortRange) -> Self {
+    fn new(port_range: PortRange) -> Self {
+        make_dna_dir().expect("should create dna dir");
         TrycpServer {
-            dir: make_conductor_dir().expect("should create conductor dir"),
-            dna_dir: make_dna_dir().expect("should create dna dir"),
+            conductors_dir: make_conductors_dir().expect("should create conductor dir"),
             next_port: port_range.start,
             port_range,
             registered: ServerList::new(),
         }
     }
 
-    pub fn acquire_port(&mut self) -> Result<u16, String> {
+    fn acquire_port(&mut self) -> Result<u16, String> {
         if self.next_port < self.port_range.end {
             let port = self.next_port;
             self.next_port += 1;
@@ -190,37 +180,35 @@ impl TrycpServer {
         }
     }
 
-    pub fn reset(&mut self) {
+    fn reset(&mut self) {
         self.next_port = self.port_range.start;
-        match make_conductor_dir() {
+        match make_conductors_dir() {
             Err(err) => println!("reset failed creating conductor dir: {:?}", err),
-            Ok(dir) => self.dir = dir,
+            Ok(dir) => self.conductors_dir = dir,
         }
+    }
+
+    fn get_conductors_dir(&self, id: &str) -> PathBuf {
+        self.conductors_dir.join(id)
+    }
+
+    fn get_config_path(&self, id: &str) -> PathBuf {
+        self.get_conductors_dir(id).join(CONDUCTOR_CONFIG_FILENAME)
+    }
+
+    fn get_stdout_log_path(&self, id: &str) -> PathBuf {
+        self.get_conductors_dir(id)
+            .join(CONDUCTOR_STDOUT_LOG_FILENAME)
+    }
+
+    fn get_stderr_log_path(&self, id: &str) -> PathBuf {
+        self.get_conductors_dir(id)
+            .join(CONDUCTOR_STDERR_LOG_FILENAME)
     }
 }
 
-fn get_dir(state: &TrycpServer, id: &str) -> PathBuf {
-    state.dir.join(id)
-}
-
-fn get_config_path(state: &TrycpServer, id: &str) -> PathBuf {
-    get_dir(state, id).join(CONDUCTOR_CONFIG_FILENAME)
-}
-
-fn get_dna_dir(state: &TrycpServer) -> PathBuf {
-    state.dna_dir.clone()
-}
-
-fn get_dna_path(state: &TrycpServer, url: &Url) -> PathBuf {
-    get_dna_dir(state).join(url.path().to_string().replace("/", "").replace("%", "_"))
-}
-
-fn get_stdout_log_path(state: &TrycpServer, id: &str) -> PathBuf {
-    get_dir(state, id).join(CONDUCTOR_STDOUT_LOG_FILENAME)
-}
-
-fn get_stderr_log_path(state: &TrycpServer, id: &str) -> PathBuf {
-    get_dir(state, id).join(CONDUCTOR_STDERR_LOG_FILENAME)
+fn get_dna_path(url: &Url) -> PathBuf {
+    Path::new(DNA_DIR_PATH).join(url.path().to_string().replace("/", "").replace("%", "_"))
 }
 
 fn internal_error(message: String) -> jsonrpc_core::types::error::Error {
@@ -240,7 +228,7 @@ fn invalid_request(message: String) -> jsonrpc_core::types::error::Error {
 }
 
 fn save_file(file_path: PathBuf, content: &[u8]) -> Result<(), jsonrpc_core::types::error::Error> {
-    File::create(file_path.clone())
+    File::create(&file_path)
         .map_err(|e| {
             internal_error(format!(
                 "unable to create file: {:?} {}",
@@ -343,7 +331,6 @@ fn main() {
     let state_player = state.clone();
     let state_startup = state.clone();
     let state_shutdown = state.clone();
-    let state_dna = state.clone();
 
     let players_arc: Arc<RwLock<HashMap<String, Child>>> = Arc::new(RwLock::new(HashMap::new()));
     let players_arc_shutdown = players_arc.clone();
@@ -448,8 +435,7 @@ fn main() {
         let url = Url::parse(&url_str).map_err(|e| {
             invalid_request(format!("unable to parse url:{} got error: {}", url_str, e))
         })?;
-        let state = state_dna.write().unwrap();
-        let file_path = get_dna_path(&state, &url);
+        let file_path = get_dna_path(&url);
         if !file_path.exists() {
             println!("Downloading dna from {} ...", &url_str);
             let content: String = reqwest::get::<Url>(url)
@@ -459,13 +445,6 @@ fn main() {
                 .text()
                 .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
             println!("Finished downloading dna from {}", url_str);
-            let dir_path = get_dna_dir(&state);
-            std::fs::create_dir_all(dir_path.clone()).map_err(|e| {
-                internal_error(format!(
-                    "error making temporary directory for dna: {:?} {:?}",
-                    e, dir_path
-                ))
-            })?;
             save_file(file_path.clone(), &content.as_bytes())?;
         }
         let local_path = file_path.to_string_lossy();
@@ -518,7 +497,7 @@ fn main() {
         }
         let SetupParams { id } = params.parse()?;
         let mut state = state_setup.write().unwrap();
-        let file_path = get_dir(&state, &id);
+        let file_path = state.get_conductors_dir(&id);
         let interface_port = state.acquire_port().map_err(internal_error)?;
         Ok(json!({
             "interfacePort": interface_port,
@@ -540,14 +519,14 @@ fn main() {
             .map_err(|e| invalid_request(format!("error decoding config: {:?}", e)))?;
         let file_path = {
             let state = state_player.read().unwrap();
-            let dir_path = get_dir(&state, &id);
+            let dir_path = state.get_conductors_dir(&id);
             std::fs::create_dir_all(dir_path.clone()).map_err(|e| {
                 invalid_request(format!(
                     "error making temporary directory for config: {:?} {:?}",
                     e, dir_path
                 ))
             })?;
-            get_config_path(&state, &id)
+            state.get_config_path(&id)
         };
         save_file(file_path.clone(), &content)?;
         let response = format!(
@@ -573,15 +552,9 @@ fn main() {
             return Err(invalid_request(format!("{} is already running", id)));
         };
 
-        let config_path = get_config_path(&state, &id);
-        let stdout_log_path = get_stdout_log_path(&state, &id)
-            .to_str()
-            .unwrap()
-            .to_string();
-        let stderr_log_path = get_stderr_log_path(&state, &id)
-            .to_str()
-            .unwrap()
-            .to_string();
+        let config_path = state.get_config_path(&id);
+        let stdout_log_path = state.get_stdout_log_path(&id);
+        let stderr_log_path = state.get_stderr_log_path(&id);
 
         let mut conductor = Command::new("holochain")
             .arg("-c")
@@ -708,7 +681,7 @@ fn check_player_config(
     state: &TrycpServer,
     id: &str,
 ) -> Result<(), jsonrpc_core::types::error::Error> {
-    let file_path = get_config_path(state, id);
+    let file_path = state.get_config_path(id);
     if !file_path.is_file() {
         return Err(invalid_request(format!(
             "player config for {} not setup",
