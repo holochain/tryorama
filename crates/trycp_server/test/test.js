@@ -24,7 +24,7 @@ function magic_remote_machine_manager(port) {
 }
 
 // instantiate Client and connect to an RPC server
-function  doTest(url) {
+function doTest(url) {
     return new Promise( (resolve) => {
     console.log("starting up at ",url)
     var ws = new WebSocket(url)
@@ -32,7 +32,7 @@ function  doTest(url) {
         console.log("making ping call")
         // call an RPC method with parameters
 
-        await ws.call('ping', {"id": "my-player"}).then(function(result) {
+        await ws.call('ping').then(function(result) {
              console.log(result)
         })
 
@@ -52,11 +52,11 @@ encryption_service_uri: ~
 decryption_service_uri: ~
 dpki: ~
 network: ~`;
-        console.log("making configure_player call", config)
+        console.log("making configure_player call")
         let result = await ws.call('configure_player', {"id": "my-player", "partial_config": config})
         console.log(result)
 
-        console.log("making configure_player call", config)
+        console.log("making configure_player call")
         result = await ws.call('configure_player', {"id": "my-player2", "partial_config": config})
         console.log(result)
 
@@ -76,7 +76,7 @@ network: ~`;
         result = await ws.call('reset')
         console.log(result)
 
-        console.log("making player2 call with config", config)
+        console.log("making player2 call with config")
         result = await ws.call('configure_player', {"id": "my-player", "partial_config": config})
         console.log(result)
 
@@ -88,16 +88,16 @@ network: ~`;
     })
 }
 
-//doTestManager("ws://localhost:9000")  // uncomment to manually run manager test
+// doTestManager("ws://localhost:9000")  // uncomment to manually run manager test
 // instantiate Client and connect to an RPC server
-function  doTestManager(url) {
+function doTestManager(url) {
     return new Promise( (resolve) => {
         console.log("starting up at ",url)
         var ws = new WebSocket(url)
         ws.on('open', async function() {
             console.log("making register call, expect: 'registered'")
             // call an RPC method with parameters
-            await ws.call('register', {"url": "ws://localhost:9001"}).then(function(result) {
+            await ws.call('register', {"url": "ws://localhost:9001", "ram": 10}).then(function(result) {
                 console.log(result)
             })
 

@@ -231,7 +231,9 @@ fn main() {
         registrar::add_methods(&mut io);
     }
 
-    io.add_method("ping", |_params: Params| {
+    io.add_method("ping", |params: Params| {
+        params.expect_no_params()?;
+
         let output = Command::new("holochain")
             .arg("-V")
             .output()
