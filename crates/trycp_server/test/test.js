@@ -73,7 +73,7 @@ network: ~`;
         console.log(result)
 
         console.log("making reset call")
-        result = await ws.call('reset', {})
+        result = await ws.call('reset')
         console.log(result)
 
         console.log("making player2 call with config", config)
