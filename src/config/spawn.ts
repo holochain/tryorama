@@ -25,14 +25,14 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
   })
 }
 
-export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook } = {}): Promise<Conductor> => {
+export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConductorFn => async (player: Player, { handleHook } = {}): Promise<Conductor> => {
   const name = player.name
-  const configPath = getConfigPath(player._configDir)
+  const configPath = getConfigPath(configDir)
   let handle
   let lairHandle
   try {
 
-    const lairDir = `${player._configDir}/keystore`
+    const lairDir = `${configDir}/keystore`
     if (!fs.existsSync(lairDir)){
       fs.mkdirSync(lairDir);
     }
@@ -97,7 +97,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       onSignal: player.onSignal,//player.onSignal.bind(player),
       onActivity: player.onActivity,
       machineHost: `localhost`,
-      adminPort: player._adminInterfacePort,
+      adminPort,
       rawConfig: player.config
     })
 
@@ -135,7 +135,7 @@ const awaitInterfaceReady = (handle, name): Promise<null> => new Promise((fulfil
 export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
   const name = player.name
   const spawnResult = await trycp.spawn(name)
-  logger.debug(`TryCP spawn result: ${spawnResult}`)
+  logger.debug(`TryCP startup result: ${spawnResult}`)
   // NB: trycp currently blocks until conductor is ready. It would be nice if it instead sent a notification asynchronously when the conductor is ready.
   // logger.info('Waiting 20 seconds for remote conductor to be ready to receive websocket connections...')
   // await delay(20000)

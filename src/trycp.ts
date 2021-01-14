@@ -1,14 +1,21 @@
 import * as _ from 'lodash'
-// import connect from ... @holochain/conductor-api?
+// import connect from '@holochain/conductor-api'
 import logger from './logger'
 import * as T from './types'
-const base64 = require('base-64')
-const TOML = require('@iarna/toml')
+import {Client as RpcWebSocket} from 'rpc-websockets'
+import * as yaml from 'yaml';
+
+export interface PartialConductorConfig {
+  signing_service_uri?: string,
+  encryption_service_uri?: string,
+  decryption_service_uri?: string,
+  network?: T.KitsuneP2pConfig,
+  // dpki?: ??
+}
 
 export type TrycpClient = {
-  setup: (id) => Promise<T.PartialConfigSeedArgs>,
   dna: (url: string) => Promise<{path: string}>,
-  player: (id, config: T.RawConductorConfig) => Promise<any>,
+  configure_player: (id, partial_config: PartialConductorConfig) => Promise<any>,
   spawn: (id) => Promise<any>,
   kill: (id, signal?) => Promise<any>,
   ping: (id) => Promise<string>,
@@ -17,25 +24,23 @@ export type TrycpClient = {
 }
 
 export const trycpSession = async (url: string): Promise<TrycpClient> => {
-  // const { call, close } = await connect({ url })
-  // TODO: fix me and redefine
-  let call, close
+  const ws = new RpcWebSocket(url)
+  await new Promise((resolve) => ws.once("open", resolve))
 
   const makeCall = (method) => async (a) => {
     logger.debug(`trycp client request to ${url}: ${method} => ${JSON.stringify(a, null, 2)}`)
-    const result = await call(method)(a)
+    const result = await ws.call(method)(a)
     logger.debug('trycp client response: %j', result)
     return result
   }
 
   return {
-    setup: (id) => makeCall('setup')({ id }),
     dna: (url) => makeCall('dna')({ url }),
-    player: (id, config) => makeCall('player')({ id, config: base64.encode(TOML.stringify(config)) }),
-    spawn: (id) => makeCall('spawn')({ id }),
-    kill: (id, signal?) => makeCall('kill')({ id, signal }),
-    ping: (id) => makeCall('ping')({ id }),
+    configure_player: (id, partial_config) => makeCall('configure_player')({ id, partial_config: yaml.stringify(partial_config)}),
+    spawn: (id) => makeCall('startup')({ id }),
+    kill: (id, signal?) => makeCall('shutdown')({ id, signal }),
+    ping: () => makeCall('ping')(undefined),
     reset: () => makeCall('reset')({}),
-    closeSession: () => close(),
+    closeSession: () => ws.close(),
   }
 }

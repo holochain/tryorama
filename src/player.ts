@@ -15,8 +15,7 @@ type ConstructorArgs = {
   scenarioUUID: string,
   name: string,
   config: RawConductorConfig,
-  configDir: string,
-  adminInterfacePort: number,
+  adminInterfacePort?: number,
   onSignal: (Signal) => void,
   onJoin: () => void,
   onLeave: () => void,
@@ -44,11 +43,10 @@ export class Player {
   scenarioUUID: string
 
   _conductor: Conductor | null
-  _configDir: string
-  _adminInterfacePort: number
+  _adminInterfacePort?: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ scenarioUUID, name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ scenarioUUID, name, config, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
@@ -58,8 +56,7 @@ export class Player {
     this.config = config
     this.scenarioUUID = scenarioUUID,
 
-    this._conductor = null
-    this._configDir = configDir
+      this._conductor = null
     this._adminInterfacePort = adminInterfacePort
     this._spawnConductor = spawnConductor
   }
@@ -119,12 +116,15 @@ export class Player {
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
       await this.shutdown(signal)
-      unparkPort(this._adminInterfacePort)
-      return true
-    } else {
-      unparkPort(this._adminInterfacePort)
-      return false
+      if (this._adminInterfacePort !== undefined) {
+        unparkPort(this._adminInterfacePort)
+
+      }
     }
+    if (this._adminInterfacePort !== undefined) {
+      unparkPort(this._adminInterfacePort)
+    }
+    return this._conductor !== null
   }
 
   /**
@@ -146,7 +146,7 @@ export class Player {
    */
   installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
     this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
-      return this._conductor!.installHapp(happ, agentPubKey)
+    return this._conductor!.installHapp(happ, agentPubKey)
   }
 
   /**

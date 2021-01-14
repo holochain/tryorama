@@ -89,7 +89,7 @@ export class Conductor {
   }
 
   // install a hApp using the InstallAppRequest struct from conductor-admin-api
-  // you must create your own app_id and dnas list, this is usefull also if you
+  // you must create your own app_id and dnas list, this is useful also if you
   // need to pass in properties or membrane-proof
   _installHapp = async (installAppReq: InstallAppRequest): Promise<T.InstalledHapp> => {
     const {cell_data} = await this.adminClient!.installApp(installAppReq)

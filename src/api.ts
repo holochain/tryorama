@@ -93,10 +93,10 @@ export class ScenarioApi {
     return players
   }
 
-  shareAllNodes = async (players: Array<Player>)  => {
+  shareAllNodes = async (players: Array<Player>) => {
     let player_nodes = {}
     for (const player of players) {
-      player_nodes[player.name] = await player.adminWs().requestAgentInfo({cell_id: null})
+      player_nodes[player.name] = await player.adminWs().requestAgentInfo({ cell_id: null })
     }
     for (const player of players) {
       for (const name in player_nodes) {
@@ -105,35 +105,28 @@ export class ScenarioApi {
         }
       }
     }
- //   return x
-//    return new Promise(() => {return x})
+    //   return x
+    //    return new Promise(() => {return x})
   }
 
-  // TODO: re-implement a way to create a trycp player
   _createTrycpPlayerBuilder = async (machineEndpoint: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
     // keep track of it so we can send a reset() at the end of this scenario
     this._trycpClients.push(trycpClient)
-    const partialConfigSeedArgs = await trycpClient.setup(playerName)
-    const configJson = this._generateConfigFromSeed(partialConfigSeedArgs, playerName, configSeed)
+    const configJson = this._generateConfigFromSeed({ adminInterfacePort: 0, configDir: "unused" }, playerName, configSeed)
     return async () => {
-      const configDir = configJson.environment_path
       // FIXME: can we get this from somewhere?
-      const adminInterfacePort = 0
-      const newConfigJson = await interpolateConfigDnaUrls(trycpClient, configJson)
-      await trycpClient.player(playerName, newConfigJson)
+      await trycpClient.configure_player(playerName, configJson)
       logger.debug('api.players: player config committed for %s', playerName)
       return new Player({
         scenarioUUID: this._uuid,
         name: playerName,
         config: configJson,
-        configDir,
-        adminInterfacePort,
         spawnConductor: spawnRemote(trycpClient, stripPortFromUrl(machineEndpoint)),
         onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
         onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
         onActivity: () => this._restartTimer(),
-        onSignal: (signal_data) => {},
+        onSignal: (signal_data) => { },
       })
     }
   }
@@ -146,17 +139,15 @@ export class ScenarioApi {
       await fs.writeFile(getConfigPath(configDir), YAML.stringify(configYaml))
 
       logger.debug('api.players: player config committed for %s', playerName)
-        return new Player({
-          scenarioUUID: this._uuid,
-          name: playerName,
-          config: configYaml,
-          configDir,
-          adminInterfacePort,
-          spawnConductor: spawnLocal,
-          onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
-          onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
-          onActivity: () => this._restartTimer(),
-          onSignal: (signal) => {console.info("got signal, doing nothing with it: %o", signal)},
+      return new Player({
+        scenarioUUID: this._uuid,
+        name: playerName,
+        config: configYaml,
+        spawnConductor: spawnLocal(configDir, adminInterfacePort),
+        onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
+        onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
+        onActivity: () => this._restartTimer(),
+        onSignal: (signal) => { console.info("got signal, doing nothing with it: %o", signal) },
       })
     }
   }
@@ -177,10 +168,10 @@ export class ScenarioApi {
   }
 
   _getTrycpClient = async (machineEndpoint: string): Promise<TrycpClient> => {
-      logger.debug('api.players: establishing trycp client connection to %s', machineEndpoint)
-      const trycpClient = await trycpSession(machineEndpoint)
-      logger.debug('api.players: trycp client session established for %s', machineEndpoint)
-      return trycpClient
+    logger.debug('api.players: establishing trycp client connection to %s', machineEndpoint)
+    const trycpClient = await trycpSession(machineEndpoint)
+    logger.debug('api.players: trycp client session established for %s', machineEndpoint)
+    return trycpClient
   }
 
   _clearTimer = () => {
@@ -228,25 +219,4 @@ ${names.join(', ')}
     this._clearTimer()
     return localKills
   }
-}
-
-/**
- * If URLs are present in the config, use TryCP 'dna' method to instruct the remote machine
- * to download the dna, and then replace the URL in the config with the returned local path
- */
-// FIXME: convert this for when we get trycp working for RSM
-const interpolateConfigDnaUrls = async (trycp: TrycpClient, configJson: T.RawConductorConfig): Promise<any> => {
-  configJson = _.cloneDeep(configJson)
-  /*
-  configJson.dnas = await Promise.all(
-    configJson.dnas.map(async (dna) => {
-      if (dna.file.match(/^https?:\/\//)) {
-        const { path } = await trycp.dna(dna.file)
-        return _.set(dna, 'file', path)
-      } else {
-        return dna
-      }
-    })
-  )*/
-  return configJson
 }
