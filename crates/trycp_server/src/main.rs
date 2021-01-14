@@ -474,8 +474,8 @@ fn main() {
                     .expect("failed to execute process");
                 println!("killall result: {:?}", output);
             } else {
-                for (id, child) in &*players {
-                    let _ = do_shutdown(id, child, "SIGKILL"); //ignore any errors
+                for child in players.values() {
+                    let _ = do_shutdown(child, Signal::SIGKILL); //ignore any errors
                 }
             }
             players.clear();
@@ -640,17 +640,23 @@ admin_interfaces:
         let ShutdownParams { id, signal } = params.parse()?;
 
         check_player_config_exists(&state_shutdown.read().unwrap(), &id)?;
-        let mut players = players_arc_shutdown.write().unwrap();
-        match players.remove(&id) {
+        match players_arc_shutdown.write().unwrap().remove(&id) {
             None => {
                 return Err(invalid_request(format!("no conductor spawned for {}", id)));
             }
-            Some(ref mut child) => {
-                let signal = match &signal {
-                    Some(signal) => signal,
-                    None => "SIGTERM",
+            Some(child) => {
+                let signal = match signal.as_deref() {
+                    Some("SIGTERM") | None => Signal::SIGTERM,
+                    Some("SIGKILL") => Signal::SIGKILL,
+                    Some("SIGINT") => Signal::SIGINT,
+                    Some(s) => return Err(invalid_request(format!("unrecognized signal: {}", s))),
                 };
-                do_shutdown(&id, child, signal)?;
+                do_shutdown(&child, signal).map_err(|e| {
+                    internal_error(format!(
+                        "unable to shut down conductor for player {}: {:?}",
+                        id, e
+                    ))
+                })?;
             }
         }
         let response = format!("shut down conductor for {}", id);
@@ -693,22 +699,8 @@ admin_interfaces:
     server.wait().expect("server should wait");
 }
 
-fn do_shutdown(
-    id: &str,
-    child: &Child,
-    signal: &str,
-) -> Result<(), jsonrpc_core::types::error::Error> {
-    let sig = match signal {
-        "SIGKILL" => Signal::SIGKILL,
-        "SIGTERM" => Signal::SIGTERM,
-        _ => Signal::SIGINT,
-    };
-    signal::kill(Pid::from_raw(child.id() as i32), sig).map_err(|e| {
-        internal_error(format!(
-            "unable to shut down conductor for {} script: {:?}",
-            id, e
-        ))
-    })
+fn do_shutdown(child: &Child, signal: Signal) -> Result<(), nix::Error> {
+    signal::kill(Pid::from_raw(child.id() as i32), signal)
 }
 
 fn check_player_config_exists(
