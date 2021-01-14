@@ -67,7 +67,7 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   // be used to spin up the conductor processes which are returned in a matching array.
   const [alice, bob] = await s.players([conductorConfig, conductorConfig])
 
-  // install your happs into the coductors and destructuring the returned happ data using the same
+  // install your happs into the conductors and destructuring the returned happ data using the same
   // array structure as you created in your installation array.
   const [
     [alice_test_happ],
@@ -95,8 +95,15 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
 
   // and install a single happ
   const carol_blog_happ = await carol.installHapp([dnaBlog])
-  // or a happ with a previously generated key
-  const carol_test_happ_with_bobs_test_key = await carol.installHapp([dnaTest], bob_blog_happ.agent)
+
+  // or a happ with a previously generated key and previously registered dna by hash
+  // which you can get from the cells as returned in the InstalledHapp from previous install
+  const testDnaHash = bob_test_happ.cells[0].dnaHash()
+  const carol_test_happ_with_bobs_test_key = await carol.installHapp([testDnaHash], bob_blog_happ.agent)
+
+  // or from a call to registerDna which might look like this to create a derived dna using
+  // different uuid.
+  const derivedDnaHash = await carol.registerDna({hash: testDnaHash}, "1234567890")
 
   // assuming default network configuration, use `shareAllNodes` helper
   // to make sure that all conductors know about eachother so they can communicate
