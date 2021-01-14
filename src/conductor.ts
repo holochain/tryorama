@@ -38,6 +38,8 @@ export class Conductor {
   _rawConfig: T.RawConductorConfig
   _wsClosePromise: Promise<void>
   _onActivity: () => void
+  _timeout: number
+
 
   constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, rawConfig }) {
     this.name = name
@@ -60,6 +62,7 @@ export class Conductor {
     this._rawConfig = rawConfig
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
+    this._timeout = 30000
   }
 
   initialize = async () => {
@@ -119,7 +122,7 @@ export class Conductor {
     // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
     const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
-    this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {
+    this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
       this._onActivity();
       this.onSignal(signal);
     })
