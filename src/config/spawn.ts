@@ -45,7 +45,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
         ...process.env,
       }
     })
-    await delay(500)
+    await new Promise ((resolve) => { lairHandle.stdout.once("data", resolve) })
 
     const binPath = env.holochainPath
     const version = execSync(`${binPath} --version`)
