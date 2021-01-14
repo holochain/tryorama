@@ -17,8 +17,8 @@ use reqwest::{self, Url};
 use serde_derive::{Deserialize, Serialize};
 use std::{
     collections::HashMap,
-    fs::File,
-    io::{BufRead, BufReader, Write},
+    fs::{self, File},
+    io::{BufRead, BufReader, Read, Write},
     ops::Range,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
@@ -31,7 +31,6 @@ use url2::prelude::*;
 const MAGIC_STRING: &str = "Conductor ready.";
 
 const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
-const LAIR_STDOUT_LOG_FILENAME: &str = "lair-stdout.txt";
 const LAIR_STDERR_LOG_FILENAME: &str = "lair-stderr.txt";
 const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
@@ -320,6 +319,7 @@ fn main() {
     let state_configure_player = state.clone();
     let state_startup = state.clone();
     let state_shutdown = state.clone();
+    let state_reset = state.clone();
 
     struct Player {
         lair: Child,
@@ -538,26 +538,38 @@ admin_interfaces:
             state.get_player_dir(&id)
         };
 
+        println!("starting player with id: {}", id);
+
         let mut players = players_arc_startup.write().unwrap();
         if players.contains_key(&id) {
             return Err(invalid_request(format!("{} is already running", id)));
         };
 
-        let lair = Command::new("lair-keystore")
+        let mut lair = Command::new("lair-keystore")
             .current_dir(&player_dir)
             .arg("-d")
             .arg("keystore")
             .env("RUST_BACKTRACE", "full")
-            .stdout(
-                File::create(player_dir.join(LAIR_STDOUT_LOG_FILENAME))
-                    .map_err(|e| internal_error(format!("failed to create log file: {:?}", e)))?,
-            )
+            .stdout(Stdio::piped())
             .stderr(
-                File::create(player_dir.join(LAIR_STDERR_LOG_FILENAME))
+                fs::OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(player_dir.join(LAIR_STDERR_LOG_FILENAME))
                     .map_err(|e| internal_error(format!("failed to create log file: {:?}", e)))?,
             )
             .spawn()
             .map_err(|e| internal_error(format!("unable to startup keystore: {:?}", e)))?;
+
+        // Wait until lair begins to output before starting conductor,
+        // otherwise Holochain starts its own copy of lair that we can't manage.
+        lair.stdout
+            .take()
+            .unwrap()
+            .read_exact(&mut [0])
+            .map_err(|e| {
+                internal_error(format!("unable to check that keystore is started: {}", e))
+            })?;
 
         let mut conductor = Command::new("holochain")
             .current_dir(&player_dir)
@@ -577,6 +589,7 @@ admin_interfaces:
 
         let mut log_stdout = Command::new("tee")
             .arg(player_dir.join(CONDUCTOR_STDOUT_LOG_FILENAME))
+            .arg("--append")
             .stdout(Stdio::piped())
             .stdin(conductor_stdout)
             .spawn()
@@ -584,6 +597,7 @@ admin_interfaces:
 
         let _log_stderr = Command::new("tee")
             .arg(player_dir.join(CONDUCTOR_STDERR_LOG_FILENAME))
+            .arg("--append")
             .stdin(conductor_stderr)
             .spawn()
             .unwrap();
@@ -612,25 +626,29 @@ admin_interfaces:
             None => {
                 return Err(invalid_request(format!("no conductor spawned for {}", id)));
             }
-            Some(player) => {
+            Some(mut player) => {
                 let signal = match signal.as_deref() {
                     Some("SIGTERM") | None => Signal::SIGTERM,
                     Some("SIGKILL") => Signal::SIGKILL,
                     Some("SIGINT") => Signal::SIGINT,
                     Some(s) => return Err(invalid_request(format!("unrecognized signal: {}", s))),
                 };
-                do_shutdown(&player.lair, signal).map_err(|e| {
+                println!("stopping player with id: {}", id);
+
+                signal::kill(Pid::from_raw(player.lair.id() as i32), signal).map_err(|e| {
                     internal_error(format!(
                         "unable to shut down keystore for player {}: {:?}",
                         id, e
                     ))
                 })?;
-                do_shutdown(&player.conductor, signal).map_err(|e| {
+                player.lair.wait().unwrap();
+                signal::kill(Pid::from_raw(player.conductor.id() as i32), signal).map_err(|e| {
                     internal_error(format!(
                         "unable to shut down conductor for player {}: {:?}",
                         id, e
                     ))
                 })?;
+                player.conductor.wait().unwrap();
             }
         }
         let response = format!("shut down conductor for {}", id);
@@ -640,19 +658,22 @@ admin_interfaces:
     // Shuts down all running conductors.
     io.add_method("reset", move |params: Params| {
         params.expect_no_params()?;
-        {
-            let mut players = players_arc_reset.write().unwrap();
 
-            for player in players.values() {
-                let _ = do_shutdown(&player.lair, Signal::SIGKILL); //ignore any errors
-                let _ = do_shutdown(&player.conductor, Signal::SIGKILL); //ignore any errors
-            }
+        let mut players = {
+            let mut players_lock = players_arc_reset.write().unwrap();
+            let mut state_lock = state_reset.write().unwrap();
+            state_lock.reset();
+            std::mem::take(&mut *players_lock)
+        };
 
-            players.clear();
+        for (id, player) in players.iter_mut() {
+            println!("force-killing player with id: {}", id);
+            let _ = player.lair.kill(); // ignore any errors
+            let _ = player.conductor.kill(); // ignore any errors
         }
-        {
-            let mut temp_path = state.write().unwrap();
-            temp_path.reset();
+        for player in players.values_mut() {
+            player.lair.wait().unwrap(); // ignore any errors
+            player.conductor.wait().unwrap(); // ignore any errors
         }
 
         Ok(Value::String("reset".into()))
@@ -692,10 +713,6 @@ admin_interfaces:
     println!("waiting for connections on port {}", args.port);
 
     server.wait().expect("server should wait");
-}
-
-fn do_shutdown(child: &Child, signal: Signal) -> Result<(), nix::Error> {
-    signal::kill(Pid::from_raw(child.id() as i32), signal)
 }
 
 fn check_player_config_exists(
