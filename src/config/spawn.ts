@@ -45,6 +45,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
         ...process.env,
       }
     })
+    // Wait for lair to output data such as "#lair-keystore-ready#" before starting holochain
     await new Promise ((resolve) => { lairHandle.stdout.once("data", resolve) })
 
     const binPath = env.holochainPath
