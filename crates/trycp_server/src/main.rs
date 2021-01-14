@@ -31,9 +31,11 @@ use url2::prelude::*;
 const MAGIC_STRING: &str = "Conductor ready.";
 
 const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
-const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "stdout.txt";
-const CONDUCTOR_STDERR_LOG_FILENAME: &str = "stderr.txt";
-const CONDUCTORS_DIR_PATH: &str = "/tmp/trycp/conductors";
+const LAIR_STDOUT_LOG_FILENAME: &str = "lair-stdout.txt";
+const LAIR_STDERR_LOG_FILENAME: &str = "lair-stderr.txt";
+const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
+const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
+const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
 const DNA_DIR_PATH: &str = "/tmp/trycp/dnas";
 
 #[derive(StructOpt)]
@@ -138,15 +140,15 @@ impl ServerList {
 }
 
 struct TrycpServer {
-    conductors_dir: PathBuf,
+    players_dir: PathBuf,
     next_port: u16,
     port_range: PortRange,
     registered: ServerList,
 }
 
-fn make_conductors_dir() -> Result<PathBuf, String> {
-    std::fs::create_dir_all(CONDUCTORS_DIR_PATH).map_err(|err| format!("{:?}", err))?;
-    let dir = tempfile::tempdir_in(CONDUCTORS_DIR_PATH)
+fn make_players_dir() -> Result<PathBuf, String> {
+    std::fs::create_dir_all(PLAYERS_DIR_PATH).map_err(|err| format!("{:?}", err))?;
+    let dir = tempfile::tempdir_in(PLAYERS_DIR_PATH)
         .map_err(|err| format!("{:?}", err))?
         .into_path();
     Ok(dir)
@@ -160,7 +162,7 @@ impl TrycpServer {
     fn new(port_range: PortRange) -> Self {
         make_dna_dir().expect("should create dna dir");
         TrycpServer {
-            conductors_dir: make_conductors_dir().expect("should create conductor dir"),
+            players_dir: make_players_dir().expect("should create conductor dir"),
             next_port: port_range.start,
             port_range,
             registered: ServerList::new(),
@@ -182,28 +184,14 @@ impl TrycpServer {
 
     fn reset(&mut self) {
         self.next_port = self.port_range.start;
-        match make_conductors_dir() {
+        match make_players_dir() {
             Err(err) => println!("reset failed creating conductor dir: {:?}", err),
-            Ok(dir) => self.conductors_dir = dir,
+            Ok(dir) => self.players_dir = dir,
         }
     }
 
-    fn get_conductor_dir(&self, id: &str) -> PathBuf {
-        self.conductors_dir.join(id)
-    }
-
-    fn get_config_path(&self, id: &str) -> PathBuf {
-        self.get_conductor_dir(id).join(CONDUCTOR_CONFIG_FILENAME)
-    }
-
-    fn get_stdout_log_path(&self, id: &str) -> PathBuf {
-        self.get_conductor_dir(id)
-            .join(CONDUCTOR_STDOUT_LOG_FILENAME)
-    }
-
-    fn get_stderr_log_path(&self, id: &str) -> PathBuf {
-        self.get_conductor_dir(id)
-            .join(CONDUCTOR_STDERR_LOG_FILENAME)
+    fn get_player_dir(&self, id: &str) -> PathBuf {
+        self.players_dir.join(id)
     }
 }
 
@@ -333,7 +321,12 @@ fn main() {
     let state_startup = state.clone();
     let state_shutdown = state.clone();
 
-    let players_arc: Arc<RwLock<HashMap<String, Child>>> = Arc::new(RwLock::new(HashMap::new()));
+    struct Player {
+        lair: Child,
+        conductor: Child,
+    }
+
+    let players_arc: Arc<RwLock<HashMap<String, Player>>> = Arc::new(RwLock::new(HashMap::new()));
     let players_arc_shutdown = players_arc.clone();
     let players_arc_reset = players_arc.clone();
     let players_arc_startup = players_arc;
@@ -454,40 +447,6 @@ fn main() {
         Ok(json!({ "path": local_path }))
     });
 
-    // Shuts down all running conductors.
-    //
-    // If passed `killall: true`, uses the `killall` command to shutdown conductors,
-    // rather than killing each spawned conductor individually.
-    io.add_method("reset", move |params: Params| {
-        #[derive(Deserialize)]
-        struct ResetParams {
-            #[serde(default)]
-            killall: bool,
-        }
-        let ResetParams { killall } = params.parse()?;
-        {
-            let mut players = players_arc_reset.write().unwrap();
-            if killall {
-                let output = Command::new("killall")
-                    .args(&["holochain", "-s", "SIGKILL"])
-                    .output()
-                    .expect("failed to execute process");
-                println!("killall result: {:?}", output);
-            } else {
-                for child in players.values() {
-                    let _ = do_shutdown(child, Signal::SIGKILL); //ignore any errors
-                }
-            }
-            players.clear();
-        }
-        {
-            let mut temp_path = state.write().unwrap();
-            temp_path.reset();
-        }
-
-        Ok(Value::String("reset".into()))
-    });
-
     io.add_method("configure_player", move |params: Params| {
         #[derive(Deserialize)]
         struct ConfigurePlayerParams {
@@ -506,15 +465,13 @@ fn main() {
         }
         let ConfigurePlayerParams { id, partial_config } = params.parse()?;
 
-        let (conductor_dir, config_path) = {
-            let state = state_configure_player.read().unwrap();
-            (state.get_conductor_dir(&id), state.get_config_path(&id))
-        };
+        let player_dir = state_configure_player.read().unwrap().get_player_dir(&id);
+        let config_path = player_dir.join(CONDUCTOR_CONFIG_FILENAME);
 
-        std::fs::create_dir_all(&conductor_dir).map_err(|e| {
+        std::fs::create_dir_all(&player_dir).map_err(|e| {
             internal_error(format!(
                 "failed to create directory ({}) for player: {:?}",
-                conductor_dir.display(),
+                player_dir.display(),
                 e
             ))
         })?;
@@ -575,47 +532,58 @@ admin_interfaces:
         }
         let StartupParams { id } = params.parse()?;
 
-        let (config_path, stdout_log_path, stderr_log_path) = {
+        let player_dir = {
             let state = state_startup.read().unwrap();
             check_player_config_exists(&state, &id)?;
-            (
-                state.get_config_path(&id),
-                state.get_stdout_log_path(&id),
-                state.get_stderr_log_path(&id),
-            )
+            state.get_player_dir(&id)
         };
-        let (conductor_stdout, conductor_stderr, conductor_pid) = {
-            let mut players = players_arc_startup.write().unwrap();
-            if players.contains_key(&id) {
-                return Err(invalid_request(format!("{} is already running", id)));
-            };
 
-            let mut conductor = Command::new("holochain")
-                .arg("-c")
-                .arg(&config_path)
-                .env("RUST_BACKTRACE", "full")
-                .stdout(Stdio::piped())
-                .stderr(Stdio::piped())
-                .spawn()
-                .map_err(|e| internal_error(format!("unable to startup conductor: {:?}", e)))?;
-            let result = (
-                conductor.stdout.take().unwrap(),
-                conductor.stderr.take().unwrap(),
-                conductor.id(),
-            );
-            players.insert(id.clone(), conductor);
-            result
+        let mut players = players_arc_startup.write().unwrap();
+        if players.contains_key(&id) {
+            return Err(invalid_request(format!("{} is already running", id)));
         };
+
+        let lair = Command::new("lair-keystore")
+            .current_dir(&player_dir)
+            .arg("-d")
+            .arg("keystore")
+            .env("RUST_BACKTRACE", "full")
+            .stdout(
+                File::create(player_dir.join(LAIR_STDOUT_LOG_FILENAME))
+                    .map_err(|e| internal_error(format!("failed to create log file: {:?}", e)))?,
+            )
+            .stderr(
+                File::create(player_dir.join(LAIR_STDERR_LOG_FILENAME))
+                    .map_err(|e| internal_error(format!("failed to create log file: {:?}", e)))?,
+            )
+            .spawn()
+            .map_err(|e| internal_error(format!("unable to startup keystore: {:?}", e)))?;
+
+        let mut conductor = Command::new("holochain")
+            .current_dir(&player_dir)
+            .arg("-c")
+            .arg(CONDUCTOR_CONFIG_FILENAME)
+            .env("RUST_BACKTRACE", "full")
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .map_err(|e| internal_error(format!("unable to startup conductor: {:?}", e)))?;
+
+        let conductor_stdout = conductor.stdout.take().unwrap();
+        let conductor_stderr = conductor.stderr.take().unwrap();
+
+        players.insert(id.clone(), Player { conductor, lair });
+        std::mem::drop(players);
 
         let mut log_stdout = Command::new("tee")
-            .arg(stdout_log_path)
+            .arg(player_dir.join(CONDUCTOR_STDOUT_LOG_FILENAME))
             .stdout(Stdio::piped())
             .stdin(conductor_stdout)
             .spawn()
             .unwrap();
 
         let _log_stderr = Command::new("tee")
-            .arg(stderr_log_path)
+            .arg(player_dir.join(CONDUCTOR_STDERR_LOG_FILENAME))
             .stdin(conductor_stderr)
             .spawn()
             .unwrap();
@@ -644,14 +612,20 @@ admin_interfaces:
             None => {
                 return Err(invalid_request(format!("no conductor spawned for {}", id)));
             }
-            Some(child) => {
+            Some(player) => {
                 let signal = match signal.as_deref() {
                     Some("SIGTERM") | None => Signal::SIGTERM,
                     Some("SIGKILL") => Signal::SIGKILL,
                     Some("SIGINT") => Signal::SIGINT,
                     Some(s) => return Err(invalid_request(format!("unrecognized signal: {}", s))),
                 };
-                do_shutdown(&child, signal).map_err(|e| {
+                do_shutdown(&player.lair, signal).map_err(|e| {
+                    internal_error(format!(
+                        "unable to shut down keystore for player {}: {:?}",
+                        id, e
+                    ))
+                })?;
+                do_shutdown(&player.conductor, signal).map_err(|e| {
                     internal_error(format!(
                         "unable to shut down conductor for player {}: {:?}",
                         id, e
@@ -661,6 +635,27 @@ admin_interfaces:
         }
         let response = format!("shut down conductor for {}", id);
         Ok(Value::String(response))
+    });
+
+    // Shuts down all running conductors.
+    io.add_method("reset", move |params: Params| {
+        params.expect_no_params()?;
+        {
+            let mut players = players_arc_reset.write().unwrap();
+
+            for player in players.values() {
+                let _ = do_shutdown(&player.lair, Signal::SIGKILL); //ignore any errors
+                let _ = do_shutdown(&player.conductor, Signal::SIGKILL); //ignore any errors
+            }
+
+            players.clear();
+        }
+        {
+            let mut temp_path = state.write().unwrap();
+            temp_path.reset();
+        }
+
+        Ok(Value::String("reset".into()))
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
@@ -707,7 +702,7 @@ fn check_player_config_exists(
     state: &TrycpServer,
     id: &str,
 ) -> Result<(), jsonrpc_core::types::error::Error> {
-    let file_path = state.get_config_path(id);
+    let file_path = state.get_player_dir(id).join(CONDUCTOR_CONFIG_FILENAME);
     if !file_path.is_file() {
         return Err(invalid_request(format!(
             "player config for {} not setup",
