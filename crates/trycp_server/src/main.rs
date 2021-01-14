@@ -575,60 +575,59 @@ admin_interfaces:
         }
         let StartupParams { id } = params.parse()?;
 
-        let state = state_startup.read().unwrap();
-        check_player_config_exists(&state, &id)?;
-        let mut players = players_arc_startup.write().unwrap();
-        if players.contains_key(&id) {
-            return Err(invalid_request(format!("{} is already running", id)));
+        let (config_path, stdout_log_path, stderr_log_path) = {
+            let state = state_startup.read().unwrap();
+            check_player_config_exists(&state, &id)?;
+            (
+                state.get_config_path(&id),
+                state.get_stdout_log_path(&id),
+                state.get_stderr_log_path(&id),
+            )
         };
+        let (conductor_stdout, conductor_stderr, conductor_pid) = {
+            let mut players = players_arc_startup.write().unwrap();
+            if players.contains_key(&id) {
+                return Err(invalid_request(format!("{} is already running", id)));
+            };
 
-        let config_path = state.get_config_path(&id);
-        let stdout_log_path = state.get_stdout_log_path(&id);
-        let stderr_log_path = state.get_stderr_log_path(&id);
-
-        let mut conductor = Command::new("holochain")
-            .arg("-c")
-            .arg(&config_path)
-            .env("RUST_BACKTRACE", "full")
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|e| internal_error(format!("unable to startup conductor: {:?}", e)))?;
+            let mut conductor = Command::new("holochain")
+                .arg("-c")
+                .arg(&config_path)
+                .env("RUST_BACKTRACE", "full")
+                .stdout(Stdio::piped())
+                .stderr(Stdio::piped())
+                .spawn()
+                .map_err(|e| internal_error(format!("unable to startup conductor: {:?}", e)))?;
+            let result = (
+                conductor.stdout.take().unwrap(),
+                conductor.stderr.take().unwrap(),
+                conductor.id(),
+            );
+            players.insert(id.clone(), conductor);
+            result
+        };
 
         let mut log_stdout = Command::new("tee")
             .arg(stdout_log_path)
             .stdout(Stdio::piped())
-            .stdin(conductor.stdout.take().unwrap())
+            .stdin(conductor_stdout)
             .spawn()
             .unwrap();
 
         let _log_stderr = Command::new("tee")
             .arg(stderr_log_path)
-            .stdin(conductor.stderr.take().unwrap())
+            .stdin(conductor_stderr)
             .spawn()
             .unwrap();
 
-        match log_stdout.stdout.take() {
-            Some(stdout) => {
-                for line in BufReader::new(stdout).lines() {
-                    let line = line.unwrap();
-                    if line == MAGIC_STRING {
-                        println!("Encountered magic string");
-                        break;
-                    }
-                }
-
-                let response = format!("conductor started up for {}", id);
-                players.insert(id, conductor);
-                Ok(Value::String(response))
-            }
-            None => {
-                conductor.kill().unwrap();
-                Err(internal_error(
-                    "Conductor process not capturing stdout, bailing!".to_string(),
-                ))
+        for line in BufReader::new(log_stdout.stdout.take().unwrap()).lines() {
+            let line = line.unwrap();
+            if line == MAGIC_STRING {
+                println!("Encountered magic string");
+                break;
             }
         }
+        Ok(Value::String(format!("conductor started up for {}", id)))
     });
 
     io.add_method("shutdown", move |params: Params| {
