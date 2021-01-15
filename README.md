@@ -96,10 +96,10 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   // and install a single happ
   const carol_blog_happ = await carol.installHapp([dnaBlog])
 
-  // or a happ with a previously generated key and previously registered dna by hash
-  // which you can get from the cells as returned in the InstalledHapp from previous install
-  // or from a call to registerDna which might look like this to create a derived dna using
-  // a different uuid
+  // or install a happ using
+  // - a previously generated key
+  // - and the hash of a dna that was previously registered with the same conductor
+  // (a dna can be registered either by installing a happ with that dna or by calling registerDna with an old dna's hash and a new UUID)
   const blogDnaHash = carol_test_happ.cells[0].dnaHash()
   const derivedDnaHash = await carol.registerDna({hash: blogDnaHash}, "1234567890")
   const carol_derived_happ_with_bobs_test_key = await carol.installHapp([derivedDnaHash], bob_blog_happ.agent)
