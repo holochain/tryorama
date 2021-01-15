@@ -74,7 +74,29 @@ module.exports = (testOrchestrator, testConfig) => {
     })
 
     const stats = await orchestrator.run()
+    t.equal(stats.successes, 1)
+    t.end()
+  })
 
+  test('dna registration', async t => {
+    const [conductorConfig, installApps] = testConfig()
+    const orchestrator = testOrchestrator()
+    orchestrator.registerScenario('we can register Dnas', async s => {
+      const [ alice ] = await s.players([conductorConfig])
+      const [[alice_happ]] = await alice.installAgentsHapps(installApps)
+      let dnas =  await alice.adminWs().listDnas()
+      t.equal(dnas.length, 1)
+      const dnaHash = alice_happ.cells[0].dnaHash()
+      const derivedDnaHash = await alice.registerDna({hash: dnaHash}, "12345")
+      t.equal(dnaHash.length, 39)
+      t.equal(derivedDnaHash.length, 39)
+      t.notEqual(dnaHash, derivedDnaHash)
+      dnas =  await alice.adminWs().listDnas()
+      t.equal(dnas.length, 2)
+
+    })
+
+    const stats = await orchestrator.run()
     t.equal(stats.successes, 1)
     t.end()
   })

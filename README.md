@@ -9,7 +9,7 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 
 Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
-Note: this version of tryorama is tested against holochain rev afdb4e949b77cc81afa1b0601cf406dc08587b45.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
+Note: this version of tryorama is tested against holochain rev ea026def01d1573d5e0edfb7f4e3e9453f88c43e.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
 
 ```bash
 npm install @holochain/tryorama
@@ -95,8 +95,14 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
 
   // and install a single happ
   const carol_blog_happ = await carol.installHapp([dnaBlog])
-  // or a happ with a previously generated key
-  const carol_test_happ_with_bobs_test_key = await carol.installHapp([dnaTest], bob_blog_happ.agent)
+
+  // or install a happ using
+  // - a previously generated key
+  // - and the hash of a dna that was previously registered with the same conductor
+  // (a dna can be registered either by installing a happ with that dna or by calling registerDna with an old dna's hash and a new UUID)
+  const blogDnaHash = carol_test_happ.cells[0].dnaHash()
+  const derivedDnaHash = await carol.registerDna({hash: blogDnaHash}, "1234567890")
+  const carol_derived_happ_with_bobs_test_key = await carol.installHapp([derivedDnaHash], bob_blog_happ.agent)
 
   // assuming default network configuration, use `shareAllNodes` helper
   // to make sure that all conductors know about eachother so they can communicate
