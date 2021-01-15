@@ -523,9 +523,13 @@ admin_interfaces:
         #[derive(Deserialize)]
         struct AdminApiCallParams {
             id: String,
-            message: Value,
+            message_base64: String,
         }
-        let AdminApiCallParams { id, message } = params.parse()?;
+        let AdminApiCallParams { id, message_base64 } = params.parse()?;
+        println!("admin_interface_call id: {:?}", id);
+
+        let message_buf = base64::decode(&message_base64).map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
+
         let maybe_port = state_admin_interface_call
             .read()
             .unwrap()
@@ -538,13 +542,15 @@ admin_interfaces:
             ))
         })?;
         let (res_tx, res_rx) = crossbeam::channel::bounded(0);
-        let mut capture_vars = Some((res_tx, id));
+        let mut capture_vars = Some((res_tx, id, message_buf));
+        dbg!("pre-connect");
         ws::connect(format!("ws://localhost:{}", port), move |out| {
+            dbg!("factory");
             // Even though this closure is only called once, the API requires FnMut
             // so we must use a workaround to take ownership of our captured variables
-            let (res_tx, id) = capture_vars.take().unwrap();
+            let (res_tx, id, message_buf) = capture_vars.take().unwrap();
 
-            let send_response = match out.send(serde_json::to_string(&message).unwrap()) {
+            let send_response = match out.send(message_buf) {
                 Ok(()) => true,
                 Err(e) => {
                     res_tx.send(Err(internal_error(format!("failed to send message to player admin interface: {}", e)))).unwrap();
@@ -555,6 +561,7 @@ admin_interfaces:
                 }
             };
             move |response| {
+                dbg!("received response");
                 println!("received admin interface response from player {}: {:?}", id, response);
                 if send_response {
                     res_tx.send(Ok(response)).unwrap();
