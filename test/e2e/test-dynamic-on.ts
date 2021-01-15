@@ -42,38 +42,6 @@ module.exports = (testOrchestrator, testConfig) => {
     t.end()
   })
 
-  test('test remote with shutdown and startup', async t => {
-    const [aliceConfig, installApps] = testConfig()
-    const orchestrator = testOrchestrator()
-
-    // orchestrator.registerScenario('attempted call with stopped conductor', async s => {
-    //   const [alice] = await s.playersRemote([aliceConfig], "localhost:9123")
-    //   await alice.startup()
-    //   const [[alice_happ]] = await alice.installAgentsHapps(installApps)
-    //   const [link_cell] = alice_happ.cells
-    //   await t.doesNotReject(
-    //     link_cell.call('test', 'create_link')
-    //   )
-    //   await alice.shutdown()
-    //   await t.rejects(
-    //     link_cell.call('test', 'create_link')
-    //     /* no conductor is running.*/
-    //   )
-    // })
-
-    orchestrator.registerScenario('start-stop-start', async s => {
-      const [alice] = await s.playersRemote([aliceConfig], "localhost:9123")
-      await alice.startup()
-      await alice.shutdown()
-      await alice.startup()
-    })
-
-    const stats = await orchestrator.run()
-
-    t.equal(stats.successes, 1)
-    t.end()
-  })
-
   test('late joiners', async t => {
     const [conductorConfig, installApps] = testConfig()
     const orchestrator = testOrchestrator()
