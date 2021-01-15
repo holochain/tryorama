@@ -20,8 +20,6 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     onSignal: () => { },
     onActivity: () => { },
     machineHost: '',
-    adminPort: 0,
-    rawConfig: player.config
   })
 }
 
@@ -33,7 +31,7 @@ export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConduct
   try {
 
     const lairDir = `${configDir}/keystore`
-    if (!fs.existsSync(lairDir)){
+    if (!fs.existsSync(lairDir)) {
       fs.mkdirSync(lairDir);
     }
     logger.info("Spawning lair for test with keystore at:  %s", lairDir)
@@ -46,7 +44,7 @@ export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConduct
       }
     })
     // Wait for lair to output data such as "#lair-keystore-ready#" before starting holochain
-    await new Promise ((resolve) => { lairHandle.stdout.once("data", resolve) })
+    await new Promise((resolve) => { lairHandle.stdout.once("data", resolve) })
 
     const binPath = env.holochainPath
     const version = execSync(`${binPath} --version`)
@@ -89,7 +87,7 @@ export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConduct
         const lairKillPromise = new Promise((resolve) => {
           lairHandle.once('close', resolve)
         })
-        const killPromise = Promise.all([conductorKillPromise,lairKillPromise])
+        const killPromise = Promise.all([conductorKillPromise, lairKillPromise])
         lairHandle.kill()
         handle.kill(...args)
         return killPromise
@@ -98,7 +96,6 @@ export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConduct
       onActivity: player.onActivity,
       machineHost: `localhost`,
       adminPort,
-      rawConfig: player.config
     })
 
     return conductor
@@ -135,7 +132,7 @@ const awaitInterfaceReady = (handle, name): Promise<null> => new Promise((fulfil
 export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
   const name = player.name
   const spawnResult = await trycp.spawn(name)
-  logger.debug(`TryCP startup result: ${spawnResult}`)
+  logger.debug(`TryCP spawn result: ${spawnResult}`)
   // NB: trycp currently blocks until conductor is ready. It would be nice if it instead sent a notification asynchronously when the conductor is ready.
   // logger.info('Waiting 20 seconds for remote conductor to be ready to receive websocket connections...')
   // await delay(20000)
@@ -148,8 +145,6 @@ export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnCon
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
     machineHost,
-    adminPort: 0,
-    rawConfig: 'TODO',
   })
 }
 

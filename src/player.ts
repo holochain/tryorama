@@ -96,7 +96,7 @@ export class Player {
     this.logger.debug("initialized")
   }
 
-  shutdown = async (signal = 'SIGINT'): Promise<boolean> => {
+  shutdown = async (signal = 'SIGTERM'): Promise<boolean> => {
     if (this._conductor) {
       const c = this._conductor
       this._conductor = null
@@ -112,7 +112,7 @@ export class Player {
   }
 
   /** Runs at the end of a test run */
-  cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
+  cleanup = async (signal = 'SIGTERM'): Promise<boolean> => {
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
       await this.shutdown(signal)

@@ -66,8 +66,6 @@ export class ScenarioApi {
         const playerName = `c${this._conductorIndex++}`
         // local machine
         return await this._createLocalPlayerBuilder(playerName, configSeed)
-        // TODO: trycp
-        // await this._createTrycpPlayerBuilder(machineEndpoint, playerName, playerConfigSeed)
       }
     ))
 
@@ -89,6 +87,36 @@ export class ScenarioApi {
         // logger.info('api.players: startup complete for %s', player.name)
       }
     }
+
+    return players
+  }
+
+  playersRemote = async (playerConfigs: Array<T.PlayerConfig>, machineEndpoint: string): Promise<Array<Player>> => {
+    logger.debug('api.playersRemote: creating players')
+
+    // validation
+    playerConfigs.forEach((pc, i) => {
+      if (!_.isFunction(pc)) {
+        throw new Error(`Config for player at index ${i} contains something other than a function. Either use Config.gen to create a seed function, or supply one manually.`)
+      }
+    })
+
+    // create all the promise *creators* which will
+    // create the players
+    const playerBuilders: Array<PlayerBuilder> = await Promise.all(playerConfigs.map(
+      async configSeed => {
+        // use the _conductorIndex and then increment it
+        const playerName = `c${this._conductorIndex++}`
+        // trycp
+        return await this._createTrycpPlayerBuilder(machineEndpoint, playerName, configSeed)
+      }
+    ))
+
+    // this will throw an error if something is wrong
+
+    // now sequentially build the players
+    const players = await promiseSerialArray<Player>(playerBuilders.map(pb => pb()))
+    logger.debug('api.playersRemote: players built')
 
     return players
   }
