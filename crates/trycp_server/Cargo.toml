@@ -15,6 +15,7 @@ edition = "2018"
 in_stream = { version = "=0.0.52-alpha2", git = "https://github.com/holochain/holochain-rust" }
 
 base64 = "=0.10.1"
+crossbeam = "0.8.0"
 env_logger = "0.7.0"
 jsonrpc-core = "14.0"
 jsonrpc-ws-server = "14.0"
@@ -31,3 +32,4 @@ structopt = "=0.2.18"
 structopt-derive = "=0.2.18"
 tempfile = "=3.0.7"
 url2 = "=0.0.4"
+ws = "0.9"

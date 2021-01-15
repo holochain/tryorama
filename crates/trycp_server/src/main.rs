@@ -111,6 +111,7 @@ struct TrycpServer {
     players_dir: PathBuf,
     next_port: u16,
     port_range: PortRange,
+    ports: HashMap<String, u16>,
 }
 
 fn make_players_dir() -> Result<PathBuf, String> {
@@ -130,13 +131,15 @@ impl TrycpServer {
             players_dir: make_players_dir().expect("should create conductor dir"),
             next_port: port_range.start,
             port_range,
+            ports: HashMap::new(),
         }
     }
 
-    fn acquire_port(&mut self) -> Result<u16, String> {
+    fn acquire_port(&mut self, id: String) -> Result<u16, String> {
         if self.next_port < self.port_range.end {
             let port = self.next_port;
             self.next_port += 1;
+            self.ports.insert(id, port);
             Ok(port)
         } else {
             Err(format!(
@@ -148,6 +151,7 @@ impl TrycpServer {
 
     fn reset(&mut self) {
         self.next_port = self.port_range.start;
+        self.ports.clear();
         // Each time we receive a reset signal, switch to a new randomly named
         // subdirectory of /tmp/trycp/players
         match make_players_dir() {
@@ -212,6 +216,7 @@ fn main() {
     let state_startup = state.clone();
     let state_shutdown = state.clone();
     let state_reset = state.clone();
+    let state_admin_interface_call = state.clone();
 
     struct Player {
         lair: Child,
@@ -319,7 +324,7 @@ fn main() {
         let port = state_configure_player
             .write()
             .unwrap()
-            .acquire_port()
+            .acquire_port(id.clone())
             .map_err(internal_error)?;
 
         writeln!(
@@ -512,6 +517,61 @@ admin_interfaces:
         }
 
         Ok(Value::String("reset".into()))
+    });
+
+    io.add_method("admin_interface_call", move |params: Params| {
+        #[derive(Deserialize)]
+        struct AdminApiCallParams {
+            id: String,
+            message: Value,
+        }
+        let AdminApiCallParams { id, message } = params.parse()?;
+        let maybe_port = state_admin_interface_call
+            .read()
+            .unwrap()
+            .ports
+            .get(&id)
+            .cloned();
+        let port = maybe_port.ok_or_else(|| {
+            invalid_request(format!(
+                "failed to call player admin interface: player not yet configured"
+            ))
+        })?;
+        let (res_tx, res_rx) = crossbeam::channel::bounded(0);
+        let mut capture_vars = Some((res_tx, id));
+        ws::connect(format!("ws://localhost:{}", port), move |out| {
+            // Even though this closure is only called once, the API requires FnMut
+            // so we must use a workaround to take ownership of our captured variables
+            let (res_tx, id) = capture_vars.take().unwrap();
+
+            let send_response = match out.send(serde_json::to_string(&message).unwrap()) {
+                Ok(()) => true,
+                Err(e) => {
+                    res_tx.send(Err(internal_error(format!("failed to send message to player admin interface: {}", e)))).unwrap();
+                    if let Err(e) = out.close(ws::CloseCode::Error) {
+                        println!("warning: silently ignoring error: failed to close admin interface connection: {}", e);
+                    }
+                    false
+                }
+            };
+            move |response| {
+                println!("received admin interface response from player {}: {:?}", id, response);
+                if send_response {
+                    res_tx.send(Ok(response)).unwrap();
+                    out.close(ws::CloseCode::Normal)
+                } else {
+                    println!("warning: ignoring admin interface response");
+                    Ok(())
+                }
+            }
+        }).map_err(|e| internal_error(format!("failed to connect to player admin interface: {}", e)))?;
+        
+        // Parse the admin interface response
+        let response = res_rx.recv().unwrap()?;
+        match response {
+            ws::Message::Text(text) => serde_json::from_str(&text).map_err(|e| internal_error(format!("failed to parse admin interface response {:?} as json: {}", text, e))),
+            m => return Err(internal_error(format!("unexpected response from admin interface: {}", m)))
+        }
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
