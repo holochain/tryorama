@@ -142,28 +142,25 @@ impl TrycpServer {
             println!("error: failed to clear out players directory: {}", e);
         }
     }
+}
 
-    fn get_player_dir(&self, id: &str) -> PathBuf {
-        Path::new(PLAYERS_DIR_PATH).join(id)
-    }
-
-    fn check_player_config_exists(
-        &self,
-        id: &str,
-    ) -> Result<(), jsonrpc_core::types::error::Error> {
-        let file_path = self.get_player_dir(id).join(CONDUCTOR_CONFIG_FILENAME);
-        if !file_path.is_file() {
-            return Err(invalid_request(format!(
-                "player config for {} not setup",
-                id
-            )));
-        }
-        Ok(())
-    }
+fn get_player_dir(id: &str) -> PathBuf {
+    Path::new(PLAYERS_DIR_PATH).join(id)
 }
 
 fn get_dna_path(url: &Url) -> PathBuf {
     Path::new(DNA_DIR_PATH).join(url.path().to_string().replace("/", "").replace("%", "_"))
+}
+
+fn check_player_config_exists(id: &str) -> Result<(), jsonrpc_core::types::error::Error> {
+    let file_path = get_player_dir(id).join(CONDUCTOR_CONFIG_FILENAME);
+    if !file_path.is_file() {
+        return Err(invalid_request(format!(
+            "player config for {} not setup",
+            id
+        )));
+    }
+    Ok(())
 }
 
 fn save_file(file_path: &Path, content: &[u8]) -> Result<(), jsonrpc_core::types::error::Error> {
@@ -196,8 +193,6 @@ fn main() {
     let state: Arc<RwLock<TrycpServer>> =
         Arc::new(RwLock::new(TrycpServer::new(conductor_port_range)));
     let state_configure_player = state.clone();
-    let state_startup = state.clone();
-    let state_shutdown = state.clone();
     let state_reset = state.clone();
 
     struct Player {
@@ -284,7 +279,7 @@ fn main() {
         }
         let ConfigurePlayerParams { id, partial_config } = params.parse()?;
 
-        let player_dir = state_configure_player.read().unwrap().get_player_dir(&id);
+        let player_dir = get_player_dir(&id);
         let config_path = player_dir.join(CONDUCTOR_CONFIG_FILENAME);
 
         std::fs::create_dir_all(&player_dir).map_err(|e| {
@@ -351,11 +346,8 @@ admin_interfaces:
         }
         let StartupParams { id } = params.parse()?;
 
-        let player_dir = {
-            let state = state_startup.read().unwrap();
-            state.check_player_config_exists(&id)?;
-            state.get_player_dir(&id)
-        };
+        check_player_config_exists(&id)?;
+        let player_dir = get_player_dir(&id);
 
         println!("starting player with id: {}", id);
 
@@ -440,10 +432,7 @@ admin_interfaces:
 
         let ShutdownParams { id, signal } = params.parse()?;
 
-        state_shutdown
-            .read()
-            .unwrap()
-            .check_player_config_exists(&id)?;
+        check_player_config_exists(&id)?;
         match players_arc_shutdown.write().unwrap().remove(&id) {
             None => {
                 return Err(invalid_request(format!("no conductor spawned for {}", id)));
