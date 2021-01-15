@@ -40,4 +40,4 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
 }
 
 export const getConfigPath = (configDir: string) =>
-  path.join(configDir, 'conductor-config.yaml')
+  path.join(configDir, 'conductor-config.yml')

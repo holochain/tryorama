@@ -67,7 +67,7 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   // be used to spin up the conductor processes which are returned in a matching array.
   const [alice, bob] = await s.players([conductorConfig, conductorConfig])
 
-  // install your happs into the conductors and destructuring the returned happ data using the same
+  // install your happs into the conductors and destructure the returned happ data using the same
   // array structure as you created in your installation array.
   const [
     [alice_test_happ],
@@ -78,8 +78,8 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
     [bob_blog_happ, bob_chat_happ]
   ] = await bob.installAgentsHapps(installation)
 
-  // then you can start making zome calls either on the cells in the order in which the dnas
-  // where defined, with params: zomeName, fnName, and arguments:
+  // then you can start making zome calls on the cells in the order in which the dnas
+  // were defined, with params: zomeName, fnName, and arguments:
   const res = await alice_blog_happ.cells[0].call('messages', 'list_messages', {})
 
   // or you can destructure the cells for more semantic references (this is most usefull
@@ -241,7 +241,7 @@ Much of the purpose of Tryorama is to provide ways to setup conductors for tests
 
 ## Goals
 1. Common setups should be easy to generate
-2. Any conductor setups should be possible
+2. Any conductor setup should be possible
 3. Conductors from different scenarios must remain independent and invisible to each other
 
 Setting up a conductor for a test consists of two main parts:
