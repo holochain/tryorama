@@ -1,5 +1,7 @@
 import test from 'tape-promise/tape'
 import { ChildProcess, ChildProcessWithoutNullStreams, spawn } from 'child_process'
+import * as fs from 'fs'
+import * as yaml from 'yaml';
 
 const PORT = 9000
 
@@ -50,9 +52,25 @@ module.exports = (testOrchestrator, testConfig) => {
             await alice.startup()
         })
 
+        orchestrator.registerScenario('check-config', async s => {
+            const [alice] = await s.playersRemote([aliceConfig], `localhost:${PORT}`)
+            const config_data = await new Promise<string>((resolve) => fs.readFile('/tmp/trycp/players/c0/conductor-config.yml', (err, data) => {
+                if (err) {
+                    throw err
+                }
+                resolve(data.toString())
+            }))
+            const config = yaml.parse(config_data)
+            t.equal(config.signing_service_uri, null)
+            t.equal(config.encryption_service_uri, null)
+            t.equal(config.decryption_service_uri, null)
+            t.deepEqual(config.network, { transport_pool: [{ type: 'quic' }] })
+            t.equal(config.dpki, null)
+        })
+
         const stats = await orchestrator.run()
 
-        t.equal(stats.successes, 1)
+        t.equal(stats.successes, 2)
         t.end()
         trycp.kill("SIGTERM")
     })
