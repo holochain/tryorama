@@ -6,7 +6,7 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, DnaProperties } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
 
@@ -47,6 +47,8 @@ export class Conductor {
   _isInitialized: boolean
   _wsClosePromise: Promise<void>
   _onActivity: () => void
+  _timeout: number
+
 
   constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort }: ConstructorArgs) {
     this.name = name
@@ -68,6 +70,7 @@ export class Conductor {
     this._isInitialized = false
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
+    this._timeout = 30000
   }
 
   initialize = async () => {
@@ -79,21 +82,34 @@ export class Conductor {
 
   awaitClosed = () => this._wsClosePromise
 
+  // this function registers a DNA from a given source
+  registerDna = async (source: T.DnaSource, uuid?, properties?): Promise<HoloHash> => {
+    const registerDnaReq: RegisterDnaRequest = { source, uuid, properties }
+    return await this.adminClient!.registerDna(registerDnaReq)
+  }
+
   // this function will auto-generate an `installed_app_id` and
   // `dna.nick` for you, to allow simplicity
   installHapp = async (agentHapp: T.InstallHapp, agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
     if (!agentPubKey) {
       agentPubKey = await this.adminClient!.generateAgentPubKey()
     }
-    const dnaPaths: T.DnaPath[] = agentHapp
+    const dnaSources: T.DnaSrc[] = agentHapp
     const installAppReq: InstallAppRequest = {
       installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
-      dnas: dnaPaths.map((dnaPath, index) => ({
-        path: dnaPath,
-        nick: `${index}${dnaPath}-${uuidGen()}`,
-        properties: { uuid: this._player.scenarioUUID },
-      }))
+      dnas: dnaSources.map((source, index) => {
+        let dna = {
+          nick: `${index}${source}-${uuidGen()}`,
+          uuid: this._player.scenarioUUID,
+        }
+        if (source.constructor.name == 'String') {
+          dna["path"] = source
+        } else if (source.constructor.name === 'Buffer') {
+          dna["hash"] = source
+        }
+        return dna
+      })
     }
     return await this._installHapp(installAppReq)
   }
@@ -129,7 +145,7 @@ export class Conductor {
     // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
     const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
-    this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {
+    this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
       this._onActivity();
       this.onSignal(signal);
     })

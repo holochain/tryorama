@@ -8,7 +8,7 @@ import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
 import { Cell } from './cell';
-import { AgentPubKey } from '@holochain/conductor-api';
+import { AgentPubKey, HoloHash } from '@holochain/conductor-api';
 
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
@@ -74,8 +74,13 @@ sometimes we can write it like this to make it easier to read
 */
 export type InstallAgentsHapps = InstallHapps[]
 export type InstallHapps = InstallHapp[]
-export type InstallHapp = DnaPath[]
+export type DnaSrc = DnaPath | HoloHash
+export type InstallHapp = DnaSrc[]
 export type DnaPath = string
+
+// This type was inadvertently not exported in holochain-conductor-api dev16, so
+// in needs to be removed from here when it gets added back
+export type DnaSource = {hash: HoloHash} | {path: DnaPath} // | {dna_file: DnaFile}
 
 // the mirror of InstallAgentHapps
 export type InstalledAgentHapps = InstalledHapps[]

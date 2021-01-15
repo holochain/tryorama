@@ -2,10 +2,10 @@ import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
 import { Cell } from './cell'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp, DnaSource } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -137,6 +137,14 @@ export class Player {
       const agentPubKey: AgentPubKey = await this.adminWs().generateAgentPubKey()
       return Promise.all(agentHapps.map(happ => this.installHapp(happ, agentPubKey)))
     }))
+  }
+
+  /**
+   * expose registerDna at the player level for in-scenario dynamic installation of apps
+   */
+  registerDna = async (source: DnaSource, params: any): Promise<HoloHash> => {
+    this._conductorGuard(`Player.registerDna(source ${JSON.stringify(source)}, params ${JSON.stringify(params)})`)
+    return this._conductor!.registerDna(source, params)
   }
 
   /**

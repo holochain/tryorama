@@ -15,7 +15,6 @@
     "build": "rm -rf ./lib ; tsc -d",
     "dev": "rm -rf ./lib ; tsc -d -w",
     "doc": "typedoc",
-    "fetch-dna": "ts-node test/fetch-dna",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "test": "ts-node test | tap-diff",
@@ -25,7 +24,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@holochain/conductor-api": "0.0.1-dev.14",
+    "@holochain/conductor-api": "0.0.1-dev.16",
     "@holochain/hachiko": "^0.5.2",
     "@iarna/toml": "^2.2.5",
     "async-mutex": "^0.1.4",

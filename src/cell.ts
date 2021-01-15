@@ -1,4 +1,4 @@
-import { CellId, CellNick } from '@holochain/conductor-api'
+import { CellId, CellNick, HoloHash } from '@holochain/conductor-api'
 import { fakeCapSecret } from './common'
 import { Player } from './player'
 
@@ -23,6 +23,10 @@ export class Cell {
     this.cellId = o.cellId
     this.cellNick = o.cellNick
     this._player = o.player
+  }
+
+  dnaHash = (): HoloHash => {
+     return this.cellId[0]
   }
 
   call: CallZomeFunc = async (zome: string, fn: string, params?: any): Promise<any> => {
