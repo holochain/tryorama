@@ -108,17 +108,8 @@ fn parse_port_range(s: String) -> Result<PortRange, String> {
 }
 
 struct TrycpServer {
-    players_dir: PathBuf,
     next_port: u16,
     port_range: PortRange,
-}
-
-fn make_players_dir() -> Result<PathBuf, String> {
-    std::fs::create_dir_all(PLAYERS_DIR_PATH).map_err(|err| format!("{:?}", err))?;
-    let dir = tempfile::tempdir_in(PLAYERS_DIR_PATH)
-        .map_err(|err| format!("{:?}", err))?
-        .into_path();
-    Ok(dir)
 }
 
 impl TrycpServer {
@@ -127,7 +118,6 @@ impl TrycpServer {
             .map_err(|err| format!("{:?}", err))
             .expect("should create dna dir");
         TrycpServer {
-            players_dir: make_players_dir().expect("should create conductor dir"),
             next_port: port_range.start,
             port_range,
         }
@@ -148,16 +138,13 @@ impl TrycpServer {
 
     fn reset(&mut self) {
         self.next_port = self.port_range.start;
-        // Each time we receive a reset signal, switch to a new randomly named
-        // subdirectory of /tmp/trycp/players
-        match make_players_dir() {
-            Err(err) => println!("reset failed creating players dir: {:?}", err),
-            Ok(dir) => self.players_dir = dir,
+        if let Err(e) = std::fs::remove_dir_all(PLAYERS_DIR_PATH) {
+            println!("error: failed to clear out players directory: {}", e);
         }
     }
 
     fn get_player_dir(&self, id: &str) -> PathBuf {
-        self.players_dir.join(id)
+        Path::new(PLAYERS_DIR_PATH).join(id)
     }
 
     fn check_player_config_exists(
