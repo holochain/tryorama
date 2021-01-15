@@ -71,7 +71,7 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 [[package]]
 name = "fixt"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=60a906212c17ee067b31511e6b2957746d86297b#60a906212c17ee067b31511e6b2957746d86297b"
+source = "git+https://github.com/holochain/holochain?rev=afdb4e949b77cc81afa1b0601cf406dc08587b45#afdb4e949b77cc81afa1b0601cf406dc08587b45"
 dependencies = [
  "holochain_serialized_bytes",
  "lazy_static",
@@ -104,7 +104,7 @@ checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 [[package]]
 name = "hdk3"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=60a906212c17ee067b31511e6b2957746d86297b#60a906212c17ee067b31511e6b2957746d86297b"
+source = "git+https://github.com/holochain/holochain?rev=afdb4e949b77cc81afa1b0601cf406dc08587b45#afdb4e949b77cc81afa1b0601cf406dc08587b45"
 dependencies = [
  "hdk3_derive",
  "holo_hash",
@@ -119,13 +119,13 @@ dependencies = [
 [[package]]
 name = "hdk3_derive"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=60a906212c17ee067b31511e6b2957746d86297b#60a906212c17ee067b31511e6b2957746d86297b"
+source = "git+https://github.com/holochain/holochain?rev=afdb4e949b77cc81afa1b0601cf406dc08587b45#afdb4e949b77cc81afa1b0601cf406dc08587b45"
 dependencies = [
  "holochain_zome_types",
  "paste",
- "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.53",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -140,7 +140,7 @@ dependencies = [
 [[package]]
 name = "holo_hash"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=60a906212c17ee067b31511e6b2957746d86297b#60a906212c17ee067b31511e6b2957746d86297b"
+source = "git+https://github.com/holochain/holochain?rev=afdb4e949b77cc81afa1b0601cf406dc08587b45#afdb4e949b77cc81afa1b0601cf406dc08587b45"
 dependencies = [
  "base64",
  "blake2b_simd",
@@ -153,9 +153,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_serialized_bytes"
-version = "0.0.46"
+version = "0.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "4b8fe6bc8c830633862ee0b7903706f6d940f7c794b3f5e768f660a7abbacbc9"
+checksum = "80e1f2f82c9ac6dc7bc7c2e06e892d4bd1f29b4681cbfa4886edeb25ee8cdfe3"
 dependencies = [
  "holochain_serialized_bytes_derive",
  "rmp-serde",
@@ -168,19 +168,19 @@ dependencies = [
 
 [[package]]
 name = "holochain_serialized_bytes_derive"
-version = "0.0.46"
+version = "0.0.47"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a1a4c0ef882177ac63c8912ae9c1eb6285d3b50a56f2bb0cebc41012255b7734"
+checksum = "0119b7cd2aa14e4bc7129a212ff570bcba295ae19392067b2b0deeba780729e9"
 dependencies = [
- "quote 0.6.13",
- "syn 0.15.44",
+ "quote",
+ "syn",
 ]
 
 [[package]]
 name = "holochain_wasmer_common"
-version = "0.0.52"
+version = "0.0.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5e064411f7c8cf58e08a451c2df9ab99efb5de839f74a650c1a30abbd607add8"
+checksum = "bf8aef6d62ba25d471c48161c1fe0e79b5196bb57f6e33a28dd584b585013050"
 dependencies = [
  "holochain_serialized_bytes",
  "serde",
@@ -189,9 +189,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_wasmer_guest"
-version = "0.0.52"
+version = "0.0.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6c86bf521e02f8f86ea96177ef316560e66e51a192b83a302e8e4b32a6f47f02"
+checksum = "fc8f04f75daaa56db47e940161b94052c6b858140673216302383224751fd500"
 dependencies = [
  "holochain_serialized_bytes",
  "holochain_wasmer_common",
@@ -201,12 +201,13 @@ dependencies = [
 [[package]]
 name = "holochain_zome_types"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=60a906212c17ee067b31511e6b2957746d86297b#60a906212c17ee067b31511e6b2957746d86297b"
+source = "git+https://github.com/holochain/holochain?rev=afdb4e949b77cc81afa1b0601cf406dc08587b45#afdb4e949b77cc81afa1b0601cf406dc08587b45"
 dependencies = [
  "fixt",
  "holo_hash",
  "holochain_serialized_bytes",
  "paste",
+ "rand",
  "serde",
  "serde_bytes",
  "strum",
@@ -298,29 +299,11 @@ checksum = "ac74c624d6b2d21f425f752262f42188365d7b8ff1aff74c82e45136510a4857"
 
 [[package]]
 name = "proc-macro2"
-version = "0.4.30"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf3d2011ab5c909338f7887f4fc896d35932e29146c12c8d01da6b22a80ba759"
-dependencies = [
- "unicode-xid 0.1.0",
-]
-
-[[package]]
-name = "proc-macro2"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1e0704ee1a7e00d7bb417d0770ea303c1bccbabf0ef1667dae92b5967f5f8a71"
 dependencies = [
- "unicode-xid 0.2.1",
-]
-
-[[package]]
-name = "quote"
-version = "0.6.13"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "6ce23b6b870e8f94f81fb0a363d65d86675884b34a09043c81e5562f11c1f8e1"
-dependencies = [
- "proc-macro2 0.4.30",
+ "unicode-xid",
 ]
 
 [[package]]
@@ -329,7 +312,7 @@ version = "1.0.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "aa563d17ecb180e500da1cfd2b028310ac758de548efdd203e18f283af693f37"
 dependencies = [
- "proc-macro2 1.0.24",
+ "proc-macro2",
 ]
 
 [[package]]
@@ -445,9 +428,9 @@ version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "128f9e303a5a29922045a830221b8f78ec74a5f544944f3d5984f8ec3895ef64"
 dependencies = [
- "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.53",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -481,9 +464,9 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "87c85aa3f8ea653bfd3ddf25f7ee357ee4d204731f6aa9ad04002306f6e2774c"
 dependencies = [
  "heck",
- "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.53",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -494,24 +477,13 @@ checksum = "343f3f510c2915908f155e94f17220b19ccfacf2a64a2a5d8004f2c3e311e7fd"
 
 [[package]]
 name = "syn"
-version = "0.15.44"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "9ca4b3b69a77cbe1ffc9e198781b7acb0c7365a883670e8f1c1bc66fba79a5c5"
-dependencies = [
- "proc-macro2 0.4.30",
- "quote 0.6.13",
- "unicode-xid 0.1.0",
-]
-
-[[package]]
-name = "syn"
 version = "1.0.53"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "8833e20724c24de12bbaba5ad230ea61c3eafb05b881c7c9d3cfe8638b187e68"
 dependencies = [
- "proc-macro2 1.0.24",
- "quote 1.0.7",
- "unicode-xid 0.2.1",
+ "proc-macro2",
+ "quote",
+ "unicode-xid",
 ]
 
 [[package]]
@@ -520,18 +492,6 @@ version = "0.0.1"
 dependencies = [
  "hdk3",
  "serde",
- "test_wasm_common",
-]
-
-[[package]]
-name = "test_wasm_common"
-version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=60a906212c17ee067b31511e6b2957746d86297b#60a906212c17ee067b31511e6b2957746d86297b"
-dependencies = [
- "hdk3",
- "holochain_serialized_bytes",
- "serde",
- "serde_bytes",
 ]
 
 [[package]]
@@ -549,9 +509,9 @@ version = "1.0.22"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "9ba20f23e85b10754cd195504aebf6a27e2e6cbe28c17778a0c930724628dd56"
 dependencies = [
- "proc-macro2 1.0.24",
- "quote 1.0.7",
- "syn 1.0.53",
+ "proc-macro2",
+ "quote",
+ "syn",
 ]
 
 [[package]]
@@ -559,12 +519,6 @@ name = "unicode-segmentation"
 version = "1.7.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bb0d2e7be6ae3a5fa87eed5fb451aff96f2573d2694942e40543ae0bbe19c796"
-
-[[package]]
-name = "unicode-xid"
-version = "0.1.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fc72304796d0818e357ead4e000d19c9c174ab23dc11093ac919054d20a6a7fc"
 
 [[package]]
 name = "unicode-xid"

@@ -2,6 +2,7 @@
 members = [
   "test/e2e/fixture/zomes/test"
 ]
+exclude = ["crates/trycp_server"]
 
 [profile.dev]
 opt-level = "z"
