@@ -67,6 +67,13 @@ network: ~`;
         console.log("making admin_interface_call call")
         result = await ws.call('admin_interface_call', {"id" : "my-player", "message": "TEST_MESSAGE"})
         console.log(result)
+        // If we reached Holochain then, result = {
+        //   type: 'error',
+        //   data: {
+        //     type: 'deserialization',
+        //     data: 'Bytes(FromBytes("invalid type: string \\"TEST_MESSAGE\\", expected adjacently tagged enum AdminRequest"))'
+        //   }
+        // }
 
         console.log("making shutdown call")
         result = await ws.call('shutdown', {"id": "my-player", "signal": "SIGTERM"})
