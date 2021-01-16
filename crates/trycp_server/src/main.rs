@@ -6,6 +6,7 @@ extern crate tempfile;
 #[macro_use]
 extern crate serde_json;
 
+mod admin_interface;
 mod registrar;
 mod rpc_util;
 
@@ -523,12 +524,10 @@ admin_interfaces:
         #[derive(Deserialize)]
         struct AdminApiCallParams {
             id: String,
-            message_base64: String,
+            message: Value,
         }
-        let AdminApiCallParams { id, message_base64 } = params.parse()?;
+        let AdminApiCallParams { id, message } = params.parse()?;
         println!("admin_interface_call id: {:?}", id);
-
-        let message_buf = base64::decode(&message_base64).map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
         let maybe_port = state_admin_interface_call
             .read()
@@ -541,44 +540,7 @@ admin_interfaces:
                 "failed to call player admin interface: player not yet configured"
             ))
         })?;
-        let (res_tx, res_rx) = crossbeam::channel::bounded(0);
-        let mut capture_vars = Some((res_tx, id, message_buf));
-        dbg!("pre-connect");
-        ws::connect(format!("ws://localhost:{}", port), move |out| {
-            dbg!("factory");
-            // Even though this closure is only called once, the API requires FnMut
-            // so we must use a workaround to take ownership of our captured variables
-            let (res_tx, id, message_buf) = capture_vars.take().unwrap();
-
-            let send_response = match out.send(message_buf) {
-                Ok(()) => true,
-                Err(e) => {
-                    res_tx.send(Err(internal_error(format!("failed to send message to player admin interface: {}", e)))).unwrap();
-                    if let Err(e) = out.close(ws::CloseCode::Error) {
-                        println!("warning: silently ignoring error: failed to close admin interface connection: {}", e);
-                    }
-                    false
-                }
-            };
-            move |response| {
-                dbg!("received response");
-                println!("received admin interface response from player {}: {:?}", id, response);
-                if send_response {
-                    res_tx.send(Ok(response)).unwrap();
-                    out.close(ws::CloseCode::Normal)
-                } else {
-                    println!("warning: ignoring admin interface response");
-                    Ok(())
-                }
-            }
-        }).map_err(|e| internal_error(format!("failed to connect to player admin interface: {}", e)))?;
-        
-        // Parse the admin interface response
-        let response = res_rx.recv().unwrap()?;
-        match response {
-            ws::Message::Text(text) => serde_json::from_str(&text).map_err(|e| internal_error(format!("failed to parse admin interface response {:?} as json: {}", text, e))),
-            m => return Err(internal_error(format!("unexpected response from admin interface: {}", m)))
-        }
+        admin_interface::remote_call(port, id, message)
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
