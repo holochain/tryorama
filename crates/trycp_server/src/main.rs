@@ -1,11 +1,6 @@
 //! trycp_server listens for remote commands issued by tryorama and does as requested
 //! with a set of Holochain conductors that it manages on the local machine.
 
-extern crate structopt;
-extern crate tempfile;
-#[macro_use]
-extern crate serde_json;
-
 mod registrar;
 mod rpc_util;
 
@@ -19,6 +14,7 @@ use nix::{
 };
 use reqwest::Url;
 use serde_derive::Deserialize;
+use serde_json::json;
 use std::{
     collections::HashMap,
     fs::{self, File},
