@@ -29,21 +29,20 @@ module.exports = (testOrchestrator, testConfig) => {
         const [aliceConfig, installApps] = testConfig()
         const orchestrator = testOrchestrator()
 
-        // TODO: uncomment once zome calls work with trycp
-        // orchestrator.registerScenario('attempted call with stopped conductor', async s => {
-        //   const [alice] = await s.playersRemote([aliceConfig], `localhost:${PORT}`)
-        //   await alice.startup()
-        //   const [[alice_happ]] = await alice.installAgentsHapps(installApps)
-        //   const [link_cell] = alice_happ.cells
-        //   await t.doesNotReject(
-        //     link_cell.call('test', 'create_link')
-        //   )
-        //   await alice.shutdown()
-        //   await t.rejects(
-        //     link_cell.call('test', 'create_link')
-        //     /* no conductor is running.*/
-        //   )
-        // })
+        orchestrator.registerScenario('attempted call with stopped conductor', async s => {
+            const [alice] = await s.playersRemote([aliceConfig], `localhost:${PORT}`)
+            await alice.startup()
+            const [[alice_happ]] = await alice.installAgentsHapps(installApps)
+            const [link_cell] = alice_happ.cells
+            await t.doesNotReject(
+                link_cell.call('test', 'create_link')
+            )
+            await alice.shutdown()
+            await t.rejects(
+                link_cell.call('test', 'create_link')
+                /* no conductor is running.*/
+            )
+        })
 
         orchestrator.registerScenario('start-stop-start', async s => {
             const [alice] = await s.playersRemote([aliceConfig], `localhost:${PORT}`)
@@ -70,7 +69,7 @@ module.exports = (testOrchestrator, testConfig) => {
 
         const stats = await orchestrator.run()
 
-        t.equal(stats.successes, 2)
+        t.equal(stats.successes, 3)
         t.end()
         trycp.kill("SIGTERM")
     })

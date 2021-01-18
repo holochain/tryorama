@@ -69,8 +69,9 @@ export class Conductor {
 
     if (adminInterfaceCall !== undefined) {
       this.adminClient = new TunneledAdminClient(adminInterfaceCall)
+    } else {
+      this.adminClient = null
     }
-    this.adminClient = null
     this.appClient = null
     this._player = player
     this._machineHost = machineHost
@@ -114,7 +115,8 @@ export class Conductor {
           if (this._saveDnaRemote !== undefined) {
             const path = source as T.DnaPath
             const contents = await fs.promises.readFile(path)
-            const remotePath = await this._saveDnaRemote(path.replace('/', ''), contents)
+            const pathAfterReplacement = path.replace(/\//g, '')
+            const { path: remotePath } = await this._saveDnaRemote(pathAfterReplacement, contents)
             dna["path"] = remotePath
           } else {
             dna["path"] = source

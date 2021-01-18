@@ -9,7 +9,7 @@ import * as msgpack from "@msgpack/msgpack"
 import * as conductorApi from "@holochain/conductor-api"
 
 export type TrycpClient = {
-  dna: (url: string) => Promise<{ path: string }>,
+  dna: (id: string, contents: Buffer) => Promise<{ path: string }>,
   configurePlayer: (id, partial_config) => Promise<any>,
   spawn: (id) => Promise<any>,
   kill: (id, signal?) => Promise<any>,
@@ -25,14 +25,18 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
   await new Promise((resolve) => ws.once("open", resolve))
 
   const makeCall = (method) => async (a) => {
-    logger.debug(`trycp client request to ${url}: ${method} => ${JSON.stringify(a, null, 2)}`)
+    let params = JSON.stringify(a, null, 2)
+    if (params && params.length > 1000) {
+      params = params.substring(0, 993) + " [snip]"
+    }
+    logger.debug(`trycp client request to ${url}: ${method} => ${params}`)
     const result = await ws.call(method, a)
     logger.debug('trycp client response: %j', result)
     return result
   }
 
   return {
-    dna: (url) => makeCall('dna')({ url }),
+    dna: (id, contents) => makeCall('dna')({ id, content_base64: contents.toString('base64') }),
     configurePlayer: (id, partial_config) => makeCall('configure_player')({
       id, partial_config: yaml.stringify({
         signing_service_uri: partial_config.signing_service_uri !== undefined ? partial_config.signing_service_uri : null,
@@ -46,11 +50,20 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     kill: (id, signal?) => makeCall('shutdown')({ id, signal }),
     ping: () => makeCall('ping')(undefined),
     reset: () => makeCall('reset')(undefined),
-    adminInterfaceCall: (id, message) =>
-      makeCall('admin_interface_call')({
+    adminInterfaceCall: async (id, message) => {
+      let params = JSON.stringify(message)
+      if (params && params.length > 1000) {
+        params = params.substring(0, 993) + " [snip]"
+      }
+      logger.debug(`trycp tunneled admin interface call at ${url} => ${params}`)
+      const response = await ws.call('admin_interface_call', {
         id,
         message_base64: Buffer.from(msgpack.encode(message)).toString("base64")
-      }).then(response => (msgpack.decode(Buffer.from(response, "base64")) as any).data),
+      })
+      const result = (msgpack.decode(Buffer.from(response, "base64")) as any).data
+      logger.debug('trycp tunneled admin interface response: %j', result)
+      return result
+    },
     closeSession: () => ws.close(),
   }
 }
