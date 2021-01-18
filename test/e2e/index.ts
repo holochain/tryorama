@@ -22,6 +22,4 @@ require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal
 // require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 require('./test-dynamic-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
 require('./test-signal')(localOrchestrator, () => testConfig(dnaLocationLocal))
-console.log("pre-test-remote")
 require('./test-remote')(localOrchestrator, () => testConfig(dnaLocationLocal))
-console.log("ppost-test-remote")
