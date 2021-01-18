@@ -75,6 +75,7 @@ export class Conductor {
 
   initialize = async () => {
     this._onActivity()
+    // TODO: fix when we can tunnel admin connections over trycp_server
     if (this._adminInterfacePort !== undefined) {
       await this._connectInterfaces()
     }
