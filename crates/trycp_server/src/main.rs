@@ -13,13 +13,12 @@ use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
 };
-use reqwest::Url;
 use serde_derive::Deserialize;
 use serde_json::json;
 use std::{
     collections::HashMap,
     fs::{self, File},
-    io::{BufRead, BufReader, Read, Write},
+    io::{self, BufRead, BufReader, Read, Write},
     ops::Range,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
@@ -150,8 +149,8 @@ fn get_player_dir(id: &str) -> PathBuf {
     Path::new(PLAYERS_DIR_PATH).join(id)
 }
 
-fn get_dna_path(url: &Url) -> PathBuf {
-    Path::new(DNA_DIR_PATH).join(url.path().to_string().replace("/", "").replace("%", "_"))
+fn get_dna_path(id: &str) -> PathBuf {
+    Path::new(DNA_DIR_PATH).join(id)
 }
 
 fn check_player_config_exists(id: &str) -> Result<(), jsonrpc_core::types::error::Error> {
@@ -162,26 +161,6 @@ fn check_player_config_exists(id: &str) -> Result<(), jsonrpc_core::types::error
             id
         )));
     }
-    Ok(())
-}
-
-fn save_file(file_path: &Path, content: &[u8]) -> Result<(), jsonrpc_core::types::error::Error> {
-    File::create(file_path)
-        .map_err(|e| {
-            internal_error(format!(
-                "unable to create file: {:?} {}",
-                e,
-                file_path.display()
-            ))
-        })?
-        .write_all(&content[..])
-        .map_err(|e| {
-            internal_error(format!(
-                "unable to write file: {:?} {}",
-                e,
-                file_path.display()
-            ))
-        })?;
     Ok(())
 }
 
@@ -236,31 +215,46 @@ fn main() {
         ))
     });
 
-    // Given a DNA URL, ensures that the DNA is downloaded, and returns the path at which it is stored.
+    // Given a base64-encoded DNA file, stores the DNA and returns the path at which it is stored.
     io.add_method("dna", move |params: Params| {
         #[derive(Deserialize)]
         struct DnaParams {
-            url: String,
+            id: String,
+            content_base64: String,
         }
-        let DnaParams { url: url_str } = params.parse()?;
-        let url = Url::parse(&url_str).map_err(|e| {
-            invalid_request(format!("unable to parse url:{} got error: {}", url_str, e))
-        })?;
-        let file_path = get_dna_path(&url);
-        if !file_path.exists() {
-            println!("Downloading dna from {} ...", &url_str);
-            let content: String = reqwest::get::<Url>(url)
-                .map_err(|e| {
-                    internal_error(format!("error downloading dna: {:?} {:?}", e, url_str))
-                })?
-                .text()
-                .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
-            println!("Finished downloading dna from {}", url_str);
-            save_file(&file_path, &content.as_bytes())?;
+        let DnaParams { id, content_base64 } = params.parse()?;
+        let file_path = get_dna_path(&id);
+
+        match fs::OpenOptions::new()
+            .write(true)
+            .create_new(true)
+            .open(&file_path)
+        {
+            Ok(mut file) => {
+                let content = base64::decode(&content_base64).map_err(|e| {
+                    invalid_request(format!("failed to decode content_base64: {}", e))
+                })?;
+
+                file.write_all(&content[..]).map_err(|e| {
+                    internal_error(format!(
+                        "unable to write file: {:?} {}",
+                        e,
+                        file_path.display()
+                    ))
+                })?;
+            }
+            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
+            Err(e) => {
+                return Err(internal_error(format!(
+                    "unable to create file: {:?} {}",
+                    e,
+                    file_path.display()
+                )))
+            }
         }
+
         let local_path = file_path.to_string_lossy();
-        let response = format!("dna for {} at {}", &url_str, local_path,);
-        println!("dna {}: {:?}", &url_str, response);
+        println!("dna for {} at {}", id, local_path);
         Ok(json!({ "path": local_path }))
     });
 

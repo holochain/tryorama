@@ -10,6 +10,7 @@ import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest,
 import { Cell } from "./cell";
 import { Player } from './player';
 import { TunneledAdminClient } from './trycp'
+import * as fs from 'fs'
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -26,6 +27,7 @@ type ConstructorArgs = {
   machineHost: string,
   adminPort?: number
   adminInterfaceCall?: (any) => Promise<any>,
+  saveDnaRemote?: (string, Buffer) => Promise<{ path: string }>
 }
 
 /**
@@ -50,9 +52,10 @@ export class Conductor {
   _wsClosePromise: Promise<void>
   _onActivity: () => void
   _timeout: number
+  _saveDnaRemote?: (string, Buffer) => Promise<{ path: string }>
 
 
-  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall }: ConstructorArgs) {
+  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall, saveDnaRemote }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -76,6 +79,7 @@ export class Conductor {
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
     this._timeout = 30000
+    this._saveDnaRemote = saveDnaRemote
   }
 
   initialize = async () => {
@@ -101,18 +105,25 @@ export class Conductor {
     const installAppReq: InstallAppRequest = {
       installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
-      dnas: dnaSources.map((source, index) => {
+      dnas: await Promise.all(dnaSources.map(async (source, index) => {
         let dna = {
           nick: `${index}${source}-${uuidGen()}`,
           uuid: this._player.scenarioUUID,
         }
         if (source.constructor.name == 'String') {
-          dna["path"] = source
+          if (this._saveDnaRemote !== undefined) {
+            const path = source as T.DnaPath
+            const contents = await fs.promises.readFile(path)
+            const remotePath = await this._saveDnaRemote(path.replace('/', ''), contents)
+            dna["path"] = remotePath
+          } else {
+            dna["path"] = source
+          }
         } else if (source.constructor.name === 'Buffer') {
           dna["hash"] = source
         }
         return dna
-      })
+      }))
     }
     return await this._installHapp(installAppReq)
   }
