@@ -1,4 +1,5 @@
 var WebSocket = require('rpc-websockets').Client
+var msgpack = require('@msgpack/msgpack')
 
 
 process.on('unhandledRejection', error => {
@@ -65,15 +66,8 @@ network: ~`;
         console.log(result)
 
         console.log("making admin_interface_call call")
-        result = await ws.call('admin_interface_call', {"id" : "my-player", "message": "TEST_MESSAGE"})
-        console.log(result)
-        // If we reached Holochain then, result = {
-        //   type: 'error',
-        //   data: {
-        //     type: 'deserialization',
-        //     data: 'Bytes(FromBytes("invalid type: string \\"TEST_MESSAGE\\", expected adjacently tagged enum AdminRequest"))'
-        //   }
-        // }
+        result = await ws.call('admin_interface_call', {"id" : "my-player", "message_base64": Buffer.from(msgpack.encode({"type": "generate_agent_pub_key"})).toString("base64")})
+        console.log(msgpack.decode(Buffer.from(result, "base64")))
 
         console.log("making shutdown call")
         result = await ws.call('shutdown', {"id": "my-player", "signal": "SIGTERM"})

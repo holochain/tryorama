@@ -9,6 +9,7 @@ import * as T from './types'
 import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
+import { TunneledAdminClient } from './trycp'
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -24,6 +25,7 @@ type ConstructorArgs = {
   onActivity: () => void,
   machineHost: string,
   adminPort?: number
+  adminInterfaceCall?: (any) => Promise<any>,
 }
 
 /**
@@ -38,7 +40,7 @@ export class Conductor {
   onSignal: (Signal) => void
   logger: any
   kill: KillFn
-  adminClient: AdminWebsocket | null
+  adminClient: AdminWebsocket | TunneledAdminClient | null
   appClient: AppWebsocket | null
 
   _player: Player
@@ -50,7 +52,7 @@ export class Conductor {
   _timeout: number
 
 
-  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort }: ConstructorArgs) {
+  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -62,6 +64,9 @@ export class Conductor {
       return this._wsClosePromise
     }
 
+    if (adminInterfaceCall !== undefined) {
+      this.adminClient = new TunneledAdminClient(adminInterfaceCall)
+    }
     this.adminClient = null
     this.appClient = null
     this._player = player
@@ -75,10 +80,7 @@ export class Conductor {
 
   initialize = async () => {
     this._onActivity()
-    // TODO: fix when we can tunnel admin connections over trycp_server
-    if (this._adminInterfacePort !== undefined) {
-      await this._connectInterfaces()
-    }
+    await this._connectInterfaces()
   }
 
   awaitClosed = () => this._wsClosePromise
@@ -140,9 +142,11 @@ export class Conductor {
 
   _connectInterfaces = async () => {
     this._onActivity()
-    const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
-    this.adminClient = await AdminWebsocket.connect(adminWsUrl)
-    this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+    if (this.adminClient === null) {
+      const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
+      this.adminClient = await AdminWebsocket.connect(adminWsUrl)
+      this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+    }
     // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
     const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`

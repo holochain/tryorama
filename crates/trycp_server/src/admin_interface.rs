@@ -1,6 +1,4 @@
-use serde::Serialize;
 use serde_derive::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::rpc_util::internal_error;
 
@@ -21,8 +19,7 @@ enum AdminInterfaceMessage {
     },
 }
 
-fn admin_request<T: Serialize>(data: T) -> Result<Vec<u8>, rmp_serde::encode::Error> {
-    let data_buf = rmp_serde::to_vec_named(&data)?;
+fn admin_request(data_buf: Vec<u8>) -> Result<Vec<u8>, rmp_serde::encode::Error> {
     let msg = AdminInterfaceMessage::Request {
         message_id: String::new(),
         data: data_buf,
@@ -30,7 +27,7 @@ fn admin_request<T: Serialize>(data: T) -> Result<Vec<u8>, rmp_serde::encode::Er
     rmp_serde::to_vec_named(&msg)
 }
 
-fn parse_admin_response(response: ws::Message) -> Result<Value, String> {
+fn parse_admin_response(response: ws::Message) -> Result<Vec<u8>, String> {
     let response_buf = match response {
         ws::Message::Binary(buf) => buf,
         r => return Err(format!("unexpected response from conductor: {:?}", r)),
@@ -42,24 +39,18 @@ fn parse_admin_response(response: ws::Message) -> Result<Value, String> {
                 e
             )
         })?;
-    let response_data = match response_msg {
-        AdminInterfaceMessage::Response { data, .. } => data,
+    match response_msg {
+        AdminInterfaceMessage::Response { data, .. } => Ok(data),
         r => return Err(format!("unexpected message type from conductor: {:?}", r)),
-    };
-    rmp_serde::from_slice(&response_data).map_err(|e| {
-        format!(
-            "failed to parse response from conductor as MessagePack: {}",
-            e
-        )
-    })
+    }
 }
 
 pub fn remote_call(
     port: u16,
     player_id: String,
-    message: Value,
-) -> Result<Value, jsonrpc_core::Error> {
-    let message_buf = admin_request(message).expect("serialization cannot fail");
+    data_buf: Vec<u8>,
+) -> Result<Vec<u8>, jsonrpc_core::Error> {
+    let message_buf = admin_request(data_buf).expect("serialization cannot fai");
     let (res_tx, res_rx) = crossbeam::channel::bounded(1);
     let mut capture_vars = Some((res_tx, player_id, message_buf));
     ws::connect(format!("ws://localhost:{}", port), move |out| {

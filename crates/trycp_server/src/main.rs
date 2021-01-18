@@ -497,10 +497,13 @@ admin_interfaces:
         #[derive(Deserialize)]
         struct AdminApiCallParams {
             id: String,
-            message: Value,
+            message_base64: String,
         }
-        let AdminApiCallParams { id, message } = params.parse()?;
+        let AdminApiCallParams { id, message_base64 } = params.parse()?;
         println!("admin_interface_call id: {:?}", id);
+
+        let message_buf = base64::decode(&message_base64)
+            .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
         let maybe_port = state_admin_interface_call
             .read()
@@ -513,7 +516,8 @@ admin_interfaces:
                 "failed to call player admin interface: player not yet configured"
             ))
         })?;
-        admin_interface::remote_call(port, id, message)
+        let response_buf = admin_interface::remote_call(port, id, message_buf)?;
+        Ok(Value::String(base64::encode(&response_buf)))
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;

@@ -144,7 +144,7 @@ export class ScenarioApi {
     const configJson = this._generateConfigFromSeed({ adminInterfacePort: 0, configDir: "unused" }, playerName, configSeed)
     return async () => {
       // FIXME: can we get this from somewhere?
-      await trycpClient.configure_player(playerName, configJson)
+      await trycpClient.configurePlayer(playerName, configJson)
       logger.debug('api.players: player config committed for %s', playerName)
       return new Player({
         scenarioUUID: this._uuid,

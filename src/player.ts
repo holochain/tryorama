@@ -9,6 +9,7 @@ import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, Install
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
+import { TunneledAdminClient } from './trycp';
 const fs = require('fs').promises
 
 type ConstructorArgs = {
@@ -66,7 +67,7 @@ export class Player {
     return this._conductor!.appClient!
   }
 
-  adminWs = (context?: string): AdminWebsocket => {
+  adminWs = (context?: string): AdminWebsocket | TunneledAdminClient => {
     this._conductorGuard(context || `Player.adminWs()`)
     return this._conductor!.adminClient!
   }
