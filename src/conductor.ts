@@ -1,5 +1,5 @@
 const colors = require('colors/safe')
-import uuidGen from 'uuid/v4'
+import { v4 as uuidGen } from 'uuid'
 
 import { KillFn } from "./types";
 import { makeLogger } from "./logger";

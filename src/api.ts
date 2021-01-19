@@ -1,4 +1,3 @@
-import uuidGen from 'uuid/v4'
 import * as _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
