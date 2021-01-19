@@ -50,7 +50,7 @@ pub fn remote_call(
     player_id: String,
     data_buf: Vec<u8>,
 ) -> Result<Vec<u8>, jsonrpc_core::Error> {
-    let message_buf = admin_request(data_buf).expect("serialization cannot fai");
+    let message_buf = admin_request(data_buf).expect("serialization cannot fail");
     let (res_tx, res_rx) = crossbeam::channel::bounded(1);
     let mut capture_vars = Some((res_tx, player_id, message_buf));
     ws::connect(format!("ws://localhost:{}", port), move |out| {
