@@ -149,8 +149,25 @@ fn get_player_dir(id: &str) -> PathBuf {
     Path::new(PLAYERS_DIR_PATH).join(id)
 }
 
-fn get_dna_path(id: &str) -> PathBuf {
+fn get_saved_dna_path(id: &str) -> PathBuf {
     Path::new(DNA_DIR_PATH).join(id)
+}
+
+fn get_downloaded_dna_path(url: &reqwest::Url) -> PathBuf {
+    Path::new(DNA_DIR_PATH).join(url.path().to_string().replace("/", "").replace("%", "_"))
+}
+
+/// Tries to create a file, returning Ok(None) if a file already exists at path
+fn try_create_file(path: &Path) -> Result<Option<File>, io::Error> {
+    match fs::OpenOptions::new()
+        .write(true)
+        .create_new(true)
+        .open(&path)
+    {
+        Ok(file) => Ok(Some(file)),
+        Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Ok(None),
+        Err(e) => Err(e),
+    }
 }
 
 fn check_player_config_exists(id: &str) -> Result<(), jsonrpc_core::types::error::Error> {
@@ -216,45 +233,83 @@ fn main() {
     });
 
     // Given a base64-encoded DNA file, stores the DNA and returns the path at which it is stored.
-    io.add_method("dna", move |params: Params| {
+    io.add_method("save_dna", move |params: Params| {
         #[derive(Deserialize)]
-        struct DnaParams {
+        struct SaveDnaParams {
             id: String,
             content_base64: String,
         }
-        let DnaParams { id, content_base64 } = params.parse()?;
-        let file_path = get_dna_path(&id);
+        let SaveDnaParams { id, content_base64 } = params.parse()?;
+        let file_path = get_saved_dna_path(&id);
 
-        match fs::OpenOptions::new()
-            .write(true)
-            .create_new(true)
-            .open(&file_path)
-        {
-            Ok(mut file) => {
-                let content = base64::decode(&content_base64).map_err(|e| {
-                    invalid_request(format!("failed to decode content_base64: {}", e))
-                })?;
+        let new_file = try_create_file(&file_path).map_err(|e| {
+            internal_error(format!(
+                "unable to create file: {} {}",
+                e,
+                file_path.display()
+            ))
+        })?;
 
-                file.write_all(&content[..]).map_err(|e| {
-                    internal_error(format!(
-                        "unable to write file: {:?} {}",
-                        e,
-                        file_path.display()
-                    ))
-                })?;
-            }
-            Err(e) if e.kind() == io::ErrorKind::AlreadyExists => {}
-            Err(e) => {
-                return Err(internal_error(format!(
-                    "unable to create file: {:?} {}",
+        if let Some(mut file) = new_file {
+            let content = base64::decode(&content_base64)
+                .map_err(|e| invalid_request(format!("failed to decode content_base64: {}", e)))?;
+
+            file.write_all(&content).map_err(|e| {
+                internal_error(format!(
+                    "unable to write file: {} {}",
                     e,
                     file_path.display()
-                )))
-            }
+                ))
+            })?;
         }
 
         let local_path = file_path.to_string_lossy();
         println!("dna for {} at {}", id, local_path);
+        Ok(json!({ "path": local_path }))
+    });
+
+    // Given a DNA URL, ensures that the DNA is downloaded, and returns the path at which it is stored.
+    io.add_method("download_dna", move |params: Params| {
+        #[derive(Deserialize)]
+        struct DownloadDnaParams {
+            url: String,
+        }
+        let DownloadDnaParams { url: url_str } = params.parse()?;
+
+        let url = reqwest::Url::parse(&url_str).map_err(|e| {
+            invalid_request(format!("unable to parse url:{} got error: {}", url_str, e))
+        })?;
+
+        let file_path = get_downloaded_dna_path(&url);
+        let new_file = try_create_file(&file_path).map_err(|e| {
+            internal_error(format!(
+                "unable to create file: {} {}",
+                e,
+                file_path.display()
+            ))
+        })?;
+
+        if let Some(mut file) = new_file {
+            println!("Downloading dna from {} ...", &url_str);
+            let content: String = reqwest::get(url)
+                .map_err(|e| {
+                    internal_error(format!("error downloading dna: {:?} {:?}", e, url_str))
+                })?
+                .text()
+                .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
+            println!("Finished downloading dna from {}", url_str);
+
+            file.write_all(content.as_bytes()).map_err(|e| {
+                internal_error(format!(
+                    "unable to write file: {} {}",
+                    e,
+                    file_path.display()
+                ))
+            })?;
+        }
+
+        let local_path = file_path.to_string_lossy();
+        println!("dna for {} at {}", url_str, local_path);
         Ok(json!({ "path": local_path }))
     });
 

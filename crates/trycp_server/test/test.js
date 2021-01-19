@@ -37,13 +37,13 @@ function doTest(url) {
              console.log(result)
         })
 
-        console.log("calling dna")
-        await ws.call('dna', {"url": "https://github.com/holochain/passthrough-dna/releases/download/v0.0.6/passthrough-dna.dna.json"}).then(function(result) {
+        console.log("calling download_dna")
+        await ws.call('download_dna', {"url": "https://github.com/holochain/passthrough-dna/releases/download/v0.0.6/passthrough-dna.dna.json"}).then(function(result) {
             console.log(result)
         })
 
-        console.log("calling dna again to test caching")
-        await ws.call('dna', {"url": "https://github.com/holochain/passthrough-dna/releases/download/v0.0.6/passthrough-dna.dna.json"}).then(function(result) {
+        console.log("calling download_dna again to test caching")
+        await ws.call('download_dna', {"url": "https://github.com/holochain/passthrough-dna/releases/download/v0.0.6/passthrough-dna.dna.json"}).then(function(result) {
             console.log(result)
         })
 
