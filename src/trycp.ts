@@ -56,13 +56,16 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
         params = params.substring(0, 993) + " [snip]"
       }
       logger.debug(`trycp tunneled admin interface call at ${url} => ${params}`)
-      const response = await ws.call('admin_interface_call', {
+      const raw_response = await ws.call('admin_interface_call', {
         id,
         message_base64: Buffer.from(msgpack.encode(message)).toString("base64")
       })
-      const result = (msgpack.decode(Buffer.from(response, "base64")) as any).data
-      logger.debug('trycp tunneled admin interface response: %j', result)
-      return result
+      const response = msgpack.decode(Buffer.from(raw_response, "base64")) as { type: string, data: any }
+      logger.debug('trycp tunneled admin interface response: %j', response.data)
+      if (response.type == "error") {
+        throw response.data
+      }
+      return response.data
     },
     closeSession: () => ws.close(),
   }
