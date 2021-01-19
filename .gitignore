@@ -5,3 +5,4 @@ docs/
 dna/
 .vscode/
 **/target/
+package-lock.json

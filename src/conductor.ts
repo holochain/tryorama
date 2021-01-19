@@ -6,7 +6,7 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, DnaProperties } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
 
@@ -15,6 +15,16 @@ import { Player } from './player';
 const WS_CLOSE_DELAY_FUDGE = 500
 
 export type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
+
+type ConstructorArgs = {
+  player: Player,
+  name: string,
+  kill: (string?) => void,
+  onSignal: (Signal) => void,
+  onActivity: () => void,
+  machineHost: string,
+  adminPort?: number
+}
 
 /**
  * Representation of a running Conductor instance.
@@ -32,14 +42,15 @@ export class Conductor {
   appClient: AppWebsocket | null
 
   _player: Player
-  _adminInterfacePort: number
+  _adminInterfacePort?: number
   _machineHost: string
   _isInitialized: boolean
-  _rawConfig: T.RawConductorConfig
   _wsClosePromise: Promise<void>
   _onActivity: () => void
+  _timeout: number
 
-  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, rawConfig }) {
+
+  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -57,17 +68,26 @@ export class Conductor {
     this._machineHost = machineHost
     this._adminInterfacePort = adminPort
     this._isInitialized = false
-    this._rawConfig = rawConfig
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
+    this._timeout = 30000
   }
 
   initialize = async () => {
     this._onActivity()
-    await this._connectInterfaces()
+    // TODO: fix when we can tunnel admin connections over trycp_server
+    if (this._adminInterfacePort !== undefined) {
+      await this._connectInterfaces()
+    }
   }
 
   awaitClosed = () => this._wsClosePromise
+
+  // this function registers a DNA from a given source
+  registerDna = async (source: T.DnaSource, uuid?, properties?): Promise<HoloHash> => {
+    const registerDnaReq: RegisterDnaRequest = { source, uuid, properties }
+    return await this.adminClient!.registerDna(registerDnaReq)
+  }
 
   // this function will auto-generate an `installed_app_id` and
   // `dna.nick` for you, to allow simplicity
@@ -75,30 +95,37 @@ export class Conductor {
     if (!agentPubKey) {
       agentPubKey = await this.adminClient!.generateAgentPubKey()
     }
-    const dnaPaths: T.DnaPath[] = agentHapp
+    const dnaSources: T.DnaSrc[] = agentHapp
     const installAppReq: InstallAppRequest = {
       installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
-      dnas: dnaPaths.map((dnaPath, index) => ({
-        path: dnaPath,
-        nick: `${index}${dnaPath}-${uuidGen()}`,
-        properties: {uuid: this._player.scenarioUUID},
-      }))
+      dnas: dnaSources.map((source, index) => {
+        let dna = {
+          nick: `${index}${source}-${uuidGen()}`,
+          uuid: this._player.scenarioUUID,
+        }
+        if (source.constructor.name == 'String') {
+          dna["path"] = source
+        } else if (source.constructor.name === 'Buffer') {
+          dna["hash"] = source
+        }
+        return dna
+      })
     }
     return await this._installHapp(installAppReq)
   }
 
   // install a hApp using the InstallAppRequest struct from conductor-admin-api
-  // you must create your own app_id and dnas list, this is usefull also if you
+  // you must create your own app_id and dnas list, this is useful also if you
   // need to pass in properties or membrane-proof
   _installHapp = async (installAppReq: InstallAppRequest): Promise<T.InstalledHapp> => {
-    const {cell_data} = await this.adminClient!.installApp(installAppReq)
+    const { cell_data } = await this.adminClient!.installApp(installAppReq)
     // must be activated to be callable
     await this.adminClient!.activateApp({ installed_app_id: installAppReq.installed_app_id })
 
     // prepare the result, and create Cell instances
     const installedAgentHapp: T.InstalledHapp = {
-      hAppId:  installAppReq.installed_app_id,
+      hAppId: installAppReq.installed_app_id,
       agent: installAppReq.agent_key,
       // construct Cell instances which are the most useful class to the client
       cells: cell_data.map(installedCell => new Cell({
@@ -119,7 +146,7 @@ export class Conductor {
     // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
     const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
-    this.appClient = await AppWebsocket.connect(appWsUrl, (signal) => {
+    this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
       this._onActivity();
       this.onSignal(signal);
     })

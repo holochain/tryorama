@@ -2,10 +2,10 @@ import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
 import { Cell } from './cell'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp, DnaSource } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -15,8 +15,7 @@ type ConstructorArgs = {
   scenarioUUID: string,
   name: string,
   config: RawConductorConfig,
-  configDir: string,
-  adminInterfacePort: number,
+  adminInterfacePort?: number,
   onSignal: (Signal) => void,
   onJoin: () => void,
   onLeave: () => void,
@@ -44,11 +43,10 @@ export class Player {
   scenarioUUID: string
 
   _conductor: Conductor | null
-  _configDir: string
-  _adminInterfacePort: number
+  _adminInterfacePort?: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ scenarioUUID, name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ scenarioUUID, name, config, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
@@ -58,8 +56,7 @@ export class Player {
     this.config = config
     this.scenarioUUID = scenarioUUID,
 
-    this._conductor = null
-    this._configDir = configDir
+      this._conductor = null
     this._adminInterfacePort = adminInterfacePort
     this._spawnConductor = spawnConductor
   }
@@ -99,7 +96,7 @@ export class Player {
     this.logger.debug("initialized")
   }
 
-  shutdown = async (signal = 'SIGINT'): Promise<boolean> => {
+  shutdown = async (signal = 'SIGTERM'): Promise<boolean> => {
     if (this._conductor) {
       const c = this._conductor
       this._conductor = null
@@ -115,16 +112,19 @@ export class Player {
   }
 
   /** Runs at the end of a test run */
-  cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
+  cleanup = async (signal = 'SIGTERM'): Promise<boolean> => {
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
       await this.shutdown(signal)
-      unparkPort(this._adminInterfacePort)
-      return true
-    } else {
-      unparkPort(this._adminInterfacePort)
-      return false
+      if (this._adminInterfacePort !== undefined) {
+        unparkPort(this._adminInterfacePort)
+
+      }
     }
+    if (this._adminInterfacePort !== undefined) {
+      unparkPort(this._adminInterfacePort)
+    }
+    return this._conductor !== null
   }
 
   /**
@@ -140,13 +140,21 @@ export class Player {
   }
 
   /**
+   * expose registerDna at the player level for in-scenario dynamic installation of apps
+   */
+  registerDna = async (source: DnaSource, params: any): Promise<HoloHash> => {
+    this._conductorGuard(`Player.registerDna(source ${JSON.stringify(source)}, params ${JSON.stringify(params)})`)
+    return this._conductor!.registerDna(source, params)
+  }
+
+  /**
    * expose installHapp at the player level for in-scenario dynamic installation of apps
    * optionally takes an AgentPubKey so that you can control who's who if you need to
    * otherwise will be a new and different agent every time you call it
    */
   installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
     this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
-      return this._conductor!.installHapp(happ, agentPubKey)
+    return this._conductor!.installHapp(happ, agentPubKey)
   }
 
   /**

@@ -385,19 +385,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "env_logger"
-version = "0.7.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "44533bbbb3bb3c1fa17d9f2e4e38bbbaf8396ba82193c4cb1b6445d711445d36"
-dependencies = [
- "atty",
- "humantime",
- "log",
- "regex",
- "termcolor",
-]
-
-[[package]]
 name = "fake-simd"
 version = "0.1.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -656,7 +643,7 @@ version = "0.0.52-alpha2"
 source = "git+https://github.com/holochain/holochain-rust#d4ef8618e1966ea13a9b25eceeb9c5874fd59593"
 dependencies = [
  "crossbeam-channel 0.3.9",
- "env_logger 0.6.2",
+ "env_logger",
  "lazy_static",
  "log",
  "nanoid",
@@ -1637,12 +1624,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "1a55ca5f3b68e41c979bf8c46a6f1da892ca4db8f94023ce0bd32407573b1ac0"
 
 [[package]]
-name = "snowflake"
-version = "1.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "27207bb65232eda1f588cf46db2fee75c0808d557f6b3cf19a75f5d6d7c94df1"
-
-[[package]]
 name = "spin"
 version = "0.5.2"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1985,24 +1966,18 @@ version = "0.0.100-alpha0"
 dependencies = [
  "base64 0.10.1",
  "crossbeam",
- "env_logger 0.7.1",
  "in_stream",
  "jsonrpc-core",
  "jsonrpc-ws-server",
- "lazy_static",
- "log",
  "nix",
- "regex",
  "reqwest",
  "rmp-serde",
  "serde",
  "serde_bytes",
  "serde_derive",
  "serde_json",
- "snowflake",
  "structopt",
  "structopt-derive",
- "tempfile",
  "url2",
  "ws",
 ]

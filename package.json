@@ -15,7 +15,6 @@
     "build": "rm -rf ./lib ; tsc -d",
     "dev": "rm -rf ./lib ; tsc -d -w",
     "doc": "typedoc",
-    "fetch-dna": "ts-node test/fetch-dna",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "test": "ts-node test | tap-diff",
@@ -25,10 +24,9 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@holochain/conductor-api": "0.0.1-dev.14",
+    "@holochain/conductor-api": "0.0.1-dev.16",
     "@holochain/hachiko": "^0.5.2",
     "@iarna/toml": "^2.2.5",
-    "yaml": "^1.10.0",
     "async-mutex": "^0.1.4",
     "axios": "^0.19.2",
     "base-64": "^0.1.0",
@@ -40,8 +38,10 @@
     "lodash": "^4.17.20",
     "memoizee": "^0.4.14",
     "ramda": "^0.26.1",
+    "rpc-websockets": "^4.6.1",
     "uuid": "^3.4.0",
-    "winston": "^3.3.3"
+    "winston": "^3.3.3",
+    "yaml": "^1.10.0"
   },
   "devDependencies": {
     "@types/lodash": "^4.14.165",

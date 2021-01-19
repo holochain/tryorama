@@ -20,20 +20,18 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     onSignal: () => { },
     onActivity: () => { },
     machineHost: '',
-    adminPort: 0,
-    rawConfig: player.config
   })
 }
 
-export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook } = {}): Promise<Conductor> => {
+export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConductorFn => async (player: Player, { handleHook } = {}): Promise<Conductor> => {
   const name = player.name
-  const configPath = getConfigPath(player._configDir)
+  const configPath = getConfigPath(configDir)
   let handle
   let lairHandle
   try {
 
-    const lairDir = `${player._configDir}/keystore`
-    if (!fs.existsSync(lairDir)){
+    const lairDir = `${configDir}/keystore`
+    if (!fs.existsSync(lairDir)) {
       fs.mkdirSync(lairDir);
     }
     logger.info("Spawning lair for test with keystore at:  %s", lairDir)
@@ -46,7 +44,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       }
     })
     // Wait for lair to output data such as "#lair-keystore-ready#" before starting holochain
-    await new Promise ((resolve) => { lairHandle.stdout.once("data", resolve) })
+    await new Promise((resolve) => { lairHandle.stdout.once("data", resolve) })
 
     const binPath = env.holochainPath
     const version = execSync(`${binPath} --version`)
@@ -89,7 +87,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
         const lairKillPromise = new Promise((resolve) => {
           lairHandle.once('close', resolve)
         })
-        const killPromise = Promise.all([conductorKillPromise,lairKillPromise])
+        const killPromise = Promise.all([conductorKillPromise, lairKillPromise])
         lairHandle.kill()
         handle.kill(...args)
         return killPromise
@@ -97,8 +95,7 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
       onSignal: player.onSignal,//player.onSignal.bind(player),
       onActivity: player.onActivity,
       machineHost: `localhost`,
-      adminPort: player._adminInterfacePort,
-      rawConfig: player.config
+      adminPort,
     })
 
     return conductor
@@ -148,8 +145,6 @@ export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnCon
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
     machineHost,
-    adminPort: 0,
-    rawConfig: 'TODO',
   })
 }
 
