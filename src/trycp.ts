@@ -22,7 +22,14 @@ export type TrycpClient = {
 export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient> => {
   const url = `ws://${machineEndpoint}`
   const ws = new RpcWebSocket(url)
-  await new Promise((resolve) => ws.once("open", resolve))
+  ws.on("error", (e) => logger.error(`trycp client error: ${e}`))
+  await new Promise<void>((resolve, reject) => {
+    ws.once("error", reject)
+    ws.once("open", () => {
+      ws.removeListener(reject)
+      resolve()
+    })
+  })
 
   const makeCall = (method) => async (a) => {
     let params = JSON.stringify(a, null, 2)
