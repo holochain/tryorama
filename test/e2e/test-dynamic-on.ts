@@ -47,7 +47,7 @@ module.exports = (testOrchestrator, testConfig) => {
     const orchestrator = testOrchestrator()
 
     orchestrator.registerScenario('other agents join after an initial one', async s => {
-      const [ alice ] = await s.players([conductorConfig])
+      const [alice] = await s.players([conductorConfig])
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
       var aliceLinks = await alice_happ.cells[0].call('test', 'get_links')
       t.equal(aliceLinks.length, 0)
