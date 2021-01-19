@@ -1,6 +1,7 @@
 //! trycp_server listens for remote commands issued by tryorama and does as requested
 //! with a set of Holochain conductors that it manages on the local machine.
 
+mod admin_interface;
 mod registrar;
 mod rpc_util;
 
@@ -106,6 +107,7 @@ fn parse_port_range(s: String) -> Result<PortRange, String> {
 struct TrycpServer {
     next_port: u16,
     port_range: PortRange,
+    ports: HashMap<String, u16>,
 }
 
 impl TrycpServer {
@@ -116,13 +118,15 @@ impl TrycpServer {
         TrycpServer {
             next_port: port_range.start,
             port_range,
+            ports: HashMap::new(),
         }
     }
 
-    fn acquire_port(&mut self) -> Result<u16, String> {
+    fn acquire_port(&mut self, id: String) -> Result<u16, String> {
         if self.next_port < self.port_range.end {
             let port = self.next_port;
             self.next_port += 1;
+            self.ports.insert(id, port);
             Ok(port)
         } else {
             Err(format!(
@@ -134,6 +138,8 @@ impl TrycpServer {
 
     fn reset(&mut self) {
         self.next_port = self.port_range.start;
+        self.ports.clear();
+
         if let Err(e) = std::fs::remove_dir_all(PLAYERS_DIR_PATH) {
             println!("error: failed to clear out players directory: {}", e);
         }
@@ -190,6 +196,7 @@ fn main() {
         Arc::new(RwLock::new(TrycpServer::new(conductor_port_range)));
     let state_configure_player = state.clone();
     let state_reset = state.clone();
+    let state_admin_interface_call = state.clone();
 
     struct Player {
         lair: Child,
@@ -297,7 +304,7 @@ fn main() {
         let port = state_configure_player
             .write()
             .unwrap()
-            .acquire_port()
+            .acquire_port(id.clone())
             .map_err(internal_error)?;
 
         writeln!(
@@ -484,6 +491,29 @@ admin_interfaces:
         }
 
         Ok(Value::String("reset".into()))
+    });
+
+    io.add_method("admin_interface_call", move |params: Params| {
+        #[derive(Deserialize)]
+        struct AdminApiCallParams {
+            id: String,
+            message: Value,
+        }
+        let AdminApiCallParams { id, message } = params.parse()?;
+        println!("admin_interface_call id: {:?}", id);
+
+        let maybe_port = state_admin_interface_call
+            .read()
+            .unwrap()
+            .ports
+            .get(&id)
+            .cloned();
+        let port = maybe_port.ok_or_else(|| {
+            invalid_request(format!(
+                "failed to call player admin interface: player not yet configured"
+            ))
+        })?;
+        admin_interface::remote_call(port, id, message)
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
