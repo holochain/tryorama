@@ -14,7 +14,6 @@ edition = "2018"
 # TODO: Remove me
 in_stream = { version = "=0.0.52-alpha2", git = "https://github.com/holochain/holochain-rust" }
 
-base64 = "=0.10.1"
 crossbeam = "0.8.0"
 jsonrpc-core = "14.0"
 jsonrpc-ws-server = "14.0"
