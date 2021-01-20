@@ -1,4 +1,3 @@
-import uuidGen from 'uuid/v4'
 import * as _ from 'lodash'
 const fs = require('fs').promises
 const path = require('path')
@@ -101,6 +100,11 @@ export class ScenarioApi {
       }
     })
 
+    // connect to trycp
+    const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
+    // keep track of it so we can send a reset() at the end of this scenario
+    this._trycpClients.push(trycpClient)
+
     // create all the promise *creators* which will
     // create the players
     const playerBuilders: Array<PlayerBuilder> = await Promise.all(playerConfigs.map(
@@ -108,7 +112,7 @@ export class ScenarioApi {
         // use the _conductorIndex and then increment it
         const playerName = `c${this._conductorIndex++}`
         // trycp
-        return await this._createTrycpPlayerBuilder(machineEndpoint, playerName, configSeed)
+        return await this._createTrycpPlayerBuilder(trycpClient, stripPortFromUrl(machineEndpoint), playerName, configSeed)
       }
     ))
 
@@ -137,20 +141,17 @@ export class ScenarioApi {
     //    return new Promise(() => {return x})
   }
 
-  _createTrycpPlayerBuilder = async (machineEndpoint: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
-    const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
-    // keep track of it so we can send a reset() at the end of this scenario
-    this._trycpClients.push(trycpClient)
+  _createTrycpPlayerBuilder = async (trycpClient: TrycpClient, machineHost: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     const configJson = this._generateConfigFromSeed({ adminInterfacePort: 0, configDir: "unused" }, playerName, configSeed)
     return async () => {
       // FIXME: can we get this from somewhere?
-      await trycpClient.configure_player(playerName, configJson)
+      await trycpClient.configurePlayer(playerName, configJson)
       logger.debug('api.players: player config committed for %s', playerName)
       return new Player({
         scenarioUUID: this._uuid,
         name: playerName,
         config: configJson,
-        spawnConductor: spawnRemote(trycpClient, stripPortFromUrl(machineEndpoint)),
+        spawnConductor: spawnRemote(trycpClient, machineHost),
         onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
         onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
         onActivity: () => this._restartTimer(),
@@ -217,7 +218,7 @@ export class ScenarioApi {
   _destroyLocalConductors = async () => {
     const kills = await this._cleanup('SIGKILL')
     this._clearTimer()
-    const names = _.values(this._localPlayers).filter((player, i) => kills[i]).map(player => player.name)
+    const names = this._localPlayers.filter((player, i) => kills[i]).map(player => player.name)
     names.sort()
     const msg = `
 The following conductors were forcefully shutdown after ${env.conductorTimeoutMs / 1000} seconds of no activity:
@@ -238,7 +239,7 @@ ${names.join(', ')}
   _cleanup = async (signal?): Promise<Array<boolean>> => {
     logger.debug("Calling Api._cleanup. _localPlayers: %j", this._localPlayers)
     const localKills = await Promise.all(
-      _.values(this._localPlayers).map(player => player.cleanup(signal))
+      this._localPlayers.map(player => player.cleanup(signal))
     )
     await Promise.all(this._trycpClients.map(async (trycp) => {
       await trycp.reset()

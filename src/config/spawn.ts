@@ -6,7 +6,7 @@ import * as path from "path";
 import { Player } from "..";
 import { Conductor } from "../conductor";
 import { getConfigPath } from ".";
-import { trycpSession, TrycpClient } from "../trycp";
+import { TrycpClient } from "../trycp";
 import { delay } from "../util";
 import env from '../env'
 var fs = require('fs');
@@ -145,6 +145,9 @@ export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnCon
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
     machineHost,
+    adminInterfaceCall: (message) => trycp.adminInterfaceCall(name, message),
+    downloadDnaRemote: trycp.downloadDna,
+    saveDnaRemote: trycp.saveDna,
   })
 }
 

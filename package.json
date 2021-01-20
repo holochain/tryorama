@@ -27,6 +27,7 @@
     "@holochain/conductor-api": "0.0.1-dev.16",
     "@holochain/hachiko": "^0.5.2",
     "@iarna/toml": "^2.2.5",
+    "@msgpack/msgpack": "^2.1.0",
     "async-mutex": "^0.1.4",
     "axios": "^0.19.2",
     "base-64": "^0.1.0",
@@ -39,7 +40,7 @@
     "memoizee": "^0.4.14",
     "ramda": "^0.26.1",
     "rpc-websockets": "^4.6.1",
-    "uuid": "^3.4.0",
+    "uuid": "^8.3.2",
     "winston": "^3.3.3",
     "yaml": "^1.10.0"
   },

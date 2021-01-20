@@ -1,7 +1,7 @@
 [package]
 name = "trycp_server"
 version = "0.0.100-alpha0"
-description = "conductor provisioner for tyrorama"
+description = "conductor provisioner for tryorama"
 license = "CAL-1.0"
 keywords = ["holochain", "holo", "p2p", "network", "simulation"]
 homepage = "https://github.com/holochain/tryorama"
@@ -14,6 +14,7 @@ edition = "2018"
 # TODO: Remove me
 in_stream = { version = "=0.0.52-alpha2", git = "https://github.com/holochain/holochain-rust" }
 
+base64 = "0.13.0"
 crossbeam = "0.8.0"
 jsonrpc-core = "14.0"
 jsonrpc-ws-server = "14.0"

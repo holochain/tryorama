@@ -1,5 +1,4 @@
-const uuidGen = require('uuid/v4')
-
+import { v4 as uuidGen } from 'uuid'
 import * as _ from 'lodash'
 import * as T from "./types";
 import * as M from "./middleware";

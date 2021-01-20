@@ -1,5 +1,5 @@
 const colors = require('colors/safe')
-import uuidGen from 'uuid/v4'
+import { v4 as uuidGen } from 'uuid'
 
 import { KillFn } from "./types";
 import { makeLogger } from "./logger";
@@ -9,6 +9,8 @@ import * as T from './types'
 import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
+import { TunneledAdminClient } from './trycp'
+import * as fs from 'fs'
 
 // probably unnecessary, but it can't hurt
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
@@ -24,6 +26,9 @@ type ConstructorArgs = {
   onActivity: () => void,
   machineHost: string,
   adminPort?: number
+  adminInterfaceCall?: (any) => Promise<any>,
+  downloadDnaRemote?: (string) => Promise<{ path: string }>
+  saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
 }
 
 /**
@@ -38,7 +43,7 @@ export class Conductor {
   onSignal: (Signal) => void
   logger: any
   kill: KillFn
-  adminClient: AdminWebsocket | null
+  adminClient: AdminWebsocket | TunneledAdminClient | null
   appClient: AppWebsocket | null
 
   _player: Player
@@ -48,9 +53,11 @@ export class Conductor {
   _wsClosePromise: Promise<void>
   _onActivity: () => void
   _timeout: number
+  _downloadDnaRemote?: (string) => Promise<{ path: string }>
+  _saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
 
 
-  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort }: ConstructorArgs) {
+  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall, downloadDnaRemote, saveDnaRemote }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -62,7 +69,11 @@ export class Conductor {
       return this._wsClosePromise
     }
 
-    this.adminClient = null
+    if (adminInterfaceCall !== undefined) {
+      this.adminClient = new TunneledAdminClient(adminInterfaceCall)
+    } else {
+      this.adminClient = null
+    }
     this.appClient = null
     this._player = player
     this._machineHost = machineHost
@@ -71,14 +82,13 @@ export class Conductor {
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
     this._timeout = 30000
+    this._downloadDnaRemote = downloadDnaRemote
+    this._saveDnaRemote = saveDnaRemote
   }
 
   initialize = async () => {
     this._onActivity()
-    // TODO: fix when we can tunnel admin connections over trycp_server
-    if (this._adminInterfacePort !== undefined) {
-      await this._connectInterfaces()
-    }
+    await this._connectInterfaces()
   }
 
   awaitClosed = () => this._wsClosePromise
@@ -99,18 +109,32 @@ export class Conductor {
     const installAppReq: InstallAppRequest = {
       installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
-      dnas: dnaSources.map((source, index) => {
+      dnas: await Promise.all(dnaSources.map(async (source, index) => {
         let dna = {
           nick: `${index}${source}-${uuidGen()}`,
           uuid: this._player.scenarioUUID,
         }
-        if (source.constructor.name == 'String') {
-          dna["path"] = source
+        if ((source as T.DnaUrl).url !== undefined) {
+          if (this._downloadDnaRemote === undefined) {
+            throw new Error("encountered URL DNA source on non-remote player")
+          }
+          const { path: remotePath } = await this._downloadDnaRemote((source as T.DnaUrl).url)
+          dna["path"] = remotePath
+        } else if (source.constructor.name == 'String') {
+          if (this._saveDnaRemote !== undefined) {
+            const path = source as T.DnaPath
+            const contents = () => fs.promises.readFile(path)
+            const pathAfterReplacement = path.replace(/\//g, '')
+            const { path: remotePath } = await this._saveDnaRemote(pathAfterReplacement, contents)
+            dna["path"] = remotePath
+          } else {
+            dna["path"] = source
+          }
         } else if (source.constructor.name === 'Buffer') {
           dna["hash"] = source
         }
         return dna
-      })
+      }))
     }
     return await this._installHapp(installAppReq)
   }
@@ -140,9 +164,11 @@ export class Conductor {
 
   _connectInterfaces = async () => {
     this._onActivity()
-    const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
-    this.adminClient = await AdminWebsocket.connect(adminWsUrl)
-    this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+    if (this.adminClient === null) {
+      const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
+      this.adminClient = await AdminWebsocket.connect(adminWsUrl)
+      this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+    }
     // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
     const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
