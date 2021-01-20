@@ -72,7 +72,7 @@ module.exports = (testOrchestrator, testConfig) => {
                     // happ 0
                     [
                         // cell 0
-                        { url: `file://${installApps[0][0][0].path}` }
+                        { url: `file://${installApps[0][0][0]}` }
                     ]
                 ]
             ]

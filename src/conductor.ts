@@ -27,6 +27,7 @@ type ConstructorArgs = {
   machineHost: string,
   adminPort?: number
   adminInterfaceCall?: (any) => Promise<any>,
+  downloadDnaRemote?: (string) => Promise<{ path: string }>
   saveDnaRemote?: (string, Buffer) => Promise<{ path: string }>
 }
 
@@ -52,10 +53,11 @@ export class Conductor {
   _wsClosePromise: Promise<void>
   _onActivity: () => void
   _timeout: number
+  _downloadDnaRemote?: (string) => Promise<{ path: string }>
   _saveDnaRemote?: (string, Buffer) => Promise<{ path: string }>
 
 
-  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall, saveDnaRemote }: ConstructorArgs) {
+  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall, downloadDnaRemote, saveDnaRemote }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -80,6 +82,7 @@ export class Conductor {
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
     this._timeout = 30000
+    this._downloadDnaRemote = downloadDnaRemote
     this._saveDnaRemote = saveDnaRemote
   }
 
@@ -111,7 +114,13 @@ export class Conductor {
           nick: `${index}${source}-${uuidGen()}`,
           uuid: this._player.scenarioUUID,
         }
-        if (source.constructor.name == 'String') {
+        if ((source as T.DnaUrl).url !== undefined) {
+          if (this._downloadDnaRemote === undefined) {
+            throw new Error("encountered URL DNA source on non-remote player")
+          }
+          const { path: remotePath } = await this._downloadDnaRemote((source as T.DnaUrl).url)
+          dna["path"] = remotePath
+        } else if (source.constructor.name == 'String') {
           if (this._saveDnaRemote !== undefined) {
             const path = source as T.DnaPath
             const contents = await fs.promises.readFile(path)

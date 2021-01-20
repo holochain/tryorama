@@ -74,13 +74,14 @@ sometimes we can write it like this to make it easier to read
 */
 export type InstallAgentsHapps = InstallHapps[]
 export type InstallHapps = InstallHapp[]
-export type DnaSrc = DnaPath | HoloHash
+export type DnaSrc = DnaPath | HoloHash | DnaUrl
 export type InstallHapp = DnaSrc[]
 export type DnaPath = string
+export type DnaUrl = { url: string }
 
 // This type was inadvertently not exported in holochain-conductor-api dev16, so
 // in needs to be removed from here when it gets added back
-export type DnaSource = {hash: HoloHash} | {path: DnaPath} // | {dna_file: DnaFile}
+export type DnaSource = { hash: HoloHash } | { path: DnaPath } // | {dna_file: DnaFile}
 
 // the mirror of InstallAgentHapps
 export type InstalledAgentHapps = InstalledHapps[]
@@ -160,7 +161,7 @@ export enum ProxyAcceptConfig {
   RejectAll = 'reject_all'
 }
 
-export type TransportConfig = ( Mem | Quic | Proxy )
+export type TransportConfig = (Mem | Quic | Proxy)
 
 // Derived from https://github.com/holochain/holochain/blob/d3a991df1732603419adbda96e8fb8e525e829cb/crates/kitsune_p2p/kitsune_p2p/src/config.rs
 // must stay in sync
