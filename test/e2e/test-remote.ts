@@ -7,7 +7,7 @@ import * as T from '../../src/types'
 const PORT = 9000
 
 async function run_trycp(port): Promise<ChildProcessWithoutNullStreams> {
-    const trycp = await spawn('cargo', ['run', '--', '-p', port, '-r', '9100-9200'], { cwd: "crates/trycp_server" })
+    const trycp = await spawn('cargo', ['run', '--release', '--target-dir', '../../target', '--', '-p', port, '-r', '9100-9200'], { cwd: "crates/trycp_server" })
 
     trycp.stderr.on('data', (data) => {
         console.error(`stderr: ${data}`)
