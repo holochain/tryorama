@@ -9,7 +9,7 @@ import * as msgpack from "@msgpack/msgpack"
 import * as conductorApi from "@holochain/conductor-api"
 
 export type TrycpClient = {
-  saveDna: (id: string, contents: Buffer) => Promise<{ path: string }>,
+  saveDna: (id: string, contents: () => Promise<Buffer>) => Promise<{ path: string }>,
   downloadDna: (url: string) => Promise<{ path: string }>,
   configurePlayer: (id, partial_config) => Promise<any>,
   spawn: (id) => Promise<any>,
@@ -43,8 +43,15 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     return result
   }
 
+  const savedDnas: Record<string, { path: string }> = {}
+
   return {
-    saveDna: (id, contents) => makeCall('save_dna')({ id, content_base64: contents.toString('base64') }),
+    saveDna: async (id, contents) => {
+      if (!(id in savedDnas)) {
+        savedDnas[id] = await makeCall('save_dna')({ id, content_base64: (await contents()).toString('base64') })
+      }
+      return savedDnas[id]
+    },
     downloadDna: (url) => makeCall('download_dna')({ url }),
     configurePlayer: (id, partial_config) => makeCall('configure_player')({
       id, partial_config: yaml.stringify({

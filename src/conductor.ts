@@ -28,7 +28,7 @@ type ConstructorArgs = {
   adminPort?: number
   adminInterfaceCall?: (any) => Promise<any>,
   downloadDnaRemote?: (string) => Promise<{ path: string }>
-  saveDnaRemote?: (string, Buffer) => Promise<{ path: string }>
+  saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
 }
 
 /**
@@ -54,7 +54,7 @@ export class Conductor {
   _onActivity: () => void
   _timeout: number
   _downloadDnaRemote?: (string) => Promise<{ path: string }>
-  _saveDnaRemote?: (string, Buffer) => Promise<{ path: string }>
+  _saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
 
 
   constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall, downloadDnaRemote, saveDnaRemote }: ConstructorArgs) {
@@ -123,7 +123,7 @@ export class Conductor {
         } else if (source.constructor.name == 'String') {
           if (this._saveDnaRemote !== undefined) {
             const path = source as T.DnaPath
-            const contents = await fs.promises.readFile(path)
+            const contents = () => fs.promises.readFile(path)
             const pathAfterReplacement = path.replace(/\//g, '')
             const { path: remotePath } = await this._saveDnaRemote(pathAfterReplacement, contents)
             dna["path"] = remotePath
