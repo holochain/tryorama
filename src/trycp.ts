@@ -55,8 +55,8 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
       message_base64: Buffer.from(msgpack.encode(message)).toString("base64")
     })
     const response = msgpack.decode(Buffer.from(raw_response, "base64")) as { type: string, data: any }
-    logger.debug(`trycp tunneled ${type} interface response: %j`, response.data)
-    if (response.type == "error") {
+    logger.debug(`trycp tunneled ${type} interface response: %j`, response)
+    if (response.type === "error") {
       throw new Error(response.data)
     }
     return response.data
