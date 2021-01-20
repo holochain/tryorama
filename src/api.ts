@@ -218,7 +218,7 @@ export class ScenarioApi {
   _destroyLocalConductors = async () => {
     const kills = await this._cleanup('SIGKILL')
     this._clearTimer()
-    const names = _.values(this._localPlayers).filter((player, i) => kills[i]).map(player => player.name)
+    const names = this._localPlayers.filter((player, i) => kills[i]).map(player => player.name)
     names.sort()
     const msg = `
 The following conductors were forcefully shutdown after ${env.conductorTimeoutMs / 1000} seconds of no activity:
@@ -239,7 +239,7 @@ ${names.join(', ')}
   _cleanup = async (signal?): Promise<Array<boolean>> => {
     logger.debug("Calling Api._cleanup. _localPlayers: %j", this._localPlayers)
     const localKills = await Promise.all(
-      _.values(this._localPlayers).map(player => player.cleanup(signal))
+      this._localPlayers.map(player => player.cleanup(signal))
     )
     await Promise.all(this._trycpClients.map(async (trycp) => {
       await trycp.reset()
