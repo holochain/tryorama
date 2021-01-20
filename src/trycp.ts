@@ -17,6 +17,7 @@ export type TrycpClient = {
   ping: (id) => Promise<string>,
   reset: () => Promise<void>,
   adminInterfaceCall: (id, message) => Promise<any>,
+  appInterfaceCall: (port, message) => Promise<any>,
   closeSession: () => Promise<void>,
 }
 
@@ -43,6 +44,24 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     return result
   }
 
+  const holochainInterfaceCall = async (type: "app" | "admin", args, message) => {
+    let params = JSON.stringify(message)
+    if (params && params.length > 1000) {
+      params = params.substring(0, 993) + " [snip]"
+    }
+    logger.debug(`trycp tunneled ${type} interface call at ${url} => ${params}`)
+    const raw_response = await ws.call(`${type}_interface_call`, {
+      ...args,
+      message_base64: Buffer.from(msgpack.encode(message)).toString("base64")
+    })
+    const response = msgpack.decode(Buffer.from(raw_response, "base64")) as { type: string, data: any }
+    logger.debug(`trycp tunneled ${type} interface response: %j`, response.data)
+    if (response.type == "error") {
+      throw new Error(response.data)
+    }
+    return response.data
+  }
+
   const savedDnas: Record<string, { path: string }> = {}
 
   return {
@@ -66,23 +85,8 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     kill: (id, signal?) => makeCall('shutdown')({ id, signal }),
     ping: () => makeCall('ping')(undefined),
     reset: () => makeCall('reset')(undefined),
-    adminInterfaceCall: async (id, message) => {
-      let params = JSON.stringify(message)
-      if (params && params.length > 1000) {
-        params = params.substring(0, 993) + " [snip]"
-      }
-      logger.debug(`trycp tunneled admin interface call at ${url} => ${params}`)
-      const raw_response = await ws.call('admin_interface_call', {
-        id,
-        message_base64: Buffer.from(msgpack.encode(message)).toString("base64")
-      })
-      const response = msgpack.decode(Buffer.from(raw_response, "base64")) as { type: string, data: any }
-      logger.debug('trycp tunneled admin interface response: %j', response.data)
-      if (response.type == "error") {
-        throw new Error(response.data)
-      }
-      return response.data
-    },
+    adminInterfaceCall: (id, message) => holochainInterfaceCall("admin", { id }, message),
+    appInterfaceCall: (port, message) => holochainInterfaceCall("app", { port }, message),
     closeSession: () => ws.close(),
   }
 }
@@ -141,5 +145,22 @@ export class TunneledAdminClient {
 
   requestAgentInfo(data: conductorApi.RequestAgentInfoRequest): Promise<conductorApi.RequestAgentInfoResponse> {
     return this.adminInterfaceCall({ type: 'request_agent_info', data })
+  }
+}
+
+export class TunneledAppClient {
+  appInterfaceCall: (any) => Promise<any>
+
+  constructor(appInterfaceCall: (any) => Promise<any>) {
+    this.appInterfaceCall = appInterfaceCall
+  }
+
+  appInfo(data: conductorApi.AppInfoRequest): Promise<conductorApi.AppInfoResponse> {
+    return this.appInterfaceCall({ type: 'app_info', data })
+  }
+
+  callZome(data: conductorApi.CallZomeRequest): Promise<conductorApi.CallZomeResponse> {
+    data.payload = msgpack.encode(data.payload)
+    return this.appInterfaceCall({ type: 'call_zome', data }).then(msgpack.decode)
   }
 }
