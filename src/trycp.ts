@@ -161,6 +161,6 @@ export class TunneledAppClient {
 
   callZome(data: conductorApi.CallZomeRequest): Promise<conductorApi.CallZomeResponse> {
     data.payload = msgpack.encode(data.payload)
-    return this.appInterfaceCall({ type: 'call_zome', data }).then(msgpack.decode)
+    return this.appInterfaceCall({ type: 'zome_call', data }).then(msgpack.decode)
   }
 }

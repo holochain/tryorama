@@ -176,7 +176,7 @@ export class Conductor {
     // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
 
-    if (this._appInterfaceCall !== undefined) {
+    if (this._appInterfaceCall === undefined) {
       const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
       this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
         this._onActivity();
