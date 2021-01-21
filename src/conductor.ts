@@ -21,7 +21,7 @@ export type CallAdminFunc = (method: string, params: Record<string, any>) => Pro
 type ConstructorArgs = {
   player: Player,
   name: string,
-  kill: (string?) => void,
+  kill: (string?) => Promise<void>,
   onSignal: (Signal) => void,
   onActivity: () => void,
   machineHost: string,
@@ -68,11 +68,15 @@ export class Conductor {
     this.kill = async (signal?): Promise<void> => {
       this.logger.debug("Killing...")
       await kill(signal)
-      return this._wsClosePromise
+      return await this._wsClosePromise
     }
 
     if (adminInterfaceCall !== undefined) {
-      this.adminClient = new TunneledAdminClient(adminInterfaceCall)
+      this.adminClient = new TunneledAdminClient(async (message) => {
+        const res = await adminInterfaceCall(message)
+        this._onActivity()
+        return res
+      })
     } else {
       this.adminClient = null
     }
@@ -184,7 +188,11 @@ export class Conductor {
       })
       this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
     } else {
-      this.appClient = new TunneledAppClient((message) => this._appInterfaceCall!(appInterfacePort, message))
+      this.appClient = new TunneledAppClient(async (message) => {
+        const res = await this._appInterfaceCall!(appInterfacePort, message)
+        this._onActivity()
+        return res
+      })
     }
   }
 }

@@ -65,7 +65,6 @@ pub fn remote_call(port: u16, data_buf: Vec<u8>) -> Result<Vec<u8>, jsonrpc_core
             }
         };
         move |response| {
-            println!("received conductor interface response: {:?}", response);
             if send_response {
                 res_tx.send(Ok(response)).unwrap();
                 out.close(ws::CloseCode::Normal)

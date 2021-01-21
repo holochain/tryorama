@@ -90,7 +90,7 @@ export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConduct
         const killPromise = Promise.all([conductorKillPromise, lairKillPromise])
         lairHandle.kill()
         handle.kill(...args)
-        return killPromise
+        await killPromise
       },
       onSignal: player.onSignal,//player.onSignal.bind(player),
       onActivity: player.onActivity,

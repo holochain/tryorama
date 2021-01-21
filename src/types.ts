@@ -168,5 +168,17 @@ export type TransportConfig = (Mem | Quic | Proxy)
 export interface KitsuneP2pConfig {
   transport_pool: TransportConfig[],
   bootstrap_service?: Url2
+  tuning_params?: TuningParams
 }
+
+export interface TuningParams {
+  gossip_loop_iteration_delay_ms: number // default 10
+  default_notify_remote_agent_count: number // default 5
+  default_notify_timeout_ms: number // default 1000
+  default_rpc_single_timeout_ms: number // default 2000
+  default_rpc_multi_remote_agent_count: number // default 2
+  default_rpc_multi_timeout_ms: number // default 2000
+  agent_info_expires_after_ms: number // default 1000 * 60 * 20 (20 minutes)
+}
+
 export type KillFn = (signal?: string) => Promise<void>
