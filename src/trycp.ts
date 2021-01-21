@@ -62,14 +62,14 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     return response.data
   }
 
-  const savedDnas: Record<string, { path: string }> = {}
+  const savedDnas: Record<string, Promise<{ path: string }>> = {}
 
   return {
     saveDna: async (id, contents) => {
       if (!(id in savedDnas)) {
-        savedDnas[id] = await makeCall('save_dna')({ id, content_base64: (await contents()).toString('base64') })
+        savedDnas[id] = (async () => makeCall('save_dna')({ id, content_base64: (await contents()).toString('base64') }))()
       }
-      return savedDnas[id]
+      return await savedDnas[id]
     },
     downloadDna: (url) => makeCall('download_dna')({ url }),
     configurePlayer: (id, partial_config) => makeCall('configure_player')({
