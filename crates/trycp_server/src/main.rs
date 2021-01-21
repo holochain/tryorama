@@ -1,7 +1,7 @@
 //! trycp_server listens for remote commands issued by tryorama and does as requested
 //! with a set of Holochain conductors that it manages on the local machine.
 
-mod admin_interface;
+mod holochain_interface;
 mod registrar;
 mod rpc_util;
 
@@ -565,7 +565,26 @@ admin_interfaces:
                 "failed to call player admin interface: player not yet configured"
             ))
         })?;
-        let response_buf = admin_interface::remote_call(port, id, message_buf)?;
+        let response_buf = holochain_interface::remote_call(port, message_buf)?;
+        Ok(Value::String(base64::encode(&response_buf)))
+    });
+
+    io.add_method("app_interface_call", move |params: Params| {
+        #[derive(Deserialize)]
+        struct AppApiCallParams {
+            port: u16,
+            message_base64: String,
+        }
+        let AppApiCallParams {
+            port,
+            message_base64,
+        } = params.parse()?;
+        println!("app_interface_call port: {:?}", port);
+
+        let message_buf = base64::decode(&message_base64)
+            .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
+
+        let response_buf = holochain_interface::remote_call(port, message_buf)?;
         Ok(Value::String(base64::encode(&response_buf)))
     });
 

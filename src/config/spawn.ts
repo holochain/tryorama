@@ -146,6 +146,7 @@ export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnCon
     onActivity: player.onActivity,
     machineHost,
     adminInterfaceCall: (message) => trycp.adminInterfaceCall(name, message),
+    appInterfaceCall: trycp.appInterfaceCall,
     downloadDnaRemote: trycp.downloadDna,
     saveDnaRemote: trycp.saveDna,
   })

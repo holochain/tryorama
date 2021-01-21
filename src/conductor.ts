@@ -9,7 +9,7 @@ import * as T from './types'
 import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
-import { TunneledAdminClient } from './trycp'
+import { TunneledAdminClient, TunneledAppClient } from './trycp'
 import * as fs from 'fs'
 
 // probably unnecessary, but it can't hurt
@@ -27,8 +27,9 @@ type ConstructorArgs = {
   machineHost: string,
   adminPort?: number
   adminInterfaceCall?: (any) => Promise<any>,
-  downloadDnaRemote?: (string) => Promise<{ path: string }>
-  saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
+  appInterfaceCall?: (port: number, message: any) => Promise<any>,
+  downloadDnaRemote?: (string) => Promise<{ path: string }>,
+  saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>,
 }
 
 /**
@@ -44,7 +45,7 @@ export class Conductor {
   logger: any
   kill: KillFn
   adminClient: AdminWebsocket | TunneledAdminClient | null
-  appClient: AppWebsocket | null
+  appClient: AppWebsocket | TunneledAppClient | null
 
   _player: Player
   _adminInterfacePort?: number
@@ -53,11 +54,12 @@ export class Conductor {
   _wsClosePromise: Promise<void>
   _onActivity: () => void
   _timeout: number
+  _appInterfaceCall?: (port: number, message: any) => Promise<any>
   _downloadDnaRemote?: (string) => Promise<{ path: string }>
   _saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
 
 
-  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall, downloadDnaRemote, saveDnaRemote }: ConstructorArgs) {
+  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall, appInterfaceCall, downloadDnaRemote, saveDnaRemote }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
@@ -82,6 +84,7 @@ export class Conductor {
     this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
     this._timeout = 30000
+    this._appInterfaceCall = appInterfaceCall
     this._downloadDnaRemote = downloadDnaRemote
     this._saveDnaRemote = saveDnaRemote
   }
@@ -169,13 +172,19 @@ export class Conductor {
       this.adminClient = await AdminWebsocket.connect(adminWsUrl)
       this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
     }
+
     // 0 in this case means use any open port
     const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
-    const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
-    this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
-      this._onActivity();
-      this.onSignal(signal);
-    })
-    this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
+
+    if (this._appInterfaceCall === undefined) {
+      const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
+      this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
+        this._onActivity();
+        this.onSignal(signal);
+      })
+      this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
+    } else {
+      this.appClient = new TunneledAppClient((message) => this._appInterfaceCall!(appInterfacePort, message))
+    }
   }
 }

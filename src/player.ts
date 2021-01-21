@@ -9,7 +9,7 @@ import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, Install
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
-import { TunneledAdminClient } from './trycp';
+import { TunneledAdminClient, TunneledAppClient } from './trycp';
 const fs = require('fs').promises
 
 type ConstructorArgs = {
@@ -62,7 +62,7 @@ export class Player {
     this._spawnConductor = spawnConductor
   }
 
-  appWs = (context?: string): AppWebsocket => {
+  appWs = (context?: string): AppWebsocket | TunneledAppClient => {
     this._conductorGuard(context || `Player.appWs()`)
     return this._conductor!.appClient!
   }
