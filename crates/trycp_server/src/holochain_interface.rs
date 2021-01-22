@@ -89,7 +89,7 @@ pub fn remote_call(port: u16, data_buf: Vec<u8>) -> Result<Vec<u8>, jsonrpc_core
 
 pub struct AppConnection {
     // Contains the base64-encoded payload of each message of type "Signal" received since last polled by tryorama
-    pub signals_accumulated: Vec<String>,
+    pub signals_accumulated: Vec<serde_json::Value>,
     pub responses_awaited: HashMap<String, crossbeam::channel::Sender<ws::Result<String>>>,
 }
 
@@ -104,7 +104,11 @@ pub fn connect_app_interface(
                 match parse_holochain_message(message) {
                     Ok(Message::Signal { data }) => {
                         let encoded = base64::encode(data);
-                        connection.lock().unwrap().signals_accumulated.push(encoded);
+                        connection
+                            .lock()
+                            .unwrap()
+                            .signals_accumulated
+                            .push(serde_json::Value::String(encoded));
                     }
                     Ok(Message::Response { id, data }) => {
                         let encoded = base64::encode(data);

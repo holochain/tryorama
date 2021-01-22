@@ -20,6 +20,7 @@ use std::{
     collections::HashMap,
     fs::{self, File},
     io::{self, BufRead, BufReader, Read, Write},
+    mem,
     ops::Range,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
@@ -658,7 +659,18 @@ admin_interfaces:
             });
             return Ok(Value::Array(Vec::new()));
         }
-        Ok(Value::Null)
+
+        Ok(Value::Array(mem::take(
+            &mut app_interface_connections
+                .read()
+                .unwrap()
+                .get(&port)
+                .unwrap()
+                .1
+                .lock()
+                .unwrap()
+                .signals_accumulated,
+        )))
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
