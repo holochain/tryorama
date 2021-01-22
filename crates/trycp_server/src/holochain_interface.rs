@@ -10,7 +10,7 @@ use crate::rpc_util::internal_error;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
-pub enum Message {
+enum Message {
     Request {
         id: String,
         #[serde(with = "serde_bytes")]
@@ -32,7 +32,7 @@ pub fn request(id: String, data_buf: Vec<u8>) -> Vec<u8> {
     rmp_serde::to_vec_named(&msg).expect("serialization cannot fail")
 }
 
-pub fn parse_holochain_message(message: ws::Message) -> Result<Message, String> {
+fn parse_holochain_message(message: ws::Message) -> Result<Message, String> {
     let response_buf = match message {
         ws::Message::Binary(buf) => buf,
         r => return Err(format!("unexpected response from conductor: {:?}", r)),
