@@ -5,6 +5,7 @@ mod holochain_interface;
 mod registrar;
 mod rpc_util;
 
+use holochain_interface::AppConnection;
 use rpc_util::{internal_error, invalid_request};
 
 use jsonrpc_core::{IoHandler, Params, Value};
@@ -22,7 +23,10 @@ use std::{
     ops::Range,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
-    sync::{Arc, RwLock},
+    sync::{
+        atomic::{self, AtomicU32},
+        Arc, Mutex, RwLock,
+    },
 };
 use structopt::StructOpt;
 
@@ -569,6 +573,12 @@ admin_interfaces:
         Ok(Value::String(base64::encode(&response_buf)))
     });
 
+    let app_interface_connections_arc: Arc<
+        RwLock<HashMap<u16, (ws::Sender, Arc<Mutex<AppConnection>>)>>,
+    > = Arc::default();
+    static NEXT_APP_INTERFACE_REQUEST_ID: AtomicU32 = AtomicU32::new(0);
+
+    let app_interface_connections = Arc::clone(&app_interface_connections_arc);
     io.add_method("app_interface_call", move |params: Params| {
         #[derive(Deserialize)]
         struct AppApiCallParams {
@@ -584,8 +594,71 @@ admin_interfaces:
         let message_buf = base64::decode(&message_base64)
             .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
-        let response_buf = holochain_interface::remote_call(port, message_buf)?;
-        Ok(Value::String(base64::encode(&response_buf)))
+        let (tx, rx) = crossbeam::channel::bounded(0);
+
+        let app_interface_connections = Arc::clone(&app_interface_connections);
+        holochain_interface::connect_app_interface(port, move |handle| {
+            let mut responses_awaited = HashMap::new();
+
+            let req_id = NEXT_APP_INTERFACE_REQUEST_ID
+                .fetch_add(1, atomic::Ordering::Relaxed)
+                .to_string();
+
+            match handle.send(holochain_interface::request(req_id.clone(), message_buf)) {
+                Ok(()) => assert!(responses_awaited.insert(req_id, tx).is_none()),
+                Err(e) => tx.send(Err(e)).unwrap(),
+            }
+            let connection = Arc::new(Mutex::new(holochain_interface::AppConnection {
+                signals_accumulated: Vec::new(),
+                responses_awaited,
+            }));
+            let prev_connection = app_interface_connections
+                .write()
+                .unwrap()
+                .insert(port, (handle, Arc::clone(&connection)));
+            assert!(prev_connection.is_none());
+            connection
+        });
+
+        match rx.recv().unwrap() {
+            Ok(string) => Ok(Value::String(string)),
+            Err(e) => Err(internal_error(format!(
+                "failed to send message along app interface: {}",
+                e
+            ))),
+        }
+    });
+
+    let app_interface_connections = app_interface_connections_arc;
+    io.add_method("poll_app_interface_signals", move |params: Params| {
+        #[derive(Deserialize)]
+        struct PollSignalsParams {
+            port: u16,
+        }
+        let PollSignalsParams { port } = params.parse()?;
+        println!("poll_app_interface_signals port: {:?}", port);
+
+        if !app_interface_connections
+            .read()
+            .unwrap()
+            .contains_key(&port)
+        {
+            let app_interface_connections = Arc::clone(&app_interface_connections);
+            holochain_interface::connect_app_interface(port, move |handle| {
+                let connection = Arc::new(Mutex::new(holochain_interface::AppConnection {
+                    signals_accumulated: Vec::new(),
+                    responses_awaited: HashMap::new(),
+                }));
+                let prev_connection = app_interface_connections
+                    .write()
+                    .unwrap()
+                    .insert(port, (handle, Arc::clone(&connection)));
+                assert!(prev_connection.is_none());
+                connection
+            });
+            return Ok(Value::Array(Vec::new()));
+        }
+        Ok(Value::Null)
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
