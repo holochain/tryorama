@@ -577,7 +577,6 @@ admin_interfaces:
     let app_interface_connections_arc: Arc<
         RwLock<HashMap<u16, (ws::Sender, Arc<Mutex<AppConnection>>)>>,
     > = Arc::default();
-    static NEXT_APP_INTERFACE_REQUEST_ID: AtomicU32 = AtomicU32::new(0);
 
     let app_interface_connections = Arc::clone(&app_interface_connections_arc);
     io.add_method("app_interface_call", move |params: Params| {
@@ -599,6 +598,8 @@ admin_interfaces:
 
         let app_interface_connections = Arc::clone(&app_interface_connections);
         holochain_interface::connect_app_interface(port, move |handle| {
+            static NEXT_APP_INTERFACE_REQUEST_ID: AtomicU32 = AtomicU32::new(0);
+
             let mut responses_awaited = HashMap::new();
 
             let req_id = NEXT_APP_INTERFACE_REQUEST_ID
