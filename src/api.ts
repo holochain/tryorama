@@ -47,7 +47,7 @@ export class ScenarioApi {
     this._conductorIndex = 0
   }
 
-  players = async (playerConfigs: Array<T.PlayerConfig>, startupArg: boolean = true): Promise<Array<Player>> => {
+  players = async (playerConfigs: Array<T.PlayerConfig>, startupArg: boolean = true, machineEndpoint: string | null = null): Promise<Array<Player>> => {
     logger.debug('api.players: creating players')
 
     // validation
@@ -57,16 +57,36 @@ export class ScenarioApi {
       }
     })
 
-    // create all the promise *creators* which will
-    // create the players
-    const playerBuilders: Array<PlayerBuilder> = await Promise.all(playerConfigs.map(
-      async configSeed => {
-        // use the _conductorIndex and then increment it
-        const playerName = `c${this._conductorIndex++}`
-        // local machine
-        return await this._createLocalPlayerBuilder(playerName, configSeed)
-      }
-    ))
+    let playerBuilders: Array<PlayerBuilder>
+
+    if (machineEndpoint === null) {
+      // create all the promise *creators* which will
+      // create the players
+      playerBuilders = await Promise.all(playerConfigs.map(
+        async configSeed => {
+          // use the _conductorIndex and then increment it
+          const playerName = `c${this._conductorIndex++}`
+          // local machine
+          return await this._createLocalPlayerBuilder(playerName, configSeed)
+        }
+      ))
+    } else {
+      // connect to trycp
+      const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
+      // keep track of it so we can send a reset() at the end of this scenario
+      this._trycpClients.push(trycpClient)
+
+      // create all the promise *creators* which will
+      // create the players
+      playerBuilders = await Promise.all(playerConfigs.map(
+        async configSeed => {
+          // use the _conductorIndex and then increment it
+          const playerName = `c${this._conductorIndex++}`
+          // trycp
+          return await this._createTrycpPlayerBuilder(trycpClient, stripPortFromUrl(machineEndpoint), playerName, configSeed)
+        }
+      ))
+    }
 
     // this will throw an error if something is wrong
 
@@ -86,41 +106,6 @@ export class ScenarioApi {
         // logger.info('api.players: startup complete for %s', player.name)
       }
     }
-
-    return players
-  }
-
-  playersRemote = async (playerConfigs: Array<T.PlayerConfig>, machineEndpoint: string): Promise<Array<Player>> => {
-    logger.debug('api.playersRemote: creating players')
-
-    // validation
-    playerConfigs.forEach((pc, i) => {
-      if (!_.isFunction(pc)) {
-        throw new Error(`Config for player at index ${i} contains something other than a function. Either use Config.gen to create a seed function, or supply one manually.`)
-      }
-    })
-
-    // connect to trycp
-    const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
-    // keep track of it so we can send a reset() at the end of this scenario
-    this._trycpClients.push(trycpClient)
-
-    // create all the promise *creators* which will
-    // create the players
-    const playerBuilders: Array<PlayerBuilder> = await Promise.all(playerConfigs.map(
-      async configSeed => {
-        // use the _conductorIndex and then increment it
-        const playerName = `c${this._conductorIndex++}`
-        // trycp
-        return await this._createTrycpPlayerBuilder(trycpClient, stripPortFromUrl(machineEndpoint), playerName, configSeed)
-      }
-    ))
-
-    // this will throw an error if something is wrong
-
-    // now sequentially build the players
-    const players = await promiseSerialArray<Player>(playerBuilders.map(pb => pb()))
-    logger.debug('api.playersRemote: players built')
 
     return players
   }

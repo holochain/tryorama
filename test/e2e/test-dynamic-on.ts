@@ -5,14 +5,14 @@ import test from 'tape-promise/tape'
 import { Orchestrator, Config, InstallAgentsHapps } from '../../src'
 import { delay, trace } from '../../src/util';
 
-module.exports = (testOrchestrator, testConfig) => {
+export default (testOrchestrator, testConfig, machineEndpoint: string | null = null) => {
 
   test('test with shutdown and startup', async t => {
     const [aliceConfig, installApps] = testConfig()
     const orchestrator = testOrchestrator()
 
     orchestrator.registerScenario('attempted call with stopped conductor', async s => {
-      const [alice] = await s.players([aliceConfig], false)
+      const [alice] = await s.players([aliceConfig], false, machineEndpoint)
       await alice.startup()
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
       const [link_cell] = alice_happ.cells
@@ -27,7 +27,7 @@ module.exports = (testOrchestrator, testConfig) => {
     })
 
     orchestrator.registerScenario('start-stop-start', async s => {
-      const [alice] = await s.players([aliceConfig], false)
+      const [alice] = await s.players([aliceConfig], false, machineEndpoint)
       await alice.startup()
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
       await alice.shutdown()
@@ -47,7 +47,7 @@ module.exports = (testOrchestrator, testConfig) => {
     const orchestrator = testOrchestrator()
 
     orchestrator.registerScenario('other agents join after an initial one', async s => {
-      const [alice] = await s.players([conductorConfig])
+      const [alice] = await s.players([conductorConfig], true, machineEndpoint)
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
       var aliceLinks = await alice_happ.cells[0].call('test', 'get_links')
       t.equal(aliceLinks.length, 0)
@@ -56,7 +56,7 @@ module.exports = (testOrchestrator, testConfig) => {
       t.equal(aliceLinks.length, 1)
 
       // bob and carol join later
-      const [bob, carol] = await s.players([conductorConfig, conductorConfig])
+      const [bob, carol] = await s.players([conductorConfig, conductorConfig], true, machineEndpoint)
       const [[bob_happ]] = await bob.installAgentsHapps(installApps)
       const [[carol_happ]] = await carol.installAgentsHapps(installApps)
 
@@ -82,16 +82,16 @@ module.exports = (testOrchestrator, testConfig) => {
     const [conductorConfig, installApps] = testConfig()
     const orchestrator = testOrchestrator()
     orchestrator.registerScenario('we can register Dnas', async s => {
-      const [ alice ] = await s.players([conductorConfig])
+      const [alice] = await s.players([conductorConfig], true, machineEndpoint)
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
-      let dnas =  await alice.adminWs().listDnas()
+      let dnas = await alice.adminWs().listDnas()
       t.equal(dnas.length, 1)
       const dnaHash = alice_happ.cells[0].dnaHash()
-      const derivedDnaHash = await alice.registerDna({hash: dnaHash}, "12345")
+      const derivedDnaHash = await alice.registerDna({ hash: dnaHash }, "12345")
       t.equal(dnaHash.length, 39)
       t.equal(derivedDnaHash.length, 39)
       t.notEqual(dnaHash, derivedDnaHash)
-      dnas =  await alice.adminWs().listDnas()
+      dnas = await alice.adminWs().listDnas()
       t.equal(dnas.length, 2)
 
     })

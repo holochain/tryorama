@@ -4,6 +4,11 @@ import { runSeries, compose, /*singleConductor, machinePerPlayer,*/ localOnly } 
 // import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
 import { testConfig } from '../common';
 import path from 'path'
+import { run_trycp, PORT } from './test-remote'
+import testAlwaysOn from './test-always-on'
+import testDynamicOn from './test-dynamic-on'
+import testSignal from './test-signal'
+import testRemote from './test-remote'
 process.on('unhandledRejection', error => {
   console.error('****************************');
   console.error('got unhandledRejection:', error);
@@ -18,8 +23,15 @@ const localOrchestrator = (extra = {}) => new Orchestrator({
   ...extra
 })
 
-require('./test-always-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
-// require('./test-always-on')(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
-require('./test-dynamic-on')(localOrchestrator, () => testConfig(dnaLocationLocal))
-require('./test-signal')(localOrchestrator, () => testConfig(dnaLocationLocal))
-require('./test-remote')(localOrchestrator, () => testConfig(dnaLocationLocal))
+testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal))
+// testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
+testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal))
+testSignal(localOrchestrator, () => testConfig(dnaLocationLocal))
+
+run_trycp().then(() => {
+  testRemote(localOrchestrator, () => testConfig(dnaLocationLocal))
+  testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
+  // testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
+  testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
+  testSignal(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
+}, (error) => { throw error })

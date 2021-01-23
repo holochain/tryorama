@@ -1,20 +1,20 @@
 import test from 'tape-promise/tape'
-import { ChildProcess, ChildProcessWithoutNullStreams, spawn } from 'child_process'
+import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
 import * as fs from 'fs'
 import * as yaml from 'yaml';
 import * as T from '../../src/types'
 
-const PORT = 9000
+export const PORT = 9000
 
-async function run_trycp(port): Promise<ChildProcessWithoutNullStreams> {
-    const trycp = await spawn('cargo', ['run', '--release', '--target-dir', '../../target', '--', '-p', port, '-r', '9100-9200'], { cwd: "crates/trycp_server" })
+export const run_trycp = (port = PORT): Promise<ChildProcessWithoutNullStreams> => {
+    const trycp = spawn('cargo', ['run', '--release', '--target-dir', '../../target', '--', '-p', port.toString(), '-r', '9100-9200'], { cwd: "crates/trycp_server" })
 
     trycp.stderr.on('data', (data) => {
         console.error(`stderr: ${data}`)
     });
 
-    return await new Promise((resolve) => trycp.stdout.on('data', (data) => {
-        var regex = new RegExp("waiting for connections on port " + port);
+    return new Promise((resolve) => trycp.stdout.on('data', (data) => {
+        const regex = new RegExp("waiting for connections on port " + port);
         if (regex.test(data)) {
             resolve(trycp)
         }
@@ -23,37 +23,14 @@ async function run_trycp(port): Promise<ChildProcessWithoutNullStreams> {
 }
 
 
-module.exports = (testOrchestrator, testConfig) => {
+export default (testOrchestrator, testConfig) => {
 
-    test('test remote with shutdown and startup', async t => {
-        const trycp = await run_trycp(PORT)
+    test('test trycp-specific behavior', async t => {
         const [aliceConfig, installApps] = testConfig()
         const orchestrator = testOrchestrator()
 
-        orchestrator.registerScenario('attempted call with stopped conductor', async s => {
-            const [alice] = await s.playersRemote([aliceConfig], `localhost:${PORT}`)
-            await alice.startup()
-            const [[alice_happ]] = await alice.installAgentsHapps(installApps)
-            const [link_cell] = alice_happ.cells
-            await t.doesNotReject(
-                link_cell.call('test', 'create_link')
-            )
-            await alice.shutdown()
-            await t.rejects(
-                link_cell.call('test', 'create_link')
-                /* no conductor is running.*/
-            )
-        })
-
-        orchestrator.registerScenario('start-stop-start', async s => {
-            const [alice] = await s.playersRemote([aliceConfig], `localhost:${PORT}`)
-            await alice.startup()
-            await alice.shutdown()
-            await alice.startup()
-        })
-
         orchestrator.registerScenario('check config', async s => {
-            const [alice] = await s.playersRemote([aliceConfig], `localhost:${PORT}`)
+            const [alice] = await s.players([aliceConfig], false, `localhost:${PORT}`)
             const config_data = (await fs.promises.readFile('/tmp/trycp/players/c0/conductor-config.yml')).toString()
             const config = yaml.parse(config_data)
             t.equal(config.signing_service_uri, null)
@@ -63,8 +40,8 @@ module.exports = (testOrchestrator, testConfig) => {
             t.equal(config.dpki, null)
         })
 
-        orchestrator.registerScenario('download dna and attempt call with stopped conductor', async s => {
-            const [alice] = await s.playersRemote([aliceConfig], `localhost:${PORT}`)
+        orchestrator.registerScenario('download dna and attempt call', async s => {
+            const [alice] = await s.players([aliceConfig], false, `localhost:${PORT}`)
             await alice.startup()
             const install: T.InstallAgentsHapps = [
                 // agent 0
@@ -81,17 +58,11 @@ module.exports = (testOrchestrator, testConfig) => {
             await t.doesNotReject(
                 link_cell.call('test', 'create_link')
             )
-            await alice.shutdown()
-            await t.rejects(
-                link_cell.call('test', 'create_link')
-                /* no conductor is running.*/
-            )
         })
 
         const stats = await orchestrator.run()
 
-        t.equal(stats.successes, 4)
+        t.equal(stats.successes, 2)
         t.end()
-        trycp.kill("SIGTERM")
     })
 }
