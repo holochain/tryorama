@@ -17,7 +17,7 @@ type ConstructorArgs = {
   name: string,
   config: RawConductorConfig,
   adminInterfacePort?: number,
-  onSignal: (Signal) => void,
+  onSignal: (signal: any) => void,
   onJoin: () => void,
   onLeave: () => void,
   onActivity: () => void,
@@ -39,7 +39,7 @@ export class Player {
   config: RawConductorConfig
   onJoin: () => void
   onLeave: () => void
-  onSignal: (Signal) => void
+  onSignal: (signal: any) => void
   onActivity: () => void
   scenarioUUID: string
 

@@ -83,7 +83,7 @@ export class ScenarioApi {
           // use the _conductorIndex and then increment it
           const playerName = `c${this._conductorIndex++}`
           // trycp
-          return await this._createTrycpPlayerBuilder(trycpClient, stripPortFromUrl(machineEndpoint), playerName, configSeed)
+          return await this._createTrycpPlayerBuilder(trycpClient, playerName, configSeed)
         }
       ))
     }
@@ -126,7 +126,7 @@ export class ScenarioApi {
     //    return new Promise(() => {return x})
   }
 
-  _createTrycpPlayerBuilder = async (trycpClient: TrycpClient, machineHost: string, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
+  _createTrycpPlayerBuilder = async (trycpClient: TrycpClient, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
     const configJson = this._generateConfigFromSeed({ adminInterfacePort: 0, configDir: "unused" }, playerName, configSeed)
     return async () => {
       // FIXME: can we get this from somewhere?
@@ -136,7 +136,7 @@ export class ScenarioApi {
         scenarioUUID: this._uuid,
         name: playerName,
         config: configJson,
-        spawnConductor: spawnRemote(trycpClient, machineHost),
+        spawnConductor: spawnRemote(trycpClient),
         onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
         onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
         onActivity: () => this._restartTimer(),

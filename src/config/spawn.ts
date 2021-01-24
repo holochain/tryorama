@@ -19,7 +19,7 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     kill: async () => { },
     onSignal: () => { },
     onActivity: () => { },
-    machineHost: '',
+    backend: { type: "test" },
   })
 }
 
@@ -94,8 +94,11 @@ export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConduct
       },
       onSignal: player.onSignal,//player.onSignal.bind(player),
       onActivity: player.onActivity,
-      machineHost: `localhost`,
-      adminPort,
+      backend: {
+        type: "local",
+        machineHost: "localhost",
+        adminInterfacePort: adminPort
+      },
     })
 
     return conductor
@@ -129,7 +132,7 @@ const awaitInterfaceReady = (handle, name): Promise<null> => new Promise((fulfil
   })
 })
 
-export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
+export const spawnRemote = (trycp: TrycpClient): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
   const name = player.name
   const spawnResult = await trycp.spawn(name)
   logger.debug(`TryCP spawn result: ${spawnResult}`)
@@ -144,11 +147,13 @@ export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnCon
     kill: (signal?) => trycp.kill(name, signal),
     onSignal: player.onSignal.bind(player),
     onActivity: player.onActivity,
-    machineHost,
-    adminInterfaceCall: (message) => trycp.adminInterfaceCall(name, message),
-    appInterfaceCall: trycp.appInterfaceCall,
-    downloadDnaRemote: trycp.downloadDna,
-    saveDnaRemote: trycp.saveDna,
+    backend: {
+      type: "trycp",
+      adminInterfaceCall: (message) => trycp.adminInterfaceCall(name, message),
+      appInterfaceCall: trycp.appInterfaceCall,
+      downloadDnaRemote: trycp.downloadDna,
+      saveDnaRemote: trycp.saveDna,
+    }
   })
 }
 
