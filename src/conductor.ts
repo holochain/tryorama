@@ -34,6 +34,7 @@ type ConstructorArgs = {
     appInterfaceCall: (port: number, message: any) => Promise<any>,
     downloadDnaRemote: (url: string) => Promise<{ path: string }>,
     saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>,
+    pollAppInterfaceSignals: (port: number) => Promise<Array<Buffer>>,
   } | { type: "test" }
 }
 
@@ -65,6 +66,7 @@ export class Conductor {
     appInterfaceCall: (port: number, message: any) => Promise<any>
     downloadDnaRemote: (url: string) => Promise<{ path: string }>
     saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
+    pollAppInterfaceSignals: (port: number) => Promise<Array<Buffer>>,
   } | { type: "test" }
 
 
@@ -206,11 +208,17 @@ export class Conductor {
         break
       case "trycp":
         const backend = this._backend
-        this.appClient = new TunneledAppClient(async (message) => {
-          const res = await backend.appInterfaceCall(appInterfacePort, message)
-          this._onActivity()
-          return res
-        })
+        this.appClient = new TunneledAppClient(
+          async (message) => {
+            const res = await backend.appInterfaceCall(appInterfacePort, message)
+            this._onActivity()
+            return res
+          },
+          () => backend.pollAppInterfaceSignals(appInterfacePort),
+          (signal) => {
+            this._onActivity();
+            this.onSignal(signal);
+          })
         break
       default:
         const assertNever: never = this._backend

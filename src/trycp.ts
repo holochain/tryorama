@@ -7,6 +7,7 @@ import * as yaml from 'yaml';
 import { make } from 'fp-ts/lib/Tree';
 import * as msgpack from "@msgpack/msgpack"
 import * as conductorApi from "@holochain/conductor-api"
+import { sign } from 'fp-ts/lib/Ordering';
 
 export type TrycpClient = {
   saveDna: (id: string, contents: () => Promise<Buffer>) => Promise<{ path: string }>,
@@ -18,6 +19,7 @@ export type TrycpClient = {
   reset: () => Promise<void>,
   adminInterfaceCall: (id, message) => Promise<any>,
   appInterfaceCall: (port, message) => Promise<any>,
+  pollAppInterfaceSignals: (port) => Promise<Array<Buffer>>
   closeSession: () => Promise<void>,
 }
 
@@ -87,6 +89,10 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     reset: () => makeCall('reset')(undefined),
     adminInterfaceCall: (id, message) => holochainInterfaceCall("admin", { id }, message),
     appInterfaceCall: (port, message) => holochainInterfaceCall("app", { port }, message),
+    pollAppInterfaceSignals: async (port) => {
+      const signals_base64: string[] = await makeCall('poll_app_interface_signals')({ port })
+      return signals_base64.map((signal_base64) => Buffer.from(signal_base64, 'base64'))
+    },
     closeSession: () => ws.close(),
   }
 }
@@ -149,10 +155,18 @@ export class TunneledAdminClient {
 }
 
 export class TunneledAppClient {
-  appInterfaceCall: (any) => Promise<any>
+  appInterfaceCall: (req: any) => Promise<any>
 
-  constructor(appInterfaceCall: (any) => Promise<any>) {
+  constructor(appInterfaceCall: (req: any) => Promise<any>, pollAppInterfaceSignals: () => Promise<Array<Buffer>>, onSignal: (signal: any) => void) {
     this.appInterfaceCall = appInterfaceCall
+    let interval
+    interval = setInterval(() => {
+      pollAppInterfaceSignals().then((signals) => signals.forEach(onSignal), (error) => {
+        logger.debug(`failed to poll app interface signals: ${error}`)
+        // The app interface is probably disconnected. Stop polling moving forward.
+        clearInterval(interval)
+      })
+    }, 200)
   }
 
   appInfo(data: conductorApi.AppInfoRequest): Promise<conductorApi.AppInfoResponse> {
