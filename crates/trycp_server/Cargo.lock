@@ -1982,6 +1982,7 @@ dependencies = [
  "serde_bytes",
  "serde_derive",
  "serde_json",
+ "slab",
  "structopt",
  "structopt-derive",
  "url2",

@@ -5,7 +5,7 @@ mod holochain_interface;
 mod registrar;
 mod rpc_util;
 
-use holochain_interface::AppConnection;
+use holochain_interface::AppConnectionState;
 use rpc_util::{internal_error, invalid_request};
 
 use jsonrpc_core::{IoHandler, Params, Value};
@@ -14,8 +14,10 @@ use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
 };
+
 use serde_derive::Deserialize;
 use serde_json::json;
+use slab::Slab;
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -24,10 +26,7 @@ use std::{
     ops::Range,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
-    sync::{
-        atomic::{self, AtomicU32},
-        Arc, Mutex, RwLock,
-    },
+    sync::{Arc, Mutex, RwLock},
 };
 use structopt::StructOpt;
 
@@ -575,7 +574,7 @@ admin_interfaces:
     });
 
     let app_interface_connections_arc: Arc<
-        RwLock<HashMap<u16, (ws::Sender, Arc<Mutex<AppConnection>>)>>,
+        RwLock<HashMap<u16, (ws::Sender, Arc<Mutex<AppConnectionState>>)>>,
     > = Arc::default();
 
     let app_interface_connections = Arc::clone(&app_interface_connections_arc);
@@ -596,31 +595,55 @@ admin_interfaces:
 
         let (tx, rx) = crossbeam::channel::bounded(0);
 
-        let app_interface_connections = Arc::clone(&app_interface_connections);
-        holochain_interface::connect_app_interface(port, move |handle| {
-            static NEXT_APP_INTERFACE_REQUEST_ID: AtomicU32 = AtomicU32::new(0);
-
-            let mut responses_awaited = HashMap::new();
-
-            let req_id = NEXT_APP_INTERFACE_REQUEST_ID
-                .fetch_add(1, atomic::Ordering::Relaxed)
-                .to_string();
-
-            match handle.send(holochain_interface::request(req_id.clone(), message_buf)) {
-                Ok(()) => assert!(responses_awaited.insert(req_id, tx).is_none()),
-                Err(e) => tx.send(Err(e)).unwrap(),
+        // If we have an ongoing connection, reuse it, otherwise create a connection
+        if let Some((handle, app_connection_state)) =
+            app_interface_connections.read().unwrap().get(&port)
+        {
+            let mut app_connection_state_lock_guard = app_connection_state.lock().unwrap();
+            let vacant_entry = app_connection_state_lock_guard
+                .responses_awaited
+                .vacant_entry();
+            match handle.send(holochain_interface::request(
+                vacant_entry.key().to_string(),
+                message_buf,
+            )) {
+                Ok(()) => {
+                    vacant_entry.insert(tx);
+                }
+                Err(e) => {
+                    return Err(internal_error(format!(
+                        "failed to send message along app interface: {}",
+                        e
+                    )))
+                }
             }
-            let connection = Arc::new(Mutex::new(holochain_interface::AppConnection {
-                signals_accumulated: Vec::new(),
-                responses_awaited,
-            }));
-            let prev_connection = app_interface_connections
-                .write()
-                .unwrap()
-                .insert(port, (handle, Arc::clone(&connection)));
-            assert!(prev_connection.is_none());
-            connection
-        });
+        } else {
+            let app_interface_connections = Arc::clone(&app_interface_connections);
+            holochain_interface::connect_app_interface(port, move |handle| {
+                let mut responses_awaited = Slab::new();
+                let vacant_entry = responses_awaited.vacant_entry();
+
+                match handle.send(holochain_interface::request(
+                    vacant_entry.key().to_string(),
+                    message_buf,
+                )) {
+                    Ok(()) => {
+                        vacant_entry.insert(tx);
+                    }
+                    Err(e) => tx.send(Err(e)).unwrap(),
+                }
+                let connection = Arc::new(Mutex::new(holochain_interface::AppConnectionState {
+                    signals_accumulated: Vec::new(),
+                    responses_awaited,
+                }));
+                let prev_connection = app_interface_connections
+                    .write()
+                    .unwrap()
+                    .insert(port, (handle, Arc::clone(&connection)));
+                assert!(prev_connection.is_none());
+                connection
+            });
+        }
 
         match rx.recv().unwrap() {
             Ok(string) => Ok(Value::String(string)),
@@ -647,10 +670,7 @@ admin_interfaces:
         {
             let app_interface_connections = Arc::clone(&app_interface_connections);
             holochain_interface::connect_app_interface(port, move |handle| {
-                let connection = Arc::new(Mutex::new(holochain_interface::AppConnection {
-                    signals_accumulated: Vec::new(),
-                    responses_awaited: HashMap::new(),
-                }));
+                let connection = Arc::default();
                 let prev_connection = app_interface_connections
                     .write()
                     .unwrap()
