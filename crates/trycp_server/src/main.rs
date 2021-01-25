@@ -573,14 +573,6 @@ admin_interfaces:
         RwLock<HashMap<u16, OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>>>,
     > = Arc::default();
 
-    // fn connect_app_interface(
-    //     app_interface_connection: &RwLock<
-    //         HashMap<u16, OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>>,
-    //     >,
-    //     on_connect: impl FnOnce(ws::Sender) -> Arc<Mutex<AppConnectionState>>,
-    // ) {
-    // }
-
     fn connect_app_interface(
         connection_state_once_cell: &OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>,
         port: u16,
