@@ -162,9 +162,18 @@ export class Orchestrator<S> {
     ])
     const api = new ScenarioApi(desc, orchestratorData, uuidGen())
     const runner = async scenario => {
-      await scenario(api)
-      await api._cleanup()
-      logger.debug("Done with _cleanup")
+      let err = null
+      try {
+        await scenario(api)
+      } catch (e) {
+        err = e
+      } finally {
+        await api._cleanup()
+        logger.debug("Done with _cleanup")
+      }
+      if (err !== null) {
+        throw err
+      }
     }
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })

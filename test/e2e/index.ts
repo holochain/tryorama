@@ -34,5 +34,5 @@ run_trycp().then((child) => {
   // testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
   testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
   testSignal(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
-  tape.onFinish(() => { console.log("killing trycp..."); child.kill() })
+  tape.onFinish(() => child.kill())
 }, (error) => { throw error })

@@ -222,7 +222,7 @@ ${names.join(', ')}
    * to ensure that players/conductors have been properly cleaned up
    */
   _cleanup = async (signal?): Promise<Array<boolean>> => {
-    logger.debug("Calling Api._cleanup. _localPlayers: %j", this._localPlayers)
+    logger.debug("Calling Api._cleanup. description: %s", this.description)
     const localKills = await Promise.all(
       this._localPlayers.map(player => player.cleanup(signal))
     )
