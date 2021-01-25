@@ -159,14 +159,17 @@ export class TunneledAppClient {
 
   constructor(appInterfaceCall: (req: any) => Promise<any>, pollAppInterfaceSignals: () => Promise<Array<Buffer>>, onSignal: (signal: any) => void) {
     this.appInterfaceCall = appInterfaceCall
-    let interval
-    interval = setInterval(() => {
-      pollAppInterfaceSignals().then((signals) => signals.forEach(onSignal), (error) => {
-        logger.debug(`failed to poll app interface signals: ${error}`)
-        // The app interface is probably disconnected. Stop polling moving forward.
-        clearInterval(interval)
-      })
-    }, 200)
+    const f = () => {
+      pollAppInterfaceSignals().then(
+        (signals) => {
+          signals.forEach(onSignal)
+          setTimeout(f, 500)
+        }, (error) => {
+          logger.debug(`failed to poll app interface signals: ${error}`)
+          // The app interface is probably disconnected. Stop polling moving forward.
+        })
+    }
+    setTimeout(f, 500)
   }
 
   appInfo(data: conductorApi.AppInfoRequest): Promise<conductorApi.AppInfoResponse> {
