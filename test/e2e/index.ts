@@ -1,4 +1,4 @@
-import * as tape from 'tape'
+import tape from 'tape'
 import { Orchestrator } from '../../src'
 import { runSeries, compose, /*singleConductor, machinePerPlayer,*/ localOnly } from '../../src/middleware'
 // import { fakeMmmConfigs, spinupLocalCluster } from '../../src/trycp'
@@ -28,10 +28,11 @@ testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 testSignal(localOrchestrator, () => testConfig(dnaLocationLocal))
 
-run_trycp().then(() => {
+run_trycp().then((child) => {
   testRemote(localOrchestrator, () => testConfig(dnaLocationLocal))
   testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
   // testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
   testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
   testSignal(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
+  tape.onFinish(() => { console.log("killing trycp..."); child.kill() })
 }, (error) => { throw error })

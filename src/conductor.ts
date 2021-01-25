@@ -54,7 +54,6 @@ export class Conductor {
 
   _player: Player
   _isInitialized: boolean
-  _wsClosePromise: Promise<void>
   _onActivity: () => void
   _timeout: number
   _backend: {
@@ -77,9 +76,18 @@ export class Conductor {
     this.onSignal = onSignal
 
     this.kill = async (signal?): Promise<void> => {
+      if (this.appClient !== null) {
+        const appClient = this.appClient
+        this.appClient = null
+        await appClient.client.close()
+      }
+      if (this.adminClient !== null) {
+        const adminClient = this.adminClient
+        this.adminClient = null
+        await adminClient.client.close()
+      }
       this.logger.debug("Killing...")
       await kill(signal)
-      return await this._wsClosePromise
     }
 
     switch (backend.type) {
@@ -102,7 +110,6 @@ export class Conductor {
     this.appClient = null
     this._player = player
     this._isInitialized = false
-    this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
     this._timeout = 30000
   }
@@ -111,8 +118,6 @@ export class Conductor {
     this._onActivity()
     await this._connectInterfaces()
   }
-
-  awaitClosed = () => this._wsClosePromise
 
   // this function registers a DNA from a given source
   registerDna = async (source: T.DnaSource, uuid?, properties?): Promise<HoloHash> => {

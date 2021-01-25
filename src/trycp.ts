@@ -98,7 +98,8 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
 }
 
 export class TunneledAdminClient {
-  adminInterfaceCall: (any) => Promise<any>
+  client = { close: async () => { } }
+  private adminInterfaceCall: (any) => Promise<any>
 
   constructor(adminInterfaceCall: (any) => Promise<any>) {
     this.adminInterfaceCall = adminInterfaceCall
@@ -154,22 +155,50 @@ export class TunneledAdminClient {
   }
 }
 
-export class TunneledAppClient {
-  appInterfaceCall: (req: any) => Promise<any>
+interface Signal {
+  type: "Signal",
+  data: { cellId: any, payload: any }
+}
 
-  constructor(appInterfaceCall: (req: any) => Promise<any>, pollAppInterfaceSignals: () => Promise<Array<Buffer>>, onSignal: (signal: any) => void) {
+const decodeSignal = (signal: Buffer): Signal => {
+  const { App: [cellId, payload] } = (msgpack.decode(signal) as any)
+  const decodedPayload = msgpack.decode(payload)
+  return { type: "Signal", data: { cellId, payload: decodedPayload } }
+}
+
+export class TunneledAppClient {
+  client: { close: () => Promise<void> }
+  private appInterfaceCall: (req: any) => Promise<any>
+  private timeout: NodeJS.Timeout
+  private pollAppInterfaceSignals: () => Promise<Array<Buffer>>
+  private onSignal: (signal: Signal) => void
+
+  constructor(appInterfaceCall: (req: any) => Promise<any>, pollAppInterfaceSignals: () => Promise<Array<Buffer>>, onSignal: (signal: Signal) => void) {
     this.appInterfaceCall = appInterfaceCall
+    this.pollAppInterfaceSignals = pollAppInterfaceSignals
+    this.onSignal = onSignal
     const f = () => {
-      pollAppInterfaceSignals().then(
-        (signals) => {
-          signals.forEach(onSignal)
-          setTimeout(f, 500)
-        }, (error) => {
-          logger.debug(`failed to poll app interface signals: ${error}`)
+      this.pollSignals().then(
+        () => this.timeout = global.setTimeout(f, 500),
+        (error) =>
           // The app interface is probably disconnected. Stop polling moving forward.
-        })
+          logger.debug(`failed to poll app interface signals: ${error}`)
+      )
+
     }
-    setTimeout(f, 500)
+    this.timeout = global.setTimeout(f, 500)
+    this.client = { close: () => Promise.resolve(this.close()) }
+  }
+
+  private async pollSignals() {
+    for (const signal of await this.pollAppInterfaceSignals()) {
+      this.onSignal(decodeSignal(signal))
+    }
+  }
+
+  close(): void {
+    global.clearTimeout(this.timeout)
+    // TODO: send a message like close_app_interface_connection to trycp
   }
 
   appInfo(data: conductorApi.AppInfoRequest): Promise<conductorApi.AppInfoResponse> {

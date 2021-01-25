@@ -3,6 +3,7 @@ import { ChildProcessWithoutNullStreams, spawn } from 'child_process'
 import * as fs from 'fs'
 import * as yaml from 'yaml';
 import * as T from '../../src/types'
+import { ScenarioApi } from '../../src/api';
 
 export const PORT = 9000
 
@@ -24,7 +25,6 @@ export const run_trycp = (port = PORT): Promise<ChildProcessWithoutNullStreams> 
 
 
 export default (testOrchestrator, testConfig) => {
-
     test('test trycp-specific behavior', async t => {
         const [aliceConfig, installApps] = testConfig()
         const orchestrator = testOrchestrator()
@@ -59,6 +59,21 @@ export default (testOrchestrator, testConfig) => {
                 link_cell.call('test', 'create_link')
             )
         })
+
+        // orchestrator.registerScenario('loopback signal zome call', async (s: ScenarioApi) => {
+        //     console.log("signal test")
+        //     const sentPayload = { value: "foo" };
+        //     const [alice] = await s.players([aliceConfig], true, `localhost:${PORT}`)
+        //     let signalResolve
+        //     alice.setSignalHandler((signal) => {
+        //         console.log("Received Signal:", signal)
+        //         t.deepEqual(signal.data.payload, sentPayload)
+        //         signalResolve()
+        //     })
+        //     const [[alice_happ]] = await alice.installAgentsHapps(installApps)
+        //     await alice_happ.cells[0].call('test', 'signal_loopback', sentPayload);
+        //     await new Promise((resolve) => signalResolve = resolve)
+        // })
 
         const stats = await orchestrator.run()
 

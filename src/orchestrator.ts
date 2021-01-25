@@ -17,7 +17,7 @@ type OrchestratorConstructorParams<S> = {
 
 type ModeOpts = {
   executor: 'none' | 'tape' | { tape: any },
-  spawning: 'local' | 'remote' | T.SpawnConductorFn,
+  spawning: 'local' | T.SpawnConductorFn,
 }
 
 const defaultModeOpts: ModeOpts = {
@@ -117,13 +117,6 @@ export class Orchestrator<S> {
           console.error(`got an error for test '${desc}':`, e)
           errors.push({ description: desc, error: e })
         })
-        .then(() => {
-          logger.debug("Done with test: %s", desc)
-          return api._cleanup()
-        })
-        .then(() => {
-          logger.debug("Done with _cleanup")
-        })
     })
     await Promise.all(all)
 
@@ -168,7 +161,11 @@ export class Orchestrator<S> {
       'waiterConfig',
     ])
     const api = new ScenarioApi(desc, orchestratorData, uuidGen())
-    const runner = async scenario => scenario(api)
+    const runner = async scenario => {
+      await scenario(api)
+      await api._cleanup()
+      logger.debug("Done with _cleanup")
+    }
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })
   }
