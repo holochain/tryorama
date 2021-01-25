@@ -1,8 +1,6 @@
-use std::{
-    sync::{Arc, Mutex},
-    thread,
-};
+use std::{sync::Arc, thread};
 
+use parking_lot::Mutex;
 use serde_derive::{Deserialize, Serialize};
 use slab::Slab;
 
@@ -98,6 +96,7 @@ pub struct AppConnectionState {
 pub fn connect_app_interface(
     port: u16,
     connected_callback: impl FnOnce(ws::Sender) -> Arc<Mutex<AppConnectionState>> + Send + 'static,
+    err_callback: impl FnOnce(ws::Error) + Send + 'static,
 ) {
     thread::spawn(move || {
         // Put our closure into an Option to satisfy the FnMut bound,
@@ -113,11 +112,8 @@ pub fn connect_app_interface(
             on_connect.take().unwrap()(handle)
         });
         if let Err(e) = res {
-            println!(
-                "warning: silently ignoring error: failed to connect to app interface: {}",
-                e
-            )
-        };
+            err_callback(e);
+        }
     });
 }
 
@@ -130,7 +126,6 @@ fn handle_app_interface_response(
             let encoded = base64::encode(data);
             app_connection_state
                 .lock()
-                .unwrap()
                 .signals_accumulated
                 .push(serde_json::Value::String(encoded));
         }
@@ -143,7 +138,7 @@ fn handle_app_interface_response(
                 }
             };
             let encoded = base64::encode(data);
-            let mut app_connection_state_lock_guard = app_connection_state.lock().unwrap();
+            let mut app_connection_state_lock_guard = app_connection_state.lock();
             let responses_awaited = &mut app_connection_state_lock_guard.responses_awaited;
             if !responses_awaited.contains(id) {
                 println!("warning: received unexpected response from app interface; dropping");

@@ -1976,6 +1976,8 @@ dependencies = [
  "jsonrpc-core",
  "jsonrpc-ws-server",
  "nix",
+ "once_cell",
+ "parking_lot 0.10.2",
  "reqwest",
  "rmp-serde",
  "serde",

@@ -6,18 +6,9 @@ mod registrar;
 mod rpc_util;
 
 use holochain_interface::AppConnectionState;
+use once_cell::sync::OnceCell;
 use rpc_util::{internal_error, invalid_request};
 
-use jsonrpc_core::{IoHandler, Params, Value};
-use jsonrpc_ws_server::ServerBuilder;
-use nix::{
-    sys::signal::{self, Signal},
-    unistd::Pid,
-};
-
-use serde_derive::Deserialize;
-use serde_json::json;
-use slab::Slab;
 use std::{
     collections::HashMap,
     fs::{self, File},
@@ -26,8 +17,18 @@ use std::{
     ops::Range,
     path::{Path, PathBuf},
     process::{Child, Command, Stdio},
-    sync::{Arc, Mutex, RwLock},
+    sync::Arc,
 };
+
+use jsonrpc_core::{IoHandler, Params, Value};
+use jsonrpc_ws_server::ServerBuilder;
+use nix::{
+    sys::signal::{self, Signal},
+    unistd::Pid,
+};
+use parking_lot::{Mutex, RwLock, RwLockWriteGuard};
+use serde_derive::Deserialize;
+use serde_json::json;
 use structopt::StructOpt;
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
@@ -356,7 +357,6 @@ fn main() {
 
         let port = state_configure_player
             .write()
-            .unwrap()
             .acquire_port(id.clone())
             .map_err(internal_error)?;
 
@@ -407,7 +407,7 @@ admin_interfaces:
 
         println!("starting player with id: {}", id);
 
-        let mut players = players_arc_startup.write().unwrap();
+        let mut players = players_arc_startup.write();
         if players.contains_key(&id) {
             return Err(invalid_request(format!("{} is already running", id)));
         };
@@ -489,7 +489,7 @@ admin_interfaces:
         let ShutdownParams { id, signal } = params.parse()?;
 
         check_player_config_exists(&id)?;
-        match players_arc_shutdown.write().unwrap().remove(&id) {
+        match players_arc_shutdown.write().remove(&id) {
             None => {
                 return Err(invalid_request(format!("no conductor spawned for {}", id)));
             }
@@ -527,8 +527,8 @@ admin_interfaces:
         params.expect_no_params()?;
 
         let mut players = {
-            let mut players_lock = players_arc_reset.write().unwrap();
-            let mut state_lock = state_reset.write().unwrap();
+            let mut players_lock = players_arc_reset.write();
+            let mut state_lock = state_reset.write();
             state_lock.reset();
             std::mem::take(&mut *players_lock)
         };
@@ -558,12 +558,7 @@ admin_interfaces:
         let message_buf = base64::decode(&message_base64)
             .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
-        let maybe_port = state_admin_interface_call
-            .read()
-            .unwrap()
-            .ports
-            .get(&id)
-            .cloned();
+        let maybe_port = state_admin_interface_call.read().ports.get(&id).cloned();
         let port = maybe_port.ok_or_else(|| {
             invalid_request(format!(
                 "failed to call player admin interface: player not yet configured"
@@ -573,9 +568,38 @@ admin_interfaces:
         Ok(Value::String(base64::encode(&response_buf)))
     });
 
+    // For each port, stores a websocket connection to an app interface on that port and state related to that connection.
     let app_interface_connections_arc: Arc<
-        RwLock<HashMap<u16, (ws::Sender, Arc<Mutex<AppConnectionState>>)>>,
+        RwLock<HashMap<u16, OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>>>,
     > = Arc::default();
+
+    // fn connect_app_interface(
+    //     app_interface_connection: &RwLock<
+    //         HashMap<u16, OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>>,
+    //     >,
+    //     on_connect: impl FnOnce(ws::Sender) -> Arc<Mutex<AppConnectionState>>,
+    // ) {
+    // }
+
+    fn connect_app_interface(
+        connection_state_once_cell: &OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>,
+        port: u16,
+    ) -> Result<&(ws::Sender, Arc<Mutex<AppConnectionState>>), ws::Error> {
+        connection_state_once_cell.get_or_try_init(|| {
+            let (tx, rx) = crossbeam::channel::bounded(0);
+            let tx_err = tx.clone();
+            holochain_interface::connect_app_interface(
+                port,
+                move |handle| {
+                    let res = Arc::default();
+                    tx.send(Ok((handle, Arc::clone(&res)))).unwrap();
+                    res
+                },
+                move |err| tx_err.send(Err(err)).unwrap(),
+            );
+            rx.recv().unwrap()
+        })
+    }
 
     let app_interface_connections = Arc::clone(&app_interface_connections_arc);
     io.add_method("app_interface_call", move |params: Params| {
@@ -593,22 +617,40 @@ admin_interfaces:
         let message_buf = base64::decode(&message_base64)
             .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
-        let (tx, rx) = crossbeam::channel::bounded(0);
+        let rx = {
+            let mut app_interface_connections_read_guard = app_interface_connections.read();
+            let connection_state_once_cell = if let Some(connection_state_once_cell) =
+                app_interface_connections_read_guard.get(&port)
+            {
+                connection_state_once_cell
+            } else {
+                mem::drop(app_interface_connections_read_guard);
+                let mut app_interface_connections_write_guard = app_interface_connections.write();
+                app_interface_connections_write_guard
+                    .entry(port)
+                    .or_insert_with(OnceCell::new);
+                app_interface_connections_read_guard =
+                    RwLockWriteGuard::downgrade(app_interface_connections_write_guard);
+                app_interface_connections_read_guard.get(&port).unwrap()
+            };
 
-        // If we have an ongoing connection, reuse it, otherwise create a connection
-        if let Some((handle, app_connection_state)) =
-            app_interface_connections.read().unwrap().get(&port)
-        {
-            let mut app_connection_state_lock_guard = app_connection_state.lock().unwrap();
-            let vacant_entry = app_connection_state_lock_guard
+            let (handle, app_connection_state) =
+                connect_app_interface(connection_state_once_cell, port).map_err(|e| {
+                    internal_error(format!("failed to connect to app interface: {}", e))
+                })?;
+
+            let mut app_connection_state_lock_guard = app_connection_state.lock();
+            let vacant_response_entry = app_connection_state_lock_guard
                 .responses_awaited
                 .vacant_entry();
             match handle.send(holochain_interface::request(
-                vacant_entry.key().to_string(),
+                vacant_response_entry.key().to_string(),
                 message_buf,
             )) {
                 Ok(()) => {
-                    vacant_entry.insert(tx);
+                    let (tx, rx) = crossbeam::channel::bounded(0);
+                    vacant_response_entry.insert(tx);
+                    rx
                 }
                 Err(e) => {
                     return Err(internal_error(format!(
@@ -617,33 +659,7 @@ admin_interfaces:
                     )))
                 }
             }
-        } else {
-            let app_interface_connections = Arc::clone(&app_interface_connections);
-            holochain_interface::connect_app_interface(port, move |handle| {
-                let mut responses_awaited = Slab::new();
-                let vacant_entry = responses_awaited.vacant_entry();
-
-                match handle.send(holochain_interface::request(
-                    vacant_entry.key().to_string(),
-                    message_buf,
-                )) {
-                    Ok(()) => {
-                        vacant_entry.insert(tx);
-                    }
-                    Err(e) => tx.send(Err(e)).unwrap(),
-                }
-                let connection = Arc::new(Mutex::new(holochain_interface::AppConnectionState {
-                    signals_accumulated: Vec::new(),
-                    responses_awaited,
-                }));
-                let prev_connection = app_interface_connections
-                    .write()
-                    .unwrap()
-                    .insert(port, (handle, Arc::clone(&connection)));
-                assert!(prev_connection.is_none());
-                connection
-            });
-        }
+        };
 
         match rx.recv().unwrap() {
             Ok(string) => Ok(Value::String(string)),
@@ -663,35 +679,32 @@ admin_interfaces:
         let PollSignalsParams { port } = params.parse()?;
         println!("poll_app_interface_signals port: {:?}", port);
 
-        if !app_interface_connections
-            .read()
-            .unwrap()
-            .contains_key(&port)
-        {
-            let app_interface_connections = Arc::clone(&app_interface_connections);
-            holochain_interface::connect_app_interface(port, move |handle| {
-                let connection = Arc::default();
-                let prev_connection = app_interface_connections
-                    .write()
-                    .unwrap()
-                    .insert(port, (handle, Arc::clone(&connection)));
-                assert!(prev_connection.is_none());
-                connection
-            });
-            return Ok(Value::Array(Vec::new()));
-        }
+        let res = {
+            let mut app_interface_connections_read_guard = app_interface_connections.read();
+            let connection_state_once_cell = if let Some(connection_state_once_cell) =
+                app_interface_connections_read_guard.get(&port)
+            {
+                connection_state_once_cell
+            } else {
+                mem::drop(app_interface_connections_read_guard);
+                let mut app_interface_connections_write_guard = app_interface_connections.write();
+                app_interface_connections_write_guard
+                    .entry(port)
+                    .or_insert_with(OnceCell::new);
+                app_interface_connections_read_guard =
+                    RwLockWriteGuard::downgrade(app_interface_connections_write_guard);
+                app_interface_connections_read_guard.get(&port).unwrap()
+            };
 
-        Ok(Value::Array(mem::take(
-            &mut app_interface_connections
-                .read()
-                .unwrap()
-                .get(&port)
-                .unwrap()
-                .1
-                .lock()
-                .unwrap()
-                .signals_accumulated,
-        )))
+            let connection_state = connect_app_interface(connection_state_once_cell, port)
+                .map_err(|e| {
+                    internal_error(format!("failed to connect to app interface: {}", e))
+                })?;
+            let mut connection_state = connection_state.1.lock();
+            mem::take(&mut connection_state.signals_accumulated)
+        };
+
+        Ok(Value::Array(res))
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
