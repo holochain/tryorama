@@ -149,7 +149,14 @@ export class Conductor {
         } else if (source.constructor.name == 'String') {
           if ("saveDnaRemote" in this._backend) {
             const path = source as T.DnaPath
-            const contents = () => fs.promises.readFile(path)
+            const contents = () => new Promise<Buffer>((resolve, reject) => {
+              fs.readFile(path, null, (err, data) => {
+                if (err) {
+                  reject(err)
+                }
+                resolve(data)
+              })
+            })
             const pathAfterReplacement = path.replace(/\//g, '')
             const { path: remotePath } = await this._backend.saveDnaRemote(pathAfterReplacement, contents)
             dna["path"] = remotePath

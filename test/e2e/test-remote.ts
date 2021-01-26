@@ -30,7 +30,14 @@ export default (testOrchestrator, testConfig) => {
 
         orchestrator.registerScenario('check config', async s => {
             const [alice] = await s.players([aliceConfig], false, `localhost:${PORT}`)
-            const config_data = (await fs.promises.readFile('/tmp/trycp/players/c0/conductor-config.yml')).toString()
+            const config_data = await new Promise<string>((resolve, reject) => {
+                fs.readFile('/tmp/trycp/players/c0/conductor-config.yml', 'utf8', (err, data) => {
+                    if (err) {
+                        reject(err)
+                    }
+                    resolve(data)
+                })
+            })
             const config = yaml.parse(config_data)
             t.equal(config.signing_service_uri, null)
             t.equal(config.encryption_service_uri, null)
