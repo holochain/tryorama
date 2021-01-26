@@ -1987,6 +1987,7 @@ dependencies = [
  "slab",
  "structopt",
  "structopt-derive",
+ "url 2.2.0",
  "url2",
  "ws",
 ]

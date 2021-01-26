@@ -108,11 +108,23 @@ pub fn connect_app_interface(
                 Ok(())
             }
         });
-        let res = ws::connect(format!("ws://localhost:{}", port), |handle| {
-            on_connect.take().unwrap()(handle)
-        });
-        if let Err(e) = res {
-            err_callback(e);
+        let mut socket = match ws::Builder::new()
+            .with_settings(ws::Settings {
+                queue_size: 64,
+                ..Default::default()
+            })
+            .build(|handle| on_connect.take().unwrap()(handle))
+        {
+            Ok(v) => v,
+            Err(e) => return err_callback(e),
+        };
+        if let Err(e) =
+            socket.connect(url::Url::parse(&format!("ws://localhost:{}", port)).unwrap())
+        {
+            return err_callback(e);
+        }
+        if let Err(e) = socket.run() {
+            return err_callback(e);
         }
     });
 }
