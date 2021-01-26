@@ -14,25 +14,18 @@ jobs:
 #    node: [ '10', '12', '14' ]
     node: [ '14' ]
   steps:
-    - uses: actions/checkout@v2
-    - uses: actions/setup-node@v2-beta
-      with:
-        node-version: ${{ matrix.node }}
-    - uses: actions-rs/toolchain@v1
-      with:
-        # borrowed from
-        # https://github.com/holochain/holochain/blob/6b47b136bc419be6e85000a08a59f67b4c46226c/docs/core_testing.md#requirements
-        toolchain: stable #-2020-12-18
-        target: wasm32-unknown-unknown
-        default: true
-    - uses: actions/cache@v2
-      with:
-        path: |
-          ~/.cargo/registry
-          ~/.cargo/git
-          target
-        key: ${{ runner.os }}-cargo-${{ hashFiles('**/Cargo.lock') }}
-    # todo: this install holochain step can be removed/simplified
-    # once holochain/holochain has releases
-    - run: ci_scripts/install-holochain.sh
-    - run: ci_scripts/run-test.sh
+   - uses: actions/checkout@v2
+   - uses: actions/setup-node@v2-beta
+     with:
+      node-version: ${{ matrix.node }}
+   - uses: actions-rs/toolchain@v1
+     with:
+      # borrowed from
+      # https://github.com/holochain/holochain/blob/6b47b136bc419be6e85000a08a59f67b4c46226c/docs/core_testing.md#requirements
+      toolchain: stable #-2020-12-18
+      target: wasm32-unknown-unknown
+      default: true
+  # todo: this install holochain step can be removed/simplified
+  # once holochain/holochain has releases
+   - run: ci_scripts/install-holochain.sh
+   - run: ci_scripts/run-test.sh
