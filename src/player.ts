@@ -9,6 +9,7 @@ import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, Install
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
+import * as T from './types'
 import { TunneledAdminClient, TunneledAppClient } from './trycp';
 const fs = require('fs').promises
 
@@ -143,9 +144,9 @@ export class Player {
   /**
    * expose registerDna at the player level for in-scenario dynamic installation of apps
    */
-  registerDna = async (source: DnaSource, params: any): Promise<HoloHash> => {
+  registerDna = async (source: DnaSource, ...params): Promise<HoloHash> => {
     this._conductorGuard(`Player.registerDna(source ${JSON.stringify(source)}, params ${JSON.stringify(params)})`)
-    return this._conductor!.registerDna(source, params)
+    return this._conductor!.registerDna(source, ...params)
   }
 
   /**
@@ -155,7 +156,15 @@ export class Player {
    */
   installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
     this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
-    return this._conductor!.installHapp(happ, agentPubKey)
+    return this._conductor!.installHapp(happ.map((src: T.DnaSrc): T.DnaSource => {
+      if (src instanceof Buffer) {
+        return { hash: src }
+      } else if (typeof src === "string") {
+        return { path: src }
+      } else {
+        return { url: src.url }
+      }
+    }), agentPubKey)
   }
 
   /**
