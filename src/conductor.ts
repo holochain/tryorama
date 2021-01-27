@@ -122,7 +122,7 @@ export class Conductor {
 
   // this function will auto-generate an `installed_app_id` and
   // `dna.nick` for you, to allow simplicity
-  installHapp = async (agentHapp: T.DnaSource[], agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
+  installHapp = async (agentHapp: T.DnaSrc[], agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
     if (!agentPubKey) {
       agentPubKey = await this.adminClient!.generateAgentPubKey()
     }
@@ -130,10 +130,19 @@ export class Conductor {
     const installAppReq: InstallAppRequest = {
       installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
-      dnas: await Promise.all(dnaSources.map(async (source, index) => {
+      dnas: await Promise.all(dnaSources.map(async (src, index) => {
+        let source: T.DnaSource
+        if (src instanceof Buffer) {
+          source = { hash: src }
+        } else if (typeof src === "string") {
+          source = { path: src }
+        } else {
+          source = { url: src.url }
+        }
+
         let dna = {
           hash: await this.registerDna(source, this._player.scenarioUUID),
-          nick: `${index}${source}-${uuidGen()}`,
+          nick: `${index}${src}-${uuidGen()}`,
         }
         return dna
       }))

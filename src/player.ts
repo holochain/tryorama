@@ -156,15 +156,7 @@ export class Player {
    */
   installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
     this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
-    return this._conductor!.installHapp(happ.map((src: T.DnaSrc): T.DnaSource => {
-      if (src instanceof Buffer) {
-        return { hash: src }
-      } else if (typeof src === "string") {
-        return { path: src }
-      } else {
-        return { url: src.url }
-      }
-    }), agentPubKey)
+    return this._conductor!.installHapp(happ, agentPubKey)
   }
 
   /**
