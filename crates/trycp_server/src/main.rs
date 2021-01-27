@@ -431,7 +431,7 @@ admin_interfaces:
         // Wait until lair begins to output before starting conductor,
         // otherwise Holochain starts its own copy of lair that we can't manage.
         lair.stdout
-            .take()
+            .as_mut()
             .unwrap()
             .read_exact(&mut [0])
             .map_err(|e| {
