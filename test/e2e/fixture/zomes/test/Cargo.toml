@@ -9,6 +9,6 @@ name = "test_wasm"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-hdk3 = { git = "https://github.com/holochain/holochain", rev = "1e0fd4fc5052683a97a5279ab92c6720434ebdfd", package = "hdk3" }
+hdk3 = { git = "https://github.com/holochain/holochain", rev = "57e6a5031d580b3fce16a9a2a1b6a78f033f1c69", package = "hdk3" }
 serde = "1.0.104"
-#test_wasm_common = { git = "https://github.com/holochain/holochain", rev = "afdb4e949b77cc81afa1b0601cf406dc08587b45", package = "test_wasm_common" }
+#test_wasm_common = { git = "https://github.com/holochain/holochain", rev = "57e6a5031d580b3fce16a9a2a1b6a78f033f1c69", package = "holochain_test_wasm_common" }

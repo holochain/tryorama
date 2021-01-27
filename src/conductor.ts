@@ -121,50 +121,51 @@ export class Conductor {
 
   // this function registers a DNA from a given source
   registerDna = async (source: T.DnaSource, uuid?, properties?): Promise<HoloHash> => {
+    if ("path" in source && "saveDnaRemote" in this._backend) {
+      const contents = () => new Promise<Buffer>((resolve, reject) => {
+        fs.readFile((source as { path: string }).path, null, (err, data) => {
+          if (err) {
+            reject(err)
+          }
+          resolve(data)
+        })
+      })
+      const pathAfterReplacement = source.path.replace(/\//g, '')
+      source = await this._backend.saveDnaRemote(pathAfterReplacement, contents)
+    }
+    if ("url" in source) {
+      if (!("downloadDnaRemote" in this._backend)) {
+        throw new Error("encountered URL DNA source on non-remote player")
+      }
+      source = await this._backend.downloadDnaRemote((source as T.DnaUrl).url)
+    }
     const registerDnaReq: RegisterDnaRequest = { source, uuid, properties }
     return await this.adminClient!.registerDna(registerDnaReq)
   }
 
   // this function will auto-generate an `installed_app_id` and
   // `dna.nick` for you, to allow simplicity
-  installHapp = async (agentHapp: T.InstallHapp, agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
+  installHapp = async (agentHapp: T.DnaSrc[], agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
     if (!agentPubKey) {
       agentPubKey = await this.adminClient!.generateAgentPubKey()
     }
-    const dnaSources: T.DnaSrc[] = agentHapp
+    const dnaSources = agentHapp
     const installAppReq: InstallAppRequest = {
       installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
-      dnas: await Promise.all(dnaSources.map(async (source, index) => {
-        let dna = {
-          nick: `${index}${source}-${uuidGen()}`,
-          uuid: this._player.scenarioUUID,
+      dnas: await Promise.all(dnaSources.map(async (src, index) => {
+        let source: T.DnaSource
+        if (src instanceof Buffer) {
+          source = { hash: src }
+        } else if (typeof src === "string") {
+          source = { path: src }
+        } else {
+          source = { url: src.url }
         }
-        if ((source as T.DnaUrl).url !== undefined) {
-          if (!("downloadDnaRemote" in this._backend)) {
-            throw new Error("encountered URL DNA source on non-remote player")
-          }
-          const { path: remotePath } = await this._backend.downloadDnaRemote((source as T.DnaUrl).url)
-          dna["path"] = remotePath
-        } else if (source.constructor.name == 'String') {
-          if ("saveDnaRemote" in this._backend) {
-            const path = source as T.DnaPath
-            const contents = () => new Promise<Buffer>((resolve, reject) => {
-              fs.readFile(path, null, (err, data) => {
-                if (err) {
-                  reject(err)
-                }
-                resolve(data)
-              })
-            })
-            const pathAfterReplacement = path.replace(/\//g, '')
-            const { path: remotePath } = await this._backend.saveDnaRemote(pathAfterReplacement, contents)
-            dna["path"] = remotePath
-          } else {
-            dna["path"] = source
-          }
-        } else if (source.constructor.name === 'Buffer') {
-          dna["hash"] = source
+        
+        let dna = {
+          hash: await this.registerDna(source, this._player.scenarioUUID),
+          nick: `${index}${src}-${uuidGen()}`,
         }
         return dna
       }))

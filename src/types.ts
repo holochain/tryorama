@@ -81,7 +81,9 @@ export type DnaUrl = { url: string }
 
 // This type was inadvertently not exported in holochain-conductor-api dev16, so
 // in needs to be removed from here when it gets added back
-export type DnaSource = { hash: HoloHash } | { path: DnaPath } // | {dna_file: DnaFile}
+type LocalDnaSource = { hash: HoloHash } | { path: DnaPath } // | {dna_file: DnaFile}
+
+export type DnaSource = LocalDnaSource | { url: string }
 
 // the mirror of InstallAgentHapps
 export type InstalledAgentHapps = InstalledHapps[]
