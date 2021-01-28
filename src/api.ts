@@ -73,6 +73,8 @@ export class ScenarioApi {
     } else {
       // connect to trycp
       const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
+      logger.info("Resetting trycp...")
+      await trycpClient.reset()
       // keep track of it so we can send a reset() at the end of this scenario
       this._trycpClients.push(trycpClient)
 
