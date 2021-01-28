@@ -22,7 +22,7 @@ type ConstructorArgs = {
   player: Player,
   name: string,
   kill: (signal?: string) => Promise<void>,
-  onSignal: (signal: any) => void,
+  onSignal: ((signal: any) => void) | null,
   onActivity: () => void,
   backend: {
     type: "local",
@@ -46,7 +46,7 @@ type ConstructorArgs = {
  */
 export class Conductor {
   name: string
-  onSignal: (signal: any) => void
+  onSignal: ((signal: any) => void) | null
   logger: any
   kill: KillFn
   adminClient: AdminWebsocket | TunneledAdminClient | null
@@ -162,7 +162,7 @@ export class Conductor {
         } else {
           source = { url: src.url }
         }
-        
+
         let dna = {
           hash: await this.registerDna(source, this._player.scenarioUUID),
           nick: `${index}${src}-${uuidGen()}`,
@@ -215,7 +215,11 @@ export class Conductor {
         const appWsUrl = `ws://${this._backend.machineHost}:${appInterfacePort}`
         this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
           this._onActivity();
-          this.onSignal(signal);
+          if (this.onSignal !== null) {
+            this.onSignal(signal);
+          } else {
+            console.info("got signal, doing nothing with it: %o", signal)
+          }
         })
         this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
         break
@@ -227,10 +231,12 @@ export class Conductor {
             this._onActivity()
             return res
           },
-          () => backend.pollAppInterfaceSignals(appInterfacePort),
+          () => (this.onSignal !== null) ? backend.pollAppInterfaceSignals(appInterfacePort) : Promise.resolve([]),
           (signal) => {
             this._onActivity();
-            this.onSignal(signal);
+            if (this.onSignal !== null) {
+              this.onSignal(signal);
+            }
           })
         break
       default:

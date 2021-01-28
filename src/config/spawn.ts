@@ -17,7 +17,7 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     player,
     name: 'test-conductor',
     kill: async () => { },
-    onSignal: () => { },
+    onSignal: null,
     onActivity: () => { },
     backend: { type: "test" },
   })
@@ -145,7 +145,7 @@ export const spawnRemote = (trycp: TrycpClient): T.SpawnConductorFn => async (pl
     player,
     name,
     kill: (signal?) => trycp.kill(name, signal),
-    onSignal: player.onSignal.bind(player),
+    onSignal: player.onSignal?.bind(player),
     onActivity: player.onActivity,
     backend: {
       type: "trycp",

@@ -142,7 +142,6 @@ export class ScenarioApi {
         onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
         onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
         onActivity: () => this._restartTimer(),
-        onSignal: (signal_data) => { },
       })
     }
   }
@@ -163,7 +162,6 @@ export class ScenarioApi {
         onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
         onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
         onActivity: () => this._restartTimer(),
-        onSignal: (signal) => { console.info("got signal, doing nothing with it: %o", signal) },
       })
     }
   }

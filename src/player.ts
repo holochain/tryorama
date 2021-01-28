@@ -18,7 +18,6 @@ type ConstructorArgs = {
   name: string,
   config: RawConductorConfig,
   adminInterfacePort?: number,
-  onSignal: (signal: any) => void,
   onJoin: () => void,
   onLeave: () => void,
   onActivity: () => void,
@@ -40,7 +39,7 @@ export class Player {
   config: RawConductorConfig
   onJoin: () => void
   onLeave: () => void
-  onSignal: (signal: any) => void
+  onSignal: ((signal: any) => void) | null = null
   onActivity: () => void
   scenarioUUID: string
 
@@ -48,12 +47,11 @@ export class Player {
   _adminInterfacePort?: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ scenarioUUID, name, config, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ scenarioUUID, name, config, adminInterfacePort, onJoin, onLeave, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
     this.onLeave = onLeave
-    this.onSignal = onSignal
     this.onActivity = onActivity
     this.config = config
     this.scenarioUUID = scenarioUUID,

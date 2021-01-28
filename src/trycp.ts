@@ -179,14 +179,14 @@ export class TunneledAppClient {
     this.onSignal = onSignal
     const f = () => {
       this.pollSignals().then(
-        () => this.timeout = global.setTimeout(f, 500),
+        () => this.timeout = global.setTimeout(f, 1000),
         (error) =>
           // The app interface is probably disconnected. Stop polling moving forward.
           logger.debug(`failed to poll app interface signals: ${error}`)
       )
 
     }
-    this.timeout = global.setTimeout(f, 500)
+    this.timeout = global.setTimeout(f, 1000)
     this.client = { close: () => Promise.resolve(this.close()) }
   }
 
