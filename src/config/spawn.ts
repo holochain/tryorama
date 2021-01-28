@@ -140,7 +140,6 @@ export const spawnRemote = (trycp: TrycpClient): T.SpawnConductorFn => async (pl
   // logger.info('Waiting 20 seconds for remote conductor to be ready to receive websocket connections...')
   // await delay(20000)
   // logger.info('Done waiting. Ready or not, here we come, remote conductor!')
-  logger.info("Removeme: Creating conductor with onSignal: %o", player.onSignal?.bind(player) ?? null)
 
   return new Conductor({
     player,
