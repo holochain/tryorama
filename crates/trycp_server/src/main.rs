@@ -209,6 +209,11 @@ fn main() {
     let players_arc_reset = players_arc.clone();
     let players_arc_startup = players_arc;
 
+    // For each port, stores a websocket connection to an app interface on that port and state related to that connection.
+    let app_interface_connections_arc: Arc<
+        RwLock<HashMap<u16, OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>>>,
+    > = Arc::default();
+
     if let Some(connection_uri) = args.register {
         registrar::register_with_remote(connection_uri, &args.host, args.port)
     }
@@ -522,25 +527,41 @@ admin_interfaces:
         Ok(Value::String(response))
     });
 
+    let app_interface_connections = Arc::clone(&app_interface_connections_arc);
     // Shuts down all running conductors.
     io.add_method("reset", move |params: Params| {
         params.expect_no_params()?;
 
-        let mut players = {
+        let (mut players, connections) = {
             let mut players_lock = players_arc_reset.write();
             let mut state_lock = state_reset.write();
+            let mut connections_lock = app_interface_connections.write();
             state_lock.reset();
-            std::mem::take(&mut *players_lock)
+            (
+                std::mem::take(&mut *players_lock),
+                std::mem::take(&mut *connections_lock),
+            )
         };
+
+        for (port, app_interface_connection_state_once_cell) in connections {
+            if let Some((sender, _)) = app_interface_connection_state_once_cell.into_inner() {
+                if let Err(e) = sender.close(ws::CloseCode::Normal) {
+                    println!(
+                        "warn: failed to close websocket on app interface port {}: {}",
+                        port, e
+                    )
+                }
+            }
+        }
 
         for (id, player) in players.iter_mut() {
             println!("force-killing player with id: {}", id);
             let _ = player.lair.kill(); // ignore any errors
             let _ = player.conductor.kill(); // ignore any errors
         }
-        for player in players.values_mut() {
-            player.lair.wait().unwrap(); // ignore any errors
-            player.conductor.wait().unwrap(); // ignore any errors
+        for (_id, mut player) in players {
+            player.lair.wait().unwrap(); // cannot error
+            player.conductor.wait().unwrap(); // cannot error
         }
 
         Ok(Value::String("reset".into()))
@@ -567,11 +588,6 @@ admin_interfaces:
         let response_buf = holochain_interface::remote_call(port, message_buf)?;
         Ok(Value::String(base64::encode(&response_buf)))
     });
-
-    // For each port, stores a websocket connection to an app interface on that port and state related to that connection.
-    let app_interface_connections_arc: Arc<
-        RwLock<HashMap<u16, OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>>>,
-    > = Arc::default();
 
     fn connect_app_interface(
         connection_state_once_cell: &OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>,
