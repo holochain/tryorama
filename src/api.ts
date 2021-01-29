@@ -47,7 +47,7 @@ export class ScenarioApi {
     this._conductorIndex = 0
   }
 
-  players = async (playerConfigs: Array<T.PlayerConfig>, startupArg: boolean = true, machineEndpoint: string | null = null): Promise<Array<Player>> => {
+  players = async (playerConfigs: Array<T.PlayerConfig>, startupArg: boolean = true, machineEndpoint: string | null = null, resetTrycp: boolean = true): Promise<Array<Player>> => {
     logger.debug('api.players: creating players')
 
     // validation
@@ -73,8 +73,10 @@ export class ScenarioApi {
     } else {
       // connect to trycp
       const trycpClient: TrycpClient = await this._getTrycpClient(machineEndpoint)
-      logger.info("Resetting trycp...")
-      await trycpClient.reset()
+      if (resetTrycp) {
+        logger.info("Resetting trycp...")
+        await trycpClient.reset()
+      }
       // keep track of it so we can send a reset() at the end of this scenario
       this._trycpClients.push(trycpClient)
 

@@ -159,11 +159,14 @@ fn get_saved_dna_path(id: &str) -> PathBuf {
 }
 
 fn get_downloaded_dna_path(url: &reqwest::Url) -> PathBuf {
-    Path::new(DNA_DIR_PATH).join(url.path().to_string().replace("/", "").replace("%", "_"))
+    Path::new(DNA_DIR_PATH)
+        .join(url.scheme())
+        .join(url.path().replace("/", "").replace("%", "_"))
 }
 
 /// Tries to create a file, returning Ok(None) if a file already exists at path
 fn try_create_file(path: &Path) -> Result<Option<File>, io::Error> {
+    fs::create_dir_all(path.parent().unwrap())?;
     match fs::OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -271,6 +274,11 @@ fn main() {
                     file_path.display()
                 ))
             })?;
+        } else {
+            println!(
+                "declining to save dna because file already exists. file length in bytes: {:?}",
+                fs::metadata(&file_path).map(|meta| meta.len())
+            )
         }
 
         let local_path = file_path.to_string_lossy();
@@ -301,21 +309,38 @@ fn main() {
 
         if let Some(mut file) = new_file {
             println!("Downloading dna from {} ...", &url_str);
-            let content: String = reqwest::get(url)
-                .map_err(|e| {
-                    internal_error(format!("error downloading dna: {:?} {:?}", e, url_str))
-                })?
-                .text()
-                .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
-            println!("Finished downloading dna from {}", url_str);
+            if url.scheme() == "file" {
+                let mut dna_file = fs::File::open(url.path()).map_err(|e| {
+                    invalid_request(format!(
+                        "failed to open DNA file at path {}: {}",
+                        url.path(),
+                        e
+                    ))
+                })?;
+                io::copy(&mut dna_file, &mut file).map_err(|e| {
+                    invalid_request(format!(
+                        "failed to read DNA file from path {}: {}",
+                        url.path(),
+                        e
+                    ))
+                })?;
+            } else {
+                let content: String = reqwest::get(url)
+                    .map_err(|e| {
+                        internal_error(format!("error downloading dna: {:?} {:?}", e, url_str))
+                    })?
+                    .text()
+                    .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
+                println!("Finished downloading dna from {}", url_str);
 
-            file.write_all(content.as_bytes()).map_err(|e| {
-                internal_error(format!(
-                    "unable to write file: {} {}",
-                    e,
-                    file_path.display()
-                ))
-            })?;
+                file.write_all(content.as_bytes()).map_err(|e| {
+                    internal_error(format!(
+                        "unable to write file: {} {}",
+                        e,
+                        file_path.display()
+                    ))
+                })?;
+            };
         }
 
         let local_path = file_path.to_string_lossy();
@@ -579,7 +604,7 @@ admin_interfaces:
         let message_buf = base64::decode(&message_base64)
             .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
-        let maybe_port = state_admin_interface_call.read().ports.get(&id).cloned();
+        let maybe_port = &state_admin_interface_call.read().ports.get(&id).cloned();
         let port = maybe_port.ok_or_else(|| {
             invalid_request(format!(
                 "failed to call player admin interface: player not yet configured"

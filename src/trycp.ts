@@ -47,7 +47,7 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
   }
 
   const holochainInterfaceCall = async (type: "app" | "admin", args, message) => {
-    let params = JSON.stringify(message)
+    let params = JSON.stringify({ ...args, message })
     if (params && params.length > 1000) {
       params = params.substring(0, 993) + " [snip]"
     }

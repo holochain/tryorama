@@ -23,13 +23,13 @@ export const run_trycp = (port = PORT): Promise<ChildProcessWithoutNullStreams> 
 }
 
 
-export default (testOrchestrator, testConfig) => {
+export default (testOrchestrator, testConfig, playersFn) => {
     test('test trycp-specific behavior', async t => {
         const [aliceConfig, installApps] = testConfig()
         const orchestrator = testOrchestrator()
 
         orchestrator.registerScenario('check config', async s => {
-            const [alice] = await s.players([aliceConfig], false, `localhost:${PORT}`)
+            const [alice] = await playersFn(s, [aliceConfig], false)
             const config_data = await new Promise<string>((resolve, reject) => {
                 fs.readFile('/tmp/trycp/players/c0/conductor-config.yml', 'utf8', (err, data) => {
                     if (err) {
@@ -47,7 +47,7 @@ export default (testOrchestrator, testConfig) => {
         })
 
         orchestrator.registerScenario('download dna and attempt call', async s => {
-            const [alice] = await s.players([aliceConfig], false, `localhost:${PORT}`)
+            const [alice] = await playersFn(s, [aliceConfig], false)
             await alice.startup()
             const install: T.InstallAgentsHapps = [
                 // agent 0

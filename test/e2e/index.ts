@@ -28,11 +28,17 @@ testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 testSignal(localOrchestrator, () => testConfig(dnaLocationLocal))
 
-run_trycp().then((child) => {
-  testRemote(localOrchestrator, () => testConfig(dnaLocationLocal))
-  testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
-  // testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
-  testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
-  testSignal(localOrchestrator, () => testConfig(dnaLocationLocal), `localhost:${PORT}`)
-  tape.onFinish(() => child.kill())
-}, (error) => { throw error })
+const trycp = run_trycp()
+const playersRemote = async (s, configs, startup?) => {
+  await trycp
+  return await s.players(configs, startup, `localhost:${PORT}`, false)
+};
+
+testRemote(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
+testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
+// testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
+testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
+testSignal(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
+tape("killing trycp", async () => {
+  (await trycp).kill()
+})

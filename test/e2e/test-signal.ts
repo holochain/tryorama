@@ -2,13 +2,13 @@ import test from 'tape-promise/tape'
 
 import { ScenarioApi } from '../../src/api';
 
-export default (testOrchestrator, testConfig, machineEndpoint: string | null = null) => {
+export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.players(...args)) => {
     test('test with emit signal', async t => {
         const [conductorConfig, installApps] = testConfig()
         const orchestrator = await testOrchestrator()
         orchestrator.registerScenario('loopback signal zome call', async (s: ScenarioApi) => {
             const sentPayload = { value: "foo" };
-            const [alice] = await s.players([conductorConfig], true, machineEndpoint)
+            const [alice] = await playersFn(s, [conductorConfig])
             let signalPromise = new Promise<void>((resolve) => alice.setSignalHandler((signal) => {
                 console.log("Received Signal:", signal)
                 t.deepEqual(signal.data.payload, sentPayload)
