@@ -113,6 +113,7 @@ export class Player {
 
   /** Runs at the end of a test run */
   cleanup = async (signal = 'SIGTERM'): Promise<boolean> => {
+    this.setSignalHandler(null)
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
       await this.shutdown(signal)
