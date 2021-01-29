@@ -169,7 +169,7 @@ export class Player {
   setSignalHandler = (handler) => {
     this.onSignal = handler
     if (this._conductor) {
-      this._conductor.onSignal = handler
+      this._conductor.setSignalHandler(handler)
     }
   }
 
