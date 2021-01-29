@@ -1,13 +1,10 @@
 import * as _ from 'lodash'
 // import connect from '@holochain/conductor-api'
 import logger from './logger'
-import * as T from './types'
 import { Client as RpcWebSocket } from 'rpc-websockets'
 import * as yaml from 'yaml';
-import { make } from 'fp-ts/lib/Tree';
 import * as msgpack from "@msgpack/msgpack"
 import * as conductorApi from "@holochain/conductor-api"
-import { sign } from 'fp-ts/lib/Ordering';
 
 export type TrycpClient = {
   saveDna: (id: string, contents: () => Promise<Buffer>) => Promise<{ path: string }>,
@@ -19,7 +16,8 @@ export type TrycpClient = {
   reset: () => Promise<void>,
   adminInterfaceCall: (id, message) => Promise<any>,
   appInterfaceCall: (port, message) => Promise<any>,
-  pollAppInterfaceSignals: (port) => Promise<Array<Buffer>>
+  subscribeAppInterfacePort: (port: number, onSignal: (signal: conductorApi.AppSignal) => void) => void,
+  unsubscribeAppInterfacePort: (port: number) => void,
   closeSession: () => Promise<void>,
 }
 
@@ -66,6 +64,15 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
 
   const savedDnas: Record<string, Promise<{ path: string }>> = {}
 
+  const decodeSignal = (signal: Buffer): conductorApi.AppSignal => {
+    const { App: [cellId, payload] } = (msgpack.decode(signal) as any)
+    const decodedPayload = msgpack.decode(payload)
+    return { type: "Signal", data: { cellId, payload: decodedPayload } }
+  }
+
+  const signalSubscriptions: Record<number, (signal: conductorApi.AppSignal) => void> = {}
+  let signalPollTimer: NodeJS.Timeout | null = null
+
   return {
     saveDna: async (id, contents) => {
       if (!(id in savedDnas)) {
@@ -89,9 +96,32 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     reset: () => makeCall('reset')(undefined),
     adminInterfaceCall: (id, message) => holochainInterfaceCall("admin", { id }, message),
     appInterfaceCall: (port, message) => holochainInterfaceCall("app", { port }, message),
-    pollAppInterfaceSignals: async (port) => {
-      const signals_base64: string[] = await makeCall('poll_app_interface_signals')({ port })
-      return signals_base64.map((signal_base64) => Buffer.from(signal_base64, 'base64'))
+    subscribeAppInterfacePort: (port, onSignal) => {
+      const pollAppInterfaceSignals: () => Promise<Array<{ port: number, signals_accumulated: string[] }>> = () => makeCall('poll_app_interface_signals')(undefined)
+      const f = () => {
+        pollAppInterfaceSignals().then(res => {
+          signalPollTimer = setTimeout(f, 1000)
+          for (const { port, signals_accumulated } of res) {
+            if (port in signalSubscriptions) {
+              for (const signalBase64 of signals_accumulated) {
+                const signalMsgpackEncoded = Buffer.from(signalBase64, 'base64')
+                const signal = decodeSignal(signalMsgpackEncoded)
+                signalSubscriptions[port](signal)
+              }
+            }
+          }
+        })
+      }
+      if (signalPollTimer === null) {
+        signalPollTimer = setTimeout(f, 1000)
+      }
+      signalSubscriptions[port] = onSignal
+    },
+    unsubscribeAppInterfacePort: (port) => {
+      delete signalSubscriptions[port]
+      if (signalPollTimer && _.isEmpty(signalSubscriptions)) {
+        clearTimeout(signalPollTimer)
+      }
     },
     closeSession: () => ws.close(),
   }
@@ -155,49 +185,16 @@ export class TunneledAdminClient {
   }
 }
 
-interface Signal {
-  type: "Signal",
-  data: { cellId: any, payload: any }
-}
-
-const decodeSignal = (signal: Buffer): Signal => {
-  const { App: [cellId, payload] } = (msgpack.decode(signal) as any)
-  const decodedPayload = msgpack.decode(payload)
-  return { type: "Signal", data: { cellId, payload: decodedPayload } }
-}
-
 export class TunneledAppClient {
   client: { close: () => Promise<void> }
   private appInterfaceCall: (req: any) => Promise<any>
-  private timeout: NodeJS.Timeout
-  private pollAppInterfaceSignals: () => Promise<Array<Buffer>>
-  private onSignal: (signal: Signal) => void
 
-  constructor(appInterfaceCall: (req: any) => Promise<any>, pollAppInterfaceSignals: () => Promise<Array<Buffer>>, onSignal: (signal: Signal) => void) {
+  constructor(appInterfaceCall: (req: any) => Promise<any>) {
     this.appInterfaceCall = appInterfaceCall
-    this.pollAppInterfaceSignals = pollAppInterfaceSignals
-    this.onSignal = onSignal
-    const f = () => {
-      this.pollSignals().then(
-        () => this.timeout = global.setTimeout(f, 1000),
-        (error) =>
-          // The app interface is probably disconnected. Stop polling moving forward.
-          logger.debug(`failed to poll app interface signals: ${error}`)
-      )
-
-    }
-    this.timeout = global.setTimeout(f, 1000)
     this.client = { close: () => Promise.resolve(this.close()) }
   }
 
-  private async pollSignals() {
-    for (const signal of await this.pollAppInterfaceSignals()) {
-      this.onSignal(decodeSignal(signal))
-    }
-  }
-
   close(): void {
-    global.clearTimeout(this.timeout)
     // TODO: send a message like close_app_interface_connection to trycp
   }
 

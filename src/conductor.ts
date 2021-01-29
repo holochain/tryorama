@@ -6,7 +6,7 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
 import { TunneledAdminClient, TunneledAppClient } from './trycp'
@@ -22,7 +22,7 @@ type ConstructorArgs = {
   player: Player,
   name: string,
   kill: (signal?: string) => Promise<void>,
-  onSignal: ((signal: any) => void) | null,
+  onSignal: ((signal: AppSignal) => void) | null,
   onActivity: () => void,
   backend: {
     type: "local",
@@ -34,7 +34,8 @@ type ConstructorArgs = {
     appInterfaceCall: (port: number, message: any) => Promise<any>,
     downloadDnaRemote: (url: string) => Promise<{ path: string }>,
     saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>,
-    pollAppInterfaceSignals: (port: number) => Promise<Array<Buffer>>,
+    subscribeAppInterfacePort: (port: number, onSignal: (signal: AppSignal) => void) => void,
+    unsubscribeAppInterfacePort: (port: number) => void,
   } | { type: "test" }
 }
 
@@ -46,12 +47,13 @@ type ConstructorArgs = {
  */
 export class Conductor {
   name: string
-  onSignal: ((signal: any) => void) | null
   logger: any
   kill: KillFn
   adminClient: AdminWebsocket | TunneledAdminClient | null
   appClient: AppWebsocket | TunneledAppClient | null
 
+  _appInterfacePort: number | null = null
+  _onSignal: ((signal: AppSignal) => void) | null
   _player: Player
   _isInitialized: boolean
   _onActivity: () => void
@@ -65,15 +67,15 @@ export class Conductor {
     appInterfaceCall: (port: number, message: any) => Promise<any>
     downloadDnaRemote: (url: string) => Promise<{ path: string }>
     saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
-    pollAppInterfaceSignals: (port: number) => Promise<Array<Buffer>>,
+    subscribeAppInterfacePort: (port: number, onSignal: (signal: AppSignal) => void) => void,
+    unsubscribeAppInterfacePort: (port: number) => void,
   } | { type: "test" }
 
 
-  constructor({ player, name, kill, onSignal, onActivity, backend }: ConstructorArgs) {
+  constructor({ player, name, kill, onActivity, backend }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
-    this.onSignal = onSignal
 
     this.kill = async (signal?): Promise<void> => {
       if (this.appClient !== null) {
@@ -117,6 +119,17 @@ export class Conductor {
   initialize = async () => {
     this._onActivity()
     await this._connectInterfaces()
+  }
+
+  setSignalHandler = (onSignal: ((signal: AppSignal) => void) | null) => {
+    const prevOnSignal = this._onSignal
+    if (onSignal === null && prevOnSignal !== null && this._appInterfacePort !== null && "unsubscribeAppInterfacePort" in this._backend) {
+      this._backend.unsubscribeAppInterfacePort(this._appInterfacePort)
+    }
+    this._onSignal = onSignal
+    if (onSignal !== null && prevOnSignal === null && this._appInterfacePort !== null && "subscribeAppInterfacePort" in this._backend) {
+      this._backend.subscribeAppInterfacePort(this._appInterfacePort, (signal) => this._onSignal!(signal))
+    }
   }
 
   // this function registers a DNA from a given source
@@ -215,8 +228,8 @@ export class Conductor {
         const appWsUrl = `ws://${this._backend.machineHost}:${appInterfacePort}`
         this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
           this._onActivity();
-          if (this.onSignal !== null) {
-            this.onSignal(signal);
+          if (this._onSignal !== null) {
+            this._onSignal(signal);
           } else {
             console.info("got signal, doing nothing with it: %o", signal)
           }
@@ -230,14 +243,11 @@ export class Conductor {
             const res = await backend.appInterfaceCall(appInterfacePort, message)
             this._onActivity()
             return res
-          },
-          () => (this.onSignal !== null) ? backend.pollAppInterfaceSignals(appInterfacePort) : Promise.resolve([]),
-          (signal) => {
-            this._onActivity();
-            if (this.onSignal !== null) {
-              this.onSignal(signal);
-            }
           })
+        this._appInterfacePort = appInterfacePort
+        if (this._onSignal !== null) {
+          this._backend.subscribeAppInterfacePort(this._appInterfacePort, (signal) => this._onSignal!(signal))
+        }
         break
       default:
         const assertNever: never = this._backend
