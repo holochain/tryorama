@@ -5,8 +5,6 @@ mod holochain_interface;
 mod registrar;
 mod rpc_util;
 
-use holochain_interface::AppConnectionState;
-use once_cell::sync::OnceCell;
 use rpc_util::{internal_error, invalid_request};
 
 use std::{
@@ -26,8 +24,8 @@ use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
 };
-use parking_lot::{Mutex, RwLock, RwLockWriteGuard};
-use serde_derive::Deserialize;
+use parking_lot::RwLock;
+use serde::Deserialize;
 use serde_json::json;
 use structopt::StructOpt;
 
@@ -213,9 +211,9 @@ fn main() {
     let players_arc_startup = players_arc;
 
     // For each port, stores a websocket connection to an app interface on that port and state related to that connection.
-    let app_interface_connections_arc: Arc<
-        RwLock<HashMap<u16, OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>>>,
-    > = Arc::default();
+    let app_interface_connections = holochain_interface::app::Connections::default();
+
+    holochain_interface::app::add_methods(&mut io, &app_interface_connections);
 
     if let Some(connection_uri) = args.register {
         registrar::register_with_remote(connection_uri, &args.host, args.port)
@@ -552,7 +550,6 @@ admin_interfaces:
         Ok(Value::String(response))
     });
 
-    let app_interface_connections = Arc::clone(&app_interface_connections_arc);
     // Shuts down all running conductors.
     io.add_method("reset", move |params: Params| {
         params.expect_no_params()?;
@@ -563,8 +560,8 @@ admin_interfaces:
             let mut connections_lock = app_interface_connections.write();
             state_lock.reset();
             (
-                std::mem::take(&mut *players_lock),
-                std::mem::take(&mut *connections_lock),
+                mem::take(&mut *players_lock),
+                mem::take(&mut *connections_lock),
             )
         };
 
@@ -612,116 +609,6 @@ admin_interfaces:
         })?;
         let response_buf = holochain_interface::remote_call(port, message_buf)?;
         Ok(Value::String(base64::encode(&response_buf)))
-    });
-
-    fn connect_app_interface(
-        connection_state_once_cell: &OnceCell<(ws::Sender, Arc<Mutex<AppConnectionState>>)>,
-        port: u16,
-    ) -> Result<&(ws::Sender, Arc<Mutex<AppConnectionState>>), ws::Error> {
-        connection_state_once_cell.get_or_try_init(|| {
-            let (tx, rx) = crossbeam::channel::bounded(0);
-            let tx_err = tx.clone();
-            holochain_interface::connect_app_interface(
-                port,
-                move |handle| {
-                    let res = Arc::default();
-                    tx.send(Ok((handle, Arc::clone(&res)))).unwrap();
-                    res
-                },
-                move |err| tx_err.send(Err(err)).unwrap(),
-            );
-            rx.recv().unwrap()
-        })
-    }
-
-    let app_interface_connections = Arc::clone(&app_interface_connections_arc);
-    io.add_method("app_interface_call", move |params: Params| {
-        #[derive(Deserialize)]
-        struct AppApiCallParams {
-            port: u16,
-            message_base64: String,
-        }
-        let AppApiCallParams {
-            port,
-            message_base64,
-        } = params.parse()?;
-        println!("app_interface_call port: {:?}", port);
-
-        let message_buf = base64::decode(&message_base64)
-            .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
-
-        let rx = {
-            let mut app_interface_connections_read_guard = app_interface_connections.read();
-            let connection_state_once_cell = if let Some(connection_state_once_cell) =
-                app_interface_connections_read_guard.get(&port)
-            {
-                connection_state_once_cell
-            } else {
-                mem::drop(app_interface_connections_read_guard);
-                let mut app_interface_connections_write_guard = app_interface_connections.write();
-                app_interface_connections_write_guard
-                    .entry(port)
-                    .or_insert_with(OnceCell::new);
-                app_interface_connections_read_guard =
-                    RwLockWriteGuard::downgrade(app_interface_connections_write_guard);
-                app_interface_connections_read_guard.get(&port).unwrap()
-            };
-
-            let (handle, app_connection_state) =
-                connect_app_interface(connection_state_once_cell, port).map_err(|e| {
-                    internal_error(format!("failed to connect to app interface: {}", e))
-                })?;
-
-            let mut app_connection_state_lock_guard = app_connection_state.lock();
-            let vacant_response_entry = app_connection_state_lock_guard
-                .responses_awaited
-                .vacant_entry();
-            match handle.send(holochain_interface::request(
-                vacant_response_entry.key().to_string(),
-                message_buf,
-            )) {
-                Ok(()) => {
-                    let (tx, rx) = crossbeam::channel::bounded(0);
-                    vacant_response_entry.insert(tx);
-                    rx
-                }
-                Err(e) => {
-                    return Err(internal_error(format!(
-                        "failed to send message along app interface: {}",
-                        e
-                    )))
-                }
-            }
-        };
-
-        match rx.recv().unwrap() {
-            Ok(string) => Ok(Value::String(string)),
-            Err(e) => Err(internal_error(format!(
-                "failed to send message along app interface: {}",
-                e
-            ))),
-        }
-    });
-
-    let app_interface_connections = app_interface_connections_arc;
-    io.add_method("poll_app_interface_signals", move |params: Params| {
-        params.expect_no_params()?;
-        println!("poll_app_interface_signals");
-
-        Ok(Value::Array(
-            app_interface_connections
-                .read()
-                .iter()
-                .filter_map(|(&port, connection_state_cell)| {
-                    let signals_accumulated =
-                        mem::take(&mut connection_state_cell.get()?.1.lock().signals_accumulated);
-                    Some(json!({
-                        "port": port,
-                        "signals_accumulated": Value::Array(signals_accumulated),
-                    }))
-                })
-                .collect(),
-        ))
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
