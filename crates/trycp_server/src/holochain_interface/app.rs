@@ -171,6 +171,62 @@ pub fn add_methods(io: &mut jsonrpc_core::IoHandler, connections_arc: &Connectio
     });
 
     let connections = Arc::clone(&connections_arc);
+    io.add_method("connect_app_interface", move |params: Params| {
+        #[derive(Deserialize)]
+        struct ConnectAppInterfaceParams {
+            port: u16,
+        }
+        let ConnectAppInterfaceParams { port } = params.parse()?;
+        println!("connect_app_interface port: {:?}", port);
+
+        {
+            let mut connections_read_guard = connections.read();
+            let connection_state_once_cell =
+                if let Some(connection_state_once_cell) = connections_read_guard.get(&port) {
+                    connection_state_once_cell
+                } else {
+                    mem::drop(connections_read_guard);
+                    let mut connections_write_guard = connections.write();
+                    connections_write_guard
+                        .entry(port)
+                        .or_insert_with(OnceCell::new);
+                    connections_read_guard = RwLockWriteGuard::downgrade(connections_write_guard);
+                    connections_read_guard.get(&port).unwrap()
+                };
+
+            connect(connection_state_once_cell, port).map_err(|e| {
+                internal_error(format!("failed to connect to app interface: {}", e))
+            })?;
+        }
+        Ok(Value::String("connected".to_string()))
+    });
+
+    let connections = Arc::clone(&connections_arc);
+    io.add_method("disconnect_app_interface", move |params: Params| {
+        #[derive(Deserialize)]
+        struct DisconnectAppInterfaceParams {
+            port: u16,
+        }
+        let DisconnectAppInterfaceParams { port } = params.parse()?;
+        println!("disconnect_app_interface port: {:?}", port);
+
+        let maybe_connection_cell = connections.write().remove(&port);
+        if let Some(connection_cell) = maybe_connection_cell {
+            if let Some(connection) = connection_cell.into_inner() {
+                connection
+                    .0
+                    .close(ws::CloseCode::Normal)
+                    .map_err(|e| internal_error(format!("failed to disconnect: {}", e)))?;
+                Ok(Value::String("disconnected successfully".to_owned()))
+            } else {
+                Ok(Value::String("warning: already disconnected".to_owned()))
+            }
+        } else {
+            Ok(Value::String("warning: already disconnected".to_owned()))
+        }
+    });
+
+    let connections = Arc::clone(&connections_arc);
     io.add_method("poll_app_interface_signals", move |params: Params| {
         params.expect_no_params()?;
         println!("poll_app_interface_signals");
