@@ -100,7 +100,7 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
       const pollAppInterfaceSignals: () => Promise<Array<{ port: number, signals_accumulated: string[] }>> = () => makeCall('poll_app_interface_signals')(undefined)
       const f = () => {
         pollAppInterfaceSignals().then(res => {
-          signalPollTimer = setTimeout(f, 1000)
+          signalPollTimer = global.setTimeout(f, 1000)
           for (const { port, signals_accumulated } of res) {
             if (port in signalSubscriptions) {
               for (const signalBase64 of signals_accumulated) {
@@ -113,14 +113,14 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
         })
       }
       if (signalPollTimer === null) {
-        signalPollTimer = setTimeout(f, 1000)
+        signalPollTimer = global.setTimeout(f, 1000)
       }
       signalSubscriptions[port] = onSignal
     },
     unsubscribeAppInterfacePort: (port) => {
       delete signalSubscriptions[port]
       if (signalPollTimer && _.isEmpty(signalSubscriptions)) {
-        clearTimeout(signalPollTimer)
+        global.clearTimeout(signalPollTimer)
       }
     },
     closeSession: () => ws.close(),
