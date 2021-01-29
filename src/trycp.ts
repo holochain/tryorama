@@ -16,6 +16,8 @@ export type TrycpClient = {
   reset: () => Promise<void>,
   adminInterfaceCall: (id, message) => Promise<any>,
   appInterfaceCall: (port, message) => Promise<any>,
+  connectAppInterface: (port: number) => Promise<void>,
+  disconnectAppInterface: (port: number) => Promise<void>,
   subscribeAppInterfacePort: (port: number, onSignal: (signal: conductorApi.AppSignal) => void) => void,
   unsubscribeAppInterfacePort: (port: number) => void,
   closeSession: () => Promise<void>,
@@ -96,6 +98,8 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     reset: () => makeCall('reset')(undefined),
     adminInterfaceCall: (id, message) => holochainInterfaceCall("admin", { id }, message),
     appInterfaceCall: (port, message) => holochainInterfaceCall("app", { port }, message),
+    connectAppInterface: (port: number) => makeCall('connect_app_interface')({ port }),
+    disconnectAppInterface: (port: number) => makeCall('disconnect_app_interface')({ port }),
     subscribeAppInterfacePort: (port, onSignal) => {
       const pollAppInterfaceSignals: () => Promise<Array<{ port: number, signals_accumulated: string[] }>> = () => makeCall('poll_app_interface_signals')(undefined)
       const f = () => {
@@ -188,14 +192,16 @@ export class TunneledAdminClient {
 export class TunneledAppClient {
   client: { close: () => Promise<void> }
   private appInterfaceCall: (req: any) => Promise<any>
+  private disconnectAppInterface: () => Promise<void>
 
-  constructor(appInterfaceCall: (req: any) => Promise<any>) {
+  constructor(appInterfaceCall: (req: any) => Promise<any>, disconnectAppInterface: () => Promise<void>) {
     this.appInterfaceCall = appInterfaceCall
-    this.client = { close: () => Promise.resolve(this.close()) }
+    this.disconnectAppInterface = disconnectAppInterface
+    this.client = { close: this.close }
   }
 
-  close(): void {
-    // TODO: send a message like close_app_interface_connection to trycp
+  private close(): Promise<void> {
+    return this.disconnectAppInterface()
   }
 
   appInfo(data: conductorApi.AppInfoRequest): Promise<conductorApi.AppInfoResponse> {

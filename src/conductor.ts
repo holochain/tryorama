@@ -32,10 +32,12 @@ type ConstructorArgs = {
     type: "trycp",
     adminInterfaceCall: (req: any) => Promise<any>,
     appInterfaceCall: (port: number, message: any) => Promise<any>,
-    downloadDnaRemote: (url: string) => Promise<{ path: string }>,
-    saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>,
+    connectAppInterface: (port: number) => Promise<void>,
+    disconnectAppInterface: (port: number) => Promise<void>,
     subscribeAppInterfacePort: (port: number, onSignal: (signal: AppSignal) => void) => void,
     unsubscribeAppInterfacePort: (port: number) => void,
+    downloadDnaRemote: (url: string) => Promise<{ path: string }>,
+    saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>,
   } | { type: "test" }
 }
 
@@ -65,10 +67,12 @@ export class Conductor {
   } | {
     type: "trycp",
     appInterfaceCall: (port: number, message: any) => Promise<any>
-    downloadDnaRemote: (url: string) => Promise<{ path: string }>
-    saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
+    connectAppInterface: (port: number) => Promise<void>,
+    disconnectAppInterface: (port: number) => Promise<void>,
     subscribeAppInterfacePort: (port: number, onSignal: (signal: AppSignal) => void) => void,
     unsubscribeAppInterfacePort: (port: number) => void,
+    downloadDnaRemote: (url: string) => Promise<{ path: string }>
+    saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
   } | { type: "test" }
 
 
@@ -238,15 +242,21 @@ export class Conductor {
         break
       case "trycp":
         const backend = this._backend
+
+        await backend.connectAppInterface(appInterfacePort)
         this.appClient = new TunneledAppClient(
           async (message) => {
             const res = await backend.appInterfaceCall(appInterfacePort, message)
             this._onActivity()
             return res
-          })
+          },
+          () => backend.disconnectAppInterface(appInterfacePort)
+        )
+
         this._appInterfacePort = appInterfacePort
+
         if (this._onSignal !== null) {
-          this._backend.subscribeAppInterfacePort(this._appInterfacePort, (signal) => this._onSignal!(signal))
+          this._backend.subscribeAppInterfacePort(appInterfacePort, (signal) => this._onSignal!(signal))
         }
         break
       default:
