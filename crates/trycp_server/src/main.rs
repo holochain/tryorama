@@ -604,7 +604,7 @@ admin_interfaces:
         let message_buf = base64::decode(&message_base64)
             .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
-        let maybe_port = &state_admin_interface_call.read().ports.get(&id).cloned();
+        let maybe_port = state_admin_interface_call.read().ports.get(&id).cloned();
         let port = maybe_port.ok_or_else(|| {
             invalid_request(format!(
                 "failed to call player admin interface: player not yet configured"
@@ -705,39 +705,23 @@ admin_interfaces:
 
     let app_interface_connections = app_interface_connections_arc;
     io.add_method("poll_app_interface_signals", move |params: Params| {
-        #[derive(Deserialize)]
-        struct PollSignalsParams {
-            port: u16,
-        }
-        let PollSignalsParams { port } = params.parse()?;
-        println!("poll_app_interface_signals port: {:?}", port);
+        params.expect_no_params()?;
+        println!("poll_app_interface_signals");
 
-        let res = {
-            let mut app_interface_connections_read_guard = app_interface_connections.read();
-            let connection_state_once_cell = if let Some(connection_state_once_cell) =
-                app_interface_connections_read_guard.get(&port)
-            {
-                connection_state_once_cell
-            } else {
-                mem::drop(app_interface_connections_read_guard);
-                let mut app_interface_connections_write_guard = app_interface_connections.write();
-                app_interface_connections_write_guard
-                    .entry(port)
-                    .or_insert_with(OnceCell::new);
-                app_interface_connections_read_guard =
-                    RwLockWriteGuard::downgrade(app_interface_connections_write_guard);
-                app_interface_connections_read_guard.get(&port).unwrap()
-            };
-
-            let connection_state = connect_app_interface(connection_state_once_cell, port)
-                .map_err(|e| {
-                    internal_error(format!("failed to connect to app interface: {}", e))
-                })?;
-            let mut connection_state = connection_state.1.lock();
-            mem::take(&mut connection_state.signals_accumulated)
-        };
-
-        Ok(Value::Array(res))
+        Ok(Value::Array(
+            app_interface_connections
+                .read()
+                .iter()
+                .filter_map(|(&port, connection_state_cell)| {
+                    let signals_accumulated =
+                        mem::take(&mut connection_state_cell.get()?.1.lock().signals_accumulated);
+                    Some(json!({
+                        "port": port,
+                        "signals_accumulated": Value::Array(signals_accumulated),
+                    }))
+                })
+                .collect(),
+        ))
     });
 
     let allow_replace_conductor = args.allow_replace_conductor;
