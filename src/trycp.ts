@@ -197,7 +197,7 @@ export class TunneledAppClient {
   constructor(appInterfaceCall: (req: any) => Promise<any>, disconnectAppInterface: () => Promise<void>) {
     this.appInterfaceCall = appInterfaceCall
     this.disconnectAppInterface = disconnectAppInterface
-    this.client = { close: this.close }
+    this.client = { close: this.close.bind(this) }
   }
 
   private close(): Promise<void> {
