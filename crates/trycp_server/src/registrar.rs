@@ -8,7 +8,7 @@ use in_stream::{
 };
 use jsonrpc_core::{IoHandler, Params, Value};
 use reqwest::Url;
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 use serde_json::json;
 use url2::Url2;
 

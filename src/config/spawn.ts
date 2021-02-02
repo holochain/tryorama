@@ -151,9 +151,12 @@ export const spawnRemote = (trycp: TrycpClient): T.SpawnConductorFn => async (pl
       type: "trycp",
       adminInterfaceCall: (message) => trycp.adminInterfaceCall(name, message),
       appInterfaceCall: trycp.appInterfaceCall,
+      connectAppInterface: trycp.connectAppInterface,
+      disconnectAppInterface: trycp.disconnectAppInterface,
+      subscribeAppInterfacePort: trycp.subscribeAppInterfacePort,
+      unsubscribeAppInterfacePort: trycp.unsubscribeAppInterfacePort,
       downloadDnaRemote: trycp.downloadDna,
       saveDnaRemote: trycp.saveDna,
-      pollAppInterfaceSignals: trycp.pollAppInterfaceSignals
     }
   })
 }

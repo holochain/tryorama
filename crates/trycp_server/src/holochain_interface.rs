@@ -1,10 +1,8 @@
-use std::{sync::Arc, thread};
-
-use parking_lot::Mutex;
-use serde_derive::{Deserialize, Serialize};
-use slab::Slab;
+use serde::{Deserialize, Serialize};
 
 use crate::rpc_util::internal_error;
+
+pub mod app;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
@@ -83,87 +81,4 @@ pub fn remote_call(port: u16, data_buf: Vec<u8>) -> Result<Vec<u8>, jsonrpc_core
     let response = res_rx.recv().unwrap()?;
     parse_holochain_response(response)
         .map_err(|e| internal_error(format!("failed to parse conductor response: {}", e)))
-}
-
-#[derive(Default)]
-pub struct AppConnectionState {
-    // Contains the base64-encoded payload of each message of type "Signal" received since last polled by tryorama
-    pub signals_accumulated: Vec<serde_json::Value>,
-    // Contains channels indexed by request ID for receiving a response after making a request.
-    pub responses_awaited: Slab<crossbeam::channel::Sender<ws::Result<String>>>,
-}
-
-pub fn connect_app_interface(
-    port: u16,
-    connected_callback: impl FnOnce(ws::Sender) -> Arc<Mutex<AppConnectionState>> + Send + 'static,
-    err_callback: impl FnOnce(ws::Error) + Send + 'static,
-) {
-    thread::spawn(move || {
-        // Put our closure into an Option to satisfy the FnMut bound,
-        // even though the closure will only be called once.
-        let mut on_connect = Some(|handle| {
-            let app_connection_state = connected_callback(handle);
-            move |message| {
-                handle_app_interface_response(message, &app_connection_state);
-                Ok(())
-            }
-        });
-        let mut socket = match ws::Builder::new()
-            .with_settings(ws::Settings {
-                queue_size: 64,
-                ..Default::default()
-            })
-            .build(|handle| on_connect.take().unwrap()(handle))
-        {
-            Ok(v) => v,
-            Err(e) => return err_callback(e),
-        };
-        if let Err(e) =
-            socket.connect(url::Url::parse(&format!("ws://localhost:{}", port)).unwrap())
-        {
-            return err_callback(e);
-        }
-        if let Err(e) = socket.run() {
-            return err_callback(e);
-        }
-    });
-}
-
-fn handle_app_interface_response(
-    message: ws::Message,
-    app_connection_state: &Mutex<AppConnectionState>,
-) {
-    match parse_holochain_message(message) {
-        Ok(Message::Signal { data }) => {
-            let encoded = base64::encode(data);
-            app_connection_state
-                .lock()
-                .signals_accumulated
-                .push(serde_json::Value::String(encoded));
-        }
-        Ok(Message::Response { id, data }) => {
-            let id: usize = match id.parse() {
-                Ok(id) => id,
-                Err(_) => {
-                    println!("warning: received response with unexpected ID from app interface; dropping");
-                    return;
-                }
-            };
-            let encoded = base64::encode(data);
-            let mut app_connection_state_lock_guard = app_connection_state.lock();
-            let responses_awaited = &mut app_connection_state_lock_guard.responses_awaited;
-            if !responses_awaited.contains(id) {
-                println!("warning: received unexpected response from app interface; dropping");
-                return;
-            }
-            responses_awaited.remove(id).send(Ok(encoded)).unwrap()
-        }
-        Ok(Message::Request { .. }) => {
-            println!("warning: received unexpected request from app interface; dropping")
-        }
-        Err(e) => println!(
-            "warning: could not parse message from app interface: {:?}",
-            e
-        ),
-    };
 }
