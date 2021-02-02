@@ -6,7 +6,7 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
 import { TunneledAdminClient, TunneledAppClient } from './trycp'
@@ -21,15 +21,24 @@ export type CallAdminFunc = (method: string, params: Record<string, any>) => Pro
 type ConstructorArgs = {
   player: Player,
   name: string,
-  kill: (string?) => void,
-  onSignal: (Signal) => void,
+  kill: (signal?: string) => Promise<void>,
+  onSignal: ((signal: AppSignal) => void) | null,
   onActivity: () => void,
-  machineHost: string,
-  adminPort?: number
-  adminInterfaceCall?: (any) => Promise<any>,
-  appInterfaceCall?: (port: number, message: any) => Promise<any>,
-  downloadDnaRemote?: (string) => Promise<{ path: string }>,
-  saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>,
+  backend: {
+    type: "local",
+    machineHost: string,
+    adminInterfacePort: number,
+  } | {
+    type: "trycp",
+    adminInterfaceCall: (req: any) => Promise<any>,
+    appInterfaceCall: (port: number, message: any) => Promise<any>,
+    connectAppInterface: (port: number) => Promise<void>,
+    disconnectAppInterface: (port: number) => Promise<void>,
+    subscribeAppInterfacePort: (port: number, onSignal: (signal: AppSignal) => void) => void,
+    unsubscribeAppInterfacePort: (port: number) => void,
+    downloadDnaRemote: (url: string) => Promise<{ path: string }>,
+    saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>,
+  } | { type: "test" }
 }
 
 /**
@@ -39,54 +48,76 @@ type ConstructorArgs = {
  * connections to the various interfaces to enable zome calls as well as admin and signal handling.
  */
 export class Conductor {
-
   name: string
-  onSignal: (Signal) => void
   logger: any
   kill: KillFn
   adminClient: AdminWebsocket | TunneledAdminClient | null
   appClient: AppWebsocket | TunneledAppClient | null
 
+  _appInterfacePort: number | null = null
+  _onSignal: ((signal: AppSignal) => void) | null
   _player: Player
-  _adminInterfacePort?: number
-  _machineHost: string
   _isInitialized: boolean
-  _wsClosePromise: Promise<void>
   _onActivity: () => void
   _timeout: number
-  _appInterfaceCall?: (port: number, message: any) => Promise<any>
-  _downloadDnaRemote?: (string) => Promise<{ path: string }>
-  _saveDnaRemote?: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
+  _backend: {
+    type: "local",
+    adminInterfacePort: number
+    machineHost: string
+  } | {
+    type: "trycp",
+    appInterfaceCall: (port: number, message: any) => Promise<any>
+    connectAppInterface: (port: number) => Promise<void>,
+    disconnectAppInterface: (port: number) => Promise<void>,
+    subscribeAppInterfacePort: (port: number, onSignal: (signal: AppSignal) => void) => void,
+    unsubscribeAppInterfacePort: (port: number) => void,
+    downloadDnaRemote: (url: string) => Promise<{ path: string }>
+    saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
+  } | { type: "test" }
 
 
-  constructor({ player, name, kill, onSignal, onActivity, machineHost, adminPort, adminInterfaceCall, appInterfaceCall, downloadDnaRemote, saveDnaRemote }: ConstructorArgs) {
+  constructor({ player, name, kill, onActivity, backend }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
     this.logger.debug("Conductor constructing")
-    this.onSignal = onSignal
 
     this.kill = async (signal?): Promise<void> => {
+      if (this.appClient !== null) {
+        const appClient = this.appClient
+        this.appClient = null
+        await appClient.client.close()
+      }
+      if (this.adminClient !== null) {
+        const adminClient = this.adminClient
+        this.adminClient = null
+        await adminClient.client.close()
+      }
       this.logger.debug("Killing...")
       await kill(signal)
-      return this._wsClosePromise
     }
 
-    if (adminInterfaceCall !== undefined) {
-      this.adminClient = new TunneledAdminClient(adminInterfaceCall)
-    } else {
-      this.adminClient = null
+    switch (backend.type) {
+      case "local":
+      case "test":
+        this._backend = backend
+        this.adminClient = null
+        break
+      case "trycp":
+        this._backend = backend
+        this.adminClient = new TunneledAdminClient(async (message) => {
+          const res = await backend.adminInterfaceCall(message)
+          this._onActivity()
+          return res
+        })
+        break
+      default:
+        const assertNever: never = backend
     }
     this.appClient = null
     this._player = player
-    this._machineHost = machineHost
-    this._adminInterfacePort = adminPort
     this._isInitialized = false
-    this._wsClosePromise = Promise.resolve()
     this._onActivity = onActivity
     this._timeout = 30000
-    this._appInterfaceCall = appInterfaceCall
-    this._downloadDnaRemote = downloadDnaRemote
-    this._saveDnaRemote = saveDnaRemote
   }
 
   initialize = async () => {
@@ -94,11 +125,20 @@ export class Conductor {
     await this._connectInterfaces()
   }
 
-  awaitClosed = () => this._wsClosePromise
+  setSignalHandler = (onSignal: ((signal: AppSignal) => void) | null) => {
+    const prevOnSignal = this._onSignal
+    if (onSignal === null && prevOnSignal !== null && this._appInterfacePort !== null && "unsubscribeAppInterfacePort" in this._backend) {
+      this._backend.unsubscribeAppInterfacePort(this._appInterfacePort)
+    }
+    this._onSignal = onSignal
+    if (onSignal !== null && prevOnSignal === null && this._appInterfacePort !== null && "subscribeAppInterfacePort" in this._backend) {
+      this._backend.subscribeAppInterfacePort(this._appInterfacePort, (signal) => this._onSignal!(signal))
+    }
+  }
 
   // this function registers a DNA from a given source
   registerDna = async (source: T.DnaSource, uuid?, properties?): Promise<HoloHash> => {
-    if (("path" in source) && (this._saveDnaRemote !== undefined)) {
+    if ("path" in source && "saveDnaRemote" in this._backend) {
       const contents = () => new Promise<Buffer>((resolve, reject) => {
         fs.readFile((source as { path: string }).path, null, (err, data) => {
           if (err) {
@@ -108,13 +148,13 @@ export class Conductor {
         })
       })
       const pathAfterReplacement = source.path.replace(/\//g, '')
-      source = await this._saveDnaRemote(pathAfterReplacement, contents)
+      source = await this._backend.saveDnaRemote(pathAfterReplacement, contents)
     }
     if ("url" in source) {
-      if (this._downloadDnaRemote === undefined) {
+      if (!("downloadDnaRemote" in this._backend)) {
         throw new Error("encountered URL DNA source on non-remote player")
       }
-      source = await this._downloadDnaRemote((source as T.DnaUrl).url)
+      source = await this._backend.downloadDnaRemote((source as T.DnaUrl).url)
     }
     const registerDnaReq: RegisterDnaRequest = { source, uuid, properties }
     return await this.adminClient!.registerDna(registerDnaReq)
@@ -174,25 +214,53 @@ export class Conductor {
   }
 
   _connectInterfaces = async () => {
+    if (this._backend.type === "test") {
+      throw new Error("cannot call _connectInterface without a conductor backend")
+    }
     this._onActivity()
-    if (this.adminClient === null) {
-      const adminWsUrl = `ws://${this._machineHost}:${this._adminInterfacePort}`
+    if (this._backend.type === "local") {
+      const adminWsUrl = `ws://${this._backend.machineHost}:${this._backend.adminInterfacePort}`
       this.adminClient = await AdminWebsocket.connect(adminWsUrl)
       this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
     }
 
     // 0 in this case means use any open port
-    const { port: appInterfacePort } = await this.adminClient.attachAppInterface({ port: 0 })
+    const { port: appInterfacePort } = await this.adminClient!.attachAppInterface({ port: 0 })
 
-    if (this._appInterfaceCall === undefined) {
-      const appWsUrl = `ws://${this._machineHost}:${appInterfacePort}`
-      this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
-        this._onActivity();
-        this.onSignal(signal);
-      })
-      this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
-    } else {
-      this.appClient = new TunneledAppClient((message) => this._appInterfaceCall!(appInterfacePort, message))
+    switch (this._backend.type) {
+      case "local":
+        const appWsUrl = `ws://${this._backend.machineHost}:${appInterfacePort}`
+        this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
+          this._onActivity();
+          if (this._onSignal !== null) {
+            this._onSignal(signal);
+          } else {
+            console.info("got signal, doing nothing with it: %o", signal)
+          }
+        })
+        this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
+        break
+      case "trycp":
+        const backend = this._backend
+
+        await backend.connectAppInterface(appInterfacePort)
+        this.appClient = new TunneledAppClient(
+          async (message) => {
+            const res = await backend.appInterfaceCall(appInterfacePort, message)
+            this._onActivity()
+            return res
+          },
+          () => backend.disconnectAppInterface(appInterfacePort)
+        )
+
+        this._appInterfacePort = appInterfacePort
+
+        if (this._onSignal !== null) {
+          this._backend.subscribeAppInterfacePort(appInterfacePort, (signal) => this._onSignal!(signal))
+        }
+        break
+      default:
+        const assertNever: never = this._backend
     }
   }
 }

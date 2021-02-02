@@ -1,10 +1,8 @@
 import * as _ from 'lodash'
 // import connect from '@holochain/conductor-api'
 import logger from './logger'
-import * as T from './types'
 import { Client as RpcWebSocket } from 'rpc-websockets'
 import * as yaml from 'yaml';
-import { make } from 'fp-ts/lib/Tree';
 import * as msgpack from "@msgpack/msgpack"
 import * as conductorApi from "@holochain/conductor-api"
 
@@ -18,6 +16,10 @@ export type TrycpClient = {
   reset: () => Promise<void>,
   adminInterfaceCall: (id, message) => Promise<any>,
   appInterfaceCall: (port, message) => Promise<any>,
+  connectAppInterface: (port: number) => Promise<void>,
+  disconnectAppInterface: (port: number) => Promise<void>,
+  subscribeAppInterfacePort: (port: number, onSignal: (signal: conductorApi.AppSignal) => void) => void,
+  unsubscribeAppInterfacePort: (port: number) => void,
   closeSession: () => Promise<void>,
 }
 
@@ -45,7 +47,7 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
   }
 
   const holochainInterfaceCall = async (type: "app" | "admin", args, message) => {
-    let params = JSON.stringify(message)
+    let params = JSON.stringify({ ...args, message })
     if (params && params.length > 1000) {
       params = params.substring(0, 993) + " [snip]"
     }
@@ -63,6 +65,15 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
   }
 
   const savedDnas: Record<string, Promise<{ path: string }>> = {}
+
+  const decodeSignal = (signal: Buffer): conductorApi.AppSignal => {
+    const { App: [cellId, payload] } = (msgpack.decode(signal) as any)
+    const decodedPayload = msgpack.decode(payload)
+    return { type: "Signal", data: { cellId, payload: decodedPayload } }
+  }
+
+  const signalSubscriptions: Record<number, (signal: conductorApi.AppSignal) => void> = {}
+  let signalPollTimer: NodeJS.Timeout | null = null
 
   return {
     saveDna: async (id, contents) => {
@@ -87,12 +98,42 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     reset: () => makeCall('reset')(undefined),
     adminInterfaceCall: (id, message) => holochainInterfaceCall("admin", { id }, message),
     appInterfaceCall: (port, message) => holochainInterfaceCall("app", { port }, message),
+    connectAppInterface: (port: number) => makeCall('connect_app_interface')({ port }),
+    disconnectAppInterface: (port: number) => makeCall('disconnect_app_interface')({ port }),
+    subscribeAppInterfacePort: (port, onSignal) => {
+      const pollAppInterfaceSignals: () => Promise<Array<{ port: number, signals_accumulated: string[] }>> = () => makeCall('poll_app_interface_signals')(undefined)
+      const f = () => {
+        pollAppInterfaceSignals().then(res => {
+          signalPollTimer = global.setTimeout(f, 1000)
+          for (const { port, signals_accumulated } of res) {
+            if (port in signalSubscriptions) {
+              for (const signalBase64 of signals_accumulated) {
+                const signalMsgpackEncoded = Buffer.from(signalBase64, 'base64')
+                const signal = decodeSignal(signalMsgpackEncoded)
+                signalSubscriptions[port](signal)
+              }
+            }
+          }
+        })
+      }
+      if (signalPollTimer === null) {
+        signalPollTimer = global.setTimeout(f, 1000)
+      }
+      signalSubscriptions[port] = onSignal
+    },
+    unsubscribeAppInterfacePort: (port) => {
+      delete signalSubscriptions[port]
+      if (signalPollTimer && _.isEmpty(signalSubscriptions)) {
+        global.clearTimeout(signalPollTimer)
+      }
+    },
     closeSession: () => ws.close(),
   }
 }
 
 export class TunneledAdminClient {
-  adminInterfaceCall: (any) => Promise<any>
+  client = { close: async () => { } }
+  private adminInterfaceCall: (any) => Promise<any>
 
   constructor(adminInterfaceCall: (any) => Promise<any>) {
     this.adminInterfaceCall = adminInterfaceCall
@@ -149,10 +190,18 @@ export class TunneledAdminClient {
 }
 
 export class TunneledAppClient {
-  appInterfaceCall: (any) => Promise<any>
+  client: { close: () => Promise<void> }
+  private appInterfaceCall: (req: any) => Promise<any>
+  private disconnectAppInterface: () => Promise<void>
 
-  constructor(appInterfaceCall: (any) => Promise<any>) {
+  constructor(appInterfaceCall: (req: any) => Promise<any>, disconnectAppInterface: () => Promise<void>) {
     this.appInterfaceCall = appInterfaceCall
+    this.disconnectAppInterface = disconnectAppInterface
+    this.client = { close: this.close.bind(this) }
+  }
+
+  private close(): Promise<void> {
+    return this.disconnectAppInterface()
   }
 
   appInfo(data: conductorApi.AppInfoRequest): Promise<conductorApi.AppInfoResponse> {

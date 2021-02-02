@@ -3,13 +3,13 @@ import test from 'tape-promise/tape'
 
 import { ScenarioApi } from '../../src/api';
 
-module.exports = (testOrchestrator, testConfig) => {
+export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.players(...args)) => {
 
   test('test with error', async t => {
     const [conductorConfig, _installApps] = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('call for conductor after shutdown', async (s: ScenarioApi) => {
-      const [alice] = await s.players([conductorConfig])
+      const [alice] = await playersFn(s, [conductorConfig])
       await alice.shutdown()
       // this will throw
       alice.adminWs()
@@ -29,7 +29,7 @@ module.exports = (testOrchestrator, testConfig) => {
     const [conductorConfig, installApps] = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('simple zome call', async (s: ScenarioApi) => {
-      const [alice] = await s.players([conductorConfig])
+      const [alice] = await playersFn(s, [conductorConfig])
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
       const hash = await alice_happ.cells[0].call('test', 'create_link')
       t.equal(hash.length, 39, 'zome call succeeded')
@@ -45,7 +45,7 @@ module.exports = (testOrchestrator, testConfig) => {
     const [conductorConfig, _installApp] = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('installAgentsHapps correctly shares agentPubKey', async (s: ScenarioApi) => {
-      const [alice] = await s.players([conductorConfig])
+      const [alice] = await playersFn(s, [conductorConfig])
       const installAppsOverride = [
         // agent 0
         [[], []],

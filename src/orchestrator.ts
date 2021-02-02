@@ -17,7 +17,7 @@ type OrchestratorConstructorParams<S> = {
 
 type ModeOpts = {
   executor: 'none' | 'tape' | { tape: any },
-  spawning: 'local' | 'remote' | T.SpawnConductorFn,
+  spawning: 'local' | T.SpawnConductorFn,
 }
 
 const defaultModeOpts: ModeOpts = {
@@ -99,7 +99,7 @@ export class Orchestrator<S> {
     if (tests.length < allTests.length) {
       logger.warn(`Skipping ${allTests.length - tests.length} test(s)!`)
     }
-    return this._executeParallel(tests)
+    return this._executeSeries(tests)
   }
 
   _executeParallel = async (tests: Array<RegisteredScenario>) => {
@@ -117,13 +117,8 @@ export class Orchestrator<S> {
           console.error(`got an error for test '${desc}':`, e)
           errors.push({ description: desc, error: e })
         })
-        .then(() => {
-          logger.debug("Done with test: %s", desc)
-          return api._cleanup()
-        })
-        .then(() => {
-          logger.debug("Done with _cleanup")
-        })
+        .then(api._cleanup)
+        .then(() => logger.debug("Done with _cleanup"))
     })
     await Promise.all(all)
 
@@ -132,35 +127,34 @@ export class Orchestrator<S> {
     return stats
   }
 
-  // Unnecessary if indeed the callSerial middleware works as well
-  // as it should:
-  //
-  // _executeSeries = async (tests: Array<RegisteredScenario>) => {
-  //   let successes = 0
-  //   const errors: Array<TestError> = []
-  //   for (const { api, desc, execute } of tests) {
-  //     this._reporter.each(desc)
-  //     try {
-  //       logger.debug("Executing test: %s", desc)
-  //       await execute()
-  //       logger.debug("Test succeeded: %s", desc)
-  //       successes += 1
-  //     } catch (e) {
-  //       logger.debug("Test failed: %s %o", desc, e)
-  //       errors.push({ description: desc, error: e })
-  //     } finally {
-  //       logger.debug("Cleaning up test: %s", desc)
-  //       await api._cleanup()
-  //       logger.debug("Finished with test: %s", desc)
-  //     }
-  //   }
-  //   const stats = {
-  //     successes,
-  //     errors
-  //   }
-  //   this._reporter.after(stats)
-  //   return stats
-  // }
+  // The call serial middleware doesn't work because it starts the next test before cleaning up the previous
+
+  _executeSeries = async (tests: Array<RegisteredScenario>) => {
+    let successes = 0
+    const errors: Array<TestError> = []
+    for (const { api, desc, execute } of tests) {
+      this._reporter.each(desc)
+      try {
+        logger.debug("Executing test: %s", desc)
+        await execute()
+        logger.debug("Test succeeded: %s", desc)
+        successes += 1
+      } catch (e) {
+        logger.debug("Test failed: %s %o", desc, e)
+        errors.push({ description: desc, error: e })
+      } finally {
+        logger.debug("Cleaning up test: %s", desc)
+        await api._cleanup()
+        logger.debug("Finished with test: %s", desc)
+      }
+    }
+    const stats = {
+      successes,
+      errors
+    }
+    this._reporter.after(stats)
+    return stats
+  }
 
   _registerScenario = (desc: string, scenario: S, modifier: ScenarioModifier): void => {
     const orchestratorData = _.pick(this, [
@@ -168,7 +162,7 @@ export class Orchestrator<S> {
       'waiterConfig',
     ])
     const api = new ScenarioApi(desc, orchestratorData, uuidGen())
-    const runner = async scenario => scenario(api)
+    const runner = scenario => scenario(api)
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })
   }

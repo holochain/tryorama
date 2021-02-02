@@ -77,7 +77,7 @@ checksum = "245097e9a4535ee1e3e3931fcfcd55a796a44c643e8596ff6566d68f09b87bbc"
 [[package]]
 name = "fixt"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=a9f1e2d184d6f34f68ccedb2ada26a32649b9970#a9f1e2d184d6f34f68ccedb2ada26a32649b9970"
+source = "git+https://github.com/holochain/holochain?rev=9b09d7acba71739ab4bdb26f43cf210d5f298165#9b09d7acba71739ab4bdb26f43cf210d5f298165"
 dependencies = [
  "holochain_serialized_bytes",
  "lazy_static",
@@ -110,7 +110,7 @@ checksum = "d7afe4a420e3fe79967a00898cc1f4db7c8a49a9333a29f8a4bd76a253d5cd04"
 [[package]]
 name = "hdk3"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=a9f1e2d184d6f34f68ccedb2ada26a32649b9970#a9f1e2d184d6f34f68ccedb2ada26a32649b9970"
+source = "git+https://github.com/holochain/holochain?rev=9b09d7acba71739ab4bdb26f43cf210d5f298165#9b09d7acba71739ab4bdb26f43cf210d5f298165"
 dependencies = [
  "hdk3_derive",
  "holo_hash",
@@ -125,7 +125,7 @@ dependencies = [
 [[package]]
 name = "hdk3_derive"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=a9f1e2d184d6f34f68ccedb2ada26a32649b9970#a9f1e2d184d6f34f68ccedb2ada26a32649b9970"
+source = "git+https://github.com/holochain/holochain?rev=9b09d7acba71739ab4bdb26f43cf210d5f298165#9b09d7acba71739ab4bdb26f43cf210d5f298165"
 dependencies = [
  "holochain_zome_types",
  "paste",
@@ -146,7 +146,7 @@ dependencies = [
 [[package]]
 name = "holo_hash"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=a9f1e2d184d6f34f68ccedb2ada26a32649b9970#a9f1e2d184d6f34f68ccedb2ada26a32649b9970"
+source = "git+https://github.com/holochain/holochain?rev=9b09d7acba71739ab4bdb26f43cf210d5f298165#9b09d7acba71739ab4bdb26f43cf210d5f298165"
 dependencies = [
  "base64",
  "blake2b_simd",
@@ -207,7 +207,7 @@ dependencies = [
 [[package]]
 name = "holochain_zome_types"
 version = "0.0.1"
-source = "git+https://github.com/holochain/holochain?rev=a9f1e2d184d6f34f68ccedb2ada26a32649b9970#a9f1e2d184d6f34f68ccedb2ada26a32649b9970"
+source = "git+https://github.com/holochain/holochain?rev=9b09d7acba71739ab4bdb26f43cf210d5f298165#9b09d7acba71739ab4bdb26f43cf210d5f298165"
 dependencies = [
  "fixt",
  "holo_hash",
@@ -245,9 +245,9 @@ checksum = "e2abad23fbc42b3700f2f279844dc832adb2b2eb069b2df918f455c4e18cc646"
 
 [[package]]
 name = "libc"
-version = "0.2.82"
+version = "0.2.84"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89203f3fba0a3795506acaad8ebce3c80c0af93f994d5a1d7a0b1eeb23271929"
+checksum = "1cca32fa0182e8c0989459524dc356b8f2b5c10f1b9eb521b7d182c03cf8c5ff"
 
 [[package]]
 name = "lock_api"
@@ -483,9 +483,9 @@ checksum = "1e81da0851ada1f3e9d4312c704aa4f8806f0f9d69faaf8df2f3464b4a9437c2"
 
 [[package]]
 name = "syn"
-version = "1.0.58"
+version = "1.0.60"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cc60a3d73ea6594cd712d830cc1f0390fd71542d8c8cd24e70cc54cdfd5e05d5"
+checksum = "c700597eca8a5a762beb35753ef6b94df201c81cca676604f547495a0d7f0081"
 dependencies = [
  "proc-macro2",
  "quote",

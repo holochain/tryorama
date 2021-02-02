@@ -18,7 +18,6 @@ type ConstructorArgs = {
   name: string,
   config: RawConductorConfig,
   adminInterfacePort?: number,
-  onSignal: (Signal) => void,
   onJoin: () => void,
   onLeave: () => void,
   onActivity: () => void,
@@ -40,7 +39,7 @@ export class Player {
   config: RawConductorConfig
   onJoin: () => void
   onLeave: () => void
-  onSignal: (Signal) => void
+  onSignal: ((signal: any) => void) | null = null
   onActivity: () => void
   scenarioUUID: string
 
@@ -48,12 +47,11 @@ export class Player {
   _adminInterfacePort?: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ scenarioUUID, name, config, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ scenarioUUID, name, config, adminInterfacePort, onJoin, onLeave, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
     this.onLeave = onLeave
-    this.onSignal = onSignal
     this.onActivity = onActivity
     this.config = config
     this.scenarioUUID = scenarioUUID,
@@ -115,6 +113,7 @@ export class Player {
 
   /** Runs at the end of a test run */
   cleanup = async (signal = 'SIGTERM'): Promise<boolean> => {
+    this.setSignalHandler(null)
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
       await this.shutdown(signal)
@@ -171,7 +170,7 @@ export class Player {
   setSignalHandler = (handler) => {
     this.onSignal = handler
     if (this._conductor) {
-      this._conductor.onSignal = handler
+      this._conductor.setSignalHandler(handler)
     }
   }
 

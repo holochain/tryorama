@@ -1,52 +1,55 @@
-use serde_derive::{Deserialize, Serialize};
+use serde::{Deserialize, Serialize};
 
 use crate::rpc_util::internal_error;
 
+pub mod app;
+
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
-enum HolochainInterfaceMessage {
+enum Message {
     Request {
-        #[serde(rename = "id")]
-        message_id: String,
+        id: String,
         #[serde(with = "serde_bytes")]
         data: Vec<u8>,
     },
     Response {
-        #[serde(rename = "id")]
-        message_id: String,
+        id: String,
+        #[serde(with = "serde_bytes")]
+        data: Vec<u8>,
+    },
+    Signal {
         #[serde(with = "serde_bytes")]
         data: Vec<u8>,
     },
 }
 
-fn holochain_request(data_buf: Vec<u8>) -> Result<Vec<u8>, rmp_serde::encode::Error> {
-    let msg = HolochainInterfaceMessage::Request {
-        message_id: String::new(),
-        data: data_buf,
-    };
-    rmp_serde::to_vec_named(&msg)
+pub fn request(id: String, data_buf: Vec<u8>) -> Vec<u8> {
+    let msg = Message::Request { id, data: data_buf };
+    rmp_serde::to_vec_named(&msg).expect("serialization cannot fail")
 }
 
-fn parse_holochain_response(response: ws::Message) -> Result<Vec<u8>, String> {
-    let response_buf = match response {
+fn parse_holochain_message(message: ws::Message) -> Result<Message, String> {
+    let response_buf = match message {
         ws::Message::Binary(buf) => buf,
         r => return Err(format!("unexpected response from conductor: {:?}", r)),
     };
-    let response_msg: HolochainInterfaceMessage =
-        rmp_serde::from_slice(&response_buf).map_err(|e| {
-            format!(
-                "failed to parse response from conductor as MessagePack: {}",
-                e
-            )
-        })?;
-    match response_msg {
-        HolochainInterfaceMessage::Response { data, .. } => Ok(data),
+    rmp_serde::from_slice(&response_buf).map_err(|e| {
+        format!(
+            "failed to parse response from conductor as MessagePack: {}",
+            e
+        )
+    })
+}
+
+fn parse_holochain_response(response: ws::Message) -> Result<Vec<u8>, String> {
+    match parse_holochain_message(response)? {
+        Message::Response { data, .. } => Ok(data),
         r => return Err(format!("unexpected message type from conductor: {:?}", r)),
     }
 }
 
 pub fn remote_call(port: u16, data_buf: Vec<u8>) -> Result<Vec<u8>, jsonrpc_core::Error> {
-    let message_buf = holochain_request(data_buf).expect("serialization cannot fail");
+    let message_buf = request(String::new(), data_buf);
     let (res_tx, res_rx) = crossbeam::channel::bounded(1);
     let mut capture_vars = Some((res_tx, message_buf));
     ws::connect(format!("ws://localhost:{}", port), move |out| {
@@ -65,7 +68,6 @@ pub fn remote_call(port: u16, data_buf: Vec<u8>) -> Result<Vec<u8>, jsonrpc_core
             }
         };
         move |response| {
-            println!("received conductor interface response: {:?}", response);
             if send_response {
                 res_tx.send(Ok(response)).unwrap();
                 out.close(ws::CloseCode::Normal)

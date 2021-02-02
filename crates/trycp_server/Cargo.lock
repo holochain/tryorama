@@ -1538,6 +1538,9 @@ name = "serde"
 version = "1.0.104"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "414115f25f818d7dfccec8ee535d76949ae78584fc4f79a6f45a904bf8ab4449"
+dependencies = [
+ "serde_derive",
+]
 
 [[package]]
 name = "serde_bytes"
@@ -1976,14 +1979,17 @@ dependencies = [
  "jsonrpc-core",
  "jsonrpc-ws-server",
  "nix",
+ "once_cell",
+ "parking_lot 0.10.2",
  "reqwest",
  "rmp-serde",
  "serde",
  "serde_bytes",
- "serde_derive",
  "serde_json",
+ "slab",
  "structopt",
  "structopt-derive",
+ "url 2.2.0",
  "url2",
  "ws",
 ]

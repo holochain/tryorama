@@ -7,23 +7,26 @@ mod rpc_util;
 
 use rpc_util::{internal_error, invalid_request};
 
+use std::{
+    collections::HashMap,
+    fs::{self, File},
+    io::{self, BufRead, BufReader, Read, Write},
+    mem,
+    ops::Range,
+    path::{Path, PathBuf},
+    process::{Child, Command, Stdio},
+    sync::Arc,
+};
+
 use jsonrpc_core::{IoHandler, Params, Value};
 use jsonrpc_ws_server::ServerBuilder;
 use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
 };
-use serde_derive::Deserialize;
+use parking_lot::RwLock;
+use serde::Deserialize;
 use serde_json::json;
-use std::{
-    collections::HashMap,
-    fs::{self, File},
-    io::{self, BufRead, BufReader, Read, Write},
-    ops::Range,
-    path::{Path, PathBuf},
-    process::{Child, Command, Stdio},
-    sync::{Arc, RwLock},
-};
 use structopt::StructOpt;
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
@@ -154,11 +157,14 @@ fn get_saved_dna_path(id: &str) -> PathBuf {
 }
 
 fn get_downloaded_dna_path(url: &reqwest::Url) -> PathBuf {
-    Path::new(DNA_DIR_PATH).join(url.path().to_string().replace("/", "").replace("%", "_"))
+    Path::new(DNA_DIR_PATH)
+        .join(url.scheme())
+        .join(url.path().replace("/", "").replace("%", "_"))
 }
 
 /// Tries to create a file, returning Ok(None) if a file already exists at path
 fn try_create_file(path: &Path) -> Result<Option<File>, io::Error> {
+    fs::create_dir_all(path.parent().unwrap())?;
     match fs::OpenOptions::new()
         .write(true)
         .create_new(true)
@@ -203,6 +209,11 @@ fn main() {
     let players_arc_shutdown = players_arc.clone();
     let players_arc_reset = players_arc.clone();
     let players_arc_startup = players_arc;
+
+    // For each port, stores a websocket connection to an app interface on that port and state related to that connection.
+    let app_interface_connections = holochain_interface::app::Connections::default();
+
+    holochain_interface::app::add_methods(&mut io, &app_interface_connections);
 
     if let Some(connection_uri) = args.register {
         registrar::register_with_remote(connection_uri, &args.host, args.port)
@@ -261,6 +272,11 @@ fn main() {
                     file_path.display()
                 ))
             })?;
+        } else {
+            println!(
+                "declining to save dna because file already exists. file length in bytes: {:?}",
+                fs::metadata(&file_path).map(|meta| meta.len())
+            )
         }
 
         let local_path = file_path.to_string_lossy();
@@ -291,21 +307,38 @@ fn main() {
 
         if let Some(mut file) = new_file {
             println!("Downloading dna from {} ...", &url_str);
-            let content: String = reqwest::get(url)
-                .map_err(|e| {
-                    internal_error(format!("error downloading dna: {:?} {:?}", e, url_str))
-                })?
-                .text()
-                .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
-            println!("Finished downloading dna from {}", url_str);
+            if url.scheme() == "file" {
+                let mut dna_file = fs::File::open(url.path()).map_err(|e| {
+                    invalid_request(format!(
+                        "failed to open DNA file at path {}: {}",
+                        url.path(),
+                        e
+                    ))
+                })?;
+                io::copy(&mut dna_file, &mut file).map_err(|e| {
+                    invalid_request(format!(
+                        "failed to read DNA file from path {}: {}",
+                        url.path(),
+                        e
+                    ))
+                })?;
+            } else {
+                let content: String = reqwest::get(url)
+                    .map_err(|e| {
+                        internal_error(format!("error downloading dna: {:?} {:?}", e, url_str))
+                    })?
+                    .text()
+                    .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
+                println!("Finished downloading dna from {}", url_str);
 
-            file.write_all(content.as_bytes()).map_err(|e| {
-                internal_error(format!(
-                    "unable to write file: {} {}",
-                    e,
-                    file_path.display()
-                ))
-            })?;
+                file.write_all(content.as_bytes()).map_err(|e| {
+                    internal_error(format!(
+                        "unable to write file: {} {}",
+                        e,
+                        file_path.display()
+                    ))
+                })?;
+            };
         }
 
         let local_path = file_path.to_string_lossy();
@@ -352,7 +385,6 @@ fn main() {
 
         let port = state_configure_player
             .write()
-            .unwrap()
             .acquire_port(id.clone())
             .map_err(internal_error)?;
 
@@ -403,7 +435,7 @@ admin_interfaces:
 
         println!("starting player with id: {}", id);
 
-        let mut players = players_arc_startup.write().unwrap();
+        let mut players = players_arc_startup.write();
         if players.contains_key(&id) {
             return Err(invalid_request(format!("{} is already running", id)));
         };
@@ -427,7 +459,7 @@ admin_interfaces:
         // Wait until lair begins to output before starting conductor,
         // otherwise Holochain starts its own copy of lair that we can't manage.
         lair.stdout
-            .take()
+            .as_mut()
             .unwrap()
             .read_exact(&mut [0])
             .map_err(|e| {
@@ -485,7 +517,7 @@ admin_interfaces:
         let ShutdownParams { id, signal } = params.parse()?;
 
         check_player_config_exists(&id)?;
-        match players_arc_shutdown.write().unwrap().remove(&id) {
+        match players_arc_shutdown.write().remove(&id) {
             None => {
                 return Err(invalid_request(format!("no conductor spawned for {}", id)));
             }
@@ -522,21 +554,36 @@ admin_interfaces:
     io.add_method("reset", move |params: Params| {
         params.expect_no_params()?;
 
-        let mut players = {
-            let mut players_lock = players_arc_reset.write().unwrap();
-            let mut state_lock = state_reset.write().unwrap();
+        let (mut players, connections) = {
+            let mut players_lock = players_arc_reset.write();
+            let mut state_lock = state_reset.write();
+            let mut connections_lock = app_interface_connections.write();
             state_lock.reset();
-            std::mem::take(&mut *players_lock)
+            (
+                mem::take(&mut *players_lock),
+                mem::take(&mut *connections_lock),
+            )
         };
+
+        for (port, app_interface_connection_state_once_cell) in connections {
+            if let Some((sender, _)) = app_interface_connection_state_once_cell.into_inner() {
+                if let Err(e) = sender.close(ws::CloseCode::Normal) {
+                    println!(
+                        "warn: failed to close websocket on app interface port {}: {}",
+                        port, e
+                    )
+                }
+            }
+        }
 
         for (id, player) in players.iter_mut() {
             println!("force-killing player with id: {}", id);
             let _ = player.lair.kill(); // ignore any errors
             let _ = player.conductor.kill(); // ignore any errors
         }
-        for player in players.values_mut() {
-            player.lair.wait().unwrap(); // ignore any errors
-            player.conductor.wait().unwrap(); // ignore any errors
+        for (_id, mut player) in players {
+            player.lair.wait().unwrap(); // cannot error
+            player.conductor.wait().unwrap(); // cannot error
         }
 
         Ok(Value::String("reset".into()))
@@ -554,36 +601,12 @@ admin_interfaces:
         let message_buf = base64::decode(&message_base64)
             .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
-        let maybe_port = state_admin_interface_call
-            .read()
-            .unwrap()
-            .ports
-            .get(&id)
-            .cloned();
+        let maybe_port = state_admin_interface_call.read().ports.get(&id).cloned();
         let port = maybe_port.ok_or_else(|| {
             invalid_request(format!(
                 "failed to call player admin interface: player not yet configured"
             ))
         })?;
-        let response_buf = holochain_interface::remote_call(port, message_buf)?;
-        Ok(Value::String(base64::encode(&response_buf)))
-    });
-
-    io.add_method("app_interface_call", move |params: Params| {
-        #[derive(Deserialize)]
-        struct AppApiCallParams {
-            port: u16,
-            message_base64: String,
-        }
-        let AppApiCallParams {
-            port,
-            message_base64,
-        } = params.parse()?;
-        println!("app_interface_call port: {:?}", port);
-
-        let message_buf = base64::decode(&message_base64)
-            .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
-
         let response_buf = holochain_interface::remote_call(port, message_buf)?;
         Ok(Value::String(base64::encode(&response_buf)))
     });
