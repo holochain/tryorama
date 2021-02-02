@@ -181,6 +181,9 @@ export interface TuningParams {
   default_rpc_multi_remote_agent_count: number // default 2
   default_rpc_multi_timeout_ms: number // default 2000
   agent_info_expires_after_ms: number // default 1000 * 60 * 20 (20 minutes)
+  tls_in_mem_session_storage: number // default 512
+  proxy_keepalive_ms: number // default 1000 * 60 * 2 (2 minutes)
+  proxy_to_expire_ms: number // default 1000 * 6 * 5 (5 minutes)
 }
 
 export type KillFn = (signal?: string) => Promise<void>
