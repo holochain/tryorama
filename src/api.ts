@@ -115,19 +115,14 @@ export class ScenarioApi {
   }
 
   shareAllNodes = async (players: Array<Player>) => {
-    let player_nodes = {}
-    for (const player of players) {
-      player_nodes[player.name] = await player.adminWs().requestAgentInfo({ cell_id: null })
-    }
-    for (const player of players) {
-      for (const name in player_nodes) {
-        if (player.name != name) {
-          await player.adminWs().addAgentInfo({ agent_infos: player_nodes[name] })
+    await Promise.all(players.map(async (playerToShareAbout, playerToShareAboutIdx) => {
+      const agentInfosToShareAbout = await playerToShareAbout.adminWs().requestAgentInfo({ cell_id: null })
+      await Promise.all(players.map(async (playerToShareWith, playerToShareWithIdx) => {
+        if (playerToShareAboutIdx !== playerToShareWithIdx) {
+          playerToShareWith.adminWs().addAgentInfo({ agent_infos: agentInfosToShareAbout })
         }
-      }
-    }
-    //   return x
-    //    return new Promise(() => {return x})
+      }))
+    }))
   }
 
   _createTrycpPlayerBuilder = async (trycpClient: TrycpClient, playerName: string, configSeed: T.ConfigSeed): Promise<PlayerBuilder> => {
