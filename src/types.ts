@@ -34,6 +34,7 @@ export type ConfigSeed = (args: ConfigSeedArgs) => IntermediateConfig
 
 export type PartialConfigSeedArgs = {
   adminInterfacePort: number,
+  appInterfacePort?: number,
   configDir: string,
 }
 export type CommonConfig = {
@@ -113,6 +114,13 @@ export interface AdminInterfaceConfig {
   }
 }
 
+export interface AppInterfaceConfig {
+  driver: {
+    type: string
+    port: number
+  }
+}
+
 export interface RawConductorConfig {
   environment_path: string,
   use_dangerous_test_keystore?: boolean,
@@ -121,6 +129,7 @@ export interface RawConductorConfig {
   decryption_service_uri?: string,
   keystore_path?: string,
   admin_interfaces?: AdminInterfaceConfig[],
+  app_interfaces?: AppInterfaceConfig[],
   network?: KitsuneP2pConfig,
   // TODO:
   // passphrase_service?: PassphraseServiceConfig,

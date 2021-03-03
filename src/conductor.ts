@@ -122,7 +122,11 @@ export class Conductor {
 
   initialize = async () => {
     this._onActivity()
-    await this._connectInterfaces()
+    if (this._backend.type === "test") {
+      await this._connectInterfaces(this._backend!.appInterfacePort)
+    } else {
+      await this._connectInterfaces()
+    }
   }
 
   setSignalHandler = (onSignal: ((signal: AppSignal) => void) | null) => {
@@ -213,7 +217,7 @@ export class Conductor {
     return installedAgentHapp
   }
 
-  _connectInterfaces = async () => {
+  _connectInterfaces = async (appPortNumber?) => {
     if (this._backend.type === "test") {
       throw new Error("cannot call _connectInterface without a conductor backend")
     }
@@ -224,8 +228,9 @@ export class Conductor {
       this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
     }
 
+    // defaults to 0 if no appInterface is provided in config
     // 0 in this case means use any open port
-    const { port: appInterfacePort } = await this.adminClient!.attachAppInterface({ port: 0 })
+    const { port: appInterfacePort } = await this.adminClient!.attachAppInterface({ port: appPortNumber || 0 })
 
     switch (this._backend.type) {
       case "local":

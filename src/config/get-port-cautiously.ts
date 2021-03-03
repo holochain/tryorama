@@ -20,7 +20,7 @@ let nextPort = rangeLo
 
 // We can do away with this and just use port = 0 in rsm config,
 // (but we need to find out what port we actually got)
-// NB: the end user should never have to specify a port (they don't now either)
+// NB: the end user should never have to specify a port (they aren't required to now either)
 export const getPort = (): Promise<number> => portMutex.runExclusive(async (): Promise<number> => {
   let port: number = 0
   do {

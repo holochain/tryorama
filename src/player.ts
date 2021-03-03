@@ -18,6 +18,7 @@ type ConstructorArgs = {
   name: string,
   config: RawConductorConfig,
   adminInterfacePort?: number,
+  appInterfacePort?: number,
   onJoin: () => void,
   onLeave: () => void,
   onActivity: () => void,

@@ -23,7 +23,7 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
   })
 }
 
-export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConductorFn => async (player: Player, { handleHook } = {}): Promise<Conductor> => {
+export const spawnLocal = (configDir: string, adminPort: number, appPort?: number): T.SpawnConductorFn => async (player: Player, { handleHook } = {}): Promise<Conductor> => {
   const name = player.name
   const configPath = getConfigPath(configDir)
   let handle
@@ -97,7 +97,8 @@ export const spawnLocal = (configDir: string, adminPort: number): T.SpawnConduct
       backend: {
         type: "local",
         machineHost: "localhost",
-        adminInterfacePort: adminPort
+        adminInterfacePort: adminPort,
+        appInterfacePort: appPort
       },
     })
 

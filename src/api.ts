@@ -147,7 +147,7 @@ export class ScenarioApi {
     return async () => {
       const partialConfigSeedArgs = await localConfigSeedArgs()
       const configYaml = this._generateConfigFromSeed(partialConfigSeedArgs, playerName, configSeed)
-      const { adminInterfacePort, configDir } = partialConfigSeedArgs
+      const { adminInterfacePort, appInterfacePort, configDir } = partialConfigSeedArgs
       await fs.writeFile(getConfigPath(configDir), YAML.stringify(configYaml))
 
       logger.debug('api.players: player config committed for %s', playerName)
@@ -155,7 +155,7 @@ export class ScenarioApi {
         scenarioUUID: this._uuid,
         name: playerName,
         config: configYaml,
-        spawnConductor: spawnLocal(configDir, adminInterfacePort),
+        spawnConductor: spawnLocal(configDir, adminInterfacePort, appInterfacePort),
         onJoin: () => console.log("FIXME: ignoring onJoin"),//instances.forEach(instance => this._waiter.addNode(instance.dna, playerName)),
         onLeave: () => console.log("FIXME: ignoring onLeave"),//instances.forEach(instance => this._waiter.removeNode(instance.dna, playerName)),
         onActivity: () => this._restartTimer(),
