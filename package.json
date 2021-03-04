@@ -24,7 +24,7 @@
   "author": "",
   "license": "Apache-2.0",
   "dependencies": {
-    "@holochain/conductor-api": "0.0.1-dev.16",
+    "@holochain/conductor-api": "holochain/holochain-conductor-api#abf192f25a34229ad28fa97ddfec3360ff551b4a",
     "@holochain/hachiko": "^0.5.2",
     "@iarna/toml": "^2.2.5",
     "@msgpack/msgpack": "^2.1.0",

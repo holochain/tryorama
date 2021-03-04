@@ -32,9 +32,9 @@ import path from 'path'
 const conductorConfig = Config.gen()
 
 // Construct proper paths for your DNAs
-const testDna = path.join(__dirname, 'test.dna.gz')
-const dnaBlog = path.join(__dirname, 'blog.dna.gz')
-const dnaChat = path.join(__dirname, 'chat.dna.gz')
+const testDna = path.join(__dirname, 'test.dna')
+const dnaBlog = path.join(__dirname, 'blog.dna')
+const dnaChat = path.join(__dirname, 'chat.dna')
 
 // create an InstallAgentsHapps array with your DNAs to tell tryorama what
 // to install into the conductor.
@@ -271,7 +271,7 @@ const installation: InstallAgentsHapps = [
     // happ 0
     [
       // dna 0
-      path.join(__dirname, 'test.dna.gz')
+      path.join(__dirname, 'test.dna')
     ]
   ],
 ]
@@ -312,7 +312,7 @@ orchestrator.registerScenario('description of this scenario', async (s, t) => {
     installed_app_id: `my_app:1234`, // my_app with some unique installed id value
     agent_key: await carol.adminWs().generateAgentPubKey(),
     dnas: [{
-      path: path.join(__dirname, 'my_app.dna.gz'),
+      path: path.join(__dirname, 'my_app.dna'),
       nick: `my_cell_nick`,
       properties: {my_property:"override_default_value"},
       membrane_proof: Array.from(msgpack.encode({role:"steward", signature:"..."})),

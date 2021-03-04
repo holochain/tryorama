@@ -15,7 +15,7 @@ process.on('unhandledRejection', error => {
   console.error('****************************');
 });
 
-const dnaLocationLocal = path.join(__dirname, 'test.dna.gz')
+const dnaLocationLocal = path.join(__dirname, 'fixture', 'test.dna')
 
 const localOrchestrator = (extra = {}) => new Orchestrator({
   middleware: compose(runSeries(), localOnly),
@@ -23,7 +23,7 @@ const localOrchestrator = (extra = {}) => new Orchestrator({
   ...extra
 })
 
-testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal))
+//testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 // testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 testSignal(localOrchestrator, () => testConfig(dnaLocationLocal))

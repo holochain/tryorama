@@ -44,7 +44,7 @@ const conductorHapps: InstallAgentsHapps = [
     // happ 0
     [
       // dna 0
-      path.join(__dirname, 'test.dna.gz')
+      path.join(__dirname, 'fixture', 'test.dna')
     ]
   ],
 ]

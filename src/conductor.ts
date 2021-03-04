@@ -6,7 +6,7 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal, DnaSource, InstalledApp } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
 import { TunneledAdminClient, TunneledAppClient } from './trycp'
@@ -137,7 +137,7 @@ export class Conductor {
   }
 
   // this function registers a DNA from a given source
-  registerDna = async (source: T.DnaSource, uuid?, properties?): Promise<HoloHash> => {
+  registerDna = async (source: DnaSource, uuid?, properties?): Promise<HoloHash> => {
     if ("path" in source && "saveDnaRemote" in this._backend) {
       const contents = () => new Promise<Buffer>((resolve, reject) => {
         fs.readFile((source as { path: string }).path, null, (err, data) => {
@@ -151,12 +151,13 @@ export class Conductor {
       source = await this._backend.saveDnaRemote(pathAfterReplacement, contents)
     }
     if ("url" in source) {
-      if (!("downloadDnaRemote" in this._backend)) {
+        throw new Error("dna source can no longer be a URL")
+/*      if (!("downloadDnaRemote" in this._backend)) {
         throw new Error("encountered URL DNA source on non-remote player")
       }
-      source = await this._backend.downloadDnaRemote((source as T.DnaUrl).url)
+      source = await this._backend.downloadDnaRemote((source as T.DnaUrl).url)*/
     }
-    const registerDnaReq: RegisterDnaRequest = { source, uuid, properties }
+    const registerDnaReq: RegisterDnaRequest = { ...source, uuid, properties }
     return await this.adminClient!.registerDna(registerDnaReq)
   }
 
@@ -171,13 +172,14 @@ export class Conductor {
       installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
       dnas: await Promise.all(dnaSources.map(async (src, index) => {
-        let source: T.DnaSource
+        let source: DnaSource
         if (src instanceof Buffer) {
           source = { hash: src }
         } else if (typeof src === "string") {
           source = { path: src }
         } else {
-          source = { url: src.url }
+          throw new Error("dna source can no longer be a URL")
+          //source = { url: src.url }
         }
 
         let dna = {
@@ -194,21 +196,26 @@ export class Conductor {
   // you must create your own app_id and dnas list, this is useful also if you
   // need to pass in properties or membrane-proof
   _installHapp = async (installAppReq: InstallAppRequest): Promise<T.InstalledHapp> => {
-    const { cell_data } = await this.adminClient!.installApp(installAppReq)
+
+    const installedApp: InstalledApp  = await this.adminClient!.installApp(installAppReq)
     // must be activated to be callable
     await this.adminClient!.activateApp({ installed_app_id: installAppReq.installed_app_id })
+
+    // TODO: fix.  For now we can always use the base_cell id.  We we start working with clones
+    // then we need to explicitly reveal slots and clones in tryorama
+    const slots = Object.entries(installedApp.slots)
+    const cells = slots.map(([cellNick, slot]) => new Cell({
+      cellId: slot.base_cell_id,
+      cellNick: cellNick,
+      player: this._player
+    }))
 
     // prepare the result, and create Cell instances
     const installedAgentHapp: T.InstalledHapp = {
       hAppId: installAppReq.installed_app_id,
       agent: installAppReq.agent_key,
       // construct Cell instances which are the most useful class to the client
-      cells: cell_data.map(installedCell => new Cell({
-        // installedCell[0] is the CellId, installedCell[1] is the CellNick
-        cellId: installedCell[0],
-        cellNick: installedCell[1],
-        player: this._player
-      }))
+      cells,
     }
     return installedAgentHapp
   }
