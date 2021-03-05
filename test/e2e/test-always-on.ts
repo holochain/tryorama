@@ -1,11 +1,13 @@
 import * as tape from 'tape'
 import test from 'tape-promise/tape'
+import path from 'path'
 
 import { ScenarioApi } from '../../src/api';
 
 export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.players(...args)) => {
 
   test('test with error', async t => {
+    t.plan(2)
     const [conductorConfig, _installApps] = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('call for conductor after shutdown', async (s: ScenarioApi) => {
@@ -38,10 +40,11 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
     t.equal(stats.successes, 1, 'only success')
     t.equal(stats.errors.length, 0, 'no errors')
     console.log(stats)
+    t.end()
   })
 
   test('test installAgentsHapps', async t => {
-    t.plan(5)
+    t.plan(3)
     const [conductorConfig, _installApp] = testConfig()
     const dnaPath = _installApp[0][0][0] // bleah
     const orchestrator = await testOrchestrator()
@@ -69,5 +72,24 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
     t.equal(stats.successes, 1, 'only success')
     t.equal(stats.errors.length, 0, 'no errors')
     console.log(stats)
+    t.end()
+  })
+
+  test('test with happ bundles', async t => {
+    t.plan(3)
+    const [conductorConfig, _installApps] = testConfig()
+    const orchestrator = await testOrchestrator()
+    orchestrator.registerScenario('installBundledHapp', async (s: ScenarioApi) => {
+      const [alice] = await playersFn(s, [conductorConfig])
+      const bundlePath = path.join(__dirname, 'fixture', 'test.happ')
+      const alice_happ = await alice.installBundledHapp({path: bundlePath})
+      const hash = await alice_happ.cells[0].call('test', 'create_link')
+      t.equal(hash.length, 39, 'zome call succeeded')
+    })
+    const stats = await orchestrator.run()
+    t.equal(stats.successes, 1, 'only success')
+    t.equal(stats.errors.length, 0, 'no errors')
+    console.log(stats)
+    t.end()
   })
 }

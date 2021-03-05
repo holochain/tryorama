@@ -23,7 +23,7 @@ const localOrchestrator = (extra = {}) => new Orchestrator({
   ...extra
 })
 
-//testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal))
+testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 // testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 testSignal(localOrchestrator, () => testConfig(dnaLocationLocal))

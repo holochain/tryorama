@@ -5,7 +5,7 @@ import { Cell } from './cell'
 import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash, DnaSource } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash, DnaSource, AppBundleSource } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -146,6 +146,16 @@ export class Player {
   registerDna = async (source: DnaSource, ...params): Promise<HoloHash> => {
     this._conductorGuard(`Player.registerDna(source ${JSON.stringify(source)}, params ${JSON.stringify(params)})`)
     return this._conductor!.registerDna(source, ...params)
+  }
+
+  /**
+   * expose installBundledHapp at the player level for in-scenario dynamic installation of apps
+   * optionally takes an AgentPubKey so that you can control who's who if you need to
+   * otherwise will be a new and different agent every time you call it
+   */
+  installBundledHapp = async (bundleSource: AppBundleSource, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player.installBundledHapp(${JSON.stringify(bundleSource)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
+    return this._conductor!.installBundledHapp(bundleSource, agentPubKey)
   }
 
   /**
