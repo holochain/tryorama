@@ -32,6 +32,7 @@ import path from 'path'
 const conductorConfig = Config.gen()
 
 // Construct proper paths for your DNAs
+// This assumes dna files created by the `hc dna pack` command
 const testDna = path.join(__dirname, 'test.dna')
 const dnaBlog = path.join(__dirname, 'blog.dna')
 const dnaChat = path.join(__dirname, 'chat.dna')
@@ -297,9 +298,13 @@ export type InstalledHapp = {
 
 ### Advanced Usage
 
+For complete control, i.e. if you need to add properties or a membrane-proof to you happ
+you can also install a happ using the holochain-conductor-app InstallAppRequest or
+InstallAppBundleRequest data structures using the `_installHapp` and `_installBundledHapp`
+functions of the player object.
+
+
 ```javascript
-// for complete control, i.e. if you need to add properties or a membrane-proof to
-// you can also install a happ using the holochain-conductor-app InstallAppRequest data structure:
 import { InstallAppRequest } from '@holochain/conductor-api'
 import * as msgpack from '@msgpack/msgpack';
 
