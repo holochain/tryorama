@@ -173,10 +173,18 @@ export class Conductor {
       agent_key: agentPubKey,
       membrane_proofs: {}
     }
+    return await this._installBundledHapp(installAppBundleReq)
+  }
+
+  // install a hApp using the InstallAppBundleRequest struct from conductor-admin-api
+  // you must create your own app_id and bundle, this is useful also if you
+  // need to pass in uuid, properties or membrane-proof
+  _installBundledHapp = async (installAppBundleReq: InstallAppBundleRequest): Promise<T.InstalledHapp> => {
+
     const installedApp: InstalledApp  = await this.adminClient!.installAppBundle(installAppBundleReq)
     // must be activated to be callable
-    await this.adminClient!.activateApp({ installed_app_id: installedAppId })
-    return  this._makeInstalledAgentHapp(installedApp)
+    await this.adminClient!.activateApp({ installed_app_id: installedApp.installed_app_id })
+    return this._makeInstalledAgentHapp(installedApp)
   }
 
   // this function will auto-generate an `installed_app_id` and
