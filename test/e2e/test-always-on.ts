@@ -3,6 +3,8 @@ import test from 'tape-promise/tape'
 import path from 'path'
 
 import { ScenarioApi } from '../../src/api';
+import { Config } from '../../src'
+import * as T from '../../src/types'
 
 export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.players(...args)) => {
 
@@ -31,7 +33,16 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
     const [conductorConfig, installApps] = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('simple zome call', async (s: ScenarioApi) => {
-      const [alice] = await playersFn(s, [conductorConfig])
+      const seed: T.ConfigSeed = Config.gen({
+        network: {
+          transport_pool: [{
+            type: T.TransportConfigType.Quic,
+          }],
+        },
+        appPort: 6000
+      }
+      )
+      const [alice] = await playersFn(s, [seed])
       const [[alice_happ]] = await alice.installAgentsHapps(installApps)
       const hash = await alice_happ.cells[0].call('test', 'create_link')
       t.equal(hash.length, 39, 'zome call succeeded')

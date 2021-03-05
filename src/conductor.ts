@@ -28,6 +28,7 @@ type ConstructorArgs = {
     type: "local",
     machineHost: string,
     adminInterfacePort: number,
+    appInterfacePort: number,
   } | {
     type: "trycp",
     adminInterfaceCall: (req: any) => Promise<any>,
@@ -63,6 +64,7 @@ export class Conductor {
   _backend: {
     type: "local",
     adminInterfacePort: number
+    appInterfacePort: number
     machineHost: string
   } | {
     type: "trycp",
@@ -254,14 +256,17 @@ export class Conductor {
       throw new Error("cannot call _connectInterface without a conductor backend")
     }
     this._onActivity()
+    // 0 in this case means use any open port
+    let appPortNumber = 0;
     if (this._backend.type === "local") {
       const adminWsUrl = `ws://${this._backend.machineHost}:${this._backend.adminInterfacePort}`
       this.adminClient = await AdminWebsocket.connect(adminWsUrl)
       this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+      appPortNumber = this._backend.appInterfacePort
     }
-
-    // 0 in this case means use any open port
-    const { port: appInterfacePort } = await this.adminClient!.attachAppInterface({ port: 0 })
+    const {port: appInterfacePort} = await this.adminClient!.attachAppInterface({ port: appPortNumber })
+     console.log("App Port spun up on port ", appInterfacePort);
+      
 
     switch (this._backend.type) {
       case "local":
