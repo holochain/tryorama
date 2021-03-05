@@ -148,7 +148,6 @@ export class ScenarioApi {
       const partialConfigSeedArgs = await localConfigSeedArgs()
       const configYaml = this._generateConfigFromSeed(partialConfigSeedArgs, playerName, configSeed)
       let { admin_interfaces, app_interfaces, environment_path: configDir } = configYaml
-      // const { adminInterfacePort, configDir } = partialConfigSeedArgs
       await fs.writeFile(getConfigPath(configDir), YAML.stringify(configYaml))
       let adminInterfacePort: number = 0;
       if(admin_interfaces) {
