@@ -1,10 +1,10 @@
 #!/bin/bash
 
-REV=5812b41398e857134f780621dc1aa7bc6c05c5f0
+REV=2912d115e61889adba6845397e2d21f7d0d4517f
 LAIR_REV=be5868e6dcbe99c795a101c0e27ba6ed5edd557d
 
-#export CARGO_TARGET_DIR="$PWD/target"
-#echo $CARGO_TARGET_DIR
+export CARGO_TARGET_DIR="$PWD/target"
+echo $CARGO_TARGET_DIR
 cargo install --force holochain \
   --git https://github.com/holochain/holochain.git \
   --rev $REV
