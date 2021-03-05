@@ -8,7 +8,7 @@ import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
 import { Cell } from './cell';
-import { AgentPubKey, HoloHash } from '@holochain/conductor-api';
+import { AgentPubKey, HoloHash, DnaSource as LocalDnaSource } from '@holochain/conductor-api';
 
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
@@ -78,6 +78,8 @@ export type DnaSrc = DnaPath | HoloHash | DnaUrl
 export type InstallHapp = DnaSrc[]
 export type DnaPath = string
 export type DnaUrl = { url: string }
+
+export type DnaSource = LocalDnaSource | { url: string }
 
 // the mirror of InstallAgentHapps
 export type InstalledAgentHapps = InstalledHapps[]

@@ -6,7 +6,7 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, InstallAppBundleRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal, DnaSource, InstalledApp, AppBundleSource } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, InstallAppBundleRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal, InstalledApp, AppBundleSource } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
 import { TunneledAdminClient, TunneledAppClient } from './trycp'
@@ -137,7 +137,7 @@ export class Conductor {
   }
 
   // this function registers a DNA from a given source
-  registerDna = async (source: DnaSource, uuid?, properties?): Promise<HoloHash> => {
+  registerDna = async (source: T.DnaSource, uuid?, properties?): Promise<HoloHash> => {
     if ("path" in source && "saveDnaRemote" in this._backend) {
       const contents = () => new Promise<Buffer>((resolve, reject) => {
         fs.readFile((source as { path: string }).path, null, (err, data) => {
@@ -151,11 +151,10 @@ export class Conductor {
       source = await this._backend.saveDnaRemote(pathAfterReplacement, contents)
     }
     if ("url" in source) {
-        throw new Error("dna source can no longer be a URL")
-/*      if (!("downloadDnaRemote" in this._backend)) {
+      if (!("downloadDnaRemote" in this._backend)) {
         throw new Error("encountered URL DNA source on non-remote player")
       }
-      source = await this._backend.downloadDnaRemote((source as T.DnaUrl).url)*/
+      source = await this._backend.downloadDnaRemote((source as T.DnaUrl).url)
     }
     const registerDnaReq: RegisterDnaRequest = { ...source, uuid, properties }
     return await this.adminClient!.registerDna(registerDnaReq)
@@ -191,14 +190,13 @@ export class Conductor {
       installed_app_id: `app-${uuidGen()}`,
       agent_key: agentPubKey,
       dnas: await Promise.all(dnaSources.map(async (src, index) => {
-        let source: DnaSource
+        let source: T.DnaSource
         if (src instanceof Buffer) {
           source = { hash: src }
         } else if (typeof src === "string") {
           source = { path: src }
         } else {
-          throw new Error("dna source can no longer be a URL")
-          //source = { url: src.url }
+          source = { url: src.url }
         }
 
         let dna = {

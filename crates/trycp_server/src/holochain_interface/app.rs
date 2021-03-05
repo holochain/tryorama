@@ -73,13 +73,6 @@ fn handle_response(message: ws::Message, connection_state: &Mutex<ConnectionStat
                 .push(serde_json::Value::String(encoded));
         }
         Ok(Message::Response { id, data }) => {
-            let id: usize = match id.parse() {
-                Ok(id) => id,
-                Err(_) => {
-                    println!("warning: received response with unexpected ID from app interface; dropping");
-                    return;
-                }
-            };
             let encoded = base64::encode(data);
             let mut connection_state_lock_guard = connection_state.lock();
             let responses_awaited = &mut connection_state_lock_guard.responses_awaited;
@@ -128,7 +121,7 @@ fn call(
         let mut connection_state_lock_guard = connection_state.lock();
         let vacant_response_entry = connection_state_lock_guard.responses_awaited.vacant_entry();
         match handle.send(crate::holochain_interface::request(
-            vacant_response_entry.key().to_string(),
+            vacant_response_entry.key(),
             message_buf,
         )) {
             Ok(()) => {

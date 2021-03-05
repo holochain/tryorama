@@ -5,7 +5,7 @@ import { Cell } from './cell'
 import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash, DnaSource, AppBundleSource } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash, AppBundleSource } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -143,7 +143,7 @@ export class Player {
   /**
    * expose registerDna at the player level for in-scenario dynamic installation of apps
    */
-  registerDna = async (source: DnaSource, ...params): Promise<HoloHash> => {
+  registerDna = async (source: T.DnaSource, ...params): Promise<HoloHash> => {
     this._conductorGuard(`Player.registerDna(source ${JSON.stringify(source)}, params ${JSON.stringify(params)})`)
     return this._conductor!.registerDna(source, ...params)
   }
