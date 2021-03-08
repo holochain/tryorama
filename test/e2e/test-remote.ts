@@ -51,13 +51,14 @@ export default (testOrchestrator, testConfig, playersFn) => {
             await alice.startup()
             const install: T.InstallAgentsHapps = [
                 // agent 0
-                [
+                [{
                     // happ 0
-                    [
+                    hAppId: null,
+                    dnas: [
                         // cell 0
                         { url: `file://${installApps[0][0][0]}` }
                     ]
-                ]
+                }]
             ]
             const [[alice_happ]] = await alice.installAgentsHapps(install)
             const [link_cell] = alice_happ.cells
