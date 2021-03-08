@@ -42,11 +42,13 @@ const conductorHapps: InstallAgentsHapps = [
   // agent 0 ...
   [
     // happ 0
-    [
+    {
+      hAppId: null,
       // dna 0
-      path.join(__dirname, 'test.dna.gz')
+      dnas: [
+        path.join(__dirname, 'test.dna.gz')
     ]
-  ],
+    }],
 ]
 
 orchestrator.registerScenario('basic test', async (s: ScenarioApi, t) => {
