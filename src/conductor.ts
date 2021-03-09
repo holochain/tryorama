@@ -230,7 +230,7 @@ export class Conductor {
 
   _makeInstalledAgentHapp = (installedApp: InstalledApp): T.InstalledHapp => {
 
-   // TODO: fix.  For now we can always use the base_cell id.  We we start working with clones
+    // TODO: fix.  For now we can always use the base_cell_id.  When we start working with clones
     // then we need to explicitly reveal slots and clones in tryorama
     const slots = Object.entries(installedApp.slots)
     const cells = slots.map(([cellNick, slot]) => new Cell({
