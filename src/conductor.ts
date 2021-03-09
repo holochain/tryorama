@@ -233,17 +233,17 @@ export class Conductor {
     // TODO: fix.  For now we can always use the base_cell_id.  When we start working with clones
     // then we need to explicitly reveal slots and clones in tryorama
     const slots = Object.entries(installedApp.slots)
+
+    // construct Cell instances which are the most useful class to the client
     const cells = slots.map(([cellNick, slot]) => new Cell({
       cellId: slot.base_cell_id,
       cellNick: cellNick,
       player: this._player
     }))
 
-    // prepare the result, and create Cell instances
     const installedAgentHapp: T.InstalledHapp = {
       hAppId: installedApp.installed_app_id,
       agent: installedApp._agent_key,
-      // construct Cell instances which are the most useful class to the client
       cells,
     }
     return installedAgentHapp
