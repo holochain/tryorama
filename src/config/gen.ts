@@ -30,6 +30,14 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
         },
       },
     ],
+    app_interfaces: [
+      {
+        driver: {
+          type: 'websocket',
+          port: commonConfig.appPort || 0,
+        },
+      },
+    ],
     ...(commonConfig.network ? { network: commonConfig.network } : {})
   }
 

@@ -37,7 +37,8 @@ export type PartialConfigSeedArgs = {
   configDir: string,
 }
 export type CommonConfig = {
-  network?: KitsuneP2pConfig
+  network?: KitsuneP2pConfig,
+  appPort?: number
 }
 
 export type ConfigSeedArgs = PartialConfigSeedArgs & {
@@ -106,7 +107,7 @@ export type InstalledHapp = {
 
 export const adminWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
 
-export interface AdminInterfaceConfig {
+export interface WsInterfaceConfig {
   driver: {
     type: string
     port: number
@@ -120,7 +121,8 @@ export interface RawConductorConfig {
   encryption_service_uri?: string,
   decryption_service_uri?: string,
   keystore_path?: string,
-  admin_interfaces?: AdminInterfaceConfig[],
+  admin_interfaces?: WsInterfaceConfig[],
+  app_interfaces?: WsInterfaceConfig[],
   network?: KitsuneP2pConfig,
   // TODO:
   // passphrase_service?: PassphraseServiceConfig,
