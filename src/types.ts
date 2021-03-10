@@ -76,10 +76,7 @@ sometimes we can write it like this to make it easier to read
 export type InstallAgentsHapps = InstallHapps[]
 export type InstallHapps = InstallHapp[]
 export type DnaSrc = DnaPath | HoloHash | DnaUrl
-export type InstallHapp =  { 
-  hAppId: string | null,
-  dnas: DnaSrc[]
-}
+export type InstallHapp = DnaSrc[]
 export type DnaPath = string
 export type DnaUrl = { url: string }
 
