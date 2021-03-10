@@ -28,7 +28,7 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
     t.end()
   })
 
-  test('test with simple zome call and', async t => {
+  test('test with simple zome call and assigned appPort', async t => {
     t.plan(3)
     const [conductorConfig, installApps] = testConfig()
     const orchestrator = await testOrchestrator()

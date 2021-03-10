@@ -11,7 +11,7 @@ export const testOrchestrator = () => new Orchestrator({
   }
 })
 
-export const testConfig = (dnaPath: string, hAppId?: string) => {
+export const testConfig = (dnaPath: string) => {
   const seed: T.ConfigSeed = Config.gen({
     network: {
       transport_pool: [{
@@ -21,12 +21,10 @@ export const testConfig = (dnaPath: string, hAppId?: string) => {
   )
   const install: T.InstallAgentsHapps = [
     // agent 0
-    [{
+    [
       // happ 0
-      hAppId: hAppId || null,
-      dnas: [dnaPath],
-
-    }]
+      [dnaPath]
+    ]
   ]
   return [seed, install]
 }
