@@ -168,6 +168,10 @@ export class TunneledAdminClient {
     return this.adminInterfaceCall({ type: 'install_app', data })
   }
 
+  installAppBundle(data: conductorApi.InstallAppBundleRequest): Promise<conductorApi.InstallAppBundleResponse> {
+    return this.adminInterfaceCall({ type: 'install_app_bundle', data })
+  }
+
   listActiveApps(): Promise<conductorApi.ListActiveAppsResponse> {
     return this.adminInterfaceCall({ type: 'list_active_apps' })
   }

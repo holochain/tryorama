@@ -9,7 +9,7 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 
 Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
-Note: this version of tryorama is tested against holochain rev 0936025e957056bde8ad5a683fa18d91c71d46fc.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
+Note: this version of tryorama is tested against holochain rev a82372a62d46a503e48f345360d0fb18cc5822d1.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
 
 ```bash
 npm install @holochain/tryorama
@@ -32,9 +32,10 @@ import path from 'path'
 const conductorConfig = Config.gen()
 
 // Construct proper paths for your DNAs
-const testDna = path.join(__dirname, 'test.dna.gz')
-const dnaBlog = path.join(__dirname, 'blog.dna.gz')
-const dnaChat = path.join(__dirname, 'chat.dna.gz')
+// This assumes dna files created by the `hc dna pack` command
+const testDna = path.join(__dirname, 'test.dna')
+const dnaBlog = path.join(__dirname, 'blog.dna')
+const dnaChat = path.join(__dirname, 'chat.dna')
 
 // create an InstallAgentsHapps array with your DNAs to tell tryorama what
 // to install into the conductor.
@@ -162,7 +163,19 @@ const network = {
       proxy_accept_config: ProxyAcceptConfig.AcceptAll
     }
   }],
-  bootstrap_service: "https://bootstrap.holo.host"
+  bootstrap_service: "https://bootstrap.holo.host",
+  tuning_params: {
+    gossip_loop_iteration_delay_ms: 10,
+    default_notify_remote_agent_count: 5,
+    default_notify_timeout_ms: number 1000,
+    default_rpc_single_timeout_ms:  2000,
+    default_rpc_multi_remote_agent_count: 2,
+    default_rpc_multi_timeout_ms: number 2000,
+    agent_info_expires_after_ms: 1000 * 60 * 20,
+    tls_in_mem_session_storage: 512,
+    proxy_keepalive_ms: 1000 * 60 * 2,
+    proxy_to_expire_ms: 1000 * 6 * 5
+  }
 }
 Config.gen({network})
 ```
@@ -271,7 +284,7 @@ const installation: InstallAgentsHapps = [
     // happ 0
     [
       // dna 0
-      path.join(__dirname, 'test.dna.gz')
+      path.join(__dirname, 'test.dna')
     ]
   ],
 ]
@@ -297,9 +310,13 @@ export type InstalledHapp = {
 
 ### Advanced Usage
 
+For complete control, i.e. if you need to add properties or a membrane-proof to you happ
+you can also install a happ using the holochain-conductor-app InstallAppRequest or
+InstallAppBundleRequest data structures using the `_installHapp` and `_installBundledHapp`
+functions of the player object.
+
+
 ```javascript
-// for complete control, i.e. if you need to add properties or a membrane-proof to
-// you can also install a happ using the holochain-conductor-app InstallAppRequest data structure:
 import { InstallAppRequest } from '@holochain/conductor-api'
 import * as msgpack from '@msgpack/msgpack';
 
@@ -312,7 +329,7 @@ orchestrator.registerScenario('description of this scenario', async (s, t) => {
     installed_app_id: `my_app:1234`, // my_app with some unique installed id value
     agent_key: await carol.adminWs().generateAgentPubKey(),
     dnas: [{
-      path: path.join(__dirname, 'my_app.dna.gz'),
+      path: path.join(__dirname, 'my_app.dna'),
       nick: `my_cell_nick`,
       properties: {my_property:"override_default_value"},
       membrane_proof: Array.from(msgpack.encode({role:"steward", signature:"..."})),

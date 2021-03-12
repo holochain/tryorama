@@ -8,7 +8,7 @@ import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
 import { Cell } from './cell';
-import { AgentPubKey, HoloHash } from '@holochain/conductor-api';
+import { AgentPubKey, HoloHash, DnaSource as LocalDnaSource } from '@holochain/conductor-api';
 
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
@@ -79,10 +79,6 @@ export type DnaSrc = DnaPath | HoloHash | DnaUrl
 export type InstallHapp = DnaSrc[]
 export type DnaPath = string
 export type DnaUrl = { url: string }
-
-// This type was inadvertently not exported in holochain-conductor-api dev16, so
-// in needs to be removed from here when it gets added back
-type LocalDnaSource = { hash: HoloHash } | { path: DnaPath } // | {dna_file: DnaFile}
 
 export type DnaSource = LocalDnaSource | { url: string }
 

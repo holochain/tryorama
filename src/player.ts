@@ -2,10 +2,10 @@ import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
 import { Cell } from './cell'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp, DnaSource } from './types';
+import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash, AppBundleSource, InstallAppBundleRequest } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -143,9 +143,28 @@ export class Player {
   /**
    * expose registerDna at the player level for in-scenario dynamic installation of apps
    */
-  registerDna = async (source: DnaSource, ...params): Promise<HoloHash> => {
+  registerDna = async (source: T.DnaSource, ...params): Promise<HoloHash> => {
     this._conductorGuard(`Player.registerDna(source ${JSON.stringify(source)}, params ${JSON.stringify(params)})`)
     return this._conductor!.registerDna(source, ...params)
+  }
+
+  /**
+   * expose installBundledHapp at the player level for in-scenario dynamic installation of apps
+   * optionally takes an AgentPubKey so that you can control who's who if you need to
+   * otherwise will be a new and different agent every time you call it
+   */
+  installBundledHapp = async (bundleSource: AppBundleSource, agentPubKey?: AgentPubKey, installedAppId?: string): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player.installBundledHapp(${JSON.stringify(bundleSource)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
+    return this._conductor!.installBundledHapp(bundleSource, agentPubKey, installedAppId)
+  }
+
+  /**
+   * expose _installBundledHapp at the player level for in-scenario dynamic installation of apps
+   * using admin api's InstallAppBundleRequest for more detailed control
+   */
+  _installBundledHapp = async (happ: InstallAppBundleRequest): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player._installHapp(${JSON.stringify(happ)})`)
+    return this._conductor!._installBundledHapp(happ)
   }
 
   /**

@@ -8,12 +8,12 @@ pub mod app;
 #[serde(tag = "type")]
 enum Message {
     Request {
-        id: String,
+        id: usize,
         #[serde(with = "serde_bytes")]
         data: Vec<u8>,
     },
     Response {
-        id: String,
+        id: usize,
         #[serde(with = "serde_bytes")]
         data: Vec<u8>,
     },
@@ -23,7 +23,7 @@ enum Message {
     },
 }
 
-pub fn request(id: String, data_buf: Vec<u8>) -> Vec<u8> {
+pub fn request(id: usize, data_buf: Vec<u8>) -> Vec<u8> {
     let msg = Message::Request { id, data: data_buf };
     rmp_serde::to_vec_named(&msg).expect("serialization cannot fail")
 }
@@ -49,7 +49,8 @@ fn parse_holochain_response(response: ws::Message) -> Result<Vec<u8>, String> {
 }
 
 pub fn remote_call(port: u16, data_buf: Vec<u8>) -> Result<Vec<u8>, jsonrpc_core::Error> {
-    let message_buf = request(String::new(), data_buf);
+    let id = 1;
+    let message_buf = request(id, data_buf);
     let (res_tx, res_rx) = crossbeam::channel::bounded(1);
     let mut capture_vars = Some((res_tx, message_buf));
     ws::connect(format!("ws://localhost:{}", port), move |out| {

@@ -1,5 +1,6 @@
 import * as tape from 'tape'
 import test from 'tape-promise/tape'
+import path from 'path'
 
 import { ScenarioApi } from '../../src/api';
 import { Config } from '../../src'
@@ -8,6 +9,7 @@ import * as T from '../../src/types'
 export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.players(...args)) => {
 
   test('test with error', async t => {
+    t.plan(2)
     const [conductorConfig, _installApps] = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('call for conductor after shutdown', async (s: ScenarioApi) => {
@@ -49,37 +51,56 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
     t.equal(stats.successes, 1, 'only success')
     t.equal(stats.errors.length, 0, 'no errors')
     console.log(stats)
+    t.end()
   })
 
   test('test installAgentsHapps', async t => {
-    t.plan(5)
+    t.plan(3)
     const [conductorConfig, _installApp] = testConfig()
+    const dnaPath = _installApp[0][0][0] // bleah
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('installAgentsHapps correctly shares agentPubKey', async (s: ScenarioApi) => {
       const [alice] = await playersFn(s, [conductorConfig])
       const installAppsOverride = [
         // agent 0
-        [[], []],
+        [[dnaPath]],
         // agent 1
-        [[], []]
+        [[dnaPath]]
       ]
-      // note that hApps can still be installed
-      // without any DNAs in them
       const [
-        [happ1, happ2],
-        [happ3, happ4]
+        [happ1],
+        [happ2]
       ] = await alice.installAgentsHapps(installAppsOverride)
 
       // happ1 and happ2 share "agent 0"
-      t.deepEqual(happ1.agent, happ2.agent)
+      //t.deepEqual(happ1.agent, happ2.agent)
       // happ3 and happ4 share "agent 1"
-      t.deepEqual(happ3.agent, happ4.agent)
+      //t.deepEqual(happ3.agent, happ4.agent)
       // "agent 0" and "agent 1" are in fact different
-      t.notDeepEqual(happ1.agent, happ3.agent)
+      t.notDeepEqual(happ1.agent, happ2.agent)
     })
     const stats = await orchestrator.run()
     t.equal(stats.successes, 1, 'only success')
     t.equal(stats.errors.length, 0, 'no errors')
     console.log(stats)
+    t.end()
+  })
+
+  test('test with happ bundles', async t => {
+    t.plan(3)
+    const [conductorConfig, _installApps] = testConfig()
+    const orchestrator = await testOrchestrator()
+    orchestrator.registerScenario('installBundledHapp', async (s: ScenarioApi) => {
+      const [alice] = await playersFn(s, [conductorConfig])
+      const bundlePath = path.join(__dirname, 'fixture', 'test.happ')
+      const alice_happ = await alice.installBundledHapp({path: bundlePath})
+      const hash = await alice_happ.cells[0].call('test', 'create_link')
+      t.equal(hash.length, 39, 'zome call succeeded')
+    })
+    const stats = await orchestrator.run()
+    t.equal(stats.successes, 1, 'only success')
+    t.equal(stats.errors.length, 0, 'no errors')
+    console.log(stats)
+    t.end()
   })
 }

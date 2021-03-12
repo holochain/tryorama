@@ -1,14 +1,14 @@
 #!/bin/bash
 
-REV=63b9fca72bf88b5760ad106256d3882f143d4f25
-LAIR_REV=be5868e6dcbe99c795a101c0e27ba6ed5edd557d
+REV=a82372a62d46a503e48f345360d0fb18cc5822d1
+LAIR_REV=a01a40640574d3cfabae33dfe3f861de7bd7a57c
 
 export CARGO_TARGET_DIR="$PWD/target"
 echo $CARGO_TARGET_DIR
 cargo install --force holochain \
   --git https://github.com/holochain/holochain.git \
   --rev $REV
-cargo install --force dna_util \
+cargo install holochain_cli --force --bin hc \
   --git https://github.com/holochain/holochain.git \
   --rev $REV
 cargo install --force lair_keystore \
