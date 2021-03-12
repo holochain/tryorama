@@ -9,7 +9,7 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 
 Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
-Note: this version of tryorama is tested against holochain rev 0936025e957056bde8ad5a683fa18d91c71d46fc.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
+Note: this version of tryorama is tested against holochain rev a82372a62d46a503e48f345360d0fb18cc5822d1.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
 
 ```bash
 npm install @holochain/tryorama
