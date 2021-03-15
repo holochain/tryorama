@@ -163,7 +163,7 @@ export enum ProxyAcceptConfig {
 
 export enum NetworkType {
     QuicBootstrap = 'quic_bootstrap',
-    QuicMdns = 'quick_mdns'
+    QuicMdns = 'quic_mdns'
 }
 
 export type TransportConfig = (Mem | Quic | Proxy)
