@@ -2,10 +2,11 @@ import * as T from '../types'
 import _ from 'lodash'
 import path from 'path'
 
-// default networking is for local Quic (no bootstrap) so that
-// shareAllNodes works out of the box
+// default networking type is for QuicBootstrap but we don't provide a
+// bootstrap server, so default action discovery is explicit with shareAllNodes
 const defaultCommonConfig = {
   network: {
+    network_type: T.NetworkType.QuicBootstrap,
     transport_pool: [{
       type: T.TransportConfigType.Quic,
     }],
@@ -17,11 +18,11 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
 ): T.RawConductorConfig => {
   const { configDir, adminInterfacePort, uuid } = args
   const keystorePath = path.join(configDir, 'keystore');
-  
+
   // don't put any keys on this object that you want to fall back to defaults
   const specific: T.RawConductorConfig = {
     environment_path: configDir,
-    keystore_path: keystorePath, 
+    keystore_path: keystorePath,
     admin_interfaces: [
       {
         driver: {

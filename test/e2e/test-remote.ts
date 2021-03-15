@@ -42,7 +42,7 @@ export default (testOrchestrator, testConfig, playersFn) => {
             t.equal(config.signing_service_uri, null)
             t.equal(config.encryption_service_uri, null)
             t.equal(config.decryption_service_uri, null)
-            t.deepEqual(config.network, { transport_pool: [{ type: 'quic' }] })
+            t.deepEqual(config.network, { network_type: 'quic_bootstrap', transport_pool: [{ type: 'quic' }] })
             t.equal(config.dpki, null)
         })
 

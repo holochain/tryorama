@@ -161,11 +161,17 @@ export enum ProxyAcceptConfig {
   RejectAll = 'reject_all'
 }
 
+export enum NetworkType {
+    QuicBootstrap = 'quic_bootstrap',
+    QuicMdns = 'quick_mdns'
+}
+
 export type TransportConfig = (Mem | Quic | Proxy)
 
 // Derived from https://github.com/holochain/holochain/blob/d3a991df1732603419adbda96e8fb8e525e829cb/crates/kitsune_p2p/kitsune_p2p/src/config.rs
 // must stay in sync
 export interface KitsuneP2pConfig {
+  network_type: NetworkType,
   transport_pool: TransportConfig[],
   bootstrap_service?: Url2
   tuning_params?: TuningParams
