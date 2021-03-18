@@ -35,6 +35,7 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
     orchestrator.registerScenario('simple zome call', async (s: ScenarioApi) => {
       const seed: T.ConfigSeed = Config.gen({
         network: {
+          network_type: T.NetworkType.QuicBootstrap,
           transport_pool: [{
             type: T.TransportConfigType.Quic,
           }],

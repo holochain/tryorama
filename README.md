@@ -153,8 +153,9 @@ Custom networking settings are passed as a `commonConfig` in `Config.gen()`
 
 #### Exampe of use for  TransportConfigType `Proxy`
 ```javascript
-import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from '@holochain/tryorama'
+import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType, NetworkType } from '@holochain/tryorama'
 const network = {
+  network_type: NetworkType.QuicBootstrap",
   transport_pool: [{
     type: TransportConfigType.Proxy,
     sub_transport: {type: TransportConfigType.Quic},
