@@ -1,4 +1,4 @@
-import { v4 as uuidGen } from 'uuid'
+import { v4 as uidGen } from 'uuid'
 import * as _ from 'lodash'
 import * as T from "./types";
 import * as M from "./middleware";
@@ -161,11 +161,10 @@ export class Orchestrator<S> {
       '_globalConfig',
       'waiterConfig',
     ])
-    const api = new ScenarioApi(desc, orchestratorData, uuidGen())
+    const api = new ScenarioApi(desc, orchestratorData, uidGen())
     const runner = scenario => scenario(api)
     const execute = () => this._middleware(runner, scenario)
     this._scenarios.push({ api, desc, execute, modifier })
   }
 
 }
-
