@@ -14,7 +14,7 @@ import { TunneledAdminClient, TunneledAppClient } from './trycp';
 const fs = require('fs').promises
 
 type ConstructorArgs = {
-  scenarioUUID: string,
+  scenarioUID: string,
   name: string,
   config: RawConductorConfig,
   adminInterfacePort?: number,
@@ -41,20 +41,20 @@ export class Player {
   onLeave: () => void
   onSignal: ((signal: any) => void) | null = null
   onActivity: () => void
-  scenarioUUID: string
+  scenarioUID: string
 
   _conductor: Conductor | null
   _adminInterfacePort?: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ scenarioUUID, name, config, adminInterfacePort, onJoin, onLeave, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ scenarioUID, name, config, adminInterfacePort, onJoin, onLeave, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
     this.onLeave = onLeave
     this.onActivity = onActivity
     this.config = config
-    this.scenarioUUID = scenarioUUID,
+    this.scenarioUID = scenarioUID,
 
       this._conductor = null
     this._adminInterfacePort = adminInterfacePort

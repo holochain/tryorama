@@ -44,7 +44,7 @@ export type CommonConfig = {
 export type ConfigSeedArgs = PartialConfigSeedArgs & {
   scenarioName: string,
   playerName: string,
-  uuid: string,
+  uid: string,
 }
 
 // export type PlayerConfigs = ObjectS<PlayerConfig>

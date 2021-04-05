@@ -16,7 +16,7 @@ const defaultCommonConfig = {
 export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
   args: T.ConfigSeedArgs
 ): T.RawConductorConfig => {
-  const { configDir, adminInterfacePort, uuid } = args
+  const { configDir, adminInterfacePort, uid } = args
   const keystorePath = path.join(configDir, 'keystore');
 
   // don't put any keys on this object that you want to fall back to defaults

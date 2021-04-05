@@ -54,7 +54,7 @@ If you need your conductor to be configured in a really specific way, fear not, 
 
 > 3. Conductors from different scenarios must remain independent and invisible to each other
 
-To achieve the independence of conductors, Tryorama ensure that various values are unique. It uses UUIDs during DNA config as well as for Agent IDs to ensure unique values; it ensures that it automatically creates temp directories for file storage when necessary, adding the paths to the config. So how can we let Tryorama handle these concerns while still generating a custom config? The answer is in a key concept:
+To achieve the independence of conductors, Tryorama ensure that various values are unique. It uses UIDs during DNA config as well as for Agent IDs to ensure unique values; it ensures that it automatically creates temp directories for file storage when necessary, adding the paths to the config. So how can we let Tryorama handle these concerns while still generating a custom config? The answer is in a key concept:
 
 **Players are configured by giving them *functions* that generate their config**. For instance, when you call `Config.gen`, it's actually creating a function for you like this:
 
@@ -63,7 +63,7 @@ To achieve the independence of conductors, Tryorama ensure that various values a
 const config = Config.gen({alice: dnaConfig})
 
 // becomes this
-const config = ({playerName, uuid, configDir, adminInterfacePort}) => {
+const config = ({playerName, uid, configDir, adminInterfacePort}) => {
   return {
     environment_path: configDir,
     network: {/* ... */},
@@ -80,7 +80,7 @@ Config seeds take an object as a parameter, with five values:
 
 * `scenarioName`: the name of the current scenario, i.e. `registerScenario(scenarioName, ...)`
 * `playerName`: the name of the player for this conductor, e.g. `"alice"`
-* `uuid`: a UUID which is guaranteed to be the same within a scenario but unique between different scenarios
+* `uid`: a UID which is guaranteed to be the same within a scenario but unique between different scenarios
 * `configDir`: a temp dir created specifically for this conductor
 * `adminInterfacePort`: a free port on the machine which is used for the admin Websocket interface
 
@@ -90,7 +90,7 @@ Under the hood, Tryorama generates unique and valid values for these parameters 
 
 * There must be an admin interface running over WebSockets at `adminInterfacePort` which includes all instances that are part of this test
 * *All* agents within a scenario must have a unique name (even across different conductors!)
-* You must incorporate the UUID or some other source of uniqueness into the DNA config's `uuid` field, to ensure that conductors in different tests do not attempt to connect to each other on the same network
+* You must incorporate the UID or some other source of uniqueness into the DNA config's `uid` field, to ensure that conductors in different tests do not attempt to connect to each other on the same network
 
 ### Using seed functions in `Config.gen`
 
@@ -99,12 +99,12 @@ Since configuring a full config that properly uses these injected values is real
 ```js
 Config.gen(
   {alice: dnaConfig},
-  ({playerName, uuid}) => {
+  ({playerName, uid}) => {
     return {
       dpki: {
         instance_id: 'my-instance',
         init_params: JSON.stringify({
-          someValueThatNeedsToBeUnique: uuid,
+          someValueThatNeedsToBeUnique: uid,
           someValueThatWantsToBeThePlayerName: playerName,
         })
       }

@@ -28,19 +28,19 @@ export class ScenarioApi {
 
   _localPlayers: Array<Player>
   _trycpClients: Array<TrycpClient>
-  _uuid: string
+  _uid: string
   _waiter: Waiter
   _modifiers: Modifiers
   _activityTimer: any
   _conductorIndex: number
 
-  constructor(description: string, orchestratorData, uuid: string, modifiers: Modifiers = { singleConductor: false }) {
+  constructor(description: string, orchestratorData, uid: string, modifiers: Modifiers = { singleConductor: false }) {
     this.description = description
     this.fail = (reason) => { throw new Error(`s.fail: ${reason}`) }
 
     this._localPlayers = []
     this._trycpClients = []
-    this._uuid = uuid
+    this._uid = uid
     this._waiter = new Waiter(FullSyncNetwork, undefined, orchestratorData.waiterConfig)
     this._modifiers = modifiers
     this._activityTimer = null
@@ -132,7 +132,7 @@ export class ScenarioApi {
       await trycpClient.configurePlayer(playerName, configJson)
       logger.debug('api.players: player config committed for %s', playerName)
       return new Player({
-        scenarioUUID: this._uuid,
+        scenarioUID: this._uid,
         name: playerName,
         config: configJson,
         spawnConductor: spawnRemote(trycpClient),
@@ -160,7 +160,7 @@ export class ScenarioApi {
 
       logger.debug('api.players: player config committed for %s', playerName)
       return new Player({
-        scenarioUUID: this._uuid,
+        scenarioUID: this._uid,
         name: playerName,
         config: configYaml,
         spawnConductor: spawnLocal(configDir, adminInterfacePort, appInterfacePort),
@@ -175,7 +175,7 @@ export class ScenarioApi {
     const configSeedArgs: T.ConfigSeedArgs = _.assign(partialConfigSeedArgs, {
       scenarioName: this.description,
       playerName,
-      uuid: this._uuid
+      uid: this._uid
     })
     logger.debug('api.players: seed args generated for %s = %j', playerName, configSeedArgs)
     const configJson = configSeed(configSeedArgs)
