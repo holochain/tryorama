@@ -154,7 +154,7 @@ export class Player {
    * otherwise will be a new and different agent every time you call it
    */
   installBundledHapp = async (bundleSource: AppBundleSource, agentPubKey?: AgentPubKey, installedAppId?: string): Promise<InstalledHapp> => {
-    this._conductorGuard(`Player.installBundledHapp(${JSON.stringify(bundleSource)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
+    this._conductorGuard(`Player.installBundledHapp(${JSON.stringify(bundleSource)}, ${agentPubKey ? 'withAgentPubKey' : 'noAgentPubKey'}, ${installedAppId || 'noInstalledAppId'})`)
     return this._conductor!.installBundledHapp(bundleSource, agentPubKey, installedAppId)
   }
 
