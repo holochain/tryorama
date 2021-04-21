@@ -75,6 +75,8 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
   const signalSubscriptions: Record<number, (signal: conductorApi.AppSignal) => void> = {}
   let signalPollTimer: NodeJS.Timeout | null = null
 
+  const remoteLogLevel = process.env.REMOTE_LOG_LEVEL
+
   return {
     saveDna: async (id, contents) => {
       if (!(id in savedDnas)) {
@@ -92,7 +94,7 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
         dpki: partial_config.dpki !== undefined ? partial_config.dpki : null,
       })
     }),
-    spawn: (id) => makeCall('startup')({ id }),
+    spawn: (id) => makeCall('startup')({ id, log_level: remoteLogLevel}),
     kill: (id, signal?) => makeCall('shutdown')({ id, signal }),
     ping: () => makeCall('ping')(undefined),
     reset: () => makeCall('reset')(undefined),

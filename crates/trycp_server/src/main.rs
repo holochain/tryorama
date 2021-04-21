@@ -427,8 +427,10 @@ admin_interfaces:
         #[derive(Deserialize)]
         struct StartupParams {
             id: String,
+            log_level: Option<String>
         }
-        let StartupParams { id } = params.parse()?;
+        let StartupParams { id, log_level } = params.parse()?;
+        let rust_log = log_level.unwrap_or("error".to_string());
 
         check_player_config_exists(&id)?;
         let player_dir = get_player_dir(&id);
@@ -471,6 +473,7 @@ admin_interfaces:
             .arg("-c")
             .arg(CONDUCTOR_CONFIG_FILENAME)
             .env("RUST_BACKTRACE", "full")
+            .env("RUST_LOG", rust_log)
             .stdout(Stdio::piped())
             .stderr(Stdio::piped())
             .spawn()

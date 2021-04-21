@@ -22,12 +22,12 @@ const localOrchestrator = (extra = {}) => new Orchestrator({
   reporter: true,
   ...extra
 })
-
+/*
 testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 // testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal))
 testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal))
 testSignal(localOrchestrator, () => testConfig(dnaLocationLocal))
-
+*/
 const trycp = run_trycp()
 const playersRemote = async (s, configs, startup?) => {
   await trycp
