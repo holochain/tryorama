@@ -42,7 +42,8 @@ fn connect(
             });
             let mut socket = match ws::Builder::new()
                 .with_settings(ws::Settings {
-                    queue_size: 64,
+                    queue_size: 100,
+                    max_connections: 200,
                     ..Default::default()
                 })
                 .build(|handle| on_connect.take().unwrap()(handle))
