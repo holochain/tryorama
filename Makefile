@@ -5,6 +5,9 @@ install-hc:
 
 test:
 	make install-hc
+	make test-all
+
+test-all:
 	./ci_scripts/run-test.sh
 
 #############################
