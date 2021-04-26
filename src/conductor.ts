@@ -6,7 +6,7 @@ import { makeLogger } from "./logger";
 import { delay } from './util';
 import env from './env';
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, InstallAppBundleRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal, InstalledApp, AppBundleSource } from '@holochain/conductor-api';
+import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, InstallAppBundleRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal, InstalledAppInfo, AppBundleSource } from '@holochain/conductor-api';
 import { Cell } from "./cell";
 import { Player } from './player';
 import { TunneledAdminClient, TunneledAppClient } from './trycp'
@@ -183,11 +183,10 @@ export class Conductor {
   // you must create your own app_id and bundle, this is useful also if you
   // need to pass in uid, properties or membrane-proof
   _installBundledHapp = async (installAppBundleReq: InstallAppBundleRequest): Promise<T.InstalledHapp> => {
-
-    const installedApp: InstalledApp  = await this.adminClient!.installAppBundle(installAppBundleReq)
+    const installedAppResponse: InstalledAppInfo  = await this.adminClient!.installAppBundle(installAppBundleReq)
     // must be activated to be callable
-    await this.adminClient!.activateApp({ installed_app_id: installedApp.installed_app_id })
-    return this._makeInstalledAgentHapp(installedApp)
+    await this.adminClient!.activateApp({ installed_app_id: installedAppResponse.installed_app_id })
+    return this._makeInstalledAgentHapp(installedAppResponse)
   }
 
   // this function will auto-generate an `installed_app_id` and
@@ -224,29 +223,25 @@ export class Conductor {
   // you must create your own app_id and dnas list, this is useful also if you
   // need to pass in properties or membrane-proof
   _installHapp = async (installAppReq: InstallAppRequest): Promise<T.InstalledHapp> => {
-
-    const installedApp: InstalledApp  = await this.adminClient!.installApp(installAppReq)
+    const installedAppResponse: InstalledAppInfo  = await this.adminClient!.installApp(installAppReq)
     // must be activated to be callable
     await this.adminClient!.activateApp({ installed_app_id: installAppReq.installed_app_id })
-    return this._makeInstalledAgentHapp(installedApp)
+    return this._makeInstalledAgentHapp(installedAppResponse)
   }
 
-  _makeInstalledAgentHapp = (installedApp: InstalledApp): T.InstalledHapp => {
-
-    // TODO: fix.  For now we can always use the base_cell_id.  When we start working with clones
-    // then we need to explicitly reveal slots and clones in tryorama
-    const slots = Object.entries(installedApp.slots)
-
+  _makeInstalledAgentHapp = (installedAppResponse: InstalledAppInfo): T.InstalledHapp => {
+    const agentPubKey = installedAppResponse.cell_data[0].cell_id[1]
+    const rawCells = Object.entries(installedAppResponse.cell_data)
     // construct Cell instances which are the most useful class to the client
-    const cells = slots.map(([cellNick, slot]) => new Cell({
-      cellId: slot.base_cell_id,
-      cellNick: cellNick,
+    const cells = rawCells.map(([_, { cell_id, cell_nick }]) => new Cell({
+      cellId: cell_id,
+      cellNick: cell_nick,
       player: this._player
     }))
 
     const installedAgentHapp: T.InstalledHapp = {
-      hAppId: installedApp.installed_app_id,
-      agent: installedApp._agent_key,
+      hAppId: installedAppResponse.installed_app_id,
+      agent: agentPubKey,
       cells,
     }
     return installedAgentHapp
