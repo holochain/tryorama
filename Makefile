@@ -1,5 +1,10 @@
 .PHONY: test
 
+VERSION:=$(shell npm view '@holochain/tryorama' version)
+
+get-version:
+	@echo 'Version: '${VERSION}
+
 install-hc:
 	./ci_scripts/install-holochain.sh
 
@@ -21,7 +26,6 @@ test-all:
 
 update-hc:
 	make HC_REV=$(HC_REV) update-hc-sha
-	git checkout -b update-hc-$(HC_REV)
 	git add nixpkgs.nix
 	git commit -m hc-rev:$(HC_REV)
 	git push origin HEAD
@@ -34,3 +38,23 @@ update-hc-sha:
 	else \
 		echo "No holo-nixpkgs rev provided"; \
   fi
+
+#############################
+# █▀█ █▀▀ █░░ █▀▀ ▄▀█ █▀ █▀▀
+# █▀▄ ██▄ █▄▄ ██▄ █▀█ ▄█ ██▄
+#############################
+
+release:
+	make release-minor
+	git checkout -b release-${VERSION}
+	git add .
+	git commit -m release-${VERSION}
+	git push origin HEAD
+
+# use this  to make a minor release 1.1 to 1.2
+release-minor:
+	npm version minor --force && npm publish
+
+# use this  to make a major release 1.1 to 2.1
+release-major:
+	npm version major --force && npm publish
