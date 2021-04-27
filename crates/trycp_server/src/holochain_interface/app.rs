@@ -142,7 +142,7 @@ fn call(
     match rx.recv().unwrap() {
         Ok(string) => Ok(Value::String(string)),
         Err(e) => Err(internal_error(format!(
-            "failed to send message along app interface: {}",
+            "failed to receive message along app interface: {}",
             e
         ))),
     }
