@@ -15,8 +15,7 @@ use std::{
     },
 };
 
-use futures::{future, stream::SplitStream, SinkExt};
-use futures_util::StreamExt;
+use futures::{future, stream::SplitStream, SinkExt, StreamExt};
 use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
@@ -309,13 +308,13 @@ async fn disconnect_app_interface(
     }
 }
 
-type WsRequestWriter = futures_util::stream::SplitSink<
+type WsRequestWriter = futures::stream::SplitSink<
     WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
     Message,
 >;
 
 type WsResponseWriter =
-    futures_util::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
+    futures::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
 
 type WsClientDuplex = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 

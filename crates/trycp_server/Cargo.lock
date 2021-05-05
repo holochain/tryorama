@@ -1338,7 +1338,6 @@ dependencies = [
  "base64",
  "crossbeam",
  "futures",
- "futures-util",
  "nix",
  "once_cell",
  "parking_lot",
