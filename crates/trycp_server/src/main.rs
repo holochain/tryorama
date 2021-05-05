@@ -2,32 +2,40 @@
 //! with a set of Holochain conductors that it manages on the local machine.
 
 mod holochain_interface;
-mod registrar;
-mod rpc_util;
-
-use rpc_util::{internal_error, invalid_request};
+mod save_dna;
+mod startup;
 
 use std::{
     collections::HashMap,
-    fs::{self, File},
-    io::{self, BufRead, BufReader, Read, Write},
-    mem,
+    hash::Hash,
+    io::{self, Write},
     ops::Range,
     path::{Path, PathBuf},
-    process::{Child, Command, Stdio},
-    sync::Arc,
+    process::Child,
+    sync::{
+        atomic::{self, AtomicU16},
+        Arc,
+    },
 };
 
-use jsonrpc_core::{IoHandler, Params, Value};
-use jsonrpc_ws_server::ServerBuilder;
+use futures::{future, stream::SplitStream, SinkExt, TryStreamExt};
+use futures_util::StreamExt;
 use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
 };
-use parking_lot::RwLock;
-use serde::Deserialize;
-use serde_json::json;
+use parking_lot::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use serde::{Deserialize, Serialize};
+use slab::Slab;
+use snafu::ResultExt;
+use snafu::{ensure, IntoError, Snafu};
 use structopt::StructOpt;
+use tokio::net::TcpStream;
+use tokio::{io::AsyncWriteExt, task::spawn_blocking};
+use tokio_tungstenite::{
+    tungstenite::{self, Message},
+    MaybeTlsStream, WebSocketStream,
+};
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
 const MAGIC_STRING: &str = "Conductor ready.";
@@ -38,6 +46,10 @@ const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
 const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
 const DNA_DIR_PATH: &str = "/tmp/trycp/dnas";
+const NEXT_ADMIN_PORT_PATH: &str = "/tmp/trycp/next_admin_port.txt";
+const FIRST_ADMIN_PORT: u16 = 9100;
+
+static NEXT_ADMIN_PORT: AtomicU16 = AtomicU16::new(FIRST_ADMIN_PORT);
 
 #[derive(StructOpt)]
 struct Cli {
@@ -55,13 +67,6 @@ struct Cli {
         help = "The port range to use for spawning new conductors (e.g. '9000-9150')"
     )]
     port_range_string: String,
-    #[structopt(
-        long,
-        short = "c",
-        help = "Allows the conductor to be remotely replaced"
-    )]
-    /// allow changing the conductor
-    allow_replace_conductor: bool,
 
     #[structopt(long, short = "m", help = "Activate ability to runs as a manager")]
     /// activates manager mode
@@ -152,23 +157,20 @@ fn get_player_dir(id: &str) -> PathBuf {
     Path::new(PLAYERS_DIR_PATH).join(id)
 }
 
-fn get_saved_dna_path(id: &str) -> PathBuf {
-    Path::new(DNA_DIR_PATH).join(id)
-}
-
-fn get_downloaded_dna_path(url: &reqwest::Url) -> PathBuf {
+fn get_downloaded_dna_path(url: &url::Url) -> PathBuf {
     Path::new(DNA_DIR_PATH)
         .join(url.scheme())
         .join(url.path().replace("/", "").replace("%", "_"))
 }
 
 /// Tries to create a file, returning Ok(None) if a file already exists at path
-fn try_create_file(path: &Path) -> Result<Option<File>, io::Error> {
-    fs::create_dir_all(path.parent().unwrap())?;
-    match fs::OpenOptions::new()
+async fn try_create_file(path: &Path) -> Result<Option<tokio::fs::File>, io::Error> {
+    tokio::fs::create_dir_all(path.parent().unwrap()).await?;
+    match tokio::fs::OpenOptions::new()
         .write(true)
         .create_new(true)
         .open(&path)
+        .await
     {
         Ok(file) => Ok(Some(file)),
         Err(e) if e.kind() == io::ErrorKind::AlreadyExists => Ok(None),
@@ -176,495 +178,637 @@ fn try_create_file(path: &Path) -> Result<Option<File>, io::Error> {
     }
 }
 
-fn check_player_config_exists(id: &str) -> Result<(), jsonrpc_core::types::error::Error> {
+fn player_config_exists(id: &str) -> bool {
     let file_path = get_player_dir(id).join(CONDUCTOR_CONFIG_FILENAME);
-    if !file_path.is_file() {
-        return Err(invalid_request(format!(
-            "player config for {} not setup",
-            id
-        )));
+    file_path.is_file()
+}
+
+#[derive(Debug, Snafu)]
+enum ConnectionError {
+    #[snafu(display("Could not complete handshake with client: {}", source))]
+    Handshake { source: tungstenite::Error },
+    #[snafu(display("Could not read reqeuest from websocket: {}", source))]
+    ReadRequest { source: tungstenite::Error },
+    #[snafu(display("Could not write response to websocket: {}", source))]
+    WriteResponse { source: tungstenite::Error },
+    #[snafu(display("Expected a binary message, got: {:?}", message))]
+    UnexpectedMessageType { message: Message },
+    #[snafu(display("Could not deserialize bytes {:?} as MessagePack: {}", bytes, source))]
+    DeserializeMessage {
+        bytes: Vec<u8>,
+        source: rmp_serde::decode::Error,
+    },
+}
+
+async fn save_dna_wrapper(request_id: u64, id: String, content: Vec<u8>) -> Vec<u8> {
+    spawn_blocking(move || {
+        let resp = save_dna::save_dna(id, content).map_err(|e| e.to_string());
+        serialize_resp(request_id, resp)
+    })
+    .await
+    .unwrap()
+}
+
+async fn handle_ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
+    let ws_stream = tokio_tungstenite::accept_async(stream)
+        .await
+        .context(Handshake)?;
+
+    let (ws_write, ws_read) = ws_stream.split();
+
+    let ws_write1 = Arc::new(futures::lock::Mutex::new(ws_write));
+    let ws_write2 = &ws_write1;
+
+    let write = futures::sink::unfold((), |(), response| async {
+        let mut ws_write_guard = ws_write1.lock().await;
+        ws_write_guard.send(response).await.context(WriteResponse)
+    });
+
+    ws_read
+        .then(|req| async move {
+            let message = req.context(ReadRequest)?;
+
+            let bytes = match message {
+                Message::Binary(bytes) => bytes,
+                _ => return UnexpectedMessageType { message }.fail(),
+            };
+
+            let ReqeuestWrapper {
+                id: request_id,
+                request,
+            } = rmp_serde::from_read_ref(&bytes).context(DeserializeMessage { bytes })?;
+
+            let response = match request {
+                Request::SaveDna { id, content } => save_dna_wrapper(request_id, id, content).await,
+
+                Request::DownloadDna { url } => serialize_resp(
+                    request_id,
+                    handle_download_dna(url).await.map_err(|e| e.to_string()),
+                ),
+                Request::ConfigurePlayer { id, partial_config } => spawn_blocking(move || {
+                    let resp =
+                        handle_configure_player(id, partial_config).map_err(|e| e.to_string());
+                    serialize_resp(request_id, resp)
+                })
+                .await
+                .unwrap(),
+                Request::Startup { id, log_level } => spawn_blocking(move || {
+                    let resp = startup::startup(id, log_level).map_err(|e| e.to_string());
+                    serialize_resp(request_id, resp)
+                })
+                .await
+                .unwrap(),
+                Request::Shutdown { id, signal } => spawn_blocking(move || {
+                    let resp = handle_shutdown(id, signal).map_err(|e| e.to_string());
+                    serialize_resp(request_id, resp)
+                })
+                .await
+                .unwrap(),
+                Request::Reset => {
+                    spawn_blocking(move || serialize_resp(request_id, handle_reset()))
+                        .await
+                        .unwrap()
+                }
+                Request::AdminApiCall { id, message } => {
+                    todo!("handle_admin_api_call(id, message).await")
+                }
+                Request::ConnectAppInterface { port } => serialize_resp(
+                    request_id,
+                    connect_app_interface(port, Arc::clone(ws_write2))
+                        .await
+                        .map_err(|e| e.to_string()),
+                ),
+                Request::DisconnectAppInterface { port } => {
+                    todo!()
+                }
+                Request::CallAppInterface { port, message } => {
+                    todo!()
+                }
+            };
+
+            Ok(Message::Binary(response))
+        })
+        .forward(write)
+        .await
+}
+
+type WsRequestWriter = futures_util::stream::SplitSink<
+    WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
+    Message,
+>;
+
+type WsResponseWriter =
+    futures_util::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
+
+type WsReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
+
+type PendingRequests = Arc<futures::lock::Mutex<Slab<u64>>>;
+
+struct AppInterfaceConnection {
+    writer: WsRequestWriter,
+    read_task:
+        tokio::task::JoinHandle<Result<Result<(), listen_app_interface::Error>, future::Aborted>>,
+    cancel_read_task: future::AbortHandle,
+    pending_requests: PendingRequests,
+}
+
+#[derive(Debug, Snafu)]
+enum ConnectAppInterfaceError {
+    #[snafu(display(
+        "Could not establish a websocket connection to app interface: {}",
+        source
+    ))]
+    Connect { source: tungstenite::Error },
+}
+
+mod listen_app_interface {
+    use std::sync::Arc;
+
+    use futures::{SinkExt, TryStreamExt};
+    use snafu::{IntoError, ResultExt, Snafu};
+    use tokio_tungstenite::tungstenite;
+    use tokio_tungstenite::tungstenite::Message;
+
+    use crate::{HolochainMessage, PendingRequests, WsReader, WsResponseWriter};
+
+    #[derive(Debug, Snafu)]
+    pub enum Error {
+        #[snafu(display("Could not read from websocket: {}", source))]
+        Read { source: tungstenite::Error },
+        #[snafu(display("Expected a binary message, got: {:?}", message))]
+        UnexpectedMessageType { message: Message },
+        #[snafu(display("Could not deserialize bytes {:?} as MessagePack: {}", bytes, source))]
+        DeserializeMessage {
+            bytes: Vec<u8>,
+            source: rmp_serde::decode::Error,
+        },
     }
+
+    pub async fn listen_app_interface(
+        reader: WsReader,
+        pending_requests: PendingRequests,
+        client_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
+    ) -> Result<(), Error> {
+        reader
+            .map_err(|e| Read.into_error(e))
+            .try_for_each(|holochain_message| async {
+                let bytes = match holochain_message {
+                    Message::Binary(bytes) => bytes,
+                    message => return UnexpectedMessageType { message }.fail(),
+                };
+
+                let deserialized: HolochainMessage =
+                    rmp_serde::from_read_ref(&bytes).context(DeserializeMessage { bytes })?;
+
+                match deserialized {
+                    HolochainMessage::Response { id, data } => {
+                        let call_request_id = {
+                            let mut pending_requests_guard = pending_requests.lock().await;
+                            if pending_requests_guard.contains(id) {
+                                pending_requests_guard.remove(id)
+                            } else {
+                                println!("warn: received response with ID {} without a pending request of that ID", id);
+                                return Ok(())
+                            }
+                        };
+
+                        let a = client_writer.lock().await;
+                        // a.send();
+                        todo!()
+                    },
+                    HolochainMessage::Signal { data } => {
+
+                    }
+                }
+
+                Ok(())
+            })
+            .await
+    }
+}
+
+async fn connect_app_interface(
+    port: u16,
+    writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
+) -> Result<(), ConnectAppInterfaceError> {
+    let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
+    url.set_port(Some(9000));
+
+    let (ws_stream, _resp) = tokio_tungstenite::connect_async(url)
+        .await
+        .context(Connect)?;
+
+    let (write, read) = ws_stream.split();
+
+    let read: WsReader = read;
+
+    let pending_requests = Arc::default();
+
+    let read_future =
+        listen_app_interface::listen_app_interface(read, Arc::clone(&pending_requests), writer);
+    let (abortable_read_future, abort_handle) = future::abortable(read_future);
+
+    let read_task = tokio::task::spawn(abortable_read_future);
+
     Ok(())
 }
 
-fn main() {
-    let args = Cli::from_args();
-    let mut io = IoHandler::new();
+#[derive(Debug, Deserialize, Serialize)]
+#[serde(tag = "type")]
+enum HolochainMessage {
+    Request {
+        id: usize,
+        #[serde(with = "serde_bytes")]
+        data: Vec<u8>,
+    },
+    Response {
+        id: usize,
+        #[serde(with = "serde_bytes")]
+        data: Vec<u8>,
+    },
+    Signal {
+        #[serde(with = "serde_bytes")]
+        data: Vec<u8>,
+    },
+}
 
-    let conductor_port_range: PortRange =
-        parse_port_range(args.port_range_string).expect("Invalid port range");
+#[derive(Debug, Snafu)]
+enum DownloadDnaError {
+    #[snafu(display("Could not parse URL {:?}: {}", url, source))]
+    ParseUrl {
+        url: String,
+        source: url::ParseError,
+    },
+    #[snafu(display("Could not create DNA file at {}: {}", path.display(), source))]
+    CreateDna { path: PathBuf, source: io::Error },
+    #[snafu(display("Could not open source DNA file at {}: {}", path, source))]
+    OpenSource { path: String, source: io::Error },
+    #[snafu(display("Could not write to DNA file at {}: {}", path.display(), source))]
+    WriteDna { path: PathBuf, source: io::Error },
+    #[snafu(display("Could not download source DNA from {}: {}", url, source))]
+    RequestDna { url: String, source: reqwest::Error },
+    #[snafu(display("Could not parse HTTP response from {}: {}", url, source))]
+    ParseResponse { url: String, source: reqwest::Error },
+}
 
-    let state: Arc<RwLock<TrycpServer>> =
-        Arc::new(RwLock::new(TrycpServer::new(conductor_port_range)));
-    let state_configure_player = state.clone();
-    let state_reset = state.clone();
-    let state_admin_interface_call = state.clone();
+async fn handle_download_dna(url_str: String) -> Result<String, DownloadDnaError> {
+    let url = url::Url::parse(&url_str).with_context(|| ParseUrl {
+        url: url_str.clone(),
+    })?;
 
-    struct Player {
-        lair: Child,
-        conductor: Child,
-    }
+    let path = get_downloaded_dna_path(&url);
+    let path_string = path
+        .to_str()
+        .expect("path constructed from UTF-8 filename and UTF-8 directory should be valid UTF-8")
+        .to_owned();
 
-    let players_arc: Arc<RwLock<HashMap<String, Player>>> = Arc::new(RwLock::new(HashMap::new()));
-    let players_arc_shutdown = players_arc.clone();
-    let players_arc_reset = players_arc.clone();
-    let players_arc_startup = players_arc;
+    let mut file = match try_create_file(&path).await {
+        Ok(Some(file)) => file,
+        Ok(None) => return Ok(path_string),
+        Err(err) => return Err(CreateDna { path }.into_error(err)),
+    };
 
-    // For each port, stores a websocket connection to an app interface on that port and state related to that connection.
-    let app_interface_connections = holochain_interface::app::Connections::default();
-
-    holochain_interface::app::add_methods(&mut io, &app_interface_connections);
-
-    if let Some(connection_uri) = args.register {
-        registrar::register_with_remote(connection_uri, &args.host, args.port)
-    }
-
-    if args.manager {
-        registrar::add_methods(&mut io);
-    }
-
-    io.add_method("ping", |params: Params| {
-        params.expect_no_params()?;
-
-        let output = Command::new("holochain")
-            .arg("-V")
-            .output()
-            .map_err(|e| internal_error(format!("failed to execute `holochain -V`: {}", e)))?;
-        let version = String::from_utf8(output.stdout).map_err(|e| {
-            internal_error(format!("failed to parse holochain output as utf-8: {}", e))
-        })?;
-
-        Ok(Value::String(
-            version
-                .strip_prefix("holochain")
-                .unwrap_or(&version)
-                .trim()
-                .to_string(),
-        ))
-    });
-
-    // Given a base64-encoded DNA file, stores the DNA and returns the path at which it is stored.
-    io.add_method("save_dna", move |params: Params| {
-        #[derive(Deserialize)]
-        struct SaveDnaParams {
-            id: String,
-            content_base64: String,
-        }
-        let SaveDnaParams { id, content_base64 } = params.parse()?;
-        let file_path = get_saved_dna_path(&id);
-
-        let new_file = try_create_file(&file_path).map_err(|e| {
-            internal_error(format!(
-                "unable to create file: {} {}",
-                e,
-                file_path.display()
-            ))
-        })?;
-
-        if let Some(mut file) = new_file {
-            let content = base64::decode(&content_base64)
-                .map_err(|e| invalid_request(format!("failed to decode content_base64: {}", e)))?;
-
-            file.write_all(&content).map_err(|e| {
-                internal_error(format!(
-                    "unable to write file: {} {}",
-                    e,
-                    file_path.display()
-                ))
-            })?;
-        } else {
-            println!(
-                "declining to save dna because file already exists. file length in bytes: {:?}",
-                fs::metadata(&file_path).map(|meta| meta.len())
-            )
-        }
-
-        let local_path = file_path.to_string_lossy();
-        println!("dna for {} at {}", id, local_path);
-        Ok(json!({ "path": local_path }))
-    });
-
-    // Given a DNA URL, ensures that the DNA is downloaded, and returns the path at which it is stored.
-    io.add_method("download_dna", move |params: Params| {
-        #[derive(Deserialize)]
-        struct DownloadDnaParams {
-            url: String,
-        }
-        let DownloadDnaParams { url: url_str } = params.parse()?;
-
-        let url = reqwest::Url::parse(&url_str).map_err(|e| {
-            invalid_request(format!("unable to parse url:{} got error: {}", url_str, e))
-        })?;
-
-        let file_path = get_downloaded_dna_path(&url);
-        let new_file = try_create_file(&file_path).map_err(|e| {
-            internal_error(format!(
-                "unable to create file: {} {}",
-                e,
-                file_path.display()
-            ))
-        })?;
-
-        if let Some(mut file) = new_file {
-            println!("Downloading dna from {} ...", &url_str);
-            if url.scheme() == "file" {
-                let mut dna_file = fs::File::open(url.path()).map_err(|e| {
-                    invalid_request(format!(
-                        "failed to open DNA file at path {}: {}",
-                        url.path(),
-                        e
-                    ))
+    if url.scheme() == "file" {
+        let source_path = url.path();
+        let mut dna_file =
+            tokio::fs::File::open(source_path)
+                .await
+                .with_context(|| OpenSource {
+                    path: source_path.to_owned(),
                 })?;
-                io::copy(&mut dna_file, &mut file).map_err(|e| {
-                    invalid_request(format!(
-                        "failed to read DNA file from path {}: {}",
-                        url.path(),
-                        e
-                    ))
-                })?;
-            } else {
-                let content: String = reqwest::get(url)
-                    .map_err(|e| {
-                        internal_error(format!("error downloading dna: {:?} {:?}", e, url_str))
-                    })?
-                    .text()
-                    .map_err(|e| internal_error(format!("could not get text response: {}", e)))?;
-                println!("Finished downloading dna from {}", url_str);
-
-                file.write_all(content.as_bytes()).map_err(|e| {
-                    internal_error(format!(
-                        "unable to write file: {} {}",
-                        e,
-                        file_path.display()
-                    ))
-                })?;
-            };
-        }
-
-        let local_path = file_path.to_string_lossy();
-        println!("dna for {} at {}", url_str, local_path);
-        Ok(json!({ "path": local_path }))
-    });
-
-    io.add_method("configure_player", move |params: Params| {
-        #[derive(Deserialize)]
-        struct ConfigurePlayerParams {
-            id: String,
-            /// The Holochain configuration data that is not provided by trycp.
-            ///
-            /// For example:
-            /// ```yaml
-            /// signing_service_uri: ~
-            /// encryption_service_uri: ~
-            /// decryption_service_uri: ~
-            /// dpki: ~
-            /// network: ~
-            /// ```
-            partial_config: String,
-        }
-        let ConfigurePlayerParams { id, partial_config } = params.parse()?;
-
-        let player_dir = get_player_dir(&id);
-        let config_path = player_dir.join(CONDUCTOR_CONFIG_FILENAME);
-
-        std::fs::create_dir_all(&player_dir).map_err(|e| {
-            internal_error(format!(
-                "failed to create directory ({}) for player: {:?}",
-                player_dir.display(),
-                e
-            ))
+        tokio::io::copy(&mut dna_file, &mut file)
+            .await
+            .context(WriteDna { path })?;
+    } else {
+        println!("Downloading dna from {} ...", &url_str);
+        let response = reqwest::get(url).await.with_context(|| RequestDna {
+            url: url_str.clone(),
         })?;
 
-        let mut config_file = File::create(&config_path).map_err(|e| {
-            internal_error(format!(
-                "unable to create file: {:?} {}",
-                e,
-                config_path.display()
-            ))
+        let content = response.bytes().await.with_context(|| ParseResponse {
+            url: url_str.clone(),
         })?;
+        println!("Finished downloading dna from {}", url_str);
 
-        let port = state_configure_player
-            .write()
-            .acquire_port(id.clone())
-            .map_err(internal_error)?;
+        file.write_all(&content).await.context(WriteDna { path })?;
+    };
 
-        writeln!(
-            config_file,
-            "\
+    Ok(path_string)
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+struct ReqeuestWrapper {
+    id: u64,
+    request: Request,
+}
+
+#[derive(Deserialize)]
+#[serde(rename_all = "snake_case")]
+enum Request {
+    // Given a DNA file, stores the DNA and returns the path at which it is stored.
+    SaveDna {
+        id: String,
+        #[serde(with = "serde_bytes")]
+        content: Vec<u8>,
+    },
+    // Given a DNA URL, ensures that the DNA is downloaded and returns the path at which it is stored.
+    DownloadDna {
+        url: String,
+    },
+    ConfigurePlayer {
+        id: String,
+        /// The Holochain configuration data that is not provided by trycp.
+        ///
+        /// For example:
+        /// ```yaml
+        /// signing_service_uri: ~
+        /// encryption_service_uri: ~
+        /// decryption_service_uri: ~
+        /// dpki: ~
+        /// network: ~
+        /// ```
+        partial_config: String,
+    },
+    Startup {
+        id: String,
+        log_level: Option<String>,
+    },
+    Shutdown {
+        id: String,
+        signal: Option<String>,
+    },
+    // Shuts down all running conductors.
+    Reset,
+    AdminApiCall {
+        id: String,
+        #[serde(with = "serde_bytes")]
+        message: Vec<u8>,
+    },
+    ConnectAppInterface {
+        port: u16,
+    },
+    DisconnectAppInterface {
+        port: u16,
+    },
+    CallAppInterface {
+        port: u16,
+        #[serde(with = "serde_bytes")]
+        message: Vec<u8>,
+    },
+}
+
+fn serialize_resp<R: Serialize>(id: u64, data: R) -> Vec<u8> {
+    rmp_serde::to_vec_named(&MessageToClient::Response { data, id }).unwrap()
+}
+
+#[derive(Serialize)]
+#[serde(rename_all = "snake_case")]
+enum MessageToClient<R> {
+    Signal { port: u16, data: Vec<u8> },
+    Response { id: u64, data: R },
+}
+
+#[derive(Debug, Snafu)]
+enum ConfigurePlayerError {
+    #[snafu(display("Could not create directory for at {}: {}", path.display(), source))]
+    CreateDir { path: PathBuf, source: io::Error },
+    #[snafu(display("Could not create config file at {}: {}", path.display(), source))]
+    CreateConfig { path: PathBuf, source: io::Error },
+    #[snafu(display("Ran out of possible admin ports"))]
+    OutOfPorts,
+    #[snafu(display("Could not write to config file at {}: {}", path.display(), source))]
+    WriteConfig { path: PathBuf, source: io::Error },
+}
+
+fn handle_configure_player(id: String, partial_config: String) -> Result<(), ConfigurePlayerError> {
+    let player_dir = get_player_dir(&id);
+    let config_path = player_dir.join(CONDUCTOR_CONFIG_FILENAME);
+
+    std::fs::create_dir_all(&player_dir).with_context(|| CreateDir {
+        path: config_path.clone(),
+    })?;
+
+    let mut config_file = std::fs::File::create(&config_path).with_context(|| CreateConfig {
+        path: config_path.clone(),
+    })?;
+
+    ensure!(
+        NEXT_ADMIN_PORT.load(atomic::Ordering::SeqCst) != 0,
+        OutOfPorts
+    );
+    let port = NEXT_ADMIN_PORT.fetch_add(1, atomic::Ordering::SeqCst);
+
+    writeln!(
+        config_file,
+        "\
 ---
 environment_path: environment
 use_dangerous_test_keystore: false
 keystore_path: keystore
 passphrase_service:
-  type: fromconfig
-  passphrase: password
+    type: fromconfig
+    passphrase: password
 admin_interfaces:
-  -
+    -
     driver:
-      type: websocket
-      port: {}
+        type: websocket
+        port: {}
 {}",
-            port, partial_config
+        port, partial_config
+    )
+    .context(WriteConfig { path: config_path })?;
+
+    println!(
+        "wrote config for player {} to {}",
+        id,
+        config_path.display()
+    );
+    Ok(())
+}
+
+/// Ensures that a key is present in the hashmap, using the least amount of locking.
+///
+/// Panics if `read_guard` is `None`. (`read_guard` is only optional due to an implementation detail.)
+fn get_or_insert_default_locked<'lock, 'guard, K, V>(
+    lock: &'lock RwLock<HashMap<K, V>>,
+    read_guard: &'guard mut Option<RwLockReadGuard<'guard, HashMap<K, V>>>,
+    key: K,
+) -> &'guard V
+where
+    'lock: 'guard,
+    K: Hash + Eq,
+    V: Default,
+{
+    // Optimistically check if we can get the value without creating a write lock.
+    match read_guard.unwrap().get(&key) {
+        Some(v) => v,
+        None => {
+            // Release the read lock.
+            read_guard.take();
+            let mut write_guard = lock.write();
+            if !write_guard.contains_key(&key) {
+                write_guard.insert(key, Default::default());
+            }
+            // Restore the read lock without allowing the entry to be removed.
+            *read_guard = Some(RwLockWriteGuard::downgrade(write_guard));
+            read_guard.unwrap().get(&key).unwrap()
+        }
+    }
+}
+
+#[derive(Debug, Snafu)]
+enum ShutdownError {
+    #[snafu(display("Could not find a configuration for player with ID {:?}", id))]
+    PlayerNotConfigured { id: String },
+    #[snafu(display("The specified signal {:?} is invalid", signal))]
+    UnrecognizedSignal { signal: String },
+    #[snafu(context(false))]
+    Kill { source: KillError },
+}
+
+fn handle_shutdown(id: String, signal: Option<String>) -> Result<(), ShutdownError> {
+    ensure!(player_config_exists(&id), PlayerNotConfigured { id });
+
+    let signal = match signal.as_deref() {
+        Some("SIGTERM") | None => Signal::SIGTERM,
+        Some("SIGKILL") => Signal::SIGKILL,
+        Some("SIGINT") => Signal::SIGINT,
+        Some(s) => {
+            return Err(ShutdownError::UnrecognizedSignal {
+                signal: s.to_owned(),
+            })
+        }
+    };
+
+    let player_lock = match PLAYERS.read().get(&id) {
+        Some(player_lock) => player_lock,
+        None => return Ok(()),
+    };
+
+    let player_cell = player_lock.lock();
+
+    Ok(())
+}
+
+#[derive(Debug, Snafu)]
+enum KillError {
+    #[snafu(display("Could not kill holochain: {}", source))]
+    KillHolochain { source: nix::Error },
+    #[snafu(display("Could not kill lair: {}", source))]
+    KillLair { source: nix::Error },
+}
+
+fn kill_player(
+    player_cell: &mut Option<Player>,
+    id: &str,
+    signal: Signal,
+) -> Result<(), KillError> {
+    let player = match &mut *player_cell {
+        Some(player) => player,
+        None => return Ok(()),
+    };
+
+    println!("stopping player with id: {}", id);
+
+    signal::kill(Pid::from_raw(player.holochain.id() as i32), signal).context(KillHolochain)?;
+    player.holochain.wait().unwrap();
+    signal::kill(Pid::from_raw(player.lair.id() as i32), signal).context(KillLair)?;
+    player.lair.wait().unwrap();
+
+    *player_cell = None;
+    Ok(())
+}
+
+fn handle_reset() {
+    let (mut players, connections) = {
+        let mut players_lock = PLAYERS.write();
+        let mut connections_lock = app_interface_connections.write();
+        NEXT_ADMIN_PORT.store(FIRST_ADMIN_PORT, atomic::Ordering::SeqCst);
+        (
+            std::mem::take(&mut *players_lock),
+            std::mem::take(&mut *connections_lock),
         )
-        .map_err(|e| {
-            internal_error(format!(
-                "unable to write file: {:?} {}",
-                e,
-                config_path.display()
-            ))
-        })?;
+    };
 
-        let response = format!(
-            "wrote config for player {} to {}",
-            id,
-            config_path.display()
-        );
-        println!("player {}: {:?}", id, response);
-        Ok(Value::String(response))
-    });
+    // for (port, app_interface_connection_state_once_cell) in connections {
+    //     if let Some((sender, _)) = app_interface_connection_state_once_cell.into_inner() {
+    //         if let Err(e) = sender.close(ws::CloseCode::Normal) {
+    //             println!(
+    //                 "warn: failed to close websocket on app interface port {}: {}",
+    //                 port, e
+    //             )
+    //         }
+    //     }
+    // }
 
-    io.add_method("startup", move |params: Params| {
-        #[derive(Deserialize)]
-        struct StartupParams {
-            id: String,
-            log_level: Option<String>
+    for (id, player) in players {
+        if let Err(e) = kill_player(player.get_mut(), &id, Signal::SIGKILL) {
+            println!("warn: failed to kill player {:?}: {}", id, e);
         }
-        let StartupParams { id, log_level } = params.parse()?;
-        let rust_log = log_level.unwrap_or("error".to_string());
+    }
+}
 
-        check_player_config_exists(&id)?;
-        let player_dir = get_player_dir(&id);
+async fn handle_admin_api_call(id: String, message: Vec<u8>) -> Message {
+    todo!()
 
-        println!("starting player with id: {}", id);
+    //         let AdminApiCallParams { id, message_base64 } = params.parse()?;
+    //         println!("admin_interface_call id: {:?}", id);
 
-        let mut players = players_arc_startup.write();
-        if players.contains_key(&id) {
-            return Err(invalid_request(format!("{} is already running", id)));
-        };
+    //         let message_buf = base64::decode(&message_base64)
+    //             .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
 
-        let mut lair = Command::new("lair-keystore")
-            .current_dir(&player_dir)
-            .arg("-d")
-            .arg("keystore")
-            .env("RUST_BACKTRACE", "full")
-            .stdout(Stdio::piped())
-            .stderr(
-                fs::OpenOptions::new()
-                    .append(true)
-                    .create(true)
-                    .open(player_dir.join(LAIR_STDERR_LOG_FILENAME))
-                    .map_err(|e| internal_error(format!("failed to create log file: {:?}", e)))?,
-            )
-            .spawn()
-            .map_err(|e| internal_error(format!("unable to startup keystore: {:?}", e)))?;
+    //         let maybe_port = state_admin_interface_call.read().ports.get(&id).cloned();
+    //         let port = maybe_port.ok_or_else(|| {
+    //             invalid_request(format!(
+    //                 "failed to call player admin interface: player not yet configured"
+    //             ))
+    //         })?;
 
-        // Wait until lair begins to output before starting conductor,
-        // otherwise Holochain starts its own copy of lair that we can't manage.
-        lair.stdout
-            .as_mut()
-            .unwrap()
-            .read_exact(&mut [0])
-            .map_err(|e| {
-                internal_error(format!("unable to check that keystore is started: {}", e))
-            })?;
+    //         let response_buf = holochain_interface::remote_call(port, message_buf)?;
+    //         Ok(Value::String(base64::encode(&response_buf)))
+}
+struct Player {
+    lair: Child,
+    holochain: Child,
+}
 
-        let mut conductor = Command::new("holochain")
-            .current_dir(&player_dir)
-            .arg("-c")
-            .arg(CONDUCTOR_CONFIG_FILENAME)
-            .env("RUST_BACKTRACE", "full")
-            .env("RUST_LOG", rust_log)
-            .stdout(Stdio::piped())
-            .stderr(Stdio::piped())
-            .spawn()
-            .map_err(|e| internal_error(format!("unable to startup conductor: {:?}", e)))?;
+static PLAYERS: RwLock<HashMap<String, Mutex<Option<Player>>>> = RwLock::default();
 
-        let conductor_stdout = conductor.stdout.take().unwrap();
-        let conductor_stderr = conductor.stderr.take().unwrap();
+#[derive(Debug, Snafu)]
+enum Error {
+    #[snafu(display("Could not remove trycp/ directory on startup: {}", source))]
+    RemoveDir { source: io::Error },
+    #[snafu(display("Could not bind websocket server: {}", source))]
+    BindServer { source: io::Error },
+}
 
-        players.insert(id.clone(), Player { conductor, lair });
-        std::mem::drop(players);
+#[tokio::main]
+async fn main() -> Result<(), Error> {
+    let args = Cli::from_args();
 
-        let mut log_stdout = Command::new("tee")
-            .arg(player_dir.join(CONDUCTOR_STDOUT_LOG_FILENAME))
-            .arg("--append")
-            .stdout(Stdio::piped())
-            .stdin(conductor_stdout)
-            .spawn()
-            .unwrap();
+    let conductor_port_range: PortRange =
+        parse_port_range(args.port_range_string).expect("Invalid port range");
 
-        let _log_stderr = Command::new("tee")
-            .arg(player_dir.join(CONDUCTOR_STDERR_LOG_FILENAME))
-            .arg("--append")
-            .stdin(conductor_stderr)
-            .spawn()
-            .unwrap();
+    tokio::fs::remove_dir_all("/tmp/trycp")
+        .await
+        .context(RemoveDir)?;
 
-        for line in BufReader::new(log_stdout.stdout.take().unwrap()).lines() {
-            let line = line.unwrap();
-            if line == MAGIC_STRING {
-                println!("Encountered magic string");
-                break;
-            }
-        }
-        Ok(Value::String(format!("conductor started up for {}", id)))
-    });
+    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", args.port))
+        .await
+        .context(BindServer)?;
 
-    io.add_method("shutdown", move |params: Params| {
-        #[derive(Deserialize)]
-        struct ShutdownParams {
-            id: String,
-            signal: Option<String>,
-        }
+    while let Ok((stream, _addr)) = listener.accept().await {
+        tokio::spawn(handle_ws_connection(stream));
+    }
 
-        let ShutdownParams { id, signal } = params.parse()?;
+    Ok(())
 
-        check_player_config_exists(&id)?;
-        match players_arc_shutdown.write().remove(&id) {
-            None => {
-                return Err(invalid_request(format!("no conductor spawned for {}", id)));
-            }
-            Some(mut player) => {
-                let signal = match signal.as_deref() {
-                    Some("SIGTERM") | None => Signal::SIGTERM,
-                    Some("SIGKILL") => Signal::SIGKILL,
-                    Some("SIGINT") => Signal::SIGINT,
-                    Some(s) => return Err(invalid_request(format!("unrecognized signal: {}", s))),
-                };
-                println!("stopping player with id: {}", id);
+    //     let server = ServerBuilder::new(io)
+    //         .start(&format!("0.0.0.0:{}", args.port).parse().unwrap())
+    //         .expect("server should start");
 
-                signal::kill(Pid::from_raw(player.lair.id() as i32), signal).map_err(|e| {
-                    internal_error(format!(
-                        "unable to shut down keystore for player {}: {:?}",
-                        id, e
-                    ))
-                })?;
-                player.lair.wait().unwrap();
-                signal::kill(Pid::from_raw(player.conductor.id() as i32), signal).map_err(|e| {
-                    internal_error(format!(
-                        "unable to shut down conductor for player {}: {:?}",
-                        id, e
-                    ))
-                })?;
-                player.conductor.wait().unwrap();
-            }
-        }
-        let response = format!("shut down conductor for {}", id);
-        Ok(Value::String(response))
-    });
+    //     println!("waiting for connections on port {}", args.port);
 
-    // Shuts down all running conductors.
-    io.add_method("reset", move |params: Params| {
-        params.expect_no_params()?;
-
-        let (mut players, connections) = {
-            let mut players_lock = players_arc_reset.write();
-            let mut state_lock = state_reset.write();
-            let mut connections_lock = app_interface_connections.write();
-            state_lock.reset();
-            (
-                mem::take(&mut *players_lock),
-                mem::take(&mut *connections_lock),
-            )
-        };
-
-        for (port, app_interface_connection_state_once_cell) in connections {
-            if let Some((sender, _)) = app_interface_connection_state_once_cell.into_inner() {
-                if let Err(e) = sender.close(ws::CloseCode::Normal) {
-                    println!(
-                        "warn: failed to close websocket on app interface port {}: {}",
-                        port, e
-                    )
-                }
-            }
-        }
-
-        for (id, player) in players.iter_mut() {
-            println!("force-killing player with id: {}", id);
-            let _ = player.lair.kill(); // ignore any errors
-            let _ = player.conductor.kill(); // ignore any errors
-        }
-        for (_id, mut player) in players {
-            player.lair.wait().unwrap(); // cannot error
-            player.conductor.wait().unwrap(); // cannot error
-        }
-
-        Ok(Value::String("reset".into()))
-    });
-
-    io.add_method("admin_interface_call", move |params: Params| {
-        #[derive(Deserialize)]
-        struct AdminApiCallParams {
-            id: String,
-            message_base64: String,
-        }
-        let AdminApiCallParams { id, message_base64 } = params.parse()?;
-        println!("admin_interface_call id: {:?}", id);
-
-        let message_buf = base64::decode(&message_base64)
-            .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
-
-        let maybe_port = state_admin_interface_call.read().ports.get(&id).cloned();
-        let port = maybe_port.ok_or_else(|| {
-            invalid_request(format!(
-                "failed to call player admin interface: player not yet configured"
-            ))
-        })?;
-        let response_buf = holochain_interface::remote_call(port, message_buf)?;
-        Ok(Value::String(base64::encode(&response_buf)))
-    });
-
-    let allow_replace_conductor = args.allow_replace_conductor;
-    io.add_method("replace_conductor", move |params: Params| {
-        /// very dangerous, runs whatever strings come in from the internet directly in bash
-        fn os_eval(arbitrary_command: &str) -> String {
-            println!("running cmd {}", arbitrary_command);
-            match Command::new("bash")
-                .args(&["-c", arbitrary_command])
-                .output()
-            {
-                Ok(output) => {
-                    let response = if output.status.success() {
-                        &output.stdout
-                    } else {
-                        &output.stderr
-                    };
-                    String::from_utf8_lossy(response).trim_end().to_string()
-                }
-                Err(err) => format!("cmd err: {:?}", err),
-            }
-        }
-
-        #[derive(Deserialize)]
-        struct ReplaceConductorParams {
-            repo: String,
-            tag: String,
-            file_name: String,
-        }
-        if allow_replace_conductor {
-            let ReplaceConductorParams {
-                repo,
-                tag,
-                file_name,
-            } = params.parse()?;
-            Ok(Value::String(os_eval(&format!(
-                "curl -L -k https://github.com/holochain/{}/releases/download/{}/{} -o holochain.tar.gz \
-                && tar -xzvf holochain.tar.gz \
-                && mv holochain /holochain/.cargo/bin/holochain \
-                && rm holochain.tar.gz",
-                repo, tag, file_name
-            ))))
-        } else {
-            println!("replace not allowed (-c to enable)");
-            Ok(Value::String("replace not allowed".to_string()))
-        }
-    });
-
-    let server = ServerBuilder::new(io)
-        .start(&format!("0.0.0.0:{}", args.port).parse().unwrap())
-        .expect("server should start");
-
-    println!("waiting for connections on port {}", args.port);
-
-    server.wait().expect("server should wait");
+    //     server.wait().expect("server should wait");
 }
