@@ -217,6 +217,8 @@ async fn ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
 enum CallAppInterfaceError {
     #[snafu(display("Not connected to app interface on port {}", port))]
     NotConnected { port: u16 },
+    #[snafu(display("Could not send request: {}", source))]
+    SendRequest { source: tungstenite::Error },
 }
 
 async fn call_app_interface(
@@ -235,13 +237,24 @@ async fn call_app_interface(
     let connection = connection_guard.as_mut().context(NotConnected { port })?;
 
     let holochain_request_id = connection.pending_requests.lock().await.insert(request_id);
-    connection.request_writer.send(Message::Binary(
-        rmp_serde::to_vec_named(&HolochainMessage::Request {
-            id: holochain_request_id,
-            data: message,
-        })
-        .unwrap(),
-    ));
+    if let Err(e) = connection
+        .request_writer
+        .send(Message::Binary(
+            rmp_serde::to_vec_named(&HolochainMessage::Request {
+                id: holochain_request_id,
+                data: message,
+            })
+            .unwrap(),
+        ))
+        .await
+    {
+        let mut pending_requests = connection.pending_requests.lock().await;
+        if pending_requests.contains(holochain_request_id) {
+            pending_requests.remove(holochain_request_id);
+        }
+
+        return Err(SendRequest.into_error(e));
+    }
 
     Ok(())
 }
@@ -681,17 +694,16 @@ where
     V: Default,
 {
     // Optimistically check if we can get the value without creating a write lock.
-    if read_guard.as_ref().unwrap().contains_key(key) {
-        return read_guard.as_mut().unwrap().get(key).unwrap();
+    if !read_guard.as_ref().unwrap().contains_key(key) {
+        // Release the read lock.
+        read_guard.take();
+        let mut write_guard = lock.write();
+        if !write_guard.contains_key(key) {
+            write_guard.insert(key.clone(), Default::default());
+        }
+        // Restore the read lock without allowing the entry to be removed.
+        *read_guard = Some(RwLockWriteGuard::downgrade(write_guard));
     }
-    // Release the read lock.
-    read_guard.take();
-    let mut write_guard = lock.write();
-    if !write_guard.contains_key(key) {
-        write_guard.insert(key.clone(), Default::default());
-    }
-    // Restore the read lock without allowing the entry to be removed.
-    *read_guard = Some(RwLockWriteGuard::downgrade(write_guard));
     read_guard.as_mut().unwrap().get(key).unwrap()
 }
 
@@ -725,7 +737,9 @@ fn shutdown(id: String, signal: Option<String>) -> Result<(), ShutdownError> {
         None => return Ok(()),
     };
 
-    let player_cell = player_lock.lock();
+    let mut player_cell = player_lock.lock();
+
+    kill_player(&mut player_cell, &id, signal)?;
 
     Ok(())
 }
@@ -789,23 +803,16 @@ fn reset() {
 }
 
 async fn admin_api_call(id: String, message: Vec<u8>) -> Vec<u8> {
-    todo!()
+    // println!("admin_interface_call id: {:?}", id);
 
-    //         let AdminApiCallParams { id, message_base64 } = params.parse()?;
-    //         println!("admin_interface_call id: {:?}", id);
+    // let port = maybe_port.ok_or_else(|| {
+    //     invalid_request(format!(
+    //         "failed to call player admin interface: player not yet configured"
+    //     ))
+    // })?;
 
-    //         let message_buf = base64::decode(&message_base64)
-    //             .map_err(|e| invalid_request(format!("failed to decode message_base64: {}", e)))?;
-
-    //         let maybe_port = state_admin_interface_call.read().ports.get(&id).cloned();
-    //         let port = maybe_port.ok_or_else(|| {
-    //             invalid_request(format!(
-    //                 "failed to call player admin interface: player not yet configured"
-    //             ))
-    //         })?;
-
-    //         let response_buf = holochain_interface::remote_call(port, message_buf)?;
-    //         Ok(Value::String(base64::encode(&response_buf)))
+    // let response_buf = holochain_interface::remote_call(port, message)?;
+    // Ok(Value::String(base64::encode(&response_buf)))
 }
 struct Player {
     lair: Child,
@@ -843,12 +850,4 @@ async fn main() -> Result<(), Error> {
     }
 
     Ok(())
-
-    //     let server = ServerBuilder::new(io)
-    //         .start(&format!("0.0.0.0:{}", args.port).parse().unwrap())
-    //         .expect("server should start");
-
-    //     println!("waiting for connections on port {}", args.port);
-
-    //     server.wait().expect("server should wait");
 }
