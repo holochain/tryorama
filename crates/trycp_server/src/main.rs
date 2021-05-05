@@ -1,7 +1,6 @@
 //! trycp_server listens for remote commands issued by tryorama and does as requested
 //! with a set of Holochain conductors that it manages on the local machine.
 
-mod holochain_interface;
 mod save_dna;
 mod startup;
 
@@ -18,7 +17,7 @@ use std::{
     },
 };
 
-use futures::{future, stream::SplitStream, SinkExt, TryStreamExt};
+use futures::{future, stream::SplitStream, SinkExt, TryFutureExt, TryStreamExt};
 use futures_util::StreamExt;
 use nix::{
     sys::signal::{self, Signal},
@@ -209,6 +208,70 @@ async fn save_dna_wrapper(request_id: u64, id: String, content: Vec<u8>) -> Vec<
     .unwrap()
 }
 
+async fn handle_ws_message(
+    message_res: Result<Message, tungstenite::Error>,
+    ws_write: Arc<futures::lock::Mutex<WsResponseWriter>>,
+) -> Result<Message, ConnectionError> {
+    let message = message_res.context(ReadRequest)?;
+
+    let bytes = match message {
+        Message::Binary(bytes) => bytes,
+        _ => return UnexpectedMessageType { message }.fail(),
+    };
+
+    let ReqeuestWrapper {
+        id: request_id,
+        request,
+    } = rmp_serde::from_read_ref(&bytes).context(DeserializeMessage { bytes })?;
+
+    let response = match request {
+        Request::SaveDna { id, content } => save_dna_wrapper(request_id, id, content).await,
+
+        Request::DownloadDna { url } => serialize_resp(
+            request_id,
+            handle_download_dna(url).await.map_err(|e| e.to_string()),
+        ),
+        Request::ConfigurePlayer { id, partial_config } => spawn_blocking(move || {
+            let resp = handle_configure_player(id, partial_config).map_err(|e| e.to_string());
+            serialize_resp(request_id, resp)
+        })
+        .await
+        .unwrap(),
+        Request::Startup { id, log_level } => spawn_blocking(move || {
+            let resp = startup::startup(id, log_level).map_err(|e| e.to_string());
+            serialize_resp(request_id, resp)
+        })
+        .await
+        .unwrap(),
+        Request::Shutdown { id, signal } => spawn_blocking(move || {
+            let resp = handle_shutdown(id, signal).map_err(|e| e.to_string());
+            serialize_resp(request_id, resp)
+        })
+        .await
+        .unwrap(),
+        Request::Reset => spawn_blocking(move || serialize_resp(request_id, handle_reset()))
+            .await
+            .unwrap(),
+        Request::AdminApiCall { id, message } => {
+            todo!("handle_admin_api_call(id, message).await")
+        }
+        Request::ConnectAppInterface { port } => serialize_resp(
+            request_id,
+            connect_app_interface(port, ws_write)
+                .await
+                .map_err(|e| e.to_string()),
+        ),
+        Request::DisconnectAppInterface { port } => {
+            todo!()
+        }
+        Request::CallAppInterface { port, message } => {
+            todo!()
+        }
+    };
+
+    Ok(Message::Binary(response))
+}
+
 async fn handle_ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
     let ws_stream = tokio_tungstenite::accept_async(stream)
         .await
@@ -225,69 +288,7 @@ async fn handle_ws_connection(stream: TcpStream) -> Result<(), ConnectionError> 
     });
 
     ws_read
-        .then(|req| async move {
-            let message = req.context(ReadRequest)?;
-
-            let bytes = match message {
-                Message::Binary(bytes) => bytes,
-                _ => return UnexpectedMessageType { message }.fail(),
-            };
-
-            let ReqeuestWrapper {
-                id: request_id,
-                request,
-            } = rmp_serde::from_read_ref(&bytes).context(DeserializeMessage { bytes })?;
-
-            let response = match request {
-                Request::SaveDna { id, content } => save_dna_wrapper(request_id, id, content).await,
-
-                Request::DownloadDna { url } => serialize_resp(
-                    request_id,
-                    handle_download_dna(url).await.map_err(|e| e.to_string()),
-                ),
-                Request::ConfigurePlayer { id, partial_config } => spawn_blocking(move || {
-                    let resp =
-                        handle_configure_player(id, partial_config).map_err(|e| e.to_string());
-                    serialize_resp(request_id, resp)
-                })
-                .await
-                .unwrap(),
-                Request::Startup { id, log_level } => spawn_blocking(move || {
-                    let resp = startup::startup(id, log_level).map_err(|e| e.to_string());
-                    serialize_resp(request_id, resp)
-                })
-                .await
-                .unwrap(),
-                Request::Shutdown { id, signal } => spawn_blocking(move || {
-                    let resp = handle_shutdown(id, signal).map_err(|e| e.to_string());
-                    serialize_resp(request_id, resp)
-                })
-                .await
-                .unwrap(),
-                Request::Reset => {
-                    spawn_blocking(move || serialize_resp(request_id, handle_reset()))
-                        .await
-                        .unwrap()
-                }
-                Request::AdminApiCall { id, message } => {
-                    todo!("handle_admin_api_call(id, message).await")
-                }
-                Request::ConnectAppInterface { port } => serialize_resp(
-                    request_id,
-                    connect_app_interface(port, Arc::clone(ws_write2))
-                        .await
-                        .map_err(|e| e.to_string()),
-                ),
-                Request::DisconnectAppInterface { port } => {
-                    todo!()
-                }
-                Request::CallAppInterface { port, message } => {
-                    todo!()
-                }
-            };
-
-            Ok(Message::Binary(response))
-        })
+        .then(|message_res| handle_ws_message(message_res, Arc::clone(ws_write2)))
         .forward(write)
         .await
 }
@@ -799,7 +800,7 @@ async fn main() -> Result<(), Error> {
         .context(BindServer)?;
 
     while let Ok((stream, _addr)) = listener.accept().await {
-        tokio::spawn(handle_ws_connection(stream));
+        tokio::spawn(handle_ws_connection(stream)).await;
     }
 
     Ok(())
