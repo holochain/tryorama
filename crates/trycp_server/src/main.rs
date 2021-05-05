@@ -26,8 +26,8 @@ use once_cell::sync::Lazy;
 use parking_lot::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::{Deserialize, Serialize};
 use slab::Slab;
-use snafu::ResultExt;
 use snafu::{ensure, IntoError, Snafu};
+use snafu::{OptionExt, ResultExt};
 use structopt::StructOpt;
 use tokio::net::TcpStream;
 use tokio::{io::AsyncWriteExt, task::spawn_blocking};
@@ -120,10 +120,10 @@ async fn save_dna_wrapper(request_id: u64, id: String, content: Vec<u8>) -> Vec<
     .unwrap()
 }
 
-async fn handle_ws_message(
+async fn ws_message(
     message_res: Result<Message, tungstenite::Error>,
     ws_write: Arc<futures::lock::Mutex<WsResponseWriter>>,
-) -> Result<Message, ConnectionError> {
+) -> Result<Option<Message>, ConnectionError> {
     let message = message_res.context(ReadRequest)?;
 
     let bytes = match message {
@@ -141,10 +141,10 @@ async fn handle_ws_message(
 
         Request::DownloadDna { url } => serialize_resp(
             request_id,
-            handle_download_dna(url).await.map_err(|e| e.to_string()),
+            download_dna(url).await.map_err(|e| e.to_string()),
         ),
         Request::ConfigurePlayer { id, partial_config } => spawn_blocking(move || {
-            let resp = handle_configure_player(id, partial_config).map_err(|e| e.to_string());
+            let resp = configure_player(id, partial_config).map_err(|e| e.to_string());
             serialize_resp(request_id, resp)
         })
         .await
@@ -156,17 +156,15 @@ async fn handle_ws_message(
         .await
         .unwrap(),
         Request::Shutdown { id, signal } => spawn_blocking(move || {
-            let resp = handle_shutdown(id, signal).map_err(|e| e.to_string());
+            let resp = shutdown(id, signal).map_err(|e| e.to_string());
             serialize_resp(request_id, resp)
         })
         .await
         .unwrap(),
-        Request::Reset => spawn_blocking(move || serialize_resp(request_id, handle_reset()))
+        Request::Reset => spawn_blocking(move || serialize_resp(request_id, reset()))
             .await
             .unwrap(),
-        Request::AdminApiCall { id, message } => {
-            todo!("handle_admin_api_call(id, message).await")
-        }
+        Request::AdminApiCall { id, message } => admin_api_call(id, message).await,
         Request::ConnectAppInterface { port } => serialize_resp(
             request_id,
             connect_app_interface(port, ws_write)
@@ -180,14 +178,17 @@ async fn handle_ws_message(
                 .map_err(|e| e.to_string()),
         ),
         Request::CallAppInterface { port, message } => {
-            todo!()
+            match call_app_interface(request_id, port, message).await {
+                Ok(()) => return Ok(None),
+                Err(e) => serialize_resp(request_id, Err::<(), _>(e.to_string())),
+            }
         }
     };
 
-    Ok(Message::Binary(response))
+    Ok(Some(Message::Binary(response)))
 }
 
-async fn handle_ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
+async fn ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
     let ws_stream = tokio_tungstenite::accept_async(stream)
         .await
         .context(Handshake)?;
@@ -198,14 +199,51 @@ async fn handle_ws_connection(stream: TcpStream) -> Result<(), ConnectionError> 
     let ws_write2 = &ws_write1;
 
     let write = futures::sink::unfold((), |(), response| async {
-        let mut ws_write_guard = ws_write1.lock().await;
-        ws_write_guard.send(response).await.context(WriteResponse)
+        if let Some(response) = response {
+            let mut ws_write_guard = ws_write1.lock().await;
+            ws_write_guard.send(response).await.context(WriteResponse)
+        } else {
+            Ok(())
+        }
     });
 
     ws_read
-        .then(|message_res| handle_ws_message(message_res, Arc::clone(ws_write2)))
+        .then(|message_res| ws_message(message_res, Arc::clone(ws_write2)))
         .forward(write)
         .await
+}
+
+#[derive(Debug, Snafu)]
+enum CallAppInterfaceError {
+    #[snafu(display("Not connected to app interface on port {}", port))]
+    NotConnected { port: u16 },
+}
+
+async fn call_app_interface(
+    request_id: u64,
+    port: u16,
+    message: Vec<u8>,
+) -> Result<(), CallAppInterfaceError> {
+    let connection_lock = Arc::clone(
+        APP_INTERFACE_CONNECTIONS
+            .lock()
+            .await
+            .get(&port)
+            .context(NotConnected { port })?,
+    );
+    let mut connection_guard = connection_lock.lock().await;
+    let connection = connection_guard.as_mut().context(NotConnected { port })?;
+
+    let holochain_request_id = connection.pending_requests.lock().await.insert(request_id);
+    connection.request_writer.send(Message::Binary(
+        rmp_serde::to_vec_named(&HolochainMessage::Request {
+            id: holochain_request_id,
+            data: message,
+        })
+        .unwrap(),
+    ));
+
+    Ok(())
 }
 
 #[derive(Debug, Snafu)]
@@ -213,7 +251,7 @@ enum DisconnectAppInterfaceError {
     #[snafu(display("Couldn't complete closing handshake: {}", source))]
     CloseHandshake { source: tungstenite::Error },
     #[snafu(display("Couldn't listen on app interface: {}", source))]
-    Connection { source: listen_app_interface::Error },
+    Listen { source: listen_app_interface::Error },
 }
 
 async fn disconnect_app_interface_by_port(port: u16) -> Result<(), DisconnectAppInterfaceError> {
@@ -250,7 +288,7 @@ async fn disconnect_app_interface(
 
     match read_task.await.unwrap() {
         Ok(Ok(())) | Err(future::Aborted) => close_handshake_result.context(CloseHandshake),
-        Ok(Err(e)) => Err(Connection.into_error(e)),
+        Ok(Err(e)) => Err(Listen.into_error(e)),
     }
 }
 
@@ -451,7 +489,7 @@ enum DownloadDnaError {
     ParseResponse { url: String, source: reqwest::Error },
 }
 
-async fn handle_download_dna(url_str: String) -> Result<String, DownloadDnaError> {
+async fn download_dna(url_str: String) -> Result<String, DownloadDnaError> {
     let url = url::Url::parse(&url_str).with_context(|| ParseUrl {
         url: url_str.clone(),
     })?;
@@ -581,7 +619,7 @@ enum ConfigurePlayerError {
     WriteConfig { path: PathBuf, source: io::Error },
 }
 
-fn handle_configure_player(id: String, partial_config: String) -> Result<(), ConfigurePlayerError> {
+fn configure_player(id: String, partial_config: String) -> Result<(), ConfigurePlayerError> {
     let player_dir = get_player_dir(&id);
     let config_path = player_dir.join(CONDUCTOR_CONFIG_FILENAME);
 
@@ -667,7 +705,7 @@ enum ShutdownError {
     Kill { source: KillError },
 }
 
-fn handle_shutdown(id: String, signal: Option<String>) -> Result<(), ShutdownError> {
+fn shutdown(id: String, signal: Option<String>) -> Result<(), ShutdownError> {
     ensure!(player_config_exists(&id), PlayerNotConfigured { id });
 
     let signal = match signal.as_deref() {
@@ -721,7 +759,7 @@ fn kill_player(
     Ok(())
 }
 
-fn handle_reset() {
+fn reset() {
     let (players, connections) = {
         let mut players_lock = PLAYERS.write();
         let mut connections_lock = futures::executor::block_on(APP_INTERFACE_CONNECTIONS.lock());
@@ -750,7 +788,7 @@ fn handle_reset() {
     }
 }
 
-async fn handle_admin_api_call(id: String, message: Vec<u8>) -> Message {
+async fn admin_api_call(id: String, message: Vec<u8>) -> Vec<u8> {
     todo!()
 
     //         let AdminApiCallParams { id, message_base64 } = params.parse()?;
@@ -801,7 +839,7 @@ async fn main() -> Result<(), Error> {
         .context(BindServer)?;
 
     while let Ok((stream, _addr)) = listener.accept().await {
-        tokio::spawn(handle_ws_connection(stream)).await;
+        tokio::spawn(ws_connection(stream)).await;
     }
 
     Ok(())
