@@ -6,7 +6,6 @@ mod startup;
 
 use std::{
     collections::HashMap,
-    hash::Hash,
     io::{self, Write},
     path::{Path, PathBuf},
     process::Child,
@@ -23,7 +22,7 @@ use nix::{
     unistd::Pid,
 };
 use once_cell::sync::Lazy;
-use parking_lot::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
+use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
 use slab::Slab;
 use snafu::{ensure, IntoError, Snafu};
@@ -164,7 +163,12 @@ async fn ws_message(
         Request::Reset => spawn_blocking(move || serialize_resp(request_id, reset()))
             .await
             .unwrap(),
-        Request::AdminApiCall { id, message } => admin_api_call(id, message).await,
+        Request::AdminApiCall { id, message } => serialize_resp(
+            request_id,
+            admin_call::admin_call(id, message)
+                .await
+                .map_err(|e| e.to_string()),
+        ),
         Request::ConnectAppInterface { port } => serialize_resp(
             request_id,
             connect_app_interface(port, ws_write)
@@ -312,6 +316,8 @@ type WsRequestWriter = futures_util::stream::SplitSink<
 
 type WsResponseWriter =
     futures_util::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
+
+type WsClientDuplex = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 
 type WsReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
 
@@ -630,6 +636,8 @@ enum ConfigurePlayerError {
     OutOfPorts,
     #[snafu(display("Could not write to config file at {}: {}", path.display(), source))]
     WriteConfig { path: PathBuf, source: io::Error },
+    #[snafu(display("Player with ID {} has already been configured", id))]
+    PlayerAlreadyConfigured { id: String },
 }
 
 fn configure_player(id: String, partial_config: String) -> Result<(), ConfigurePlayerError> {
@@ -640,15 +648,29 @@ fn configure_player(id: String, partial_config: String) -> Result<(), ConfigureP
         path: config_path.clone(),
     })?;
 
-    let mut config_file = std::fs::File::create(&config_path).with_context(|| CreateConfig {
-        path: config_path.clone(),
-    })?;
-
     ensure!(
         NEXT_ADMIN_PORT.load(atomic::Ordering::SeqCst) != 0,
         OutOfPorts
     );
     let port = NEXT_ADMIN_PORT.fetch_add(1, atomic::Ordering::SeqCst);
+
+    {
+        let mut players_guard = PLAYERS.write();
+        if players_guard.contains_key(&id) {
+            return PlayerAlreadyConfigured { id }.fail();
+        }
+        players_guard.insert(
+            id.clone(),
+            Player {
+                admin_port: port,
+                processes: Mutex::default(),
+            },
+        );
+    }
+
+    let mut config_file = std::fs::File::create(&config_path).with_context(|| CreateConfig {
+        path: config_path.clone(),
+    })?;
 
     writeln!(
         config_file,
@@ -680,33 +702,6 @@ admin_interfaces:
     Ok(())
 }
 
-/// Ensures that a key is present in the hashmap, using the least amount of locking.
-///
-/// Panics if `read_guard` is `None`. (`read_guard` is only optional due to an implementation detail.)
-fn get_or_insert_default_locked<'lock, 'guard, K, V>(
-    lock: &'lock RwLock<HashMap<K, V>>,
-    read_guard: &'guard mut Option<RwLockReadGuard<'lock, HashMap<K, V>>>,
-    key: &K,
-) -> &'guard V
-where
-    'lock: 'guard,
-    K: Hash + Eq + Clone,
-    V: Default,
-{
-    // Optimistically check if we can get the value without creating a write lock.
-    if !read_guard.as_ref().unwrap().contains_key(key) {
-        // Release the read lock.
-        read_guard.take();
-        let mut write_guard = lock.write();
-        if !write_guard.contains_key(key) {
-            write_guard.insert(key.clone(), Default::default());
-        }
-        // Restore the read lock without allowing the entry to be removed.
-        *read_guard = Some(RwLockWriteGuard::downgrade(write_guard));
-    }
-    read_guard.as_mut().unwrap().get(key).unwrap()
-}
-
 #[derive(Debug, Snafu)]
 enum ShutdownError {
     #[snafu(display("Could not find a configuration for player with ID {:?}", id))]
@@ -732,12 +727,12 @@ fn shutdown(id: String, signal: Option<String>) -> Result<(), ShutdownError> {
     };
 
     let players_guard = PLAYERS.read();
-    let player_lock = match players_guard.get(&id) {
-        Some(player_lock) => player_lock,
+    let processes_lock = match players_guard.get(&id) {
+        Some(player) => &player.processes,
         None => return Ok(()),
     };
 
-    let mut player_cell = player_lock.lock();
+    let mut player_cell = processes_lock.lock();
 
     kill_player(&mut player_cell, &id, signal)?;
 
@@ -753,7 +748,7 @@ enum KillError {
 }
 
 fn kill_player(
-    player_cell: &mut Option<Player>,
+    player_cell: &mut Option<PlayerProcesses>,
     id: &str,
     signal: Signal,
 ) -> Result<(), KillError> {
@@ -775,51 +770,136 @@ fn kill_player(
 
 fn reset() {
     let (players, connections) = {
-        let mut players_lock = PLAYERS.write();
-        let mut connections_lock = futures::executor::block_on(APP_INTERFACE_CONNECTIONS.lock());
+        let mut players_guard = PLAYERS.write();
+        let mut connections_guard = futures::executor::block_on(APP_INTERFACE_CONNECTIONS.lock());
         NEXT_ADMIN_PORT.store(FIRST_ADMIN_PORT, atomic::Ordering::SeqCst);
         (
-            std::mem::take(&mut *players_lock),
-            std::mem::take(&mut *connections_lock),
+            std::mem::take(&mut *players_guard),
+            std::mem::take(&mut *connections_guard),
         )
     };
 
-    // for (port, app_interface_connection_state_once_cell) in connections {
-    //     if let Some((sender, _)) = app_interface_connection_state_once_cell.into_inner() {
-    //         if let Err(e) = sender.close(ws::CloseCode::Normal) {
-    //             println!(
-    //                 "warn: failed to close websocket on app interface port {}: {}",
-    //                 port, e
-    //             )
-    //         }
-    //     }
-    // }
+    for (port, connection) in connections {
+        if let Err(e) = futures::executor::block_on(disconnect_app_interface(connection)) {
+            println!(
+                "warn: failed to disconnect app interface at port {}: {}",
+                port, e
+            );
+        }
+    }
 
     for (id, mut player) in players {
-        if let Err(e) = kill_player(player.get_mut(), &id, Signal::SIGKILL) {
+        if let Err(e) = kill_player(player.processes.get_mut(), &id, Signal::SIGKILL) {
             println!("warn: failed to kill player {:?}: {}", id, e);
         }
     }
 }
 
-async fn admin_api_call(id: String, message: Vec<u8>) -> Vec<u8> {
-    // println!("admin_interface_call id: {:?}", id);
+mod admin_call {
+    use futures::{SinkExt, StreamExt};
+    use snafu::{OptionExt, ResultExt, Snafu};
+    use tokio::task::spawn_blocking;
+    use tokio_tungstenite::tungstenite::{
+        self,
+        protocol::{frame::coding::CloseCode, CloseFrame},
+        Message,
+    };
 
-    // let port = maybe_port.ok_or_else(|| {
-    //     invalid_request(format!(
-    //         "failed to call player admin interface: player not yet configured"
-    //     ))
-    // })?;
+    use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
 
-    // let response_buf = holochain_interface::remote_call(port, message)?;
-    // Ok(Value::String(base64::encode(&response_buf)))
+    #[derive(Debug, Snafu)]
+    pub(crate) enum AdminCallError {
+        #[snafu(display("Could not find a configuration for player with ID {:?}", id))]
+        PlayerNotConfigured { id: String },
+        #[snafu(display("Could not establish a websocket connection: {}", source))]
+        Connect { source: tungstenite::Error },
+        #[snafu(context(false))]
+        Call { source: CallError },
+    }
+
+    pub(crate) async fn admin_call(
+        id: String,
+        message: Vec<u8>,
+    ) -> Result<Vec<u8>, AdminCallError> {
+        println!("admin_interface_call id: {:?}", id);
+
+        let id2 = id.clone();
+        let port = spawn_blocking(move || PLAYERS.read().get(&id2).map(|player| player.admin_port))
+            .await
+            .unwrap()
+            .context(PlayerNotConfigured { id })?;
+
+        let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
+        url.set_port(Some(port)).expect("can set port on localhost");
+
+        let (mut ws_stream, _resp) = tokio_tungstenite::connect_async(url)
+            .await
+            .context(Connect)?;
+
+        let call_result = call(&mut ws_stream, 0, message).await;
+        let _ = ws_stream
+            .send(Message::Close(Some(CloseFrame {
+                code: CloseCode::Normal,
+                reason: "fulfilled purpose".into(),
+            })))
+            .await;
+
+        Ok(call_result?)
+    }
+
+    #[derive(Debug, Snafu)]
+    pub(crate) enum CallError {
+        #[snafu(display("Could not send request over websocket: {}", source))]
+        SendRequest { source: tungstenite::Error },
+        #[snafu(display("Did not receive response over websocket"))]
+        NoResponse,
+        #[snafu(display("Could not receive response over websocket: {}", source))]
+        ReceiveResponse { source: tungstenite::Error },
+        #[snafu(display("Expected a binary response, got {:?}", response))]
+        UnexpectedResponseType { response: Message },
+    }
+
+    async fn call(
+        ws_stream: &mut WsClientDuplex,
+        request_id: usize,
+        data: Vec<u8>,
+    ) -> Result<Vec<u8>, CallError> {
+        let request_data = rmp_serde::to_vec_named(&HolochainMessage::Request {
+            id: request_id,
+            data,
+        })
+        .unwrap();
+
+        ws_stream
+            .send(Message::Binary(request_data))
+            .await
+            .context(SendRequest)?;
+
+        let response = ws_stream
+            .next()
+            .await
+            .context(NoResponse)?
+            .context(ReceiveResponse)?;
+        if let Message::Binary(response_data) = response {
+            Ok(response_data)
+        } else {
+            UnexpectedResponseType { response }.fail()
+        }
+    }
 }
+
+#[derive(Default)]
 struct Player {
+    admin_port: u16,
+    processes: Mutex<Option<PlayerProcesses>>,
+}
+
+struct PlayerProcesses {
     lair: Child,
     holochain: Child,
 }
 
-static PLAYERS: Lazy<RwLock<HashMap<String, Mutex<Option<Player>>>>> = Lazy::new(RwLock::default);
+static PLAYERS: Lazy<RwLock<HashMap<String, Player>>> = Lazy::new(RwLock::default);
 
 static APP_INTERFACE_CONNECTIONS: Lazy<
     futures::lock::Mutex<HashMap<u16, Arc<futures::lock::Mutex<Option<AppInterfaceConnection>>>>>,

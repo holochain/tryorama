@@ -4,12 +4,11 @@ use std::{
     process::{Command, Stdio},
 };
 
-use snafu::{ensure, ResultExt, Snafu};
+use snafu::{OptionExt, ResultExt, Snafu};
 
 use crate::{
-    get_or_insert_default_locked, get_player_dir, player_config_exists, Player,
-    CONDUCTOR_CONFIG_FILENAME, CONDUCTOR_STDERR_LOG_FILENAME, CONDUCTOR_STDOUT_LOG_FILENAME,
-    LAIR_STDERR_LOG_FILENAME, MAGIC_STRING, PLAYERS,
+    get_player_dir, PlayerProcesses, CONDUCTOR_CONFIG_FILENAME, CONDUCTOR_STDERR_LOG_FILENAME,
+    CONDUCTOR_STDOUT_LOG_FILENAME, LAIR_STDERR_LOG_FILENAME, MAGIC_STRING, PLAYERS,
 };
 
 #[derive(Debug, Snafu)]
@@ -39,21 +38,19 @@ pub enum Error {
 pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
     let rust_log = log_level.unwrap_or_else(|| "error".to_string());
 
-    ensure!(player_config_exists(&id), PlayerNotConfigured { id });
     let player_dir = get_player_dir(&id);
-
-    println!("starting player with id: {}", id);
 
     let conductor_stdout;
     let conductor_stderr;
     {
-        let mut players = Some(PLAYERS.read());
-        let player_lock = get_or_insert_default_locked(&PLAYERS, &mut players, &id);
+        let players = PLAYERS.read();
+        let player = players
+            .get(&id)
+            .context(PlayerNotConfigured { id: id.clone() })?;
 
-        let mut player = player_lock.lock();
-        if player.is_some() {
-            return Ok(());
-        }
+        let mut processes = player.processes.lock();
+
+        println!("starting player with id: {}", id);
 
         let lair_stdout_log_path = player_dir.join(LAIR_STDERR_LOG_FILENAME);
         let mut lair = Command::new("lair-keystore")
@@ -96,7 +93,7 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
         conductor_stdout = conductor.stdout.take().unwrap();
         conductor_stderr = conductor.stderr.take().unwrap();
 
-        *player = Some(Player {
+        *processes = Some(PlayerProcesses {
             holochain: conductor,
             lair,
         });
