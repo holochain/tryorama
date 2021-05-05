@@ -35,6 +35,8 @@ update-hc-sha:
 		echo "⚙️  Updating tryorama using holochain rev: $(HC_REV)";\
 		echo "✔  Replacing rev...";\
 		sed -i '3s/.*/REV=$(HC_REV)/' ./ci_scripts/install-holochain.sh;\
+		sed -i -e 's/^hdk = .*/hdk = {git ="https:\/\/github.com\/holochain\/holochain", rev = "$(HC_REV)", package = "hdk"}/' test/e2e/fixture/zomes/test/Cargo.toml;\
+		sed -i -e 's/^Note: this version of tryorama is tested against holochain rev .*/Note: this version of tryorama is tested against holochain rev $(HC_REV)/' README.md;\
 	else \
 		echo "No holochain rev provided"; \
   fi
