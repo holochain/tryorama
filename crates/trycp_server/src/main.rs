@@ -8,7 +8,6 @@ use std::{
     collections::HashMap,
     hash::Hash,
     io::{self, Write},
-    ops::Range,
     path::{Path, PathBuf},
     process::Child,
     sync::{
@@ -17,12 +16,13 @@ use std::{
     },
 };
 
-use futures::{future, stream::SplitStream, SinkExt, TryFutureExt, TryStreamExt};
+use futures::{future, stream::SplitStream, SinkExt};
 use futures_util::StreamExt;
 use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
 };
+use once_cell::sync::Lazy;
 use parking_lot::{Mutex, RwLock, RwLockReadGuard, RwLockWriteGuard};
 use serde::{Deserialize, Serialize};
 use slab::Slab;
@@ -32,7 +32,11 @@ use structopt::StructOpt;
 use tokio::net::TcpStream;
 use tokio::{io::AsyncWriteExt, task::spawn_blocking};
 use tokio_tungstenite::{
-    tungstenite::{self, Message},
+    tungstenite::{
+        self,
+        protocol::{frame::coding::CloseCode, CloseFrame},
+        Message,
+    },
     MaybeTlsStream, WebSocketStream,
 };
 
@@ -45,7 +49,6 @@ const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
 const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
 const DNA_DIR_PATH: &str = "/tmp/trycp/dnas";
-const NEXT_ADMIN_PORT_PATH: &str = "/tmp/trycp/next_admin_port.txt";
 const FIRST_ADMIN_PORT: u16 = 9100;
 
 static NEXT_ADMIN_PORT: AtomicU16 = AtomicU16::new(FIRST_ADMIN_PORT);
@@ -59,97 +62,6 @@ struct Cli {
         default_value = "9000"
     )]
     port: u16,
-
-    #[structopt(
-        long = "port-range",
-        short = "r",
-        help = "The port range to use for spawning new conductors (e.g. '9000-9150')"
-    )]
-    port_range_string: String,
-
-    #[structopt(long, short = "m", help = "Activate ability to runs as a manager")]
-    /// activates manager mode
-    manager: bool,
-
-    #[structopt(
-        long,
-        short = "e",
-        help = "Register with a manager (url + port, e.g. ws://final-exam:9000)"
-    )]
-    /// url of manager to register availability with
-    register: Option<String>,
-
-    #[structopt(
-        long,
-        short,
-        help = "The host name to use when registering with a manager",
-        default_value = "localhost"
-    )]
-    host: String,
-}
-
-type PortRange = Range<u16>;
-
-fn parse_port_range(s: String) -> Result<PortRange, String> {
-    let segments = s
-        .split('-')
-        .map(|seg| {
-            seg.parse()
-                .map_err(|e: std::num::ParseIntError| e.to_string())
-        })
-        .collect::<Result<Vec<u16>, String>>()?;
-    match segments.as_slice() {
-        &[lo, hi] => {
-            if lo < hi {
-                Ok(lo..hi)
-            } else {
-                Err("Port range must go from a lower port to a higher one.".into())
-            }
-        }
-        _ => Err("Port range must be in the format 'xxxx-yyyy'".into()),
-    }
-}
-
-struct TrycpServer {
-    next_port: u16,
-    port_range: PortRange,
-    ports: HashMap<String, u16>,
-}
-
-impl TrycpServer {
-    fn new(port_range: PortRange) -> Self {
-        std::fs::create_dir_all(DNA_DIR_PATH)
-            .map_err(|err| format!("{:?}", err))
-            .expect("should create dna dir");
-        TrycpServer {
-            next_port: port_range.start,
-            port_range,
-            ports: HashMap::new(),
-        }
-    }
-
-    fn acquire_port(&mut self, id: String) -> Result<u16, String> {
-        if self.next_port < self.port_range.end {
-            let port = self.next_port;
-            self.next_port += 1;
-            self.ports.insert(id, port);
-            Ok(port)
-        } else {
-            Err(format!(
-                "All available ports have been used up! Range: {:?}",
-                self.port_range
-            ))
-        }
-    }
-
-    fn reset(&mut self) {
-        self.next_port = self.port_range.start;
-        self.ports.clear();
-
-        if let Err(e) = std::fs::remove_dir_all(PLAYERS_DIR_PATH) {
-            println!("error: failed to clear out players directory: {}", e);
-        }
-    }
 }
 
 fn get_player_dir(id: &str) -> PathBuf {
@@ -261,9 +173,12 @@ async fn handle_ws_message(
                 .await
                 .map_err(|e| e.to_string()),
         ),
-        Request::DisconnectAppInterface { port } => {
-            todo!()
-        }
+        Request::DisconnectAppInterface { port } => serialize_resp(
+            request_id,
+            disconnect_app_interface_by_port(port)
+                .await
+                .map_err(|e| e.to_string()),
+        ),
         Request::CallAppInterface { port, message } => {
             todo!()
         }
@@ -293,6 +208,52 @@ async fn handle_ws_connection(stream: TcpStream) -> Result<(), ConnectionError> 
         .await
 }
 
+#[derive(Debug, Snafu)]
+enum DisconnectAppInterfaceError {
+    #[snafu(display("Couldn't complete closing handshake: {}", source))]
+    CloseHandshake { source: tungstenite::Error },
+    #[snafu(display("Couldn't listen on app interface: {}", source))]
+    Connection { source: listen_app_interface::Error },
+}
+
+async fn disconnect_app_interface_by_port(port: u16) -> Result<(), DisconnectAppInterfaceError> {
+    let connection_lock = match APP_INTERFACE_CONNECTIONS.lock().await.get(&port) {
+        Some(connection_lock) => Arc::clone(connection_lock),
+        None => return Ok(()),
+    };
+
+    disconnect_app_interface(connection_lock).await
+}
+
+async fn disconnect_app_interface(
+    connection_lock: Arc<futures::lock::Mutex<Option<AppInterfaceConnection>>>,
+) -> Result<(), DisconnectAppInterfaceError> {
+    let mut connection_guard = connection_lock.lock().await;
+    let AppInterfaceConnection {
+        mut request_writer,
+        cancel_read_task,
+        read_task,
+        pending_requests: _,
+    } = match connection_guard.take() {
+        Some(connection) => connection,
+        None => return Ok(()),
+    };
+
+    let close_handshake_result = request_writer
+        .send(Message::Close(Some(CloseFrame {
+            code: CloseCode::Normal,
+            reason: "purpose fulfilled".into(),
+        })))
+        .await;
+
+    cancel_read_task.abort();
+
+    match read_task.await.unwrap() {
+        Ok(Ok(())) | Err(future::Aborted) => close_handshake_result.context(CloseHandshake),
+        Ok(Err(e)) => Err(Connection.into_error(e)),
+    }
+}
+
 type WsRequestWriter = futures_util::stream::SplitSink<
     WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
     Message,
@@ -306,7 +267,7 @@ type WsReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream
 type PendingRequests = Arc<futures::lock::Mutex<Slab<u64>>>;
 
 struct AppInterfaceConnection {
-    writer: WsRequestWriter,
+    request_writer: WsRequestWriter,
     read_task:
         tokio::task::JoinHandle<Result<Result<(), listen_app_interface::Error>, future::Aborted>>,
     cancel_read_task: future::AbortHandle,
@@ -330,10 +291,13 @@ mod listen_app_interface {
     use tokio_tungstenite::tungstenite;
     use tokio_tungstenite::tungstenite::Message;
 
-    use crate::{HolochainMessage, PendingRequests, WsReader, WsResponseWriter};
+    use crate::{
+        serialize_resp, HolochainMessage, MessageToClient, PendingRequests, WsReader,
+        WsResponseWriter,
+    };
 
     #[derive(Debug, Snafu)]
-    pub enum Error {
+    pub(crate) enum Error {
         #[snafu(display("Could not read from websocket: {}", source))]
         Read { source: tungstenite::Error },
         #[snafu(display("Expected a binary message, got: {:?}", message))]
@@ -343,12 +307,22 @@ mod listen_app_interface {
             bytes: Vec<u8>,
             source: rmp_serde::decode::Error,
         },
+        #[snafu(display("Could not send response to client: {}", source))]
+        SendResponse { source: tungstenite::Error },
+        #[snafu(display("Could not send signal to client: {}", source))]
+        SendSignal { source: tungstenite::Error },
+        #[snafu(display(
+            "Received request from Holochain {:?} but Holochain is not supposed to make requests",
+            request
+        ))]
+        UnexpectedRequest { request: HolochainMessage },
     }
 
-    pub async fn listen_app_interface(
+    pub(crate) async fn listen_app_interface(
+        port: u16,
         reader: WsReader,
         pending_requests: PendingRequests,
-        client_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
+        response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
     ) -> Result<(), Error> {
         reader
             .map_err(|e| Read.into_error(e))
@@ -373,12 +347,13 @@ mod listen_app_interface {
                             }
                         };
 
-                        let a = client_writer.lock().await;
-                        // a.send();
-                        todo!()
+                        response_writer.lock().await.send(Message::Binary(serialize_resp(call_request_id, data))).await.context(SendResponse)?;
                     },
                     HolochainMessage::Signal { data } => {
-
+                        response_writer.lock().await.send(Message::Binary(rmp_serde::to_vec_named(&MessageToClient::<()>::Signal{port, data}).unwrap())).await.context(SendSignal)?;
+                    }
+                    request @ HolochainMessage::Request { .. } =>  {
+                        return UnexpectedRequest { request }.fail()
                     }
                 }
 
@@ -390,26 +365,50 @@ mod listen_app_interface {
 
 async fn connect_app_interface(
     port: u16,
-    writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
+    response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
 ) -> Result<(), ConnectAppInterfaceError> {
+    let connection_lock = Arc::clone(
+        &APP_INTERFACE_CONNECTIONS
+            .lock()
+            .await
+            .entry(port)
+            .or_default(),
+    );
+
+    let mut connection = connection_lock.lock().await;
+    if connection.is_some() {
+        return Ok(());
+    }
+
     let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
-    url.set_port(Some(9000));
+    url.set_port(Some(9000)).expect("can set port on localhost");
 
     let (ws_stream, _resp) = tokio_tungstenite::connect_async(url)
         .await
         .context(Connect)?;
 
-    let (write, read) = ws_stream.split();
+    let (request_writer, read) = ws_stream.split();
 
     let read: WsReader = read;
 
     let pending_requests = Arc::default();
 
-    let read_future =
-        listen_app_interface::listen_app_interface(read, Arc::clone(&pending_requests), writer);
+    let read_future = listen_app_interface::listen_app_interface(
+        port,
+        read,
+        Arc::clone(&pending_requests),
+        response_writer,
+    );
     let (abortable_read_future, abort_handle) = future::abortable(read_future);
 
     let read_task = tokio::task::spawn(abortable_read_future);
+
+    *connection = Some(AppInterfaceConnection {
+        read_task,
+        cancel_read_task: abort_handle,
+        pending_requests,
+        request_writer,
+    });
 
     Ok(())
 }
@@ -618,7 +617,9 @@ admin_interfaces:
 {}",
         port, partial_config
     )
-    .context(WriteConfig { path: config_path })?;
+    .with_context(|| WriteConfig {
+        path: config_path.clone(),
+    })?;
 
     println!(
         "wrote config for player {} to {}",
@@ -633,29 +634,27 @@ admin_interfaces:
 /// Panics if `read_guard` is `None`. (`read_guard` is only optional due to an implementation detail.)
 fn get_or_insert_default_locked<'lock, 'guard, K, V>(
     lock: &'lock RwLock<HashMap<K, V>>,
-    read_guard: &'guard mut Option<RwLockReadGuard<'guard, HashMap<K, V>>>,
-    key: K,
+    read_guard: &'guard mut Option<RwLockReadGuard<'lock, HashMap<K, V>>>,
+    key: &K,
 ) -> &'guard V
 where
     'lock: 'guard,
-    K: Hash + Eq,
+    K: Hash + Eq + Clone,
     V: Default,
 {
     // Optimistically check if we can get the value without creating a write lock.
-    match read_guard.unwrap().get(&key) {
-        Some(v) => v,
-        None => {
-            // Release the read lock.
-            read_guard.take();
-            let mut write_guard = lock.write();
-            if !write_guard.contains_key(&key) {
-                write_guard.insert(key, Default::default());
-            }
-            // Restore the read lock without allowing the entry to be removed.
-            *read_guard = Some(RwLockWriteGuard::downgrade(write_guard));
-            read_guard.unwrap().get(&key).unwrap()
-        }
+    if read_guard.as_ref().unwrap().contains_key(key) {
+        return read_guard.as_mut().unwrap().get(key).unwrap();
     }
+    // Release the read lock.
+    read_guard.take();
+    let mut write_guard = lock.write();
+    if !write_guard.contains_key(key) {
+        write_guard.insert(key.clone(), Default::default());
+    }
+    // Restore the read lock without allowing the entry to be removed.
+    *read_guard = Some(RwLockWriteGuard::downgrade(write_guard));
+    read_guard.as_mut().unwrap().get(key).unwrap()
 }
 
 #[derive(Debug, Snafu)]
@@ -682,7 +681,8 @@ fn handle_shutdown(id: String, signal: Option<String>) -> Result<(), ShutdownErr
         }
     };
 
-    let player_lock = match PLAYERS.read().get(&id) {
+    let players_guard = PLAYERS.read();
+    let player_lock = match players_guard.get(&id) {
         Some(player_lock) => player_lock,
         None => return Ok(()),
     };
@@ -722,9 +722,9 @@ fn kill_player(
 }
 
 fn handle_reset() {
-    let (mut players, connections) = {
+    let (players, connections) = {
         let mut players_lock = PLAYERS.write();
-        let mut connections_lock = app_interface_connections.write();
+        let mut connections_lock = futures::executor::block_on(APP_INTERFACE_CONNECTIONS.lock());
         NEXT_ADMIN_PORT.store(FIRST_ADMIN_PORT, atomic::Ordering::SeqCst);
         (
             std::mem::take(&mut *players_lock),
@@ -743,7 +743,7 @@ fn handle_reset() {
     //     }
     // }
 
-    for (id, player) in players {
+    for (id, mut player) in players {
         if let Err(e) = kill_player(player.get_mut(), &id, Signal::SIGKILL) {
             println!("warn: failed to kill player {:?}: {}", id, e);
         }
@@ -774,7 +774,11 @@ struct Player {
     holochain: Child,
 }
 
-static PLAYERS: RwLock<HashMap<String, Mutex<Option<Player>>>> = RwLock::default();
+static PLAYERS: Lazy<RwLock<HashMap<String, Mutex<Option<Player>>>>> = Lazy::new(RwLock::default);
+
+static APP_INTERFACE_CONNECTIONS: Lazy<
+    futures::lock::Mutex<HashMap<u16, Arc<futures::lock::Mutex<Option<AppInterfaceConnection>>>>>,
+> = Lazy::new(Default::default);
 
 #[derive(Debug, Snafu)]
 enum Error {
@@ -787,9 +791,6 @@ enum Error {
 #[tokio::main]
 async fn main() -> Result<(), Error> {
     let args = Cli::from_args();
-
-    let conductor_port_range: PortRange =
-        parse_port_range(args.port_range_string).expect("Invalid port range");
 
     tokio::fs::remove_dir_all("/tmp/trycp")
         .await

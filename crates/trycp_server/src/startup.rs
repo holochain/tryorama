@@ -44,60 +44,63 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
 
     println!("starting player with id: {}", id);
 
-    let mut players = Some(PLAYERS.read());
-    let player_lock = get_or_insert_default_locked(&PLAYERS, &mut players, id.clone());
+    let conductor_stdout;
+    let conductor_stderr;
+    {
+        let mut players = Some(PLAYERS.read());
+        let player_lock = get_or_insert_default_locked(&PLAYERS, &mut players, &id);
 
-    let mut player = player_lock.lock();
-    if player.is_some() {
-        return Ok(());
+        let mut player = player_lock.lock();
+        if player.is_some() {
+            return Ok(());
+        }
+
+        let lair_stdout_log_path = player_dir.join(LAIR_STDERR_LOG_FILENAME);
+        let mut lair = Command::new("lair-keystore")
+            .current_dir(&player_dir)
+            .arg("-d")
+            .arg("keystore")
+            .env("RUST_BACKTRACE", "full")
+            .stdout(Stdio::piped())
+            .stderr(
+                std::fs::OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(&lair_stdout_log_path)
+                    .context(CreateLairStdoutFile {
+                        path: lair_stdout_log_path,
+                    })?,
+            )
+            .spawn()
+            .context(SpawnLair)?;
+
+        // Wait until lair begins to output before starting conductor,
+        // otherwise Holochain starts its own copy of lair that we can't manage.
+        lair.stdout
+            .as_mut()
+            .unwrap()
+            .read_exact(&mut [0])
+            .context(CheckLairReady)?;
+
+        let mut conductor = Command::new("holochain")
+            .current_dir(&player_dir)
+            .arg("-c")
+            .arg(CONDUCTOR_CONFIG_FILENAME)
+            .env("RUST_BACKTRACE", "full")
+            .env("RUST_LOG", rust_log)
+            .stdout(Stdio::piped())
+            .stderr(Stdio::piped())
+            .spawn()
+            .context(SpawnHolochain)?;
+
+        conductor_stdout = conductor.stdout.take().unwrap();
+        conductor_stderr = conductor.stderr.take().unwrap();
+
+        *player = Some(Player {
+            holochain: conductor,
+            lair,
+        });
     }
-
-    let lair_stdout_log_path = player_dir.join(LAIR_STDERR_LOG_FILENAME);
-    let mut lair = Command::new("lair-keystore")
-        .current_dir(&player_dir)
-        .arg("-d")
-        .arg("keystore")
-        .env("RUST_BACKTRACE", "full")
-        .stdout(Stdio::piped())
-        .stderr(
-            std::fs::OpenOptions::new()
-                .append(true)
-                .create(true)
-                .open(&lair_stdout_log_path)
-                .context(CreateLairStdoutFile {
-                    path: lair_stdout_log_path,
-                })?,
-        )
-        .spawn()
-        .context(SpawnLair)?;
-
-    // Wait until lair begins to output before starting conductor,
-    // otherwise Holochain starts its own copy of lair that we can't manage.
-    lair.stdout
-        .as_mut()
-        .unwrap()
-        .read_exact(&mut [0])
-        .context(CheckLairReady)?;
-
-    let mut conductor = Command::new("holochain")
-        .current_dir(&player_dir)
-        .arg("-c")
-        .arg(CONDUCTOR_CONFIG_FILENAME)
-        .env("RUST_BACKTRACE", "full")
-        .env("RUST_LOG", rust_log)
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .context(SpawnHolochain)?;
-
-    let conductor_stdout = conductor.stdout.take().unwrap();
-    let conductor_stderr = conductor.stderr.take().unwrap();
-
-    *player = Some(Player {
-        holochain: conductor,
-        lair,
-    });
-    std::mem::drop(players);
 
     let mut log_stdout = Command::new("tee")
         .arg(player_dir.join(CONDUCTOR_STDOUT_LOG_FILENAME))
