@@ -1,6 +1,9 @@
 //! trycp_server listens for remote commands issued by tryorama and does as requested
 //! with a set of Holochain conductors that it manages on the local machine.
 
+mod admin_call;
+mod app_interface;
+mod reset;
 mod save_dna;
 mod startup;
 
@@ -16,7 +19,7 @@ use std::{
     },
 };
 
-use futures::{future, stream::SplitStream, SinkExt, StreamExt};
+use futures::{stream::SplitStream, SinkExt, StreamExt};
 use nix::{
     sys::signal::{self, Signal},
     unistd::Pid,
@@ -24,18 +27,13 @@ use nix::{
 use once_cell::sync::Lazy;
 use parking_lot::{Mutex, RwLock};
 use serde::{Deserialize, Serialize};
-use slab::Slab;
+use snafu::ResultExt;
 use snafu::{ensure, IntoError, Snafu};
-use snafu::{OptionExt, ResultExt};
 use structopt::StructOpt;
 use tokio::net::TcpStream;
 use tokio::{io::AsyncWriteExt, task::spawn_blocking};
 use tokio_tungstenite::{
-    tungstenite::{
-        self,
-        protocol::{frame::coding::CloseCode, CloseFrame},
-        Message,
-    },
+    tungstenite::{self, Message},
     MaybeTlsStream, WebSocketStream,
 };
 
@@ -172,11 +170,11 @@ async fn ws_message(
         })
         .await
         .unwrap(),
-        Request::Reset => {
-            spawn_blocking(move || serialize_resp(request_id, reset().map_err(|e| e.to_string())))
-                .await
-                .unwrap()
-        }
+        Request::Reset => spawn_blocking(move || {
+            serialize_resp(request_id, reset::reset().map_err(|e| e.to_string()))
+        })
+        .await
+        .unwrap(),
         Request::CallAdminInterface { id, message } => serialize_resp(
             request_id,
             admin_call::admin_call(id, message)
@@ -185,18 +183,18 @@ async fn ws_message(
         ),
         Request::ConnectAppInterface { port } => serialize_resp(
             request_id,
-            connect_app_interface(port, ws_write)
+            app_interface::connect(port, ws_write)
                 .await
                 .map_err(|e| e.to_string()),
         ),
         Request::DisconnectAppInterface { port } => serialize_resp(
             request_id,
-            disconnect_app_interface_by_port(port)
+            app_interface::disconnect_by_port(port)
                 .await
                 .map_err(|e| e.to_string()),
         ),
         Request::CallAppInterface { port, message } => {
-            match call_app_interface(request_id, port, message).await {
+            match app_interface::call(request_id, port, message).await {
                 Ok(()) => return Ok(None),
                 Err(e) => serialize_resp(request_id, Err::<(), _>(e.to_string())),
             }
@@ -231,98 +229,6 @@ async fn ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
         .await
 }
 
-#[derive(Debug, Snafu)]
-enum CallAppInterfaceError {
-    #[snafu(display("Not connected to app interface on port {}", port))]
-    NotConnected { port: u16 },
-    #[snafu(display("Could not send request: {}", source))]
-    SendRequest { source: tungstenite::Error },
-}
-
-async fn call_app_interface(
-    request_id: u64,
-    port: u16,
-    message: Vec<u8>,
-) -> Result<(), CallAppInterfaceError> {
-    let connection_lock = Arc::clone(
-        APP_INTERFACE_CONNECTIONS
-            .lock()
-            .await
-            .get(&port)
-            .context(NotConnected { port })?,
-    );
-    let mut connection_guard = connection_lock.lock().await;
-    let connection = connection_guard.as_mut().context(NotConnected { port })?;
-
-    let holochain_request_id = connection.pending_requests.lock().await.insert(request_id);
-    if let Err(e) = connection
-        .request_writer
-        .send(Message::Binary(
-            rmp_serde::to_vec_named(&HolochainMessage::Request {
-                id: holochain_request_id,
-                data: message,
-            })
-            .unwrap(),
-        ))
-        .await
-    {
-        let mut pending_requests = connection.pending_requests.lock().await;
-        if pending_requests.contains(holochain_request_id) {
-            pending_requests.remove(holochain_request_id);
-        }
-
-        return Err(SendRequest.into_error(e));
-    }
-
-    Ok(())
-}
-
-#[derive(Debug, Snafu)]
-enum DisconnectAppInterfaceError {
-    #[snafu(display("Couldn't complete closing handshake: {}", source))]
-    CloseHandshake { source: tungstenite::Error },
-    #[snafu(display("Couldn't listen on app interface: {}", source))]
-    Listen { source: listen_app_interface::Error },
-}
-
-async fn disconnect_app_interface_by_port(port: u16) -> Result<(), DisconnectAppInterfaceError> {
-    let connection_lock = match APP_INTERFACE_CONNECTIONS.lock().await.get(&port) {
-        Some(connection_lock) => Arc::clone(connection_lock),
-        None => return Ok(()),
-    };
-
-    disconnect_app_interface(connection_lock).await
-}
-
-async fn disconnect_app_interface(
-    connection_lock: Arc<futures::lock::Mutex<Option<AppInterfaceConnection>>>,
-) -> Result<(), DisconnectAppInterfaceError> {
-    let mut connection_guard = connection_lock.lock().await;
-    let AppInterfaceConnection {
-        mut request_writer,
-        cancel_read_task,
-        read_task,
-        pending_requests: _,
-    } = match connection_guard.take() {
-        Some(connection) => connection,
-        None => return Ok(()),
-    };
-
-    let close_handshake_result = request_writer
-        .send(Message::Close(Some(CloseFrame {
-            code: CloseCode::Normal,
-            reason: "purpose fulfilled".into(),
-        })))
-        .await;
-
-    cancel_read_task.abort();
-
-    match read_task.await.unwrap() {
-        Ok(Ok(())) | Err(future::Aborted) => close_handshake_result.context(CloseHandshake),
-        Ok(Err(e)) => Err(Listen.into_error(e)),
-    }
-}
-
 type WsRequestWriter =
     futures::stream::SplitSink<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>, Message>;
 
@@ -331,155 +237,6 @@ type WsResponseWriter = futures::stream::SplitSink<WebSocketStream<tokio::net::T
 type WsClientDuplex = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 
 type WsReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
-
-type PendingRequests = Arc<futures::lock::Mutex<Slab<u64>>>;
-
-struct AppInterfaceConnection {
-    request_writer: WsRequestWriter,
-    read_task:
-        tokio::task::JoinHandle<Result<Result<(), listen_app_interface::Error>, future::Aborted>>,
-    cancel_read_task: future::AbortHandle,
-    pending_requests: PendingRequests,
-}
-
-#[derive(Debug, Snafu)]
-enum ConnectAppInterfaceError {
-    #[snafu(display(
-        "Could not establish a websocket connection to app interface: {}",
-        source
-    ))]
-    Connect { source: tungstenite::Error },
-}
-
-mod listen_app_interface {
-    use std::sync::Arc;
-
-    use futures::{SinkExt, TryStreamExt};
-    use snafu::{IntoError, ResultExt, Snafu};
-    use tokio_tungstenite::tungstenite;
-    use tokio_tungstenite::tungstenite::Message;
-
-    use crate::{
-        serialize_resp, HolochainMessage, MessageToClient, PendingRequests, WsReader,
-        WsResponseWriter,
-    };
-
-    #[derive(Debug, Snafu)]
-    pub(crate) enum Error {
-        #[snafu(display("Could not read from websocket: {}", source))]
-        Read { source: tungstenite::Error },
-        #[snafu(display("Expected a binary message, got: {:?}", message))]
-        UnexpectedMessageType { message: Message },
-        #[snafu(display("Could not deserialize bytes {:?} as MessagePack: {}", bytes, source))]
-        DeserializeMessage {
-            bytes: Vec<u8>,
-            source: rmp_serde::decode::Error,
-        },
-        #[snafu(display("Could not send response to client: {}", source))]
-        SendResponse { source: tungstenite::Error },
-        #[snafu(display("Could not send signal to client: {}", source))]
-        SendSignal { source: tungstenite::Error },
-        #[snafu(display(
-            "Received request from Holochain {:?} but Holochain is not supposed to make requests",
-            request
-        ))]
-        UnexpectedRequest { request: HolochainMessage },
-    }
-
-    pub(crate) async fn listen_app_interface(
-        port: u16,
-        reader: WsReader,
-        pending_requests: PendingRequests,
-        response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
-    ) -> Result<(), Error> {
-        reader
-            .map_err(|e| Read.into_error(e))
-            .try_for_each(|holochain_message| async {
-                let bytes = match holochain_message {
-                    Message::Binary(bytes) => bytes,
-                    message => return UnexpectedMessageType { message }.fail(),
-                };
-
-                let deserialized: HolochainMessage =
-                    rmp_serde::from_read_ref(&bytes).context(DeserializeMessage { bytes })?;
-
-                match deserialized {
-                    HolochainMessage::Response { id, data } => {
-                        let call_request_id = {
-                            let mut pending_requests_guard = pending_requests.lock().await;
-                            if pending_requests_guard.contains(id) {
-                                pending_requests_guard.remove(id)
-                            } else {
-                                println!("warn: received response with ID {} without a pending request of that ID", id);
-                                return Ok(())
-                            }
-                        };
-
-                        response_writer.lock().await.send(Message::Binary(serialize_resp(call_request_id, Ok::<_, String>(data)))).await.context(SendResponse)?;
-                    },
-                    HolochainMessage::Signal { data } => {
-                        response_writer.lock().await.send(Message::Binary(rmp_serde::to_vec_named(&MessageToClient::<()>::Signal{port, data}).unwrap())).await.context(SendSignal)?;
-                    }
-                    request @ HolochainMessage::Request { .. } =>  {
-                        return UnexpectedRequest { request }.fail()
-                    }
-                }
-
-                Ok(())
-            })
-            .await
-    }
-}
-
-async fn connect_app_interface(
-    port: u16,
-    response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
-) -> Result<(), ConnectAppInterfaceError> {
-    let connection_lock = Arc::clone(
-        &APP_INTERFACE_CONNECTIONS
-            .lock()
-            .await
-            .entry(port)
-            .or_default(),
-    );
-
-    let mut connection = connection_lock.lock().await;
-    if connection.is_some() {
-        return Ok(());
-    }
-
-    let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
-    url.set_port(Some(port)).expect("can set port on localhost");
-
-    let (ws_stream, _resp) = tokio_tungstenite::connect_async(url)
-        .await
-        .context(Connect)?;
-
-    let (request_writer, read) = ws_stream.split();
-
-    let read: WsReader = read;
-
-    let pending_requests = Arc::default();
-
-    let read_future = listen_app_interface::listen_app_interface(
-        port,
-        read,
-        Arc::clone(&pending_requests),
-        response_writer,
-    );
-    let (abortable_read_future, abort_handle) = future::abortable(read_future);
-
-    let read_task = tokio::task::spawn(abortable_read_future);
-
-    *connection = Some(AppInterfaceConnection {
-        read_task,
-        cancel_read_task: abort_handle,
-        pending_requests,
-        request_writer,
-    });
-
-    Ok(())
-}
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(tag = "type")]
@@ -782,170 +539,6 @@ fn kill_player(
     Ok(())
 }
 
-#[derive(Debug, Snafu)]
-enum ResetError {
-    #[snafu(display(
-        "Could not clear out players directory at {}: {}",
-        PLAYERS_DIR_PATH,
-        source
-    ))]
-    RemoveDir { source: io::Error },
-}
-
-fn reset() -> Result<(), ResetError> {
-    let (players, connections) = {
-        let mut players_guard = PLAYERS.write();
-        let mut connections_guard = futures::executor::block_on(APP_INTERFACE_CONNECTIONS.lock());
-        NEXT_ADMIN_PORT.store(FIRST_ADMIN_PORT, atomic::Ordering::SeqCst);
-        match std::fs::remove_dir_all(PLAYERS_DIR_PATH) {
-            Ok(()) => {}
-            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
-            Err(e) => return Err(RemoveDir.into_error(e)),
-        }
-        (
-            std::mem::take(&mut *players_guard),
-            std::mem::take(&mut *connections_guard),
-        )
-    };
-
-    for (port, connection) in connections {
-        if let Err(e) = futures::executor::block_on(disconnect_app_interface(connection)) {
-            println!(
-                "warn: failed to disconnect app interface at port {}: {}",
-                port, e
-            );
-        }
-    }
-
-    for (id, mut player) in players {
-        if let Err(e) = kill_player(player.processes.get_mut(), &id, Signal::SIGKILL) {
-            println!("warn: failed to kill player {:?}: {}", id, e);
-        }
-    }
-
-    Ok(())
-}
-
-mod admin_call {
-    use futures::{SinkExt, StreamExt};
-    use snafu::{OptionExt, ResultExt, Snafu};
-    use tokio::task::spawn_blocking;
-    use tokio_tungstenite::tungstenite::{
-        self,
-        protocol::{frame::coding::CloseCode, CloseFrame},
-        Message,
-    };
-
-    use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
-
-    #[derive(Debug, Snafu)]
-    pub(crate) enum AdminCallError {
-        #[snafu(display("Could not find a configuration for player with ID {:?}", id))]
-        PlayerNotConfigured { id: String },
-        #[snafu(display("Could not establish a websocket connection: {}", source))]
-        Connect { source: tungstenite::Error },
-        #[snafu(context(false))]
-        Call { source: CallError },
-    }
-
-    pub(crate) async fn admin_call(
-        id: String,
-        message: Vec<u8>,
-    ) -> Result<Vec<u8>, AdminCallError> {
-        println!("admin_interface_call id: {:?}", id);
-
-        let id2 = id.clone();
-        let port = spawn_blocking(move || PLAYERS.read().get(&id2).map(|player| player.admin_port))
-            .await
-            .unwrap()
-            .context(PlayerNotConfigured { id })?;
-
-        let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
-        url.set_port(Some(port)).expect("can set port on localhost");
-
-        println!("Established admin interface with {}", url);
-
-        let (mut ws_stream, _resp) = tokio_tungstenite::connect_async(url)
-            .await
-            .context(Connect)?;
-
-        let call_result = call(&mut ws_stream, 0, message).await;
-        let _ = ws_stream
-            .send(Message::Close(Some(CloseFrame {
-                code: CloseCode::Normal,
-                reason: "fulfilled purpose".into(),
-            })))
-            .await;
-
-        Ok(call_result?)
-    }
-
-    #[derive(Debug, Snafu)]
-    pub(crate) enum CallError {
-        #[snafu(display("Could not send request over websocket: {}", source))]
-        SendRequest { source: tungstenite::Error },
-        #[snafu(display("Did not receive response over websocket"))]
-        NoResponse,
-        #[snafu(display("Could not receive response over websocket: {}", source))]
-        ReceiveResponse { source: tungstenite::Error },
-        #[snafu(display("Expected a binary response, got {:?}", response))]
-        UnexpectedResponseType { response: Message },
-        #[snafu(display(
-            "Could not deserialize response {:?} as MessagePack: {}",
-            response,
-            source
-        ))]
-        DeserializeResponse {
-            response: Vec<u8>,
-            source: rmp_serde::decode::Error,
-        },
-        #[snafu(display("Expected a message of type 'Response', got {:?}", message))]
-        UnexpectedMessageType { message: HolochainMessage },
-    }
-
-    async fn call(
-        ws_stream: &mut WsClientDuplex,
-        request_id: usize,
-        data: Vec<u8>,
-    ) -> Result<Vec<u8>, CallError> {
-        let request_data = rmp_serde::to_vec_named(&HolochainMessage::Request {
-            id: request_id,
-            data,
-        })
-        .unwrap();
-
-        ws_stream
-            .send(Message::Binary(request_data))
-            .await
-            .context(SendRequest)?;
-
-        let ws_message = ws_stream
-            .next()
-            .await
-            .context(NoResponse)?
-            .context(ReceiveResponse)?;
-        let ws_data = if let Message::Binary(ws_data) = ws_message {
-            ws_data
-        } else {
-            return UnexpectedResponseType {
-                response: ws_message,
-            }
-            .fail();
-        };
-
-        let message: HolochainMessage = rmp_serde::from_read_ref(&ws_data)
-            .with_context(|| DeserializeResponse { response: ws_data })?;
-
-        let response_data = if let HolochainMessage::Response { id: _, data } = message {
-            data
-        } else {
-            return UnexpectedMessageType { message }.fail();
-        };
-
-        Ok(response_data)
-    }
-}
-
 #[derive(Default)]
 struct Player {
     admin_port: u16,
@@ -958,10 +551,6 @@ struct PlayerProcesses {
 }
 
 static PLAYERS: Lazy<RwLock<HashMap<String, Player>>> = Lazy::new(RwLock::default);
-
-static APP_INTERFACE_CONNECTIONS: Lazy<
-    futures::lock::Mutex<HashMap<u16, Arc<futures::lock::Mutex<Option<AppInterfaceConnection>>>>>,
-> = Lazy::new(Default::default);
 
 #[derive(Debug, Snafu)]
 enum Error {
