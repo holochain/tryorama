@@ -50,6 +50,10 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
 
         let mut processes = player.processes.lock();
 
+        if processes.is_some() {
+            return Ok(());
+        }
+
         println!("starting player with id: {}", id);
 
         let lair_stdout_log_path = player_dir.join(LAIR_STDERR_LOG_FILENAME);

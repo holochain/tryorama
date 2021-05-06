@@ -4,7 +4,7 @@
   },
   "dependencies": {
     "@msgpack/msgpack": "^2.1.0",
-    "rpc-websockets": "^4.6.1"
+    "ws": "7.4.5"
   },
   "scripts": {
     "test": "node test.js"

@@ -6,6 +6,7 @@ mod startup;
 
 use std::{
     collections::HashMap,
+    fmt::Debug,
     io::{self, Write},
     path::{Path, PathBuf},
     process::Child,
@@ -126,10 +127,18 @@ async fn ws_message(
 
     let bytes = match message {
         Message::Binary(bytes) => bytes,
+        Message::Close(..) => {
+            println!("Received websocket close handshake");
+            return Ok(None);
+        }
+        Message::Ping(..) => {
+            println!("Received websocket ping");
+            return Ok(None);
+        }
         _ => return UnexpectedMessageType { message }.fail(),
     };
 
-    let ReqeuestWrapper {
+    let RequestWrapper {
         id: request_id,
         request,
     } = rmp_serde::from_read_ref(&bytes).context(DeserializeMessage { bytes })?;
@@ -551,13 +560,14 @@ async fn download_dna(url_str: String) -> Result<String, DownloadDnaError> {
 
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
-struct ReqeuestWrapper {
+struct RequestWrapper {
     id: u64,
     request: Request,
 }
 
 #[derive(Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[serde(tag = "type")]
 enum Request {
     // Given a DNA file, stores the DNA and returns the path at which it is stored.
     SaveDna {
@@ -611,15 +621,17 @@ enum Request {
     },
 }
 
-fn serialize_resp<R: Serialize>(id: u64, data: R) -> Vec<u8> {
-    rmp_serde::to_vec_named(&MessageToClient::Response { data, id }).unwrap()
+fn serialize_resp<R: Serialize + Debug>(id: u64, data: R) -> Vec<u8> {
+    println!("Responding to request ID {} with {:?}", id, data);
+    rmp_serde::to_vec_named(&MessageToClient::Response { response: data, id }).unwrap()
 }
 
 #[derive(Serialize)]
 #[serde(rename_all = "snake_case")]
+#[serde(tag = "type")]
 enum MessageToClient<R> {
     Signal { port: u16, data: Vec<u8> },
-    Response { id: u64, data: R },
+    Response { id: u64, response: R },
 }
 
 #[derive(Debug, Snafu)]
@@ -679,8 +691,7 @@ passphrase_service:
     type: fromconfig
     passphrase: password
 admin_interfaces:
-    -
-    driver:
+    - driver:
         type: websocket
         port: {}
 {}",
@@ -828,6 +839,8 @@ mod admin_call {
         let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
         url.set_port(Some(port)).expect("can set port on localhost");
 
+        println!("Established admin interface with {}", url);
+
         let (mut ws_stream, _resp) = tokio_tungstenite::connect_async(url)
             .await
             .context(Connect)?;
@@ -903,8 +916,6 @@ static APP_INTERFACE_CONNECTIONS: Lazy<
 
 #[derive(Debug, Snafu)]
 enum Error {
-    #[snafu(display("Could not remove trycp/ directory on startup: {}", source))]
-    RemoveDir { source: io::Error },
     #[snafu(display("Could not bind websocket server: {}", source))]
     BindServer { source: io::Error },
 }
@@ -913,13 +924,15 @@ enum Error {
 async fn main() -> Result<(), Error> {
     let args = Cli::from_args();
 
-    tokio::fs::remove_dir_all("/tmp/trycp")
-        .await
-        .context(RemoveDir)?;
+    let _ = tokio::fs::remove_dir_all("/tmp/trycp").await;
 
-    let listener = tokio::net::TcpListener::bind(format!("0.0.0.0:{}", args.port))
+    let addr = format!("0.0.0.0:{}", args.port);
+
+    let listener = tokio::net::TcpListener::bind(&addr)
         .await
         .context(BindServer)?;
+
+    println!("Listening on {}", addr);
 
     let mut client_futures = vec![];
     while let Ok((stream, addr)) = listener.accept().await {

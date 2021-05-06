@@ -1,5 +1,5 @@
-var WebSocket = require('rpc-websockets').Client
-var msgpack = require('@msgpack/msgpack')
+const WebSocket = require('ws')
+const msgpack = require('@msgpack/msgpack')
 
 process.on('unhandledRejection', error => {
   console.error('got unhandledRejection:', error)
@@ -12,7 +12,7 @@ function magic_remote_machine_manager (port) {
   const { spawn } = require('child_process')
   const trycp = spawn('trycp_server', ['-p', port])
   trycp.stdout.on('data', data => {
-    var regex = new RegExp('waiting for connections on port ' + port)
+    const regex = new RegExp('waiting for connections on port ' + port)
     if (regex.test(data)) {
       doTest('ws://localhost:' + port)
     }
@@ -24,138 +24,135 @@ function magic_remote_machine_manager (port) {
 }
 
 // instantiate Client and connect to an RPC server
-function doTest (url) {
-  return new Promise(resolve => {
-    console.log('starting up at ', url)
-    var ws = new WebSocket(url)
-    ws.on('open', async function () {
-      console.log('making ping call')
-      // call an RPC method with parameters
+async function doTest (url) {
+  console.log('starting up at ', url)
+  const ws = new WebSocket(url)
+  await new Promise(resolve => ws.on('open', resolve))
 
-      await ws.call('ping').then(function (result) {
-        console.log(result)
-      })
+  console.log('making ping call')
+  const pongPromise = new Promise(resolve => ws.on('pong', resolve))
+  await new Promise(resolve => ws.ping(undefined, undefined, resolve))
 
-      console.log('calling download_dna')
-      await ws
-        .call('download_dna', {
-          url:
-            'https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz'
-        })
-        .then(function (result) {
-          console.log(result)
-        })
+  await pongPromise
+  console.log('pong!')
 
-      console.log('calling download_dna again to test caching')
-      await ws
-        .call('download_dna', {
-          url:
-            'https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz'
-        })
-        .then(function (result) {
-          console.log(result)
-        })
+  const responsesAwaited = {}
 
-      const config = `signing_service_uri: ~
+  ws.on('message', message => {
+    console.log('received message', message)
+    try {
+      const decoded = msgpack.decode(message)
+      switch (decoded.type) {
+        case 'response':
+          const { id, response } = decoded
+          responsesAwaited[id](response)
+          break
+        case 'signal':
+          const { port, data } = decoded
+          break
+        default:
+          throw new Error('unexpected message from trycp')
+      }
+    } catch (e) {
+      console.error('Error processing message', message, e)
+    }
+  })
+
+  let nextId = 0
+
+  const call = async request => {
+    const id = nextId
+    nextId++
+
+    const payload = msgpack.encode({
+      id,
+      request
+    })
+
+    const responsePromise = new Promise(
+      resolve => (responsesAwaited[id] = resolve)
+    )
+
+    await new Promise(resolve => ws.send(payload, undefined, resolve))
+
+    return await responsePromise
+  }
+
+  console.log('calling download_dna')
+
+  console.log(
+    'download_dna response:',
+    await call({
+      type: 'download_dna',
+      url:
+        'https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz'
+    })
+  )
+
+  console.log('calling download_dna again to test caching')
+  console.log(
+    'download_dna response:',
+    await call({
+      type: 'download_dna',
+      url:
+        'https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz'
+    })
+  )
+
+  const config = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
 dpki: ~
 network: ~`
-      console.log('making configure_player call')
-      let result = await ws.call('configure_player', {
-        id: 'my-player',
-        partial_config: config
-      })
-      console.log(result)
 
-      console.log('making configure_player call')
-      result = await ws.call('configure_player', {
-        id: 'my-player2',
-        partial_config: config
-      })
-      console.log(result)
-
-      console.log('making startup call')
-      result = await ws.call('startup', { id: 'my-player' })
-      console.log(result)
-
-      console.log('making admin_interface_call call')
-      result = await ws.call('admin_interface_call', {
-        id: 'my-player',
-        message_base64: Buffer.from(
-          msgpack.encode({ type: 'generate_agent_pub_key' })
-        ).toString('base64')
-      })
-      console.log(msgpack.decode(Buffer.from(result, 'base64')))
-
-      console.log('making shutdown call')
-      result = await ws.call('shutdown', { id: 'my-player', signal: 'SIGTERM' })
-      console.log(result)
-
-      console.log('making startup call2')
-      result = await ws.call('startup', { id: 'my-player' })
-      console.log(result)
-
-      console.log('making reset call')
-      result = await ws.call('reset')
-      console.log(result)
-
-      console.log('making player2 call with config')
-      result = await ws.call('configure_player', {
-        id: 'my-player',
-        partial_config: config
-      })
-      console.log(result)
-
-      // close a websocket connection
-      ws.close()
-
-      resolve()
-    })
+  console.log('making configure_player call')
+  let result = await call({
+    type: 'configure_player',
+    id: 'my-player',
+    partial_config: config
   })
-}
+  console.log(result)
 
-// doTestManager("ws://localhost:9000")  // uncomment to manually run manager test
-// instantiate Client and connect to an RPC server
-function doTestManager (url) {
-  return new Promise(resolve => {
-    console.log('starting up at ', url)
-    var ws = new WebSocket(url)
-    ws.on('open', async function () {
-      console.log("making register call, expect: 'registered'")
-      // call an RPC method with parameters
-      await ws
-        .call('register', { url: 'ws://localhost:9001', ram: 10 })
-        .then(function (result) {
-          console.log(result)
-        })
-
-      console.log(
-        'making request call, expect: insufficient endpoints available'
-      )
-      // call an RPC method with parameters
-      await ws.call('request', { count: 100 }).then(function (result) {
-        console.log(result.error)
-      })
-
-      console.log('making request call, expect: registered node')
-      // call an RPC method with parameters
-      await ws.call('request', { count: 1 }).then(function (result) {
-        console.log(result)
-      })
-
-      console.log(
-        'making request call, expect: insufficient endpoints available'
-      )
-      // call an RPC method with parameters
-      await ws.call('request', { count: 1 }).then(function (result) {
-        console.log(result.error)
-      })
-
-      // close a websocket connection
-      ws.close()
-
-      resolve()
-    })
+  console.log('making configure_player call')
+  result = await call({
+    type: 'configure_player',
+    id: 'my-player2',
+    partial_config: config
   })
+  console.log(result)
+
+  console.log('making startup call')
+  result = await call({ type: 'startup', id: 'my-player' })
+  console.log(result)
+
+  console.log('making admin_api_call')
+  result = await call({
+    type: 'admin_api_call',
+    id: 'my-player',
+    message: msgpack.encode({ type: 'generate_agent_pub_key' })
+  })
+  console.log(msgpack.decode(result[0]))
+
+  console.log('making shutdown call')
+  result = await call({ type: 'shutdown', id: 'my-player', signal: 'SIGTERM' })
+  console.log(result)
+
+  console.log('making startup call2')
+  result = await call({ type: 'startup', id: 'my-player' })
+  console.log(result)
+
+  console.log('making reset call')
+  result = await call({ type: 'reset' })
+  console.log(result)
+
+  console.log('making player2 call with config')
+  result = await call({
+    type: 'configure_player',
+    id: 'my-player',
+    partial_config: config
+  })
+  console.log(result)
+
+  // close a websocket connection
+  ws.close()
 }
