@@ -172,9 +172,11 @@ async fn ws_message(
         })
         .await
         .unwrap(),
-        Request::Reset => spawn_blocking(move || serialize_resp(request_id, reset()))
-            .await
-            .unwrap(),
+        Request::Reset => {
+            spawn_blocking(move || serialize_resp(request_id, reset().map_err(|e| e.to_string())))
+                .await
+                .unwrap()
+        }
         Request::CallAdminInterface { id, message } => serialize_resp(
             request_id,
             admin_call::admin_call(id, message)
@@ -659,6 +661,8 @@ fn configure_player(id: String, partial_config: String) -> Result<(), ConfigureP
         path: config_path.clone(),
     })?;
 
+    ensure!(!player_config_exists(&id), PlayerAlreadyConfigured { id });
+
     ensure!(
         NEXT_ADMIN_PORT.load(atomic::Ordering::SeqCst) != 0,
         OutOfPorts
@@ -778,11 +782,26 @@ fn kill_player(
     Ok(())
 }
 
-fn reset() {
+#[derive(Debug, Snafu)]
+enum ResetError {
+    #[snafu(display(
+        "Could not clear out players directory at {}: {}",
+        PLAYERS_DIR_PATH,
+        source
+    ))]
+    RemoveDir { source: io::Error },
+}
+
+fn reset() -> Result<(), ResetError> {
     let (players, connections) = {
         let mut players_guard = PLAYERS.write();
         let mut connections_guard = futures::executor::block_on(APP_INTERFACE_CONNECTIONS.lock());
         NEXT_ADMIN_PORT.store(FIRST_ADMIN_PORT, atomic::Ordering::SeqCst);
+        match std::fs::remove_dir_all(PLAYERS_DIR_PATH) {
+            Ok(()) => {}
+            Err(e) if e.kind() == io::ErrorKind::NotFound => {}
+            Err(e) => return Err(RemoveDir.into_error(e)),
+        }
         (
             std::mem::take(&mut *players_guard),
             std::mem::take(&mut *connections_guard),
@@ -803,6 +822,8 @@ fn reset() {
             println!("warn: failed to kill player {:?}: {}", id, e);
         }
     }
+
+    Ok(())
 }
 
 mod admin_call {
