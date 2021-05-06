@@ -23,7 +23,6 @@ function magic_remote_machine_manager (port) {
   })
 }
 
-// instantiate Client and connect to an RPC server
 async function doTest (url) {
   console.log('starting up at ', url)
   const ws = new WebSocket(url)
@@ -125,9 +124,9 @@ network: ~`
   result = await call({ type: 'startup', id: 'my-player' })
   console.log(result)
 
-  console.log('making admin_api_call')
+  console.log('making call_admin_interface')
   result = await call({
-    type: 'admin_api_call',
+    type: 'call_admin_interface',
     id: 'my-player',
     message: msgpack.encode({ type: 'generate_agent_pub_key' })
   })

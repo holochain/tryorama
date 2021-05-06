@@ -7,7 +7,7 @@ import * as T from '../../src/types'
 export const PORT = 9000
 
 export const run_trycp = (port = PORT): Promise<ChildProcessWithoutNullStreams> => {
-    const trycp = spawn('cargo', ['run', '--release', '--target-dir', '../../target', '--', '-p', port.toString(), '-r', '9100-9200'], { cwd: "crates/trycp_server" })
+    const trycp = spawn('cargo', ['run', '--release', '--target-dir', '../../target', '--', '-p', port.toString()], { cwd: "crates/trycp_server" })
 
     trycp.stderr.on('data', (data) => {
         console.error(`stderr: ${data}`)

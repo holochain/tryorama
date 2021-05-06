@@ -171,7 +171,7 @@ async fn ws_message(
         Request::Reset => spawn_blocking(move || serialize_resp(request_id, reset()))
             .await
             .unwrap(),
-        Request::AdminApiCall { id, message } => serialize_resp(
+        Request::CallAdminInterface { id, message } => serialize_resp(
             request_id,
             admin_call::admin_call(id, message)
                 .await
@@ -603,7 +603,7 @@ enum Request {
     },
     // Shuts down all running conductors.
     Reset,
-    AdminApiCall {
+    CallAdminInterface {
         id: String,
         #[serde(with = "serde_bytes")]
         message: Vec<u8>,
