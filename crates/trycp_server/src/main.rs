@@ -103,8 +103,12 @@ enum ConnectionError {
     WriteResponse { source: tungstenite::Error },
     #[snafu(display("Expected a binary message, got: {:?}", message))]
     UnexpectedMessageType { message: Message },
-    #[snafu(display("Could not deserialize bytes {:?} as MessagePack: {}", bytes, source))]
-    DeserializeMessage {
+    #[snafu(display(
+        "Could not deserialize bytes {:?} as RequestWrapper: {}",
+        bytes,
+        source
+    ))]
+    DeserializeRequestWrapper {
         bytes: Vec<u8>,
         source: rmp_serde::decode::Error,
     },
@@ -141,7 +145,7 @@ async fn ws_message(
     let RequestWrapper {
         id: request_id,
         request,
-    } = rmp_serde::from_read_ref(&bytes).context(DeserializeMessage { bytes })?;
+    } = rmp_serde::from_read_ref(&bytes).context(DeserializeRequestWrapper { bytes })?;
 
     let response = match request {
         Request::SaveDna { id, content } => save_dna_wrapper(request_id, id, content).await,
@@ -409,7 +413,7 @@ mod listen_app_interface {
                             }
                         };
 
-                        response_writer.lock().await.send(Message::Binary(serialize_resp(call_request_id, data))).await.context(SendResponse)?;
+                        response_writer.lock().await.send(Message::Binary(serialize_resp(call_request_id, Ok::<_, String>(data)))).await.context(SendResponse)?;
                     },
                     HolochainMessage::Signal { data } => {
                         response_writer.lock().await.send(Message::Binary(rmp_serde::to_vec_named(&MessageToClient::<()>::Signal{port, data}).unwrap())).await.context(SendSignal)?;
@@ -443,7 +447,7 @@ async fn connect_app_interface(
     }
 
     let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
-    url.set_port(Some(9000)).expect("can set port on localhost");
+    url.set_port(Some(port)).expect("can set port on localhost");
 
     let (ws_stream, _resp) = tokio_tungstenite::connect_async(url)
         .await
@@ -621,8 +625,7 @@ enum Request {
     },
 }
 
-fn serialize_resp<R: Serialize + Debug>(id: u64, data: R) -> Vec<u8> {
-    println!("Responding to request ID {} with {:?}", id, data);
+fn serialize_resp<R: Serialize>(id: u64, data: R) -> Vec<u8> {
     rmp_serde::to_vec_named(&MessageToClient::Response { response: data, id }).unwrap()
 }
 
@@ -866,6 +869,17 @@ mod admin_call {
         ReceiveResponse { source: tungstenite::Error },
         #[snafu(display("Expected a binary response, got {:?}", response))]
         UnexpectedResponseType { response: Message },
+        #[snafu(display(
+            "Could not deserialize response {:?} as MessagePack: {}",
+            response,
+            source
+        ))]
+        DeserializeResponse {
+            response: Vec<u8>,
+            source: rmp_serde::decode::Error,
+        },
+        #[snafu(display("Expected a message of type 'Response', got {:?}", message))]
+        UnexpectedMessageType { message: HolochainMessage },
     }
 
     async fn call(
@@ -884,16 +898,30 @@ mod admin_call {
             .await
             .context(SendRequest)?;
 
-        let response = ws_stream
+        let ws_message = ws_stream
             .next()
             .await
             .context(NoResponse)?
             .context(ReceiveResponse)?;
-        if let Message::Binary(response_data) = response {
-            Ok(response_data)
+        let ws_data = if let Message::Binary(ws_data) = ws_message {
+            ws_data
         } else {
-            UnexpectedResponseType { response }.fail()
-        }
+            return UnexpectedResponseType {
+                response: ws_message,
+            }
+            .fail();
+        };
+
+        let message: HolochainMessage = rmp_serde::from_read_ref(&ws_data)
+            .with_context(|| DeserializeResponse { response: ws_data })?;
+
+        let response_data = if let HolochainMessage::Response { id: _, data } = message {
+            data
+        } else {
+            return UnexpectedMessageType { message }.fail();
+        };
+
+        Ok(response_data)
     }
 }
 

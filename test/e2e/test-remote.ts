@@ -14,7 +14,7 @@ export const run_trycp = (port = PORT): Promise<ChildProcessWithoutNullStreams> 
     });
 
     return new Promise((resolve) => trycp.stdout.on('data', (data) => {
-        const regex = new RegExp("waiting for connections on port " + port);
+        const regex = new RegExp("Listening on 0.0.0.0:" + port);
         if (regex.test(data)) {
             resolve(trycp)
         }

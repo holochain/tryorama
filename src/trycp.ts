@@ -7,11 +7,11 @@ import * as conductorApi from "@holochain/conductor-api"
 import { inspect } from 'util';
 
 export type TrycpClient = {
-  saveDna: (id: string, contents: () => Promise<Buffer>) => Promise<{ path: string }>,
-  downloadDna: (url: string) => Promise<{ path: string }>,
-  configurePlayer: (id, partial_config) => Promise<any>,
-  spawn: (id) => Promise<any>,
-  kill: (id, signal?) => Promise<any>,
+  saveDna: (id: string, contents: () => Promise<Buffer>) => Promise<string>,
+  downloadDna: (url: string) => Promise<string>,
+  configurePlayer: (id, partial_config) => Promise<void>,
+  spawn: (id) => Promise<void>,
+  kill: (id, signal?) => Promise<void>,
   reset: () => Promise<void>,
   adminInterfaceCall: (id, message) => Promise<any>,
   appInterfaceCall: (port, message) => Promise<any>,
@@ -92,24 +92,24 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
   }
 
   const makeCall = (method) => async (payload) => {
-    let params = JSON.stringify(payload, null, 2)
-    if (params && params.length > 1000) {
-      params = params.substring(0, 993) + " [snip]"
+    let params = JSON.stringify(payload)
+    if (params && params.length > 300) {
+      params = params.substring(0, 293) + " [snip]"
     }
     logger.debug(`trycp client request to ${url}: ${method} => ${params}`)
     const result = await call({ type: method, ...payload } ) as any
     logger.debug('trycp client response: %j', result)
-    if (1 in result) {
-      throw new Error(`trycp error: ${inspect(result[1])}`)
-    }
-    if (0 in result) {
+    if (result && 0 in result && !(1 in result)) {
       return result[0]
+    }
+    if (result && !(0 in result) && 1 in result) {
+      throw new Error(`trycp error: ${inspect(result[1])}`)
     }
     return result
   }
 
   const holochainInterfaceCall = async (type: "app" | "admin", args, message) => {
-    let params = JSON.stringify({ ...args, message })
+    let params = JSON.stringify({ ...args, message: { type: message.type } })
     if (params && params.length > 1000) {
       params = params.substring(0, 993) + " [snip]"
     }
@@ -120,21 +120,21 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     }
     const raw_response = result[0]
     const response = msgpack.decode(raw_response) as { type: string, data: any }
-    logger.debug(`trycp tunneled ${type} interface response: %j`, response)
+    logger.debug(`trycp tunneled ${type} interface response: %j`, { type: response.type })
     if (response.type === "error") {
       throw new Error(`${type} call error: ${inspect(response.data)}`)
     }
     return response.data
   }
 
-  const savedDnas: Record<string, Promise<{ path: string }>> = {}
+  const savedDnas: Record<string, Promise<string>> = {}
 
   const remoteLogLevel = process.env.REMOTE_LOG_LEVEL
 
   return {
     saveDna: async (id, contents) => {
       if (!(id in savedDnas)) {
-        savedDnas[id] = (async () => makeCall('save_dna')({ id, content_base64: (await contents()).toString('base64') }))()
+        savedDnas[id] = (async () => makeCall('save_dna')({ id, content: await contents() }))()
       }
       return await savedDnas[id]
     },
