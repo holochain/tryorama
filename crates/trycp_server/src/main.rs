@@ -308,13 +308,10 @@ async fn disconnect_app_interface(
     }
 }
 
-type WsRequestWriter = futures::stream::SplitSink<
-    WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>,
-    Message,
->;
+type WsRequestWriter =
+    futures::stream::SplitSink<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>, Message>;
 
-type WsResponseWriter =
-    futures::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
+type WsResponseWriter = futures::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
 
 type WsClientDuplex = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 
@@ -924,9 +921,16 @@ async fn main() -> Result<(), Error> {
         .await
         .context(BindServer)?;
 
-    while let Ok((stream, _addr)) = listener.accept().await {
-        tokio::spawn(ws_connection(stream)).await;
+    let mut client_futures = vec![];
+    while let Ok((stream, addr)) = listener.accept().await {
+        client_futures.push(tokio::spawn(async move {
+            ws_connection(stream)
+                .await
+                .unwrap_or_else(|e| println!("Error serving client from address ({}): {}", addr, e))
+        }));
     }
+
+    futures::future::join_all(client_futures).await;
 
     Ok(())
 }
