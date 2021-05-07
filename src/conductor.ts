@@ -17,7 +17,7 @@ import {
   HoloHash,
   DnaProperties,
   AppSignal,
-  InstalledApp,
+  InstalledAppInfo,
   AppBundleSource
 } from '@holochain/conductor-api'
 import { Cell } from './cell'
@@ -240,14 +240,14 @@ export class Conductor {
   _installBundledHapp = async (
     installAppBundleReq: InstallAppBundleRequest
   ): Promise<T.InstalledHapp> => {
-    const installedApp: InstalledApp = await this.adminClient!.installAppBundle(
+    const installedAppResponse: InstalledAppInfo = await this.adminClient!.installAppBundle(
       installAppBundleReq
     )
     // must be activated to be callable
     await this.adminClient!.activateApp({
-      installed_app_id: installedApp.installed_app_id
+      installed_app_id: installedAppResponse.installed_app_id
     })
-    return this._makeInstalledAgentHapp(installedApp)
+    return this._makeInstalledAgentHapp(installedAppResponse)
   }
 
   // this function will auto-generate an `installed_app_id` and
@@ -291,35 +291,30 @@ export class Conductor {
   _installHapp = async (
     installAppReq: InstallAppRequest
   ): Promise<T.InstalledHapp> => {
-    const installedApp: InstalledApp = await this.adminClient!.installApp(
+    const installedAppResponse: InstalledAppInfo = await this.adminClient!.installApp(
       installAppReq
     )
     // must be activated to be callable
     await this.adminClient!.activateApp({
       installed_app_id: installAppReq.installed_app_id
     })
-    return this._makeInstalledAgentHapp(installedApp)
+    return this._makeInstalledAgentHapp(installedAppResponse)
   }
 
-  _makeInstalledAgentHapp = (installedApp: InstalledApp): T.InstalledHapp => {
-    // TODO: fix.  For now we can always use the base_cell_id.  When we start working with clones
-    // then we need to explicitly reveal slots and clones in tryorama
-    const slots = Object.entries(installedApp.slots)
-
+  _makeInstalledAgentHapp = (installedAppResponse: InstalledAppInfo): T.InstalledHapp => {
+    const agentPubKey = installedAppResponse.cell_data[0].cell_id[1]
+    const rawCells = Object.entries(installedAppResponse.cell_data)
     // construct Cell instances which are the most useful class to the client
-    const cells = slots.map(
-      ([cellNick, slot]) =>
-        new Cell({
-          cellId: slot.base_cell_id,
-          cellNick: cellNick,
-          player: this._player
-        })
-    )
+    const cells = rawCells.map(([_, { cell_id, cell_nick }]) => new Cell({
+      cellId: cell_id,
+      cellNick: cell_nick,
+      player: this._player
+    }))
 
     const installedAgentHapp: T.InstalledHapp = {
-      hAppId: installedApp.installed_app_id,
-      agent: installedApp._agent_key,
-      cells
+      hAppId: installedAppResponse.installed_app_id,
+      agent: agentPubKey,
+      cells,
     }
     return installedAgentHapp
   }
