@@ -1,18 +1,17 @@
 import * as _ from 'lodash'
-// import connect from '@holochain/conductor-api'
+import WebSocket from 'ws';
 import logger from './logger'
-import { Client as RpcWebSocket } from 'rpc-websockets'
 import * as yaml from 'yaml';
 import * as msgpack from "@msgpack/msgpack"
 import * as conductorApi from "@holochain/conductor-api"
+import { inspect } from 'util';
 
 export type TrycpClient = {
-  saveDna: (id: string, contents: () => Promise<Buffer>) => Promise<{ path: string }>,
-  downloadDna: (url: string) => Promise<{ path: string }>,
-  configurePlayer: (id, partial_config) => Promise<any>,
-  spawn: (id) => Promise<any>,
-  kill: (id, signal?) => Promise<any>,
-  ping: (id) => Promise<string>,
+  saveDna: (id: string, contents: () => Promise<Buffer>) => Promise<string>,
+  downloadDna: (url: string) => Promise<string>,
+  configurePlayer: (id, partial_config) => Promise<void>,
+  spawn: (id) => Promise<void>,
+  kill: (id, signal?) => Promise<void>,
   reset: () => Promise<void>,
   adminInterfaceCall: (id, message) => Promise<any>,
   appInterfaceCall: (port, message) => Promise<any>,
@@ -23,48 +22,25 @@ export type TrycpClient = {
   closeSession: () => Promise<void>,
 }
 
+type TrycpMessage = {
+  type: 'signal',
+  port: number,
+  data: Buffer,
+} | { type: 'response', id: number, response: any }
+
 export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient> => {
   const url = `ws://${machineEndpoint}`
-  const ws = new RpcWebSocket(url)
+  const ws = new WebSocket(url)
   ws.on("error", (e) => logger.error(`trycp client error: ${e}`))
   await new Promise<void>((resolve, reject) => {
     ws.once("error", reject)
     ws.once("open", () => {
-      ws.removeListener(reject)
+      ws.removeEventListener("error", reject)
       resolve()
     })
   })
 
-  const makeCall = (method) => async (a) => {
-    let params = JSON.stringify(a, null, 2)
-    if (params && params.length > 1000) {
-      params = params.substring(0, 993) + " [snip]"
-    }
-    logger.debug(`trycp client request to ${url}: ${method} => ${params}`)
-    const result = await ws.call(method, a)
-    logger.debug('trycp client response: %j', result)
-    return result
-  }
-
-  const holochainInterfaceCall = async (type: "app" | "admin", args, message) => {
-    let params = JSON.stringify({ ...args, message })
-    if (params && params.length > 1000) {
-      params = params.substring(0, 993) + " [snip]"
-    }
-    logger.debug(`trycp tunneled ${type} interface call at ${url} => ${params}`)
-    const raw_response = await ws.call(`${type}_interface_call`, {
-      ...args,
-      message_base64: Buffer.from(msgpack.encode(message)).toString("base64")
-    })
-    const response = msgpack.decode(Buffer.from(raw_response, "base64")) as { type: string, data: any }
-    logger.debug(`trycp tunneled ${type} interface response: %j`, response)
-    if (response.type === "error") {
-      throw new Error(JSON.stringify(response.data))
-    }
-    return response.data
-  }
-
-  const savedDnas: Record<string, Promise<{ path: string }>> = {}
+  const responsesAwaited = {}
 
   const decodeSignal = (signal: Buffer): conductorApi.AppSignal => {
     const { App: [cellId, payload] } = (msgpack.decode(signal) as any)
@@ -73,14 +49,92 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
   }
 
   const signalSubscriptions: Record<number, (signal: conductorApi.AppSignal) => void> = {}
-  let signalPollTimer: NodeJS.Timeout | null = null
+
+  ws.on('message', message => {
+    try {
+      const decoded = msgpack.decode(Buffer.from(message)) as TrycpMessage
+      switch (decoded.type) {
+        case 'response':
+          const { id, response } = decoded
+          responsesAwaited[id](response)
+          break
+        case 'signal':
+          const { port, data } = decoded
+          const signal = decodeSignal(data)
+          signalSubscriptions[port](signal)
+          break
+        default:
+          ((_: never) => {})(decoded)
+      }
+    } catch (e) {
+      console.error('Error processing message', message, e)
+    }
+  })
+
+  let nextId = 0
+
+  const call = async request => {
+    const id = nextId
+    nextId++
+
+    const payload = msgpack.encode({
+      id,
+      request
+    })
+
+    const responsePromise = new Promise(
+      resolve => (responsesAwaited[id] = resolve)
+    )
+
+    await new Promise(resolve => ws.send(payload, {}, resolve))
+
+    return await responsePromise
+  }
+
+  const makeCall = (method) => async (payload) => {
+    let params = JSON.stringify(payload)
+    if (params && params.length > 300) {
+      params = params.substring(0, 293) + " [snip]"
+    }
+    logger.debug(`trycp client request to ${url}: ${method} => ${params}`)
+    const result = await call({ type: method, ...payload } ) as any
+    logger.debug('trycp client response: %j', result)
+    if (result && 0 in result && !(1 in result)) {
+      return result[0]
+    }
+    if (result && !(0 in result) && 1 in result) {
+      throw new Error(`trycp error: ${inspect(result[1])}`)
+    }
+    return result
+  }
+
+  const holochainInterfaceCall = async (type: "app" | "admin", args, message) => {
+    let params = JSON.stringify({ ...args, message: { type: message.type } })
+    if (params && params.length > 1000) {
+      params = params.substring(0, 993) + " [snip]"
+    }
+    logger.debug(`trycp tunneled ${type} interface call at ${url} => ${params}`)
+    const result = await call({ type: `call_${type}_interface`, ...args, message: msgpack.encode(message) }) as any
+    if (1 in result) {
+      throw new Error(`trycp error: ${inspect(result[1])}`)
+    }
+    const raw_response = result[0]
+    const response = msgpack.decode(raw_response) as { type: string, data: any }
+    logger.debug(`trycp tunneled ${type} interface response: %j`, { type: response.type })
+    if (response.type === "error") {
+      throw new Error(`${type} call error: ${inspect(response.data)}`)
+    }
+    return response.data
+  }
+
+  const savedDnas: Record<string, Promise<string>> = {}
 
   const remoteLogLevel = process.env.REMOTE_LOG_LEVEL
 
   return {
     saveDna: async (id, contents) => {
       if (!(id in savedDnas)) {
-        savedDnas[id] = (async () => makeCall('save_dna')({ id, content_base64: (await contents()).toString('base64') }))()
+        savedDnas[id] = (async () => makeCall('save_dna')({ id, content: await contents() }))()
       }
       return await savedDnas[id]
     },
@@ -96,40 +150,24 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     }),
     spawn: (id) => makeCall('startup')({ id, log_level: remoteLogLevel}),
     kill: (id, signal?) => makeCall('shutdown')({ id, signal }),
-    ping: () => makeCall('ping')(undefined),
     reset: () => makeCall('reset')(undefined),
     adminInterfaceCall: (id, message) => holochainInterfaceCall("admin", { id }, message),
     appInterfaceCall: (port, message) => holochainInterfaceCall("app", { port }, message),
     connectAppInterface: (port: number) => makeCall('connect_app_interface')({ port }),
     disconnectAppInterface: (port: number) => makeCall('disconnect_app_interface')({ port }),
     subscribeAppInterfacePort: (port, onSignal) => {
-      const pollAppInterfaceSignals: () => Promise<Array<{ port: number, signals_accumulated: string[] }>> = () => makeCall('poll_app_interface_signals')(undefined)
-      const f = () => {
-        pollAppInterfaceSignals().then(res => {
-          signalPollTimer = global.setTimeout(f, 1000)
-          for (const { port, signals_accumulated } of res) {
-            if (port in signalSubscriptions) {
-              for (const signalBase64 of signals_accumulated) {
-                const signalMsgpackEncoded = Buffer.from(signalBase64, 'base64')
-                const signal = decodeSignal(signalMsgpackEncoded)
-                signalSubscriptions[port](signal)
-              }
-            }
-          }
-        })
-      }
-      if (signalPollTimer === null) {
-        signalPollTimer = global.setTimeout(f, 1000)
-      }
       signalSubscriptions[port] = onSignal
     },
     unsubscribeAppInterfacePort: (port) => {
       delete signalSubscriptions[port]
-      if (signalPollTimer && _.isEmpty(signalSubscriptions)) {
-        global.clearTimeout(signalPollTimer)
+    },
+    closeSession: async () => {
+      const closePromise = new Promise(resolve => ws.on('close', resolve))
+      ws.close()
+      if (ws.readyState !== 3) {
+        await closePromise
       }
     },
-    closeSession: () => ws.close(),
   }
 }
 
