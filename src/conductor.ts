@@ -1,14 +1,27 @@
 const colors = require('colors/safe')
 import { v4 as uidGen } from 'uuid'
 
-import { KillFn } from "./types";
-import { makeLogger } from "./logger";
-import { delay } from './util';
-import env from './env';
+import { KillFn } from './types'
+import { makeLogger } from './logger'
+import { delay } from './util'
+import env from './env'
 import * as T from './types'
-import { CellNick, AdminWebsocket, AppWebsocket, AgentPubKey, InstallAppRequest, InstallAppBundleRequest, RegisterDnaRequest, HoloHash, DnaProperties, AppSignal, InstalledAppInfo, AppBundleSource } from '@holochain/conductor-api';
-import { Cell } from "./cell";
-import { Player } from './player';
+import {
+  CellNick,
+  AdminWebsocket,
+  AppWebsocket,
+  AgentPubKey,
+  InstallAppRequest,
+  InstallAppBundleRequest,
+  RegisterDnaRequest,
+  HoloHash,
+  DnaProperties,
+  AppSignal,
+  InstalledAppInfo,
+  AppBundleSource
+} from '@holochain/conductor-api'
+import { Cell } from './cell'
+import { Player } from './player'
 import { TunneledAdminClient, TunneledAppClient } from './trycp'
 import * as fs from 'fs'
 
@@ -16,30 +29,42 @@ import * as fs from 'fs'
 // TODO: bump this gradually down to 0 until we can maybe remove it altogether
 const WS_CLOSE_DELAY_FUDGE = 500
 
-export type CallAdminFunc = (method: string, params: Record<string, any>) => Promise<any>
+export type CallAdminFunc = (
+  method: string,
+  params: Record<string, any>
+) => Promise<any>
 
 type ConstructorArgs = {
-  player: Player,
-  name: string,
-  kill: (signal?: string) => Promise<void>,
-  onSignal: ((signal: AppSignal) => void) | null,
-  onActivity: () => void,
-  backend: {
-    type: "local",
-    machineHost: string,
-    adminInterfacePort: number,
-    appInterfacePort: number,
-  } | {
-    type: "trycp",
-    adminInterfaceCall: (req: any) => Promise<any>,
-    appInterfaceCall: (port: number, message: any) => Promise<any>,
-    connectAppInterface: (port: number) => Promise<void>,
-    disconnectAppInterface: (port: number) => Promise<void>,
-    subscribeAppInterfacePort: (port: number, onSignal: (signal: AppSignal) => void) => void,
-    unsubscribeAppInterfacePort: (port: number) => void,
-    downloadDnaRemote: (url: string) => Promise<{ path: string }>,
-    saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>,
-  } | { type: "test" }
+  player: Player
+  name: string
+  kill: (signal?: string) => Promise<void>
+  onSignal: ((signal: AppSignal) => void) | null
+  onActivity: () => void
+  backend:
+    | {
+        type: 'local'
+        machineHost: string
+        adminInterfacePort: number
+        appInterfacePort: number
+      }
+    | {
+        type: 'trycp'
+        adminInterfaceCall: (req: any) => Promise<any>
+        appInterfaceCall: (port: number, message: any) => Promise<any>
+        connectAppInterface: (port: number) => Promise<void>
+        disconnectAppInterface: (port: number) => Promise<void>
+        subscribeAppInterfacePort: (
+          port: number,
+          onSignal: (signal: AppSignal) => void
+        ) => void
+        unsubscribeAppInterfacePort: (port: number) => void
+        downloadDnaRemote: (url: string) => Promise<string>
+        saveDnaRemote: (
+          id: string,
+          buffer_callback: () => Promise<Buffer>
+        ) => Promise<string>
+      }
+    | { type: 'test' }
 }
 
 /**
@@ -61,27 +86,35 @@ export class Conductor {
   _isInitialized: boolean
   _onActivity: () => void
   _timeout: number
-  _backend: {
-    type: "local",
-    adminInterfacePort: number
-    appInterfacePort: number
-    machineHost: string
-  } | {
-    type: "trycp",
-    appInterfaceCall: (port: number, message: any) => Promise<any>
-    connectAppInterface: (port: number) => Promise<void>,
-    disconnectAppInterface: (port: number) => Promise<void>,
-    subscribeAppInterfacePort: (port: number, onSignal: (signal: AppSignal) => void) => void,
-    unsubscribeAppInterfacePort: (port: number) => void,
-    downloadDnaRemote: (url: string) => Promise<{ path: string }>
-    saveDnaRemote: (id: string, buffer_callback: () => Promise<Buffer>) => Promise<{ path: string }>
-  } | { type: "test" }
+  _backend:
+    | {
+        type: 'local'
+        adminInterfacePort: number
+        appInterfacePort: number
+        machineHost: string
+      }
+    | {
+        type: 'trycp'
+        appInterfaceCall: (port: number, message: any) => Promise<any>
+        connectAppInterface: (port: number) => Promise<void>
+        disconnectAppInterface: (port: number) => Promise<void>
+        subscribeAppInterfacePort: (
+          port: number,
+          onSignal: (signal: AppSignal) => void
+        ) => void
+        unsubscribeAppInterfacePort: (port: number) => void
+        downloadDnaRemote: (url: string) => Promise<string>
+        saveDnaRemote: (
+          id: string,
+          buffer_callback: () => Promise<Buffer>
+        ) => Promise<string>
+      }
+    | { type: 'test' }
 
-
-  constructor({ player, name, kill, onActivity, backend }: ConstructorArgs) {
+  constructor ({ player, name, kill, onActivity, backend }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`tryorama conductor ${name}`)
-    this.logger.debug("Conductor constructing")
+    this.logger.debug('Conductor constructing')
 
     this.kill = async (signal?): Promise<void> => {
       if (this.appClient !== null) {
@@ -94,19 +127,19 @@ export class Conductor {
         this.adminClient = null
         await adminClient.client.close()
       }
-      this.logger.debug("Killing...")
+      this.logger.debug('Killing...')
       await kill(signal)
     }
 
     switch (backend.type) {
-      case "local":
-      case "test":
+      case 'local':
+      case 'test':
         this._backend = backend
         this.adminClient = null
         break
-      case "trycp":
+      case 'trycp':
         this._backend = backend
-        this.adminClient = new TunneledAdminClient(async (message) => {
+        this.adminClient = new TunneledAdminClient(async message => {
           const res = await backend.adminInterfaceCall(message)
           this._onActivity()
           return res
@@ -129,41 +162,63 @@ export class Conductor {
 
   setSignalHandler = (onSignal: ((signal: AppSignal) => void) | null) => {
     const prevOnSignal = this._onSignal
-    if (onSignal === null && prevOnSignal !== null && this._appInterfacePort !== null && "unsubscribeAppInterfacePort" in this._backend) {
+    if (
+      onSignal === null &&
+      prevOnSignal !== null &&
+      this._appInterfacePort !== null &&
+      'unsubscribeAppInterfacePort' in this._backend
+    ) {
       this._backend.unsubscribeAppInterfacePort(this._appInterfacePort)
     }
     this._onSignal = onSignal
-    if (onSignal !== null && prevOnSignal === null && this._appInterfacePort !== null && "subscribeAppInterfacePort" in this._backend) {
-      this._backend.subscribeAppInterfacePort(this._appInterfacePort, (signal) => this._onSignal!(signal))
+    if (
+      onSignal !== null &&
+      prevOnSignal === null &&
+      this._appInterfacePort !== null &&
+      'subscribeAppInterfacePort' in this._backend
+    ) {
+      this._backend.subscribeAppInterfacePort(this._appInterfacePort, signal =>
+        this._onSignal!(signal)
+      )
     }
   }
 
   // this function registers a DNA from a given source
-  registerDna = async (source: T.DnaSource, uid?, properties?): Promise<HoloHash> => {
-    if ("path" in source && "saveDnaRemote" in this._backend) {
-      const contents = () => new Promise<Buffer>((resolve, reject) => {
-        fs.readFile((source as { path: string }).path, null, (err, data) => {
-          if (err) {
-            reject(err)
-          }
-          resolve(data)
+  registerDna = async (
+    source: T.DnaSource,
+    uid?,
+    properties?
+  ): Promise<HoloHash> => {
+    if ('path' in source && 'saveDnaRemote' in this._backend) {
+      const contents = () =>
+        new Promise<Buffer>((resolve, reject) => {
+          fs.readFile((source as { path: string }).path, null, (err, data) => {
+            if (err) {
+              reject(err)
+            }
+            resolve(data)
+          })
         })
-      })
       const pathAfterReplacement = source.path.replace(/\//g, '')
-      source = await this._backend.saveDnaRemote(pathAfterReplacement, contents)
+      source = { path: await this._backend.saveDnaRemote(pathAfterReplacement, contents) }
     }
-    if ("url" in source) {
-      if (!("downloadDnaRemote" in this._backend)) {
-        throw new Error("encountered URL DNA source on non-remote player")
+    if ('url' in source) {
+      if (!('downloadDnaRemote' in this._backend)) {
+        throw new Error('encountered URL DNA source on non-remote player')
       }
-      source = await this._backend.downloadDnaRemote((source as T.DnaUrl).url)
+      source = { path: await this._backend.downloadDnaRemote((source as T.DnaUrl).url)}
     }
     const registerDnaReq: RegisterDnaRequest = { ...source, uid, properties }
     return await this.adminClient!.registerDna(registerDnaReq)
   }
 
   // this function will install an app bundle as generated by hc app pack
-  installBundledHapp = async (bundleSource: AppBundleSource, agentPubKey?: AgentPubKey, installedAppId?: string, uid?: string): Promise<T.InstalledHapp> => {
+  installBundledHapp = async (
+    bundleSource: AppBundleSource,
+    agentPubKey?: AgentPubKey,
+    installedAppId?: string,
+    uid?: string
+  ): Promise<T.InstalledHapp> => {
     if (!agentPubKey) {
       agentPubKey = await this.adminClient!.generateAgentPubKey()
     }
@@ -182,16 +237,25 @@ export class Conductor {
   // install a hApp using the InstallAppBundleRequest struct from conductor-admin-api
   // you must create your own app_id and bundle, this is useful also if you
   // need to pass in uid, properties or membrane-proof
-  _installBundledHapp = async (installAppBundleReq: InstallAppBundleRequest): Promise<T.InstalledHapp> => {
-    const installedAppResponse: InstalledAppInfo  = await this.adminClient!.installAppBundle(installAppBundleReq)
+  _installBundledHapp = async (
+    installAppBundleReq: InstallAppBundleRequest
+  ): Promise<T.InstalledHapp> => {
+    const installedAppResponse: InstalledAppInfo = await this.adminClient!.installAppBundle(
+      installAppBundleReq
+    )
     // must be activated to be callable
-    await this.adminClient!.activateApp({ installed_app_id: installedAppResponse.installed_app_id })
+    await this.adminClient!.activateApp({
+      installed_app_id: installedAppResponse.installed_app_id
+    })
     return this._makeInstalledAgentHapp(installedAppResponse)
   }
 
   // this function will auto-generate an `installed_app_id` and
   // `dna.nick` for you, to allow simplicity
-  installHapp = async (agentHapp: T.DnaSrc[], agentPubKey?: AgentPubKey): Promise<T.InstalledHapp> => {
+  installHapp = async (
+    agentHapp: T.DnaSrc[],
+    agentPubKey?: AgentPubKey
+  ): Promise<T.InstalledHapp> => {
     if (!agentPubKey) {
       agentPubKey = await this.adminClient!.generateAgentPubKey()
     }
@@ -199,22 +263,24 @@ export class Conductor {
     const installAppReq: InstallAppRequest = {
       installed_app_id: `app-${uidGen()}`,
       agent_key: agentPubKey,
-      dnas: await Promise.all(dnaSources.map(async (src, index) => {
-        let source: T.DnaSource
-        if (src instanceof Buffer) {
-          source = { hash: src }
-        } else if (typeof src === "string") {
-          source = { path: src }
-        } else {
-          source = { url: src.url }
-        }
+      dnas: await Promise.all(
+        dnaSources.map(async (src, index) => {
+          let source: T.DnaSource
+          if (src instanceof Buffer) {
+            source = { hash: src }
+          } else if (typeof src === 'string') {
+            source = { path: src }
+          } else {
+            source = { url: src.url }
+          }
 
-        let dna = {
-          hash: await this.registerDna(source, this._player.scenarioUID),
-          nick: `${index}${src}-${uidGen()}`,
-        }
-        return dna
-      }))
+          let dna = {
+            hash: await this.registerDna(source, this._player.scenarioUID),
+            nick: `${index}${src}-${uidGen()}`
+          }
+          return dna
+        })
+      )
     }
     return await this._installHapp(installAppReq)
   }
@@ -222,10 +288,16 @@ export class Conductor {
   // install a hApp using the InstallAppRequest struct from conductor-admin-api
   // you must create your own app_id and dnas list, this is useful also if you
   // need to pass in properties or membrane-proof
-  _installHapp = async (installAppReq: InstallAppRequest): Promise<T.InstalledHapp> => {
-    const installedAppResponse: InstalledAppInfo  = await this.adminClient!.installApp(installAppReq)
+  _installHapp = async (
+    installAppReq: InstallAppRequest
+  ): Promise<T.InstalledHapp> => {
+    const installedAppResponse: InstalledAppInfo = await this.adminClient!.installApp(
+      installAppReq
+    )
     // must be activated to be callable
-    await this.adminClient!.activateApp({ installed_app_id: installAppReq.installed_app_id })
+    await this.adminClient!.activateApp({
+      installed_app_id: installAppReq.installed_app_id
+    })
     return this._makeInstalledAgentHapp(installedAppResponse)
   }
 
@@ -248,42 +320,56 @@ export class Conductor {
   }
 
   _connectInterfaces = async () => {
-    if (this._backend.type === "test") {
-      throw new Error("cannot call _connectInterface without a conductor backend")
+    if (this._backend.type === 'test') {
+      throw new Error(
+        'cannot call _connectInterface without a conductor backend'
+      )
     }
     this._onActivity()
     // 0 in this case means use any open port
-    let appPortNumber = 0;
-    if (this._backend.type === "local") {
+    let appPortNumber = 0
+    if (this._backend.type === 'local') {
       const adminWsUrl = `ws://${this._backend.machineHost}:${this._backend.adminInterfacePort}`
       this.adminClient = await AdminWebsocket.connect(adminWsUrl)
-      this.logger.debug(`connectInterfaces :: connected admin interface at ${adminWsUrl}`)
+      this.logger.debug(
+        `connectInterfaces :: connected admin interface at ${adminWsUrl}`
+      )
       appPortNumber = this._backend.appInterfacePort
     }
-    const {port: appInterfacePort} = await this.adminClient!.attachAppInterface({ port: appPortNumber })
-     console.log("App Port spun up on port ", appInterfacePort);
-
+    const {
+      port: appInterfacePort
+    } = await this.adminClient!.attachAppInterface({ port: appPortNumber })
+    console.log('App Port spun up on port ', appInterfacePort)
 
     switch (this._backend.type) {
-      case "local":
+      case 'local':
         const appWsUrl = `ws://${this._backend.machineHost}:${appInterfacePort}`
-        this.appClient = await AppWebsocket.connect(appWsUrl, this._timeout, (signal) => {
-          this._onActivity();
-          if (this._onSignal !== null) {
-            this._onSignal(signal);
-          } else {
-            console.info("got signal, doing nothing with it: %o", signal)
+        this.appClient = await AppWebsocket.connect(
+          appWsUrl,
+          this._timeout,
+          signal => {
+            this._onActivity()
+            if (this._onSignal !== null) {
+              this._onSignal(signal)
+            } else {
+              console.info('got signal, doing nothing with it: %o', signal)
+            }
           }
-        })
-        this.logger.debug(`connectInterfaces :: connected app interface at ${appWsUrl}`)
+        )
+        this.logger.debug(
+          `connectInterfaces :: connected app interface at ${appWsUrl}`
+        )
         break
-      case "trycp":
+      case 'trycp':
         const backend = this._backend
 
         await backend.connectAppInterface(appInterfacePort)
         this.appClient = new TunneledAppClient(
-          async (message) => {
-            const res = await backend.appInterfaceCall(appInterfacePort, message)
+          async message => {
+            const res = await backend.appInterfaceCall(
+              appInterfacePort,
+              message
+            )
             this._onActivity()
             return res
           },
@@ -293,7 +379,9 @@ export class Conductor {
         this._appInterfacePort = appInterfacePort
 
         if (this._onSignal !== null) {
-          this._backend.subscribeAppInterfacePort(appInterfacePort, (signal) => this._onSignal!(signal))
+          this._backend.subscribeAppInterfacePort(appInterfacePort, signal =>
+            this._onSignal!(signal)
+          )
         }
         break
       default:

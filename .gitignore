@@ -6,3 +6,4 @@ dna/
 .vscode/
 **/target/
 package-lock.json
+target
