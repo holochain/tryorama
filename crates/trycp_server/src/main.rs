@@ -34,6 +34,7 @@ const MAGIC_STRING: &str = "Conductor ready.";
 
 const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
 const LAIR_STDERR_LOG_FILENAME: &str = "lair-stderr.txt";
+const SHIM_STDERR_LOG_FILENAME: &str = "shim-stderr.txt";
 const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
 const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
@@ -82,6 +83,13 @@ struct Cli {
         default_value = "localhost"
     )]
     host: String,
+
+    #[structopt(
+        long = "lair-shim",
+        short = "ls",
+        help = "Server code for a lair shim i.e a replacement for lair-keystore",
+    )]
+    lair_shim: bool,
 }
 
 type PortRange = Range<u16>;
@@ -218,6 +226,8 @@ fn main() {
     if let Some(connection_uri) = args.register {
         registrar::register_with_remote(connection_uri, &args.host, args.port)
     }
+
+    let shim_exists = args.lair_shim.clone();
 
     if args.manager {
         registrar::add_methods(&mut io);
@@ -388,31 +398,62 @@ fn main() {
             .acquire_port(id.clone())
             .map_err(internal_error)?;
 
-        writeln!(
-            config_file,
-            "\
+        if !shim_exists {
+            writeln!(
+                config_file,
+                "\
 ---
 environment_path: environment
 use_dangerous_test_keystore: false
 keystore_path: keystore
 passphrase_service:
-  type: fromconfig
-  passphrase: password
+type: fromconfig
+passphrase: password
 admin_interfaces:
-  -
-    driver:
-      type: websocket
-      port: {}
+-
+driver:
+type: websocket
+port: {}
 {}",
-            port, partial_config
-        )
-        .map_err(|e| {
-            internal_error(format!(
-                "unable to write file: {:?} {}",
-                e,
-                config_path.display()
-            ))
-        })?;
+                port, partial_config
+            )
+            .map_err(|e| {
+                internal_error(format!(
+                    "unable to write file: {:?} {}",
+                    e,
+                    config_path.display()
+                ))
+            })?;
+        }
+        else {
+            writeln!(
+                config_file,
+                "\
+---
+environment_path: environment
+use_dangerous_test_keystore: false
+keystore_path: shim
+passphrase_service:
+type: fromconfig
+passphrase: password
+admin_interfaces:
+-
+driver:
+  type: websocket
+  port: {}
+{}",
+                port, partial_config
+            )
+            .map_err(|e| {
+                internal_error(format!(
+                    "unable to write file: {:?} {}",
+                    e,
+                    config_path.display()
+                ))
+            })?;
+
+        }
+
 
         let response = format!(
             "wrote config for player {} to {}",
@@ -439,7 +480,6 @@ admin_interfaces:
         if players.contains_key(&id) {
             return Err(invalid_request(format!("{} is already running", id)));
         };
-
         let mut lair = Command::new("lair-keystore")
             .current_dir(&player_dir)
             .arg("-d")
@@ -465,6 +505,36 @@ admin_interfaces:
             .map_err(|e| {
                 internal_error(format!("unable to check that keystore is started: {}", e))
             })?;
+
+        if shim_exists {
+            let mut shim = Command::new("lair-shim")
+            .current_dir(&player_dir)
+            .arg("-d")
+            .arg("shim")
+            .arg("-m")
+            .arg("test")
+            .env("RUST_BACKTRACE", "full")
+            .stdout(Stdio::piped())
+            .stderr(
+                fs::OpenOptions::new()
+                .append(true)
+                .create(true)
+                .open(player_dir.join(SHIM_STDERR_LOG_FILENAME))
+                .map_err(|e| internal_error(format!("failed to create log file: {:?}", e)))?,
+            )
+            .spawn()
+            .map_err(|e| internal_error(format!("unable to startup keystore: {:?}", e)))?;
+
+            // Wait until shim begins to output before starting conductor,
+            // otherwise Holochain starts its own copy of shim that we can't manage.
+            shim.stdout
+            .as_mut()
+            .unwrap()
+            .read_exact(&mut [0])
+            .map_err(|e| {
+                internal_error(format!("unable to check that keystore is started: {}", e))
+            })?;
+        }
 
         let mut conductor = Command::new("holochain")
             .current_dir(&player_dir)
