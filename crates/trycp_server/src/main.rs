@@ -42,6 +42,7 @@ const MAGIC_STRING: &str = "Conductor ready.";
 
 const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
 const LAIR_STDERR_LOG_FILENAME: &str = "lair-stderr.txt";
+const SHIM_STDERR_LOG_FILENAME: &str = "shim-stderr.txt";
 const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
 const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
@@ -62,6 +63,12 @@ async fn main() -> Result<(), Error> {
             default_value = "9000"
         )]
         port: u16,
+        #[structopt(
+            long = "lair-shim",
+            short = "ls",
+            help = "Server code for a lair shim i.e a replacement for lair-keystore",
+        )]
+        lair_shim: bool,
     }
     let args = Cli::from_args();
 
@@ -74,11 +81,11 @@ async fn main() -> Result<(), Error> {
         .context(BindServer)?;
 
     println!("Listening on {}", addr);
-
+    let lair_shim = args.lair_shim;
     let mut client_futures = vec![];
     while let Ok((stream, addr)) = listener.accept().await {
         client_futures.push(tokio::spawn(async move {
-            ws_connection(stream)
+            ws_connection(stream, lair_shim)
                 .await
                 .unwrap_or_else(|e| println!("Error serving client from address ({}): {}", addr, e))
         }));
@@ -202,7 +209,7 @@ enum ConnectionError {
     },
 }
 
-async fn ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
+async fn ws_connection(stream: TcpStream, lair_shim: bool) -> Result<(), ConnectionError> {
     let ws_stream = tokio_tungstenite::accept_async(stream)
         .await
         .context(Handshake)?;
@@ -222,7 +229,7 @@ async fn ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
     });
 
     ws_read
-        .then(|message_res| ws_message(message_res, Arc::clone(ws_write2)))
+        .then(|message_res| ws_message(message_res, Arc::clone(ws_write2), lair_shim))
         .forward(write)
         .await
 }
@@ -230,6 +237,7 @@ async fn ws_connection(stream: TcpStream) -> Result<(), ConnectionError> {
 async fn ws_message(
     message_res: Result<Message, tungstenite::Error>,
     ws_write: Arc<futures::lock::Mutex<WsResponseWriter>>,
+    lair_shim: bool,
 ) -> Result<Option<Message>, ConnectionError> {
     let message = message_res.context(ReadRequest)?;
 
@@ -267,13 +275,13 @@ async fn ws_message(
         ),
         Request::ConfigurePlayer { id, partial_config } => spawn_blocking(move || {
             let resp =
-                configure_player::configure_player(id, partial_config).map_err(|e| e.to_string());
+                configure_player::configure_player(id, partial_config, lair_shim).map_err(|e| e.to_string());
             serialize_resp(request_id, resp)
         })
         .await
         .unwrap(),
         Request::Startup { id, log_level } => spawn_blocking(move || {
-            let resp = startup::startup(id, log_level).map_err(|e| e.to_string());
+            let resp = startup::startup(id, log_level, lair_shim).map_err(|e| e.to_string());
             serialize_resp(request_id, resp)
         })
         .await

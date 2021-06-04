@@ -8,13 +8,22 @@ use snafu::{OptionExt, ResultExt, Snafu};
 
 use crate::{
     get_player_dir, PlayerProcesses, CONDUCTOR_CONFIG_FILENAME, CONDUCTOR_STDERR_LOG_FILENAME,
-    CONDUCTOR_STDOUT_LOG_FILENAME, LAIR_STDERR_LOG_FILENAME, MAGIC_STRING, PLAYERS,
+    CONDUCTOR_STDOUT_LOG_FILENAME, LAIR_STDERR_LOG_FILENAME, SHIM_STDERR_LOG_FILENAME, MAGIC_STRING, PLAYERS,
 };
 
 #[derive(Debug, Snafu)]
 pub enum Error {
     #[snafu(display("Could not find a configuration for player with ID {:?}", id))]
     PlayerNotConfigured { id: String },
+    #[snafu(display("Could not create log file at {} for lair-shim's stdout: {}", path.display(), source))]
+    CreateLairShimStdoutFile { path: PathBuf, source: io::Error },
+    #[snafu(display("Could not spawn lair-shim: {}", source))]
+    SpawnShim { source: io::Error },
+    #[snafu(display(
+        "Could not check lair-shim's output to confirm that it's ready: {}",
+        source
+    ))]
+    CheckShimReady { source: io::Error },
     #[snafu(display("Could not create log file at {} for lair-keystore's stdout: {}", path.display(), source))]
     CreateLairStdoutFile { path: PathBuf, source: io::Error },
     #[snafu(display("Could not spawn lair-keystore: {}", source))]
@@ -35,7 +44,7 @@ pub enum Error {
     CheckHolochainReady { source: io::Error },
 }
 
-pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
+pub fn startup(id: String, log_level: Option<String>, shim_exists: bool) -> Result<(), Error> {
     let rust_log = log_level.unwrap_or_else(|| "error".to_string());
 
     let player_dir = get_player_dir(&id);
@@ -55,6 +64,37 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
         }
 
         println!("starting player with id: {}", id);
+
+        if shim_exists {
+            let lair_stdout_log_path = player_dir.join(SHIM_STDERR_LOG_FILENAME);
+            let mut shim = Command::new("lair-shim")
+                .current_dir(&player_dir)
+                .arg("-d")
+                .arg("shim")
+                .arg("-m")
+                .arg("test")
+                .env("RUST_BACKTRACE", "full")
+                .stdout(Stdio::piped())
+                .stderr(
+                    std::fs::OpenOptions::new()
+                    .append(true)
+                    .create(true)
+                    .open(&lair_stdout_log_path)
+                    .context(CreateLairShimStdoutFile {
+                        path: lair_stdout_log_path,
+                    })?,
+                )
+                .spawn()
+                .context(SpawnShim)?;
+
+            // Wait until shim begins to output before starting conductor,
+            // otherwise Holochain starts its own copy of shim that we can't manage.
+            shim.stdout
+                .as_mut()
+                .unwrap()
+                .read_exact(&mut [0])
+                .context(CheckLairReady)?;
+        }
 
         let lair_stdout_log_path = player_dir.join(LAIR_STDERR_LOG_FILENAME);
         let mut lair = Command::new("lair-keystore")
