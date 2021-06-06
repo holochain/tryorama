@@ -73,13 +73,12 @@ environment_path: environment
 use_dangerous_test_keystore: false
 keystore_path: keystore
 passphrase_service:
-type: fromconfig
-passphrase: password
+    type: fromconfig
+    passphrase: password
 admin_interfaces:
--
-driver:
-type: websocket
-port: {}
+    - driver:
+        type: websocket
+        port: {}
 {}",
             port, partial_config
         )
@@ -96,13 +95,12 @@ environment_path: environment
 use_dangerous_test_keystore: false
 keystore_path: shim
 passphrase_service:
-type: fromconfig
-passphrase: password
+    type: fromconfig
+    passphrase: password
 admin_interfaces:
--
-driver:
-type: websocket
-port: {}
+    - driver:
+        type: websocket
+        port: {}
 {}",
             port, partial_config
         )
