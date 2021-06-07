@@ -65,7 +65,6 @@ async fn main() -> Result<(), Error> {
         port: u16,
         #[structopt(
             long = "lair-shim",
-            short = "ls",
             help = "Server code for a lair shim i.e a replacement for lair-keystore",
         )]
         lair_shim: Option<u16>,
