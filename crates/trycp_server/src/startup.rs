@@ -44,7 +44,7 @@ pub enum Error {
     CheckHolochainReady { source: io::Error },
 }
 
-pub fn startup(id: String, log_level: Option<String>, shim_exists: bool) -> Result<(), Error> {
+pub fn startup(id: String, log_level: Option<String>, lair_shim: Option<u16>) -> Result<(), Error> {
     let rust_log = log_level.unwrap_or_else(|| "error".to_string());
 
     let player_dir = get_player_dir(&id);
@@ -64,37 +64,6 @@ pub fn startup(id: String, log_level: Option<String>, shim_exists: bool) -> Resu
         }
 
         println!("starting player with id: {}", id);
-
-        if shim_exists {
-            let lair_stdout_log_path = player_dir.join(SHIM_STDERR_LOG_FILENAME);
-            let mut shim = Command::new("lair-shim")
-                .current_dir(&player_dir)
-                .arg("-p")
-                .arg("./shim/socket")
-                .arg("-l")
-                .arg("./keystore/socket")
-                .arg("-t")
-                .stdout(Stdio::piped())
-                .stderr(
-                    std::fs::OpenOptions::new()
-                    .append(true)
-                    .create(true)
-                    .open(&lair_stdout_log_path)
-                    .context(CreateLairShimStdoutFile {
-                        path: lair_stdout_log_path,
-                    })?,
-                )
-                .spawn()
-                .context(SpawnShim)?;
-
-            // Wait until shim begins to output before starting conductor,
-            // otherwise Holochain starts its own copy of shim that we can't manage.
-            shim.stdout
-                .as_mut()
-                .unwrap()
-                .read_exact(&mut [0])
-                .context(CheckLairReady)?;
-        }
 
         let lair_stdout_log_path = player_dir.join(LAIR_STDERR_LOG_FILENAME);
         let mut lair = Command::new("lair-keystore")
@@ -122,6 +91,41 @@ pub fn startup(id: String, log_level: Option<String>, shim_exists: bool) -> Resu
             .unwrap()
             .read_exact(&mut [0])
             .context(CheckLairReady)?;
+
+            match lair_shim {
+                Some(delay) => {
+                    let lair_stdout_log_path = player_dir.join(SHIM_STDERR_LOG_FILENAME);
+                    let mut shim = Command::new("lair-shim")
+                        .current_dir(&player_dir)
+                        .arg("-p")
+                        .arg("./shim/socket")
+                        .arg("-l")
+                        .arg("./keystore/socket")
+                        .arg("-t")
+                        .arg(delay.to_string())
+                        .stdout(Stdio::piped())
+                        .stderr(
+                            std::fs::OpenOptions::new()
+                            .append(true)
+                            .create(true)
+                            .open(&lair_stdout_log_path)
+                            .context(CreateLairShimStdoutFile {
+                                path: lair_stdout_log_path,
+                            })?,
+                        )
+                        .spawn()
+                        .context(SpawnShim)?;
+
+                    // Wait until shim begins to output before starting conductor,
+                    // otherwise Holochain starts its own copy of shim that we can't manage.
+                    shim.stdout
+                        .as_mut()
+                        .unwrap()
+                        .read_exact(&mut [0])
+                        .context(CheckLairReady)?;
+                },
+                None => {}
+            }
 
         let mut conductor = Command::new("holochain")
             .current_dir(&player_dir)

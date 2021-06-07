@@ -29,7 +29,7 @@ pub(crate) enum ConfigurePlayerError {
 pub(crate) fn configure_player(
     id: String,
     partial_config: String,
-    lair_shim: bool
+    lair_shim: Option<u16>
 ) -> Result<(), ConfigurePlayerError> {
     let player_dir = get_player_dir(&id);
     let config_path = player_dir.join(CONDUCTOR_CONFIG_FILENAME);
@@ -63,11 +63,11 @@ pub(crate) fn configure_player(
     let mut config_file = std::fs::File::create(&config_path).with_context(|| CreateConfig {
         path: config_path.clone(),
     })?;
-
-    if !lair_shim {
-        writeln!(
-            config_file,
-            "\
+    match lair_shim {
+        Some(_) => {
+            writeln!(
+                config_file,
+                "\
 ---
 environment_path: environment
 use_dangerous_test_keystore: false
@@ -80,16 +80,16 @@ admin_interfaces:
         type: websocket
         port: {}
 {}",
-            port, partial_config
-        )
-        .with_context(|| WriteConfig {
-             path: config_path.clone(),
-         })?;
-    }
-    else {
-        writeln!(
-            config_file,
-            "\
+                port, partial_config
+            )
+            .with_context(|| WriteConfig {
+                 path: config_path.clone(),
+             })?;
+        },
+        None => {
+            writeln!(
+                config_file,
+                "\
 ---
 environment_path: environment
 use_dangerous_test_keystore: false
@@ -102,13 +102,13 @@ admin_interfaces:
         type: websocket
         port: {}
 {}",
-            port, partial_config
-        )
-        .with_context(|| WriteConfig {
-             path: config_path.clone(),
-         })?;
+                port, partial_config
+            )
+            .with_context(|| WriteConfig {
+                 path: config_path.clone(),
+             })?;
+        }
     }
-
 
     println!(
         "wrote config for player {} to {}",

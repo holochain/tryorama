@@ -68,7 +68,7 @@ async fn main() -> Result<(), Error> {
             short = "ls",
             help = "Server code for a lair shim i.e a replacement for lair-keystore",
         )]
-        lair_shim: bool,
+        lair_shim: Option<u16>,
     }
     let args = Cli::from_args();
 
@@ -209,7 +209,7 @@ enum ConnectionError {
     },
 }
 
-async fn ws_connection(stream: TcpStream, lair_shim: bool) -> Result<(), ConnectionError> {
+async fn ws_connection(stream: TcpStream, lair_shim: Option<u16>) -> Result<(), ConnectionError> {
     let ws_stream = tokio_tungstenite::accept_async(stream)
         .await
         .context(Handshake)?;
@@ -237,7 +237,7 @@ async fn ws_connection(stream: TcpStream, lair_shim: bool) -> Result<(), Connect
 async fn ws_message(
     message_res: Result<Message, tungstenite::Error>,
     ws_write: Arc<futures::lock::Mutex<WsResponseWriter>>,
-    lair_shim: bool,
+    lair_shim: Option<u16>,
 ) -> Result<Option<Message>, ConnectionError> {
     let message = message_res.context(ReadRequest)?;
 
