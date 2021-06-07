@@ -24,6 +24,8 @@ pub enum Error {
         source
     ))]
     CheckShimReady { source: io::Error },
+    #[snafu(display("Could not create directory for at {}: {}", path.display(), source))]
+    CreateDir { path: PathBuf, source: io::Error },
     #[snafu(display("Could not create log file at {} for lair-keystore's stdout: {}", path.display(), source))]
     CreateLairStdoutFile { path: PathBuf, source: io::Error },
     #[snafu(display("Could not spawn lair-keystore: {}", source))]
@@ -96,6 +98,9 @@ pub fn startup(id: String, log_level: Option<String>, lair_shim: Option<u16>) ->
                 Some(delay) => {
                     const SHIM_FILE: &str = "shim/socket";
                     const LAIR_FILE: &str = "keystore/socket";
+                    std::fs::create_dir_all(player_dir.join("shim")).with_context(|| CreateDir {
+                        path: player_dir.join("shim").clone(),
+                    })?;
                     let lair_stdout_log_path = player_dir.join(SHIM_STDERR_LOG_FILENAME);
                     let mut shim = Command::new("lair-shim")
                         .current_dir(&player_dir)
