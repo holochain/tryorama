@@ -69,11 +69,11 @@ pub fn startup(id: String, log_level: Option<String>, shim_exists: bool) -> Resu
             let lair_stdout_log_path = player_dir.join(SHIM_STDERR_LOG_FILENAME);
             let mut shim = Command::new("lair-shim")
                 .current_dir(&player_dir)
-                .arg("-d")
-                .arg("shim")
-                .arg("-m")
-                .arg("test")
-                .env("RUST_BACKTRACE", "full")
+                .arg("-p")
+                .arg("./shim/socket")
+                .arg("-l")
+                .arg("./keystore/socket")
+                .arg("-t")
                 .stdout(Stdio::piped())
                 .stderr(
                     std::fs::OpenOptions::new()
