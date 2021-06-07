@@ -94,13 +94,15 @@ pub fn startup(id: String, log_level: Option<String>, lair_shim: Option<u16>) ->
 
             match lair_shim {
                 Some(delay) => {
+                    const SHIM_FILE: &str = "shim/socket";
+                    const LAIR_FILE: &str = "keystore/socket";
                     let lair_stdout_log_path = player_dir.join(SHIM_STDERR_LOG_FILENAME);
                     let mut shim = Command::new("lair-shim")
                         .current_dir(&player_dir)
                         .arg("-p")
-                        .arg("./shim/socket")
+                        .arg(player_dir.join(SHIM_FILE))
                         .arg("-l")
-                        .arg("./keystore/socket")
+                        .arg(player_dir.join(LAIR_FILE))
                         .arg("-t")
                         .arg(delay.to_string())
                         .stdout(Stdio::piped())
