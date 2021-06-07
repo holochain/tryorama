@@ -63,15 +63,16 @@ pub(crate) fn configure_player(
     let mut config_file = std::fs::File::create(&config_path).with_context(|| CreateConfig {
         path: config_path.clone(),
     })?;
-    match lair_shim {
-        Some(_) => {
-            writeln!(
-                config_file,
-                "\
+
+    let keystore_path = if lair_shim.is_some() { "shim" } else { "keystore" };
+
+    writeln!(
+        config_file,
+        "\
 ---
 environment_path: environment
 use_dangerous_test_keystore: false
-keystore_path: keystore
+keystore_path: {}
 passphrase_service:
     type: fromconfig
     passphrase: password
@@ -80,35 +81,11 @@ admin_interfaces:
         type: websocket
         port: {}
 {}",
-                port, partial_config
-            )
-            .with_context(|| WriteConfig {
-                 path: config_path.clone(),
-             })?;
-        },
-        None => {
-            writeln!(
-                config_file,
-                "\
----
-environment_path: environment
-use_dangerous_test_keystore: false
-keystore_path: shim
-passphrase_service:
-    type: fromconfig
-    passphrase: password
-admin_interfaces:
-    - driver:
-        type: websocket
-        port: {}
-{}",
-                port, partial_config
-            )
-            .with_context(|| WriteConfig {
-                 path: config_path.clone(),
-             })?;
-        }
-    }
+        keystore_path, port, partial_config
+    )
+    .with_context(|| WriteConfig {
+        path: config_path.clone(),
+    })?;
 
     println!(
         "wrote config for player {} to {}",
