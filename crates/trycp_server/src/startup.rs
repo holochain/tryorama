@@ -98,8 +98,9 @@ pub fn startup(id: String, log_level: Option<String>, lair_shim: Option<u16>) ->
                 Some(delay) => {
                     const SHIM_FILE: &str = "shim/socket";
                     const LAIR_FILE: &str = "keystore/socket";
-                    std::fs::create_dir_all(player_dir.join("shim")).with_context(|| CreateDir {
-                        path: player_dir.join("shim").clone(),
+                    let shim_dir = player_dir.join("shim");
+                    std::fs::create_dir_all(&shim_dir).with_context(|| CreateDir {
+                        path: shim_dir,
                     })?;
                     let lair_stdout_log_path = player_dir.join(SHIM_STDERR_LOG_FILENAME);
                     let mut shim = Command::new("lair-shim")
