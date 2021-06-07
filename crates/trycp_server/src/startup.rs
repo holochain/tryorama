@@ -24,7 +24,7 @@ pub enum Error {
         source
     ))]
     CheckShimReady { source: io::Error },
-    #[snafu(display("Could not create directory for at {}: {}", path.display(), source))]
+    #[snafu(display("Could not create directory for lair-shim at {}: {}", path.display(), source))]
     CreateDir { path: PathBuf, source: io::Error },
     #[snafu(display("Could not create log file at {} for lair-keystore's stdout: {}", path.display(), source))]
     CreateLairStdoutFile { path: PathBuf, source: io::Error },
