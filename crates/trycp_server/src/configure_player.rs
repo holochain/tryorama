@@ -29,6 +29,7 @@ pub(crate) enum ConfigurePlayerError {
 pub(crate) fn configure_player(
     id: String,
     partial_config: String,
+    lair_shim: Option<u16>
 ) -> Result<(), ConfigurePlayerError> {
     let player_dir = get_player_dir(&id);
     let config_path = player_dir.join(CONDUCTOR_CONFIG_FILENAME);
@@ -63,13 +64,15 @@ pub(crate) fn configure_player(
         path: config_path.clone(),
     })?;
 
+    let keystore_path = if lair_shim.is_some() { "shim" } else { "keystore" };
+
     writeln!(
         config_file,
         "\
 ---
 environment_path: environment
 use_dangerous_test_keystore: false
-keystore_path: keystore
+keystore_path: {}
 passphrase_service:
     type: fromconfig
     passphrase: password
@@ -78,7 +81,7 @@ admin_interfaces:
         type: websocket
         port: {}
 {}",
-        port, partial_config
+        keystore_path, port, partial_config
     )
     .with_context(|| WriteConfig {
         path: config_path.clone(),
