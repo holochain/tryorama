@@ -65,7 +65,7 @@ async fn main() -> Result<(), Error> {
         port: u16,
         #[structopt(
             long = "lair-shim",
-            help = "Server code for a lair shim i.e a replacement for lair-keystore",
+            help = "Server code for a lair shim i.e a replacement for lair-keystore"
         )]
         lair_shim: Option<u64>,
     }
@@ -273,8 +273,8 @@ async fn ws_message(
                 .map_err(|e| e.to_string()),
         ),
         Request::ConfigurePlayer { id, partial_config } => spawn_blocking(move || {
-            let resp =
-                configure_player::configure_player(id, partial_config, lair_shim).map_err(|e| e.to_string());
+            let resp = configure_player::configure_player(id, partial_config, lair_shim)
+                .map_err(|e| e.to_string());
             serialize_resp(request_id, resp)
         })
         .await
