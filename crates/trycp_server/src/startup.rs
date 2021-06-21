@@ -46,7 +46,7 @@ pub enum Error {
     CheckHolochainReady { source: io::Error },
 }
 
-pub fn startup(id: String, log_level: Option<String>, lair_shim: Option<u16>) -> Result<(), Error> {
+pub fn startup(id: String, log_level: Option<String>, lair_shim: Option<u64>) -> Result<(), Error> {
     let rust_log = log_level.unwrap_or_else(|| "error".to_string());
 
     let player_dir = get_player_dir(&id);

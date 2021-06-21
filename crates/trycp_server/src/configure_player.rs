@@ -29,7 +29,7 @@ pub(crate) enum ConfigurePlayerError {
 pub(crate) fn configure_player(
     id: String,
     partial_config: String,
-    lair_shim: Option<u16>
+    lair_shim: Option<u64>
 ) -> Result<(), ConfigurePlayerError> {
     let player_dir = get_player_dir(&id);
     let config_path = player_dir.join(CONDUCTOR_CONFIG_FILENAME);
