@@ -40,6 +40,12 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     })
   })
 
+  // Pings to make sure the connection stays alive
+  ws.on('pong', () => {
+    setTimeout(() => ws.ping(), 30_000)
+  })
+  ws.ping()
+
   const responsesAwaited = {}
 
   const decodeSignal = (signal: Buffer): conductorApi.AppSignal => {
