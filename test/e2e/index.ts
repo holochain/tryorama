@@ -35,7 +35,7 @@ const playersRemote = async (s, configs, startup?) => {
 };
 
 testRemote(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
-testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
+// testAlwaysOn(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
 // testAlwaysOn(singleConductorOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
 testDynamicOn(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)
 testSignal(localOrchestrator, () => testConfig(dnaLocationLocal), playersRemote)

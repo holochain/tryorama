@@ -73,10 +73,6 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
         [happ2]
       ] = await alice.installAgentsHapps(installAppsOverride)
 
-      // happ1 and happ2 share "agent 0"
-      //t.deepEqual(happ1.agent, happ2.agent)
-      // happ3 and happ4 share "agent 1"
-      //t.deepEqual(happ3.agent, happ4.agent)
       // "agent 0" and "agent 1" are in fact different
       t.notDeepEqual(happ1.agent, happ2.agent)
     })
@@ -106,7 +102,7 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
   })
 
   test('test with happ bundles including installed_app_id', async t => {
-    t.plan(4)
+    t.plan(7)
     const [conductorConfig, _installApps] = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('installBundledHapp', async (s: ScenarioApi) => {
@@ -118,6 +114,14 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
       t.equal(hash.length, 39, 'zome call succeeded')
       const [appId] = await alice.adminWs().listActiveApps()
       t.equal(appId, installedAppId, 'installation with correct `installed_app_id` succeeded')
+
+      // tests coreect status and number os apps
+      const runningAppsInfo = await alice.adminWs().listApps({status_filter: 'running'})
+      t.equal(runningAppsInfo.length, 1, 'number of running apps succeeded')
+      const pausedAppsInfo = await alice.adminWs().listApps({status_filter: 'paused'})
+      t.equal(pausedAppsInfo.length, 0, 'number of paused apps succeeded')
+      const disabledAppsInfo = await alice.adminWs().listApps({status_filter: 'disabled'})
+      t.equal(disabledAppsInfo.length, 0, 'number of disabled apps succeeded')
     })
     const stats = await orchestrator.run()
     t.equal(stats.successes, 1, 'only success')
