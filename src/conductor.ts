@@ -13,6 +13,8 @@ import {
   AgentPubKey,
   InstallAppRequest,
   InstallAppBundleRequest,
+  ListAppsRequest,
+  ListAppsResponse,
   EnableAppResponse,
   RegisterDnaRequest,
   HoloHash,
@@ -159,6 +161,11 @@ export class Conductor {
   initialize = async () => {
     this._onActivity()
     await this._connectInterfaces()
+  }
+
+
+  listApps = async (status: ListAppsRequest): Promise<ListAppsResponse>  => {
+    return await this.adminClient!.listApps(status)
   }
 
   setSignalHandler = (onSignal: ((signal: AppSignal) => void) | null) => {

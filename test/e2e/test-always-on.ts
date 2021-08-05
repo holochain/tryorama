@@ -115,7 +115,7 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
       const [appId] = await alice.adminWs().listActiveApps()
       t.equal(appId, installedAppId, 'installation with correct `installed_app_id` succeeded')
 
-      // tests coreect status and number os apps
+      // tests correct status and number os apps
       const runningAppsInfo = await alice.adminWs().listApps({status_filter: 'running'})
       t.equal(runningAppsInfo.length, 1, 'number of running apps succeeded')
       const pausedAppsInfo = await alice.adminWs().listApps({status_filter: 'paused'})

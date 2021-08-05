@@ -5,7 +5,7 @@ import { Cell } from './cell'
 import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket, HoloHash, AppBundleSource, InstallAppBundleRequest } from '@holochain/conductor-api';
+import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, ListAppsRequest, InstallAppRequest, AppWebsocket, HoloHash, AppBundleSource, InstallAppBundleRequest, ListAppsResponse } from '@holochain/conductor-api';
 import { unimplemented } from './util';
 import { fakeCapSecret } from './common';
 import env from './env';
@@ -191,6 +191,11 @@ export class Player {
     if (this._conductor) {
       this._conductor.setSignalHandler(handler)
     }
+  }
+  
+  listApps =  async (status: ListAppsRequest): Promise<ListAppsResponse> => {
+    this._conductorGuard(`Player.listApps(${JSON.stringify(status)})`)
+    return this._conductor!.listApps(status)
   }
 
   _conductorGuard = (context) => {
