@@ -62,17 +62,11 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('installAgentsHapps correctly shares agentPubKey', async (s: ScenarioApi) => {
       const [alice] = await playersFn(s, [conductorConfig])
-      const installAppsOverride = [
-        // agent 0
-        [[dnaPath]],
-        // agent 1
-        [[dnaPath]]
-      ]
-      const [
-        [happ1],
-        [happ2]
-      ] = await alice.installAgentsHapps(installAppsOverride)
-
+      const installAppsOverride = [ [[dnaPath]] ]
+      // agent 0
+      const [ [happ1] ] = await alice.installAgentsHapps(installAppsOverride)
+      // agent 1
+      const [ [happ2] ] = await alice.installAgentsHapps(installAppsOverride)
       // "agent 0" and "agent 1" are in fact different
       t.notDeepEqual(happ1.agent, happ2.agent)
     })
@@ -102,7 +96,7 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
   })
 
   test('test with happ bundles including installed_app_id', async t => {
-    t.plan(7)
+    t.plan(3)
     const [conductorConfig, _installApps] = testConfig()
     const orchestrator = await testOrchestrator()
     orchestrator.registerScenario('installBundledHapp', async (s: ScenarioApi) => {
@@ -112,16 +106,6 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
       const alice_happ = await alice.installBundledHapp({ path: bundlePath }, null, installedAppId)
       const hash = await alice_happ.cells[0].call('test', 'create_link')
       t.equal(hash.length, 39, 'zome call succeeded')
-      const [appId] = await alice.adminWs().listActiveApps()
-      t.equal(appId, installedAppId, 'installation with correct `installed_app_id` succeeded')
-
-      // tests correct status and number os apps
-      const runningAppsInfo = await alice.adminWs().listApps({status_filter: 'running'})
-      t.equal(runningAppsInfo.length, 1, 'number of running apps succeeded')
-      const pausedAppsInfo = await alice.adminWs().listApps({status_filter: 'paused'})
-      t.equal(pausedAppsInfo.length, 0, 'number of paused apps succeeded')
-      const disabledAppsInfo = await alice.adminWs().listApps({status_filter: 'disabled'})
-      t.equal(disabledAppsInfo.length, 0, 'number of disabled apps succeeded')
     })
     const stats = await orchestrator.run()
     t.equal(stats.successes, 1, 'only success')

@@ -229,8 +229,8 @@ checksum = "e78d4f1cc4ae33bbfc157ed5d5a5ef3bc29227303d595861deb238fcec4e9457"
 
 [[package]]
 name = "fixt"
-version = "0.0.4-dev.0"
-source = "git+https://github.com/holochain/holochain?rev=c5dbdf28825927106bc32d186dd54f20d35df468#c5dbdf28825927106bc32d186dd54f20d35df468"
+version = "0.0.4"
+source = "git+https://github.com/holochain/holochain?rev=bd89d55e397baf7876099f600db997c89dd70fb6#bd89d55e397baf7876099f600db997c89dd70fb6"
 dependencies = [
  "holochain_serialized_bytes",
  "lazy_static",
@@ -274,8 +274,8 @@ checksum = "ab5ef0d4909ef3724cc8cce6ccc8572c5c817592e9285f5464f8e86f8bd3726e"
 
 [[package]]
 name = "hdk"
-version = "0.0.102-dev.0"
-source = "git+https://github.com/holochain/holochain?rev=c5dbdf28825927106bc32d186dd54f20d35df468#c5dbdf28825927106bc32d186dd54f20d35df468"
+version = "0.0.102"
+source = "git+https://github.com/holochain/holochain?rev=bd89d55e397baf7876099f600db997c89dd70fb6#bd89d55e397baf7876099f600db997c89dd70fb6"
 dependencies = [
  "hdk_derive",
  "holo_hash",
@@ -292,8 +292,8 @@ dependencies = [
 
 [[package]]
 name = "hdk_derive"
-version = "0.0.4-dev.0"
-source = "git+https://github.com/holochain/holochain?rev=c5dbdf28825927106bc32d186dd54f20d35df468#c5dbdf28825927106bc32d186dd54f20d35df468"
+version = "0.0.4"
+source = "git+https://github.com/holochain/holochain?rev=bd89d55e397baf7876099f600db997c89dd70fb6#bd89d55e397baf7876099f600db997c89dd70fb6"
 dependencies = [
  "holochain_zome_types",
  "paste",
@@ -313,8 +313,8 @@ dependencies = [
 
 [[package]]
 name = "holo_hash"
-version = "0.0.4-dev.0"
-source = "git+https://github.com/holochain/holochain?rev=c5dbdf28825927106bc32d186dd54f20d35df468#c5dbdf28825927106bc32d186dd54f20d35df468"
+version = "0.0.4"
+source = "git+https://github.com/holochain/holochain?rev=bd89d55e397baf7876099f600db997c89dd70fb6#bd89d55e397baf7876099f600db997c89dd70fb6"
 dependencies = [
  "arbitrary",
  "base64",
@@ -381,8 +381,8 @@ dependencies = [
 
 [[package]]
 name = "holochain_zome_types"
-version = "0.0.4-dev.0"
-source = "git+https://github.com/holochain/holochain?rev=c5dbdf28825927106bc32d186dd54f20d35df468#c5dbdf28825927106bc32d186dd54f20d35df468"
+version = "0.0.4"
+source = "git+https://github.com/holochain/holochain?rev=bd89d55e397baf7876099f600db997c89dd70fb6#bd89d55e397baf7876099f600db997c89dd70fb6"
 dependencies = [
  "arbitrary",
  "chrono",
@@ -401,6 +401,7 @@ dependencies = [
  "shrinkwraprs",
  "strum",
  "subtle",
+ "subtle-encoding",
  "thiserror",
  "tracing",
 ]
@@ -637,7 +638,7 @@ dependencies = [
  "cfg-if 1.0.0",
  "instant",
  "libc",
- "redox_syscall 0.2.9",
+ "redox_syscall 0.2.10",
  "smallvec",
  "winapi",
 ]
@@ -851,9 +852,9 @@ checksum = "41cc0f7e4d5d4544e8861606a285bb08d3e70712ccc7d2b84d7c0ccfaf4b05ce"
 
 [[package]]
 name = "redox_syscall"
-version = "0.2.9"
+version = "0.2.10"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "5ab49abadf3f9e1c4bc499e8845e152ad87d2ad2d30371841171169e9d75feee"
+checksum = "8383f39639269cde97d255a32bdb68c047337295414940c68bdd30c2e13203ff"
 dependencies = [
  "bitflags",
 ]
@@ -1051,6 +1052,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6bdef32e8150c2a081110b42772ffe7d7c9032b606bc226c8260fd97e0976601"
 
 [[package]]
+name = "subtle-encoding"
+version = "0.5.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "7dcb1ed7b8330c5eed5441052651dd7a12c75e2ed88f2ec024ae1fa3a5e59945"
+dependencies = [
+ "zeroize",
+]
+
+[[package]]
 name = "syn"
 version = "1.0.74"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1235,3 +1245,9 @@ name = "winapi-x86_64-pc-windows-gnu"
 version = "0.4.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "712e227841d057c1ee1cd2fb22fa7e5a5461ae8e48fa2ca79ec42cfc1931183f"
+
+[[package]]
+name = "zeroize"
+version = "1.4.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "377db0846015f7ae377174787dd452e1c5f5a9050bc6f954911d01f116daa0cd"
