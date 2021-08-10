@@ -185,8 +185,8 @@ export class TunneledAdminClient {
     this.adminInterfaceCall = adminInterfaceCall
   }
 
-  activateApp(data: conductorApi.ActivateAppRequest): Promise<conductorApi.ActivateAppResponse> {
-    return this.adminInterfaceCall({ type: 'activate_app', data })
+  enableApp(data: conductorApi.EnableAppRequest): Promise<conductorApi.EnableAppResponse> {
+    return this.adminInterfaceCall({ type: 'enable_app', data })
   }
 
   addAgentInfo(data: conductorApi.AddAgentInfoRequest): Promise<conductorApi.AddAgentInfoResponse> {
@@ -197,8 +197,8 @@ export class TunneledAdminClient {
     return this.adminInterfaceCall({ type: 'attach_app_interface', data })
   }
 
-  deactivateApp(data: conductorApi.DeactivateAppRequest): Promise<conductorApi.DeactivateAppResponse> {
-    return this.adminInterfaceCall({ type: 'deactivate_app', data })
+  disableApp(data: conductorApi.DisableAppRequest): Promise<conductorApi.DisableAppResponse> {
+    return this.adminInterfaceCall({ type: 'disable_app', data })
   }
 
   dumpState(data: conductorApi.DumpStateRequest): Promise<conductorApi.DumpStateResponse> {
@@ -218,6 +218,11 @@ export class TunneledAdminClient {
     return this.adminInterfaceCall({ type: 'install_app_bundle', data })
   }
 
+  listApps(data: conductorApi.ListAppsRequest): Promise<conductorApi.ListAppsResponse> {
+    return this.adminInterfaceCall({ type: 'list_apps', data })
+  }
+
+  // deprecated
   listActiveApps(): Promise<conductorApi.ListActiveAppsResponse> {
     return this.adminInterfaceCall({ type: 'list_active_apps' })
   }
@@ -236,6 +241,11 @@ export class TunneledAdminClient {
 
   requestAgentInfo(data: conductorApi.RequestAgentInfoRequest): Promise<conductorApi.RequestAgentInfoResponse> {
     return this.adminInterfaceCall({ type: 'request_agent_info', data })
+  }
+
+  // used to attempt to manually restart a Paused app (...therefore must have been first enabled)
+  startApp(data: conductorApi.StartAppRequest): Promise<conductorApi.StartAppResponse> {
+    return this.adminInterfaceCall({ type: 'start_app', data })
   }
 }
 

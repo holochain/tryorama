@@ -13,6 +13,9 @@ import {
   AgentPubKey,
   InstallAppRequest,
   InstallAppBundleRequest,
+  ListAppsRequest,
+  ListAppsResponse,
+  EnableAppResponse,
   RegisterDnaRequest,
   HoloHash,
   DnaProperties,
@@ -160,6 +163,11 @@ export class Conductor {
     await this._connectInterfaces()
   }
 
+
+  listApps = async (status: ListAppsRequest): Promise<ListAppsResponse>  => {
+    return await this.adminClient!.listApps(status)
+  }
+
   setSignalHandler = (onSignal: ((signal: AppSignal) => void) | null) => {
     const prevOnSignal = this._onSignal
     if (
@@ -243,11 +251,16 @@ export class Conductor {
     const installedAppResponse: InstalledAppInfo = await this.adminClient!.installAppBundle(
       installAppBundleReq
     )
-    // must be activated to be callable
-    await this.adminClient!.activateApp({
+    // must be enabled to be callable
+    const enabledAppResponse: EnableAppResponse = await this.adminClient!.enableApp({
       installed_app_id: installedAppResponse.installed_app_id
     })
-    return this._makeInstalledAgentHapp(installedAppResponse)
+    if (enabledAppResponse.errors.length > 0) {
+      throw new Error(
+        `Error - Failed to enable app: ${enabledAppResponse.errors}`
+      )
+    }
+    return this._makeInstalledAgentHapp(enabledAppResponse.app)
   }
 
   // this function will auto-generate an `installed_app_id` and
@@ -291,14 +304,19 @@ export class Conductor {
   _installHapp = async (
     installAppReq: InstallAppRequest
   ): Promise<T.InstalledHapp> => {
-    const installedAppResponse: InstalledAppInfo = await this.adminClient!.installApp(
+    await this.adminClient!.installApp(
       installAppReq
     )
-    // must be activated to be callable
-    await this.adminClient!.activateApp({
+    // must be enabled to be callable
+    const enabledAppResponse: EnableAppResponse = await this.adminClient!.enableApp({
       installed_app_id: installAppReq.installed_app_id
     })
-    return this._makeInstalledAgentHapp(installedAppResponse)
+    if (enabledAppResponse.errors.length > 0) {
+      throw new Error(
+        `Error - Failed to enable app: ${enabledAppResponse.errors}`
+      )
+    }
+    return this._makeInstalledAgentHapp(enabledAppResponse.app)
   }
 
   _makeInstalledAgentHapp = (installedAppResponse: InstalledAppInfo): T.InstalledHapp => {
