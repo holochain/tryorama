@@ -9,5 +9,5 @@ name = "test_wasm"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-hdk = {git ="https://github.com/holochain/holochain", rev = "f3d17d993ad8d988402cc01d73a0095484efbabb", package = "hdk"}
+hdk = {git ="https://github.com/holochain/holochain", rev = "092df23697b7fdd53f901ec4c3a8579c280bae3f", package = "hdk"}
 serde = "1.0.123"
