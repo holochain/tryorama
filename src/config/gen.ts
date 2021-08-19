@@ -22,6 +22,10 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
   // don't put any keys on this object that you want to fall back to defaults
   const specific: T.RawConductorConfig = {
     environment_path: configDir,
+    passphrase_service: {
+      type: "danger_insecure_from_config",
+      passphrase: "pass"
+    },
     keystore_path: keystorePath,
     admin_interfaces: [
       {

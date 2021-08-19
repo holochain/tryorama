@@ -1,6 +1,6 @@
 #!/bin/bash
 
-REV=f3d17d993ad8d988402cc01d73a0095484efbabb
+REV=092df23697b7fdd53f901ec4c3a8579c280bae3f
 LAIR_REV=6a9aab37c90566328c13c4d048d1afaf75fc39a9
 
 export CARGO_TARGET_DIR="$PWD/target"
