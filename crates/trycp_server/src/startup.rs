@@ -95,6 +95,8 @@ pub fn startup(id: String, log_level: Option<String>, lair_shim: Option<u64>) ->
             .read_exact(&mut [0])
             .context(CheckLairReady)?;
 
+        std::thread::sleep(std::time::Duration::from_secs(1));
+
         if let Some(delay) = lair_shim {
             const SHIM_FILE: &str = "shim/socket";
             const LAIR_FILE: &str = "keystore/socket";
