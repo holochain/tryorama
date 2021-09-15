@@ -38,7 +38,7 @@ export type PartialConfigSeedArgs = {
 }
 export type CommonConfig = {
   network?: KitsuneP2pConfig,
-  dbSyncLevel?: string,
+  db_sync_level?: string,
   appPort?: number
 }
 

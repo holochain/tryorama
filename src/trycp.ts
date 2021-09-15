@@ -147,6 +147,7 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     downloadDna: (url) => makeCall('download_dna')({ url }),
     configurePlayer: (id, partial_config) => makeCall('configure_player')({
       id, partial_config: yaml.stringify({
+        db_sync_level: partial_config.db_sync_level !== undefined ? partial_config.db_sync_level : null,
         signing_service_uri: partial_config.signing_service_uri !== undefined ? partial_config.signing_service_uri : null,
         encryption_service_uri: partial_config.encryption_service_uri !== undefined ? partial_config.encryption_service_uri : null,
         decryption_service_uri: partial_config.decryption_service_uri !== undefined ? partial_config.decryption_service_uri : null,
