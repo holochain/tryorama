@@ -126,7 +126,7 @@ export interface RawConductorConfig {
   keystore_path?: string,
   admin_interfaces?: WsInterfaceConfig[],
   app_interfaces?: WsInterfaceConfig[],
-  db_sync_level?: dbSyncLevelConfig,
+  db_sync_level?: string,
   network?: KitsuneP2pConfig,
 }
 
@@ -198,6 +198,3 @@ export interface TuningParams {
 
 export type KillFn = (signal?: string) => Promise<void>
 
-export interface dbSyncLevelConfig {
-  type: string
-}
