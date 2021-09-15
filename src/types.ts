@@ -38,6 +38,7 @@ export type PartialConfigSeedArgs = {
 }
 export type CommonConfig = {
   network?: KitsuneP2pConfig,
+  dbSyncLevel?: string,
   appPort?: number
 }
 
@@ -125,6 +126,7 @@ export interface RawConductorConfig {
   keystore_path?: string,
   admin_interfaces?: WsInterfaceConfig[],
   app_interfaces?: WsInterfaceConfig[],
+  db_sync_level?: dbSyncLevelConfig,
   network?: KitsuneP2pConfig,
 }
 
@@ -195,3 +197,7 @@ export interface TuningParams {
 }
 
 export type KillFn = (signal?: string) => Promise<void>
+
+export interface dbSyncLevelConfig {
+  type: string
+}
