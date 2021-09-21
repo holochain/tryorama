@@ -26,9 +26,6 @@ test-all:
 
 update-hc:
 	make HC_REV=$(HC_REV) update-hc-sha
-	git add nixpkgs.nix
-	git commit -m hc-rev:$(HC_REV)
-	git push origin HEAD
 
 update-hc-sha:
 	@if [ $(HC_REV) ]; then\
