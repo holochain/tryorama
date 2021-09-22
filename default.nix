@@ -5,8 +5,8 @@ let
     holochainVersionId = "custom";
 
     holochainVersion = {
-      rev = "092df23697b7fdd53f901ec4c3a8579c280bae3f";
-      sha256 = "1z0y1bl1j2cfv4cgr4k7y0pxnkbiv5c0xv89y8dqnr32vli3bld7";
+      rev = "ab02f36c87999d42026b7429164ded503bb39853";
+      sha256 = "0bwyq34hn5s2rif5g83f8xnkwjk7wl71xj9bxqib9plzk8rc0dkp";
       cargoSha256 = "1rf8vg832qyymw0a4x247g0iikk6kswkllfrd5fqdr0qgf9prc31";
       bins = {
         holochain = "holochain";
@@ -14,8 +14,8 @@ let
       };
 
       lairKeystoreHashes = {
-        sha256 = "1jiz9y1d4ybh33h1ly24s7knsqyqjagsn1gzqbj1ngl22y5v3aqh";
-        cargoSha256 = "0agykcl7ysikssfwkjgb3hfw6xl0slzy38prc4rnzvagm5wd1jjv";
+        sha256 = "0khg5w5fgdp1sg22vqyzsb2ri7znbxiwl7vr2zx6bwn744wy2cyv";
+        cargoSha256 = "1lm8vrxh7fw7gcir9lq85frfd0rdcca9p7883nikjfbn21ac4sn4";
       };
     };
   };
