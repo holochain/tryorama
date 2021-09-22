@@ -7,3 +7,4 @@ dna/
 **/target/
 package-lock.json
 target
+.cargo

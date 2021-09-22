@@ -78,7 +78,7 @@ environment_path: environment
 use_dangerous_test_keystore: false
 keystore_path: {}
 passphrase_service:
-    type: fromconfig
+    type: danger_insecure_from_config
     passphrase: password
 admin_interfaces:
     - driver:

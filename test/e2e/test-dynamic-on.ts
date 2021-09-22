@@ -62,8 +62,8 @@ export default (testOrchestrator, testConfig, playersFn = (s, ...args) => s.play
 
       // now use admin node injection so all the conductors know about each-other
       const r = await s.shareAllNodes([alice, bob, carol])
-      // allow 1 second for gossiping
-      await delay(1000)
+      // allow 2 seconds for gossiping
+      await delay(2000)
 
       // confirm that bob and carol have the links
       const bobLinks = await bob_happ.cells[0].call('test', 'get_links')

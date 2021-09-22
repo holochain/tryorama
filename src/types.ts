@@ -110,8 +110,14 @@ export interface WsInterfaceConfig {
   }
 }
 
+export interface PassphraseServiceConfig {
+    type: string,
+    passphrase: string,
+}
+
 export interface RawConductorConfig {
   environment_path: string,
+  passphrase_service: PassphraseServiceConfig,
   use_dangerous_test_keystore?: boolean,
   signing_service_uri?: string,
   encryption_service_uri?: string,
@@ -120,8 +126,6 @@ export interface RawConductorConfig {
   admin_interfaces?: WsInterfaceConfig[],
   app_interfaces?: WsInterfaceConfig[],
   network?: KitsuneP2pConfig,
-  // TODO:
-  // passphrase_service?: PassphraseServiceConfig,
 }
 
 export type Url2 = string
