@@ -45,7 +45,7 @@ update-hc-sha:
 update-nix-by-failure:
 	@if [ $(HC_REV) ]; then\
 		echo "➳  Corrupting cargoSha256...";\
-		sed -i -e 's/^     cargoSha256 = .*/     cargoSha256 = "000000000000000000000000000000000000000000000000000a";/' default.nix;\
+		sed -i -e 's/^      cargoSha256 = .*/      cargoSha256 = "000000000000000000000000000000000000000000000000000a";/' default.nix;\
 		echo "➳  Getting cargoSha256... This can take a while...";\
 		nix-shell &>nix.log || echo "This was ment to fail :)...";\
 	else \
@@ -59,7 +59,7 @@ update-hc-cargoSha:
 		sleep 5;\
 		echo "✔  Replacing cargoSha256...";\
 		$(eval CARGOSHA256=$(shell sh -c "grep "got" ./nix.log" | awk '{print $$2}'))\
-		sed -i -e 's/^     cargoSha256 = .*/     cargoSha256 = "$(CARGOSHA256)";/' default.nix;\
+		sed -i -e 's/^      cargoSha256 = .*/      cargoSha256 = "$(CARGOSHA256)";/' default.nix;\
 	else \
 		echo "No holochain rev provided"; \
   fi

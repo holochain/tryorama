@@ -7,7 +7,7 @@ let
     holochainVersion = {
       rev = "ab02f36c87999d42026b7429164ded503bb39853";
       sha256 = "0bwyq34hn5s2rif5g83f8xnkwjk7wl71xj9bxqib9plzk8rc0dkp";
-      cargoSha256 = "1rf8vg832qyymw0a4x247g0iikk6kswkllfrd5fqdr0qgf9prc31";
+      cargoSha256 = "0bxflwmdh785c99cjgpmynd0h70a5gm40pryzzrfd9xiypr29gi7";
       bins = {
         holochain = "holochain";
         hc = "hc";
