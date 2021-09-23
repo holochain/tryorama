@@ -147,11 +147,12 @@ export const trycpSession = async (machineEndpoint: string): Promise<TrycpClient
     downloadDna: (url) => makeCall('download_dna')({ url }),
     configurePlayer: (id, partial_config) => makeCall('configure_player')({
       id, partial_config: yaml.stringify({
-        signing_service_uri: partial_config.signing_service_uri !== undefined ? partial_config.signing_service_uri : null,
-        encryption_service_uri: partial_config.encryption_service_uri !== undefined ? partial_config.encryption_service_uri : null,
-        decryption_service_uri: partial_config.decryption_service_uri !== undefined ? partial_config.decryption_service_uri : null,
-        network: partial_config.network !== undefined ? partial_config.network : null,
-        dpki: partial_config.dpki !== undefined ? partial_config.dpki : null,
+        ...(partial_config.db_sync_level ? { db_sync_level: partial_config.db_sync_level } : {}),
+        signing_service_uri: partial_config.signing_service_uri ?? null,
+        encryption_service_uri: partial_config.encryption_service_uri ?? null,
+        decryption_service_uri: partial_config.decryption_service_uri ?? null,
+        network: partial_config.network ?? null,
+        dpki: partial_config.dpki ?? null,
       })
     }),
     spawn: (id) => makeCall('startup')({ id, log_level: remoteLogLevel}),

@@ -43,6 +43,7 @@ export const gen = ( commonConfig: T.CommonConfig = {} ): T.ConfigSeed => (
         },
       },
     ],
+    ...(commonConfig.db_sync_level ? { db_sync_level: commonConfig.db_sync_level } : {}),
     ...(commonConfig.network ? { network: commonConfig.network } : {})
   }
 
