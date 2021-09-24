@@ -2,6 +2,15 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.4]
+
+### Added
+
+- `db_sync_level` option to configuration
+### Changed
+
+- Updated to support Hlochain v0.0.107
+
 ## [0.3.2]
 
 ### Fixed
@@ -132,4 +141,3 @@ await player.call('instanceId', 'zome', 'fn', params)
 
 - Ability to spawn and kill conductors arbitrarily during a test
 - New syntax to support this main difference
-
