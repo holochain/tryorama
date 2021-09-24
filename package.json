@@ -4,10 +4,11 @@
     "type": "git",
     "url": "https://github.com/holochain/tryorama"
   },
-  "version": "0.4.3",
+  "version": "0.4.5",
   "description": "test framework for holochain hApps",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
+  "files": ["lib/"],
   "directories": {
     "test": "test"
   },
