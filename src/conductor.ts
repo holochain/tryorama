@@ -367,7 +367,7 @@ export class Conductor {
           this._timeout,
           signal => {
             this._onActivity()
-            if (this._onSignal !== null) {
+            if (this._onSignal) {
               this._onSignal(signal)
             } else {
               console.info('got signal, doing nothing with it: %o', signal)
