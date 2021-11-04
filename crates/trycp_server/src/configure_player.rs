@@ -76,10 +76,10 @@ pub(crate) fn configure_player(
 ---
 environment_path: environment
 use_dangerous_test_keystore: false
-keystore_path: {}
-passphrase_service:
-    type: danger_insecure_from_config
-    passphrase: password
+keystore:
+    type: lair_server_legacy_deprecated
+    keystore_path: {}
+    danger_passphrase_insecure_from_config: test
 admin_interfaces:
     - driver:
         type: websocket

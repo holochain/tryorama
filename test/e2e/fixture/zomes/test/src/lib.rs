@@ -27,13 +27,13 @@ fn delete_link(input: HeaderHash) -> ExternResult<HeaderHash> {
 }
 
 #[hdk_extern]
-fn get_links(_: ()) -> ExternResult<Links> {
+fn get_links(_: ()) -> ExternResult<Vec<Link>> {
     Ok(hdk::prelude::get_links(base()?, None)?)
 }
 
 #[hdk_extern]
 fn delete_all_links(_: ()) -> ExternResult<()> {
-    for link in hdk::prelude::get_links(base()?, None)?.into_inner() {
+    for link in hdk::prelude::get_links(base()?, None)? {
         hdk::prelude::delete_link(link.create_link_hash)?;
     }
     Ok(())

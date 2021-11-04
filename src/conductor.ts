@@ -7,7 +7,7 @@ import { delay } from './util'
 import env from './env'
 import * as T from './types'
 import {
-  CellNick,
+  RoleId,
   AdminWebsocket,
   AppWebsocket,
   AgentPubKey,
@@ -289,7 +289,7 @@ export class Conductor {
 
           let dna = {
             hash: await this.registerDna(source, this._player.scenarioUID),
-            nick: `${index}${src}-${uidGen()}`
+            role_id: `${index}${src}-${uidGen()}`
           }
           return dna
         })
@@ -323,9 +323,9 @@ export class Conductor {
     const agentPubKey = installedAppResponse.cell_data[0].cell_id[1]
     const rawCells = Object.entries(installedAppResponse.cell_data)
     // construct Cell instances which are the most useful class to the client
-    const cells = rawCells.map(([_, { cell_id, cell_nick }]) => new Cell({
+    const cells = rawCells.map(([_, { cell_id, role_id }]) => new Cell({
       cellId: cell_id,
-      cellNick: cell_nick,
+      cellRole: role_id,
       player: this._player
     }))
 
