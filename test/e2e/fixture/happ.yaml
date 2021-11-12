@@ -2,7 +2,7 @@
 manifest_version: "1"
 name: test-happ
 description: ""
-slots:
+roles:
   - id: test
     provisioning:
       strategy: create

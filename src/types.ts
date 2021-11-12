@@ -118,8 +118,7 @@ export interface PassphraseServiceConfig {
 
 export interface RawConductorConfig {
   environment_path: string,
-  passphrase_service: PassphraseServiceConfig,
-  use_dangerous_test_keystore?: boolean,
+  keystore: KeystoreConfig,
   signing_service_uri?: string,
   encryption_service_uri?: string,
   decryption_service_uri?: string,
@@ -128,6 +127,12 @@ export interface RawConductorConfig {
   app_interfaces?: WsInterfaceConfig[],
   db_sync_level?: string,
   network?: KitsuneP2pConfig,
+}
+
+export interface KeystoreConfig {
+  type: string;
+  keystore_path: string;
+  danger_passphrase_insecure_from_config: string;
 }
 
 export type Url2 = string
