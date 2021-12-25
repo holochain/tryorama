@@ -1,7 +1,3 @@
-const fs = require('fs')
-const fsp = require('fs').promises
-import axios from 'axios'
-import logger from './logger'
 import { ObjectS } from './types';
 
 export const delay = (ms: number) => new Promise(resolve => setTimeout(resolve, ms))
@@ -31,63 +27,6 @@ export function promiseSerialObject<T>(promises: ObjectS<Promise<T>>): Promise<O
     promise.then(result =>
       p.then(v => Object.assign(result, { [key]: v }))),
     Promise.resolve({}))
-}
-
-/** @deprecated */
-export const downloadFile = async ({ url, path, overwrite }: { url: string, path: string, overwrite?: boolean }): Promise<void> => {
-  if (overwrite) {
-    await _downloadFile({ url, path })
-  } else {
-    // only download file if it doesn't already exist at this path.
-    await fsp.access(path).catch(() => _downloadFile({ url, path }))
-  }
-}
-
-/** @deprecated */
-const _downloadFile = async ({ url, path }: { url: string, path: string }): Promise<void> => {
-  const response = await axios.request({
-    url: url,
-    method: 'GET',
-    responseType: 'stream',
-    maxContentLength: 999999999999,
-  }).catch(e => {
-    logger.warn('axios error: ', parseAxiosError(e))
-    throw e.response
-  })
-
-  return new Promise((fulfill, reject) => {
-    if (!response.status || response.status != 200) {
-      reject(`Could not fetch ${url}, response was ${response.statusText} ${response.status}`)
-    } else {
-      const writer = fs.createWriteStream(path, { emitClose: true })
-        .on("error", reject)
-        .on("finish", () => {
-          logger.debug("Download complete.")
-          writer.close(fulfill)
-        })
-      logger.debug("Starting streaming download...")
-      response.data.pipe(writer)
-    }
-  })
-}
-
-const parseAxiosError = e => {
-  if ('config' in e && 'request' in e && 'response' in e) {
-    return {
-      request: {
-        method: e.config.method,
-        url: e.config.url,
-        data: e.config.data,
-      },
-      response: !e.response ? e.response : {
-        status: e.response.status,
-        statusText: e.response.statusText,
-        data: e.response.data,
-      }
-    }
-  } else {
-    return e
-  }
 }
 
 export const unimplemented = (reason: string) => {
