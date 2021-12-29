@@ -4,7 +4,7 @@
     "type": "git",
     "url": "https://github.com/holochain/tryorama"
   },
-  "version": "0.4.6",
+  "version": "0.4.7",
   "description": "test framework for holochain hApps",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -30,7 +30,6 @@
     "@iarna/toml": "^2.2.5",
     "@msgpack/msgpack": "^2.1.0",
     "async-mutex": "^0.1.4",
-    "axios": "^0.19.2",
     "base-64": "^0.1.0",
     "colors": "^1.4.0",
     "fp-ts": "^2.8.5",
