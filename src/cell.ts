@@ -1,4 +1,4 @@
-import { CellId, RoleId, HoloHash } from '@holochain/conductor-api'
+import { CellId, RoleId, HoloHash } from '@holochain/client'
 import { fakeCapSecret } from './common'
 import { Player } from './player'
 
@@ -43,7 +43,7 @@ export class Cell {
     return this._player.appWs(`cell.call()`).callZome({
       cell_id: this.cellId,
       zome_name: zome,
-      cap: fakeCapSecret(), // FIXME (see Player.ts)
+      cap_secret: fakeCapSecret(), // FIXME (see Player.ts)
       fn_name: fn,
       payload: params,
       provenance, // FIXME

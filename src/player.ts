@@ -1,17 +1,12 @@
 import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
-import { Cell } from './cell'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
+import { SpawnConductorFn, RawConductorConfig, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, AdminWebsocket, AgentPubKey, ListAppsRequest, InstallAppRequest, AppWebsocket, HoloHash, AppBundleSource, InstallAppBundleRequest, ListAppsResponse } from '@holochain/conductor-api';
-import { unimplemented } from './util';
-import { fakeCapSecret } from './common';
-import env from './env';
+import { AdminWebsocket, AgentPubKey, ListAppsRequest, InstallAppRequest, AppWebsocket, HoloHash, AppBundleSource, InstallAppBundleRequest, ListAppsResponse } from '@holochain/client';
 import * as T from './types'
 import { TunneledAdminClient, TunneledAppClient } from './trycp';
-const fs = require('fs').promises
 
 type ConstructorArgs = {
   scenarioUID: string,

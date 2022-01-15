@@ -1,13 +1,9 @@
-const colors = require('colors/safe')
 import { v4 as uidGen } from 'uuid'
 
 import { KillFn } from './types'
 import { makeLogger } from './logger'
-import { delay } from './util'
-import env from './env'
 import * as T from './types'
 import {
-  RoleId,
   AdminWebsocket,
   AppWebsocket,
   AgentPubKey,
@@ -18,19 +14,14 @@ import {
   EnableAppResponse,
   RegisterDnaRequest,
   HoloHash,
-  DnaProperties,
   AppSignal,
   InstalledAppInfo,
   AppBundleSource
-} from '@holochain/conductor-api'
+} from '@holochain/client'
 import { Cell } from './cell'
 import { Player } from './player'
 import { TunneledAdminClient, TunneledAppClient } from './trycp'
 import * as fs from 'fs'
-
-// probably unnecessary, but it can't hurt
-// TODO: bump this gradually down to 0 until we can maybe remove it altogether
-const WS_CLOSE_DELAY_FUDGE = 500
 
 export type CallAdminFunc = (
   method: string,
@@ -283,8 +274,10 @@ export class Conductor {
             source = { hash: src }
           } else if (typeof src === 'string') {
             source = { path: src }
-          } else {
+          } else if ('url' in src) {
             source = { url: src.url }
+          } else {
+            source = { hash: src }
           }
 
           let dna = {

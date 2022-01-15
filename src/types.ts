@@ -1,14 +1,11 @@
 import * as _ from 'lodash'
 import { ScenarioApi } from "./api"
-// import * as t from "io-ts"
 import { reporter } from 'io-ts-reporters'
-// import { ThrowReporter } from "io-ts/lib/ThrowReporter"
-// import { ChildProcess } from 'child_process';
 import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
 import { Cell } from './cell';
-import { AgentPubKey, HoloHash, DnaSource as LocalDnaSource } from '@holochain/conductor-api';
+import { AgentPubKey, HoloHash, DnaSource as LocalDnaSource } from '@holochain/client';
 
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
@@ -81,7 +78,7 @@ export type InstallHapp = DnaSrc[]
 export type DnaPath = string
 export type DnaUrl = { url: string }
 
-export type DnaSource = LocalDnaSource | { url: string }
+export type DnaSource = LocalDnaSource | DnaUrl
 
 // the mirror of InstallAgentHapps
 export type InstalledAgentHapps = InstalledHapps[]
