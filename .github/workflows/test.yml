@@ -13,13 +13,13 @@ jobs:
 
     strategy:
       matrix:
-        node-version: [14.x]
+        node-version: [16.x]
 
     steps:
     - name: Fetch source code
       uses: actions/checkout@v2
     - name: Use Nix
-      uses: cachix/install-nix-action@v12
+      uses: cachix/install-nix-action@v16
     - name: Use Node.js ${{ matrix.node-version }}
       uses: actions/setup-node@v1
       with:
@@ -32,7 +32,6 @@ jobs:
     - uses: cachix/cachix-action@v10
       with:
         name: holochain-ci
-#        authToken: '${{ secrets.CACHIX_HOLOCHAIN_CI }}'
     - name: Prepare Nix environment
       run: nix-shell --command "echo Completed"
     - name: Run all tests
