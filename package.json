@@ -18,8 +18,8 @@
     "doc": "typedoc",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
-    "test": "ts-node test | tap-diff",
-    "test:unit": "ts-node test/unit | tap-diff",
+    "test": "ts-node test",
+    "test:unit": "ts-node test/unit",
     "test:e2e": "ts-node test/e2e"
   },
   "author": "",
@@ -49,11 +49,9 @@
     "@types/node": "^12.19.3",
     "@types/ramda": "^0.26.44",
     "sinon": "^7.5.0",
-    "tap-diff": "^0.1.1",
     "tape": "^5.0.1",
     "tape-promise": "^4.0.0",
     "ts-node": "^8.10.2",
-    "typedoc": "^0.15.8",
     "typescript": "^3.9.7"
   }
 }
