@@ -1,4 +1,4 @@
-import { CapSecret } from "@holochain/conductor-api"
+import { CapSecret } from "@holochain/client"
 
 export const notImplemented = new Error("Not implemented!")
 

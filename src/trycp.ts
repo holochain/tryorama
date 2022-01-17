@@ -3,7 +3,7 @@ import WebSocket from 'ws';
 import logger from './logger'
 import * as yaml from 'yaml';
 import * as msgpack from "@msgpack/msgpack"
-import * as conductorApi from "@holochain/conductor-api"
+import * as conductorApi from "@holochain/client"
 import { inspect } from 'util';
 
 export type TrycpClient = {
