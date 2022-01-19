@@ -13,7 +13,7 @@
     "test": "test"
   },
   "scripts": {
-    "build": "rm -rf ./lib ; tsc -d",
+    "build": "tsc -b",
     "dev": "rm -rf ./lib ; tsc -d -w",
     "doc": "typedoc",
     "prepare": "npm run build",
