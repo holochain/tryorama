@@ -8,7 +8,9 @@
   "description": "test framework for holochain hApps",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
-  "files": ["lib/"],
+  "files": [
+    "lib/"
+  ],
   "directories": {
     "test": "test"
   },
@@ -51,7 +53,7 @@
     "sinon": "^7.5.0",
     "tape": "^5.0.1",
     "tape-promise": "^4.0.0",
-    "ts-node": "^8.10.2",
-    "typescript": "^3.9.7"
+    "ts-node": "^10.4.0",
+    "typescript": "^4.5.4"
   }
 }

@@ -8,3 +8,4 @@ dna/
 package-lock.json
 target
 .cargo
+.tsbuildinfo
