@@ -2,6 +2,14 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+
+## [0.4.9]
+### Fixed
+- Upgrade Holochain JS client to version 0.3.2, which fixes ECMA Modules support
+## [0.4.8]
+
+### Changed
+- Switch to renamed Holochain JS client
 ## [0.4.5]
 
 ### Fixed
