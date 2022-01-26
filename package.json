@@ -4,7 +4,7 @@
     "type": "git",
     "url": "https://github.com/holochain/tryorama"
   },
-  "version": "0.4.9",
+  "version": "0.4.10",
   "description": "test framework for holochain hApps",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
@@ -15,7 +15,7 @@
     "test": "test"
   },
   "scripts": {
-    "build": "rm -rf ./lib ; tsc -d",
+    "build": "tsc -b",
     "dev": "rm -rf ./lib ; tsc -d -w",
     "doc": "typedoc",
     "prepare": "npm run build",
