@@ -14,6 +14,7 @@ export const testOrchestrator = () => new Orchestrator({
 export const testConfig = (dnaPath: string) => {
   const seed: T.ConfigSeed = Config.gen({
     network: {
+      network_type: T.NetworkType.QuicBootstrap,
       transport_pool: [{
         type: T.TransportConfigType.Quic,
       }],
@@ -44,6 +45,6 @@ export const genConfigArgs: () => Promise<T.ConfigSeedArgs> = async () => ({
   adminInterfacePort: 1000,
   playerName: 'playerName',
   scenarioName: 'scenarioName',
-  uuid: 'uuid',
+  uid: 'uid',
 })
 export const spawnConductor = (() => { }) as unknown as T.SpawnConductorFn

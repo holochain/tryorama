@@ -1,0 +1,12 @@
+{
+  "devDependencies": {
+    "standard": "^16.0.4"
+  },
+  "dependencies": {
+    "@msgpack/msgpack": "^2.1.0",
+    "ws": "7.4.6"
+  },
+  "scripts": {
+    "test": "node test.js"
+  }
+}

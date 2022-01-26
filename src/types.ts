@@ -1,14 +1,11 @@
 import * as _ from 'lodash'
 import { ScenarioApi } from "./api"
-// import * as t from "io-ts"
 import { reporter } from 'io-ts-reporters'
-// import { ThrowReporter } from "io-ts/lib/ThrowReporter"
-// import { ChildProcess } from 'child_process';
 import logger from "./logger";
 import { Conductor } from "./conductor"
 import { Player } from "./player"
 import { Cell } from './cell';
-import { AgentPubKey } from '@holochain/conductor-api';
+import { AgentPubKey, HoloHash, DnaSource as LocalDnaSource } from '@holochain/client';
 
 export const decodeOrThrow = (validator, value, extraMsg = '') => {
   const result = validator.decode(value)
@@ -37,13 +34,15 @@ export type PartialConfigSeedArgs = {
   configDir: string,
 }
 export type CommonConfig = {
-  network?: KitsuneP2pConfig
+  network?: KitsuneP2pConfig,
+  db_sync_level?: string,
+  appPort?: number
 }
 
 export type ConfigSeedArgs = PartialConfigSeedArgs & {
   scenarioName: string,
   playerName: string,
-  uuid: string,
+  uid: string,
 }
 
 // export type PlayerConfigs = ObjectS<PlayerConfig>
@@ -74,8 +73,12 @@ sometimes we can write it like this to make it easier to read
 */
 export type InstallAgentsHapps = InstallHapps[]
 export type InstallHapps = InstallHapp[]
-export type InstallHapp = DnaPath[]
+export type DnaSrc = DnaPath | HoloHash | DnaUrl
+export type InstallHapp = DnaSrc[]
 export type DnaPath = string
+export type DnaUrl = { url: string }
+
+export type DnaSource = LocalDnaSource | DnaUrl
 
 // the mirror of InstallAgentHapps
 export type InstalledAgentHapps = InstalledHapps[]
@@ -98,24 +101,35 @@ export type InstalledHapp = {
 
 export const adminWsUrl = ({ urlBase, port }) => `${urlBase}:${port}`
 
-export interface AdminInterfaceConfig {
+export interface WsInterfaceConfig {
   driver: {
     type: string
     port: number
   }
 }
 
+export interface PassphraseServiceConfig {
+    type: string,
+    passphrase: string,
+}
+
 export interface RawConductorConfig {
   environment_path: string,
-  use_dangerous_test_keystore?: boolean,
+  keystore: KeystoreConfig,
   signing_service_uri?: string,
   encryption_service_uri?: string,
   decryption_service_uri?: string,
   keystore_path?: string,
-  admin_interfaces?: AdminInterfaceConfig[],
+  admin_interfaces?: WsInterfaceConfig[],
+  app_interfaces?: WsInterfaceConfig[],
+  db_sync_level?: string,
   network?: KitsuneP2pConfig,
-  // TODO:
-  // passphrase_service?: PassphraseServiceConfig,
+}
+
+export interface KeystoreConfig {
+  type: string;
+  keystore_path: string;
+  danger_passphrase_insecure_from_config: string;
 }
 
 export type Url2 = string
@@ -155,12 +169,34 @@ export enum ProxyAcceptConfig {
   RejectAll = 'reject_all'
 }
 
-export type TransportConfig = ( Mem | Quic | Proxy )
+export enum NetworkType {
+    QuicBootstrap = 'quic_bootstrap',
+    QuicMdns = 'quic_mdns'
+}
+
+export type TransportConfig = (Mem | Quic | Proxy)
 
 // Derived from https://github.com/holochain/holochain/blob/d3a991df1732603419adbda96e8fb8e525e829cb/crates/kitsune_p2p/kitsune_p2p/src/config.rs
 // must stay in sync
 export interface KitsuneP2pConfig {
+  network_type: NetworkType,
   transport_pool: TransportConfig[],
   bootstrap_service?: Url2
+  tuning_params?: TuningParams
 }
+
+export interface TuningParams {
+  gossip_loop_iteration_delay_ms: number // default 10
+  default_notify_remote_agent_count: number // default 5
+  default_notify_timeout_ms: number // default 1000
+  default_rpc_single_timeout_ms: number // default 2000
+  default_rpc_multi_remote_agent_count: number // default 2
+  default_rpc_multi_timeout_ms: number // default 2000
+  agent_info_expires_after_ms: number // default 1000 * 60 * 20 (20 minutes)
+  tls_in_mem_session_storage: number // default 512
+  proxy_keepalive_ms: number // default 1000 * 60 * 2 (2 minutes)
+  proxy_to_expire_ms: number // default 1000 * 6 * 5 (5 minutes)
+}
+
 export type KillFn = (signal?: string) => Promise<void>
+

@@ -1,4 +1,4 @@
-import { CellId, CellNick } from '@holochain/conductor-api'
+import { CellId, RoleId, HoloHash } from '@holochain/client'
 import { fakeCapSecret } from './common'
 import { Player } from './player'
 
@@ -6,7 +6,7 @@ type CallZomeFunc = (zome: string, fn: string, params?: any) => Promise<any>
 
 type CellConstructorParams = {
   cellId: CellId,
-  cellNick: CellNick,
+  cellRole: RoleId,
   player: Player
 }
 
@@ -16,13 +16,17 @@ type CellConstructorParams = {
  */
 export class Cell {
   cellId: CellId
-  cellNick: CellNick
+  cellRole: RoleId
   _player: Player
 
   constructor(o: CellConstructorParams) {
     this.cellId = o.cellId
-    this.cellNick = o.cellNick
+    this.cellRole = o.cellRole
     this._player = o.player
+  }
+
+  dnaHash = (): HoloHash => {
+     return this.cellId[0]
   }
 
   call: CallZomeFunc = async (zome: string, fn: string, params?: any): Promise<any> => {
@@ -39,7 +43,7 @@ export class Cell {
     return this._player.appWs(`cell.call()`).callZome({
       cell_id: this.cellId,
       zome_name: zome,
-      cap: fakeCapSecret(), // FIXME (see Player.ts)
+      cap_secret: fakeCapSecret(), // FIXME (see Player.ts)
       fn_name: fn,
       payload: params,
       provenance, // FIXME

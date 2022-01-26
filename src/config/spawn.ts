@@ -6,7 +6,7 @@ import * as path from "path";
 import { Player } from "..";
 import { Conductor } from "../conductor";
 import { getConfigPath } from ".";
-import { trycpSession, TrycpClient } from "../trycp";
+import { TrycpClient } from "../trycp";
 import { delay } from "../util";
 import env from '../env'
 var fs = require('fs');
@@ -17,23 +17,21 @@ export const spawnTest: T.SpawnConductorFn = async (player: Player, { }) => {
     player,
     name: 'test-conductor',
     kill: async () => { },
-    onSignal: () => { },
+    onSignal: null,
     onActivity: () => { },
-    machineHost: '',
-    adminPort: 0,
-    rawConfig: player.config
+    backend: { type: "test" },
   })
 }
 
-export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHook } = {}): Promise<Conductor> => {
+export const spawnLocal = (configDir: string, adminPort: number, appPort?: number): T.SpawnConductorFn => async (player: Player, { handleHook } = {}): Promise<Conductor> => {
   const name = player.name
-  const configPath = getConfigPath(player._configDir)
+  const configPath = getConfigPath(configDir)
   let handle
   let lairHandle
   try {
 
-    const lairDir = `${player._configDir}/keystore`
-    if (!fs.existsSync(lairDir)){
+    const lairDir = `${configDir}/keystore`
+    if (!fs.existsSync(lairDir)) {
       fs.mkdirSync(lairDir);
     }
     logger.info("Spawning lair for test with keystore at:  %s", lairDir)
@@ -45,7 +43,8 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
         ...process.env,
       }
     })
-    await delay(500)
+    // Wait for lair to output data such as "#lair-keystore-ready#" before starting holochain
+    await new Promise((resolve) => { lairHandle.stdout.once("data", resolve) })
 
     const binPath = env.holochainPath
     const version = execSync(`${binPath} --version`)
@@ -88,16 +87,19 @@ export const spawnLocal: T.SpawnConductorFn = async (player: Player, { handleHoo
         const lairKillPromise = new Promise((resolve) => {
           lairHandle.once('close', resolve)
         })
-        const killPromise = Promise.all([conductorKillPromise,lairKillPromise])
+        const killPromise = Promise.all([conductorKillPromise, lairKillPromise])
         lairHandle.kill()
         handle.kill(...args)
-        return killPromise
+        await killPromise
       },
       onSignal: player.onSignal,//player.onSignal.bind(player),
       onActivity: player.onActivity,
-      machineHost: `localhost`,
-      adminPort: player._adminInterfacePort,
-      rawConfig: player.config
+      backend: {
+        type: "local",
+        machineHost: "localhost",
+        adminInterfacePort: adminPort,
+        appInterfacePort: appPort || 0
+      },
     })
 
     return conductor
@@ -126,12 +128,12 @@ const awaitInterfaceReady = (handle, name): Promise<null> => new Promise((fulfil
     if (line.match(pattern)) {
       logger.info(`Conductor '${name}' process spawning completed.`)
       resolved = true
-      fulfill()
+      fulfill(null)
     }
   })
 })
 
-export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
+export const spawnRemote = (trycp: TrycpClient): T.SpawnConductorFn => async (player: Player): Promise<Conductor> => {
   const name = player.name
   const spawnResult = await trycp.spawn(name)
   logger.debug(`TryCP spawn result: ${spawnResult}`)
@@ -144,11 +146,19 @@ export const spawnRemote = (trycp: TrycpClient, machineHost: string): T.SpawnCon
     player,
     name,
     kill: (signal?) => trycp.kill(name, signal),
-    onSignal: player.onSignal.bind(player),
+    onSignal: player.onSignal?.bind(player) ?? null,
     onActivity: player.onActivity,
-    machineHost,
-    adminPort: 0,
-    rawConfig: 'TODO',
+    backend: {
+      type: "trycp",
+      adminInterfaceCall: (message) => trycp.adminInterfaceCall(name, message),
+      appInterfaceCall: trycp.appInterfaceCall,
+      connectAppInterface: trycp.connectAppInterface,
+      disconnectAppInterface: trycp.disconnectAppInterface,
+      subscribeAppInterfacePort: trycp.subscribeAppInterfacePort,
+      unsubscribeAppInterfacePort: trycp.unsubscribeAppInterfacePort,
+      downloadDnaRemote: trycp.downloadDna,
+      saveDnaRemote: trycp.saveDna,
+    }
   })
 }
 

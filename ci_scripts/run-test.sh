@@ -1,10 +1,11 @@
 #!/bin/bash
 echo `pwd`
 cd test/e2e/fixture/zomes/test
-cargo build --release --target wasm32-unknown-unknown --target-dir ./target
-cp target/wasm32-unknown-unknown/release/test_wasm.wasm ../../../test.dna.workdir/test.wasm
+# target at top level to share with trycp_server builds and for github CI caching
+cargo build --release --target wasm32-unknown-unknown --target-dir ../../../../../target
+cd ../.. #into fixtures
+hc dna pack . -o test.dna
+hc app pack . -o test.happ
 cd ../../..
-dna-util -c test.dna.workdir
-cd ../..
 npm install
 npm run test

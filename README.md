@@ -9,7 +9,8 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 
 Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
 
-Note: this version of tryorama is tested against holochain rev afdb4e949b77cc81afa1b0601cf406dc08587b45.  Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
+Note: this version of tryorama is tested against holochain rev ab02f36c87999d42026b7429164ded503bb39853
+Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
 
 ```bash
 npm install @holochain/tryorama
@@ -32,9 +33,10 @@ import path from 'path'
 const conductorConfig = Config.gen()
 
 // Construct proper paths for your DNAs
-const testDna = path.join(__dirname, 'test.dna.gz')
-const dnaBlog = path.join(__dirname, 'blog.dna.gz')
-const dnaChat = path.join(__dirname, 'chat.dna.gz')
+// This assumes dna files created by the `hc dna pack` command
+const testDna = path.join(__dirname, 'test.dna')
+const dnaBlog = path.join(__dirname, 'blog.dna')
+const dnaChat = path.join(__dirname, 'chat.dna')
 
 // create an InstallAgentsHapps array with your DNAs to tell tryorama what
 // to install into the conductor.
@@ -67,7 +69,7 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
   // be used to spin up the conductor processes which are returned in a matching array.
   const [alice, bob] = await s.players([conductorConfig, conductorConfig])
 
-  // install your happs into the coductors and destructuring the returned happ data using the same
+  // install your happs into the conductors and destructure the returned happ data using the same
   // array structure as you created in your installation array.
   const [
     [alice_test_happ],
@@ -78,8 +80,8 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
     [bob_blog_happ, bob_chat_happ]
   ] = await bob.installAgentsHapps(installation)
 
-  // then you can start making zome calls either on the cells in the order in which the dnas
-  // where defined, with params: zomeName, fnName, and arguments:
+  // then you can start making zome calls on the cells in the order in which the dnas
+  // were defined, with params: zomeName, fnName, and arguments:
   const res = await alice_blog_happ.cells[0].call('messages', 'list_messages', {})
 
   // or you can destructure the cells for more semantic references (this is most usefull
@@ -95,8 +97,14 @@ orchestrator.registerScenario('proper zome call', async (s, t) => {
 
   // and install a single happ
   const carol_blog_happ = await carol.installHapp([dnaBlog])
-  // or a happ with a previously generated key
-  const carol_test_happ_with_bobs_test_key = await carol.installHapp([dnaTest], bob_blog_happ.agent)
+
+  // or install a happ using
+  // - a previously generated key
+  // - and the hash of a dna that was previously registered with the same conductor
+  // (a dna can be registered either by installing a happ with that dna or by calling registerDna with an old dna's hash and a new UID)
+  const blogDnaHash = carol_test_happ.cells[0].dnaHash()
+  const derivedDnaHash = await carol.registerDna({hash: blogDnaHash}, "1234567890")
+  const carol_derived_happ_with_bobs_test_key = await carol.installHapp([derivedDnaHash], bob_blog_happ.agent)
 
   // assuming default network configuration, use `shareAllNodes` helper
   // to make sure that all conductors know about eachother so they can communicate
@@ -146,8 +154,9 @@ Custom networking settings are passed as a `commonConfig` in `Config.gen()`
 
 #### Exampe of use for  TransportConfigType `Proxy`
 ```javascript
-import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType } from '@holochain/tryorama'
+import { TransportConfigType, ProxyAcceptConfig, ProxyConfigType, NetworkType } from '@holochain/tryorama'
 const network = {
+  network_type: NetworkType.QuicBootstrap",
   transport_pool: [{
     type: TransportConfigType.Proxy,
     sub_transport: {type: TransportConfigType.Quic},
@@ -156,7 +165,19 @@ const network = {
       proxy_accept_config: ProxyAcceptConfig.AcceptAll
     }
   }],
-  bootstrap_service: "https://bootstrap.holo.host"
+  bootstrap_service: "https://bootstrap.holo.host",
+  tuning_params: {
+    gossip_loop_iteration_delay_ms: 10,
+    default_notify_remote_agent_count: 5,
+    default_notify_timeout_ms: number 1000,
+    default_rpc_single_timeout_ms:  2000,
+    default_rpc_multi_remote_agent_count: 2,
+    default_rpc_multi_timeout_ms: number 2000,
+    agent_info_expires_after_ms: 1000 * 60 * 20,
+    tls_in_mem_session_storage: 512,
+    proxy_keepalive_ms: 1000 * 60 * 2,
+    proxy_to_expire_ms: 1000 * 6 * 5
+  }
 }
 Config.gen({network})
 ```
@@ -235,7 +256,7 @@ Much of the purpose of Tryorama is to provide ways to setup conductors for tests
 
 ## Goals
 1. Common setups should be easy to generate
-2. Any conductor setups should be possible
+2. Any conductor setup should be possible
 3. Conductors from different scenarios must remain independent and invisible to each other
 
 Setting up a conductor for a test consists of two main parts:
@@ -265,7 +286,7 @@ const installation: InstallAgentsHapps = [
     // happ 0
     [
       // dna 0
-      path.join(__dirname, 'test.dna.gz')
+      path.join(__dirname, 'test.dna')
     ]
   ],
 ]
@@ -291,9 +312,13 @@ export type InstalledHapp = {
 
 ### Advanced Usage
 
+For complete control, i.e. if you need to add properties or a membrane-proof to you happ
+you can also install a happ using the holochain-conductor-app InstallAppRequest or
+InstallAppBundleRequest data structures using the `_installHapp` and `_installBundledHapp`
+functions of the player object.
+
+
 ```javascript
-// for complete control, i.e. if you need to add properties or a membrane-proof to
-// you can also install a happ using the holochain-conductor-app InstallAppRequest data structure:
 import { InstallAppRequest } from '@holochain/conductor-api'
 import * as msgpack from '@msgpack/msgpack';
 
@@ -306,7 +331,7 @@ orchestrator.registerScenario('description of this scenario', async (s, t) => {
     installed_app_id: `my_app:1234`, // my_app with some unique installed id value
     agent_key: await carol.adminWs().generateAgentPubKey(),
     dnas: [{
-      path: path.join(__dirname, 'my_app.dna.gz'),
+      path: path.join(__dirname, 'my_app.dna'),
       nick: `my_cell_nick`,
       properties: {my_property:"override_default_value"},
       membrane_proof: Array.from(msgpack.encode({role:"steward", signature:"..."})),

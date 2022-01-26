@@ -35,4 +35,4 @@ export const getPort = (): Promise<number> => portMutex.runExclusive(async (): P
 })
 
 // export const parkPort = port => PARKED_PORTS.add(port)
-export const unparkPort = port => PARKED_PORTS.delete(port)
+export const unparkPort = (port: number) => PARKED_PORTS.delete(port)

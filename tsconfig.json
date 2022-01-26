@@ -4,14 +4,15 @@
     "rootDir": "src",
     "outDir": "lib",
     "module": "commonjs",
-    "target": "ES2015",
+    "target": "ES2018",
     "sourceMap": true,
     "lib": [
+      "DOM",
       "esnext.array",
       "es2018"
     ],
+    "composite": true,
     "esModuleInterop": true,
-    // "downlevelIteration": true,
     "forceConsistentCasingInFileNames": true,
     "noImplicitReturns": false,
     "noImplicitThis": true,
@@ -19,20 +20,14 @@
     "strictNullChecks": true,
     "suppressImplicitAnyIndexErrors": true,
     "noUnusedLocals": false,
-    "plugins": [
-      {
-        "name": "typescript-tslint-plugin"
-      }
-    ]
+    "skipLibCheck": true
   },
-  // "files": [
-  //   "src/**/*"
-  // ],
-  "include": [
-    "src/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "lib"
+
+  "files": [],
+
+  "references": [
+    {
+      "path": "./src"
+    }
   ]
 }

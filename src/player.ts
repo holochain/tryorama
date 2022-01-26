@@ -1,23 +1,18 @@
 import * as _ from 'lodash'
 
 import { Conductor } from './conductor'
-import { Cell } from './cell'
-import { SpawnConductorFn, ObjectS, RawConductorConfig, InstalledHapps, InstallHapps, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
+import { SpawnConductorFn, RawConductorConfig, InstallAgentsHapps, InstalledAgentHapps, InstallHapp, InstalledHapp } from './types';
 import { makeLogger } from './logger';
 import { unparkPort } from './config/get-port-cautiously'
-import { CellId, CallZomeRequest, CellNick, AdminWebsocket, AgentPubKey, InstallAppRequest, AppWebsocket } from '@holochain/conductor-api';
-import { unimplemented } from './util';
-import { fakeCapSecret } from './common';
-import env from './env';
-const fs = require('fs').promises
+import { AdminWebsocket, AgentPubKey, ListAppsRequest, InstallAppRequest, AppWebsocket, HoloHash, AppBundleSource, InstallAppBundleRequest, ListAppsResponse } from '@holochain/client';
+import * as T from './types'
+import { TunneledAdminClient, TunneledAppClient } from './trycp';
 
 type ConstructorArgs = {
-  scenarioUUID: string,
+  scenarioUID: string,
   name: string,
   config: RawConductorConfig,
-  configDir: string,
-  adminInterfacePort: number,
-  onSignal: (Signal) => void,
+  adminInterfacePort?: number,
   onJoin: () => void,
   onLeave: () => void,
   onActivity: () => void,
@@ -39,37 +34,34 @@ export class Player {
   config: RawConductorConfig
   onJoin: () => void
   onLeave: () => void
-  onSignal: (Signal) => void
+  onSignal: ((signal: any) => void) | null = null
   onActivity: () => void
-  scenarioUUID: string
+  scenarioUID: string
 
   _conductor: Conductor | null
-  _configDir: string
-  _adminInterfacePort: number
+  _adminInterfacePort?: number
   _spawnConductor: SpawnConductorFn
 
-  constructor({ scenarioUUID, name, config, configDir, adminInterfacePort, onJoin, onLeave, onSignal, onActivity, spawnConductor }: ConstructorArgs) {
+  constructor({ scenarioUID, name, config, adminInterfacePort, onJoin, onLeave, onActivity, spawnConductor }: ConstructorArgs) {
     this.name = name
     this.logger = makeLogger(`player ${name}`)
     this.onJoin = onJoin
     this.onLeave = onLeave
-    this.onSignal = onSignal
     this.onActivity = onActivity
     this.config = config
-    this.scenarioUUID = scenarioUUID,
+    this.scenarioUID = scenarioUID,
 
-    this._conductor = null
-    this._configDir = configDir
+      this._conductor = null
     this._adminInterfacePort = adminInterfacePort
     this._spawnConductor = spawnConductor
   }
 
-  appWs = (context?: string): AppWebsocket => {
+  appWs = (context?: string): AppWebsocket | TunneledAppClient => {
     this._conductorGuard(context || `Player.appWs()`)
     return this._conductor!.appClient!
   }
 
-  adminWs = (context?: string): AdminWebsocket => {
+  adminWs = (context?: string): AdminWebsocket | TunneledAdminClient => {
     this._conductorGuard(context || `Player.adminWs()`)
     return this._conductor!.adminClient!
   }
@@ -99,7 +91,7 @@ export class Player {
     this.logger.debug("initialized")
   }
 
-  shutdown = async (signal = 'SIGINT'): Promise<boolean> => {
+  shutdown = async (signal = 'SIGTERM'): Promise<boolean> => {
     if (this._conductor) {
       const c = this._conductor
       this._conductor = null
@@ -115,16 +107,20 @@ export class Player {
   }
 
   /** Runs at the end of a test run */
-  cleanup = async (signal = 'SIGINT'): Promise<boolean> => {
+  cleanup = async (signal = 'SIGTERM'): Promise<boolean> => {
+    this.setSignalHandler(null)
     this.logger.debug("calling Player.cleanup, conductor: %b", this._conductor)
     if (this._conductor) {
       await this.shutdown(signal)
-      unparkPort(this._adminInterfacePort)
-      return true
-    } else {
-      unparkPort(this._adminInterfacePort)
-      return false
+      if (this._adminInterfacePort !== undefined) {
+        unparkPort(this._adminInterfacePort)
+
+      }
     }
+    if (this._adminInterfacePort !== undefined) {
+      unparkPort(this._adminInterfacePort)
+    }
+    return this._conductor !== null
   }
 
   /**
@@ -140,13 +136,40 @@ export class Player {
   }
 
   /**
+   * expose registerDna at the player level for in-scenario dynamic installation of apps
+   */
+  registerDna = async (source: T.DnaSource, ...params): Promise<HoloHash> => {
+    this._conductorGuard(`Player.registerDna(source ${JSON.stringify(source)}, params ${JSON.stringify(params)})`)
+    return this._conductor!.registerDna(source, ...params)
+  }
+
+  /**
+   * expose installBundledHapp at the player level for in-scenario dynamic installation of apps
+   * optionally takes an AgentPubKey so that you can control who's who if you need to
+   * otherwise will be a new and different agent every time you call it
+   */
+  installBundledHapp = async (bundleSource: AppBundleSource, agentPubKey?: AgentPubKey, installedAppId?: string): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player.installBundledHapp(${JSON.stringify(bundleSource)}, ${agentPubKey ? 'withAgentPubKey' : 'noAgentPubKey'}, ${installedAppId || 'noInstalledAppId'})`)
+    return this._conductor!.installBundledHapp(bundleSource, agentPubKey, installedAppId)
+  }
+
+  /**
+   * expose _installBundledHapp at the player level for in-scenario dynamic installation of apps
+   * using admin api's InstallAppBundleRequest for more detailed control
+   */
+  _installBundledHapp = async (happ: InstallAppBundleRequest): Promise<InstalledHapp> => {
+    this._conductorGuard(`Player._installHapp(${JSON.stringify(happ)})`)
+    return this._conductor!._installBundledHapp(happ)
+  }
+
+  /**
    * expose installHapp at the player level for in-scenario dynamic installation of apps
    * optionally takes an AgentPubKey so that you can control who's who if you need to
    * otherwise will be a new and different agent every time you call it
    */
   installHapp = async (happ: InstallHapp, agentPubKey?: AgentPubKey): Promise<InstalledHapp> => {
     this._conductorGuard(`Player.installHapp(${JSON.stringify(happ)}, ${agentPubKey ? 'noAgentPubKey' : 'withAgentPubKey'})`)
-      return this._conductor!.installHapp(happ, agentPubKey)
+    return this._conductor!.installHapp(happ, agentPubKey)
   }
 
   /**
@@ -161,8 +184,13 @@ export class Player {
   setSignalHandler = (handler) => {
     this.onSignal = handler
     if (this._conductor) {
-      this._conductor.onSignal = handler
+      this._conductor.setSignalHandler(handler)
     }
+  }
+  
+  listApps =  async (status: ListAppsRequest): Promise<ListAppsResponse> => {
+    this._conductorGuard(`Player.listApps(${JSON.stringify(status)})`)
+    return this._conductor!.listApps(status)
   }
 
   _conductorGuard = (context) => {

@@ -4,3 +4,8 @@ lib/
 docs/
 dna/
 .vscode/
+**/target/
+package-lock.json
+target
+.cargo
+.tsbuildinfo
