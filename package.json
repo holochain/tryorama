@@ -24,8 +24,7 @@
     "test:unit": "ts-node test/unit",
     "test:e2e": "ts-node test/e2e"
   },
-  "author": "",
-  "license": "Apache-2.0",
+  "license": "CAL-1.0",
   "dependencies": {
     "@holochain/client": "^0.3.2",
     "@holochain/hachiko": "^0.5.2",
