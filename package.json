@@ -14,7 +14,7 @@
     "lib/"
   ],
   "scripts": {
-    "build": "rimraf ./lib && tsc -b",
+    "build": "rimraf ./lib && tsc -p tsconfig.build.json",
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "lint": "eslint --fix --ext .ts src test .eslintrc.js",
