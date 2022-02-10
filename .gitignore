@@ -1,11 +1,8 @@
 .DS_Store
-node_modules/
-lib/
-docs/
-dna/
-.vscode/
-**/target/
-package-lock.json
+node_modules
+lib
+.vscode
+tsconfig.tsbuildinfo
+
 target
 .cargo
-.tsbuildinfo
