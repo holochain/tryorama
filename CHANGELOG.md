@@ -2,6 +2,24 @@
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## \[Unreleased\]
+
+### Added
+### Removed
+### Changed
+### Fixed
+
+## [0.5.0]
+Re-write Tryorama
+
+### Added
+### Removed
+- Middleware
+- Conductor configuration
+- Implicit usage of `tape` as test harness
+### Changed
+### Fixed
+
 ## [0.4.10]
 ### Fixed
 - Include missing type declarations for Tryorama
