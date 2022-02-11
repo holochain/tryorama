@@ -1,10 +1,9 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "ESNext",
-    "outDir": "lib",
+    "outDir": "lib"
   },
   "exclude": [
-    "test/**/*"
+    "ts/test/**/*"
   ]
 }

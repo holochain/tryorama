@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "module": "NodeNext",
+    "module": "ESNext",
     "target": "ESNext",
     "moduleResolution": "Node",
     "sourceMap": true,
@@ -10,7 +10,6 @@
     "strict": true
   },
   "include": [
-    "src/**/*",
-    "test/**/*"
+    "ts/**/*"
   ]
 }

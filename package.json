@@ -8,8 +8,13 @@
     "url": "https://github.com/holochain/tryorama"
   },
   "license": "CAL-1.0",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "type": "module",
+  "engines": {
+    "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
+  },
+  "exports": {
+    ".": "./lib/*.js"
+  },
   "files": [
     "lib/"
   ],
@@ -18,7 +23,7 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "lint": "eslint --fix --ext .ts src test .eslintrc.js",
-    "test": "ts-node test",
+    "test": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/index.ts",
     "test:unit": "ts-node test/unit",
     "test:e2e": "ts-node test/e2e"
   },
