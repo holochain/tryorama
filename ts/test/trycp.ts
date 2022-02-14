@@ -1,5 +1,5 @@
 // import { AdminWebsocket } from "@holochain/client";
-import test, { Test } from "tape";
+import test from "tape";
 import { PORT, TryCpServer } from "../src/local-trycp-server";
 import { TryCpClient } from "../src/trycp-client";
 

@@ -17,7 +17,7 @@ export class TryCpServer {
         "-p",
         port.toString(),
       ],
-      { cwd: "crates/trycp_server" }
+      { cwd: "rust/crates/trycp_server" }
     );
   }
 

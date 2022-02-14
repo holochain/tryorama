@@ -1,8 +1,8 @@
 [workspace]
 members = [
-  "test/e2e/fixture/zomes/test"
+  "rust/crates/trycp_server",
+  "ts/test/e2e/fixture/zomes/entry"
 ]
-exclude = ["crates/trycp_server"]
 
 [profile.dev]
 opt-level = "z"
