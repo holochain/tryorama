@@ -1,6 +1,6 @@
 // import { AdminWebsocket } from "@holochain/client";
 import test, { Test } from "tape";
-import { PORT, startLocalTryCpServer } from "../src/local-trycp-server";
+import { PORT, TryCpServer } from "../src/local-trycp-server";
 import { TryCpClient } from "../src/trycp-client";
 
 // async function doTest(url: string) {
@@ -57,13 +57,14 @@ import { TryCpClient } from "../src/trycp-client";
 // }
 
 test("trycp", async (t) => {
-  const localTryCpServer = await startLocalTryCpServer();
-
+  const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await TryCpClient.create("ws://0.0.0.0:" + PORT);
-  await tryCpClient.destroy();
 
-  localTryCpServer.on("exit", (code) =>
-    console.log("local TryCP server exit code", code)
-  );
-  localTryCpServer.kill("SIGINT");
+  const expected = "peng";
+  const actual = (await tryCpClient.ping(expected)).toString();
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.equal(actual, expected);
 });
