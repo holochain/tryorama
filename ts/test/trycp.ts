@@ -56,7 +56,7 @@ import { TryCpClient } from "../src/trycp-client";
 //   };
 // }
 
-test("trycp", async (t) => {
+test("Local TryCP ping", async (assert) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await TryCpClient.create("ws://0.0.0.0:" + PORT);
 
@@ -66,5 +66,5 @@ test("trycp", async (t) => {
   await tryCpClient.destroy();
   await localTryCpServer.stop();
 
-  t.equal(actual, expected);
+  assert.equal(actual, expected);
 });

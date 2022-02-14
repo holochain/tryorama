@@ -1,6 +1,6 @@
 [workspace]
 members = [
-  "rust/crates/trycp_server",
+  "crates/trycp_server",
   "ts/test/e2e/fixture/zomes/entry"
 ]
 

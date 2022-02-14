@@ -1,6 +1,11 @@
 import { WebSocket } from "ws";
+import msgpack from "@msgpack/msgpack";
 
-let clientId = 1;
+export interface TryCpCallPayload {
+  type: string;
+  id: string;
+  message: { type: string };
+}
 
 export class TryCpClient {
   private ws: WebSocket;
@@ -13,13 +18,10 @@ export class TryCpClient {
     const tryCpClient = new TryCpClient(url);
     const connectPromise = new Promise<TryCpClient>((resolve, reject) => {
       tryCpClient.ws.once("open", () => {
-        console.log(`TryCP client ${clientId}: connected to TryCP server`);
-        clientId++;
+        console.log("TryCP client: connected to TryCP server");
         resolve(tryCpClient);
       });
-      tryCpClient.ws.on(`TryCP client ${clientId}: error`, (err) =>
-        reject(err)
-      );
+      tryCpClient.ws.on("TryCP client: error", (err) => reject(err));
     });
     return connectPromise;
   }
@@ -28,9 +30,7 @@ export class TryCpClient {
     this.ws.close(1000);
     const closePromise = new Promise((resolve) => {
       this.ws.once("close", (code) => {
-        console.log(
-          `TryCP client ${clientId}: ws connection closed with code ${code}`
-        );
+        console.log(`TryCP client: ws connection closed with code ${code}`);
         resolve(code);
       });
     });
@@ -43,5 +43,22 @@ export class TryCpClient {
     );
     this.ws.ping(data);
     return pongPromise;
+  }
+
+  async call<T>(payload: TryCpCallPayload): Promise<T> {
+    // const encodedPayload = msgpack.encode(payload);
+    const callPromise = new Promise<T>((resolve) => {
+      this.ws.once("message", (data) => {
+        console.log("recieved some data here", data);
+        // @ts-ignore
+        resolve(data);
+      });
+    });
+    this.ws.send("setsdfs", (err) => {
+      if (err) {
+        console.error("ererererererer", err);
+      }
+    });
+    return callPromise;
   }
 }
