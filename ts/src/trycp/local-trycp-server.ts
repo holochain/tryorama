@@ -25,7 +25,11 @@ export class TryCpServer {
     const tryCpServer = new TryCpServer(port);
 
     tryCpServer.serverProcess.stderr.on("data", (data) => {
-      console.error(`TryCP server stderr: ${data}`);
+      console.error(`TryCP server compilation: ${data}`);
+    });
+
+    tryCpServer.serverProcess.stderr.on("error", (err) => {
+      console.error(`TryCP server compilation error: ${err}`);
     });
 
     const trycpPromise = new Promise<TryCpServer>((resolve) =>
@@ -34,13 +38,14 @@ export class TryCpServer {
         if (regex.test(data)) {
           resolve(tryCpServer);
         }
-        console.log(`TryCP server stdout: ${data}`);
+        console.log(`TryCP server output: ${data}`);
       })
     );
     return trycpPromise;
   }
 
   async stop() {
+    // TODO send stop signal
     this.serverProcess.on("exit", (code) =>
       console.log(`TryCP server exit code ${code}`)
     );
