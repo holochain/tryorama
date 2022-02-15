@@ -22,7 +22,7 @@ export const makeLogger = (label?: string, plain?: boolean) =>
       format.colorize(),
       format.timestamp({ format: "mediumTime" }),
       format.label(
-        label ? { label: plain ? label : `tryorama: ${label}` } : {}
+        label ? { label: plain ? label : `Tryorama - ${label}` } : {}
       ),
       myFormat
     ),

@@ -1,4 +1,7 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { makeLogger } from "../logger";
+
+const logger = makeLogger("TryCP server");
 
 export const PORT = 9000;
 
@@ -25,20 +28,17 @@ export class TryCpServer {
     const tryCpServer = new TryCpServer(port);
 
     tryCpServer.serverProcess.stderr.on("data", (data) => {
-      console.error(`TryCP server compilation: ${data}`);
-    });
-
-    tryCpServer.serverProcess.stderr.on("error", (err) => {
-      console.error(`TryCP server compilation error: ${err}`);
+      logger.info(`build process - ${data}`);
     });
 
     const trycpPromise = new Promise<TryCpServer>((resolve) =>
       tryCpServer.serverProcess.stdout.on("data", (data) => {
         const regex = new RegExp("Listening on 0.0.0.0:" + port);
         if (regex.test(data)) {
+          logger.debug("started");
           resolve(tryCpServer);
         }
-        console.log(`TryCP server output: ${data}`);
+        logger.info(data);
       })
     );
     return trycpPromise;
@@ -46,9 +46,7 @@ export class TryCpServer {
 
   async stop() {
     // TODO send stop signal
-    this.serverProcess.on("exit", (code) =>
-      console.log(`TryCP server exit code ${code}`)
-    );
+    this.serverProcess.on("exit", (code) => logger.info(`exit code ${code}`));
     this.serverProcess.kill("SIGINT");
   }
 }

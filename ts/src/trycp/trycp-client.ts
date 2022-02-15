@@ -4,7 +4,7 @@ import { WebSocket } from "ws";
 import { TryCpCallPayload, TryCpResponseWrapper } from "./types";
 import { decodeTryCpResponse } from "./util";
 
-const logger = makeLogger("TryCP client", true);
+const logger = makeLogger("TryCP client");
 
 const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
   encryption_service_uri: ~
