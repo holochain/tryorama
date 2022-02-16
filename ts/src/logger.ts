@@ -1,13 +1,12 @@
 import { createLogger, format, transports } from "winston";
 import env from "./env";
 
-const myFormat = format.printf(({ level, message, label, timestamp }) =>
-  label
-    ? `${timestamp} [${label}] ${level}: ${message}`
-    : `${timestamp} ${level}: ${message}`
+const myFormat = format.printf(
+  ({ level, message, label, timestamp }) =>
+    `${timestamp} [${label}] ${level}: ${message}`
 );
 
-export const makeLogger = (label?: string, plain?: boolean) =>
+export const makeLogger = (label?: string) =>
   createLogger({
     levels: {
       error: 0,
@@ -21,12 +20,10 @@ export const makeLogger = (label?: string, plain?: boolean) =>
       format.splat(),
       format.colorize(),
       format.timestamp({ format: "mediumTime" }),
-      format.label(
-        label ? { label: plain ? label : `Tryorama - ${label}` } : {}
-      ),
+      format.label({ label: label ? `Tryorama - ${label}` : "Tryorama" }),
       myFormat
     ),
     transports: [new transports.Console({ level: env.logLevel })],
   });
 
-export default makeLogger("tryorama", true);
+export default makeLogger();
