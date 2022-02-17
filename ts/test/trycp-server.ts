@@ -34,13 +34,11 @@ test.only("TryCP call - configure player", async (assert) => {
     request: {
       type: "configure_player",
       id: "player1",
-      partial_config: "facke", //DEFAULT_PARTIAL_PLAYER_CONFIG,
+      partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
     },
   });
   await tryCpClient.destroy();
   await localTryCpServer.stop();
-
-  console.log("response", actual);
 
   assert.equal(actual.id, expectedRequestId);
   assert.equal(actual.type, "response");
