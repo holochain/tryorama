@@ -23,15 +23,20 @@ interface TryCpServerRequestStartup {
 export interface TryCpResponseWrapper {
   type: "response";
   id: number;
-  response: TryCpResponseSuccess & TryCpResponseError;
+  response: TryCpResponse;
 }
 
+export type TryCpResponse = TryCpResponseSuccess & TryCpResponseError;
+export type TryCpResponseSuccessValue = null;
+export type TryCpResponseErrorValue = string;
+export const TRYCP_RESPONSE_SUCCESS: TryCpResponseSuccessValue = null;
+
 interface TryCpResponseSuccess {
-  0: null;
+  0: TryCpResponseSuccessValue;
 }
 
 interface TryCpResponseError {
-  1: string;
+  1: TryCpResponseErrorValue;
 }
 
 // saveDna: async (id, contents) => {

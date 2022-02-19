@@ -1,29 +1,36 @@
 import msgpack from "@msgpack/msgpack";
 import { makeLogger } from "../logger";
 import { WebSocket } from "ws";
-import { TryCpCallPayload, TryCpResponseWrapper } from "./types";
+import {
+  TryCpResponseErrorValue,
+  TryCpResponseSuccessValue,
+  TryCpServerCall,
+  TryCpServerRequest,
+} from "./types";
 import { decodeTryCpResponse } from "./util";
 
 const logger = makeLogger("TryCP client");
-
-const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
-  encryption_service_uri: ~
-  decryption_service_uri: ~
-  dpki: ~
-  network: ~` as const;
+let requestId = 0;
 
 export class TryCpClient {
   private readonly ws: WebSocket;
+  private requestPromises: {
+    [index: string]: {
+      responseResolve: (response: TryCpResponseSuccessValue) => void;
+      responseReject: (reason: TryCpResponseErrorValue) => void;
+    };
+  };
 
   private constructor(url: string) {
     this.ws = new WebSocket(url);
+    this.requestPromises = {};
   }
 
   static async create(url: string) {
     const tryCpClient = new TryCpClient(url);
     const connectPromise = new Promise<TryCpClient>((resolve, reject) => {
       tryCpClient.ws.once("open", () => {
-        logger.info(`connected to TryCP server @ ${url}`);
+        logger.debug(`connected to TryCP server @ ${url}`);
         tryCpClient.ws.removeEventListener("error", reject);
         resolve(tryCpClient);
       });
@@ -31,66 +38,68 @@ export class TryCpClient {
         logger.error(`could not connect to TryCP server @ ${url}: ${err}`);
         reject(err);
       });
+      tryCpClient.ws.on("message", (encodedResponse: Buffer) => {
+        const responseWrapper = decodeTryCpResponse(encodedResponse);
+        logger.debug(`response ${JSON.stringify(responseWrapper, null, 4)}`);
+
+        const { responseResolve, responseReject } =
+          tryCpClient.requestPromises[responseWrapper.id];
+        if (0 in responseWrapper.response) {
+          responseResolve(responseWrapper.response[0]);
+        } else if (1 in responseWrapper.response) {
+          responseReject(responseWrapper.response[1]);
+        } else {
+          logger.error(
+            "unknown response type",
+            JSON.stringify(responseWrapper.response, null, 4)
+          );
+        }
+        delete tryCpClient.requestPromises[responseWrapper.id];
+      });
+      tryCpClient.ws.on("error", (err) => {
+        logger.error(err);
+      });
     });
     return connectPromise;
   }
 
   async destroy() {
     this.ws.close(1000);
-    const closePromise = new Promise((resolve, reject) => {
+    const closePromise = new Promise((resolve) => {
       this.ws.once("close", (code) => {
-        logger.info(
+        logger.debug(
           `connection to TryCP server @ ${this.ws.url} closed with code ${code}`
         );
         resolve(code);
-      });
-      this.ws.once("error", (err) => {
-        logger.error(
-          `error on closing connection to TryCP server @ ${this.ws.url}: ${err}`
-        );
-        reject(err);
       });
     });
     return closePromise;
   }
 
   async ping(data: unknown) {
-    const pongPromise = new Promise<Buffer>((resolve, reject) => {
+    const pongPromise = new Promise<Buffer>((resolve) => {
       this.ws.once("pong", (data) => resolve(data));
-      this.ws.once("error", (err) => {
-        logger.error(`ping to TryCP server failed with error ${err}`);
-        reject(err);
-      });
     });
     this.ws.ping(data);
     return pongPromise;
   }
 
-  async call(payload: TryCpCallPayload) {
-    // const encodedPayload = msgpack.encode(payload);
-    const callPromise = new Promise<TryCpResponseWrapper>((resolve) => {
-      this.ws.once("message", (encodedResponse: Buffer) => {
-        const response = decodeTryCpResponse(encodedResponse);
-        logger.info(`response ${response}`);
-        resolve(response);
-      });
-    });
-    this.ws.send(
-      msgpack.encode({
-        id: 1,
-        request: {
-          type: "configure_player",
-          id: "my-player",
-          partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
-        },
-      })
-      // msgpack.encode({ id: 1, request: { type: "startup", id: "my-player" } })
+  async call(request: TryCpServerRequest) {
+    const callPromise = new Promise<TryCpResponseSuccessValue>(
+      (resolve, reject) => {
+        const serverCall: TryCpServerCall = {
+          id: requestId,
+          request,
+        };
+        this.requestPromises[requestId] = {
+          responseResolve: resolve,
+          responseReject: reject,
+        };
+        requestId++;
 
-      // msgpack.encode({
-      //   type: "call_admin_interface",
-      //   id: "my-player",
-      //   message: msgpack.encode({ type: "generate_agent_pub_key" }),
-      // })
+        const encodedServerCall = msgpack.encode(serverCall);
+        this.ws.send(encodedServerCall);
+      }
     );
     return callPromise;
   }

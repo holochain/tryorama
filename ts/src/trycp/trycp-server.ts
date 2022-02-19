@@ -34,7 +34,7 @@ export class TryCpServer {
     const tryCpServer = new TryCpServer(port);
 
     tryCpServer.serverProcess.on("error", (err) =>
-      logger.error(`Error starting up local TryCP server ${err}`)
+      logger.error(`Error starting up local TryCP server - ${err}`)
     );
 
     tryCpServer.serverProcess.stderr.on("data", (data) => {
@@ -43,12 +43,17 @@ export class TryCpServer {
 
     const trycpPromise = new Promise<TryCpServer>((resolve) =>
       tryCpServer.serverProcess.stdout.on("data", (data) => {
-        const regex = new RegExp(
+        const regexServerStarted = new RegExp(
           `Listening on ${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
         );
-        if (regex.test(data)) {
+        if (/error/i.test(data)) {
+          logger.error(data);
+          return;
+        }
+        if (regexServerStarted.test(data)) {
           logger.debug("started");
           resolve(tryCpServer);
+          return;
         }
         logger.debug(data);
       })
