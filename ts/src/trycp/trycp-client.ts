@@ -38,33 +38,34 @@ export class TryCpClient {
         logger.error(`could not connect to TryCP server @ ${url}: ${err}`);
         reject(err);
       });
-      tryCpClient.ws.on("message", (encodedResponse: Buffer) => {
-        const responseWrapper = decodeTryCpResponse(encodedResponse);
-        logger.debug(`response ${JSON.stringify(responseWrapper, null, 4)}`);
-
-        const { responseResolve, responseReject } =
-          tryCpClient.requestPromises[responseWrapper.id];
-        if (0 in responseWrapper.response) {
-          responseResolve(responseWrapper.response[0]);
-        } else if (1 in responseWrapper.response) {
-          responseReject(responseWrapper.response[1]);
-        } else {
-          logger.error(
-            "unknown response type",
-            JSON.stringify(responseWrapper.response, null, 4)
-          );
-        }
-        delete tryCpClient.requestPromises[responseWrapper.id];
-      });
-      tryCpClient.ws.on("error", (err) => {
-        logger.error(err);
-      });
     });
+
+    tryCpClient.ws.on("message", (encodedResponse: Buffer) => {
+      const responseWrapper = decodeTryCpResponse(encodedResponse);
+      logger.debug(`response ${JSON.stringify(responseWrapper, null, 4)}`);
+
+      const { responseResolve, responseReject } =
+        tryCpClient.requestPromises[responseWrapper.id];
+      if (0 in responseWrapper.response) {
+        responseResolve(responseWrapper.response[0]);
+      } else if (1 in responseWrapper.response) {
+        responseReject(responseWrapper.response[1]);
+      } else {
+        logger.error(
+          "unknown response type",
+          JSON.stringify(responseWrapper.response, null, 4)
+        );
+      }
+      delete tryCpClient.requestPromises[responseWrapper.id];
+    });
+    tryCpClient.ws.on("error", (err) => {
+      logger.error(err);
+    });
+
     return connectPromise;
   }
 
   async destroy() {
-    this.ws.close(1000);
     const closePromise = new Promise((resolve) => {
       this.ws.once("close", (code) => {
         logger.debug(
@@ -73,6 +74,7 @@ export class TryCpClient {
         resolve(code);
       });
     });
+    this.ws.close(1000);
     return closePromise;
   }
 
@@ -84,23 +86,24 @@ export class TryCpClient {
     return pongPromise;
   }
 
-  async call(request: TryCpServerRequest) {
+  call(request: TryCpServerRequest) {
     const callPromise = new Promise<TryCpResponseSuccessValue>(
       (resolve, reject) => {
-        const serverCall: TryCpServerCall = {
-          id: requestId,
-          request,
-        };
         this.requestPromises[requestId] = {
           responseResolve: resolve,
           responseReject: reject,
         };
-        requestId++;
-
-        const encodedServerCall = msgpack.encode(serverCall);
-        this.ws.send(encodedServerCall);
       }
     );
+
+    const serverCall: TryCpServerCall = {
+      id: requestId,
+      request,
+    };
+    const encodedServerCall = msgpack.encode(serverCall);
+    this.ws.send(encodedServerCall);
+
+    requestId++;
     return callPromise;
   }
 }

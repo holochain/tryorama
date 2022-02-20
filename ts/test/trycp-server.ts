@@ -1,5 +1,5 @@
 // import { AdminWebsocket } from "@holochain/client";
-import test from "tape";
+import test from "tape-promise/tape";
 import {
   TRYCP_SERVER_HOST,
   TRYCP_SERVER_PORT,
@@ -23,6 +23,44 @@ test("TryCP - ping", async (t) => {
   await localTryCpServer.stop();
 
   t.equal(actual, expected);
+});
+
+test("TryCP call - non-existant call throws", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const actual = tryCpClient.call({
+    // eslint-disable-next-line
+    // @ts-ignore
+    type: "non-call",
+  });
+  // eslint-disable-next-line
+  // @ts-ignore
+  t.throws(actual);
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+});
+
+test("TryCP call - invalid call is rejected", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const player = "player-1";
+  await tryCpClient.call({
+    type: "configure_player",
+    id: player,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  const actual = tryCpClient.call({
+    type: "configure_player",
+    id: player,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  t.rejects(actual);
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
 });
 
 test("TryCP call - configure player", async (t) => {
