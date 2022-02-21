@@ -127,3 +127,59 @@ test("TryCP call - startup", async (t) => {
 
   t.equal(actual, TRYCP_RESPONSE_SUCCESS);
 });
+
+test("TryCP call - shutdown", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const playerId = "player-1";
+  await tryCpClient.call({
+    type: "configure_player",
+    id: playerId,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  await tryCpClient.call({
+    type: "startup",
+    id: playerId,
+  });
+
+  const actual = await tryCpClient.call({
+    type: "shutdown",
+    id: playerId,
+  });
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
+});
+
+test("TryCP call - reset", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const playerId = "player-1";
+  await tryCpClient.call({
+    type: "configure_player",
+    id: playerId,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  await tryCpClient.call({
+    type: "startup",
+    id: playerId,
+  });
+
+  const actual = await tryCpClient.call({
+    type: "reset",
+  });
+  const attemptToStartAgain = tryCpClient.call({
+    type: "startup",
+    id: playerId,
+  });
+  t.rejects(attemptToStartAgain);
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
+});

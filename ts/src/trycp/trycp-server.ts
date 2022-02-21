@@ -51,7 +51,7 @@ export class TryCpServer {
           return;
         }
         if (regexServerStarted.test(data)) {
-          logger.debug("started");
+          logger.verbose(data);
           resolve(tryCpServer);
           return;
         }

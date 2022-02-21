@@ -1,23 +1,35 @@
-export type ConductorId = string;
+export type PlayerId = string;
 export interface TryCpServerCall {
   id: number;
   request: TryCpServerRequest;
 }
 
 export type TryCpServerRequest =
-  | TryCpServerRequestConfigurePlayer
-  | TryCpServerRequestStartup;
+  | RequestConfigurePlayer
+  | RequestStartup
+  | RequestShutdown
+  | RequestReset;
 
-interface TryCpServerRequestConfigurePlayer {
+interface RequestConfigurePlayer {
   type: "configure_player";
-  id: string;
+  id: PlayerId;
   partial_config: string;
 }
 
-interface TryCpServerRequestStartup {
+interface RequestStartup {
   type: "startup";
-  id: string;
+  id: PlayerId;
   log_level?: string;
+}
+
+interface RequestShutdown {
+  type: "shutdown";
+  id: PlayerId;
+  signal?: "SIGTERM" | "SIGKILL" | "SIGINT";
+}
+
+interface RequestReset {
+  type: "reset";
 }
 
 export interface TryCpResponseWrapper {

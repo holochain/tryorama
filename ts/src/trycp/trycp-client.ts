@@ -30,7 +30,7 @@ export class TryCpClient {
     const tryCpClient = new TryCpClient(url);
     const connectPromise = new Promise<TryCpClient>((resolve, reject) => {
       tryCpClient.ws.once("open", () => {
-        logger.debug(`connected to TryCP server @ ${url}`);
+        logger.verbose(`connected to TryCP server @ ${url}`);
         tryCpClient.ws.removeEventListener("error", reject);
         resolve(tryCpClient);
       });
@@ -68,7 +68,7 @@ export class TryCpClient {
   async destroy() {
     const closePromise = new Promise((resolve) => {
       this.ws.once("close", (code) => {
-        logger.debug(
+        logger.verbose(
           `connection to TryCP server @ ${this.ws.url} closed with code ${code}`
         );
         resolve(code);
