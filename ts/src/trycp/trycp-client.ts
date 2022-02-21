@@ -87,6 +87,8 @@ export class TryCpClient {
   }
 
   call(request: TryCpServerRequest) {
+    logger.debug(`request ${JSON.stringify(request, null, 4)}`);
+
     const callPromise = new Promise<TryCpResponseSuccessValue>(
       (resolve, reject) => {
         this.requestPromises[requestId] = {

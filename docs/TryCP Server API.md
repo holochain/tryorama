@@ -4,15 +4,35 @@ TryCP is a protocol to enable remote management of Holochain conductors on netwo
 
 ## Table of contents
 
-> All data types are Rust types
+[Call signature](#call-signature)
+[Requests](#requests)
+[configure_player](#configureplayer)
+[startup](#startup)
 
-## Call format
+> Data types in Rust syntax
+
+## Call signature
 - `id` { u64 } The request id
 - `request` { Enum } Enum 
 
-Calls to the TryCP server are composed of a call id and the request data. Following there's a list of all possible requests.
+Calls to the TryCP server are composed of a request id and the request data. Following there's a list of all possible requests.
 
-## startup
+## Requests
+### configure_player
+- `type` { "configure_player" }
+- `id` { String } The player id
+- `partial_config` { String } The Holochain configuration that is not provided by TryCP. For example:
+```yaml
+signing_service_uri: ~
+encryption_service_uri: ~
+decryption_service_uri: ~
+dpki: ~
+network: ~
+```
+
+### startup
 - `type` { "startup" }
-- `id` { String } The player's id
-- `log_level` { Option<String> } One of the log levels 
+- `id` { String } The player id
+- `log_level` { Option<String> } One of the log levels "error", "warn", "info", "debug", "trace" of the [log crate](https://docs.rs/log/latest/log/enum.Level.html)
+
+### shutdown

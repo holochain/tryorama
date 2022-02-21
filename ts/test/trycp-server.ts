@@ -42,27 +42,6 @@ test("TryCP call - non-existant call throws", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP call - invalid call is rejected", async (t) => {
-  const localTryCpServer = await TryCpServer.start();
-  const tryCpClient = await createTryCpClient();
-
-  const player = "player-1";
-  await tryCpClient.call({
-    type: "configure_player",
-    id: player,
-    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
-  });
-  const actual = tryCpClient.call({
-    type: "configure_player",
-    id: player,
-    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
-  });
-  t.rejects(actual);
-
-  await tryCpClient.destroy();
-  await localTryCpServer.stop();
-});
-
 test("TryCP call - configure player", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
@@ -128,7 +107,7 @@ test("TryCP - 2 parallel calls from two clients return correct responses", async
   t.equal(response2, TRYCP_RESPONSE_SUCCESS);
 });
 
-test.skip("TryCP call - startup", async (t) => {
+test("TryCP call - startup", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -146,6 +125,5 @@ test.skip("TryCP call - startup", async (t) => {
   await tryCpClient.destroy();
   await localTryCpServer.stop();
 
-  console.log("actual", actual);
-  t.equal(true, true);
+  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
 });
