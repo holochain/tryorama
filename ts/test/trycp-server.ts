@@ -25,7 +25,7 @@ test("TryCP - ping", async (t) => {
   t.equal(actual, expected);
 });
 
-test("TryCP call - non-existant call throws", async (t) => {
+test("TryCP call - non-existent call throws", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -40,6 +40,40 @@ test("TryCP call - non-existant call throws", async (t) => {
 
   await tryCpClient.destroy();
   await localTryCpServer.stop();
+});
+
+test("TryCP call - download DNA from web", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const url =
+    "https://github.com/holochain/elemental-chat/releases/download/v0.0.1-alpha15/elemental-chat.dna.gz";
+  const expectedUrl = url.replace(/https?:\/\/.*?\//g, "").replace(/\//g, "");
+  const actualUrl = await tryCpClient.call({
+    type: "download_dna",
+    url,
+  });
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.ok(actualUrl?.endsWith(expectedUrl));
+});
+
+test("TryCP call - download DNA from file system", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const url =
+    "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/test.dna";
+  const expectedUrl = url.replace(/file:/, "").replace(/\//g, "");
+  const actualUrl = await tryCpClient.call({
+    type: "download_dna",
+    url,
+  });
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.ok(actualUrl?.endsWith(expectedUrl));
 });
 
 test("TryCP call - configure player", async (t) => {

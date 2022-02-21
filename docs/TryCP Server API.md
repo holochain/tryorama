@@ -45,4 +45,8 @@ Shutdown the player's conductor.
 
 ### reset
 - `type` { "reset" }
-Shutdown all conductors.
+Shutdown and delete all conductors.
+
+### download_dna
+- `type` { "download_dna" } 
+- `url` { "String" }
