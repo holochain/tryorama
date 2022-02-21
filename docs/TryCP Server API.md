@@ -34,13 +34,13 @@ Creates files and folders for a new player.
 ### startup
 - `type` { "startup" }
 - `id` { String } The player id
-- `log_level` { Option<String> } Optional one of the log levels "error", "warn", "info", "debug", "trace" of the [log crate](https://docs.rs/log/latest/log/enum.Level.html)
+- `log_level` { Option<String> } one of the log levels "error", "warn", "info", "debug", "trace" of the [log crate](https://docs.rs/log/latest/log/enum.Level.html); optional
 Startup the player's conductor.
 
 ### shutdown
 - `type` { "shutdown" }
 - `id` { String } The player id
-- `signal` { Option<String> } Optional one of the kill signal "SIGTERM", "SIGKILL", "SIGINT"; defaults to "SIGTERM"
+- `signal` { Option<String> } one of the kill signals "SIGTERM", "SIGKILL", "SIGINT"; defaults to "SIGTERM"; optional
 Shutdown the player's conductor.
 
 ### reset
@@ -49,4 +49,11 @@ Shutdown and delete all conductors.
 
 ### download_dna
 - `type` { "download_dna" } 
-- `url` { "String" }
+- `url` { "String" } a file or web URL to download the DNA from
+Downloads a DNA from a web or file system URI and returns the path at which it is stored.
+
+### save_dna
+- `type` { "save_dna" }
+- `id` { "String" }
+- `content` { "Vec<u8>" }
+Stores the given DNA and returns the path at which it is stored.

@@ -76,6 +76,22 @@ test("TryCP call - download DNA from file system", async (t) => {
   t.ok(actualUrl?.endsWith(expectedUrl));
 });
 
+test("TryCP call - save DNA to file system", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const dnaId = "dna-1";
+  const actualUrl = await tryCpClient.call({
+    type: "save_dna",
+    id: dnaId,
+    content: Buffer.from([0, 1, 2, 3, 4]),
+  });
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.ok(actualUrl?.endsWith(dnaId));
+});
+
 test("TryCP call - configure player", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();

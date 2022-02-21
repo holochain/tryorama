@@ -6,6 +6,7 @@ export interface TryCpServerCall {
 
 export type TryCpServerRequest =
   | RequestDownloadDna
+  | RequestSaveDna
   | RequestConfigurePlayer
   | RequestStartup
   | RequestShutdown
@@ -14,6 +15,12 @@ export type TryCpServerRequest =
 interface RequestDownloadDna {
   type: "download_dna";
   url: string;
+}
+
+interface RequestSaveDna {
+  type: "save_dna";
+  id: string;
+  content: Buffer;
 }
 
 interface RequestConfigurePlayer {
