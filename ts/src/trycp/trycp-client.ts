@@ -46,9 +46,10 @@ export class TryCpClient {
 
       const { responseResolve, responseReject } =
         tryCpClient.requestPromises[responseWrapper.id];
-      if (0 in responseWrapper.response) {
+
+      if ("0" in responseWrapper.response) {
         responseResolve(responseWrapper.response[0]);
-      } else if (1 in responseWrapper.response) {
+      } else if ("1" in responseWrapper.response) {
         responseReject(responseWrapper.response[1]);
       } else {
         logger.error(

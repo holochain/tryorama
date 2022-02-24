@@ -9,6 +9,7 @@ import {
 } from "../src/trycp/trycp-server";
 import { TryCpClient } from "../src/trycp/trycp-client";
 import { TRYCP_RESPONSE_SUCCESS } from "../src/trycp/types";
+import { decodeTryCpAdminApiResponse } from "../src/trycp/util";
 
 const createTryCpClient = () =>
   TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -57,7 +58,7 @@ test("TryCP call - download DNA from web", async (t) => {
   await tryCpClient.destroy();
   await localTryCpServer.stop();
 
-  t.ok(actualUrl?.endsWith(expectedUrl));
+  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 });
 
 test("TryCP call - download DNA from file system", async (t) => {
@@ -74,7 +75,7 @@ test("TryCP call - download DNA from file system", async (t) => {
   await tryCpClient.destroy();
   await localTryCpServer.stop();
 
-  t.ok(actualUrl?.endsWith(expectedUrl));
+  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 });
 
 test("TryCP call - save DNA to file system", async (t) => {
@@ -90,7 +91,7 @@ test("TryCP call - save DNA to file system", async (t) => {
   await tryCpClient.destroy();
   await localTryCpServer.stop();
 
-  t.ok(actualUrl?.endsWith(dnaId));
+  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(dnaId));
 });
 
 test("TryCP call - configure player", async (t) => {
@@ -158,7 +159,7 @@ test("TryCP - 2 parallel calls from two clients return correct responses", async
   t.equal(response2, TRYCP_RESPONSE_SUCCESS);
 });
 
-test("TryCP call - startup", async (t) => {
+test("TryCP call - startup and shutdown", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -168,33 +169,12 @@ test("TryCP call - startup", async (t) => {
     id: playerId,
     partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
   });
-
-  const actual = await tryCpClient.call({
-    type: "startup",
-    id: playerId,
-  });
-  await tryCpClient.destroy();
-  await localTryCpServer.stop();
-
-  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
-});
-
-test("TryCP call - shutdown", async (t) => {
-  const localTryCpServer = await TryCpServer.start();
-  const tryCpClient = await createTryCpClient();
-
-  const playerId = "player-1";
-  await tryCpClient.call({
-    type: "configure_player",
-    id: playerId,
-    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
-  });
-  await tryCpClient.call({
+  const actualStartup = await tryCpClient.call({
     type: "startup",
     id: playerId,
   });
 
-  const actual = await tryCpClient.call({
+  const actualShutdown = await tryCpClient.call({
     type: "shutdown",
     id: playerId,
   });
@@ -202,7 +182,8 @@ test("TryCP call - shutdown", async (t) => {
   await tryCpClient.destroy();
   await localTryCpServer.stop();
 
-  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
+  t.equal(actualStartup, TRYCP_RESPONSE_SUCCESS);
+  t.equal(actualShutdown, TRYCP_RESPONSE_SUCCESS);
 });
 
 test("TryCP call - reset", async (t) => {
@@ -261,7 +242,7 @@ test.skip("TryCP call - connect app interface", async (t) => {
   t.equal(actual, TRYCP_RESPONSE_SUCCESS);
 });
 
-test("TryCP call - disconnect app interface", async (t) => {
+test.skip("TryCP call - disconnect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -314,7 +295,7 @@ test.skip("TryCP call - call app interface", async (t) => {
   t.equal(actual, TRYCP_RESPONSE_SUCCESS);
 });
 
-test.only("TryCP call - call admin interface", async (t) => {
+test("TryCP call - call admin interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -329,16 +310,23 @@ test.only("TryCP call - call admin interface", async (t) => {
     id: playerId,
   });
 
-  const actual = await tryCpClient.call({
+  const response = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
-    // eslint-disable-next-line
-    // @ts-ignore
     message: msgpack.encode({ type: "generate_agent_pub_key" }),
+  });
+  const actual = decodeTryCpAdminApiResponse(response);
+  const actualAgentPubKey = Buffer.from(actual.data).toString("base64");
+
+  await tryCpClient.call({
+    type: "shutdown",
+    id: playerId,
   });
 
   await tryCpClient.destroy();
   await localTryCpServer.stop();
 
-  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
+  t.equal(actual.type, "agent_pub_key_generated");
+  t.ok(actualAgentPubKey.startsWith("hCAk"));
+  t.equal(actualAgentPubKey.length, 52);
 });

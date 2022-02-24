@@ -68,7 +68,7 @@ interface RequestCallAppInterface {
 interface RequestCallAdminInterface {
   type: "call_admin_interface";
   id: PlayerId;
-  message: Buffer;
+  message: Uint8Array;
 }
 
 export interface TryCpResponseWrapper {
@@ -77,8 +77,11 @@ export interface TryCpResponseWrapper {
   response: TryCpResponse;
 }
 
-export type TryCpResponse = TryCpResponseSuccess & TryCpResponseError;
-export type TryCpResponseSuccessValue = null | string;
+export type TryCpResponse = TryCpResponseSuccess | TryCpResponseError;
+export type TryCpResponseSuccessValue =
+  | null
+  | string
+  | TryCpResponseAdminApiEncoded;
 export type TryCpResponseErrorValue = string;
 export const TRYCP_RESPONSE_SUCCESS: TryCpResponseSuccessValue = null;
 
@@ -88,4 +91,10 @@ interface TryCpResponseSuccess {
 
 interface TryCpResponseError {
   1: TryCpResponseErrorValue;
+}
+
+export type TryCpResponseAdminApiEncoded = Uint8Array;
+export interface TryCpResponseAdminApi {
+  type: string;
+  data: Uint8Array;
 }

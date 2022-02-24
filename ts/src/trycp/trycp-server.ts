@@ -12,17 +12,33 @@ dpki: ~
 network: ~`;
 
 /**
- * A local instance of the TryCP that's part of this monorepo. Runs `cargo run` to build and run the binary.
+ * A factory class to spawn local instances of the TryCP server that's part of this monorepo.
  */
 export class TryCpServer {
   private serverProcess: ChildProcessWithoutNullStreams;
 
   private constructor(port: number) {
-    this.serverProcess = spawn("cargo", ["run"], {
-      cwd: "crates/trycp_server",
-    });
+    this.serverProcess = spawn(
+      "cargo",
+      [
+        "run",
+        "--release",
+        "--target-dir",
+        "../../target",
+        "--",
+        "-p",
+        port.toString(),
+      ],
+      { cwd: "crates/trycp_server" }
+    );
   }
 
+  /**
+   * Spawns and starts a local TryCP server on the specified port.
+   *
+   * @param port - the network port the server should listen on
+   * @returns a promise that resolves to the newly created server instance
+   */
   static async start(port = TRYCP_SERVER_PORT) {
     const tryCpServer = new TryCpServer(port);
 
@@ -54,9 +70,19 @@ export class TryCpServer {
     return trycpPromise;
   }
 
+  /**
+   * Stops the server instance by killing the server process.
+   *
+   * @returns a promise that resolves when the process has exited
+   */
   async stop() {
-    // TODO send stop signal
-    this.serverProcess.on("exit", (code) => logger.debug(`exit code ${code}`));
-    this.serverProcess.kill();
+    const killPromise = new Promise<void>((resolve) => {
+      this.serverProcess.on("exit", (code) => {
+        logger.debug(`exited with code ${code}`);
+        resolve();
+      });
+    });
+    this.serverProcess.kill("SIGTERM");
+    return killPromise;
   }
 }
