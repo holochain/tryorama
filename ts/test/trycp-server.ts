@@ -1,4 +1,5 @@
 // import { AdminWebsocket } from "@holochain/client";
+import msgpack from "@msgpack/msgpack";
 import test from "tape-promise/tape";
 import {
   TRYCP_SERVER_HOST,
@@ -227,6 +228,114 @@ test("TryCP call - reset", async (t) => {
     id: playerId,
   });
   t.rejects(attemptToStartAgain);
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
+});
+
+test.skip("TryCP call - connect app interface", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const playerId = "player-1";
+  await tryCpClient.call({
+    type: "configure_player",
+    id: playerId,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  await tryCpClient.call({
+    type: "startup",
+    id: playerId,
+  });
+
+  const actual = await tryCpClient.call({
+    type: "connect_app_interface",
+    port: 9010,
+  });
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
+});
+
+test("TryCP call - disconnect app interface", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const playerId = "player-1";
+  await tryCpClient.call({
+    type: "configure_player",
+    id: playerId,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  await tryCpClient.call({
+    type: "startup",
+    id: playerId,
+  });
+
+  const actual = await tryCpClient.call({
+    type: "disconnect_app_interface",
+    port: 9000,
+  });
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
+});
+
+test.skip("TryCP call - call app interface", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const playerId = "player-1";
+  await tryCpClient.call({
+    type: "configure_player",
+    id: playerId,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  await tryCpClient.call({
+    type: "startup",
+    id: playerId,
+  });
+
+  const actual = await tryCpClient.call({
+    type: "call_app_interface",
+    port: 9100,
+    message: Buffer.from([0, 1, 2, 3, 4]),
+  });
+
+  await tryCpClient.destroy();
+  await localTryCpServer.stop();
+
+  t.equal(actual, TRYCP_RESPONSE_SUCCESS);
+});
+
+test.only("TryCP call - call admin interface", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  const playerId = "player-1";
+  await tryCpClient.call({
+    type: "configure_player",
+    id: playerId,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  await tryCpClient.call({
+    type: "startup",
+    id: playerId,
+  });
+
+  const actual = await tryCpClient.call({
+    type: "call_admin_interface",
+    id: playerId,
+    // eslint-disable-next-line
+    // @ts-ignore
+    message: msgpack.encode({ type: "generate_agent_pub_key" }),
+  });
 
   await tryCpClient.destroy();
   await localTryCpServer.stop();

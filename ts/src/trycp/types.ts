@@ -10,7 +10,11 @@ export type TryCpServerRequest =
   | RequestConfigurePlayer
   | RequestStartup
   | RequestShutdown
-  | RequestReset;
+  | RequestReset
+  | RequestConnectAppInterface
+  | RequestDisconnectAppInterface
+  | RequestCallAppInterface
+  | RequestCallAdminInterface;
 
 interface RequestDownloadDna {
   type: "download_dna";
@@ -43,6 +47,28 @@ interface RequestShutdown {
 
 interface RequestReset {
   type: "reset";
+}
+
+interface RequestConnectAppInterface {
+  type: "connect_app_interface";
+  port: number;
+}
+
+interface RequestDisconnectAppInterface {
+  type: "disconnect_app_interface";
+  port: number;
+}
+
+interface RequestCallAppInterface {
+  type: "call_app_interface";
+  port: number;
+  message: Buffer;
+}
+
+interface RequestCallAdminInterface {
+  type: "call_admin_interface";
+  id: PlayerId;
+  message: Buffer;
 }
 
 export interface TryCpResponseWrapper {

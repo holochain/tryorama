@@ -34,13 +34,13 @@ Creates files and folders for a new player.
 ### startup
 - `type` { "startup" }
 - `id` { String } The player id
-- `log_level` { Option<String> } one of the log levels "error", "warn", "info", "debug", "trace" of the [log crate](https://docs.rs/log/latest/log/enum.Level.html); optional
+- `log_level` { Option<String> } One of the log levels "error", "warn", "info", "debug", "trace" of the [log crate](https://docs.rs/log/latest/log/enum.Level.html); optional
 Startup the player's conductor.
 
 ### shutdown
 - `type` { "shutdown" }
 - `id` { String } The player id
-- `signal` { Option<String> } one of the kill signals "SIGTERM", "SIGKILL", "SIGINT"; defaults to "SIGTERM"; optional
+- `signal` { Option<String> } One of the kill signals "SIGTERM", "SIGKILL", "SIGINT"; defaults to "SIGTERM"; optional
 Shutdown the player's conductor.
 
 ### reset
@@ -49,11 +49,33 @@ Shutdown and delete all conductors.
 
 ### download_dna
 - `type` { "download_dna" } 
-- `url` { "String" } a file or web URL to download the DNA from
+- `url` { String } A file or web URL to download the DNA from
 Downloads a DNA from a web or file system URI and returns the path at which it is stored.
 
 ### save_dna
 - `type` { "save_dna" }
-- `id` { "String" }
-- `content` { "Vec<u8>" }
+- `id` { String } Identifier of the DNA
+- `content` { Vec<u8> } DNA content as byte array
 Stores the given DNA and returns the path at which it is stored.
+
+### connect_app_interface
+- `type` { "connect_app_interface" }
+- `port` { u16 } The port to open as app interface port
+Attach an app interface to the specified port.
+
+### disconnect_app_interface
+- `type` { "disconnect_app_interface" }
+- `port` { u16 } The app interface port to disconnect
+Remove the app interface from the specified port.
+
+### call_app_interface
+- `type` { "call_app_interface" }
+- `port` { u16 } The app interface port to send the message to
+- `message` { Vec<u8> } The hApp call serialized to a byte array
+Call the conductor's app interface with a specific zome call.
+
+### call_admin_interface
+- `type` { "call_admin_interface" }
+- `id` { String } The player's id
+- `message` { Vec<u8> } The hApp call serialized to a byte array
+Call the conductor's admin interface with a speficic admin call.
