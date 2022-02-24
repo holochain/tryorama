@@ -6,28 +6,21 @@ const logger = makeLogger("TryCP server");
 export const TRYCP_SERVER_HOST = "0.0.0.0";
 export const TRYCP_SERVER_PORT = 9000;
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
-  encryption_service_uri: ~
-  decryption_service_uri: ~
-  dpki: ~
-  network: ~`;
+encryption_service_uri: ~
+decryption_service_uri: ~
+dpki: ~
+network: ~`;
 
+/**
+ * A local instance of the TryCP that's part of this monorepo. Runs `cargo run` to build and run the binary.
+ */
 export class TryCpServer {
   private serverProcess: ChildProcessWithoutNullStreams;
 
   private constructor(port: number) {
-    this.serverProcess = spawn(
-      "cargo",
-      [
-        "run",
-        "--release",
-        "--target-dir",
-        "../../target",
-        "--",
-        "-p",
-        port.toString(),
-      ],
-      { cwd: "crates/trycp_server" }
-    );
+    this.serverProcess = spawn("cargo", ["run"], {
+      cwd: "crates/trycp_server",
+    });
   }
 
   static async start(port = TRYCP_SERVER_PORT) {
