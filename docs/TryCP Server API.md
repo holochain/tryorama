@@ -11,10 +11,12 @@ TryCP is a protocol to enable remote management of Holochain conductors on netwo
 
 > Data types in Rust syntax
 
+## Response
+Responses are composed of an object with either `0` or `1` as a property for success or error. In case of success the value is `null`, whereas errors return a `string` with the error message.
+
 ## Call signature
 - `id` { u64 } The request id
-- `request` { Enum } Enum 
-
+- `request` { Enum } Enum
 Calls to the TryCP server are composed of a request id and the request data. Following there's a list of all possible requests.
 
 ## Requests
