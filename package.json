@@ -12,9 +12,13 @@
   "engines": {
     "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
   },
+  "workspaces": [
+    "crates/trycp_server/test"
+  ],
   "exports": {
     ".": "./lib/*.js"
   },
+  "typings": "./lib/index.d.ts",
   "files": [
     "lib/"
   ],
@@ -23,7 +27,9 @@
     "prepare": "npm run build",
     "prepublishOnly": "npm test",
     "lint": "eslint --fix --ext .ts src test .eslintrc.js",
-    "test": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/index.ts",
+    "test": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/index.ts | tap-diff",
+    "test:trycp": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp-server.ts",
+    "test:holoport": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/holo-port.ts",
     "test:unit": "ts-node test/unit",
     "test:e2e": "ts-node test/e2e"
   },
@@ -40,27 +46,32 @@
     "lodash": "^4.17.20",
     "memoizee": "^0.4.14",
     "ramda": "^0.26.1",
-    "uuid": "^8.3.2",
-    "winston": "^3.3.3",
+    "winston": "^3.6.0",
     "ws": "^8.5.0",
     "yaml": "^1.10.0"
   },
   "devDependencies": {
+    "@microsoft/api-documenter": "^7.15.3",
+    "@microsoft/api-extractor": "^7.19.4",
     "@msgpack/msgpack": "^2.7.2",
     "@types/lodash": "^4.14.165",
     "@types/node": "^12.20.45",
     "@types/ramda": "^0.26.44",
     "@types/tape": "^4.13.2",
+    "@types/tape-promise": "^4.0.1",
     "@types/ws": "^8.2.2",
     "@typescript-eslint/eslint-plugin": "^5.11.0",
     "@typescript-eslint/parser": "^5.11.0",
     "eslint": "^8.8.0",
     "eslint-config-prettier": "^8.3.0",
     "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-tsdoc": "^0.2.14",
     "prettier": "^2.5.1",
     "rimraf": "^3.0.2",
     "sinon": "^7.5.0",
-    "tape": "^5.5.1",
+    "tap-diff": "^0.1.1",
+    "tape": "^5.5.2",
+    "tape-promise": "^4.0.0",
     "ts-node": "^10.5.0",
     "typescript": "^4.5.5"
   }
