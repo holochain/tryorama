@@ -62,13 +62,18 @@ interface RequestDisconnectAppInterface {
 interface RequestCallAppInterface {
   type: "call_app_interface";
   port: number;
-  message: Buffer;
+  message: Uint8Array;
 }
 
 interface RequestCallAdminInterface {
   type: "call_admin_interface";
   id: PlayerId;
-  message: Uint8Array;
+  message: Uint8Array; // byte code with format RequestAdminInterfaceData
+}
+
+export interface RequestAdminInterfaceData {
+  type: string;
+  data: Record<string, string | number>;
 }
 
 export interface TryCpResponseWrapper {
