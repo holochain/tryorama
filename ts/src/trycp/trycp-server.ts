@@ -12,7 +12,10 @@ dpki: ~
 network: ~`;
 
 /**
- * A factory class to spawn local instances of the TryCP server that's part of this monorepo.
+ * Tryorama Control Protocol (TryCP) server
+ *
+ * TryCP is a protocol to enable remote management of Holochain conductors on network hosts.
+ * This class is a factory class to spawn local instances of the TryCP server.
  */
 export class TryCpServer {
   private serverProcess: ChildProcessWithoutNullStreams;
