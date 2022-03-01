@@ -2,13 +2,6 @@
 
 TryCP is a protocol to enable remote management of Holochain conductors on network hosts.
 
-## Table of contents
-
-[Call signature](#call-signature)
-[Requests](#requests)
-[configure_player](#configureplayer)
-[startup](#startup)
-
 > Data types in Rust syntax
 
 ## Response
