@@ -12,10 +12,9 @@ dpki: ~
 network: ~`;
 
 /**
- * Tryorama Control Protocol (TryCP) server
+ * A factory class to start and stop local instances of the TryCP server.
  *
- * TryCP is a protocol to enable remote management of Holochain conductors on network hosts.
- * This class is a factory class to spawn local instances of the TryCP server.
+ * @public
  */
 export class TryCpServer {
   private serverProcess: ChildProcessWithoutNullStreams;
@@ -49,6 +48,7 @@ export class TryCpServer {
       logger.error(`Error starting up local TryCP server - ${err}`)
     );
 
+    // the build output from cargo is written to stderr instead of stdout, even if no error has occurred - I don't know why
     tryCpServer.serverProcess.stderr.on("data", (data) => {
       logger.debug(`build process - ${data}`);
     });

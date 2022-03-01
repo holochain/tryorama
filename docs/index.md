@@ -8,5 +8,5 @@
 
 |  Package | Description |
 |  --- | --- |
-|  [@holochain/tryorama](./tryorama.md) |  |
+|  [@holochain/tryorama](./tryorama.md) | Tryorama Control Protocol (TryCP) server<!-- -->TryCP is a protocol to enable remote management of Holochain conductors on network hosts. |
 

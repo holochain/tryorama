@@ -4,7 +4,7 @@
 
 ## TryCpServer class
 
-A factory class to spawn local instances of the TryCP server that's part of this monorepo.
+A factory class to start and stop local instances of the TryCP server.
 
 <b>Signature:</b>
 

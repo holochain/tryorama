@@ -4,6 +4,8 @@
 
 ## TryCpClient.ping() method
 
+Send a ping with data.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ ping(data: unknown): Promise<Buffer>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  data | unknown |  |
+|  data | unknown | Data to send and receive with the ping-pong. |
 
 <b>Returns:</b>
 
 Promise&lt;Buffer&gt;
+
+A promise that resolves when the pong was received.
 

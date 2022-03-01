@@ -1,2 +1,8 @@
-export { TryCpServer } from "./trycp/trycp-server";
-export { TryCpClient } from "./trycp/trycp-client";
+/**
+ * Tryorama Control Protocol (TryCP) server
+ *
+ * TryCP is a protocol to enable remote management of Holochain conductors on network hosts.
+ *
+ * @packageDocumentation
+ */
+export * from "./trycp";

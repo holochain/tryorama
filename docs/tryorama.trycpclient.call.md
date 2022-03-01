@@ -4,19 +4,23 @@
 
 ## TryCpClient.call() method
 
+Call the TryCP server.
+
 <b>Signature:</b>
 
 ```typescript
-call(request: TryCpServerRequest): Promise<TryCpResponseSuccessValue>;
+call(request: TryCpRequest): Promise<TryCpResponseSuccessValue>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  request | TryCpServerRequest |  |
+|  request | [TryCpRequest](./tryorama.trycprequest.md) | [TryCpRequest](./tryorama.trycprequest.md) |
 
 <b>Returns:</b>
 
-Promise&lt;TryCpResponseSuccessValue&gt;
+Promise&lt;[TryCpResponseSuccessValue](./tryorama.trycpresponsesuccessvalue.md)<!-- -->&gt;
+
+A promise that resolves to the [TryCpResponseSuccessValue](./tryorama.trycpresponsesuccessvalue.md)
 

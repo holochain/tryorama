@@ -23,7 +23,7 @@ test("TryCP - ping", async (t) => {
   const expected = "peng";
   const actual = (await tryCpClient.ping(expected)).toString();
 
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(actual, expected);
@@ -42,7 +42,7 @@ test("TryCP call - non-existent call throws", async (t) => {
   // @ts-ignore
   t.throws(actual);
 
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 });
 
@@ -57,7 +57,7 @@ test("TryCP call - download DNA from web", async (t) => {
     type: "download_dna",
     url,
   });
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
@@ -74,7 +74,7 @@ test("TryCP call - download DNA from file system", async (t) => {
     type: "download_dna",
     url,
   });
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
@@ -90,7 +90,7 @@ test("TryCP call - save DNA to file system", async (t) => {
     id: dnaId,
     content: Buffer.from([0, 1, 2, 3, 4]),
   });
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(dnaId));
@@ -105,7 +105,7 @@ test("TryCP call - configure player", async (t) => {
     id: "player-1",
     partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
   });
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(actual, TRYCP_RESPONSE_SUCCESS);
@@ -128,7 +128,7 @@ test("TryCP - 2 parallel calls from one client return corresponding responses", 
     }),
   ];
   const [response1, response2] = await Promise.all(parallelCallPromises);
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(response1, TRYCP_RESPONSE_SUCCESS);
@@ -153,8 +153,8 @@ test("TryCP - 2 parallel calls from two clients return correct responses", async
     }),
   ];
   const [response1, response2] = await Promise.all(parallelCallPromises);
-  await tryCpClient1.destroy();
-  await tryCpClient2.destroy();
+  await tryCpClient1.close();
+  await tryCpClient2.close();
   await localTryCpServer.stop();
 
   t.equal(response1, TRYCP_RESPONSE_SUCCESS);
@@ -181,7 +181,7 @@ test("TryCP call - startup and shutdown", async (t) => {
     id: playerId,
   });
 
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(actualStartup, TRYCP_RESPONSE_SUCCESS);
@@ -212,7 +212,7 @@ test("TryCP call - reset", async (t) => {
   });
   t.rejects(attemptToStartAgain);
 
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(actual, TRYCP_RESPONSE_SUCCESS);
@@ -246,7 +246,7 @@ test("TryCP call - call admin interface", async (t) => {
     id: playerId,
   });
 
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(actual.type, "agent_pub_key_generated");
@@ -289,7 +289,7 @@ test("TryCP call - connect app interface", async (t) => {
     type: "shutdown",
     id: playerId,
   });
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(actual, TRYCP_RESPONSE_SUCCESS);
@@ -334,7 +334,7 @@ test("TryCP call - disconnect app interface", async (t) => {
     type: "shutdown",
     id: playerId,
   });
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(actual, TRYCP_RESPONSE_SUCCESS);
@@ -384,7 +384,7 @@ test("TryCP call - call app interface", async (t) => {
     type: "shutdown",
     id: playerId,
   });
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   t.equal(actual.type, "app_info");

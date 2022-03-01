@@ -4,14 +4,19 @@ import { WebSocket } from "ws";
 import {
   TryCpResponseErrorValue,
   TryCpResponseSuccessValue,
-  TryCpServerCall,
-  TryCpServerRequest,
+  _TryCpCall,
+  TryCpRequest,
 } from "./types";
 import { decodeTryCpResponse } from "./util";
 
 const logger = makeLogger("TryCP client");
 let requestId = 0;
 
+/**
+ * A factory class to create client connections to a running TryCP server.
+ *
+ * @public
+ */
 export class TryCpClient {
   private readonly ws: WebSocket;
   private requestPromises: {
@@ -26,6 +31,12 @@ export class TryCpClient {
     this.requestPromises = {};
   }
 
+  /**
+   * Create a client connection to a running TryCP server.
+   *
+   * @param url - The URL of the TryCP server.
+   * @returns A client connection.
+   */
   static async create(url: string) {
     const tryCpClient = new TryCpClient(url);
     const connectPromise = new Promise<TryCpClient>((resolve, reject) => {
@@ -47,6 +58,8 @@ export class TryCpClient {
       const { responseResolve, responseReject } =
         tryCpClient.requestPromises[responseWrapper.id];
 
+      // the server returns an object as its response
+      // for successful requests it contains `0` as a property and otherwise `1` when an error occurred
       if ("0" in responseWrapper.response) {
         responseResolve(responseWrapper.response[0]);
       } else if ("1" in responseWrapper.response) {
@@ -66,7 +79,12 @@ export class TryCpClient {
     return connectPromise;
   }
 
-  async destroy() {
+  /**
+   * Closes the client connection.
+   *
+   * @returns A promise that resolves when the connection was closed.
+   */
+  async close() {
     const closePromise = new Promise((resolve) => {
       this.ws.once("close", (code) => {
         logger.verbose(
@@ -79,6 +97,12 @@ export class TryCpClient {
     return closePromise;
   }
 
+  /**
+   * Send a ping with data.
+   *
+   * @param data - Data to send and receive with the ping-pong.
+   * @returns A promise that resolves when the pong was received.
+   */
   async ping(data: unknown) {
     const pongPromise = new Promise<Buffer>((resolve) => {
       this.ws.once("pong", (data) => resolve(data));
@@ -87,7 +111,13 @@ export class TryCpClient {
     return pongPromise;
   }
 
-  call(request: TryCpServerRequest) {
+  /**
+   * Call the TryCP server.
+   *
+   * @param request - {@link TryCpRequest}
+   * @returns A promise that resolves to the {@link TryCpResponseSuccessValue}
+   */
+  call(request: TryCpRequest) {
     logger.debug(`request ${JSON.stringify(request, null, 4)}`);
 
     const callPromise = new Promise<TryCpResponseSuccessValue>(
@@ -99,7 +129,7 @@ export class TryCpClient {
       }
     );
 
-    const serverCall: TryCpServerCall = {
+    const serverCall: _TryCpCall = {
       id: requestId,
       request,
     };

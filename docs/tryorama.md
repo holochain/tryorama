@@ -4,10 +4,47 @@
 
 ## tryorama package
 
+Tryorama Control Protocol (TryCP) server
+
+TryCP is a protocol to enable remote management of Holochain conductors on network hosts.
+
 ## Classes
 
 |  Class | Description |
 |  --- | --- |
-|  [TryCpClient](./tryorama.trycpclient.md) |  |
-|  [TryCpServer](./tryorama.trycpserver.md) | A factory class to spawn local instances of the TryCP server that's part of this monorepo. |
+|  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server. |
+|  [TryCpServer](./tryorama.trycpserver.md) | A factory class to start and stop local instances of the TryCP server. |
+
+## Interfaces
+
+|  Interface | Description |
+|  --- | --- |
+|  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) |  |
+|  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) |  |
+|  [RequestCallAppInterface](./tryorama.requestcallappinterface.md) |  |
+|  [RequestConfigurePlayer](./tryorama.requestconfigureplayer.md) |  |
+|  [RequestConnectAppInterface](./tryorama.requestconnectappinterface.md) |  |
+|  [RequestDisconnectAppInterface](./tryorama.requestdisconnectappinterface.md) |  |
+|  [RequestDownloadDna](./tryorama.requestdownloaddna.md) | Request to download a DNA from a URL. |
+|  [RequestReset](./tryorama.requestreset.md) |  |
+|  [RequestSaveDna](./tryorama.requestsavedna.md) |  |
+|  [RequestShutdown](./tryorama.requestshutdown.md) |  |
+|  [RequestStartup](./tryorama.requeststartup.md) |  |
+
+## Variables
+
+|  Variable | Description |
+|  --- | --- |
+|  [TRYCP\_RESPONSE\_SUCCESS](./tryorama.trycp_response_success.md) |  |
+
+## Type Aliases
+
+|  Type Alias | Description |
+|  --- | --- |
+|  [PlayerId](./tryorama.playerid.md) |  |
+|  [TryCpReponseSuccessValueVoid](./tryorama.trycpreponsesuccessvaluevoid.md) |  |
+|  [TryCpRequest](./tryorama.trycprequest.md) |  |
+|  [TryCpResponseAdminApiEncoded](./tryorama.trycpresponseadminapiencoded.md) |  |
+|  [TryCpResponseErrorValue](./tryorama.trycpresponseerrorvalue.md) |  |
+|  [TryCpResponseSuccessValue](./tryorama.trycpresponsesuccessvalue.md) | Value for successful responses from the TryCP server. |
 

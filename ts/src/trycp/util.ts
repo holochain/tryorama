@@ -1,8 +1,8 @@
 import msgpack from "@msgpack/msgpack";
 import {
-  TryCpResponseAdminApi,
+  _TryCpResponseAdminApi,
   TryCpResponseSuccessValue,
-  TryCpResponseWrapper,
+  _TryCpResponseWrapper,
 } from "./types";
 
 export const decodeTryCpResponse = (data: ArrayLike<number> | BufferSource) => {
@@ -12,6 +12,14 @@ export const decodeTryCpResponse = (data: ArrayLike<number> | BufferSource) => {
   return tryCpResponse;
 };
 
+/**
+ * Deserialize the binary response from the Admin API
+ *
+ * @param response - The response to deserialize.
+ * @returns The deserialized response.
+ *
+ * @public
+ */
 export const decodeTryCpAdminApiResponse = (
   response: TryCpResponseSuccessValue
 ) => {
@@ -26,7 +34,7 @@ export const decodeTryCpAdminApiResponse = (
 
 function assertIsResponseWrapper(
   response: unknown
-): asserts response is TryCpResponseWrapper {
+): asserts response is _TryCpResponseWrapper {
   if (
     response !== null &&
     typeof response === "object" &&
@@ -41,7 +49,7 @@ function assertIsResponseWrapper(
 
 function assertIsAdminApiResponse(
   decodedResponse: unknown
-): asserts decodedResponse is TryCpResponseAdminApi {
+): asserts decodedResponse is _TryCpResponseAdminApi {
   if (
     decodedResponse &&
     typeof decodedResponse === "object" &&

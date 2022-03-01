@@ -4,6 +4,8 @@
 
 ## TryCpClient class
 
+A factory class to create client connections to a running TryCP server.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,8 +16,8 @@ export declare class TryCpClient
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [call(request)](./tryorama.trycpclient.call.md) |  |  |
-|  [create(url)](./tryorama.trycpclient.create.md) | <code>static</code> |  |
-|  [destroy()](./tryorama.trycpclient.destroy.md) |  |  |
-|  [ping(data)](./tryorama.trycpclient.ping.md) |  |  |
+|  [call(request)](./tryorama.trycpclient.call.md) |  | Call the TryCP server. |
+|  [close()](./tryorama.trycpclient.close.md) |  | Closes the client connection. |
+|  [create(url)](./tryorama.trycpclient.create.md) | <code>static</code> | Create a client connection to a running TryCP server. |
+|  [ping(data)](./tryorama.trycpclient.ping.md) |  | Send a ping with data. |
 

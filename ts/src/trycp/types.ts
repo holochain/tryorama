@@ -1,10 +1,20 @@
+/**
+ * @public
+ */
 export type PlayerId = string;
-export interface TryCpServerCall {
+
+/**
+ * @internal
+ */
+export interface _TryCpCall {
   id: number;
-  request: TryCpServerRequest;
+  request: TryCpRequest;
 }
 
-export type TryCpServerRequest =
+/**
+ * @public
+ */
+export type TryCpRequest =
   | RequestDownloadDna
   | RequestSaveDna
   | RequestConfigurePlayer
@@ -16,90 +26,167 @@ export type TryCpServerRequest =
   | RequestCallAppInterface
   | RequestCallAdminInterface;
 
-interface RequestDownloadDna {
+/**
+ * Request to download a DNA from a URL.
+ *
+ * @param url - from where to download the DNA
+ *
+ * @public
+ */
+export interface RequestDownloadDna {
   type: "download_dna";
   url: string;
 }
 
-interface RequestSaveDna {
+/**
+ * @public
+ */
+export interface RequestSaveDna {
   type: "save_dna";
   id: string;
   content: Buffer;
 }
 
-interface RequestConfigurePlayer {
+/**
+ * @public
+ */
+export interface RequestConfigurePlayer {
   type: "configure_player";
   id: PlayerId;
   partial_config: string;
 }
 
-interface RequestStartup {
+/**
+ * @public
+ */
+export interface RequestStartup {
   type: "startup";
   id: PlayerId;
   log_level?: string;
 }
 
-interface RequestShutdown {
+/**
+ * @public
+ */
+export interface RequestShutdown {
   type: "shutdown";
   id: PlayerId;
   signal?: "SIGTERM" | "SIGKILL" | "SIGINT";
 }
 
-interface RequestReset {
+/**
+ * @public
+ */
+export interface RequestReset {
   type: "reset";
 }
 
-interface RequestConnectAppInterface {
+/**
+ * @public
+ */
+export interface RequestConnectAppInterface {
   type: "connect_app_interface";
   port: number;
 }
 
-interface RequestDisconnectAppInterface {
+/**
+ * @public
+ */
+export interface RequestDisconnectAppInterface {
   type: "disconnect_app_interface";
   port: number;
 }
 
-interface RequestCallAppInterface {
+/**
+ * @public
+ */
+export interface RequestCallAppInterface {
   type: "call_app_interface";
   port: number;
   message: Uint8Array;
 }
 
-interface RequestCallAdminInterface {
+/**
+ * @public
+ */
+export interface RequestCallAdminInterface {
   type: "call_admin_interface";
   id: PlayerId;
   message: Uint8Array; // byte code with format RequestAdminInterfaceData
 }
 
+/**
+ * @public
+ */
 export interface RequestAdminInterfaceData {
   type: string;
   data: Record<string, string | number>;
 }
 
-export interface TryCpResponseWrapper {
+/**
+ * @internal
+ */
+export interface _TryCpResponseWrapper {
   type: "response";
   id: number;
-  response: TryCpResponse;
+  response: _TryCpResponse;
 }
 
-export type TryCpResponse = TryCpResponseSuccess | TryCpResponseError;
+/**
+ * Responses are composed of an object with either `0` or `1` as a property for success or error.
+ *
+ * @internal
+ */
+export type _TryCpResponse = _TryCpResponseSuccess | _TryCpResponseError;
+
+/**
+ * Value for successful responses from the TryCP server.
+ *
+ * @public
+ */
 export type TryCpResponseSuccessValue =
-  | null
+  | TryCpReponseSuccessValueVoid
   | string
   | TryCpResponseAdminApiEncoded;
-export type TryCpResponseErrorValue = string;
-export const TRYCP_RESPONSE_SUCCESS: TryCpResponseSuccessValue = null;
 
-interface TryCpResponseSuccess {
+/**
+ * @public
+ */
+export type TryCpReponseSuccessValueVoid = null;
+
+/**
+ * @public
+ */
+export const TRYCP_RESPONSE_SUCCESS: TryCpReponseSuccessValueVoid = null;
+
+/**
+ * @public
+ */
+export type TryCpResponseErrorValue = string;
+
+/**
+ * @internal
+ */
+export interface _TryCpResponseSuccess {
   0: TryCpResponseSuccessValue;
 }
 
-interface TryCpResponseError {
+/**
+ * @internal
+ */
+export interface _TryCpResponseError {
   1: TryCpResponseErrorValue;
 }
 
+/**
+ * @public
+ */
 export type TryCpResponseAdminApiEncoded = Uint8Array;
-export interface TryCpResponseAdminApi {
+
+/**
+ * @internal
+ */
+export interface _TryCpResponseAdminApi {
   type: string;
-  data: Uint8Array;
+  data: TryCpResponseAdminApiEncoded;
 }

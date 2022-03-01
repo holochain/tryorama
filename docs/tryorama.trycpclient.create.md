@@ -4,6 +4,8 @@
 
 ## TryCpClient.create() method
 
+Create a client connection to a running TryCP server.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ static create(url: string): Promise<TryCpClient>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  url | string |  |
+|  url | string | The URL of the TryCP server. |
 
 <b>Returns:</b>
 
 Promise&lt;[TryCpClient](./tryorama.trycpclient.md)<!-- -->&gt;
+
+A client connection.
 
