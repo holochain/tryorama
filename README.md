@@ -1,4 +1,4 @@
-# tryorama
+# Tryorama
 
 An end-to-end/scenario testing framework for Holochain applications, written in TypeScript.
 
@@ -6,8 +6,7 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 [![Chat](https://img.shields.io/badge/chat-chat%2eholochain%2enet-blue.svg?style=flat-square)](https://chat.holochain.net)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-
-Tryorama allows you to write test suites about the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network together.
+Tryorama provides a convenient way to run an arbitrary amount of sandboxed conductors on your local machine, as well as on network nodes that are running the TryCP service. In combination with the test runner and assertion library of your choice, you can test the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network.
 
 Note: this version of tryorama is tested against holochain rev ab02f36c87999d42026b7429164ded503bb39853
 Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
