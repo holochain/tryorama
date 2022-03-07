@@ -390,3 +390,91 @@ test("TryCP call - call app interface", async (t) => {
   t.equal(actual.type, "app_info");
   t.equal(actual.data, null);
 });
+
+test.only("TryCP call - call admin interface", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+
+  await tryCpClient.call({
+    type: "reset",
+  });
+
+  const url =
+    "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/entry.dna";
+  const relativePath = await tryCpClient.call({
+    type: "download_dna",
+    url,
+  });
+  console.log("url", typeof relativePath);
+
+  const playerId = "player-1";
+
+  await tryCpClient.call({
+    type: "configure_player",
+    id: playerId,
+    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+  });
+  await tryCpClient.call({
+    type: "startup",
+    id: playerId,
+    log_level: "trace",
+  });
+
+  const hashResponse = await tryCpClient.call({
+    type: "call_admin_interface",
+    id: playerId,
+    message: msgpack.encode({
+      type: "register_dna",
+      data: { path: relativePath },
+    }),
+  });
+  const hash = decodeTryCpAdminApiResponse(hashResponse);
+  console.log("hash", hash);
+
+  // const response = await tryCpClient.call({
+  //   type: "call_admin_interface",
+  //   id: playerId,
+  //   message: msgpack.encode({ type: "generate_agent_pub_key" }),
+  // });
+  // const actual = decodeTryCpAdminApiResponse(response);
+  // const actualAgentPubKey = Buffer.from(actual.data).toString("base64");
+
+  // const port = TRYCP_SERVER_PORT + 50;
+  // const adminRequestData: RequestAdminInterfaceData = {
+  //   type: "attach_app_interface",
+  //   data: { port },
+  // };
+  // await tryCpClient.call({
+  //   type: "call_admin_interface",
+  //   id: playerId,
+  //   message: msgpack.encode(adminRequestData),
+  // });
+
+  // await tryCpClient.call({
+  //   type: "connect_app_interface",
+  //   port,
+  // });
+
+  // const response2 = await tryCpClient.call({
+  //   type: "call_app_interface",
+  //   port,
+  //   message: msgpack.encode({
+  //     type: "app_info",
+  //     data: { installed_app_id: "no_happ_installed" },
+  //   }),
+  // });
+  // const actual2 = decodeTryCpAdminApiResponse(response2);
+  // console.log("actual2", actual2);
+
+  await tryCpClient.call({
+    type: "shutdown",
+    id: playerId,
+  });
+
+  await tryCpClient.close();
+  await localTryCpServer.stop();
+
+  // t.equal(actual.type, "agent_pub_key_generated");
+  // t.ok(actualAgentPubKey.startsWith("hCAk"));
+  // t.equal(actualAgentPubKey.length, 52);
+});

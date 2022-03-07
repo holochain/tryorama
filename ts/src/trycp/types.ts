@@ -62,7 +62,7 @@ export interface RequestConfigurePlayer {
 export interface RequestStartup {
   type: "startup";
   id: PlayerId;
-  log_level?: string;
+  log_level?: "error" | "warn" | "info" | "debug" | "trace";
 }
 
 /**
