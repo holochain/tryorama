@@ -1,5 +1,6 @@
 import msgpack from "@msgpack/msgpack";
 import test from "tape-promise/tape";
+import { Buffer } from "buffer";
 import {
   TRYCP_SERVER_HOST,
   TRYCP_SERVER_PORT,
@@ -405,7 +406,6 @@ test.only("TryCP call - call admin interface", async (t) => {
     type: "download_dna",
     url,
   });
-  console.log("url", typeof relativePath);
 
   const playerId = "player-1";
 
@@ -420,7 +420,7 @@ test.only("TryCP call - call admin interface", async (t) => {
     log_level: "trace",
   });
 
-  const hashResponse = await tryCpClient.call({
+  const actualRegisterDna = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
     message: msgpack.encode({
@@ -428,16 +428,46 @@ test.only("TryCP call - call admin interface", async (t) => {
       data: { path: relativePath },
     }),
   });
-  const hash = decodeTryCpAdminApiResponse(hashResponse);
-  console.log("hash", hash);
+  const decodedRegisterDna = decodeTryCpAdminApiResponse(actualRegisterDna);
+  const dnaHash = Buffer.from(decodedRegisterDna.data).toString("base64");
+  console.log("hash", dnaHash);
 
-  // const response = await tryCpClient.call({
-  //   type: "call_admin_interface",
-  //   id: playerId,
-  //   message: msgpack.encode({ type: "generate_agent_pub_key" }),
-  // });
-  // const actual = decodeTryCpAdminApiResponse(response);
-  // const actualAgentPubKey = Buffer.from(actual.data).toString("base64");
+  t.equal(decodedRegisterDna.type, "dna_registered");
+  t.ok(dnaHash.startsWith("hC0k"));
+  t.equal(dnaHash.length, 52);
+
+  const actualGenerateAgentPubKey = await tryCpClient.call({
+    type: "call_admin_interface",
+    id: playerId,
+    message: msgpack.encode({ type: "generate_agent_pub_key" }),
+  });
+  const decodedGenerateAgentPubKey = decodeTryCpAdminApiResponse(
+    actualGenerateAgentPubKey
+  );
+  const agentPubKey = Buffer.from(decodedGenerateAgentPubKey.data).toString(
+    "base64"
+  );
+  console.log("actualpubkey", decodedGenerateAgentPubKey.data.subarray(0, 4));
+
+  t.equal(decodedGenerateAgentPubKey.type, "agent_pub_key_generated");
+  t.ok(agentPubKey.startsWith("hCAk"));
+  t.equal(agentPubKey.length, 52);
+
+  const actualInstallApp = await tryCpClient.call({
+    type: "call_admin_interface",
+    id: playerId,
+    message: msgpack.encode({
+      type: "install_app",
+      data: {
+        installed_app_id: "entry-app",
+        agent_key: decodedGenerateAgentPubKey.data,
+        dnas: [{ hash: decodedRegisterDna.data, role_id: "entry-id" }],
+      },
+    }),
+  });
+  const decodedInstallAppResponse =
+    decodeTryCpAdminApiResponse(actualInstallApp);
+  console.log("re", decodedInstallAppResponse);
 
   // const port = TRYCP_SERVER_PORT + 50;
   // const adminRequestData: RequestAdminInterfaceData = {
