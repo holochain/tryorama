@@ -1,5 +1,4 @@
 import { InstalledAppInfo } from "@holochain/client";
-import { string } from "fp-ts";
 
 /**
  * @public
