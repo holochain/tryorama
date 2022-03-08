@@ -1,5 +1,6 @@
 import msgpack from "@msgpack/msgpack";
 import test from "tape-promise/tape";
+import assert from "assert";
 import { Buffer } from "buffer";
 import {
   TRYCP_SERVER_HOST,
@@ -12,7 +13,11 @@ import {
   RequestAdminInterfaceData,
   TRYCP_RESPONSE_SUCCESS,
 } from "../src/trycp/types";
-import { decodeTryCpAdminApiResponse } from "../src/trycp/util";
+import {
+  decodeAppApiResponse,
+  decodeTryCpAdminApiResponse,
+} from "../src/trycp/util";
+import { CallZomeResponse } from "@holochain/client";
 
 const createTryCpClient = () =>
   TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -420,7 +425,7 @@ test.only("TryCP call - call admin interface", async (t) => {
     log_level: "trace",
   });
 
-  const actualRegisterDna = await tryCpClient.call({
+  const actualRegisterDnaResponse = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
     message: msgpack.encode({
@@ -428,73 +433,106 @@ test.only("TryCP call - call admin interface", async (t) => {
       data: { path: relativePath },
     }),
   });
-  const decodedRegisterDna = decodeTryCpAdminApiResponse(actualRegisterDna);
-  const dnaHash = Buffer.from(decodedRegisterDna.data).toString("base64");
-  console.log("hash", dnaHash);
+  const decodedRegisterDnaResponse = decodeTryCpAdminApiResponse(
+    actualRegisterDnaResponse
+  );
+  const dnaHash = Buffer.from(decodedRegisterDnaResponse.data).toString(
+    "base64"
+  );
 
-  t.equal(decodedRegisterDna.type, "dna_registered");
+  t.equal(decodedRegisterDnaResponse.type, "dna_registered");
+  assert("length" in decodedRegisterDnaResponse.data);
+  t.equal(decodedRegisterDnaResponse.data.length, 39);
   t.ok(dnaHash.startsWith("hC0k"));
-  t.equal(dnaHash.length, 52);
 
-  const actualGenerateAgentPubKey = await tryCpClient.call({
+  const actualGenerateAgentPubKeyResponse = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
     message: msgpack.encode({ type: "generate_agent_pub_key" }),
   });
-  const decodedGenerateAgentPubKey = decodeTryCpAdminApiResponse(
-    actualGenerateAgentPubKey
+  const decodedGenerateAgentPubKeyResponse = decodeTryCpAdminApiResponse(
+    actualGenerateAgentPubKeyResponse
   );
-  const agentPubKey = Buffer.from(decodedGenerateAgentPubKey.data).toString(
-    "base64"
-  );
-  console.log("actualpubkey", decodedGenerateAgentPubKey.data.subarray(0, 4));
+  const agentPubKey = Buffer.from(
+    decodedGenerateAgentPubKeyResponse.data
+  ).toString("base64");
 
-  t.equal(decodedGenerateAgentPubKey.type, "agent_pub_key_generated");
+  t.equal(decodedGenerateAgentPubKeyResponse.type, "agent_pub_key_generated");
+  assert("length" in decodedGenerateAgentPubKeyResponse.data);
+  t.equal(decodedGenerateAgentPubKeyResponse.data.length, 39);
   t.ok(agentPubKey.startsWith("hCAk"));
-  t.equal(agentPubKey.length, 52);
 
-  const actualInstallApp = await tryCpClient.call({
+  const actualInstallAppResponse = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
     message: msgpack.encode({
       type: "install_app",
       data: {
         installed_app_id: "entry-app",
-        agent_key: decodedGenerateAgentPubKey.data,
-        dnas: [{ hash: decodedRegisterDna.data, role_id: "entry-id" }],
+        agent_key: decodedGenerateAgentPubKeyResponse.data,
+        dnas: [{ hash: decodedRegisterDnaResponse.data, role_id: "entry-id" }],
       },
     }),
   });
-  const decodedInstallAppResponse =
-    decodeTryCpAdminApiResponse(actualInstallApp);
-  console.log("re", decodedInstallAppResponse);
+  const decodedInstallAppResponse = decodeTryCpAdminApiResponse(
+    actualInstallAppResponse
+  );
+  assert("cell_data" in decodedInstallAppResponse.data);
+  const cell_id = decodedInstallAppResponse.data.cell_data[0].cell_id;
 
-  // const port = TRYCP_SERVER_PORT + 50;
-  // const adminRequestData: RequestAdminInterfaceData = {
-  //   type: "attach_app_interface",
-  //   data: { port },
-  // };
-  // await tryCpClient.call({
-  //   type: "call_admin_interface",
-  //   id: playerId,
-  //   message: msgpack.encode(adminRequestData),
-  // });
+  t.equal(decodedInstallAppResponse.type, "app_installed");
 
-  // await tryCpClient.call({
-  //   type: "connect_app_interface",
-  //   port,
-  // });
+  const actualEnableApp = await tryCpClient.call({
+    type: "call_admin_interface",
+    id: playerId,
+    message: msgpack.encode({
+      type: "enable_app",
+      data: {
+        installed_app_id: "entry-app",
+      },
+    }),
+  });
+  const decodedEnableAppResponse = decodeTryCpAdminApiResponse(actualEnableApp);
 
-  // const response2 = await tryCpClient.call({
-  //   type: "call_app_interface",
-  //   port,
-  //   message: msgpack.encode({
-  //     type: "app_info",
-  //     data: { installed_app_id: "no_happ_installed" },
-  //   }),
-  // });
-  // const actual2 = decodeTryCpAdminApiResponse(response2);
-  // console.log("actual2", actual2);
+  t.equal(decodedEnableAppResponse.type, "app_enabled");
+
+  const port = TRYCP_SERVER_PORT + 50;
+  const adminRequestData: RequestAdminInterfaceData = {
+    type: "attach_app_interface",
+    data: { port },
+  };
+  await tryCpClient.call({
+    type: "call_admin_interface",
+    id: playerId,
+    message: msgpack.encode(adminRequestData),
+  });
+
+  await tryCpClient.call({
+    type: "connect_app_interface",
+    port,
+  });
+
+  const response2 = await tryCpClient.call({
+    type: "call_app_interface",
+    port,
+    message: msgpack.encode({
+      type: "zome_call",
+      data: {
+        cap: null,
+        cell_id,
+        zome_name: "crud",
+        fn_name: "create",
+        provenance: decodedGenerateAgentPubKeyResponse.data,
+        payload: msgpack.encode({ content: "hello" }),
+      },
+    }),
+  });
+  const actual2 = decodeAppApiResponse(response2) as CallZomeResponse;
+  const decodedPayload = msgpack.decode(actual2.data) as Uint8Array;
+  const entryHash = Buffer.from(decodedPayload).toString("base64");
+
+  t.equal(decodedPayload.length, 39);
+  t.ok(entryHash.startsWith("hCkk"));
 
   await tryCpClient.call({
     type: "shutdown",
@@ -503,8 +541,4 @@ test.only("TryCP call - call admin interface", async (t) => {
 
   await tryCpClient.close();
   await localTryCpServer.stop();
-
-  // t.equal(actual.type, "agent_pub_key_generated");
-  // t.ok(actualAgentPubKey.startsWith("hCAk"));
-  // t.equal(actualAgentPubKey.length, 52);
 });

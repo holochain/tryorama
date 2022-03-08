@@ -1,3 +1,6 @@
+import { InstalledAppInfo } from "@holochain/client";
+import { string } from "fp-ts";
+
 /**
  * @public
  */
@@ -147,7 +150,7 @@ export type _TryCpResponse = _TryCpResponseSuccess | _TryCpResponseError;
 export type TryCpResponseSuccessValue =
   | TryCpReponseSuccessValueVoid
   | string
-  | TryCpResponseAdminApiEncoded;
+  | AdminApiResponse;
 
 /**
  * @public
@@ -179,14 +182,22 @@ export interface _TryCpResponseError {
 }
 
 /**
- * @public
- */
-export type TryCpResponseAdminApiEncoded = Uint8Array;
-
-/**
  * @internal
  */
 export interface _TryCpResponseAdminApi {
   type: string;
-  data: TryCpResponseAdminApiEncoded;
+  data: AdminApiResponse;
+}
+
+/**
+ * @public
+ */
+export type AdminApiResponse = Uint8Array | InstalledAppInfo;
+
+/**
+ * @public
+ */
+export interface AppApiResponse {
+  type: string;
+  data: Uint8Array;
 }
