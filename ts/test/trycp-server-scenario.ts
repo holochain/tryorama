@@ -5,166 +5,79 @@ import { Buffer } from "buffer";
 import {
   TRYCP_SERVER_PORT,
   TryCpServer,
-  DEFAULT_PARTIAL_PLAYER_CONFIG,
   TRYCP_SERVER_HOST,
 } from "../src/trycp/trycp-server";
-import { TryCpClient } from "../src/trycp/trycp-client";
 import { RequestAdminInterfaceData } from "../src/trycp/types";
 import {
   decodeAppApiResponse,
   decodeTryCpAdminApiResponse,
 } from "../src/trycp/util";
 import { CallZomeResponse } from "@holochain/client";
+import { createPlayer } from "../src/player/player";
 
-const createTryCpClient = () =>
-  TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
-
-test.only("TryCP call - call admin interface", async (t) => {
+test("Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const tryCpClient = await createTryCpClient();
-
-  await tryCpClient.call({
-    type: "reset",
-  });
+  const player = await createPlayer(
+    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
+  );
 
   const url =
     "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/entry.dna";
-  const relativePath = await tryCpClient.call({
-    type: "download_dna",
-    url,
-  });
+  const relativePath = await player.downloadDna(url);
 
-  const playerId = "player-1";
+  await player.startup("trace");
+  const dnaHashB64 = await player.registerDna(relativePath);
+  const dnaHash = Buffer.from(dnaHashB64).toString("base64");
 
-  await tryCpClient.call({
-    type: "configure_player",
-    id: playerId,
-    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
-  });
-  await tryCpClient.call({
-    type: "startup",
-    id: playerId,
-    log_level: "trace",
-  });
-
-  const actualRegisterDnaResponse = await tryCpClient.call({
-    type: "call_admin_interface",
-    id: playerId,
-    message: msgpack.encode({
-      type: "register_dna",
-      data: { path: relativePath },
-    }),
-  });
-  const decodedRegisterDnaResponse = decodeTryCpAdminApiResponse(
-    actualRegisterDnaResponse
-  );
-  const dnaHash = Buffer.from(decodedRegisterDnaResponse.data).toString(
-    "base64"
-  );
-
-  t.equal(decodedRegisterDnaResponse.type, "dna_registered");
-  assert("length" in decodedRegisterDnaResponse.data);
-  t.equal(decodedRegisterDnaResponse.data.length, 39);
+  t.equal(dnaHashB64.length, 39);
   t.ok(dnaHash.startsWith("hC0k"));
 
-  const actualGenerateAgentPubKeyResponse = await tryCpClient.call({
-    type: "call_admin_interface",
-    id: playerId,
-    message: msgpack.encode({ type: "generate_agent_pub_key" }),
-  });
-  const decodedGenerateAgentPubKeyResponse = decodeTryCpAdminApiResponse(
-    actualGenerateAgentPubKeyResponse
-  );
-  const agentPubKey = Buffer.from(
-    decodedGenerateAgentPubKeyResponse.data
-  ).toString("base64");
+  const agentPubKeyB64 = await player.generateAgentPubKey();
+  const agentPubKey = Buffer.from(agentPubKeyB64).toString("base64");
 
-  t.equal(decodedGenerateAgentPubKeyResponse.type, "agent_pub_key_generated");
-  assert("length" in decodedGenerateAgentPubKeyResponse.data);
-  t.equal(decodedGenerateAgentPubKeyResponse.data.length, 39);
+  t.equal(agentPubKeyB64.length, 39);
   t.ok(agentPubKey.startsWith("hCAk"));
 
-  const actualInstallAppResponse = await tryCpClient.call({
-    type: "call_admin_interface",
-    id: playerId,
-    message: msgpack.encode({
-      type: "install_app",
-      data: {
-        installed_app_id: "entry-app",
-        agent_key: decodedGenerateAgentPubKeyResponse.data,
-        dnas: [{ hash: decodedRegisterDnaResponse.data, role_id: "entry-id" }],
-      },
-    }),
-  });
-  const decodedInstallAppResponse = decodeTryCpAdminApiResponse(
-    actualInstallAppResponse
-  );
-  assert("cell_data" in decodedInstallAppResponse.data);
-  const cell_id = decodedInstallAppResponse.data.cell_data[0].cell_id;
+  const cell_id = await player.installApp(agentPubKeyB64, [
+    { hash: dnaHashB64, role_id: "entry-dna" },
+  ]);
 
-  t.equal(decodedInstallAppResponse.type, "app_installed");
+  t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
+  t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
 
-  const actualEnableApp = await tryCpClient.call({
-    type: "call_admin_interface",
-    id: playerId,
-    message: msgpack.encode({
-      type: "enable_app",
-      data: {
-        installed_app_id: "entry-app",
-      },
-    }),
-  });
-  const decodedEnableAppResponse = decodeTryCpAdminApiResponse(actualEnableApp);
-
-  t.equal(decodedEnableAppResponse.type, "app_enabled");
+  const enabledAppResponse = await player.enableApp("entry-app");
+  t.deepEqual(enabledAppResponse.app.status, { running: null });
 
   const port = TRYCP_SERVER_PORT + 50;
-  const adminRequestData: RequestAdminInterfaceData = {
-    type: "attach_app_interface",
-    data: { port },
-  };
-  await tryCpClient.call({
-    type: "call_admin_interface",
-    id: playerId,
-    message: msgpack.encode(adminRequestData),
-  });
+  const actualPort = await player.attachAppInterface(port);
+  t.equal(actualPort, port);
 
-  await tryCpClient.call({
-    type: "connect_app_interface",
-    port,
-  });
+  // const createEntryResponse = await tryCpClient.call({
+  //   type: "call_app_interface",
+  //   port,
+  //   message: msgpack.encode({
+  //     type: "zome_call",
+  //     data: {
+  //       cap: null,
+  //       cell_id,
+  //       zome_name: "crud",
+  //       fn_name: "create",
+  //       provenance: decodedGenerateAgentPubKeyResponse.data,
+  //       payload: msgpack.encode({ content: "hello" }),
+  //     },
+  //   }),
+  // });
+  // const decodedCreateEntryResponse = decodeAppApiResponse(
+  //   createEntryResponse
+  // ) as CallZomeResponse;
+  // const decodedPayload = msgpack.decode(
+  //   decodedCreateEntryResponse.data
+  // ) as Uint8Array;
+  // const entryHash = Buffer.from(decodedPayload).toString("base64");
 
-  const createEntryResponse = await tryCpClient.call({
-    type: "call_app_interface",
-    port,
-    message: msgpack.encode({
-      type: "zome_call",
-      data: {
-        cap: null,
-        cell_id,
-        zome_name: "crud",
-        fn_name: "create",
-        provenance: decodedGenerateAgentPubKeyResponse.data,
-        payload: msgpack.encode({ content: "hello" }),
-      },
-    }),
-  });
-  const decodedCreateEntryResponse = decodeAppApiResponse(
-    createEntryResponse
-  ) as CallZomeResponse;
-  const decodedPayload = msgpack.decode(
-    decodedCreateEntryResponse.data
-  ) as Uint8Array;
-  const entryHash = Buffer.from(decodedPayload).toString("base64");
+  // t.equal(decodedPayload.length, 39);
+  // t.ok(entryHash.startsWith("hCkk"));
 
-  t.equal(decodedPayload.length, 39);
-  t.ok(entryHash.startsWith("hCkk"));
-
-  await tryCpClient.call({
-    type: "shutdown",
-    id: playerId,
-  });
-
-  await tryCpClient.close();
+  await player.shutdown();
   await localTryCpServer.stop();
 });

@@ -1,9 +1,10 @@
-import { InstalledAppInfo } from "@holochain/client";
-
-/**
- * @public
- */
-export type PlayerId = string;
+import {
+  AttachAppInterfaceResponse,
+  EnableAppResponse,
+  HoloHash,
+  InstalledAppInfo,
+} from "@holochain/client";
+import { PlayerId } from "../player/player";
 
 /**
  * @internal
@@ -61,10 +62,15 @@ export interface RequestConfigurePlayer {
 /**
  * @public
  */
+export type PlayerLogLevel = "error" | "warn" | "info" | "debug" | "trace";
+
+/**
+ * @public
+ */
 export interface RequestStartup {
   type: "startup";
   id: PlayerId;
-  log_level?: "error" | "warn" | "info" | "debug" | "trace";
+  log_level?: PlayerLogLevel;
 }
 
 /**
@@ -109,12 +115,13 @@ export interface RequestCallAppInterface {
 }
 
 /**
+ * @param message - Byte code with format RequestAdminInterfaceData
  * @public
  */
 export interface RequestCallAdminInterface {
   type: "call_admin_interface";
   id: PlayerId;
-  message: Uint8Array; // byte code with format RequestAdminInterfaceData
+  message: Uint8Array;
 }
 
 /**
@@ -191,7 +198,11 @@ export interface _TryCpResponseAdminApi {
 /**
  * @public
  */
-export type AdminApiResponse = Uint8Array | InstalledAppInfo;
+export type AdminApiResponse =
+  | HoloHash
+  | InstalledAppInfo
+  | EnableAppResponse
+  | AttachAppInterfaceResponse;
 
 /**
  * @public
