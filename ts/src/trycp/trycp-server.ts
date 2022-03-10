@@ -2,6 +2,9 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { makeLogger } from "../logger";
 
 const logger = makeLogger("TryCP server");
+const serverError = new RegExp(
+  /(internal_error|Error serving client from address)/i
+);
 
 export const TRYCP_SERVER_HOST = "0.0.0.0";
 export const TRYCP_SERVER_PORT = 9000;
@@ -55,13 +58,13 @@ export class TryCpServer {
 
     const trycpPromise = new Promise<TryCpServer>((resolve) =>
       tryCpServer.serverProcess.stdout.on("data", (data) => {
-        const regexServerStarted = new RegExp(
-          `Listening on ${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
-        );
-        if (/error/i.test(data)) {
+        if (serverError.test(data)) {
           logger.error(data);
           return;
         }
+        const regexServerStarted = new RegExp(
+          `Listening on ${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
+        );
         if (regexServerStarted.test(data)) {
           logger.verbose(data);
           resolve(tryCpServer);

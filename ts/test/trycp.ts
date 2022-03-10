@@ -6,7 +6,6 @@ import {
   TryCpServer,
 } from "../src/trycp/trycp-server";
 import { TryCpClient } from "../src/trycp/trycp-client";
-import { TryCpServerCall } from "../src/trycp/types";
 
 const createTryCpClient = () =>
   TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -18,7 +17,7 @@ test("TryCP ping", async (assert) => {
   const expected = "peng";
   const actual = (await tryCpClient.ping(expected)).toString();
 
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
 
   assert.equal(actual, expected);
@@ -52,7 +51,7 @@ test.only("TryCP call admin interface", async (assert) => {
     console.error("erere", error);
   }
 
-  await tryCpClient.destroy();
+  await tryCpClient.close();
   await localTryCpServer.stop();
   assert.end();
 });
