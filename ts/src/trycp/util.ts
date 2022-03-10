@@ -1,9 +1,11 @@
+import { CallZomeRequestGeneric, HoloHash } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
+import assert from "assert";
 import {
   _TryCpResponseAdminApi,
   TryCpResponseSuccessValue,
   _TryCpResponseWrapper,
-  AppApiResponse,
+  _TryCpAppApiResponse,
 } from "./types";
 
 export const decodeTryCpResponse = (data: ArrayLike<number> | BufferSource) => {
@@ -19,7 +21,7 @@ export const decodeTryCpResponse = (data: ArrayLike<number> | BufferSource) => {
  * @param response - The response to deserialize.
  * @returns The deserialized response.
  *
- * @public
+ * @internal
  */
 export const decodeTryCpAdminApiResponse = (
   response: TryCpResponseSuccessValue
@@ -34,12 +36,12 @@ export const decodeTryCpAdminApiResponse = (
 };
 
 /**
- * Deserialize the binary response from the Admin API
+ * Deserialize the binary response from the App API
  *
  * @param response - The response to deserialize.
  * @returns The deserialized response.
  *
- * @public
+ * @internal
  */
 export const decodeAppApiResponse = (response: TryCpResponseSuccessValue) => {
   if (response && typeof response === "object" && Array.isArray(response)) {
@@ -49,6 +51,23 @@ export const decodeAppApiResponse = (response: TryCpResponseSuccessValue) => {
     return decodedAdminApiResponse;
   }
   throw new TypeError(`decode app API response: unknown format ${response}`);
+};
+
+/**
+ * Deserialize the App API response's payload
+ *
+ * @param payload - The payload to deserialize.
+ * @typeParam P - The type of the response's payload.
+ * @returns The deserialized payload.
+ *
+ * @internal
+ */
+export const decodeAppApiPayload = <P extends HoloHash>(
+  payload: Uint8Array
+): P => {
+  const decodedPayload = msgpack.decode(payload);
+  assertIsApiPayload(decodedPayload);
+  return decodedPayload;
 };
 
 function assertIsResponseWrapper(
@@ -82,7 +101,7 @@ function assertIsAdminApiResponse(
 
 function assertIsAppApiResponse(
   decodedResponse: unknown
-): asserts decodedResponse is AppApiResponse {
+): asserts decodedResponse is _TryCpAppApiResponse {
   if (
     decodedResponse &&
     typeof decodedResponse === "object" &&
@@ -92,4 +111,10 @@ function assertIsAppApiResponse(
     return;
   }
   throw new TypeError(`decode: unknown format ${decodedResponse}`);
+}
+
+function assertIsApiPayload(payload: unknown): asserts payload is any {
+  assert(typeof payload === "object");
+  assert(payload !== null);
+  assert("length" in payload);
 }

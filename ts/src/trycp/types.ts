@@ -207,7 +207,7 @@ export type AdminApiResponse =
 /**
  * @public
  */
-export interface AppApiResponse {
+export interface _TryCpAppApiResponse {
   type: string;
   data: Uint8Array;
 }

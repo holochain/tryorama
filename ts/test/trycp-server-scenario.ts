@@ -1,18 +1,12 @@
-import msgpack from "@msgpack/msgpack";
 import test from "tape-promise/tape";
-import assert from "assert";
 import { Buffer } from "buffer";
 import {
   TRYCP_SERVER_PORT,
   TryCpServer,
   TRYCP_SERVER_HOST,
 } from "../src/trycp/trycp-server";
-import { RequestAdminInterfaceData } from "../src/trycp/types";
-import {
-  decodeAppApiResponse,
-  decodeTryCpAdminApiResponse,
-} from "../src/trycp/util";
-import { CallZomeResponse } from "@holochain/client";
+import { TRYCP_RESPONSE_SUCCESS } from "../src/trycp/types";
+import { HoloHash } from "@holochain/client";
 import { createPlayer } from "../src/player/player";
 
 test("Create and read an entry using the entry zome", async (t) => {
@@ -28,20 +22,17 @@ test("Create and read an entry using the entry zome", async (t) => {
   await player.startup("trace");
   const dnaHashB64 = await player.registerDna(relativePath);
   const dnaHash = Buffer.from(dnaHashB64).toString("base64");
-
   t.equal(dnaHashB64.length, 39);
   t.ok(dnaHash.startsWith("hC0k"));
 
   const agentPubKeyB64 = await player.generateAgentPubKey();
   const agentPubKey = Buffer.from(agentPubKeyB64).toString("base64");
-
   t.equal(agentPubKeyB64.length, 39);
   t.ok(agentPubKey.startsWith("hCAk"));
 
   const cell_id = await player.installApp(agentPubKeyB64, [
     { hash: dnaHashB64, role_id: "entry-dna" },
   ]);
-
   t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
 
@@ -52,31 +43,20 @@ test("Create and read an entry using the entry zome", async (t) => {
   const actualPort = await player.attachAppInterface(port);
   t.equal(actualPort, port);
 
-  // const createEntryResponse = await tryCpClient.call({
-  //   type: "call_app_interface",
-  //   port,
-  //   message: msgpack.encode({
-  //     type: "zome_call",
-  //     data: {
-  //       cap: null,
-  //       cell_id,
-  //       zome_name: "crud",
-  //       fn_name: "create",
-  //       provenance: decodedGenerateAgentPubKeyResponse.data,
-  //       payload: msgpack.encode({ content: "hello" }),
-  //     },
-  //   }),
-  // });
-  // const decodedCreateEntryResponse = decodeAppApiResponse(
-  //   createEntryResponse
-  // ) as CallZomeResponse;
-  // const decodedPayload = msgpack.decode(
-  //   decodedCreateEntryResponse.data
-  // ) as Uint8Array;
-  // const entryHash = Buffer.from(decodedPayload).toString("base64");
+  const connectAppInterfaceResponse = await player.connectAppInterface(port);
+  t.equal(connectAppInterfaceResponse, TRYCP_RESPONSE_SUCCESS);
 
-  // t.equal(decodedPayload.length, 39);
-  // t.ok(entryHash.startsWith("hCkk"));
+  const createEntryResponse = await player.callZome<HoloHash>(port, {
+    cap_secret: null,
+    cell_id,
+    zome_name: "crud",
+    fn_name: "create",
+    provenance: agentPubKeyB64,
+    payload: { content: "hello" },
+  });
+  const createdEntryHash = Buffer.from(createEntryResponse).toString("base64");
+  t.equal(createEntryResponse.length, 39);
+  t.ok(createdEntryHash.startsWith("hCkk"));
 
   await player.shutdown();
   await localTryCpServer.stop();

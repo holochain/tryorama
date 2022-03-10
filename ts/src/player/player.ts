@@ -7,9 +7,14 @@ import {
   TryCpClient,
 } from "../trycp";
 import { DEFAULT_PARTIAL_PLAYER_CONFIG } from "../trycp/trycp-server";
-import { decodeTryCpAdminApiResponse } from "../trycp/util";
+import {
+  decodeAppApiPayload,
+  decodeAppApiResponse,
+  decodeTryCpAdminApiResponse,
+} from "../trycp/util";
 import {
   AgentPubKey,
+  CallZomeRequest,
   Dna,
   HoloHash,
   InstallAppDnaPayload,
@@ -162,17 +167,31 @@ class Player {
     assert("port" in decodedResponse.data);
     return decodedResponse.data.port;
   }
-}
 
-// /**
-//  * Make a zome call to the TryCP server.
-//  */
-//  async callZome(port: number, request: CallZomeRequest) {
-//   const zomeResponse = await this.call({
-//     type: "call_app_interface",
-//     port,
-//     message: msgpack.encode(request),
-//   });
-//   const decodedAppApiResponse = decodeAppApiResponse(zomeResponse);
-//   decodedAppApiResponse.data
-// }
+  async connectAppInterface(port: number) {
+    return this.tryCpClient.call({
+      type: "connect_app_interface",
+      port,
+    });
+  }
+
+  /**
+   * Make a zome call to the TryCP server.
+   */
+  async callZome<T extends HoloHash>(port: number, request: CallZomeRequest) {
+    if (request.payload) {
+      request.payload = msgpack.encode(request.payload);
+    }
+    const response = await this.tryCpClient.call({
+      type: "call_app_interface",
+      port,
+      message: msgpack.encode({
+        type: "zome_call",
+        data: request,
+      }),
+    });
+    const decodedResponse = decodeAppApiResponse(response);
+    const decodedPayload: T = decodeAppApiPayload(decodedResponse.data);
+    return decodedPayload;
+  }
+}
