@@ -1,0 +1,12 @@
+[package]
+edition = "2018"
+name = "crud"
+version = "0.1.0"
+
+[lib]
+crate-type = ["cdylib", "rlib"]
+name = "crud"
+
+[dependencies]
+hdk = "0.0.120"
+serde = "1"

@@ -1,6 +1,6 @@
 ---
 manifest_version: "1"
-name: test-happ
+name: entry-happ
 description: ""
 roles:
   - id: test
@@ -8,7 +8,7 @@ roles:
       strategy: create
       deferred: false
     dna:
-      bundled: ./test.dna
+      bundled: ./entry.dna
       properties: ~
       uid: ~
       version: ~
