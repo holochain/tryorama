@@ -1,6 +1,7 @@
 import assert from "assert";
 import msgpack from "@msgpack/msgpack";
 import uniqueId from "lodash/uniqueId";
+import { makeLogger } from "../../src/logger";
 import {
   PlayerLogLevel,
   RequestAdminInterfaceData,
@@ -15,12 +16,12 @@ import {
 import {
   AgentPubKey,
   CallZomeRequest,
-  Dna,
   HoloHash,
-  InstallAppDnaPayload,
   InstalledAppId,
 } from "@holochain/client";
 import { DnaInstallOptions } from "./types";
+
+const logger = makeLogger("Player");
 
 /**
  * @public
@@ -178,7 +179,7 @@ class Player {
   /**
    * Make a zome call to the TryCP server.
    */
-  async callZome<T extends HoloHash>(port: number, request: CallZomeRequest) {
+  async callZome<T>(port: number, request: CallZomeRequest) {
     if (request.payload) {
       request.payload = msgpack.encode(request.payload);
     }
@@ -191,6 +192,15 @@ class Player {
       }),
     });
     const decodedResponse = decodeAppApiResponse(response);
+    if (decodedResponse.type === "error") {
+      const errorMessage = `error when calling zome:\n${JSON.stringify(
+        decodedResponse.data,
+        null,
+        4
+      )}`;
+      logger.error(errorMessage);
+      throw new Error(errorMessage);
+    }
     const decodedPayload: T = decodeAppApiPayload(decodedResponse.data);
     return decodedPayload;
   }
