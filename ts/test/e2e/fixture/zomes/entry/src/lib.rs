@@ -23,8 +23,8 @@ pub fn create(input: Input) -> ExternResult<HeaderHash> {
 }
 
 #[hdk_extern]
-pub fn read(hash: HeaderHash) -> ExternResult<Details> {
-    let entry = get_details(hash, GetOptions::default())?.unwrap();
+pub fn read(hash: HeaderHash) -> ExternResult<Element> {
+    let entry = get(hash, GetOptions::default())?.unwrap();
     Ok(entry)
 }
 
