@@ -1,6 +1,5 @@
-import { CallZomeRequestGeneric, HoloHash } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
-import assert from "assert";
+import { ZomeResponsePayload } from "../player/types";
 import {
   _TryCpResponseAdminApi,
   TryCpResponseSuccessValue,
@@ -62,11 +61,10 @@ export const decodeAppApiResponse = (response: TryCpResponseSuccessValue) => {
  *
  * @internal
  */
-export const decodeAppApiPayload = <P extends HoloHash>(
+export const decodeAppApiPayload = <T extends ZomeResponsePayload>(
   payload: Uint8Array
-): P => {
-  const decodedPayload = msgpack.decode(payload);
-  assertIsApiPayload(decodedPayload);
+): T => {
+  const decodedPayload = msgpack.decode(payload) as T;
   return decodedPayload;
 };
 
@@ -111,10 +109,4 @@ function assertIsAppApiResponse(
     return;
   }
   throw new TypeError(`decode: unknown format ${decodedResponse}`);
-}
-
-function assertIsApiPayload(payload: unknown): asserts payload is any {
-  assert(typeof payload === "object");
-  assert(payload !== null);
-  assert("length" in payload);
 }

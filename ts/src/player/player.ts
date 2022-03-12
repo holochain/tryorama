@@ -19,7 +19,7 @@ import {
   HoloHash,
   InstalledAppId,
 } from "@holochain/client";
-import { DnaInstallOptions } from "./types";
+import { DnaInstallOptions, ZomeResponsePayload } from "./types";
 
 const logger = makeLogger("Player");
 
@@ -179,7 +179,10 @@ class Player {
   /**
    * Make a zome call to the TryCP server.
    */
-  async callZome<T>(port: number, request: CallZomeRequest) {
+  async callZome<T extends ZomeResponsePayload>(
+    port: number,
+    request: CallZomeRequest
+  ) {
     if (request.payload) {
       request.payload = msgpack.encode(request.payload);
     }
@@ -201,7 +204,7 @@ class Player {
       logger.error(errorMessage);
       throw new Error(errorMessage);
     }
-    const decodedPayload: T = decodeAppApiPayload(decodedResponse.data);
+    const decodedPayload = decodeAppApiPayload<T>(decodedResponse.data);
     return decodedPayload;
   }
 }

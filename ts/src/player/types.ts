@@ -5,3 +5,7 @@ export type DnaInstallOptions = {
   role_id: RoleId;
   membrane_proof?: MembraneProof;
 };
+
+export type ZomeResponsePayload =
+  | HoloHash
+  | Record<number | string, boolean | number | string | object>;
