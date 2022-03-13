@@ -201,7 +201,6 @@ class Player {
         null,
         4
       )}`;
-      logger.error(errorMessage);
       throw new Error(errorMessage);
     }
     const decodedPayload = decodeAppApiPayload<T>(decodedResponse.data);

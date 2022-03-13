@@ -6,3 +6,6 @@ tsconfig.tsbuildinfo
 
 target
 .cargo
+
+*.dna
+*.happ

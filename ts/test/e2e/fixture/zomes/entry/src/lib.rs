@@ -1,36 +1,31 @@
 use hdk::prelude::*;
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
-pub struct Input {
-    pub content: String,
-}
+entry_defs![Content::entry_def()];
 
+#[hdk_entry(id = "Content")]
+pub struct Content(String);
 #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
 pub struct UpdateInput {
     pub hash: HeaderHash,
     pub content: String,
 }
 
-#[hdk_entry(id = "foo")]
-pub struct TestEntry(String);
-
-entry_defs![TestEntry::entry_def()];
-
 #[hdk_extern]
-pub fn create(input: Input) -> ExternResult<HeaderHash> {
-    let entry_hash = create_entry(TestEntry(input.content)).unwrap();
+pub fn create(input: Content) -> ExternResult<HeaderHash> {
+    let entry_hash = create_entry(input).unwrap();
     Ok(entry_hash)
 }
 
 #[hdk_extern]
-pub fn read(hash: HeaderHash) -> ExternResult<Element> {
-    let entry = get(hash, GetOptions::default())?.unwrap();
-    Ok(entry)
+pub fn read(hash: HeaderHash) -> ExternResult<Content> {
+    let element = get(hash, GetOptions::default())?.unwrap();
+    let input: Content = element.entry().to_app_option()?.unwrap();
+    Ok(input)
 }
 
 #[hdk_extern]
 pub fn update(input: UpdateInput) -> ExternResult<HeaderHash> {
-    let updated_hash = update_entry(input.hash, TestEntry(input.content)).unwrap();
+    let updated_hash = update_entry(input.hash, Content(input.content)).unwrap();
     Ok(updated_hash)
 }
 
