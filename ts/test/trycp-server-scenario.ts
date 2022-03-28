@@ -46,13 +46,14 @@ test("Create and read an entry using the entry zome", async (t) => {
   const connectAppInterfaceResponse = await player.connectAppInterface(port);
   t.equal(connectAppInterfaceResponse, TRYCP_RESPONSE_SUCCESS);
 
+  const entryContent = "test-content";
   const createEntryResponse = await player.callZome<HoloHash>(port, {
     cap_secret: null,
     cell_id,
     zome_name: "crud",
     fn_name: "create",
     provenance: agentPubKeyB64,
-    payload: "peter",
+    payload: entryContent,
   });
   const createdEntryHash = Buffer.from(createEntryResponse).toString("base64");
   t.equal(createEntryResponse.length, 39);
@@ -69,10 +70,7 @@ test("Create and read an entry using the entry zome", async (t) => {
     provenance: agentPubKeyB64,
     payload: createEntryResponse,
   });
-  console.log("readentryreps", JSON.stringify(readEntryResponse, null, 4));
-  // const s = Object.values(readEntryResponse.entry.Present.entry).map((v) => v);
-  // console.log("dd", Buffer.from(s).toString());
-  // t.equal(s, "peter");
+  t.equal(readEntryResponse, entryContent);
 
   await player.shutdown();
   await localTryCpServer.stop();
