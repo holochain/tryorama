@@ -7,5 +7,6 @@ export type DnaInstallOptions = {
 };
 
 export type ZomeResponsePayload =
+  | string
   | HoloHash
   | Record<number | string, boolean | number | string | object>;

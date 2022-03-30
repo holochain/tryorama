@@ -21,8 +21,6 @@ import {
 } from "@holochain/client";
 import { DnaInstallOptions, ZomeResponsePayload } from "./types";
 
-const logger = makeLogger("Player");
-
 /**
  * @public
  */
@@ -183,9 +181,7 @@ class Player {
     port: number,
     request: CallZomeRequest
   ) {
-    if (request.payload) {
-      request.payload = msgpack.encode(request.payload);
-    }
+    request.payload = msgpack.encode(request.payload);
     const response = await this.tryCpClient.call({
       type: "call_app_interface",
       port,

@@ -29,7 +29,7 @@ export class TryCpServer {
         "run",
         "--release",
         "--target-dir",
-        "../../target",
+        "target",
         "--",
         "-p",
         port.toString(),
