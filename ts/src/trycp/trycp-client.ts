@@ -58,8 +58,8 @@ export class TryCpClient {
       const { responseResolve, responseReject } =
         tryCpClient.requestPromises[responseWrapper.id];
 
-      // the server returns an object as its response
-      // for successful requests it contains `0` as a property and otherwise `1` when an error occurred
+      // the server responds with an object
+      // for successful requests it contains `0` as property and otherwise `1` when an error occurred
       if ("0" in responseWrapper.response) {
         responseResolve(responseWrapper.response[0]);
       } else if ("1" in responseWrapper.response) {

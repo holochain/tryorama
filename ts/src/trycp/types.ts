@@ -1,4 +1,5 @@
 import {
+  AgentInfoSigned,
   AttachAppInterfaceResponse,
   EnableAppResponse,
   HoloHash,
@@ -202,7 +203,8 @@ export type AdminApiResponse =
   | HoloHash
   | InstalledAppInfo
   | EnableAppResponse
-  | AttachAppInterfaceResponse;
+  | AttachAppInterfaceResponse
+  | AgentInfoSigned[];
 
 /**
  * @public

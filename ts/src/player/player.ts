@@ -1,7 +1,6 @@
 import assert from "assert";
 import msgpack from "@msgpack/msgpack";
 import uniqueId from "lodash/uniqueId";
-import { makeLogger } from "../../src/logger";
 import {
   PlayerLogLevel,
   RequestAdminInterfaceData,
@@ -27,7 +26,7 @@ import { DnaInstallOptions, ZomeResponsePayload } from "./types";
 export type PlayerId = string;
 
 /**
- * The function to create a Player, used instead of a static Player factory.
+ * The function to create a Player.
  *
  * @param url - The URL of the TryCP server to connect to.
  * @param id - The Player's name; optional.
@@ -37,9 +36,7 @@ export type PlayerId = string;
  */
 export const createPlayer = async (url: string, id?: PlayerId) => {
   const client = await TryCpClient.create(url);
-  const player = new Player(client, id);
-  await player.configure();
-  return player;
+  return new Player(client, id);
 };
 
 /**
@@ -52,6 +49,10 @@ class Player {
     this.id = "player-" + (id || uniqueId());
   }
 
+  async destroy() {
+    return this.tryCpClient.close();
+  }
+
   async reset() {
     return this.tryCpClient.call({
       type: "reset",
@@ -62,6 +63,16 @@ class Player {
     const response = await this.tryCpClient.call({
       type: "download_dna",
       url,
+    });
+    assert(typeof response === "string");
+    return response;
+  }
+
+  async saveDna(dnaContent: Buffer) {
+    const response = await this.tryCpClient.call({
+      type: "save_dna",
+      id: "./entry.dna",
+      content: dnaContent,
     });
     assert(typeof response === "string");
     return response;
@@ -100,7 +111,7 @@ class Player {
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    assert("length" in decodedResponse.data);
+    assert("BYTES_PER_ELEMENT" in decodedResponse.data);
     const dnaHash: HoloHash = decodedResponse.data;
     return dnaHash;
   }
@@ -112,7 +123,7 @@ class Player {
       message: msgpack.encode({ type: "generate_agent_pub_key" }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    assert("length" in decodedResponse.data);
+    assert("BYTES_PER_ELEMENT" in decodedResponse.data);
     const agentPubKey: HoloHash = decodedResponse.data;
     return agentPubKey;
   }
@@ -201,5 +212,42 @@ class Player {
     }
     const decodedPayload = decodeAppApiPayload<T>(decodedResponse.data);
     return decodedPayload;
+  }
+
+  /**
+   * Register provided conductors with each other.
+   */
+  async connectConductors(conductors: Player[]) {
+    await Promise.all(
+      conductors.map(
+        async (conductorToShareAbout, conductorToShareAboutIndex) => {
+          const response = await this.tryCpClient.call({
+            type: "call_admin_interface",
+            id: conductorToShareAbout.id,
+            message: msgpack.encode({ type: "request_agent_info", data: {} }),
+          });
+          const decodedResponse = decodeTryCpAdminApiResponse(response);
+          console.log("decodedreposn", decodedResponse);
+          assert(Array.isArray(decodedResponse.data));
+          const signedAgentInfos = decodedResponse.data;
+          await Promise.all(
+            conductors.map(
+              (conductorToShareWith, conductorToShareWithIndex) => {
+                if (conductorToShareWithIndex !== conductorToShareAboutIndex) {
+                  conductorToShareWith.tryCpClient.call({
+                    type: "call_admin_interface",
+                    id: conductorToShareWith.id,
+                    message: msgpack.encode({
+                      type: "add_agent_info",
+                      data: { agent_infos: signedAgentInfos },
+                    }),
+                  });
+                }
+              }
+            )
+          );
+        }
+      )
+    );
   }
 }
