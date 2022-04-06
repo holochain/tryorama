@@ -154,7 +154,7 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 agents", asy
   await localTryCpServer.stop();
 });
 
-test.only("Create and read an entry using the entry zome, 2 conductors, 2 agents", async (t) => {
+test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
   const dnaUrl =

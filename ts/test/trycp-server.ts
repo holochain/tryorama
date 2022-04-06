@@ -13,11 +13,11 @@ import {
   TRYCP_RESPONSE_SUCCESS,
 } from "../src/trycp/types";
 import {
+  decodeAppApiPayload,
   decodeAppApiResponse,
   decodeTryCpAdminApiResponse,
 } from "../src/trycp/util";
 import assert from "assert";
-import { CallZomeResponse } from "@holochain/client";
 
 const createTryCpClient = () =>
   TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -400,7 +400,6 @@ test("TryCP call - call app interface", async (t) => {
 test("TryCP call - make zome calls", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
-
   await tryCpClient.call({
     type: "reset",
   });
@@ -413,7 +412,6 @@ test("TryCP call - make zome calls", async (t) => {
   });
 
   const playerId = "player-1";
-
   await tryCpClient.call({
     type: "configure_player",
     id: playerId,
@@ -436,14 +434,13 @@ test("TryCP call - make zome calls", async (t) => {
   const decodedRegisterDnaResponse = decodeTryCpAdminApiResponse(
     actualRegisterDnaResponse
   );
-  const dnaHash = Buffer.from(decodedRegisterDnaResponse.data).toString(
+  const dnaHashB64 = Buffer.from(decodedRegisterDnaResponse.data).toString(
     "base64"
   );
-
   t.equal(decodedRegisterDnaResponse.type, "dna_registered");
   assert("length" in decodedRegisterDnaResponse.data);
   t.equal(decodedRegisterDnaResponse.data.length, 39);
-  t.ok(dnaHash.startsWith("hC0k"));
+  t.ok(dnaHashB64.startsWith("hC0k"));
 
   const actualGenerateAgentPubKeyResponse = await tryCpClient.call({
     type: "call_admin_interface",
@@ -453,14 +450,12 @@ test("TryCP call - make zome calls", async (t) => {
   const decodedGenerateAgentPubKeyResponse = decodeTryCpAdminApiResponse(
     actualGenerateAgentPubKeyResponse
   );
-  const agentPubKey = Buffer.from(
-    decodedGenerateAgentPubKeyResponse.data
-  ).toString("base64");
-
+  const agentPubKey = decodedGenerateAgentPubKeyResponse.data;
+  const agentPubKeyB64 = Buffer.from(agentPubKey).toString("base64");
   t.equal(decodedGenerateAgentPubKeyResponse.type, "agent_pub_key_generated");
-  assert("length" in decodedGenerateAgentPubKeyResponse.data);
-  t.equal(decodedGenerateAgentPubKeyResponse.data.length, 39);
-  t.ok(agentPubKey.startsWith("hCAk"));
+  assert("length" in agentPubKey);
+  t.equal(agentPubKey.length, 39);
+  t.ok(agentPubKeyB64.startsWith("hCAk"));
 
   const actualInstallAppResponse = await tryCpClient.call({
     type: "call_admin_interface",
@@ -479,7 +474,6 @@ test("TryCP call - make zome calls", async (t) => {
   );
   assert("cell_data" in decodedInstallAppResponse.data);
   const cell_id = decodedInstallAppResponse.data.cell_data[0].cell_id;
-
   t.equal(decodedInstallAppResponse.type, "app_installed");
 
   const actualEnableApp = await tryCpClient.call({
@@ -493,7 +487,6 @@ test("TryCP call - make zome calls", async (t) => {
     }),
   });
   const decodedEnableAppResponse = decodeTryCpAdminApiResponse(actualEnableApp);
-
   t.equal(decodedEnableAppResponse.type, "app_enabled");
 
   const port = TRYCP_SERVER_PORT + 50;
@@ -506,7 +499,6 @@ test("TryCP call - make zome calls", async (t) => {
     id: playerId,
     message: msgpack.encode(adminRequestData),
   });
-
   await tryCpClient.call({
     type: "connect_app_interface",
     port,
@@ -522,27 +514,21 @@ test("TryCP call - make zome calls", async (t) => {
         cell_id,
         zome_name: "crud",
         fn_name: "create",
-        provenance: decodedGenerateAgentPubKeyResponse.data,
-        payload: msgpack.encode({ content: "hello" }),
+        provenance: agentPubKey,
+        payload: msgpack.encode("hello"),
       },
     }),
   });
-  const decodedCreateEntryResponse = decodeAppApiResponse(
-    createEntryResponse
-  ) as CallZomeResponse;
-  const decodedPayload = msgpack.decode(
-    decodedCreateEntryResponse.data
-  ) as Uint8Array;
-  const entryHash = Buffer.from(decodedPayload).toString("base64");
-
+  const decodedCreateEntryResponse = decodeAppApiResponse(createEntryResponse);
+  const decodedPayload = decodeAppApiPayload(decodedCreateEntryResponse.data);
+  const entryHashB64 = Buffer.from(decodedPayload).toString("base64");
   t.equal(decodedPayload.length, 39);
-  t.ok(entryHash.startsWith("hCkk"));
+  t.ok(entryHashB64.startsWith("hCkk"));
 
   await tryCpClient.call({
     type: "shutdown",
     id: playerId,
   });
-
   await tryCpClient.close();
   await localTryCpServer.stop();
 });

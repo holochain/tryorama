@@ -1,20 +1,11 @@
 import test from "tape";
-import msgpack from "@msgpack/msgpack";
 import fs from "fs";
 import path from "path";
 import { TryCpClient } from "../src/trycp/trycp-client";
-import { decodeTryCpAdminApiResponse } from "../src/trycp/util";
-import {
-  DEFAULT_PARTIAL_PLAYER_CONFIG,
-  TRYCP_SERVER_HOST,
-  TRYCP_SERVER_PORT,
-} from "../src/trycp/trycp-server";
-import {
-  createPlayer,
-  RequestAdminInterfaceData,
-  TRYCP_RESPONSE_SUCCESS,
-} from "../src";
+import { TRYCP_SERVER_PORT } from "../src/trycp/trycp-server";
+import { TRYCP_RESPONSE_SUCCESS } from "../src";
 import { HoloHash } from "@holochain/client";
+import { createConductor } from "../src/trycp/conductor";
 
 const PORT = 9000;
 const HOLO_PORT = `ws://172.26.25.40:${PORT}`;
@@ -31,7 +22,7 @@ test("HoloPort ping", async (t) => {
 });
 
 test("Create and read an entry using the entry zome", async (t) => {
-  const player = await createPlayer(HOLO_PORT);
+  const player = await createConductor(HOLO_PORT);
   await player.reset();
   await player.configure();
 
@@ -100,7 +91,7 @@ test("Create and read an entry using the entry zome", async (t) => {
   await player.destroy();
 });
 
-test.only("Create and read an entry using the entry zome, 2 HPs, 2 agents", async (t) => {
+test.skip("Create and read an entry using the entry zome, 2 HPs, 2 agents", async (t) => {
   const url = path.resolve("ts/test/e2e/fixture/entry.dna");
   const dnaContent = await new Promise<Buffer>((resolve, reject) => {
     fs.readFile(url, null, (err, data) => {
@@ -111,7 +102,7 @@ test.only("Create and read an entry using the entry zome, 2 HPs, 2 agents", asyn
     });
   });
 
-  const player1 = await createPlayer(HOLO_PORT);
+  const player1 = await createConductor(HOLO_PORT);
   await player1.reset();
   await player1.configure();
   const relativePath1 = await player1.saveDna(dnaContent);
@@ -143,7 +134,7 @@ test.only("Create and read an entry using the entry zome, 2 HPs, 2 agents", asyn
   const connectAppInterfaceResponse1 = await player1.connectAppInterface(port1);
   t.equal(connectAppInterfaceResponse1, TRYCP_RESPONSE_SUCCESS);
 
-  const player2 = await createPlayer("ws://172.26.73.251:9000");
+  const player2 = await createConductor("ws://172.26.73.251:9000");
   await player2.reset();
   await player2.configure();
   const relativePath2 = await player2.saveDna(dnaContent);
@@ -213,7 +204,7 @@ test.only("Create and read an entry using the entry zome, 2 HPs, 2 agents", asyn
   // });
   // t.equal(cap_secret.length, 64); // cap secret is 512 bits
 
-  await player2.
+  // await player2.
 
   // const readEntryResponse = await player2.callZome<string>(port2, {
   //   cap_secret: null,
