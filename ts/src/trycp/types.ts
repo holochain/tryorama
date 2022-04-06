@@ -5,7 +5,7 @@ import {
   HoloHash,
   InstalledAppInfo,
 } from "@holochain/client";
-import { PlayerId } from "../player";
+import { PlayerId } from "./conductor";
 
 /**
  * @internal

@@ -7,11 +7,11 @@ import {
 } from "../src/trycp/trycp-server";
 import { TRYCP_RESPONSE_SUCCESS } from "../src/trycp/types";
 import { HoloHash } from "@holochain/client";
-import { createPlayer } from "../src/player";
+import { createConductor } from "../src/trycp/conductor";
 
 test("Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const player = await createPlayer(
+  const player = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
 
@@ -70,14 +70,13 @@ test("Create and read an entry using the entry zome", async (t) => {
   });
   t.equal(readEntryResponse, entryContent);
 
-  await player.shutdown();
   await player.destroy();
   await localTryCpServer.stop();
 });
 
 test("Create and read an entry using the entry zome, 1 conductor, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const player = await createPlayer(
+  const player = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
 
@@ -151,18 +150,17 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 agents", asy
   });
   t.equal(readEntryResponse, entryContent);
 
-  await player.shutdown();
   await player.destroy();
   await localTryCpServer.stop();
 });
 
-test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents", async (t) => {
+test.only("Create and read an entry using the entry zome, 2 conductors, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
   const dnaUrl =
     "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/entry.dna";
 
-  const player1 = await createPlayer(
+  const player1 = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
   await player1.configure();
@@ -194,7 +192,7 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
   const connectAppInterfaceResponse1 = await player1.connectAppInterface(port1);
   t.equal(connectAppInterfaceResponse1, TRYCP_RESPONSE_SUCCESS);
 
-  const player2 = await createPlayer(
+  const player2 = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
   await player2.configure();
@@ -253,15 +251,15 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
   t.equal(createEntry2Hash.length, 39);
   t.ok(createdEntry2HashB64.startsWith("hCkk"));
 
-  // const cap_secret = await player1.callZome<Uint8Array>(port1, {
-  //   cap_secret: null,
-  //   cell_id: cell_id1,
-  //   zome_name: "crud",
-  //   fn_name: "get_cap_secret",
-  //   provenance: agent1PubKey,
-  //   payload: agent2PubKey,
-  // });
-  // t.equal(cap_secret.length, 64); // cap secret is 512 bits
+  const cap_secret = await player1.callZome<Uint8Array>(port1, {
+    cap_secret: null,
+    cell_id: cellId1,
+    zome_name: "crud",
+    fn_name: "get_cap_secret",
+    provenance: agent1PubKey,
+    payload: agent2PubKey,
+  });
+  t.equal(cap_secret.length, 64); // cap secret is 512 bits = 64 bytes
 
   const readEntryResponse = await player2.callZome<string>(port2, {
     cap_secret: null,
@@ -273,8 +271,6 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
   });
   t.equal(readEntryResponse, entryContent);
 
-  await player1.shutdown();
-  await player2.shutdown();
   await player1.destroy();
   await player2.destroy();
   await localTryCpServer.stop();

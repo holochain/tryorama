@@ -6,5 +6,3 @@
  * @packageDocumentation
  */
 export * from "./trycp";
-
-export * from "./player";

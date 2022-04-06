@@ -1,5 +1,5 @@
 import msgpack from "@msgpack/msgpack";
-import { ZomeResponsePayload } from "../player/types";
+import { ZomeResponsePayload } from "./conductor/types";
 import {
   _TryCpResponseAdminApi,
   TryCpResponseSuccessValue,
@@ -89,8 +89,7 @@ function assertIsAdminApiResponse(
   if (
     decodedResponse &&
     typeof decodedResponse === "object" &&
-    "type" in decodedResponse &&
-    "data" in decodedResponse
+    "type" in decodedResponse
   ) {
     return;
   }

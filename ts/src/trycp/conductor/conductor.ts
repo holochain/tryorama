@@ -1,20 +1,19 @@
 import assert from "assert";
 import msgpack from "@msgpack/msgpack";
 import uniqueId from "lodash/uniqueId";
-import {
-  PlayerLogLevel,
-  RequestAdminInterfaceData,
-  TryCpClient,
-} from "../trycp";
-import { DEFAULT_PARTIAL_PLAYER_CONFIG } from "../trycp/trycp-server";
+import { PlayerLogLevel, RequestAdminInterfaceData, TryCpClient } from "..";
+import { DEFAULT_PARTIAL_PLAYER_CONFIG } from "../trycp-server";
+import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT } from "../trycp-server";
 import {
   decodeAppApiPayload,
   decodeAppApiResponse,
   decodeTryCpAdminApiResponse,
-} from "../trycp/util";
+} from "../util";
 import {
+  AgentInfoSigned,
   AgentPubKey,
   CallZomeRequest,
+  CellId,
   HoloHash,
   InstalledAppId,
 } from "@holochain/client";
@@ -26,15 +25,16 @@ import { DnaInstallOptions, ZomeResponsePayload } from "./types";
 export type PlayerId = string;
 
 /**
- * The function to create a Player.
+ * The function to create a Conductor (called "Player" on TryCP server).
  *
  * @param url - The URL of the TryCP server to connect to.
  * @param id - The Player's name; optional.
- * @returns A configured Player instance.
+ * @returns A configured Conductor instance.
  *
  * @public
  */
-export const createPlayer = async (url: string, id?: PlayerId) => {
+export const createConductor = async (url?: string, id?: PlayerId) => {
+  url = url || `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`;
   const client = await TryCpClient.create(url);
   return new Player(client, id);
 };
@@ -42,7 +42,7 @@ export const createPlayer = async (url: string, id?: PlayerId) => {
 /**
  * @internal
  */
-class Player {
+export class Player {
   private id: string;
 
   public constructor(private readonly tryCpClient: TryCpClient, id?: PlayerId) {
@@ -50,6 +50,7 @@ class Player {
   }
 
   async destroy() {
+    await this.shutdown();
     return this.tryCpClient.close();
   }
 
@@ -186,6 +187,45 @@ class Player {
   }
 
   /**
+   * Get agent infos, optionally of a particular cell.
+   * @param cellId - The cell id to get agent infos of.
+   * @returns The agent infos.
+   */
+  async requestAgentInfo(cellId?: CellId) {
+    const response = await this.tryCpClient.call({
+      type: "call_admin_interface",
+      id: this.id,
+      message: msgpack.encode({
+        type: "request_agent_info",
+        data: {
+          cell_id: cellId || null,
+        },
+      }),
+    });
+    const decodedResponse = decodeTryCpAdminApiResponse(response);
+    assert(Array.isArray(decodedResponse.data));
+    const agentInfos: AgentInfoSigned[] = decodedResponse.data;
+    return agentInfos;
+  }
+
+  /**
+   * Add agents to a conductor.
+   * @param signedAgentInfos - The agents to add to the conductor.
+   */
+  async addAgentInfo(signedAgentInfos: AgentInfoSigned[]) {
+    const response = await this.tryCpClient.call({
+      type: "call_admin_interface",
+      id: this.id,
+      message: msgpack.encode({
+        type: "add_agent_info",
+        data: { agent_infos: signedAgentInfos },
+      }),
+    });
+    const decodedResponse = decodeTryCpAdminApiResponse(response);
+    assert(decodedResponse.type === "agent_info_added");
+  }
+
+  /**
    * Make a zome call to the TryCP server.
    */
   async callZome<T extends ZomeResponsePayload>(
@@ -221,27 +261,13 @@ class Player {
     await Promise.all(
       conductors.map(
         async (conductorToShareAbout, conductorToShareAboutIndex) => {
-          const response = await this.tryCpClient.call({
-            type: "call_admin_interface",
-            id: conductorToShareAbout.id,
-            message: msgpack.encode({ type: "request_agent_info", data: {} }),
-          });
-          const decodedResponse = decodeTryCpAdminApiResponse(response);
-          console.log("decodedreposn", decodedResponse);
-          assert(Array.isArray(decodedResponse.data));
-          const signedAgentInfos = decodedResponse.data;
+          const signedAgentInfos =
+            await conductorToShareAbout.requestAgentInfo();
           await Promise.all(
             conductors.map(
               (conductorToShareWith, conductorToShareWithIndex) => {
                 if (conductorToShareWithIndex !== conductorToShareAboutIndex) {
-                  conductorToShareWith.tryCpClient.call({
-                    type: "call_admin_interface",
-                    id: conductorToShareWith.id,
-                    message: msgpack.encode({
-                      type: "add_agent_info",
-                      data: { agent_infos: signedAgentInfos },
-                    }),
-                  });
+                  conductorToShareWith.addAgentInfo(signedAgentInfos);
                 }
               }
             )
