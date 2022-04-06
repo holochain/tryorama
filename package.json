@@ -40,16 +40,8 @@
   "dependencies": {
     "@holochain/client": "^0.3.2",
     "@iarna/toml": "^2.2.5",
-    "async-mutex": "^0.1.4",
-    "base-64": "^0.1.0",
-    "colors": "^1.4.0",
-    "fp-ts": "^2.8.5",
-    "get-port": "^5.1.1",
-    "io-ts": "^2.2.12",
-    "io-ts-reporters": "^1.2.2",
+    "get-port": "^6.1.2",
     "lodash": "^4.17.20",
-    "memoizee": "^0.4.14",
-    "ramda": "^0.26.1",
     "winston": "^3.6.0",
     "ws": "^8.5.0",
     "yaml": "^1.10.0"
