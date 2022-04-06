@@ -6,17 +6,17 @@ import {
   TRYCP_SERVER_PORT,
   TryCpServer,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
-} from "../src/trycp/trycp-server";
-import { TryCpClient } from "../src/trycp/trycp-client";
+} from "../../src/trycp/trycp-server";
+import { TryCpClient } from "../../src/trycp/trycp-client";
 import {
   RequestAdminInterfaceData,
   TRYCP_RESPONSE_SUCCESS,
-} from "../src/trycp/types";
+} from "../../src/trycp/types";
 import {
   decodeAppApiPayload,
   decodeAppApiResponse,
   decodeTryCpAdminApiResponse,
-} from "../src/trycp/util";
+} from "../../src/trycp/util";
 import assert from "assert";
 
 const createTryCpClient = () =>

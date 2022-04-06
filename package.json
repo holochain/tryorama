@@ -29,10 +29,10 @@
     "prepublishOnly": "npm test",
     "lint": "eslint --fix --ext .ts src test .eslintrc.cjs",
     "test": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/index.ts | tap-diff",
-    "test:trycp": "npm run test:trycp:server && npm run test:trycp:scenario",
-    "test:trycp:server": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp-server.ts",
-    "test:trycp:helpers": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp-server-helpers.ts",
-    "test:trycp:scenarios": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp-server-scenarios.ts",
+    "test:trycp": "npm run test:trycp:server && npm run test:trycp:helpers && npm run test:trycp:scenarios",
+    "test:trycp:server": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/server.ts",
+    "test:trycp:helpers": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/helpers.ts",
+    "test:trycp:scenarios": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/scenarios.ts",
     "test:holoport": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/holo-port.ts"
   },
   "dependencies": {

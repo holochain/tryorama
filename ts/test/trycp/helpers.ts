@@ -1,5 +1,5 @@
 import test from "tape-promise/tape";
-import { installAgentsHapps, TryCpServer } from "../src";
+import { installAgentsHapps, TryCpServer } from "../../src";
 
 test("Install agents and hApps", async (t) => {
   const localTryCpServer = await TryCpServer.start();

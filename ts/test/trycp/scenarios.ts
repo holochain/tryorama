@@ -4,10 +4,10 @@ import {
   TRYCP_SERVER_PORT,
   TryCpServer,
   TRYCP_SERVER_HOST,
-} from "../src/trycp/trycp-server";
-import { TRYCP_RESPONSE_SUCCESS } from "../src/trycp/types";
+} from "../../src/trycp/trycp-server";
+import { TRYCP_RESPONSE_SUCCESS } from "../../src/trycp/types";
 import { HoloHash } from "@holochain/client";
-import { createConductor } from "../src/trycp/conductor";
+import { createConductor } from "../../src/trycp/conductor";
 
 test("Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
