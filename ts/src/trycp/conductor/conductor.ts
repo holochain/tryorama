@@ -25,10 +25,10 @@ import { DnaInstallOptions, ZomeResponsePayload } from "./types";
 export type PlayerId = string;
 
 /**
- * The function to create a Conductor (called "Player" on TryCP server).
+ * The function to create a TryCP Conductor (called "Player").
  *
  * @param url - The URL of the TryCP server to connect to.
- * @param id - The Player's name; optional.
+ * @param id - An optional name for the Player.
  * @returns A configured Conductor instance.
  *
  * @public
@@ -40,7 +40,7 @@ export const createConductor = async (url?: string, id?: PlayerId) => {
 };
 
 /**
- * @internal
+ * @public
  */
 export class Player {
   private id: string;

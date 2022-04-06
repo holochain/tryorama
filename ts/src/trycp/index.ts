@@ -1,12 +1,24 @@
 export { TryCpServer } from "./trycp-server";
 export { TryCpClient } from "./trycp-client";
 export * from "./types";
+export * from "./conductor";
 
 import assert from "assert";
 import { createConductor } from "./conductor";
 import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT } from "./trycp-server";
 import { PlayerLogLevel, TRYCP_RESPONSE_SUCCESS } from "./types";
 
+/**
+ * Helper to install DNAs and create agents. Given an array of DNAs, a conductor
+ * is spawned, DNAs are installed, an agent is created and handles to the
+ * conductor, the cells and the agents are returned.
+ *
+ * @param dnaUrl - The URL of the DNA to install.
+ * @param options - Options to set log level and other parameters.
+ * @returns Handles to the conductor instance and the created cells.
+ *
+ * @public
+ */
 export async function installAgentsHapps(
   dnaUrl: string,
   options?: { logLevel: PlayerLogLevel }
