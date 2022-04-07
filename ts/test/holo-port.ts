@@ -1,11 +1,11 @@
 import test from "tape";
 import fs from "fs";
-import path from "path";
 import { TryCpClient } from "../src/trycp/trycp-client";
 import { TRYCP_SERVER_PORT } from "../src/trycp/trycp-server";
 import { TRYCP_RESPONSE_SUCCESS } from "../src";
 import { HoloHash } from "@holochain/client";
 import { createConductor } from "../src/trycp/conductor";
+import { FIXTURE_DNA_URL } from "./fixture";
 
 const PORT = 9000;
 const HOLO_PORT = `ws://172.26.25.40:${PORT}`;
@@ -26,9 +26,9 @@ test("Create and read an entry using the entry zome", async (t) => {
   await player.reset();
   await player.configure();
 
-  const url = path.resolve("ts/test/e2e/fixture/entry.dna");
+  const path = FIXTURE_DNA_URL.pathname;
   const dnaContent = await new Promise<Buffer>((resolve, reject) => {
-    fs.readFile(url, null, (err, data) => {
+    fs.readFile(path, null, (err, data) => {
       if (err) {
         reject(err);
       }
@@ -92,9 +92,8 @@ test("Create and read an entry using the entry zome", async (t) => {
 });
 
 test.skip("Create and read an entry using the entry zome, 2 HPs, 2 agents", async (t) => {
-  const url = path.resolve("ts/test/e2e/fixture/entry.dna");
   const dnaContent = await new Promise<Buffer>((resolve, reject) => {
-    fs.readFile(url, null, (err, data) => {
+    fs.readFile(FIXTURE_DNA_URL.pathname, null, (err, data) => {
       if (err) {
         reject(err);
       }

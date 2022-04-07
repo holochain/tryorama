@@ -4,7 +4,6 @@
 
 ## RequestCallAdminInterface interface
 
-
 <b>Signature:</b>
 
 ```typescript

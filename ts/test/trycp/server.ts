@@ -18,6 +18,7 @@ import {
   decodeTryCpAdminApiResponse,
 } from "../../src/trycp/util";
 import assert from "assert";
+import { FIXTURE_DNA_URL } from "../fixture";
 
 const createTryCpClient = () =>
   TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -73,8 +74,7 @@ test("TryCP call - download DNA from file system", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
-  const url =
-    "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/entry.dna";
+  const url = FIXTURE_DNA_URL.href;
   const expectedUrl = url.replace(/file:/, "").replace(/\//g, "");
   const actualUrl = await tryCpClient.call({
     type: "download_dna",
@@ -404,8 +404,7 @@ test("TryCP call - make zome calls", async (t) => {
     type: "reset",
   });
 
-  const url =
-    "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/entry.dna";
+  const url = FIXTURE_DNA_URL.href;
   const relativePath = await tryCpClient.call({
     type: "download_dna",
     url,

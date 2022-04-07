@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-log_level?: string;
+log_level?: PlayerLogLevel;
 ```

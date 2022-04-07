@@ -12,13 +12,21 @@ TryCP is a protocol to enable remote management of Holochain conductors on netwo
 
 |  Class | Description |
 |  --- | --- |
+|  [Player](./tryorama.player.md) |  |
 |  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server. |
 |  [TryCpServer](./tryorama.trycpserver.md) | A factory class to start and stop local instances of the TryCP server. |
+
+## Functions
+
+|  Function | Description |
+|  --- | --- |
+|  [installAgentsHapps(dnaUrl, options)](./tryorama.installagentshapps.md) | Helper to install DNAs and create agents. Given an array of DNAs, a conductor is spawned, DNAs are installed, an agent is created and handles to the conductor, the cells and the agents are returned. |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
+|  [\_TryCpAppApiResponse](./tryorama._trycpappapiresponse.md) |  |
 |  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) |  |
 |  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) |  |
 |  [RequestCallAppInterface](./tryorama.requestcallappinterface.md) |  |
@@ -35,16 +43,20 @@ TryCP is a protocol to enable remote management of Holochain conductors on netwo
 
 |  Variable | Description |
 |  --- | --- |
+|  [createConductor](./tryorama.createconductor.md) | The function to create a TryCP Conductor (called "Player"). |
 |  [TRYCP\_RESPONSE\_SUCCESS](./tryorama.trycp_response_success.md) |  |
 
 ## Type Aliases
 
 |  Type Alias | Description |
 |  --- | --- |
+|  [AdminApiResponse](./tryorama.adminapiresponse.md) |  |
+|  [DnaInstallOptions](./tryorama.dnainstalloptions.md) |  |
 |  [PlayerId](./tryorama.playerid.md) |  |
+|  [PlayerLogLevel](./tryorama.playerloglevel.md) |  |
 |  [TryCpReponseSuccessValueVoid](./tryorama.trycpreponsesuccessvaluevoid.md) |  |
 |  [TryCpRequest](./tryorama.trycprequest.md) |  |
-|  [TryCpResponseAdminApiEncoded](./tryorama.trycpresponseadminapiencoded.md) |  |
 |  [TryCpResponseErrorValue](./tryorama.trycpresponseerrorvalue.md) |  |
 |  [TryCpResponseSuccessValue](./tryorama.trycpresponsesuccessvalue.md) | Value for successful responses from the TryCP server. |
+|  [ZomeResponsePayload](./tryorama.zomeresponsepayload.md) |  |
 

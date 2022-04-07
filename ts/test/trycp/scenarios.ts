@@ -8,6 +8,7 @@ import {
 import { TRYCP_RESPONSE_SUCCESS } from "../../src/trycp/types";
 import { HoloHash } from "@holochain/client";
 import { createConductor } from "../../src/trycp/conductor";
+import { FIXTURE_DNA_URL } from "../fixture";
 
 test("Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
@@ -15,9 +16,7 @@ test("Create and read an entry using the entry zome", async (t) => {
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
 
-  const url =
-    "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/entry.dna";
-  const relativePath = await player.downloadDna(url);
+  const relativePath = await player.downloadDna(FIXTURE_DNA_URL);
 
   await player.configure();
   await player.startup();
@@ -80,10 +79,7 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 agents", asy
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
 
-  const url =
-    "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/entry.dna";
-  const relativePath = await player.downloadDna(url);
-
+  const relativePath = await player.downloadDna(FIXTURE_DNA_URL);
   await player.configure();
   await player.startup();
   const dnaHash = await player.registerDna(relativePath);
@@ -157,14 +153,11 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 agents", asy
 test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
-  const dnaUrl =
-    "file:///Users/jost/Desktop/holochain/tryorama/ts/test/e2e/fixture/entry.dna";
-
   const player1 = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
   await player1.configure();
-  const relativePath1 = await player1.downloadDna(dnaUrl);
+  const relativePath1 = await player1.downloadDna(FIXTURE_DNA_URL);
   await player1.startup();
   const dnaHash1 = await player1.registerDna(relativePath1);
   const dnaHash1B64 = Buffer.from(dnaHash1).toString("base64");
@@ -196,7 +189,7 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
   await player2.configure();
-  const relativePath2 = await player2.downloadDna(dnaUrl);
+  const relativePath2 = await player2.downloadDna(FIXTURE_DNA_URL);
   await player2.startup();
   const dnaHash2 = await player2.registerDna(relativePath2);
   const dnaHash2B64 = Buffer.from(dnaHash2).toString("base64");

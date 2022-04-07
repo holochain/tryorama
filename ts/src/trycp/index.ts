@@ -20,7 +20,7 @@ import { PlayerLogLevel, TRYCP_RESPONSE_SUCCESS } from "./types";
  * @public
  */
 export async function installAgentsHapps(
-  dnaUrl: string,
+  dnaUrl: URL,
   options?: { logLevel: PlayerLogLevel }
 ) {
   const conductor = await createConductor(

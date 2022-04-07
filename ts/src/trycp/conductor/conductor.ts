@@ -60,10 +60,10 @@ export class Player {
     });
   }
 
-  async downloadDna(url: string) {
+  async downloadDna(url: URL) {
     const response = await this.tryCpClient.call({
       type: "download_dna",
-      url,
+      url: url.toString(),
     });
     assert(typeof response === "string");
     return response;

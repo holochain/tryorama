@@ -9,7 +9,7 @@ Value for successful responses from the TryCP server.
 <b>Signature:</b>
 
 ```typescript
-export declare type TryCpResponseSuccessValue = TryCpReponseSuccessValueVoid | string | TryCpResponseAdminApiEncoded;
+export declare type TryCpResponseSuccessValue = TryCpReponseSuccessValueVoid | string | AdminApiResponse;
 ```
-<b>References:</b> [TryCpReponseSuccessValueVoid](./tryorama.trycpreponsesuccessvaluevoid.md)<!-- -->, [TryCpResponseAdminApiEncoded](./tryorama.trycpresponseadminapiencoded.md)
+<b>References:</b> [TryCpReponseSuccessValueVoid](./tryorama.trycpreponsesuccessvaluevoid.md)<!-- -->, [AdminApiResponse](./tryorama.adminapiresponse.md)
 

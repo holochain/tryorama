@@ -16,6 +16,6 @@ export interface RequestStartup
 |  Property | Type | Description |
 |  --- | --- | --- |
 |  [id](./tryorama.requeststartup.id.md) | [PlayerId](./tryorama.playerid.md) |  |
-|  [log\_level?](./tryorama.requeststartup.log_level.md) | string | <i>(Optional)</i> |
+|  [log\_level?](./tryorama.requeststartup.log_level.md) | [PlayerLogLevel](./tryorama.playerloglevel.md) | <i>(Optional)</i> |
 |  [type](./tryorama.requeststartup.type.md) | "startup" |  |
 
