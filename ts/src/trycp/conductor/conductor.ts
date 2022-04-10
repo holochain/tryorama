@@ -63,7 +63,7 @@ export class Player {
   async downloadDna(url: URL) {
     const response = await this.tryCpClient.call({
       type: "download_dna",
-      url: url.toString(),
+      url: url.href,
     });
     assert(typeof response === "string");
     return response;
@@ -255,7 +255,7 @@ export class Player {
   }
 
   /**
-   * Register provided conductors with each other.
+   * Register agents of provided conductors with all other conductors.
    */
   async connectConductors(conductors: Player[]) {
     await Promise.all(

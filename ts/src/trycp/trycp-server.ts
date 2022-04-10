@@ -39,7 +39,7 @@ export class TryCpServer {
   }
 
   /**
-   * Spawns and starts a local TryCP server on the specified port.
+   * Builds and starts a local TryCP server on the specified port.
    *
    * @param port - the network port the server should listen on
    * @returns a promise that resolves to the newly created server instance
