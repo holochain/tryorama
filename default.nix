@@ -1,13 +1,14 @@
 let
-  holonixRev = "1cb431ac2d30d6f44dbcb5a40520f7328ae49ec1";
-  holonixPath = builtins.fetchTarball "https://github.com/holochain/holonix/archive/${holonixRev}.tar.gz";
+  holonixPath = (import ./nix/sources.nix).holonix;
   holonix = import (holonixPath) {
-    holochainVersionId = "v0_0_124";
+    holochainVersionId = "v0_0_132";
   };
   nixpkgs = holonix.pkgs;
-in nixpkgs.mkShell {
+in
+nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
   packages = with nixpkgs; [
-    # Additional packages go here
+    niv
+    pkgs.darwin.apple_sdk.frameworks.Security
   ];
 }
