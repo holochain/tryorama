@@ -18,6 +18,7 @@ import {
   InstalledAppId,
 } from "@holochain/client";
 import { DnaInstallOptions, ZomeResponsePayload } from "./types";
+import { _TryCpResponseAdminApi } from "../types";
 
 /**
  * @public
@@ -112,6 +113,7 @@ export class Player {
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
+    this.checkResponseForError(decodedResponse);
     assert("BYTES_PER_ELEMENT" in decodedResponse.data);
     const dnaHash: HoloHash = decodedResponse.data;
     return dnaHash;
@@ -124,6 +126,7 @@ export class Player {
       message: msgpack.encode({ type: "generate_agent_pub_key" }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
+    this.checkResponseForError(decodedResponse);
     assert("BYTES_PER_ELEMENT" in decodedResponse.data);
     const agentPubKey: HoloHash = decodedResponse.data;
     return agentPubKey;
@@ -143,6 +146,7 @@ export class Player {
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
+    this.checkResponseForError(decodedResponse);
     assert("cell_data" in decodedResponse.data);
     const cellId = decodedResponse.data.cell_data[0].cell_id;
     return cellId;
@@ -160,6 +164,7 @@ export class Player {
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
+    this.checkResponseForError(decodedResponse);
     assert("app" in decodedResponse.data);
     return decodedResponse.data;
   }
@@ -175,6 +180,7 @@ export class Player {
       message: msgpack.encode(adminRequestData),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
+    this.checkResponseForError(decodedResponse);
     assert("port" in decodedResponse.data);
     return decodedResponse.data.port;
   }
@@ -203,6 +209,7 @@ export class Player {
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
+    this.checkResponseForError(decodedResponse);
     assert(Array.isArray(decodedResponse.data));
     const agentInfos: AgentInfoSigned[] = decodedResponse.data;
     return agentInfos;
@@ -222,6 +229,7 @@ export class Player {
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
+    this.checkResponseForError(decodedResponse);
     assert(decodedResponse.type === "agent_info_added");
   }
 
@@ -275,5 +283,16 @@ export class Player {
         }
       )
     );
+  }
+
+  checkResponseForError(response: _TryCpResponseAdminApi) {
+    if (response.type === "error") {
+      const errorMessage = `error when calling admin api:\n${JSON.stringify(
+        response.data,
+        null,
+        4
+      )}`;
+      throw new Error(errorMessage);
+    }
   }
 }
