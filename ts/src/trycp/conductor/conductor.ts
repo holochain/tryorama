@@ -132,17 +132,17 @@ export class Player {
     return agentPubKey;
   }
 
-  async installApp(agent_key: AgentPubKey, dnas: DnaInstallOptions[]) {
+  async installApp(data: {
+    installed_app_id: string;
+    agent_key: AgentPubKey;
+    dnas: DnaInstallOptions[];
+  }) {
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
       message: msgpack.encode({
         type: "install_app",
-        data: {
-          installed_app_id: "entry-app",
-          agent_key,
-          dnas,
-        },
+        data,
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
