@@ -30,13 +30,17 @@ test("Create and read an entry using the entry zome", async (t) => {
   t.equal(agentPubKey.length, 39);
   t.ok(agentPubKeyB64.startsWith("hCAk"));
 
-  const cell_id = await player.installApp(agentPubKey, [
-    { hash: dnaHash, role_id: "entry-dna" },
-  ]);
+  const appId = "entry-app";
+  const installedAppInfo = await player.installApp({
+    installed_app_id: appId,
+    agent_key: agentPubKey,
+    dnas: [{ hash: dnaHash, role_id: "entry-dna" }],
+  });
+  const { cell_id } = installedAppInfo.cell_data[0];
   t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
 
-  const enabledAppResponse = await player.enableApp("entry-app");
+  const enabledAppResponse = await player.enableApp(appId);
   t.deepEqual(enabledAppResponse.app.status, { running: null });
 
   const port = TRYCP_SERVER_PORT + 50;
@@ -73,7 +77,7 @@ test("Create and read an entry using the entry zome", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("Create and read an entry using the entry zome, 1 conductor, 2 agents", async (t) => {
+test("Create and read an entry using the entry zome, 1 conductor, 1 cell, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const player = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
@@ -97,9 +101,13 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 agents", asy
   t.equal(agent2PubKey.length, 39);
   t.ok(agent2PubKeyB64.startsWith("hCAk"));
 
-  const cell_id = await player.installApp(agent1PubKey, [
-    { hash: dnaHash, role_id: "entry-dna" },
-  ]);
+  const appId = "entry-app";
+  const installedAppInfo = await player.installApp({
+    installed_app_id: appId,
+    agent_key: agent1PubKey,
+    dnas: [{ hash: dnaHash, role_id: "entry-dna" }],
+  });
+  const { cell_id } = installedAppInfo.cell_data[0];
   t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
 
@@ -150,6 +158,97 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 agents", asy
   await localTryCpServer.stop();
 });
 
+test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const player = await createConductor(
+    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
+  );
+
+  const relativePath = await player.downloadDna(FIXTURE_DNA_URL);
+  await player.configure();
+  await player.startup();
+  const dnaHash1 = await player.registerDna(relativePath);
+  const dnaHash2 = await player.registerDna(relativePath);
+  const dnaHash1B64 = Buffer.from(dnaHash1).toString("base64");
+  const dnaHash2B64 = Buffer.from(dnaHash1).toString("base64");
+  t.equal(dnaHash1.length, 39);
+  t.ok(dnaHash1B64.startsWith("hC0k"));
+  t.equal(dnaHash2.length, 39);
+  t.ok(dnaHash2B64.startsWith("hC0k"));
+
+  const agent1PubKey = await player.generateAgentPubKey();
+  const agent1PubKeyB64 = Buffer.from(agent1PubKey).toString("base64");
+  t.equal(agent1PubKey.length, 39);
+  t.ok(agent1PubKeyB64.startsWith("hCAk"));
+
+  const agent2PubKey = await player.generateAgentPubKey();
+  const agent2PubKeyB64 = Buffer.from(agent1PubKey).toString("base64");
+  t.equal(agent2PubKey.length, 39);
+  t.ok(agent2PubKeyB64.startsWith("hCAk"));
+
+  const appId = "entry-app";
+  const installedAppInfo1 = await player.installApp({
+    installed_app_id: appId,
+    agent_key: agent1PubKey,
+    dnas: [
+      { hash: dnaHash1, role_id: "entry-dna1" },
+      { hash: dnaHash2, role_id: "entry-dna2" },
+    ],
+  });
+  const cellId1 = installedAppInfo1.cell_data[0].cell_id;
+  const cellId2 = installedAppInfo1.cell_data[1].cell_id;
+  t.ok(Buffer.from(cellId1[0]).toString("base64").startsWith("hC0k"));
+  t.ok(Buffer.from(cellId1[1]).toString("base64").startsWith("hCAk"));
+  t.ok(Buffer.from(cellId2[0]).toString("base64").startsWith("hC0k"));
+  t.ok(Buffer.from(cellId2[1]).toString("base64").startsWith("hCAk"));
+
+  const enabledAppResponse = await player.enableApp(appId);
+  t.deepEqual(enabledAppResponse.app.status, { running: null });
+
+  const port = TRYCP_SERVER_PORT + 50;
+  const actualPort = await player.attachAppInterface(port);
+  t.equal(actualPort, port);
+
+  const connectAppInterfaceResponse = await player.connectAppInterface(port);
+  t.equal(connectAppInterfaceResponse, TRYCP_RESPONSE_SUCCESS);
+
+  const entryContent = "test-content";
+  const createEntryHash = await player.callZome<HoloHash>(port, {
+    cap_secret: null,
+    cell_id: cellId1,
+    zome_name: "crud",
+    fn_name: "create",
+    provenance: agent1PubKey,
+    payload: entryContent,
+  });
+  const createdEntryHashB64 = Buffer.from(createEntryHash).toString("base64");
+  t.equal(createEntryHash.length, 39);
+  t.ok(createdEntryHashB64.startsWith("hCkk"));
+
+  const cap_secret = await player.callZome<Uint8Array>(port, {
+    cap_secret: null,
+    cell_id: cellId1,
+    zome_name: "crud",
+    fn_name: "get_cap_secret",
+    provenance: agent1PubKey,
+    payload: agent2PubKey,
+  });
+  t.equal(cap_secret.length, 64); // cap secret is 512 bits
+
+  const readEntryResponse = await player.callZome<string>(port, {
+    cap_secret,
+    cell_id: cellId2,
+    zome_name: "crud",
+    fn_name: "read",
+    provenance: agent2PubKey,
+    payload: createEntryHash,
+  });
+  t.equal(readEntryResponse, entryContent);
+
+  await player.destroy();
+  await localTryCpServer.stop();
+});
+
 test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
@@ -169,9 +268,13 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
   t.equal(agent1PubKey.length, 39);
   t.ok(agent1PubKeyB64.startsWith("hCAk"));
 
-  const cellId1 = await player1.installApp(agent1PubKey, [
-    { hash: dnaHash1, role_id: "entry-dna" },
-  ]);
+  const appId = "entry-app";
+  const installedAppInfo1 = await player1.installApp({
+    installed_app_id: appId,
+    agent_key: agent1PubKey,
+    dnas: [{ hash: dnaHash1, role_id: "entry-dna" }],
+  });
+  const cellId1 = installedAppInfo1.cell_data[0].cell_id;
   t.ok(Buffer.from(cellId1[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cellId1[1]).toString("base64").startsWith("hCAk"));
 
@@ -201,11 +304,11 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
   t.equal(agent2PubKey.length, 39);
   t.ok(agent2PubKeyB64.startsWith("hCAk"));
 
-  const cellId2 = await player2.installApp(agent2PubKey, [
-    { hash: dnaHash2, role_id: "entry-dna" },
-  ]);
-  t.ok(Buffer.from(cellId2[0]).toString("base64").startsWith("hC0k"));
-  t.ok(Buffer.from(cellId2[1]).toString("base64").startsWith("hCAk"));
+  // const cellId2 = await player2.installApp(agent2PubKey, [
+  //   { hash: dnaHash2, role_id: "entry-dna" },
+  // ]);
+  // t.ok(Buffer.from(cellId2[0]).toString("base64").startsWith("hC0k"));
+  // t.ok(Buffer.from(cellId2[1]).toString("base64").startsWith("hCAk"));
 
   const enabledAppResponse2 = await player2.enableApp("entry-app");
   t.deepEqual(enabledAppResponse2.app.status, { running: null });
@@ -234,7 +337,7 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
 
   const createEntry2Hash = await player2.callZome<HoloHash>(port2, {
     cap_secret: null,
-    cell_id: cellId2,
+    cell_id: cellId1,
     zome_name: "crud",
     fn_name: "create",
     provenance: agent2PubKey,
@@ -244,7 +347,9 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
   t.equal(createEntry2Hash.length, 39);
   t.ok(createdEntry2HashB64.startsWith("hCkk"));
 
-  const cap_secret = await player1.callZome<Uint8Array>(port1, {
+  await new Promise((resolve) => setTimeout(() => resolve(null), 2000));
+
+  const cap_secret = await player2.callZome<Uint8Array>(port1, {
     cap_secret: null,
     cell_id: cellId1,
     zome_name: "crud",
@@ -252,16 +357,18 @@ test.skip("Create and read an entry using the entry zome, 2 conductors, 2 agents
     provenance: agent1PubKey,
     payload: agent2PubKey,
   });
+  console.log("capsecred", cap_secret);
   t.equal(cap_secret.length, 64); // cap secret is 512 bits = 64 bytes
 
   const readEntryResponse = await player2.callZome<string>(port2, {
     cap_secret: null,
-    cell_id: cellId2,
+    cell_id: cellId1,
     zome_name: "crud",
     fn_name: "read",
     provenance: agent2PubKey,
     payload: createEntry1Hash,
   });
+  console.log("entrycontent", entryContent);
   t.equal(readEntryResponse, entryContent);
 
   await player1.destroy();
