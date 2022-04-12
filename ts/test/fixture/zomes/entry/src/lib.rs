@@ -19,9 +19,11 @@ pub fn create(input: Content) -> ExternResult<HeaderHash> {
 
 #[hdk_extern]
 pub fn read(hash: HeaderHash) -> ExternResult<Content> {
-    let element = get(hash, GetOptions::default())?.unwrap();
-    let input: Content = element.entry().to_app_option()?.unwrap();
-    Ok(input)
+    let entry = match get(hash, GetOptions::default())? {
+        Some(element) => element.entry().to_app_option::<Content>()?.unwrap(),
+        None => return Err(WasmError::Guest(String::from("Entry not found for hash"))),
+    };
+    Ok(entry)
 }
 
 #[hdk_extern]
