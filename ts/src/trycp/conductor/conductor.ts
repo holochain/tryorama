@@ -2,7 +2,6 @@ import assert from "assert";
 import msgpack from "@msgpack/msgpack";
 import uniqueId from "lodash/uniqueId";
 import { PlayerLogLevel, RequestAdminInterfaceData, TryCpClient } from "..";
-import { DEFAULT_PARTIAL_PLAYER_CONFIG } from "../trycp-server";
 import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT } from "../trycp-server";
 import {
   decodeAppApiPayload,
@@ -19,6 +18,12 @@ import {
 } from "@holochain/client";
 import { DnaInstallOptions, ZomeResponsePayload } from "./types";
 import { _TryCpResponseAdminApi } from "../types";
+
+const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
+encryption_service_uri: ~
+decryption_service_uri: ~
+dpki: ~
+network: ~`;
 
 /**
  * @public
@@ -104,29 +109,31 @@ export class Player {
   }
 
   async registerDna(path: string) {
+    const type = "register_dna";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
       message: msgpack.encode({
-        type: "register_dna",
+        type,
         data: { path },
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(decodedResponse);
+    this.checkResponseForError(type, decodedResponse);
     assert("BYTES_PER_ELEMENT" in decodedResponse.data);
     const dnaHash: HoloHash = decodedResponse.data;
     return dnaHash;
   }
 
   async generateAgentPubKey(): Promise<HoloHash> {
+    const type = "generate_agent_pub_key";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
       message: msgpack.encode({ type: "generate_agent_pub_key" }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(decodedResponse);
+    this.checkResponseForError(type, decodedResponse);
     assert("BYTES_PER_ELEMENT" in decodedResponse.data);
     const agentPubKey: HoloHash = decodedResponse.data;
     return agentPubKey;
@@ -137,40 +144,43 @@ export class Player {
     agent_key: AgentPubKey;
     dnas: DnaInstallOptions[];
   }) {
+    const type = "install_app";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
       message: msgpack.encode({
-        type: "install_app",
+        type,
         data,
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(decodedResponse);
+    this.checkResponseForError(type, decodedResponse);
     assert("cell_data" in decodedResponse.data);
     return decodedResponse.data;
   }
 
   async enableApp(installed_app_id: InstalledAppId) {
+    const type = "enable_app";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
       message: msgpack.encode({
-        type: "enable_app",
+        type,
         data: {
           installed_app_id,
         },
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(decodedResponse);
+    this.checkResponseForError(type, decodedResponse);
     assert("app" in decodedResponse.data);
     return decodedResponse.data;
   }
 
   async attachAppInterface(port: number) {
+    const type = "attach_app_interface";
     const adminRequestData: RequestAdminInterfaceData = {
-      type: "attach_app_interface",
+      type,
       data: { port },
     };
     const response = await this.tryCpClient.call({
@@ -179,7 +189,7 @@ export class Player {
       message: msgpack.encode(adminRequestData),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(decodedResponse);
+    this.checkResponseForError(type, decodedResponse);
     assert("port" in decodedResponse.data);
     return decodedResponse.data.port;
   }
@@ -197,18 +207,19 @@ export class Player {
    * @returns The agent infos.
    */
   async requestAgentInfo(cellId?: CellId) {
+    const type = "request_agent_info";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
       message: msgpack.encode({
-        type: "request_agent_info",
+        type,
         data: {
           cell_id: cellId || null,
         },
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(decodedResponse);
+    this.checkResponseForError(type, decodedResponse);
     assert(Array.isArray(decodedResponse.data));
     const agentInfos: AgentInfoSigned[] = decodedResponse.data;
     return agentInfos;
@@ -219,16 +230,17 @@ export class Player {
    * @param signedAgentInfos - The agents to add to the conductor.
    */
   async addAgentInfo(signedAgentInfos: AgentInfoSigned[]) {
+    const type = "add_agent_info";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
       message: msgpack.encode({
-        type: "add_agent_info",
+        type,
         data: { agent_infos: signedAgentInfos },
       }),
     });
     const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(decodedResponse);
+    this.checkResponseForError(type, decodedResponse);
     assert(decodedResponse.type === "agent_info_added");
   }
 
@@ -249,21 +261,17 @@ export class Player {
       }),
     });
     const decodedResponse = decodeAppApiResponse(response);
-    if (decodedResponse.type === "error") {
-      const errorMessage = `error when calling zome:\n${JSON.stringify(
-        decodedResponse.data,
-        null,
-        4
-      )}`;
-      throw new Error(errorMessage);
-    }
+    this.checkResponseForError(
+      `zome ${request.zome_name} fn ${request.fn_name}`,
+      decodedResponse
+    );
     const decodedPayload = decodeAppApiPayload<T>(decodedResponse.data);
     return decodedPayload;
   }
 
-  checkResponseForError(response: _TryCpResponseAdminApi) {
+  checkResponseForError(requestType: string, response: _TryCpResponseAdminApi) {
     if (response.type === "error") {
-      const errorMessage = `error when calling admin api:\n${JSON.stringify(
+      const errorMessage = `error when calling ${requestType}:\n${JSON.stringify(
         response.data,
         null,
         4

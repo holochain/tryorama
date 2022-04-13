@@ -8,5 +8,5 @@ crate-type = ["cdylib", "rlib"]
 name = "crud"
 
 [dependencies]
-hdk = "0.0.127"
+hdk = "0.0.126"
 serde = "1"

@@ -8,15 +8,6 @@ const serverError = new RegExp(
 
 export const TRYCP_SERVER_HOST = "0.0.0.0";
 export const TRYCP_SERVER_PORT = 9000;
-export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
-encryption_service_uri: ~
-decryption_service_uri: ~
-dpki: ~
-network:
-  transport_pool:
-    - type: quic
-      bind_to: kitsune-quic://0.0.0.0:0
-  network_type: quic_mdns`;
 
 /**
  * A factory class to start and stop local instances of the TryCP server.
