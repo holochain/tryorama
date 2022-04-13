@@ -1,4 +1,5 @@
 import msgpack from "@msgpack/msgpack";
+import { Player } from "./conductor";
 import { ZomeResponsePayload } from "./conductor/types";
 import {
   _TryCpResponseAdminApi,
@@ -6,6 +7,26 @@ import {
   _TryCpResponseWrapper,
   _TryCpAppApiResponse,
 } from "./types";
+
+/**
+ * Register agents of provided conductors with all other conductors.
+ */
+export const addAllAgentsToAllConductors = async (conductors: Player[]) => {
+  await Promise.all(
+    conductors.map(
+      async (conductorToShareAbout, conductorToShareAboutIndex) => {
+        const signedAgentInfos = await conductorToShareAbout.requestAgentInfo();
+        await Promise.all(
+          conductors.map((conductorToShareWith, conductorToShareWithIndex) => {
+            if (conductorToShareWithIndex !== conductorToShareAboutIndex) {
+              conductorToShareWith.addAgentInfo(signedAgentInfos);
+            }
+          })
+        );
+      }
+    )
+  );
+};
 
 export const decodeTryCpResponse = (data: ArrayLike<number> | BufferSource) => {
   const decodedData = msgpack.decode(data);

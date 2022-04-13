@@ -7,14 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-downloadDna(url: string): Promise<string>;
+downloadDna(url: URL): Promise<string>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  url | string |  |
+|  url | URL |  |
 
 <b>Returns:</b>
 

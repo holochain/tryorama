@@ -9,7 +9,7 @@ Helper to install DNAs and create agents. Given an array of DNAs, a conductor is
 <b>Signature:</b>
 
 ```typescript
-export declare function installAgentsHapps(dnaUrl: string, options?: {
+export declare function installAgentsHapps(dnaUrl: URL, options?: {
     logLevel: PlayerLogLevel;
 }): Promise<{
     conductor: import("./conductor").Player;
@@ -21,7 +21,7 @@ export declare function installAgentsHapps(dnaUrl: string, options?: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  dnaUrl | string | The URL of the DNA to install. |
+|  dnaUrl | URL | The URL of the DNA to install. |
 |  options | { logLevel: [PlayerLogLevel](./tryorama.playerloglevel.md)<!-- -->; } | Options to set log level and other parameters. |
 
 <b>Returns:</b>

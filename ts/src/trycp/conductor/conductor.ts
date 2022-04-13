@@ -148,8 +148,7 @@ export class Player {
     const decodedResponse = decodeTryCpAdminApiResponse(response);
     this.checkResponseForError(decodedResponse);
     assert("cell_data" in decodedResponse.data);
-    const cellId = decodedResponse.data.cell_data[0].cell_id;
-    return cellId;
+    return decodedResponse.data;
   }
 
   async enableApp(installed_app_id: InstalledAppId) {
@@ -260,29 +259,6 @@ export class Player {
     }
     const decodedPayload = decodeAppApiPayload<T>(decodedResponse.data);
     return decodedPayload;
-  }
-
-  /**
-   * Register agents of provided conductors with all other conductors.
-   */
-  async connectConductors(conductors: Player[]) {
-    await Promise.all(
-      conductors.map(
-        async (conductorToShareAbout, conductorToShareAboutIndex) => {
-          const signedAgentInfos =
-            await conductorToShareAbout.requestAgentInfo();
-          await Promise.all(
-            conductors.map(
-              (conductorToShareWith, conductorToShareWithIndex) => {
-                if (conductorToShareWithIndex !== conductorToShareAboutIndex) {
-                  conductorToShareWith.addAgentInfo(signedAgentInfos);
-                }
-              }
-            )
-          );
-        }
-      )
-    );
   }
 
   checkResponseForError(response: _TryCpResponseAdminApi) {

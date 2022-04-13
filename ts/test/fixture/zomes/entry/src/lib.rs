@@ -13,15 +13,15 @@ pub struct UpdateInput {
 
 #[hdk_extern]
 pub fn create(input: Content) -> ExternResult<HeaderHash> {
-    let entry_hash = create_entry(input).unwrap();
-    Ok(entry_hash)
+    let header_hash = create_entry(input).unwrap();
+    Ok(header_hash)
 }
 
 #[hdk_extern]
 pub fn read(hash: HeaderHash) -> ExternResult<Content> {
     let entry = match get(hash, GetOptions::default())? {
         Some(element) => element.entry().to_app_option::<Content>()?.unwrap(),
-        None => return Err(WasmError::Guest(String::from("Entry not found for hash"))),
+        None => return Err(WasmError::Guest(String::from("read: entry not found"))),
     };
     Ok(entry)
 }
@@ -37,12 +37,6 @@ pub fn delete(hash: HeaderHash) -> ExternResult<HeaderHash> {
     let deleted_hash = delete_entry(hash).unwrap();
     Ok(deleted_hash)
 }
-
-// #[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
-// pub struct GrantInput {
-//     pub grantee: AgentPubKey,
-//     pub entry_hash: HeaderHash,
-// }
 
 #[hdk_extern]
 pub fn get_cap_secret(grantee: AgentPubKey) -> ExternResult<CapSecret> {

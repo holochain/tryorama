@@ -31,9 +31,11 @@ export async function installAgentsHapps(
   await conductor.startup(options?.logLevel);
   const dnaHash = await conductor.registerDna(relativePath);
   const agentPubKey = await conductor.generateAgentPubKey();
-  const cellId = await conductor.installApp(agentPubKey, [
-    { hash: dnaHash, role_id: "entry-dna" },
-  ]);
+  const installedAppInfo = await conductor.installApp({
+    installed_app_id: "entry-app",
+    agent_key: agentPubKey,
+    dnas: [{ hash: dnaHash, role_id: "entry-dna" }],
+  });
   const enabledAppResponse = await conductor.enableApp("entry-app");
   assert(
     "running" in enabledAppResponse.app.status &&
@@ -43,5 +45,5 @@ export async function installAgentsHapps(
   await conductor.attachAppInterface(port);
   const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
   assert(connectAppInterfaceResponse === TRYCP_RESPONSE_SUCCESS);
-  return { conductor, cellId };
+  return { conductor, cells: installedAppInfo.cell_data };
 }
