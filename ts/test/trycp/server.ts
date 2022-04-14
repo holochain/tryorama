@@ -5,7 +5,6 @@ import {
   TRYCP_SERVER_HOST,
   TRYCP_SERVER_PORT,
   TryCpServer,
-  DEFAULT_PARTIAL_PLAYER_CONFIG,
 } from "../../src/trycp/trycp-server";
 import { TryCpClient } from "../../src/trycp/trycp-client";
 import {
@@ -19,6 +18,7 @@ import {
 } from "../../src/trycp/util";
 import assert from "assert";
 import { FIXTURE_DNA_URL } from "../fixture";
+import { DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
 
 const createTryCpClient = () =>
   TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);

@@ -11,6 +11,16 @@ import { createConductor } from "../../src/trycp/conductor";
 import { FIXTURE_DNA_URL } from "../fixture";
 import { addAllAgentsToAllConductors } from "../../src/trycp/util";
 
+const LOCAL_TEST_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
+encryption_service_uri: ~
+decryption_service_uri: ~
+dpki: ~
+network:
+  transport_pool:
+    - type: quic
+      bind_to: kitsune-quic://0.0.0.0:0
+  network_type: quic_mdns`;
+
 test("Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const player = await createConductor(
@@ -19,7 +29,7 @@ test("Create and read an entry using the entry zome", async (t) => {
 
   const relativePath = await player.downloadDna(FIXTURE_DNA_URL);
 
-  await player.configure();
+  await player.configure(LOCAL_TEST_PARTIAL_PLAYER_CONFIG);
   await player.startup();
   const dnaHash = await player.registerDna(relativePath);
   const dnaHashB64 = Buffer.from(dnaHash).toString("base64");
@@ -78,14 +88,14 @@ test("Create and read an entry using the entry zome", async (t) => {
   await localTryCpServer.stop();
 });
 
-test.skip("Create and read an entry using the entry zome, 1 conductor, 1 cell, 2 agents", async (t) => {
+test("Create and read an entry using the entry zome, 1 conductor, 1 cell, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const player = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
 
   const relativePath = await player.downloadDna(FIXTURE_DNA_URL);
-  await player.configure();
+  await player.configure(LOCAL_TEST_PARTIAL_PLAYER_CONFIG);
   await player.startup();
   const dnaHash = await player.registerDna(relativePath);
   const dnaHashB64 = Buffer.from(dnaHash).toString("base64");
@@ -166,7 +176,7 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
   );
 
   const relativePath = await player.downloadDna(FIXTURE_DNA_URL);
-  await player.configure();
+  await player.configure(LOCAL_TEST_PARTIAL_PLAYER_CONFIG);
   await player.startup();
   const dnaHash1 = await player.registerDna(relativePath);
   const dnaHash2 = await player.registerDna(relativePath);
@@ -187,35 +197,43 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
   t.equal(agent2PubKey.length, 39);
   t.ok(agent2PubKeyB64.startsWith("hCAk"));
 
-  const appId = "entry-app";
+  const appId1 = "entry-app1";
   const installedAppInfo1 = await player.installApp({
-    installed_app_id: appId,
+    installed_app_id: appId1,
     agent_key: agent1PubKey,
-    dnas: [
-      { hash: dnaHash1, role_id: "entry-dna1" },
-      { hash: dnaHash2, role_id: "entry-dna2" },
-    ],
+    dnas: [{ hash: dnaHash1, role_id: "entry-dna" }],
   });
   const cellId1 = installedAppInfo1.cell_data[0].cell_id;
-  const cellId2 = installedAppInfo1.cell_data[1].cell_id;
   t.ok(Buffer.from(cellId1[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cellId1[1]).toString("base64").startsWith("hCAk"));
+
+  const appId2 = "entry-app2";
+  const installedAppInfo2 = await player.installApp({
+    installed_app_id: appId2,
+    agent_key: agent2PubKey,
+    dnas: [{ hash: dnaHash2, role_id: "entry-dna" }],
+  });
+  const cellId2 = installedAppInfo2.cell_data[0].cell_id;
   t.ok(Buffer.from(cellId2[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cellId2[1]).toString("base64").startsWith("hCAk"));
   t.deepEqual(cellId1[0], cellId2[0]);
 
-  const enabledAppResponse = await player.enableApp(appId);
-  t.deepEqual(enabledAppResponse.app.status, { running: null });
+  const enabledAppResponse1 = await player.enableApp(appId1);
+  t.deepEqual(enabledAppResponse1.app.status, { running: null });
+  const enabledAppResponse2 = await player.enableApp(appId2);
+  t.deepEqual(enabledAppResponse2.app.status, { running: null });
 
-  const port = TRYCP_SERVER_PORT + 50;
-  const actualPort = await player.attachAppInterface(port);
-  t.equal(actualPort, port);
+  const appApiPort = TRYCP_SERVER_PORT + 50;
+  const actualPort = await player.attachAppInterface(appApiPort);
+  t.equal(actualPort, appApiPort);
 
-  const connectAppInterfaceResponse = await player.connectAppInterface(port);
+  const connectAppInterfaceResponse = await player.connectAppInterface(
+    appApiPort
+  );
   t.equal(connectAppInterfaceResponse, TRYCP_RESPONSE_SUCCESS);
 
   const entryContent = "test-content";
-  const createEntryHash = await player.callZome<HoloHash>(port, {
+  const createEntryHash = await player.callZome<HoloHash>(appApiPort, {
     cap_secret: null,
     cell_id: cellId1,
     zome_name: "crud",
@@ -227,18 +245,8 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  const cap_secret = await player.callZome<Uint8Array>(port, {
+  const readEntryResponse = await player.callZome<string>(appApiPort, {
     cap_secret: null,
-    cell_id: cellId1,
-    zome_name: "crud",
-    fn_name: "get_cap_secret",
-    provenance: agent1PubKey,
-    payload: agent2PubKey,
-  });
-  t.equal(cap_secret.length, 64); // cap secret is 512 bits
-
-  const readEntryResponse = await player.callZome<string>(port, {
-    cap_secret,
     cell_id: cellId2,
     zome_name: "crud",
     fn_name: "read",
@@ -251,13 +259,13 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
   await localTryCpServer.stop();
 });
 
-test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test.only("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
   const player1 = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
-  await player1.configure();
+  await player1.configure(LOCAL_TEST_PARTIAL_PLAYER_CONFIG);
   const relativePath1 = await player1.downloadDna(FIXTURE_DNA_URL);
   await player1.startup("debug");
   const dnaHash1 = await player1.registerDna(relativePath1);
@@ -293,7 +301,7 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
   const player2 = await createConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
-  await player2.configure();
+  await player2.configure(LOCAL_TEST_PARTIAL_PLAYER_CONFIG);
   const relativePath2 = await player2.downloadDna(FIXTURE_DNA_URL);
   await player2.startup("warn");
   const dnaHash2 = await player2.registerDna(relativePath2);

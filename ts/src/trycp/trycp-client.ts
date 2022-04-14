@@ -112,13 +112,14 @@ export class TryCpClient {
   }
 
   /**
-   * Call the TryCP server.
+   * Send a call to the TryCP server.
    *
    * @param request - {@link TryCpRequest}
    * @returns A promise that resolves to the {@link TryCpResponseSuccessValue}
    */
   call(request: TryCpRequest) {
-    logger.debug(`request ${JSON.stringify(request, null, 4)}`);
+    const debugRequest = this.getDebugRequest(request);
+    logger.debug(`request ${JSON.stringify(debugRequest, null, 4)}`);
 
     const callPromise = new Promise<TryCpResponseSuccessValue>(
       (resolve, reject) => {
@@ -138,5 +139,16 @@ export class TryCpClient {
 
     requestId++;
     return callPromise;
+  }
+
+  /**
+   * Call "save_dna" submits a very long DNA as binary which will be stripped
+   */
+  private getDebugRequest(request: TryCpRequest) {
+    return request.type === "save_dna"
+      ? Object.assign({}, request, {
+          content: undefined,
+        })
+      : request;
   }
 }

@@ -19,7 +19,7 @@ import {
 import { DnaInstallOptions, ZomeResponsePayload } from "./types";
 import { _TryCpResponseAdminApi } from "../types";
 
-const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
+export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
 dpki: ~
