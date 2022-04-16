@@ -117,10 +117,15 @@ export interface RequestDisconnectAppInterface {
 export interface RequestCallAppInterface {
   type: "call_app_interface";
   port: number;
-  message: {
-    type: "zome_call";
-    data: CallZomeRequest;
-  };
+  message: RequestCallAppInterfaceMessage;
+}
+
+/**
+ * @public
+ */
+export interface RequestCallAppInterfaceMessage {
+  type: "zome_call";
+  data: CallZomeRequest;
 }
 
 /**
@@ -172,7 +177,7 @@ export type _TryCpResponse = _TryCpResponseSuccess | _TryCpResponseError;
  * @internal
  */
 export interface _TryCpResponseSuccess {
-  0: _TryCpResponseSuccessEncoded;
+  0: _TryCpSuccessResponseSeralized;
 }
 
 /**
@@ -185,8 +190,8 @@ export interface _TryCpResponseError {
 /**
  * @internal
  */
-export type _TryCpResponseSuccessEncoded =
-  | typeof TRYCP_RESPONSE_SUCCESS
+export type _TryCpSuccessResponseSeralized =
+  | typeof TRYCP_SUCCESS_RESPONSE
   | string
   | Uint8Array;
 
@@ -195,15 +200,15 @@ export type _TryCpResponseSuccessEncoded =
  *
  * @public
  */
-export type TryCpResponseSuccessDecoded =
-  | typeof TRYCP_RESPONSE_SUCCESS
+export type TryCpSuccessResponse =
+  | typeof TRYCP_SUCCESS_RESPONSE
   | string
-  | _TryCpResponseApi;
+  | _TryCpApiResponse;
 
 /**
  * @public
  */
-export const TRYCP_RESPONSE_SUCCESS = null;
+export const TRYCP_SUCCESS_RESPONSE = null;
 
 /**
  * @public
@@ -213,9 +218,9 @@ export type TryCpResponseErrorValue = string;
 /**
  * @internal
  */
-export interface _TryCpResponseApi {
+export interface _TryCpApiResponse {
   type: string;
-  data: AdminApiResponse | AppApiResponse;
+  data?: AdminApiResponse | AppApiResponse;
 }
 
 /**
@@ -231,19 +236,4 @@ export type AdminApiResponse =
 /**
  * @public
  */
-export interface AppApiResponse {
-  type: "zome_call";
-  data: Uint8Array;
-}
-
-/**
- * @public
- */
-export interface AppApiResponseDecoded extends Omit<AppApiResponse, "data"> {
-  data: ZomeResponsePayload;
-}
-
-/**
- * @public
- */
-export type ZomeResponsePayload = HoloHash | string;
+export type AppApiResponse = Uint8Array;

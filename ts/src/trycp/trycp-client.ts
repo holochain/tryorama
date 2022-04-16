@@ -4,11 +4,12 @@ import { makeLogger } from "../logger";
 import { WebSocket } from "ws";
 import {
   TryCpResponseErrorValue,
-  _TryCpResponseSuccessEncoded,
+  _TryCpSuccessResponseSeralized,
   _TryCpCall,
   TryCpRequest,
-  TRYCP_RESPONSE_SUCCESS,
-  TryCpResponseSuccessDecoded,
+  TRYCP_SUCCESS_RESPONSE,
+  TryCpSuccessResponse,
+  _TryCpApiResponse,
 } from "./types";
 import { deserializeTryCpResponse, deserializeApiResponse } from "./util";
 
@@ -24,7 +25,7 @@ export class TryCpClient {
   private readonly ws: WebSocket;
   private requestPromises: {
     [index: string]: {
-      responseResolve: (response: TryCpResponseSuccessDecoded) => void;
+      responseResolve: (response: TryCpSuccessResponse) => void;
       responseReject: (reason: TryCpResponseErrorValue) => void;
     };
   };
@@ -83,47 +84,27 @@ export class TryCpClient {
     return connectPromise;
   }
 
-  processSuccessResponse(response: _TryCpResponseSuccessEncoded) {
-    if (response === TRYCP_RESPONSE_SUCCESS || typeof response === "string") {
+  processSuccessResponse(response: _TryCpSuccessResponseSeralized) {
+    if (response === TRYCP_SUCCESS_RESPONSE || typeof response === "string") {
       logger.debug(`response ${JSON.stringify(response, null, 4)}\n`);
       return response;
     }
 
-    const deserializedResponse = deserializeApiResponse(response);
+    const deserializedApiResponse = deserializeApiResponse(response);
 
     // when the request fails, the response's type is "error"
-    if (deserializedResponse.type === "error") {
+    if (deserializedApiResponse.type === "error") {
       const errorMessage = `error response from Admin API\n${JSON.stringify(
-        deserializedResponse.data,
+        deserializedApiResponse.data,
         null,
         4
       )}`;
       throw new Error(errorMessage);
     }
 
-    let debugLog;
-    if (
-      "BYTES_PER_ELEMENT" in deserializedResponse.data &&
-      deserializedResponse.data.length === 39
-    ) {
-      // Holochain hash
-      const hashB64 = Buffer.from(deserializedResponse.data).toString("base64");
-      const deserializedResponseForLog = Object.assign(
-        {},
-        { ...deserializedResponse },
-        { data: hashB64 }
-      );
-      debugLog = `response ${JSON.stringify(
-        deserializedResponseForLog,
-        null,
-        4
-      )}\n`;
-    } else {
-      debugLog = `response ${JSON.stringify(deserializedResponse, null, 4)}\n`;
-    }
-    logger.debug(debugLog);
+    logger.debug(this.getFormattedResponseLog(deserializedApiResponse));
 
-    return deserializedResponse;
+    return deserializedApiResponse;
   }
 
   /**
@@ -168,14 +149,12 @@ export class TryCpClient {
     const requestDebugLog = this.getFormattedRequestLog(request);
     logger.debug(`request ${requestDebugLog}\n`);
 
-    const callPromise = new Promise<TryCpResponseSuccessDecoded>(
-      (resolve, reject) => {
-        this.requestPromises[requestId] = {
-          responseResolve: resolve,
-          responseReject: reject,
-        };
-      }
-    );
+    const callPromise = new Promise<TryCpSuccessResponse>((resolve, reject) => {
+      this.requestPromises[requestId] = {
+        responseResolve: resolve,
+        responseReject: reject,
+      };
+    });
 
     const serverCall: _TryCpCall = {
       id: requestId,
@@ -192,7 +171,7 @@ export class TryCpClient {
       );
     }
 
-    // serialize entire message if the request is an Admin or App API call
+    // serialize message if the request is an Admin or App API call
     if (
       serverCall.request.type === "call_admin_interface" ||
       serverCall.request.type === "call_app_interface"
@@ -200,12 +179,37 @@ export class TryCpClient {
       serverCall.request.message = msgpack.encode(serverCall.request.message);
     }
 
-    // serialize entire call
-    const encodedServerCall = msgpack.encode(serverCall);
-    this.ws.send(encodedServerCall);
+    // serialize entire request
+    const serializedRequest = msgpack.encode(serverCall);
+    this.ws.send(serializedRequest);
 
     requestId++;
     return callPromise;
+  }
+
+  private getFormattedResponseLog(response: _TryCpApiResponse) {
+    let debugLog;
+    if (
+      response.data &&
+      "BYTES_PER_ELEMENT" in response.data &&
+      response.data.length === 39
+    ) {
+      // Holochain hash
+      const hashB64 = Buffer.from(response.data).toString("base64");
+      const deserializedResponseForLog = Object.assign(
+        {},
+        { ...response },
+        { data: hashB64 }
+      );
+      debugLog = `response ${JSON.stringify(
+        deserializedResponseForLog,
+        null,
+        4
+      )}\n`;
+    } else {
+      debugLog = `response ${JSON.stringify(response, null, 4)}\n`;
+    }
+    return debugLog;
   }
 
   private getFormattedRequestLog(request: TryCpRequest) {

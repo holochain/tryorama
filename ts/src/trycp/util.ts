@@ -1,10 +1,8 @@
 import msgpack from "@msgpack/msgpack";
+import assert from "assert";
+import { ZomeResponsePayload } from "../../test/fixture";
 import { TryCpConductor } from "./conductor";
-import {
-  _TryCpResponseApi,
-  _TryCpResponseWrapper,
-  ZomeResponsePayload,
-} from "./types";
+import { _TryCpApiResponse, _TryCpResponseWrapper } from "./types";
 
 /**
  * Register agents of provided conductors with all other conductors.
@@ -70,34 +68,24 @@ export const deserializeApiResponse = (response: Uint8Array) => {
 export const deserializeZomeResponsePayload = <T extends ZomeResponsePayload>(
   payload: Uint8Array
 ): T => {
-  const deserializedPayload = msgpack.decode(payload) as T;
-  return deserializedPayload;
+  const deserializedPayload = msgpack.decode(payload);
+  return deserializedPayload as T;
 };
 
 function assertIsResponseWrapper(
   response: unknown
 ): asserts response is _TryCpResponseWrapper {
-  if (
+  assert(
     response !== null &&
-    typeof response === "object" &&
-    "id" in response &&
-    "type" in response &&
-    "response" in response
-  ) {
-    return;
-  }
-  throw new TypeError(`decode: unknown format ${response}`);
+      typeof response === "object" &&
+      "id" in response &&
+      "type" in response &&
+      "response" in response
+  );
 }
 
 function assertIsApiResponse(
-  decodedResponse: unknown
-): asserts decodedResponse is _TryCpResponseApi {
-  if (
-    decodedResponse &&
-    typeof decodedResponse === "object" &&
-    "type" in decodedResponse
-  ) {
-    return;
-  }
-  throw new TypeError(`decode: unknown format ${decodedResponse}`);
+  response: unknown
+): asserts response is _TryCpApiResponse {
+  assert(response && typeof response === "object" && "type" in response);
 }

@@ -9,10 +9,16 @@ import {
   CellId,
   EnableAppResponse,
   HoloHash,
+  InstallAppDnaPayload,
   InstalledAppId,
 } from "@holochain/client";
-import { DnaInstallOptions } from "./types";
-import { TRYCP_RESPONSE_SUCCESS, ZomeResponsePayload } from "../types";
+import {
+  TRYCP_SUCCESS_RESPONSE,
+  RequestAdminInterfaceData,
+  RequestCallAppInterfaceMessage,
+} from "../types";
+import { ZomeResponsePayload } from "../../../test/fixture";
+import { deserializeZomeResponsePayload } from "../util";
 
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -50,7 +56,7 @@ export class TryCpConductor {
     private readonly tryCpClient: TryCpClient,
     id?: ConductorId
   ) {
-    this.id = "conductor-" + (id || uniqueId());
+    this.id = id || "conductor-" + uniqueId();
   }
 
   async destroy() {
@@ -64,7 +70,7 @@ export class TryCpConductor {
     const response = await this.tryCpClient.call({
       type: "reset",
     });
-    assert(response === TRYCP_RESPONSE_SUCCESS);
+    assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }
 
@@ -93,7 +99,7 @@ export class TryCpConductor {
       id: this.id,
       partial_config: partialConfig || DEFAULT_PARTIAL_PLAYER_CONFIG,
     });
-    assert(response === TRYCP_RESPONSE_SUCCESS);
+    assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }
 
@@ -103,7 +109,7 @@ export class TryCpConductor {
       id: this.id,
       log_level,
     });
-    assert(response === TRYCP_RESPONSE_SUCCESS);
+    assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }
 
@@ -112,88 +118,8 @@ export class TryCpConductor {
       type: "shutdown",
       id: this.id,
     });
-    assert(response === TRYCP_RESPONSE_SUCCESS);
+    assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
-  }
-
-  async registerDna(path: string): Promise<HoloHash> {
-    const response = await this.tryCpClient.call({
-      type: "call_admin_interface",
-      id: this.id,
-      message: {
-        type: "register_dna",
-        data: { path },
-      },
-    });
-    assert(response !== TRYCP_RESPONSE_SUCCESS);
-    assert(typeof response !== "string");
-    assert("BYTES_PER_ELEMENT" in response.data);
-    return response.data;
-  }
-
-  async generateAgentPubKey(): Promise<HoloHash> {
-    const response = await this.tryCpClient.call({
-      type: "call_admin_interface",
-      id: this.id,
-      message: { type: "generate_agent_pub_key" },
-    });
-    assert(response !== TRYCP_RESPONSE_SUCCESS);
-    assert(typeof response !== "string");
-    assert("BYTES_PER_ELEMENT" in response.data);
-    return response.data;
-  }
-
-  async installApp(data: {
-    installed_app_id: string;
-    agent_key: AgentPubKey;
-    dnas: DnaInstallOptions[];
-  }) {
-    const response = await this.tryCpClient.call({
-      type: "call_admin_interface",
-      id: this.id,
-      message: {
-        type: "install_app",
-        data,
-      },
-    });
-    assert(response !== TRYCP_RESPONSE_SUCCESS);
-    assert(typeof response !== "string");
-    assert("cell_data" in response.data);
-    return response.data;
-  }
-
-  async enableApp(
-    installed_app_id: InstalledAppId
-  ): Promise<EnableAppResponse> {
-    const response = await this.tryCpClient.call({
-      type: "call_admin_interface",
-      id: this.id,
-      message: {
-        type: "enable_app",
-        data: {
-          installed_app_id,
-        },
-      },
-    });
-    assert(response !== TRYCP_RESPONSE_SUCCESS);
-    assert(typeof response !== "string");
-    assert("app" in response.data);
-    return response.data;
-  }
-
-  async attachAppInterface(port: number) {
-    const response = await this.tryCpClient.call({
-      type: "call_admin_interface",
-      id: this.id,
-      message: {
-        type: "attach_app_interface",
-        data: { port },
-      },
-    });
-    assert(response !== TRYCP_RESPONSE_SUCCESS);
-    assert(typeof response !== "string");
-    assert("port" in response.data);
-    return response.data.port;
   }
 
   async connectAppInterface(port: number) {
@@ -201,8 +127,81 @@ export class TryCpConductor {
       type: "connect_app_interface",
       port,
     });
-    assert(response === TRYCP_RESPONSE_SUCCESS);
+    assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
+  }
+
+  async callAdminApi(message: RequestAdminInterfaceData) {
+    const response = await this.tryCpClient.call({
+      type: "call_admin_interface",
+      id: this.id,
+      message,
+    });
+    assert(response !== TRYCP_SUCCESS_RESPONSE);
+    assert(typeof response !== "string");
+    return response;
+  }
+
+  async registerDna(path: string): Promise<HoloHash> {
+    const response = await this.callAdminApi({
+      type: "register_dna",
+      data: { path },
+    });
+    assert("data" in response);
+    assert(response.data);
+    assert("BYTES_PER_ELEMENT" in response.data);
+    return response.data;
+  }
+
+  async generateAgentPubKey(): Promise<HoloHash> {
+    const response = await this.callAdminApi({
+      type: "generate_agent_pub_key",
+    });
+    assert("data" in response);
+    assert(response.data);
+    assert("BYTES_PER_ELEMENT" in response.data);
+    return response.data;
+  }
+
+  async installApp(data: {
+    installed_app_id: string;
+    agent_key: AgentPubKey;
+    dnas: InstallAppDnaPayload[];
+  }) {
+    const response = await this.callAdminApi({
+      type: "install_app",
+      data,
+    });
+    assert("data" in response);
+    assert(response.data);
+    assert("cell_data" in response.data);
+    return response.data;
+  }
+
+  async enableApp(
+    installed_app_id: InstalledAppId
+  ): Promise<EnableAppResponse> {
+    const response = await this.callAdminApi({
+      type: "enable_app",
+      data: {
+        installed_app_id,
+      },
+    });
+    assert("data" in response);
+    assert(response.data);
+    assert("app" in response.data);
+    return response.data;
+  }
+
+  async attachAppInterface(port: number) {
+    const response = await this.callAdminApi({
+      type: "attach_app_interface",
+      data: { port },
+    });
+    assert("data" in response);
+    assert(response.data);
+    assert("port" in response.data);
+    return response.data.port;
   }
 
   /**
@@ -211,18 +210,12 @@ export class TryCpConductor {
    * @returns The agent infos.
    */
   async requestAgentInfo(cellId?: CellId): Promise<AgentInfoSigned[]> {
-    const response = await this.tryCpClient.call({
-      type: "call_admin_interface",
-      id: this.id,
-      message: {
-        type: "request_agent_info",
-        data: {
-          cell_id: cellId || null,
-        },
+    const response = await this.callAdminApi({
+      type: "request_agent_info",
+      data: {
+        cell_id: cellId || null,
       },
     });
-    assert(response !== TRYCP_RESPONSE_SUCCESS);
-    assert(typeof response !== "string");
     assert(Array.isArray(response.data));
     return response.data;
   }
@@ -232,17 +225,25 @@ export class TryCpConductor {
    * @param signedAgentInfos - The agents to add to the conductor.
    */
   async addAgentInfo(signedAgentInfos: AgentInfoSigned[]) {
-    const response = await this.tryCpClient.call({
-      type: "call_admin_interface",
-      id: this.id,
-      message: {
-        type: "add_agent_info",
-        data: { agent_infos: signedAgentInfos },
-      },
+    const response = await this.callAdminApi({
+      type: "add_agent_info",
+      data: { agent_infos: signedAgentInfos },
     });
-    assert(response !== TRYCP_RESPONSE_SUCCESS);
-    assert(typeof response !== "string");
     assert(response.type === "agent_info_added");
+    return response;
+  }
+
+  /**
+   * Call conductor's App API
+   */
+  async callAppApi(port: number, message: RequestCallAppInterfaceMessage) {
+    const response = await this.tryCpClient.call({
+      type: "call_app_interface",
+      port,
+      message,
+    });
+    assert(response !== TRYCP_SUCCESS_RESPONSE);
+    assert(typeof response !== "string");
     return response;
   }
 
@@ -253,16 +254,16 @@ export class TryCpConductor {
     port: number,
     request: CallZomeRequest
   ) {
-    const response = await this.tryCpClient.call({
-      type: "call_app_interface",
-      port,
-      message: {
-        type: "zome_call",
-        data: request,
-      },
+    const response = await this.callAppApi(port, {
+      type: "zome_call",
+      data: request,
     });
-    assert(response !== TRYCP_RESPONSE_SUCCESS);
-    assert(typeof response !== "string");
-    return response.data as T;
+    assert("data" in response);
+    assert(response.data);
+    assert("BYTES_PER_ELEMENT" in response.data);
+    const deserializedPayload = deserializeZomeResponsePayload<T>(
+      response.data
+    );
+    return deserializedPayload;
   }
 }

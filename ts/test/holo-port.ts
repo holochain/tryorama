@@ -2,7 +2,7 @@ import test from "tape";
 import fs from "fs";
 import { TryCpClient } from "../src/trycp/trycp-client";
 import { TRYCP_SERVER_PORT } from "../src/trycp/trycp-server";
-import { TRYCP_RESPONSE_SUCCESS } from "../src";
+import { TRYCP_SUCCESS_RESPONSE } from "../src";
 import { HoloHash } from "@holochain/client";
 import { createConductor } from "../src/trycp/conductor";
 import { FIXTURE_DNA_URL } from "./fixture";
@@ -79,7 +79,7 @@ test("Create and read an entry using the entry zome", async (t) => {
   t.equal(actualPort, port);
 
   const connectAppInterfaceResponse = await player.connectAppInterface(port);
-  t.equal(connectAppInterfaceResponse, TRYCP_RESPONSE_SUCCESS);
+  t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
   const createEntryHash = await player.callZome<HoloHash>(port, {
@@ -151,7 +151,7 @@ test.only("Create and read an entry using the entry zome, 2 conductors, 2 cells,
   t.equal(actualPort1, port1);
 
   const connectAppInterfaceResponse1 = await player1.connectAppInterface(port1);
-  t.equal(connectAppInterfaceResponse1, TRYCP_RESPONSE_SUCCESS);
+  t.equal(connectAppInterfaceResponse1, TRYCP_SUCCESS_RESPONSE);
 
   const player2 = await createConductor(HOLO_PORT_2);
   await player2.reset();
@@ -186,7 +186,7 @@ test.only("Create and read an entry using the entry zome, 2 conductors, 2 cells,
   t.equal(actualPort2, port2);
 
   const connectAppInterfaceResponse2 = await player2.connectAppInterface(port2);
-  t.equal(connectAppInterfaceResponse2, TRYCP_RESPONSE_SUCCESS);
+  t.equal(connectAppInterfaceResponse2, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
   const createEntry1Hash = await player1.callZome<HoloHash>(port1, {

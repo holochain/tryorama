@@ -6,7 +6,7 @@ export * from "./conductor";
 import assert from "assert";
 import { createConductor } from "./conductor";
 import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT } from "./trycp-server";
-import { PlayerLogLevel, TRYCP_RESPONSE_SUCCESS } from "./types";
+import { PlayerLogLevel, TRYCP_SUCCESS_RESPONSE } from "./types";
 
 /**
  * Helper to install DNAs and create agents. Given an array of DNAs, a conductor
@@ -44,6 +44,6 @@ export async function installAgentsHapps(
   const port = TRYCP_SERVER_PORT + 50;
   await conductor.attachAppInterface(port);
   const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
-  assert(connectAppInterfaceResponse === TRYCP_RESPONSE_SUCCESS);
+  assert(connectAppInterfaceResponse === TRYCP_SUCCESS_RESPONSE);
   return { conductor, cells: installedAppInfo.cell_data };
 }
