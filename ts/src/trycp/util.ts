@@ -1,17 +1,17 @@
 import msgpack from "@msgpack/msgpack";
-import { Player } from "./conductor";
-import { ZomeResponsePayload } from "./conductor/types";
+import { TryCpConductor } from "./conductor";
 import {
-  _TryCpResponseAdminApi,
-  TryCpResponseSuccessValue,
+  _TryCpResponseApi,
   _TryCpResponseWrapper,
-  _TryCpAppApiResponse,
+  ZomeResponsePayload,
 } from "./types";
 
 /**
  * Register agents of provided conductors with all other conductors.
  */
-export const addAllAgentsToAllConductors = async (conductors: Player[]) => {
+export const addAllAgentsToAllConductors = async (
+  conductors: TryCpConductor[]
+) => {
   await Promise.all(
     conductors.map(
       async (conductorToShareAbout, conductorToShareAboutIndex) => {
@@ -28,49 +28,34 @@ export const addAllAgentsToAllConductors = async (conductors: Player[]) => {
   );
 };
 
-export const decodeTryCpResponse = (data: ArrayLike<number> | BufferSource) => {
-  const decodedData = msgpack.decode(data);
+/**
+ * Deserialize the binary response from TryCP
+ *
+ * @param response - The response to deserialize.
+ * @returns The deserialized response.
+ *
+ * @internal
+ */
+export const deserializeTryCpResponse = (response: Uint8Array) => {
+  const decodedData = msgpack.decode(response);
   assertIsResponseWrapper(decodedData);
   const tryCpResponse = decodedData;
   return tryCpResponse;
 };
 
 /**
- * Deserialize the binary response from the Admin API
+ * Deserialize the binary response from the Admin or App API
  *
  * @param response - The response to deserialize.
  * @returns The deserialized response.
  *
  * @internal
  */
-export const decodeTryCpAdminApiResponse = (
-  response: TryCpResponseSuccessValue
-) => {
-  if (response && typeof response === "object" && Array.isArray(response)) {
-    const decodedResponse = msgpack.decode(response);
-    assertIsAdminApiResponse(decodedResponse);
-    const decodedAdminApiResponse = decodedResponse;
-    return decodedAdminApiResponse;
-  }
-  throw new TypeError(`decode admin API response: unknown format ${response}`);
-};
-
-/**
- * Deserialize the binary response from the App API
- *
- * @param response - The response to deserialize.
- * @returns The deserialized response.
- *
- * @internal
- */
-export const decodeAppApiResponse = (response: TryCpResponseSuccessValue) => {
-  if (response && typeof response === "object" && Array.isArray(response)) {
-    const decodedResponse = msgpack.decode(response);
-    assertIsAppApiResponse(decodedResponse);
-    const decodedAdminApiResponse = decodedResponse;
-    return decodedAdminApiResponse;
-  }
-  throw new TypeError(`decode app API response: unknown format ${response}`);
+export const deserializeApiResponse = (response: Uint8Array) => {
+  const decodedResponse = msgpack.decode(response);
+  assertIsApiResponse(decodedResponse);
+  const decodedAdminApiResponse = decodedResponse;
+  return decodedAdminApiResponse;
 };
 
 /**
@@ -82,11 +67,11 @@ export const decodeAppApiResponse = (response: TryCpResponseSuccessValue) => {
  *
  * @internal
  */
-export const decodeAppApiPayload = <T extends ZomeResponsePayload>(
+export const deserializeZomeResponsePayload = <T extends ZomeResponsePayload>(
   payload: Uint8Array
 ): T => {
-  const decodedPayload = msgpack.decode(payload) as T;
-  return decodedPayload;
+  const deserializedPayload = msgpack.decode(payload) as T;
+  return deserializedPayload;
 };
 
 function assertIsResponseWrapper(
@@ -104,27 +89,13 @@ function assertIsResponseWrapper(
   throw new TypeError(`decode: unknown format ${response}`);
 }
 
-function assertIsAdminApiResponse(
+function assertIsApiResponse(
   decodedResponse: unknown
-): asserts decodedResponse is _TryCpResponseAdminApi {
+): asserts decodedResponse is _TryCpResponseApi {
   if (
     decodedResponse &&
     typeof decodedResponse === "object" &&
     "type" in decodedResponse
-  ) {
-    return;
-  }
-  throw new TypeError(`decode: unknown format ${decodedResponse}`);
-}
-
-function assertIsAppApiResponse(
-  decodedResponse: unknown
-): asserts decodedResponse is _TryCpAppApiResponse {
-  if (
-    decodedResponse &&
-    typeof decodedResponse === "object" &&
-    "type" in decodedResponse &&
-    "data" in decodedResponse
   ) {
     return;
   }

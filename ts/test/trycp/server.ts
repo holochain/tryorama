@@ -13,12 +13,13 @@ import {
 } from "../../src/trycp/types";
 import {
   decodeAppApiPayload,
-  decodeAppApiResponse,
-  decodeTryCpAdminApiResponse,
+  deserializeSuccessResponse,
+  decodeAdminApiResponse,
 } from "../../src/trycp/util";
 import assert from "assert";
 import { FIXTURE_DNA_URL } from "../fixture";
 import { DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
+import { InstallAppRequest } from "@holochain/client";
 
 const createTryCpClient = () =>
   TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -244,7 +245,7 @@ test("TryCP call - call admin interface", async (t) => {
     id: playerId,
     message: msgpack.encode({ type: "generate_agent_pub_key" }),
   });
-  const actual = decodeTryCpAdminApiResponse(response);
+  const actual = decodeAdminApiResponse(response);
   const actualAgentPubKey = Buffer.from(actual.data).toString("base64");
 
   await tryCpClient.call({
@@ -369,7 +370,7 @@ test("TryCP call - call app interface", async (t) => {
   await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
-    message: msgpack.encode(adminRequestData),
+    message: adminRequestData,
   });
   await tryCpClient.call({
     type: "connect_app_interface",
@@ -384,7 +385,7 @@ test("TryCP call - call app interface", async (t) => {
       data: { installed_app_id: "no_happ_installed" },
     }),
   });
-  const actual = decodeTryCpAdminApiResponse(response);
+  const actual = decodeAdminApiResponse(response);
 
   await tryCpClient.call({
     type: "shutdown",
@@ -425,12 +426,12 @@ test("TryCP call - make zome calls", async (t) => {
   const actualRegisterDnaResponse = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
-    message: msgpack.encode({
+    message: {
       type: "register_dna",
       data: { path: relativePath },
-    }),
+    },
   });
-  const decodedRegisterDnaResponse = decodeTryCpAdminApiResponse(
+  const decodedRegisterDnaResponse = decodeAdminApiResponse(
     actualRegisterDnaResponse
   );
   const dnaHashB64 = Buffer.from(decodedRegisterDnaResponse.data).toString(
@@ -444,9 +445,9 @@ test("TryCP call - make zome calls", async (t) => {
   const actualGenerateAgentPubKeyResponse = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
-    message: msgpack.encode({ type: "generate_agent_pub_key" }),
+    message: { type: "generate_agent_pub_key" },
   });
-  const decodedGenerateAgentPubKeyResponse = decodeTryCpAdminApiResponse(
+  const decodedGenerateAgentPubKeyResponse = decodeAdminApiResponse(
     actualGenerateAgentPubKeyResponse
   );
   const agentPubKey = decodedGenerateAgentPubKeyResponse.data;
@@ -459,16 +460,16 @@ test("TryCP call - make zome calls", async (t) => {
   const actualInstallAppResponse = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
-    message: msgpack.encode({
+    message: {
       type: "install_app",
       data: {
         installed_app_id: "entry-app",
         agent_key: decodedGenerateAgentPubKeyResponse.data,
         dnas: [{ hash: decodedRegisterDnaResponse.data, role_id: "entry-id" }],
-      },
-    }),
+      } as InstallAppRequest,
+    },
   });
-  const decodedInstallAppResponse = decodeTryCpAdminApiResponse(
+  const decodedInstallAppResponse = decodeAdminApiResponse(
     actualInstallAppResponse
   );
   assert("cell_data" in decodedInstallAppResponse.data);
@@ -478,14 +479,14 @@ test("TryCP call - make zome calls", async (t) => {
   const actualEnableApp = await tryCpClient.call({
     type: "call_admin_interface",
     id: playerId,
-    message: msgpack.encode({
+    message: {
       type: "enable_app",
       data: {
         installed_app_id: "entry-app",
       },
-    }),
+    },
   });
-  const decodedEnableAppResponse = decodeTryCpAdminApiResponse(actualEnableApp);
+  const decodedEnableAppResponse = decodeAdminApiResponse(actualEnableApp);
   t.equal(decodedEnableAppResponse.type, "app_enabled");
 
   const port = TRYCP_SERVER_PORT + 50;
@@ -506,7 +507,7 @@ test("TryCP call - make zome calls", async (t) => {
   const createEntryResponse = await tryCpClient.call({
     type: "call_app_interface",
     port,
-    message: msgpack.encode({
+    message: {
       type: "zome_call",
       data: {
         cap: null,
@@ -516,9 +517,10 @@ test("TryCP call - make zome calls", async (t) => {
         provenance: agentPubKey,
         payload: msgpack.encode("hello"),
       },
-    }),
+    },
   });
-  const decodedCreateEntryResponse = decodeAppApiResponse(createEntryResponse);
+  const decodedCreateEntryResponse =
+    deserializeSuccessResponse(createEntryResponse);
   const decodedPayload = decodeAppApiPayload(decodedCreateEntryResponse.data);
   const entryHashB64 = Buffer.from(decodedPayload).toString("base64");
   t.equal(decodedPayload.length, 39);

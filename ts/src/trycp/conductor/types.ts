@@ -8,11 +8,3 @@ export type DnaInstallOptions = {
   role_id: RoleId;
   membrane_proof?: MembraneProof;
 };
-
-/**
- * @public
- */
-export type ZomeResponsePayload =
-  | string
-  | HoloHash
-  | Record<number | string, boolean | number | string | object>;

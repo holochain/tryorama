@@ -1,13 +1,16 @@
 import msgpack from "@msgpack/msgpack";
+import cloneDeep from "lodash/cloneDeep";
 import { makeLogger } from "../logger";
 import { WebSocket } from "ws";
 import {
   TryCpResponseErrorValue,
-  TryCpResponseSuccessValue,
+  _TryCpResponseSuccessEncoded,
   _TryCpCall,
   TryCpRequest,
+  TRYCP_RESPONSE_SUCCESS,
+  TryCpResponseSuccessDecoded,
 } from "./types";
-import { decodeTryCpResponse } from "./util";
+import { deserializeTryCpResponse, deserializeApiResponse } from "./util";
 
 const logger = makeLogger("TryCP client");
 let requestId = 0;
@@ -21,7 +24,7 @@ export class TryCpClient {
   private readonly ws: WebSocket;
   private requestPromises: {
     [index: string]: {
-      responseResolve: (response: TryCpResponseSuccessValue) => void;
+      responseResolve: (response: TryCpResponseSuccessDecoded) => void;
       responseReject: (reason: TryCpResponseErrorValue) => void;
     };
   };
@@ -52,16 +55,17 @@ export class TryCpClient {
     });
 
     tryCpClient.ws.on("message", (encodedResponse: Buffer) => {
-      const responseWrapper = decodeTryCpResponse(encodedResponse);
-      logger.debug(`response ${JSON.stringify(responseWrapper, null, 4)}`);
-
+      const responseWrapper = deserializeTryCpResponse(encodedResponse);
       const { responseResolve, responseReject } =
         tryCpClient.requestPromises[responseWrapper.id];
 
       // the server responds with an object
-      // for successful requests it contains `0` as property and otherwise `1` when an error occurred
+      // for formally correct requests it contains `0` as property and otherwise `1` when the format was incorrect
       if ("0" in responseWrapper.response) {
-        responseResolve(responseWrapper.response[0]);
+        const innerResponse = tryCpClient.processSuccessResponse(
+          responseWrapper.response[0]
+        );
+        responseResolve(innerResponse);
       } else if ("1" in responseWrapper.response) {
         responseReject(responseWrapper.response[1]);
       } else {
@@ -77,6 +81,49 @@ export class TryCpClient {
     });
 
     return connectPromise;
+  }
+
+  processSuccessResponse(response: _TryCpResponseSuccessEncoded) {
+    if (response === TRYCP_RESPONSE_SUCCESS || typeof response === "string") {
+      logger.debug(`response ${JSON.stringify(response, null, 4)}\n`);
+      return response;
+    }
+
+    const deserializedResponse = deserializeApiResponse(response);
+
+    // when the request fails, the response's type is "error"
+    if (deserializedResponse.type === "error") {
+      const errorMessage = `error response from Admin API\n${JSON.stringify(
+        deserializedResponse.data,
+        null,
+        4
+      )}`;
+      throw new Error(errorMessage);
+    }
+
+    let debugLog;
+    if (
+      "BYTES_PER_ELEMENT" in deserializedResponse.data &&
+      deserializedResponse.data.length === 39
+    ) {
+      // Holochain hash
+      const hashB64 = Buffer.from(deserializedResponse.data).toString("base64");
+      const deserializedResponseForLog = Object.assign(
+        {},
+        { ...deserializedResponse },
+        { data: hashB64 }
+      );
+      debugLog = `response ${JSON.stringify(
+        deserializedResponseForLog,
+        null,
+        4
+      )}\n`;
+    } else {
+      debugLog = `response ${JSON.stringify(deserializedResponse, null, 4)}\n`;
+    }
+    logger.debug(debugLog);
+
+    return deserializedResponse;
   }
 
   /**
@@ -118,10 +165,10 @@ export class TryCpClient {
    * @returns A promise that resolves to the {@link TryCpResponseSuccessValue}
    */
   call(request: TryCpRequest) {
-    const debugRequest = this.getDebugRequest(request);
-    logger.debug(`request ${JSON.stringify(debugRequest, null, 4)}`);
+    const requestDebugLog = this.getFormattedRequestLog(request);
+    logger.debug(`request ${requestDebugLog}\n`);
 
-    const callPromise = new Promise<TryCpResponseSuccessValue>(
+    const callPromise = new Promise<TryCpResponseSuccessDecoded>(
       (resolve, reject) => {
         this.requestPromises[requestId] = {
           responseResolve: resolve,
@@ -134,6 +181,26 @@ export class TryCpClient {
       id: requestId,
       request,
     };
+
+    // serialize payload if the request is a zome call
+    if (
+      serverCall.request.type === "call_app_interface" &&
+      "data" in serverCall.request.message
+    ) {
+      serverCall.request.message.data.payload = msgpack.encode(
+        serverCall.request.message.data.payload
+      );
+    }
+
+    // serialize entire message if the request is an Admin or App API call
+    if (
+      serverCall.request.type === "call_admin_interface" ||
+      serverCall.request.type === "call_app_interface"
+    ) {
+      serverCall.request.message = msgpack.encode(serverCall.request.message);
+    }
+
+    // serialize entire call
     const encodedServerCall = msgpack.encode(serverCall);
     this.ws.send(encodedServerCall);
 
@@ -141,14 +208,23 @@ export class TryCpClient {
     return callPromise;
   }
 
-  /**
-   * Call "save_dna" submits a very long DNA as binary which will be stripped
-   */
-  private getDebugRequest(request: TryCpRequest) {
-    return request.type === "save_dna"
-      ? Object.assign({}, request, {
-          content: undefined,
-        })
-      : request;
+  private getFormattedRequestLog(request: TryCpRequest) {
+    let debugLog = cloneDeep(request);
+    if (debugLog.type === "call_app_interface" && "data" in debugLog.message) {
+      debugLog.message.data = Object.assign(debugLog.message.data, {
+        cell_id: [
+          Buffer.from(debugLog.message.data.cell_id[0]).toString("base64"),
+          Buffer.from(debugLog.message.data.cell_id[1]).toString("base64"),
+        ],
+        provenance: Buffer.from(debugLog.message.data.provenance).toString(
+          "base64"
+        ),
+      });
+    }
+    if ("content" in request) {
+      // Call "save_dna" submits a DNA as binary
+      debugLog = Object.assign(debugLog, { content: undefined });
+    }
+    return JSON.stringify(debugLog, null, 4);
   }
 }

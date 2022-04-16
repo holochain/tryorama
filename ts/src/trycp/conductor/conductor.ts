@@ -1,23 +1,18 @@
 import assert from "assert";
-import msgpack from "@msgpack/msgpack";
 import uniqueId from "lodash/uniqueId";
-import { PlayerLogLevel, RequestAdminInterfaceData, TryCpClient } from "..";
+import { PlayerLogLevel as TryCpConductorLogLevel, TryCpClient } from "..";
 import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT } from "../trycp-server";
-import {
-  decodeAppApiPayload,
-  decodeAppApiResponse,
-  decodeTryCpAdminApiResponse,
-} from "../util";
 import {
   AgentInfoSigned,
   AgentPubKey,
   CallZomeRequest,
   CellId,
+  EnableAppResponse,
   HoloHash,
   InstalledAppId,
 } from "@holochain/client";
-import { DnaInstallOptions, ZomeResponsePayload } from "./types";
-import { _TryCpResponseAdminApi } from "../types";
+import { DnaInstallOptions } from "./types";
+import { TRYCP_RESPONSE_SUCCESS, ZomeResponsePayload } from "../types";
 
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -28,42 +23,49 @@ network: ~`;
 /**
  * @public
  */
-export type PlayerId = string;
+export type ConductorId = string;
 
 /**
- * The function to create a TryCP Conductor (called "Player").
+ * The function to create a TryCP Conductor (aka "Player").
  *
  * @param url - The URL of the TryCP server to connect to.
- * @param id - An optional name for the Player.
+ * @param id - An optional name for the Conductor.
  * @returns A configured Conductor instance.
  *
  * @public
  */
-export const createConductor = async (url?: string, id?: PlayerId) => {
+export const createConductor = async (url?: string, id?: ConductorId) => {
   url = url || `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`;
   const client = await TryCpClient.create(url);
-  return new Player(client, id);
+  return new TryCpConductor(client, id);
 };
 
 /**
  * @public
  */
-export class Player {
+export class TryCpConductor {
   private id: string;
 
-  public constructor(private readonly tryCpClient: TryCpClient, id?: PlayerId) {
-    this.id = "player-" + (id || uniqueId());
+  public constructor(
+    private readonly tryCpClient: TryCpClient,
+    id?: ConductorId
+  ) {
+    this.id = "conductor-" + (id || uniqueId());
   }
 
   async destroy() {
     await this.shutdown();
-    return this.tryCpClient.close();
+    const response = await this.tryCpClient.close();
+    assert(typeof response === "number");
+    return response;
   }
 
   async reset() {
-    return this.tryCpClient.call({
+    const response = await this.tryCpClient.call({
       type: "reset",
     });
+    assert(response === TRYCP_RESPONSE_SUCCESS);
+    return response;
   }
 
   async downloadDna(url: URL) {
@@ -86,57 +88,59 @@ export class Player {
   }
 
   async configure(partialConfig?: string) {
-    return this.tryCpClient.call({
+    const response = await this.tryCpClient.call({
       type: "configure_player",
       id: this.id,
       partial_config: partialConfig || DEFAULT_PARTIAL_PLAYER_CONFIG,
     });
+    assert(response === TRYCP_RESPONSE_SUCCESS);
+    return response;
   }
 
-  async startup(log_level?: PlayerLogLevel) {
-    return this.tryCpClient.call({
+  async startup(log_level?: TryCpConductorLogLevel) {
+    const response = await this.tryCpClient.call({
       type: "startup",
       id: this.id,
       log_level,
     });
+    assert(response === TRYCP_RESPONSE_SUCCESS);
+    return response;
   }
 
   async shutdown() {
-    return this.tryCpClient.call({
+    const response = await this.tryCpClient.call({
       type: "shutdown",
       id: this.id,
     });
+    assert(response === TRYCP_RESPONSE_SUCCESS);
+    return response;
   }
 
-  async registerDna(path: string) {
-    const type = "register_dna";
+  async registerDna(path: string): Promise<HoloHash> {
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
-      message: msgpack.encode({
-        type,
+      message: {
+        type: "register_dna",
         data: { path },
-      }),
+      },
     });
-    const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(type, decodedResponse);
-    assert("BYTES_PER_ELEMENT" in decodedResponse.data);
-    const dnaHash: HoloHash = decodedResponse.data;
-    return dnaHash;
+    assert(response !== TRYCP_RESPONSE_SUCCESS);
+    assert(typeof response !== "string");
+    assert("BYTES_PER_ELEMENT" in response.data);
+    return response.data;
   }
 
   async generateAgentPubKey(): Promise<HoloHash> {
-    const type = "generate_agent_pub_key";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
-      message: msgpack.encode({ type: "generate_agent_pub_key" }),
+      message: { type: "generate_agent_pub_key" },
     });
-    const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(type, decodedResponse);
-    assert("BYTES_PER_ELEMENT" in decodedResponse.data);
-    const agentPubKey: HoloHash = decodedResponse.data;
-    return agentPubKey;
+    assert(response !== TRYCP_RESPONSE_SUCCESS);
+    assert(typeof response !== "string");
+    assert("BYTES_PER_ELEMENT" in response.data);
+    return response.data;
   }
 
   async installApp(data: {
@@ -144,61 +148,61 @@ export class Player {
     agent_key: AgentPubKey;
     dnas: DnaInstallOptions[];
   }) {
-    const type = "install_app";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
-      message: msgpack.encode({
-        type,
+      message: {
+        type: "install_app",
         data,
-      }),
+      },
     });
-    const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(type, decodedResponse);
-    assert("cell_data" in decodedResponse.data);
-    return decodedResponse.data;
+    assert(response !== TRYCP_RESPONSE_SUCCESS);
+    assert(typeof response !== "string");
+    assert("cell_data" in response.data);
+    return response.data;
   }
 
-  async enableApp(installed_app_id: InstalledAppId) {
-    const type = "enable_app";
+  async enableApp(
+    installed_app_id: InstalledAppId
+  ): Promise<EnableAppResponse> {
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
-      message: msgpack.encode({
-        type,
+      message: {
+        type: "enable_app",
         data: {
           installed_app_id,
         },
-      }),
+      },
     });
-    const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(type, decodedResponse);
-    assert("app" in decodedResponse.data);
-    return decodedResponse.data;
+    assert(response !== TRYCP_RESPONSE_SUCCESS);
+    assert(typeof response !== "string");
+    assert("app" in response.data);
+    return response.data;
   }
 
   async attachAppInterface(port: number) {
-    const type = "attach_app_interface";
-    const adminRequestData: RequestAdminInterfaceData = {
-      type,
-      data: { port },
-    };
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
-      message: msgpack.encode(adminRequestData),
+      message: {
+        type: "attach_app_interface",
+        data: { port },
+      },
     });
-    const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(type, decodedResponse);
-    assert("port" in decodedResponse.data);
-    return decodedResponse.data.port;
+    assert(response !== TRYCP_RESPONSE_SUCCESS);
+    assert(typeof response !== "string");
+    assert("port" in response.data);
+    return response.data.port;
   }
 
   async connectAppInterface(port: number) {
-    return this.tryCpClient.call({
+    const response = await this.tryCpClient.call({
       type: "connect_app_interface",
       port,
     });
+    assert(response === TRYCP_RESPONSE_SUCCESS);
+    return response;
   }
 
   /**
@@ -206,23 +210,21 @@ export class Player {
    * @param cellId - The cell id to get agent infos of.
    * @returns The agent infos.
    */
-  async requestAgentInfo(cellId?: CellId) {
-    const type = "request_agent_info";
+  async requestAgentInfo(cellId?: CellId): Promise<AgentInfoSigned[]> {
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
-      message: msgpack.encode({
-        type,
+      message: {
+        type: "request_agent_info",
         data: {
           cell_id: cellId || null,
         },
-      }),
+      },
     });
-    const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(type, decodedResponse);
-    assert(Array.isArray(decodedResponse.data));
-    const agentInfos: AgentInfoSigned[] = decodedResponse.data;
-    return agentInfos;
+    assert(response !== TRYCP_RESPONSE_SUCCESS);
+    assert(typeof response !== "string");
+    assert(Array.isArray(response.data));
+    return response.data;
   }
 
   /**
@@ -230,53 +232,37 @@ export class Player {
    * @param signedAgentInfos - The agents to add to the conductor.
    */
   async addAgentInfo(signedAgentInfos: AgentInfoSigned[]) {
-    const type = "add_agent_info";
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
-      message: msgpack.encode({
-        type,
+      message: {
+        type: "add_agent_info",
         data: { agent_infos: signedAgentInfos },
-      }),
+      },
     });
-    const decodedResponse = decodeTryCpAdminApiResponse(response);
-    this.checkResponseForError(type, decodedResponse);
-    assert(decodedResponse.type === "agent_info_added");
+    assert(response !== TRYCP_RESPONSE_SUCCESS);
+    assert(typeof response !== "string");
+    assert(response.type === "agent_info_added");
+    return response;
   }
 
   /**
-   * Make a zome call to the TryCP server.
+   * Make a zome call to a conductor through the TryCP server.
    */
   async callZome<T extends ZomeResponsePayload>(
     port: number,
     request: CallZomeRequest
   ) {
-    request.payload = msgpack.encode(request.payload);
     const response = await this.tryCpClient.call({
       type: "call_app_interface",
       port,
-      message: msgpack.encode({
+      message: {
         type: "zome_call",
         data: request,
-      }),
+      },
     });
-    const decodedResponse = decodeAppApiResponse(response);
-    this.checkResponseForError(
-      `zome ${request.zome_name} fn ${request.fn_name}`,
-      decodedResponse
-    );
-    const decodedPayload = decodeAppApiPayload<T>(decodedResponse.data);
-    return decodedPayload;
-  }
-
-  checkResponseForError(requestType: string, response: _TryCpResponseAdminApi) {
-    if (response.type === "error") {
-      const errorMessage = `error when calling ${requestType}:\n${JSON.stringify(
-        response.data,
-        null,
-        4
-      )}`;
-      throw new Error(errorMessage);
-    }
+    assert(response !== TRYCP_RESPONSE_SUCCESS);
+    assert(typeof response !== "string");
+    return response.data as T;
   }
 }

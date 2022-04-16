@@ -1,11 +1,15 @@
 import {
+  AddAgentInfoRequest,
   AgentInfoSigned,
   AttachAppInterfaceResponse,
+  CallZomeRequest,
+  CellId,
   EnableAppResponse,
   HoloHash,
+  InstallAppRequest,
   InstalledAppInfo,
 } from "@holochain/client";
-import { PlayerId } from "./conductor";
+import { ConductorId } from "./conductor";
 
 /**
  * @internal
@@ -28,6 +32,7 @@ export type TryCpRequest =
   | RequestConnectAppInterface
   | RequestDisconnectAppInterface
   | RequestCallAppInterface
+  | RequestCallAppInterfaceEncoded
   | RequestCallAdminInterface;
 
 /**
@@ -56,7 +61,7 @@ export interface RequestSaveDna {
  */
 export interface RequestConfigurePlayer {
   type: "configure_player";
-  id: PlayerId;
+  id: ConductorId;
   partial_config: string;
 }
 
@@ -70,7 +75,7 @@ export type PlayerLogLevel = "error" | "warn" | "info" | "debug" | "trace";
  */
 export interface RequestStartup {
   type: "startup";
-  id: PlayerId;
+  id: ConductorId;
   log_level?: PlayerLogLevel;
 }
 
@@ -79,7 +84,7 @@ export interface RequestStartup {
  */
 export interface RequestShutdown {
   type: "shutdown";
-  id: PlayerId;
+  id: ConductorId;
   signal?: "SIGTERM" | "SIGKILL" | "SIGINT";
 }
 
@@ -112,6 +117,17 @@ export interface RequestDisconnectAppInterface {
 export interface RequestCallAppInterface {
   type: "call_app_interface";
   port: number;
+  message: {
+    type: "zome_call";
+    data: CallZomeRequest;
+  };
+}
+
+/**
+ * @public
+ */
+export interface RequestCallAppInterfaceEncoded
+  extends Omit<RequestCallAppInterface, "message"> {
   message: Uint8Array;
 }
 
@@ -121,8 +137,8 @@ export interface RequestCallAppInterface {
  */
 export interface RequestCallAdminInterface {
   type: "call_admin_interface";
-  id: PlayerId;
-  message: Uint8Array;
+  id: ConductorId;
+  message: RequestAdminInterfaceData;
 }
 
 /**
@@ -130,7 +146,10 @@ export interface RequestCallAdminInterface {
  */
 export interface RequestAdminInterfaceData {
   type: string;
-  data: Record<string, string | number>;
+  data?:
+    | Record<string, string | number | CellId | null>
+    | InstallAppRequest
+    | AddAgentInfoRequest;
 }
 
 /**
@@ -150,35 +169,10 @@ export interface _TryCpResponseWrapper {
 export type _TryCpResponse = _TryCpResponseSuccess | _TryCpResponseError;
 
 /**
- * Value for successful responses from the TryCP server.
- *
- * @public
- */
-export type TryCpResponseSuccessValue =
-  | TryCpReponseSuccessValueVoid
-  | string
-  | AdminApiResponse;
-
-/**
- * @public
- */
-export type TryCpReponseSuccessValueVoid = null;
-
-/**
- * @public
- */
-export const TRYCP_RESPONSE_SUCCESS: TryCpReponseSuccessValueVoid = null;
-
-/**
- * @public
- */
-export type TryCpResponseErrorValue = string;
-
-/**
  * @internal
  */
 export interface _TryCpResponseSuccess {
-  0: TryCpResponseSuccessValue;
+  0: _TryCpResponseSuccessEncoded;
 }
 
 /**
@@ -191,9 +185,37 @@ export interface _TryCpResponseError {
 /**
  * @internal
  */
-export interface _TryCpResponseAdminApi {
+export type _TryCpResponseSuccessEncoded =
+  | typeof TRYCP_RESPONSE_SUCCESS
+  | string
+  | Uint8Array;
+
+/**
+ * Value for successful responses from the TryCP server.
+ *
+ * @public
+ */
+export type TryCpResponseSuccessDecoded =
+  | typeof TRYCP_RESPONSE_SUCCESS
+  | string
+  | _TryCpResponseApi;
+
+/**
+ * @public
+ */
+export const TRYCP_RESPONSE_SUCCESS = null;
+
+/**
+ * @public
+ */
+export type TryCpResponseErrorValue = string;
+
+/**
+ * @internal
+ */
+export interface _TryCpResponseApi {
   type: string;
-  data: AdminApiResponse;
+  data: AdminApiResponse | AppApiResponse;
 }
 
 /**
@@ -209,7 +231,19 @@ export type AdminApiResponse =
 /**
  * @public
  */
-export interface _TryCpAppApiResponse {
-  type: string;
+export interface AppApiResponse {
+  type: "zome_call";
   data: Uint8Array;
 }
+
+/**
+ * @public
+ */
+export interface AppApiResponseDecoded extends Omit<AppApiResponse, "data"> {
+  data: ZomeResponsePayload;
+}
+
+/**
+ * @public
+ */
+export type ZomeResponsePayload = HoloHash | string;
