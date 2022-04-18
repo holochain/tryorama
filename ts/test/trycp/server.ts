@@ -214,7 +214,7 @@ test("TryCP call - reset", async (t) => {
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
 });
 
-test.only("TryCP call - Admin API - connect app interface", async (t) => {
+test("TryCP call - Admin API - connect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createConductor(LOCAL_SERVER_URL);
 
@@ -223,7 +223,7 @@ test.only("TryCP call - Admin API - connect app interface", async (t) => {
   const port = await conductor.attachAppInterface();
   t.ok(typeof port === "number");
 
-  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
+  const connectAppInterfaceResponse = await conductor.connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const appInfoResponse = await conductor.appInfo("");

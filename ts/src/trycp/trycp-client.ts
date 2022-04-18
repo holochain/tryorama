@@ -83,6 +83,7 @@ export class TryCpClient {
           "unknown response type",
           JSON.stringify(responseWrapper.response, null, 4)
         );
+        throw new Error("Unknown response type");
       }
       delete tryCpClient.requestPromises[responseWrapper.id];
     });

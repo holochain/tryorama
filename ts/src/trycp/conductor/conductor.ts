@@ -1,6 +1,6 @@
 import assert from "assert";
 import uniqueId from "lodash/uniqueId";
-import getPort from "get-port";
+import getPort, { portNumbers } from "get-port";
 import { PlayerLogLevel as TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AgentInfoSigned,
@@ -122,10 +122,11 @@ export class TryCpConductor {
     return response;
   }
 
-  async connectAppInterface(port: number) {
+  async connectAppInterface() {
+    assert(this.appInterfacePort, "No App interface attached to conductor");
     const response = await this.tryCpClient.call({
       type: "connect_app_interface",
-      port,
+      port: this.appInterfacePort,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
@@ -194,7 +195,7 @@ export class TryCpConductor {
   }
 
   async attachAppInterface(port?: number) {
-    port = port ?? (await getPort());
+    port = port ?? (await getPort({ port: portNumbers(30000, 40000) }));
     const response = await this.callAdminApi({
       type: "attach_app_interface",
       data: { port },
@@ -240,7 +241,7 @@ export class TryCpConductor {
    * Call conductor's App API
    */
   async callAppApi(message: RequestCallAppInterfaceMessage) {
-    assert(this.appInterfacePort, "No App interface attached");
+    assert(this.appInterfacePort, "No App interface attached to conductor");
     const response = await this.tryCpClient.call({
       type: "call_app_interface",
       port: this.appInterfacePort,
@@ -248,6 +249,7 @@ export class TryCpConductor {
     });
     assert(response !== TRYCP_SUCCESS_RESPONSE);
     assert(typeof response !== "string");
+    assert("data" in response);
     return response;
   }
 
@@ -262,9 +264,7 @@ export class TryCpConductor {
       type: "app_info",
       data: { installed_app_id },
     });
-    assert("type" in response);
     assert(response.type === "app_info");
-    assert("data" in response);
     assert(response.data === null || "installed_app_id" in response.data);
     return response.data;
   }
@@ -275,15 +275,11 @@ export class TryCpConductor {
    * @param request - The zome call parameters.
    * @returns The result of the zome call.
    */
-  async callZome<T extends ZomeResponsePayload>(
-    port: number,
-    request: CallZomeRequest
-  ) {
+  async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
     const response = await this.callAppApi({
       type: "zome_call",
       data: request,
     });
-    assert("data" in response);
     assert(response.data);
     assert("BYTES_PER_ELEMENT" in response.data);
     const deserializedPayload = deserializeZomeResponsePayload<T>(

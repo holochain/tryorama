@@ -55,15 +55,12 @@ test("Create and read an entry using the entry zome", async (t) => {
   const enabledAppResponse = await conductor.enableApp(appId);
   t.deepEqual(enabledAppResponse.app.status, { running: null });
 
-  const port = TRYCP_SERVER_PORT + 50;
-  const actualPort = await conductor.attachAppInterface(port);
-
-  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
+  await conductor.attachAppInterface();
+  const connectAppInterfaceResponse = await conductor.connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
-  t.equal(actualPort, port);
 
   const entryContent = "test-content";
-  const createEntryHash = await conductor.callZome<HoloHash>(port, {
+  const createEntryHash = await conductor.callZome<HoloHash>({
     cap_secret: null,
     cell_id,
     zome_name: "crud",
@@ -75,7 +72,7 @@ test("Create and read an entry using the entry zome", async (t) => {
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  const readEntryResponse = await conductor.callZome<string>(port, {
+  const readEntryResponse = await conductor.callZome<string>({
     cap_secret: null,
     cell_id,
     zome_name: "crud",
@@ -143,17 +140,12 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
   const enabledAppResponse2 = await conductor.enableApp(appId2);
   t.deepEqual(enabledAppResponse2.app.status, { running: null });
 
-  const appApiPort = TRYCP_SERVER_PORT + 50;
-  const actualPort = await conductor.attachAppInterface(appApiPort);
-  t.equal(actualPort, appApiPort);
-
-  const connectAppInterfaceResponse = await conductor.connectAppInterface(
-    appApiPort
-  );
+  await conductor.attachAppInterface();
+  const connectAppInterfaceResponse = await conductor.connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
-  const createEntryHash = await conductor.callZome<HoloHash>(appApiPort, {
+  const createEntryHash = await conductor.callZome<HoloHash>({
     cap_secret: null,
     cell_id: cellId1,
     zome_name: "crud",
@@ -165,7 +157,7 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  const readEntryResponse = await conductor.callZome<string>(appApiPort, {
+  const readEntryResponse = await conductor.callZome<string>({
     cap_secret: null,
     cell_id: cellId2,
     zome_name: "crud",
@@ -216,13 +208,8 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
     const enabledAppResponse1 = await conductor1.enableApp("entry-app");
     t.deepEqual(enabledAppResponse1.app.status, { running: null });
 
-    const port1 = TRYCP_SERVER_PORT + 50;
-    const actualPort1 = await conductor1.attachAppInterface(port1);
-    t.equal(actualPort1, port1);
-
-    const connectAppInterfaceResponse1 = await conductor1.connectAppInterface(
-      port1
-    );
+    await conductor1.attachAppInterface();
+    const connectAppInterfaceResponse1 = await conductor1.connectAppInterface();
     t.equal(connectAppInterfaceResponse1, TRYCP_SUCCESS_RESPONSE);
 
     await conductor2.configure(LOCAL_TEST_PARTIAL_PLAYER_CONFIG);
@@ -251,19 +238,14 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
     const enabledAppResponse2 = await conductor2.enableApp("entry-app");
     t.deepEqual(enabledAppResponse2.app.status, { running: null });
 
-    const port2 = TRYCP_SERVER_PORT + 51;
-    const actualPort2 = await conductor2.attachAppInterface(port2);
-    t.equal(actualPort2, port2);
-
-    const connectAppInterfaceResponse = await conductor2.connectAppInterface(
-      port2
-    );
+    await conductor2.attachAppInterface();
+    const connectAppInterfaceResponse = await conductor2.connectAppInterface();
     t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
     await addAllAgentsToAllConductors([conductor1, conductor2]);
 
     const entryContent = "test-content";
-    const createEntry1Hash = await conductor1.callZome<HoloHash>(port1, {
+    const createEntry1Hash = await conductor1.callZome<HoloHash>({
       cap_secret: null,
       cell_id: cellId1,
       zome_name: "crud",
@@ -278,7 +260,7 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
 
     await new Promise((resolve) => setTimeout(() => resolve(null), 100));
 
-    const readEntryResponse = await conductor2.callZome<string>(port2, {
+    const readEntryResponse = await conductor2.callZome<string>({
       cap_secret: null,
       cell_id: cellId2,
       zome_name: "crud",

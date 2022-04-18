@@ -41,9 +41,8 @@ export async function installAgentsHapps(
     "running" in enabledAppResponse.app.status &&
       enabledAppResponse.app.status.running === null
   );
-  const port = TRYCP_SERVER_PORT + 50;
-  await conductor.attachAppInterface(port);
-  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
+  await conductor.attachAppInterface();
+  const connectAppInterfaceResponse = await conductor.connectAppInterface();
   assert(connectAppInterfaceResponse === TRYCP_SUCCESS_RESPONSE);
   return { conductor, cells: installedAppInfo.cell_data };
 }
