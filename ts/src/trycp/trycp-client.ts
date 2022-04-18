@@ -63,10 +63,19 @@ export class TryCpClient {
       // the server responds with an object
       // for formally correct requests it contains `0` as property and otherwise `1` when the format was incorrect
       if ("0" in responseWrapper.response) {
-        const innerResponse = tryCpClient.processSuccessResponse(
-          responseWrapper.response[0]
-        );
-        responseResolve(innerResponse);
+        try {
+          const innerResponse = tryCpClient.processSuccessResponse(
+            responseWrapper.response[0]
+          );
+          responseResolve(innerResponse);
+        } catch (error) {
+          if (error instanceof Error) {
+            responseReject(error);
+          } else {
+            const errorMessage = JSON.stringify(error, null, 4);
+            responseReject(errorMessage);
+          }
+        }
       } else if ("1" in responseWrapper.response) {
         responseReject(responseWrapper.response[1]);
       } else {
