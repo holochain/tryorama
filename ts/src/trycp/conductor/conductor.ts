@@ -1,7 +1,7 @@
 import assert from "assert";
 import uniqueId from "lodash/uniqueId";
+import getPort from "get-port";
 import { PlayerLogLevel as TryCpConductorLogLevel, TryCpClient } from "..";
-import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT } from "../trycp-server";
 import {
   AgentInfoSigned,
   AgentPubKey,
@@ -40,8 +40,7 @@ export type ConductorId = string;
  *
  * @public
  */
-export const createConductor = async (url?: string, id?: ConductorId) => {
-  url = url || `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`;
+export const createConductor = async (url: string, id?: ConductorId) => {
   const client = await TryCpClient.create(url);
   return new TryCpConductor(client, id);
 };
@@ -51,6 +50,7 @@ export const createConductor = async (url?: string, id?: ConductorId) => {
  */
 export class TryCpConductor {
   private id: string;
+  private appInterfacePort: undefined | number;
 
   public constructor(
     private readonly tryCpClient: TryCpClient,
@@ -193,7 +193,8 @@ export class TryCpConductor {
     return response.data;
   }
 
-  async attachAppInterface(port: number) {
+  async attachAppInterface(port?: number) {
+    port = port ?? (await getPort());
     const response = await this.callAdminApi({
       type: "attach_app_interface",
       data: { port },
@@ -201,6 +202,7 @@ export class TryCpConductor {
     assert("data" in response);
     assert(response.data);
     assert("port" in response.data);
+    this.appInterfacePort = port;
     return response.data.port;
   }
 
@@ -216,6 +218,7 @@ export class TryCpConductor {
         cell_id: cellId || null,
       },
     });
+    assert("data" in response);
     assert(Array.isArray(response.data));
     return response.data;
   }
@@ -236,10 +239,11 @@ export class TryCpConductor {
   /**
    * Call conductor's App API
    */
-  async callAppApi(port: number, message: RequestCallAppInterfaceMessage) {
+  async callAppApi(message: RequestCallAppInterfaceMessage) {
+    assert(this.appInterfacePort, "No App interface attached");
     const response = await this.tryCpClient.call({
       type: "call_app_interface",
-      port,
+      port: this.appInterfacePort,
       message,
     });
     assert(response !== TRYCP_SUCCESS_RESPONSE);
@@ -248,13 +252,34 @@ export class TryCpConductor {
   }
 
   /**
+   * Request info of an installed hApp.
+   *
+   * @param installed_app_id - The id of the hApp to query.
+   * @returns The app info.
+   */
+  async appInfo(installed_app_id: string) {
+    const response = await this.callAppApi({
+      type: "app_info",
+      data: { installed_app_id },
+    });
+    assert("type" in response);
+    assert(response.type === "app_info");
+    assert("data" in response);
+    assert(response.data === null || "installed_app_id" in response.data);
+    return response.data;
+  }
+
+  /**
    * Make a zome call to a conductor through the TryCP server.
+   *
+   * @param request - The zome call parameters.
+   * @returns The result of the zome call.
    */
   async callZome<T extends ZomeResponsePayload>(
     port: number,
     request: CallZomeRequest
   ) {
-    const response = await this.callAppApi(port, {
+    const response = await this.callAppApi({
       type: "zome_call",
       data: request,
     });

@@ -8,10 +8,10 @@ import {
 import { TryCpClient } from "../../src/trycp/trycp-client";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { FIXTURE_DNA_URL } from "../fixture";
-import { DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
+import { createConductor, DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
 
-const createTryCpClient = () =>
-  TryCpClient.create(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
+const LOCAL_SERVER_URL = `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`;
+const createTryCpClient = () => TryCpClient.create(LOCAL_SERVER_URL);
 
 test("TryCP - ping", async (t) => {
   const localTryCpServer = await TryCpServer.start();
@@ -212,4 +212,23 @@ test("TryCP call - reset", async (t) => {
   await localTryCpServer.stop();
 
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
+});
+
+test.only("TryCP call - Admin API - connect app interface", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const conductor = await createConductor(LOCAL_SERVER_URL);
+
+  await conductor.configure();
+  await conductor.startup();
+  const port = await conductor.attachAppInterface();
+  t.ok(typeof port === "number");
+
+  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
+  t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
+
+  const appInfoResponse = await conductor.appInfo("");
+  t.equal(appInfoResponse, null);
+
+  await conductor.destroy();
+  await localTryCpServer.stop();
 });

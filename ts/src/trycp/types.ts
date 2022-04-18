@@ -1,6 +1,7 @@
 import {
   AddAgentInfoRequest,
   AgentInfoSigned,
+  AppInfoResponse,
   AttachAppInterfaceResponse,
   CallZomeRequest,
   CellId,
@@ -121,11 +122,24 @@ export interface RequestCallAppInterface {
 }
 
 /**
+ * @internal
+ */
+export type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo;
+
+/**
  * @public
  */
-export interface RequestCallAppInterfaceMessage {
+export interface RequestCallZome {
   type: "zome_call";
   data: CallZomeRequest;
+}
+
+/**
+ * @public
+ */
+export interface RequestAppInfo {
+  type: "app_info";
+  data: { installed_app_id: string };
 }
 
 /**
@@ -213,27 +227,107 @@ export const TRYCP_SUCCESS_RESPONSE = null;
 /**
  * @public
  */
-export type TryCpResponseErrorValue = string;
+export type TryCpResponseErrorValue = string | Error;
 
 /**
  * @internal
  */
-export interface _TryCpApiResponse {
-  type: string;
-  data?: AdminApiResponse | AppApiResponse;
+export type _TryCpApiResponse =
+  | AdminApiResponse
+  | AppApiResponse
+  | ApiErrorResponse;
+
+/**
+ * @public
+ */
+export interface ApiErrorResponse {
+  type: "error";
+  data: { type: string; data: string };
 }
 
 /**
  * @public
  */
 export type AdminApiResponse =
-  | HoloHash
-  | InstalledAppInfo
-  | EnableAppResponse
-  | AttachAppInterfaceResponse
-  | AgentInfoSigned[];
+  | AdminApiResponseDnaRegistered
+  | AdminApiResponseAgentPubKeyGenerated
+  | AdminApiResponseAppInstalled
+  | AdminApiResponseAppEnabled
+  | AdminApiResponseAppInterfaceAttached
+  | AdminApiResponseAgentInfoAdded;
 
 /**
  * @public
  */
-export type AppApiResponse = Uint8Array;
+export interface AdminApiResponseDnaRegistered {
+  type: "dna_registered";
+  data: HoloHash;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAgentPubKeyGenerated {
+  type: "agent_pub_key_generated";
+  data: HoloHash;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppInstalled {
+  type: "app_installed";
+  data: InstalledAppInfo;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppEnabled {
+  type: "app_enabled";
+  data: EnableAppResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppInterfaceAttached {
+  type: "app_interface_attached";
+  data: AttachAppInterfaceResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAgentInfoAdded {
+  type: "agent_info_added";
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAgentInfoRequested {
+  type: "agent_info_requested";
+  data: AgentInfoSigned[];
+}
+
+/**
+ * @public
+ */
+export type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall;
+
+/**
+ * @public
+ */
+export interface AppApiResponseAppInfo {
+  type: "app_info";
+  data: AppInfoResponse | null;
+}
+
+/**
+ * @public
+ */
+export interface AppApiResponseZomeCall {
+  type: "zome_call";
+  data: Uint8Array;
+}

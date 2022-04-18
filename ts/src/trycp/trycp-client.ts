@@ -173,7 +173,8 @@ export class TryCpClient {
     // serialize payload if the request is a zome call
     if (
       serverCall.request.type === "call_app_interface" &&
-      "data" in serverCall.request.message
+      "data" in serverCall.request.message &&
+      serverCall.request.message.type === "zome_call"
     ) {
       serverCall.request.message.data.payload = msgpack.encode(
         serverCall.request.message.data.payload
@@ -199,7 +200,9 @@ export class TryCpClient {
   private getFormattedResponseLog(response: _TryCpApiResponse) {
     let debugLog;
     if (
+      "data" in response &&
       response.data &&
+      typeof response.data !== "string" &&
       "BYTES_PER_ELEMENT" in response.data &&
       response.data.length === 39
     ) {
@@ -223,7 +226,11 @@ export class TryCpClient {
 
   private getFormattedRequestLog(request: TryCpRequest) {
     let debugLog = cloneDeep(request);
-    if (debugLog.type === "call_app_interface" && "data" in debugLog.message) {
+    if (
+      debugLog.type === "call_app_interface" &&
+      "data" in debugLog.message &&
+      debugLog.message.type === "zome_call"
+    ) {
       debugLog.message.data = Object.assign(debugLog.message.data, {
         cell_id: [
           Buffer.from(debugLog.message.data.cell_id[0]).toString("base64"),
