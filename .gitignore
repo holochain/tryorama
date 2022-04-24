@@ -9,3 +9,5 @@ target
 
 *.dna
 *.happ
+
+.hc*
