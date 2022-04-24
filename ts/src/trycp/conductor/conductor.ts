@@ -1,5 +1,6 @@
 import assert from "assert";
-import uniqueId from "lodash/uniqueId";
+import fs from "fs";
+import { v4 as uuidv4 } from "uuid";
 import getPort, { portNumbers } from "get-port";
 import { PlayerLogLevel as TryCpConductorLogLevel, TryCpClient } from "..";
 import {
@@ -7,6 +8,7 @@ import {
   AgentPubKey,
   CallZomeRequest,
   CellId,
+  DnaSource,
   EnableAppResponse,
   HoloHash,
   InstallAppDnaPayload,
@@ -56,13 +58,13 @@ export class TryCpConductor {
     private readonly tryCpClient: TryCpClient,
     id?: ConductorId
   ) {
-    this.id = id || "conductor-" + uniqueId();
+    this.id = id || "conductor-" + uuidv4();
   }
 
   async destroy() {
     await this.shutdown();
     const response = await this.tryCpClient.close();
-    assert(typeof response === "number");
+    assert(response === 1000);
     return response;
   }
 
@@ -286,5 +288,43 @@ export class TryCpConductor {
       response.data
     );
     return deserializedPayload;
+  }
+
+  async installAgentsDnas(dnas: DnaSource[]) {
+    const agentsCells: Array<{ agentPubKey: AgentPubKey; cellId: CellId }> = [];
+
+    for (const dna of dnas) {
+      let dnaHash: Uint8Array;
+      if ("path" in dna) {
+        const dnaContent = await new Promise<Buffer>((resolve, reject) => {
+          fs.readFile(dna.path, null, (err, data) => {
+            if (err) {
+              reject(err);
+            }
+            resolve(data);
+          });
+        });
+        const relativePath = await this.saveDna(dnaContent);
+        dnaHash = await this.registerDna(relativePath);
+      } else {
+        dnaHash = new Uint8Array();
+        throw new Error("Not dnaHashed");
+      }
+      const agentPubKey = await this.generateAgentPubKey();
+      const appId = `app-${uuidv4()}`;
+      const installedAppInfo = await this.installApp({
+        installed_app_id: appId,
+        agent_key: agentPubKey,
+        dnas: [{ hash: dnaHash, role_id: "entry-dna" }],
+      });
+      const { cell_id } = installedAppInfo.cell_data[0];
+      await this.enableApp(appId);
+      agentsCells.push({ agentPubKey, cellId: cell_id });
+    }
+
+    await this.attachAppInterface();
+    await this.connectAppInterface();
+
+    return agentsCells;
   }
 }
