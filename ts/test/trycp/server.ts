@@ -8,7 +8,7 @@ import {
 import { TryCpClient } from "../../src/trycp/trycp-client";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { FIXTURE_DNA_URL } from "../fixture";
-import { createConductor, DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
+import { createTryCpConductor, DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
 
 const LOCAL_SERVER_URL = `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`;
 const createTryCpClient = () => TryCpClient.create(LOCAL_SERVER_URL);
@@ -216,7 +216,7 @@ test("TryCP call - reset", async (t) => {
 
 test("TryCP call - Admin API - connect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createConductor(LOCAL_SERVER_URL);
+  const conductor = await createTryCpConductor(LOCAL_SERVER_URL);
 
   await conductor.configure();
   await conductor.startup();

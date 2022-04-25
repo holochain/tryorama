@@ -7,7 +7,7 @@ import {
 } from "../../src/trycp/trycp-server";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { HoloHash } from "@holochain/client";
-import { createConductor } from "../../src/trycp/conductor";
+import { createTryCpConductor } from "../../src/trycp/conductor";
 import { FIXTURE_DNA_URL } from "../fixture";
 import { addAllAgentsToAllConductors } from "../../src/trycp/util";
 
@@ -23,7 +23,7 @@ network:
 
 test("Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createConductor(
+  const conductor = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
 
@@ -88,7 +88,7 @@ test("Create and read an entry using the entry zome", async (t) => {
 
 test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createConductor(
+  const conductor = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
 
@@ -174,11 +174,11 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
 test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
-  const conductor1 = await createConductor(
+  const conductor1 = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
 
-  const conductor2 = await createConductor(
+  const conductor2 = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
   try {

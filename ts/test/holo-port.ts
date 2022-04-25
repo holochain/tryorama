@@ -1,7 +1,7 @@
 import test from "tape";
 import { TryCpClient } from "../src/trycp/trycp-client";
 import { DnaSource, HoloHash } from "@holochain/client";
-import { createConductor } from "../src/trycp/conductor";
+import { createTryCpConductor } from "../src/trycp/conductor";
 import { FIXTURE_DNA_URL } from "./fixture";
 import { addAllAgentsToAllConductors } from "../src/trycp/util";
 
@@ -33,7 +33,7 @@ test("Create and read an entry using the entry zome", async (t) => {
   const path = FIXTURE_DNA_URL.pathname;
   const dnas: DnaSource[] = [{ path }, { path }];
 
-  const conductor = await createConductor(HOLO_PORT_1);
+  const conductor = await createTryCpConductor(HOLO_PORT_1);
   await conductor.reset();
   await conductor.configure(partialConfig);
   await conductor.startup();
@@ -69,13 +69,13 @@ test("Create and read an entry using the entry zome", async (t) => {
 test.only("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
-  const conductor1 = await createConductor(HOLO_PORT_1);
+  const conductor1 = await createTryCpConductor(HOLO_PORT_1);
   await conductor1.reset();
   await conductor1.configure(partialConfig);
   await conductor1.startup();
   const [alice] = await conductor1.installAgentsDnas(dnas);
 
-  const conductor2 = await createConductor(HOLO_PORT_2);
+  const conductor2 = await createTryCpConductor(HOLO_PORT_2);
   await conductor2.reset();
   await conductor2.configure(partialConfig);
   await conductor2.startup();

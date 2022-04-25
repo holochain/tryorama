@@ -42,7 +42,7 @@ export type ConductorId = string;
  *
  * @public
  */
-export const createConductor = async (url: string, id?: ConductorId) => {
+export const createTryCpConductor = async (url: string, id?: ConductorId) => {
   const client = await TryCpClient.create(url);
   return new TryCpConductor(client, id);
 };
