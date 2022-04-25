@@ -4,10 +4,9 @@ import { cleanSandboxes, createLocalConductor } from "../../src/local";
 test.only("Local - spawn a local conductor", async (t) => {
   const conductor = await createLocalConductor();
   await conductor.start();
-  // await client.adminWs.listApps({});
-  // await client.appWs.appInfo({ installed_app_id: "" });
+  await conductor.adminWs().listApps({});
+  await conductor.appWs().appInfo({ installed_app_id: "" });
 
-  // await client.destroy();
   await conductor.destroy();
   await cleanSandboxes();
 });

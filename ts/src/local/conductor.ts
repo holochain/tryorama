@@ -25,12 +25,16 @@ export const createLocalConductor = async () => {
 export class LocalConductor {
   private conductorProcess: ChildProcessWithoutNullStreams | undefined;
   private conductorDir: string | undefined;
-  private conductor: Awaited<ReturnType<typeof this.createClient>> | undefined;
   private adminInterfacePort: number | undefined;
+  public _adminWs: AdminWebsocket | undefined;
+  public _appWs: AppWebsocket | undefined;
 
   private constructor() {
-    this.conductor = undefined;
     this.conductorProcess = undefined;
+    this.conductorDir = undefined;
+    this.adminInterfacePort = undefined;
+    this._adminWs = undefined;
+    this._appWs = undefined;
   }
 
   static async create() {
@@ -55,26 +59,6 @@ export class LocalConductor {
       }
     );
     return createConductorPromise;
-  }
-
-  private async createClient(url: string) {
-    const adminWs = await AdminWebsocket.connect(url);
-    logger.debug(`connected to Admin API @ ${url}\n`);
-
-    const appApiPort = await getPort({ port: portNumbers(30000, 40000) });
-    adminWs.attachAppInterface({ port: appApiPort });
-
-    const adminApiUrl = new URL(url);
-    const appApiUrl = `${adminApiUrl.protocol}//${adminApiUrl.hostname}:${appApiPort}`;
-    const appWs = await AppWebsocket.connect(appApiUrl);
-
-    const destroy = async () => {
-      await appWs.client.close();
-      await adminWs.client.close();
-      logger.debug("disconnected from Admin API\n");
-    };
-
-    return { adminWs, appWs, destroy };
   }
 
   async start() {
@@ -121,14 +105,39 @@ export class LocalConductor {
     });
     this.conductorProcess = runConductorProcess;
     const adminApiPort = await startPromise;
-    // this.conductor = await this.createClient(`ws://127.0.0.1:1${adminApiPort}`);
+    await this.connectAdminWs(`ws://127.0.0.1:${adminApiPort}`);
+    await this.connectAppWs();
+  }
+
+  private async connectAdminWs(url: string) {
+    this._adminWs = await AdminWebsocket.connect(url);
+    logger.debug(`connected to Admin API @ ${url}\n`);
+  }
+
+  private async connectAppWs() {
+    assert(this._adminWs, "error connecting to app: admin  is not defined");
+    const appApiPort = await getPort({ port: portNumbers(30000, 40000) });
+    this._adminWs.attachAppInterface({ port: appApiPort });
+
+    const adminApiUrl = new URL(this._adminWs.client.socket.url);
+    const appApiUrl = `${adminApiUrl.protocol}//${adminApiUrl.hostname}:${appApiPort}`;
+    this._appWs = await AppWebsocket.connect(appApiUrl);
+  }
+
+  adminWs() {
+    assert(
+      this._adminWs,
+      "error getting admin ws: admin ws has not been connected"
+    );
+    return this._adminWs;
+  }
+
+  appWs() {
+    assert(this._appWs, "error getting app ws: app ws has not been connected");
+    return this._appWs;
   }
 
   async destroy() {
-    if (this.conductor) {
-      await this.conductor.destroy();
-    }
-
     const destroyPromise = new Promise<number | null>((resolve) => {
       assert(
         this.conductorProcess,
@@ -147,7 +156,7 @@ export const cleanSandboxes = async () => {
   const conductorProcess = spawn("hc", ["sandbox", "clean"]);
   const cleanPromise = new Promise<void>((resolve) => {
     conductorProcess.stdout.once("end", () => {
-      logger.debug("conductors cleaned\n");
+      logger.debug("sandboxed conductors cleaned\n");
       resolve();
     });
   });
