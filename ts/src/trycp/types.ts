@@ -69,7 +69,12 @@ export interface RequestConfigurePlayer {
 /**
  * @public
  */
-export type PlayerLogLevel = "error" | "warn" | "info" | "debug" | "trace";
+export type TryCpConductorLogLevel =
+  | "error"
+  | "warn"
+  | "info"
+  | "debug"
+  | "trace";
 
 /**
  * @public
@@ -77,7 +82,7 @@ export type PlayerLogLevel = "error" | "warn" | "info" | "debug" | "trace";
 export interface RequestStartup {
   type: "startup";
   id: ConductorId;
-  log_level?: PlayerLogLevel;
+  log_level?: TryCpConductorLogLevel;
 }
 
 /**

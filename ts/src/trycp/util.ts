@@ -13,11 +13,15 @@ export const addAllAgentsToAllConductors = async (
   await Promise.all(
     conductors.map(
       async (conductorToShareAbout, conductorToShareAboutIndex) => {
-        const signedAgentInfos = await conductorToShareAbout.requestAgentInfo();
+        const signedAgentInfos = await conductorToShareAbout.requestAgentInfo({
+          cell_id: null,
+        });
         await Promise.all(
           conductors.map((conductorToShareWith, conductorToShareWithIndex) => {
             if (conductorToShareWithIndex !== conductorToShareAboutIndex) {
-              conductorToShareWith.addAgentInfo(signedAgentInfos);
+              conductorToShareWith.addAgentInfo({
+                agent_infos: signedAgentInfos,
+              });
             }
           })
         );

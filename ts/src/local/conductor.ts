@@ -1,8 +1,19 @@
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import assert from "assert";
+import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { makeLogger } from "../logger";
-import { AdminWebsocket, AppWebsocket } from "@holochain/client";
+import {
+  AdminWebsocket,
+  AppWebsocket,
+  AttachAppInterfaceRequest,
+  CallZomeRequest,
+  CallZomeResponse,
+  EnableAppRequest,
+  InstallAppRequest,
+  RegisterDnaRequest,
+} from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
+import { Conductor } from "../types";
+import { ZomeResponsePayload } from "../../test/fixture";
 
 const logger = makeLogger("Local conductor");
 
@@ -22,12 +33,12 @@ export const createLocalConductor = async () => {
 /**
  * @public
  */
-export class LocalConductor {
+export class LocalConductor implements Conductor {
   private conductorProcess: ChildProcessWithoutNullStreams | undefined;
   private conductorDir: string | undefined;
   private adminInterfacePort: number | undefined;
-  public _adminWs: AdminWebsocket | undefined;
-  public _appWs: AppWebsocket | undefined;
+  private _adminWs: AdminWebsocket | undefined;
+  private _appWs: AppWebsocket | undefined;
 
   private constructor() {
     this.conductorProcess = undefined;
@@ -43,7 +54,7 @@ export class LocalConductor {
     const createConductorPromise = new Promise<LocalConductor>(
       (resolve, reject) => {
         createConductorProcess.stdout.on("data", (data: Buffer) => {
-          logger.debug(`creating conductor config - ${data.toString()}\n`);
+          logger.debug(`creating conductor config\n${data.toString()}`);
           const tmpDirMatches = data.toString().match(/Created (\[".+"])/);
           if (tmpDirMatches) {
             localConductor.conductorDir = JSON.parse(tmpDirMatches[1])[0];
@@ -61,7 +72,7 @@ export class LocalConductor {
     return createConductorPromise;
   }
 
-  async start() {
+  async startup() {
     assert(
       this.conductorDir,
       "error starting conductor: conductor has not been created"
@@ -137,7 +148,40 @@ export class LocalConductor {
     return this._appWs;
   }
 
-  async destroy() {
+  async generateAgentPubKey() {
+    return this.adminWs().generateAgentPubKey();
+  }
+
+  // async requestAgentInfo(cellId?: CellId) {
+  //   return this.adminWs().requestAgentInfo({ cell_id: cellId || null });
+  // }
+
+  async registerDna(request: RegisterDnaRequest) {
+    return this.adminWs().registerDna(request);
+  }
+
+  async installApp(request: InstallAppRequest) {
+    return this.adminWs().installApp(request);
+  }
+
+  async enableApp(request: EnableAppRequest) {
+    return this.adminWs().enableApp(request);
+  }
+
+  async attachAppInterface(request?: AttachAppInterfaceRequest) {
+    request = request ?? {
+      port: await getPort({ port: portNumbers(30000, 40000) }),
+    };
+    return this.adminWs().attachAppInterface(request);
+  }
+
+  async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
+    const zomeResponse = await this.appWs().callZome(request);
+    assertZomeResponse<T>(zomeResponse);
+    return zomeResponse;
+  }
+
+  async shutdown() {
     const destroyPromise = new Promise<number | null>((resolve) => {
       assert(
         this.conductorProcess,
@@ -152,7 +196,7 @@ export class LocalConductor {
   }
 }
 
-export const cleanSandboxes = async () => {
+export const cleanAllConductors = async () => {
   const conductorProcess = spawn("hc", ["sandbox", "clean"]);
   const cleanPromise = new Promise<void>((resolve) => {
     conductorProcess.stdout.once("end", () => {
@@ -162,3 +206,9 @@ export const cleanSandboxes = async () => {
   });
   return cleanPromise;
 };
+
+function assertZomeResponse<T extends ZomeResponsePayload>(
+  response: CallZomeResponse
+): asserts response is T {
+  return;
+}

@@ -34,7 +34,7 @@ test("Create and read an entry using the entry zome", async (t) => {
   const dnas: DnaSource[] = [{ path }, { path }];
 
   const conductor = await createTryCpConductor(HOLO_PORT_1);
-  await conductor.reset();
+  await conductor.cleanAllConductors();
   await conductor.configure(partialConfig);
   await conductor.startup();
   const agentsCells = await conductor.installAgentsDnas(dnas);
@@ -63,20 +63,20 @@ test("Create and read an entry using the entry zome", async (t) => {
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor.destroy();
+  await conductor.shutdown();
 });
 
 test.only("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   const conductor1 = await createTryCpConductor(HOLO_PORT_1);
-  await conductor1.reset();
+  await conductor1.cleanAllConductors();
   await conductor1.configure(partialConfig);
   await conductor1.startup();
   const [alice] = await conductor1.installAgentsDnas(dnas);
 
   const conductor2 = await createTryCpConductor(HOLO_PORT_2);
-  await conductor2.reset();
+  await conductor2.cleanAllConductors();
   await conductor2.configure(partialConfig);
   await conductor2.startup();
   const [bob] = await conductor2.installAgentsDnas(dnas);
@@ -107,6 +107,6 @@ test.only("Create and read an entry using the entry zome, 2 conductors, 2 cells,
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor1.destroy();
-  await conductor2.destroy();
+  await conductor1.shutdown();
+  await conductor2.shutdown();
 });
