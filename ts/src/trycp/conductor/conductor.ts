@@ -56,7 +56,8 @@ export interface TryCpConductorOptions {
  *
  * @param url - The URL of the TryCP server to connect to.
  * @param options - Optional parameters to name, configure and start the
- * Conductor as well as clean all existing conductors.
+ * Conductor as well as clean all existing conductors. `cleanAllConductors` is
+ * `true` by default, as `startup`.
  * @returns A configured Conductor instance.
  *
  * @public
@@ -137,6 +138,13 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Start a configured conductor.
+   *
+   * @param log_level - Defaults to "info" on the TryCP server.
+   *
+   * @public
+   */
   async startup(log_level?: TryCpConductorLogLevel) {
     const response = await this.tryCpClient.call({
       type: "startup",
@@ -238,8 +246,10 @@ export class TryCpConductor implements Conductor {
 
   /**
    * Get agent infos, optionally of a particular cell.
-   * @param cellId - The cell id to get agent infos of.
+   * @param req - The cell id to get agent infos of.
    * @returns The agent infos.
+   *
+   * @public
    */
   async requestAgentInfo(
     req: RequestAgentInfoRequest
@@ -258,6 +268,8 @@ export class TryCpConductor implements Conductor {
   /**
    * Add agents to a conductor.
    * @param request - The agents to add to the conductor.
+   *
+   * @public
    */
   async addAgentInfo(request: AddAgentInfoRequest) {
     const response = await this.callAdminApi({
@@ -269,10 +281,12 @@ export class TryCpConductor implements Conductor {
   }
 
   /**
-   * Request a dump of the cell's source chain.
+   * Request a dump of the cell's state.
    *
    * @param request - The cell id for which state should be dumped.
    * @returns The cell's state as JSON.
+   *
+   * @public
    */
   async dumpState(request: DumpStateRequest) {
     const response = await this.callAdminApi({
@@ -286,10 +300,13 @@ export class TryCpConductor implements Conductor {
   }
 
   /**
-   * Request a dump of the cell's source chain.
+   * Request a full state dump of the cell's source chain.
    *
-   * @param request - The cell id for which state should be dumped.
+   * @param request - The cell id for which state should be dumped and
+   * optionally a DHT Ops cursor.
    * @returns The cell's state as JSON.
+   *
+   * @public
    */
   async dumpFullState(request: DumpFullStateRequest) {
     const response = await this.callAdminApi({
@@ -303,7 +320,9 @@ export class TryCpConductor implements Conductor {
   }
 
   /**
-   * Call conductor's App API
+   * Call conductor's App API.
+   *
+   * @public
    */
   async callAppApi(message: RequestCallAppInterfaceMessage) {
     assert(this.appInterfacePort, "No App interface attached to conductor");
@@ -323,6 +342,8 @@ export class TryCpConductor implements Conductor {
    *
    * @param installed_app_id - The id of the hApp to query.
    * @returns The app info.
+   *
+   * @public
    */
   async appInfo(installed_app_id: string) {
     const response = await this.callAppApi({
@@ -339,6 +360,8 @@ export class TryCpConductor implements Conductor {
    *
    * @param request - The zome call parameters.
    * @returns The result of the zome call.
+   *
+   * @public
    */
   async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
     const response = await this.callAppApi({
@@ -381,7 +404,10 @@ export class TryCpConductor implements Conductor {
           });
         });
         const relativePath = await this.saveDna(dnaContent);
-        dnaHash = await this.registerDna({ path: relativePath });
+        dnaHash = await this.registerDna({
+          path: relativePath,
+          uid: `uid-${uuidv4()}`,
+        });
       } else {
         dnaHash = new Uint8Array();
         throw new Error("Not dnaHashed");

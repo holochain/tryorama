@@ -24,14 +24,11 @@ network:
 test("Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTryCpConductor(
-    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
+    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
+    { partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG }
   );
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
-
-  await conductor.configure(LOCAL_TEST_PARTIAL_PLAYER_CONFIG);
-  await conductor.startup();
-
   const dnaHash = await conductor.registerDna({ path: relativePath });
   const dnaHashB64 = Buffer.from(dnaHash).toString("base64");
   t.equal(dnaHash.length, 39);
@@ -88,15 +85,35 @@ test("Create and read an entry using the entry zome", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
+test("Reading an entry without having created one will return None", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
+  const [alice] = await conductor.installAgentsDnas([
+    { path: FIXTURE_DNA_URL.pathname },
+  ]);
+  const actual = await conductor.callZome<null>({
+    cap_secret: null,
+    cell_id: alice.cellId,
+    zome_name: "crud",
+    fn_name: "read",
+    provenance: alice.agentPubKey,
+    payload: Buffer.from("hCkk", "base64"),
+  });
+  t.equal(actual, null);
+  await conductor.shutdown();
+  await localTryCpServer.stop();
+});
+
+test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const conductor = await createTryCpConductor(
+    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
+    { partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG }
+  );
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
-  await conductor.configure(LOCAL_TEST_PARTIAL_PLAYER_CONFIG);
-  await conductor.startup();
   const dnaHash1 = await conductor.registerDna({ path: relativePath });
   const dnaHash2 = await conductor.registerDna({ path: relativePath });
   const dnaHash1B64 = Buffer.from(dnaHash1).toString("base64");
@@ -184,10 +201,7 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
 
   const conductor1 = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
-    {
-      cleanAllConductors: true,
-      partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG,
-    }
+    { partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG }
   );
   const [alice] = await conductor1.installAgentsDnas(dnas);
 
@@ -195,6 +209,7 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
     {
       partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG,
+      cleanAllConductors: false,
     }
   );
   const [bob] = await conductor2.installAgentsDnas(dnas);
