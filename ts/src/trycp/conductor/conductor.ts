@@ -13,6 +13,8 @@ import {
   CellId,
   DnaHash,
   DnaSource,
+  DumpFullStateRequest,
+  DumpStateRequest,
   EnableAppRequest,
   EnableAppResponse,
   InstallAppRequest,
@@ -65,8 +67,8 @@ export const createTryCpConductor = async (
 ) => {
   const client = await TryCpClient.create(url);
   const conductor = new TryCpConductor(client, options?.id);
-  if (options?.cleanAllConductors) {
-    // clean all conductors when explicitly set
+  if (options?.cleanAllConductors !== false) {
+    // clean all conductors by default
     await conductor.cleanAllConductors();
   }
   if (options?.startup !== false) {
@@ -255,7 +257,7 @@ export class TryCpConductor implements Conductor {
 
   /**
    * Add agents to a conductor.
-   * @param signedAgentInfos - The agents to add to the conductor.
+   * @param request - The agents to add to the conductor.
    */
   async addAgentInfo(request: AddAgentInfoRequest) {
     const response = await this.callAdminApi({
@@ -264,6 +266,40 @@ export class TryCpConductor implements Conductor {
     });
     assert(response.type === "agent_info_added");
     return response;
+  }
+
+  /**
+   * Request a dump of the cell's source chain.
+   *
+   * @param request - The cell id for which state should be dumped.
+   * @returns The cell's state as JSON.
+   */
+  async dumpState(request: DumpStateRequest) {
+    const response = await this.callAdminApi({
+      type: "dump_state",
+      data: request,
+    });
+    assert("data" in response);
+    assert(typeof response.data === "string");
+    const stateDump = response.data.replace(/\\n/g, "");
+    return stateDump;
+  }
+
+  /**
+   * Request a dump of the cell's source chain.
+   *
+   * @param request - The cell id for which state should be dumped.
+   * @returns The cell's state as JSON.
+   */
+  async dumpFullState(request: DumpFullStateRequest) {
+    const response = await this.callAdminApi({
+      type: "dump_full_state",
+      data: request,
+    });
+    assert(response.type === "full_state_dumped");
+    assert("data" in response);
+    assert("peer_dump" in response.data);
+    return response.data;
   }
 
   /**
@@ -351,11 +387,11 @@ export class TryCpConductor implements Conductor {
         throw new Error("Not dnaHashed");
       }
       const agentPubKey = await this.generateAgentPubKey();
-      const appId = `app-${uuidv4()}`;
+      const appId = `app-entry`;
       const installedAppInfo = await this.installApp({
         installed_app_id: appId,
         agent_key: agentPubKey,
-        dnas: [{ hash: dnaHash, role_id: `${uuidv4()}-dna` }],
+        dnas: [{ hash: dnaHash, role_id: `entry-dna` }],
       });
       const { cell_id } = installedAppInfo.cell_data[0];
       await this.enableApp({ installed_app_id: appId });

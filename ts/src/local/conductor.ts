@@ -1,21 +1,29 @@
 import assert from "assert";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { makeLogger } from "../logger";
+import { v4 as uuidv4 } from "uuid";
 import {
+  AddAgentInfoRequest,
   AdminWebsocket,
   AppWebsocket,
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CallZomeResponse,
+  DnaSource,
   EnableAppRequest,
   InstallAppRequest,
   RegisterDnaRequest,
+  RequestAgentInfoRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
-import { Conductor } from "../types";
+import { AgentCell, Conductor } from "../types";
 import { ZomeResponsePayload } from "../../test/fixture";
 
 const logger = makeLogger("Local conductor");
+
+export interface LocalConductorOptions {
+  startup: boolean;
+}
 
 /**
  * The function to create a Local Conductor. It starts a sandbox conductor via
@@ -25,8 +33,11 @@ const logger = makeLogger("Local conductor");
  *
  * @public
  */
-export const createLocalConductor = async () => {
+export const createLocalConductor = async (options?: LocalConductorOptions) => {
   const conductor = await LocalConductor.create();
+  if (options?.startup !== false) {
+    await conductor.startup();
+  }
   return conductor;
 };
 
@@ -109,6 +120,16 @@ export class LocalConductor implements Conductor {
         }
       });
 
+      runConductorProcess.stdout.on("error", (err) => {
+        console.log("error happened", err);
+      });
+      runConductorProcess.stderr.on("data", (data: Buffer) => {
+        console.log("error happened", data.toString());
+      });
+      runConductorProcess.stderr.on("error", (err) => {
+        console.log("error happened", err);
+      });
+
       runConductorProcess.on("error", (err) => {
         logger.error(`error when starting conductor: ${err}\n`);
         reject(err);
@@ -118,6 +139,26 @@ export class LocalConductor implements Conductor {
     const adminApiPort = await startPromise;
     await this.connectAdminWs(`ws://127.0.0.1:${adminApiPort}`);
     await this.connectAppWs();
+  }
+
+  async shutdown() {
+    if (this._adminWs) {
+      await this._adminWs.client.close();
+    }
+    if (this._appWs) {
+      await this._appWs.client.close();
+    }
+    const destroyPromise = new Promise<number | null>((resolve) => {
+      assert(
+        this.conductorProcess,
+        "error destroying conductor: conductor is not running"
+      );
+      process.kill(-this.conductorProcess.pid);
+      this.conductorProcess.on("exit", (code) => {
+        resolve(code);
+      });
+    });
+    return destroyPromise;
   }
 
   private async connectAdminWs(url: string) {
@@ -152,9 +193,9 @@ export class LocalConductor implements Conductor {
     return this.adminWs().generateAgentPubKey();
   }
 
-  // async requestAgentInfo(cellId?: CellId) {
-  //   return this.adminWs().requestAgentInfo({ cell_id: cellId || null });
-  // }
+  async requestAgentInfo(request: RequestAgentInfoRequest) {
+    return this.adminWs().requestAgentInfo(request);
+  }
 
   async registerDna(request: RegisterDnaRequest) {
     return this.adminWs().registerDna(request);
@@ -175,24 +216,43 @@ export class LocalConductor implements Conductor {
     return this.adminWs().attachAppInterface(request);
   }
 
-  async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
-    const zomeResponse = await this.appWs().callZome(request);
-    assertZomeResponse<T>(zomeResponse);
-    return zomeResponse;
+  async addAgentInfo(request: AddAgentInfoRequest) {
+    return this.adminWs().addAgentInfo(request);
   }
 
-  async shutdown() {
-    const destroyPromise = new Promise<number | null>((resolve) => {
-      assert(
-        this.conductorProcess,
-        "error destroying conductor: conductor is not running"
+  async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
+    try {
+      const zomeResponse = await this.appWs().callZome(request);
+      assertZomeResponse<T>(zomeResponse);
+      return zomeResponse;
+    } catch (error) {
+      logger.error(
+        `local app ws error - call zome:\n${JSON.stringify(error, null, 4)}`
       );
-      process.kill(-this.conductorProcess.pid);
-      this.conductorProcess.on("exit", (code) => {
-        resolve(code);
-      });
-    });
-    return destroyPromise;
+      throw error;
+    }
+  }
+
+  async installAgentsDnas(dnas: DnaSource[]) {
+    const agentsCells: AgentCell[] = [];
+    const appId = `app-${uuidv4()}`;
+    for (const dna of dnas) {
+      const agentPubKey = await this.generateAgentPubKey();
+      if ("path" in dna) {
+        const dnaHash = await this.registerDna({ path: dna.path });
+        const installedAppInfo = await this.installApp({
+          installed_app_id: appId,
+          agent_key: agentPubKey,
+          dnas: [{ hash: dnaHash, role_id: `entry-${uuidv4()}` }],
+        });
+        const cellId = installedAppInfo.cell_data[0].cell_id;
+        agentsCells.push({ agentPubKey, cellId });
+      }
+    }
+    await this.enableApp({ installed_app_id: appId });
+    await this.attachAppInterface();
+
+    return agentsCells;
   }
 }
 

@@ -177,7 +177,7 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
   await localTryCpServer.stop();
 });
 
-test.only("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];

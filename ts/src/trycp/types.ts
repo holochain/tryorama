@@ -2,14 +2,21 @@ import {
   AddAgentInfoRequest,
   AgentInfoSigned,
   AppInfoResponse,
+  AttachAppInterfaceRequest,
   AttachAppInterfaceResponse,
   CallZomeRequest,
-  CellId,
+  DumpFullStateRequest,
+  DumpStateRequest,
+  DumpStateResponse,
+  EnableAppRequest,
   EnableAppResponse,
   HoloHash,
   InstallAppRequest,
   InstalledAppInfo,
+  RegisterDnaRequest,
+  RequestAgentInfoRequest,
 } from "@holochain/client";
+import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { ConductorId } from "./conductor";
 
 /**
@@ -169,11 +176,26 @@ export interface RequestCallAdminInterface {
  * @public
  */
 export interface RequestAdminInterfaceData {
-  type: string;
+  type:
+    | "generate_agent_pub_key"
+    | "connect_app_interface"
+    | "add_agent_info"
+    | "attach_app_interface"
+    | "dump_state"
+    | "dump_full_state"
+    | "enable_app"
+    | "install_app"
+    | "request_agent_info"
+    | "register_dna";
   data?:
-    | Record<string, string | number | CellId | null>
+    | AddAgentInfoRequest
+    | AttachAppInterfaceRequest
+    | DumpStateRequest
+    | DumpFullStateRequest
+    | EnableAppRequest
     | InstallAppRequest
-    | AddAgentInfoRequest;
+    | RegisterDnaRequest
+    | RequestAgentInfoRequest;
 }
 
 /**
@@ -254,12 +276,14 @@ export interface ApiErrorResponse {
  * @public
  */
 export type AdminApiResponse =
-  | AdminApiResponseDnaRegistered
+  | AdminApiResponseAgentInfoAdded
   | AdminApiResponseAgentPubKeyGenerated
-  | AdminApiResponseAppInstalled
   | AdminApiResponseAppEnabled
+  | AdminApiResponseAppInstalled
   | AdminApiResponseAppInterfaceAttached
-  | AdminApiResponseAgentInfoAdded;
+  | AdminApiResponseDnaRegistered
+  | AdminApiResponseStateDumped
+  | AdminApiResponseFullStateDumped;
 
 /**
  * @public
@@ -267,6 +291,22 @@ export type AdminApiResponse =
 export interface AdminApiResponseDnaRegistered {
   type: "dna_registered";
   data: HoloHash;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseStateDumped {
+  type: "state_dumped";
+  data: DumpStateResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseFullStateDumped {
+  type: "full_state_dumped";
+  data: FullStateDump;
 }
 
 /**
