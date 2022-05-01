@@ -2,15 +2,15 @@ import {
   AdminWebsocket,
   AppWebsocket,
   CallZomeRequest,
-  CellId,
   DnaSource,
+  InstalledCell,
 } from "@holochain/client";
 import { ZomeResponsePayload } from "../test/fixture";
 import { TryCpConductorLogLevel } from "./trycp";
 
-export interface AgentCell {
+export interface AgentCells {
   agentPubKey: Uint8Array;
-  cellId: CellId;
+  cells: InstalledCell[];
 }
 export interface Conductor
   extends Pick<
@@ -35,5 +35,8 @@ export interface Conductor
     request: CallZomeRequest
   ) => Promise<T>;
 
-  installAgentsDnas: (dnas: DnaSource[]) => Promise<AgentCell[]>;
+  installAgentsDnas: (options: {
+    agentsDnas: DnaSource[][];
+    uid?: string;
+  }) => Promise<AgentCells[]>;
 }

@@ -1,12 +1,10 @@
-import { DnaSource, EntryHash } from "@holochain/client";
 import test from "tape-promise/tape";
+import { DnaSource, EntryHash } from "@holochain/client";
 import { cleanAllConductors, createLocalConductor } from "../../src/local";
-import { addAllAgentsToAllConductors } from "../../src/trycp/util";
 import { FIXTURE_DNA_URL } from "../fixture";
 
-test("Local - spawn a conductor and check for admin and app ws", async (t) => {
+test("Local Conductor - spawn a conductor and check for admin and app ws", async (t) => {
   const conductor = await createLocalConductor();
-  await conductor.startup();
   t.ok(conductor.adminWs());
   t.ok(conductor.appWs());
 
@@ -14,7 +12,24 @@ test("Local - spawn a conductor and check for admin and app ws", async (t) => {
   await cleanAllConductors();
 });
 
-test("Local - Create and read an entry using the entry zome", async (t) => {
+test("Local Conductor - install multiple agents and DNAs and get access to them", async (t) => {
+  const conductor = await createLocalConductor();
+  const [alice, bob] = await conductor.installAgentsDnas({
+    agentsDnas: [
+      [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
+      [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
+    ],
+  });
+  alice.cells.forEach((cell) =>
+    t.deepEqual(cell.cell_id[1], alice.agentPubKey)
+  );
+  bob.cells.forEach((cell) => t.deepEqual(cell.cell_id[1], bob.agentPubKey));
+
+  await conductor.shutdown();
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Create and read an entry using the entry zome", async (t) => {
   const conductor = await createLocalConductor();
   t.ok(conductor.adminWs());
   t.ok(conductor.appWs());
@@ -52,9 +67,9 @@ test("Local - Create and read an entry using the entry zome", async (t) => {
     provenance: agentPubKey,
     payload: entryContent,
   });
-  // const createdEntryHashB64 = Buffer.from(createEntryHash).toString("base64");
-  // t.equal(createEntryHash.length, 39);
-  // t.ok(createdEntryHashB64.startsWith("hCkk"));
+  const createdEntryHashB64 = Buffer.from(createEntryHash).toString("base64");
+  t.equal(createEntryHash.length, 39);
+  t.ok(createdEntryHashB64.startsWith("hCkk"));
 
   const readEntryResponse = await conductor.callZome<typeof entryContent>({
     cap_secret: null,
@@ -70,18 +85,18 @@ test("Local - Create and read an entry using the entry zome", async (t) => {
   await cleanAllConductors();
 });
 
-test.only("Local - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   const conductor1 = await createLocalConductor();
   const conductor2 = await createLocalConductor();
-  const [alice] = await conductor1.installAgentsDnas(dnas);
-  const [bob] = await conductor2.installAgentsDnas(dnas);
+  const [alice] = await conductor1.installAgentsDnas({ agentsDnas: [dnas] });
+  const [bob] = await conductor2.installAgentsDnas({ agentsDnas: [dnas] });
 
   const entryContent = "test-content";
   const createEntryHash = await conductor1.callZome<EntryHash>({
     cap_secret: null,
-    cell_id: alice.cellId,
+    cell_id: alice.cells[0].cell_id,
     zome_name: "crud",
     fn_name: "create",
     provenance: alice.agentPubKey,
@@ -91,12 +106,11 @@ test.only("Local - Create and read an entry using the entry zome, 2 conductors, 
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  await addAllAgentsToAllConductors([conductor1, conductor2]);
-  await new Promise((resolve) => setTimeout(resolve, 1000));
+  await new Promise((resolve) => setTimeout(resolve, 500));
 
   const readEntryResponse = await conductor2.callZome<typeof entryContent>({
     cap_secret: null,
-    cell_id: bob.cellId,
+    cell_id: bob.cells[0].cell_id,
     zome_name: "crud",
     fn_name: "read",
     provenance: bob.agentPubKey,

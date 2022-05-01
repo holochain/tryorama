@@ -9,14 +9,17 @@ import {
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CallZomeResponse,
+  DnaHash,
   DnaSource,
+  DumpFullStateRequest,
+  DumpStateRequest,
   EnableAppRequest,
   InstallAppRequest,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
-import { AgentCell, Conductor } from "../types";
+import { AgentCells, Conductor } from "../types";
 import { ZomeResponsePayload } from "../../test/fixture";
 
 const logger = makeLogger("Local conductor");
@@ -61,7 +64,12 @@ export class LocalConductor implements Conductor {
 
   static async create() {
     const localConductor = new LocalConductor();
-    const createConductorProcess = spawn("hc", ["sandbox", "create"]);
+    const createConductorProcess = spawn("hc", [
+      "sandbox",
+      "create",
+      "network",
+      "mdns",
+    ]);
     const createConductorPromise = new Promise<LocalConductor>(
       (resolve, reject) => {
         createConductorProcess.stdout.on("data", (data: Buffer) => {
@@ -120,14 +128,9 @@ export class LocalConductor implements Conductor {
         }
       });
 
-      runConductorProcess.stdout.on("error", (err) => {
-        console.log("error happened", err);
-      });
       runConductorProcess.stderr.on("data", (data: Buffer) => {
-        console.log("error happened", data.toString());
-      });
-      runConductorProcess.stderr.on("error", (err) => {
-        console.log("error happened", err);
+        logger.error(`error when starting conductor: ${data.toString()}`);
+        reject(data);
       });
 
       runConductorProcess.on("error", (err) => {
@@ -167,9 +170,10 @@ export class LocalConductor implements Conductor {
   }
 
   private async connectAppWs() {
-    assert(this._adminWs, "error connecting to app: admin  is not defined");
+    assert(this._adminWs, "error connecting to app: admin is not defined");
     const appApiPort = await getPort({ port: portNumbers(30000, 40000) });
-    this._adminWs.attachAppInterface({ port: appApiPort });
+    logger.debug(`attaching App API to port ${appApiPort}\n`);
+    await this._adminWs.attachAppInterface({ port: appApiPort });
 
     const adminApiUrl = new URL(this._adminWs.client.socket.url);
     const appApiUrl = `${adminApiUrl.protocol}//${adminApiUrl.hostname}:${appApiPort}`;
@@ -220,6 +224,14 @@ export class LocalConductor implements Conductor {
     return this.adminWs().addAgentInfo(request);
   }
 
+  async dumpState(request: DumpStateRequest) {
+    return this.adminWs().dumpState(request);
+  }
+
+  async dumpFullState(request: DumpFullStateRequest) {
+    return this.adminWs().dumpFullState(request);
+  }
+
   async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
     try {
       const zomeResponse = await this.appWs().callZome(request);
@@ -233,23 +245,50 @@ export class LocalConductor implements Conductor {
     }
   }
 
-  async installAgentsDnas(dnas: DnaSource[]) {
-    const agentsCells: AgentCell[] = [];
-    const appId = `app-${uuidv4()}`;
-    for (const dna of dnas) {
+  async installAgentsDnas(options: {
+    agentsDnas: DnaSource[][];
+    uid?: string;
+  }) {
+    const agentsCells: AgentCells[] = [];
+    for (const agents of options.agentsDnas) {
+      const appId = `app-${uuidv4()}`;
+      const dnaHashes: DnaHash[] = [];
       const agentPubKey = await this.generateAgentPubKey();
-      if ("path" in dna) {
-        const dnaHash = await this.registerDna({ path: dna.path });
+      for (const dna of agents) {
+        if ("path" in dna) {
+          const dnaHash = await this.registerDna({ path: dna.path });
+          dnaHashes.push(dnaHash);
+        } else {
+          throw new Error("no dna found like");
+        }
+      }
+
+      const dnas = dnaHashes.map((dnaHash) => ({
+        hash: dnaHash,
+        role_id: `dna-${uuidv4()}`,
+      }));
+      try {
         const installedAppInfo = await this.installApp({
           installed_app_id: appId,
           agent_key: agentPubKey,
-          dnas: [{ hash: dnaHash, role_id: `entry-${uuidv4()}` }],
+          dnas,
         });
-        const cellId = installedAppInfo.cell_data[0].cell_id;
-        agentsCells.push({ agentPubKey, cellId });
+        const enableAppResponse = await this.enableApp({
+          installed_app_id: appId,
+        });
+        if (enableAppResponse.errors.length) {
+          logger.error(`error enabling app\n${enableAppResponse.errors}`);
+        }
+
+        agentsCells.push({
+          agentPubKey,
+          cells: installedAppInfo.cell_data,
+        });
+      } catch (error) {
+        logger.error(`error installing app\n${JSON.stringify(error, null, 4)}`);
+        throw error;
       }
     }
-    await this.enableApp({ installed_app_id: appId });
     await this.attachAppInterface();
 
     return agentsCells;
