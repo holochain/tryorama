@@ -85,7 +85,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   await cleanAllConductors();
 });
 
-test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test.only("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   const conductor1 = await createLocalConductor();
@@ -120,5 +120,5 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
   await conductor1.shutdown();
   await conductor2.shutdown();
-  await cleanAllConductors();
+  // await cleanAllConductors();
 });

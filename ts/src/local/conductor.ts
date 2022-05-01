@@ -250,11 +250,13 @@ export class LocalConductor implements Conductor {
     uid?: string;
   }) {
     const agentsCells: AgentCells[] = [];
-    for (const agents of options.agentsDnas) {
-      const appId = `app-${uuidv4()}`;
+
+    for (const agent of options.agentsDnas) {
       const dnaHashes: DnaHash[] = [];
       const agentPubKey = await this.generateAgentPubKey();
-      for (const dna of agents) {
+      const appId = `app-${uuidv4()}`;
+
+      for (const dna of agent) {
         if ("path" in dna) {
           const dnaHash = await this.registerDna({ path: dna.path });
           dnaHashes.push(dnaHash);
@@ -267,27 +269,23 @@ export class LocalConductor implements Conductor {
         hash: dnaHash,
         role_id: `dna-${uuidv4()}`,
       }));
-      try {
-        const installedAppInfo = await this.installApp({
-          installed_app_id: appId,
-          agent_key: agentPubKey,
-          dnas,
-        });
-        const enableAppResponse = await this.enableApp({
-          installed_app_id: appId,
-        });
-        if (enableAppResponse.errors.length) {
-          logger.error(`error enabling app\n${enableAppResponse.errors}`);
-        }
 
-        agentsCells.push({
-          agentPubKey,
-          cells: installedAppInfo.cell_data,
-        });
-      } catch (error) {
-        logger.error(`error installing app\n${JSON.stringify(error, null, 4)}`);
-        throw error;
+      const installedAppInfo = await this.installApp({
+        installed_app_id: appId,
+        agent_key: agentPubKey,
+        dnas,
+      });
+      const enableAppResponse = await this.enableApp({
+        installed_app_id: appId,
+      });
+      if (enableAppResponse.errors.length) {
+        logger.error(`error enabling app\n${enableAppResponse.errors}`);
       }
+
+      agentsCells.push({
+        agentPubKey,
+        cells: installedAppInfo.cell_data,
+      });
     }
     await this.attachAppInterface();
 

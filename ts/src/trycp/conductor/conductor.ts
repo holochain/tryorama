@@ -2,15 +2,13 @@ import assert from "assert";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import getPort, { portNumbers } from "get-port";
-import { Conductor } from "../../types";
+import { AgentCells, Conductor } from "../../types";
 import { TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AddAgentInfoRequest,
-  AgentInfoSigned,
   AgentPubKey,
   AttachAppInterfaceRequest,
   CallZomeRequest,
-  CellId,
   DnaHash,
   DnaSource,
   DumpFullStateRequest,
@@ -28,6 +26,7 @@ import {
 } from "../types";
 import { ZomeResponsePayload } from "../../../test/fixture";
 import { deserializeZomeResponsePayload } from "../util";
+import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -176,14 +175,12 @@ export class TryCpConductor implements Conductor {
   }
 
   async registerDna(request: RegisterDnaRequest & DnaSource): Promise<DnaHash> {
-    assert("path" in request);
+    // assert("path" in request);
     const response = await this.callAdminApi({
       type: "register_dna",
-      data: { path: request.path },
+      data: request,
     });
-    assert("data" in response);
-    assert(response.data);
-    assert("BYTES_PER_ELEMENT" in response.data);
+    assert(response.type === "dna_registered");
     return response.data;
   }
 
@@ -191,9 +188,7 @@ export class TryCpConductor implements Conductor {
     const response = await this.callAdminApi({
       type: "generate_agent_pub_key",
     });
-    assert("data" in response);
-    assert(response.data);
-    assert("BYTES_PER_ELEMENT" in response.data);
+    assert(response.type === "agent_pub_key_generated");
     return response.data;
   }
 
@@ -202,9 +197,7 @@ export class TryCpConductor implements Conductor {
       type: "install_app",
       data,
     });
-    assert("data" in response);
-    assert(response.data);
-    assert("cell_data" in response.data);
+    assert(response.type === "app_installed");
     return response.data;
   }
 
@@ -213,9 +206,7 @@ export class TryCpConductor implements Conductor {
       type: "enable_app",
       data: request,
     });
-    assert("data" in response);
-    assert(response.data);
-    assert("app" in response.data);
+    assert(response.type === "app_enabled");
     return response.data;
   }
 
@@ -227,9 +218,7 @@ export class TryCpConductor implements Conductor {
       type: "attach_app_interface",
       data: request,
     });
-    assert("data" in response);
-    assert(response.data);
-    assert("port" in response.data);
+    assert(response.type === "app_interface_attached");
     this.appInterfacePort = request.port;
     return { port: response.data.port };
   }
@@ -251,17 +240,14 @@ export class TryCpConductor implements Conductor {
    *
    * @public
    */
-  async requestAgentInfo(
-    req: RequestAgentInfoRequest
-  ): Promise<AgentInfoSigned[]> {
+  async requestAgentInfo(req: RequestAgentInfoRequest) {
     const response = await this.callAdminApi({
       type: "request_agent_info",
       data: {
         cell_id: req.cell_id || null,
       },
     });
-    assert("data" in response);
-    assert(Array.isArray(response.data));
+    assert(response.type === "agent_info_requested");
     return response.data;
   }
 
@@ -295,8 +281,8 @@ export class TryCpConductor implements Conductor {
     });
     assert("data" in response);
     assert(typeof response.data === "string");
-    const stateDump = response.data.replace(/\\n/g, "");
-    return stateDump;
+    const stateDump = JSON.parse(response.data.replace(/\\n/g, ""));
+    return stateDump as [FullStateDump, string];
   }
 
   /**
@@ -314,8 +300,6 @@ export class TryCpConductor implements Conductor {
       data: request,
     });
     assert(response.type === "full_state_dumped");
-    assert("data" in response);
-    assert("peer_dump" in response.data);
     return response.data;
   }
 
@@ -351,7 +335,6 @@ export class TryCpConductor implements Conductor {
       data: { installed_app_id },
     });
     assert(response.type === "app_info");
-    assert(response.data === null || "installed_app_id" in response.data);
     return response.data;
   }
 
@@ -376,52 +359,69 @@ export class TryCpConductor implements Conductor {
     return deserializedPayload;
   }
 
+  createUniqueHapp(dnas: DnaSource[]) {
+    const uid = uuidv4();
+    return { dnas, uid };
+  }
+
   /**
    * Helper to install DNAs and create agents. Given an array of DNAs for each
    * agent to be created, an agentPubKey is generated and the DNAs for the
    * agent are installed.  and handles to the
    * conductor, the cells and the agents are returned.
    *
-   * @param dnas - An array of DNA sources for each agent (= two-dimensional
-   * array).
+   * @param options - An array of DNA sources for each agent (= two-dimensional
+   * array) and optionally a unique id of the hApp.
    * @returns An array of agents and handles to their created cells (= two-
    * dimensional array).
    *
    * @public
    */
-  async installAgentsDnas(dnas: DnaSource[]) {
-    const agentsCells: Array<{ agentPubKey: AgentPubKey; cellId: CellId }> = [];
+  async installAgentsDnas(options: {
+    agentsDnas: DnaSource[][];
+    uid?: string;
+  }) {
+    const agentsCells: AgentCells[] = [];
 
-    for (const dna of dnas) {
-      let dnaHash: Uint8Array;
-      if ("path" in dna) {
-        const dnaContent = await new Promise<Buffer>((resolve, reject) => {
-          fs.readFile(dna.path, null, (err, data) => {
-            if (err) {
-              reject(err);
-            }
-            resolve(data);
-          });
-        });
-        const relativePath = await this.saveDna(dnaContent);
-        dnaHash = await this.registerDna({
-          path: relativePath,
-          uid: `uid-${uuidv4()}`,
-        });
-      } else {
-        dnaHash = new Uint8Array();
-        throw new Error("Not dnaHashed");
-      }
+    for (const agentDnas of options.agentsDnas) {
+      const dnaHashes: DnaHash[] = [];
       const agentPubKey = await this.generateAgentPubKey();
-      const appId = `app-entry`;
-      const installedAppInfo = await this.installApp({
-        installed_app_id: appId,
-        agent_key: agentPubKey,
-        dnas: [{ hash: dnaHash, role_id: `entry-dna` }],
-      });
-      const { cell_id } = installedAppInfo.cell_data[0];
-      await this.enableApp({ installed_app_id: appId });
-      agentsCells.push({ agentPubKey, cellId: cell_id });
+      const appId = `app-${uuidv4()}`;
+
+      for (const dna of agentDnas) {
+        if ("path" in dna) {
+          const dnaContent = await new Promise<Buffer>((resolve, reject) => {
+            fs.readFile(dna.path, null, (err, data) => {
+              if (err) {
+                reject(err);
+              }
+              resolve(data);
+            });
+          });
+          const relativePath = await this.saveDna(dnaContent);
+          const dnaHash = await this.registerDna({
+            path: relativePath,
+            uid: options.uid,
+          });
+          dnaHashes.push(dnaHash);
+        } else {
+          throw new Error("Not dnaHashed");
+        }
+
+        const dnas = dnaHashes.map((dnaHash) => ({
+          hash: dnaHash,
+          role_id: `dna-${uuidv4()}`,
+        }));
+
+        const installedAppInfo = await this.installApp({
+          installed_app_id: appId,
+          agent_key: agentPubKey,
+          dnas,
+        });
+        await this.enableApp({ installed_app_id: appId });
+        const cells = installedAppInfo.cell_data;
+        agentsCells.push({ agentPubKey, cells });
+      }
     }
 
     await this.attachAppInterface();

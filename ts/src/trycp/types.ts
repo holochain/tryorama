@@ -15,6 +15,7 @@ import {
   InstalledAppInfo,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
+  RequestAgentInfoResponse,
 } from "@holochain/client";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { ConductorId } from "./conductor";
@@ -277,6 +278,7 @@ export interface ApiErrorResponse {
  */
 export type AdminApiResponse =
   | AdminApiResponseAgentInfoAdded
+  | AdminApiResponseAgentInfoRequested
   | AdminApiResponseAgentPubKeyGenerated
   | AdminApiResponseAppEnabled
   | AdminApiResponseAppInstalled
@@ -284,6 +286,14 @@ export type AdminApiResponse =
   | AdminApiResponseDnaRegistered
   | AdminApiResponseStateDumped
   | AdminApiResponseFullStateDumped;
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAgentInfoRequested {
+  type: "agent_info_requested";
+  data: RequestAgentInfoResponse;
+}
 
 /**
  * @public

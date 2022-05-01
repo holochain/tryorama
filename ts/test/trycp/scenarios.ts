@@ -9,7 +9,6 @@ import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { DnaSource, EntryHash } from "@holochain/client";
 import { createTryCpConductor } from "../../src/trycp/conductor";
 import { FIXTURE_DNA_URL } from "../fixture";
-import { addAllAgentsToAllConductors } from "../../src/trycp/util";
 
 const LOCAL_TEST_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -18,10 +17,9 @@ dpki: ~
 network:
   transport_pool:
     - type: quic
-      bind_to: kitsune-quic://0.0.0.0:0
   network_type: quic_mdns`;
 
-test("Create and read an entry using the entry zome", async (t) => {
+test("TryCP Scenario - Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
@@ -85,17 +83,19 @@ test("Create and read an entry using the entry zome", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("Reading an entry without having created one will return None", async (t) => {
+test("TryCP Scenario - Reading an entry without having created one will return None", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
-  const [alice] = await conductor.installAgentsDnas([
-    { path: FIXTURE_DNA_URL.pathname },
-  ]);
+  const dnas = [{ path: FIXTURE_DNA_URL.pathname }];
+  const [alice] = await conductor.installAgentsDnas({
+    agentsDnas: [dnas],
+  });
+
   const actual = await conductor.callZome<null>({
     cap_secret: null,
-    cell_id: alice.cellId,
+    cell_id: alice.cells[0].cell_id,
     zome_name: "crud",
     fn_name: "read",
     provenance: alice.agentPubKey,
@@ -106,7 +106,7 @@ test("Reading an entry without having created one will return None", async (t) =
   await localTryCpServer.stop();
 });
 
-test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
+test("TryCP Scenario - Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
@@ -194,7 +194,7 @@ test("Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 age
   await localTryCpServer.stop();
 });
 
-test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test("TryCP Scenario - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
@@ -203,7 +203,7 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
     { partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG }
   );
-  const [alice] = await conductor1.installAgentsDnas(dnas);
+  const [alice] = await conductor1.installAgentsDnas({ agentsDnas: [dnas] });
 
   const conductor2 = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
@@ -212,14 +212,12 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
       cleanAllConductors: false,
     }
   );
-  const [bob] = await conductor2.installAgentsDnas(dnas);
-
-  await addAllAgentsToAllConductors([conductor1, conductor2]);
+  const [bob] = await conductor2.installAgentsDnas({ agentsDnas: [dnas] });
 
   const entryContent = "test-content";
   const createEntry1Hash = await conductor1.callZome<EntryHash>({
     cap_secret: null,
-    cell_id: alice.cellId,
+    cell_id: alice.cells[0].cell_id,
     zome_name: "crud",
     fn_name: "create",
     provenance: alice.agentPubKey,
@@ -229,11 +227,11 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
   t.equal(createEntry1Hash.length, 39);
   t.ok(createdEntry1HashB64.startsWith("hCkk"));
 
-  await new Promise((resolve) => setTimeout(() => resolve(null), 100));
+  await new Promise((resolve) => setTimeout(() => resolve(null), 1000));
 
   const readEntryResponse = await conductor2.callZome<typeof entryContent>({
     cap_secret: null,
-    cell_id: bob.cellId,
+    cell_id: bob.cells[0].cell_id,
     zome_name: "crud",
     fn_name: "read",
     provenance: bob.agentPubKey,
@@ -245,3 +243,5 @@ test("Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 ag
   await conductor2.shutdown();
   await localTryCpServer.stop();
 });
+
+// test("TryCP Scenario - Ensure peers are added to each other's p2p store", async (t) => {});

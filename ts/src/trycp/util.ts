@@ -1,33 +1,7 @@
 import msgpack from "@msgpack/msgpack";
 import assert from "assert";
 import { ZomeResponsePayload } from "../../test/fixture";
-import { Conductor } from "../types";
-import { TryCpConductor } from "./conductor";
 import { _TryCpApiResponse, _TryCpResponseWrapper } from "./types";
-
-/**
- * Register agents of provided conductors with all other conductors.
- */
-export const addAllAgentsToAllConductors = async (conductors: Conductor[]) => {
-  await Promise.all(
-    conductors.map(
-      async (conductorToShareAbout, conductorToShareAboutIndex) => {
-        const signedAgentInfos = await conductorToShareAbout.requestAgentInfo({
-          cell_id: null,
-        });
-        await Promise.all(
-          conductors.map((conductorToShareWith, conductorToShareWithIndex) => {
-            if (conductorToShareWithIndex !== conductorToShareAboutIndex) {
-              conductorToShareWith.addAgentInfo({
-                agent_infos: signedAgentInfos,
-              });
-            }
-          })
-        );
-      }
-    )
-  );
-};
 
 /**
  * Deserialize the binary response from TryCP
