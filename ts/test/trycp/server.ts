@@ -218,8 +218,6 @@ test("TryCP call - Admin API - connect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTryCpConductor(LOCAL_SERVER_URL);
 
-  await conductor.configure();
-  await conductor.startup();
   const { port } = await conductor.attachAppInterface();
   t.ok(typeof port === "number");
 

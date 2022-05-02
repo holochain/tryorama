@@ -27,6 +27,9 @@ import {
 import { ZomeResponsePayload } from "../../../test/fixture";
 import { deserializeZomeResponsePayload } from "../util";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
+import { makeLogger } from "../../logger";
+
+const logger = makeLogger("TryCP conductor");
 
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -359,11 +362,6 @@ export class TryCpConductor implements Conductor {
     return deserializedPayload;
   }
 
-  createUniqueHapp(dnas: DnaSource[]) {
-    const uid = uuidv4();
-    return { dnas, uid };
-  }
-
   /**
    * Helper to install DNAs and create agents. Given an array of DNAs for each
    * agent to be created, an agentPubKey is generated and the DNAs for the
@@ -387,6 +385,11 @@ export class TryCpConductor implements Conductor {
       const dnaHashes: DnaHash[] = [];
       const agentPubKey = await this.generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
+      logger.debug(
+        `installing app with id ${appId} for agent ${Buffer.from(
+          agentPubKey
+        ).toString("base64")}`
+      );
 
       for (const dna of agentDnas) {
         if ("path" in dna) {
