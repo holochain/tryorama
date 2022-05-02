@@ -1,34 +1,44 @@
-import { CallZomeRequest, DnaSource } from "@holochain/client";
+import { DnaSource } from "@holochain/client";
 import { v4 as uuidv4 } from "uuid";
+import { CallableCell } from "../types";
 import { createLocalConductor, LocalConductor } from "./conductor";
+
+export type Player = {
+  conductor: LocalConductor;
+  agentPubKey: Uint8Array;
+  cells: CallableCell[];
+};
 
 export class Scenario {
   uid: string;
-  // conductors: LocalConductor[];
+  conductors: LocalConductor[];
 
   constructor() {
     this.uid = uuidv4();
-    // this.conductors = [];
+    this.conductors = [];
   }
 
-  async addPlayer(dnas: DnaSource[]) {
+  async addPlayer(dnas: DnaSource[]): Promise<Player> {
     const conductor = await createLocalConductor();
-    const [agentsCells] = await conductor.installAgentsDnas({
+    const [agentCells] = await conductor.installAgentsDnas({
       agentsDnas: [dnas],
       uid: this.uid,
     });
-    agentsCells.cells.forEach((cell) => {
-      // eslint-disable-next-line
-      // @ts-ignore
-      cell.callZome = async (
-        request: Omit<CallZomeRequest, "cell_id"> & { provenance?: Uint8Array }
-      ) =>
-        conductor.callZome({
-          ...request,
-          provenance: request.provenance || agentsCells.agentPubKey,
-          cell_id: cell.cell_id,
-        });
-    });
-    return { conductor, agentsCells };
+    this.conductors.push(conductor);
+    return { conductor, ...agentCells };
+  }
+
+  async addPlayers(playersDnas: DnaSource[][]): Promise<Player[]> {
+    const players: Player[] = [];
+    for (const playerDnas of playersDnas) {
+      const player = await this.addPlayer(playerDnas);
+      players.push(player);
+    }
+    return players;
+  }
+
+  async cleanUp() {
+    await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
+    this.conductors = [];
   }
 }

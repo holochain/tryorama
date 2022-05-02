@@ -227,6 +227,6 @@ test("TryCP call - Admin API - connect app interface", async (t) => {
   const appInfoResponse = await conductor.appInfo("");
   t.equal(appInfoResponse, null);
 
-  await conductor.shutdown();
+  await conductor.shutDown();
   await localTryCpServer.stop();
 });

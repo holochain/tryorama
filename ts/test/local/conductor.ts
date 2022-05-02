@@ -2,13 +2,14 @@ import test from "tape-promise/tape";
 import { DnaSource, EntryHash } from "@holochain/client";
 import { cleanAllConductors, createLocalConductor } from "../../src/local";
 import { FIXTURE_DNA_URL } from "../fixture";
+import { pause } from "../../src/util";
 
 test("Local Conductor - spawn a conductor and check for admin and app ws", async (t) => {
   const conductor = await createLocalConductor();
   t.ok(conductor.adminWs());
   t.ok(conductor.appWs());
 
-  await conductor.shutdown();
+  await conductor.shutDown();
   await cleanAllConductors();
 });
 
@@ -25,7 +26,7 @@ test("Local Conductor - Install multiple agents and DNAs and get access to agent
   );
   bob.cells.forEach((cell) => t.deepEqual(cell.cell_id[1], bob.agentPubKey));
 
-  await conductor.shutdown();
+  await conductor.shutDown();
   await cleanAllConductors();
 });
 
@@ -81,7 +82,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor.shutdown();
+  await conductor.shutDown();
   await cleanAllConductors();
 });
 
@@ -103,7 +104,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  await new Promise((resolve) => setTimeout(resolve, 500));
+  await pause(500);
 
   const readEntryResponse = await bob.cells[0].callZome<typeof entryContent>({
     zome_name: "crud",
@@ -112,7 +113,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor1.shutdown();
-  await conductor2.shutdown();
+  await conductor1.shutDown();
+  await conductor2.shutDown();
   await cleanAllConductors();
 });

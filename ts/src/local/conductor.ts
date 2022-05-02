@@ -39,7 +39,7 @@ export interface LocalConductorOptions {
 export const createLocalConductor = async (options?: LocalConductorOptions) => {
   const conductor = await LocalConductor.create();
   if (options?.startup !== false) {
-    await conductor.startup();
+    await conductor.startUp();
   }
   return conductor;
 };
@@ -91,7 +91,7 @@ export class LocalConductor implements Conductor {
     return createConductorPromise;
   }
 
-  async startup() {
+  async startUp() {
     assert(
       this.conductorDir,
       "error starting conductor: conductor has not been created"
@@ -144,7 +144,7 @@ export class LocalConductor implements Conductor {
     await this.connectAppWs();
   }
 
-  async shutdown() {
+  async shutDown() {
     if (this._adminWs) {
       await this._adminWs.client.close();
     }

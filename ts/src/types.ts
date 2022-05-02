@@ -20,9 +20,13 @@ export type CallZomeFn = <T extends ZomeResponsePayload>(
   request: CellZomeCallRequest
 ) => Promise<T>;
 
+export interface CallableCell extends InstalledCell {
+  callZome: CallZomeFn;
+}
+
 export interface AgentCells {
   agentPubKey: Uint8Array;
-  cells: Array<InstalledCell & { callZome: CallZomeFn }>;
+  cells: CallableCell[];
 }
 export interface Conductor
   extends Pick<
@@ -38,8 +42,8 @@ export interface Conductor
       | "dumpFullState"
     >,
     Pick<AppWebsocket, "callZome"> {
-  startup: (log_level?: TryCpConductorLogLevel) => Promise<void | null>;
-  shutdown: () => Promise<number | null>;
+  startUp: (log_level?: TryCpConductorLogLevel) => Promise<void | null>;
+  shutDown: () => Promise<number | null>;
 
   // appInfo: (installed_app_id: string) => Promise<InstalledAppInfo | null>;
 

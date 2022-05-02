@@ -2,7 +2,7 @@ import assert from "assert";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import getPort, { portNumbers } from "get-port";
-import { AgentCells, Conductor } from "../../types";
+import { AgentCells, CellZomeCallRequest, Conductor } from "../../types";
 import { TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AddAgentInfoRequest,
@@ -77,7 +77,7 @@ export const createTryCpConductor = async (
   if (options?.startup !== false) {
     // configure and startup conductor by default
     await conductor.configure(options?.partialConfig);
-    await conductor.startup(options?.logLevel);
+    await conductor.startUp(options?.logLevel);
   }
   return conductor;
 };
@@ -96,7 +96,34 @@ export class TryCpConductor implements Conductor {
     this.id = id || "conductor-" + uuidv4();
   }
 
-  async shutdown() {
+  async configure(partialConfig?: string) {
+    const response = await this.tryCpClient.call({
+      type: "configure_player",
+      id: this.id,
+      partial_config: partialConfig || DEFAULT_PARTIAL_PLAYER_CONFIG,
+    });
+    assert(response === TRYCP_SUCCESS_RESPONSE);
+    return response;
+  }
+
+  /**
+   * Start a configured conductor.
+   *
+   * @param log_level - Defaults to "info" on the TryCP server.
+   *
+   * @public
+   */
+  async startUp(log_level?: TryCpConductorLogLevel) {
+    const response = await this.tryCpClient.call({
+      type: "startup",
+      id: this.id,
+      log_level,
+    });
+    assert(response === TRYCP_SUCCESS_RESPONSE);
+    return response;
+  }
+
+  async shutDown() {
     await this.shutdownConductor();
     const response = await this.tryCpClient.close();
     assert(response === 1000);
@@ -127,33 +154,6 @@ export class TryCpConductor implements Conductor {
       content: dnaContent,
     });
     assert(typeof response === "string");
-    return response;
-  }
-
-  async configure(partialConfig?: string) {
-    const response = await this.tryCpClient.call({
-      type: "configure_player",
-      id: this.id,
-      partial_config: partialConfig || DEFAULT_PARTIAL_PLAYER_CONFIG,
-    });
-    assert(response === TRYCP_SUCCESS_RESPONSE);
-    return response;
-  }
-
-  /**
-   * Start a configured conductor.
-   *
-   * @param log_level - Defaults to "info" on the TryCP server.
-   *
-   * @public
-   */
-  async startup(log_level?: TryCpConductorLogLevel) {
-    const response = await this.tryCpClient.call({
-      type: "startup",
-      id: this.id,
-      log_level,
-    });
-    assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }
 
@@ -422,7 +422,19 @@ export class TryCpConductor implements Conductor {
           dnas,
         });
         await this.enableApp({ installed_app_id: appId });
-        const cells = installedAppInfo.cell_data;
+
+        const cells = installedAppInfo.cell_data.map((cell) => ({
+          ...cell,
+          callZome: async <T extends ZomeResponsePayload>(
+            request: CellZomeCallRequest
+          ) =>
+            this.callZome<T>({
+              ...request,
+              cap_secret: request.cap_secret || null,
+              cell_id: cell.cell_id,
+              provenance: request.provenance || agentPubKey,
+            }),
+        }));
         agentsCells.push({ agentPubKey, cells });
       }
     }

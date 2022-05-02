@@ -9,6 +9,7 @@ import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { DnaSource, EntryHash } from "@holochain/client";
 import { createTryCpConductor } from "../../src/trycp/conductor";
 import { FIXTURE_DNA_URL } from "../fixture";
+import { pause } from "../../src/util";
 
 const LOCAL_TEST_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -79,7 +80,7 @@ test("TryCP Scenario - Create and read an entry using the entry zome", async (t)
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor.shutdown();
+  await conductor.shutDown();
   await localTryCpServer.stop();
 });
 
@@ -102,7 +103,7 @@ test("TryCP Scenario - Reading an entry without having created one will return N
     payload: Buffer.from("hCkk", "base64"),
   });
   t.equal(actual, null);
-  await conductor.shutdown();
+  await conductor.shutDown();
   await localTryCpServer.stop();
 });
 
@@ -190,7 +191,7 @@ test("TryCP Scenario - Create and read an entry using the entry zome, 1 conducto
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor.shutdown();
+  await conductor.shutDown();
   await localTryCpServer.stop();
 });
 
@@ -227,7 +228,7 @@ test("TryCP Scenario - Create and read an entry using the entry zome, 2 conducto
   t.equal(createEntry1Hash.length, 39);
   t.ok(createdEntry1HashB64.startsWith("hCkk"));
 
-  await new Promise((resolve) => setTimeout(() => resolve(null), 1000));
+  await pause(1000);
 
   const readEntryResponse = await conductor2.callZome<typeof entryContent>({
     cap_secret: null,
@@ -239,9 +240,7 @@ test("TryCP Scenario - Create and read an entry using the entry zome, 2 conducto
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor1.shutdown();
-  await conductor2.shutdown();
+  await conductor1.shutDown();
+  await conductor2.shutDown();
   await localTryCpServer.stop();
 });
-
-// test("TryCP Scenario - Ensure peers are added to each other's p2p store", async (t) => {});
