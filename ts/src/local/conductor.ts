@@ -19,7 +19,7 @@ import {
   RequestAgentInfoRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
-import { AgentCells, Conductor } from "../types";
+import { AgentCells, CellZomeCallRequest, Conductor } from "../types";
 import { ZomeResponsePayload } from "../../test/fixture";
 
 const logger = makeLogger("Local conductor");
@@ -282,9 +282,22 @@ export class LocalConductor implements Conductor {
         logger.error(`error enabling app\n${enableAppResponse.errors}`);
       }
 
+      const cells = installedAppInfo.cell_data.map((cell) => ({
+        ...cell,
+        callZome: async <T extends ZomeResponsePayload>(
+          request: CellZomeCallRequest
+        ) =>
+          this.callZome<T>({
+            ...request,
+            cap_secret: request.cap_secret || null,
+            cell_id: cell.cell_id,
+            provenance: request.provenance || agentPubKey,
+          }),
+      }));
+
       agentsCells.push({
         agentPubKey,
-        cells: installedAppInfo.cell_data,
+        cells,
       });
     }
     await this.attachAppInterface();

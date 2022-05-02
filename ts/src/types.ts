@@ -8,9 +8,21 @@ import {
 import { ZomeResponsePayload } from "../test/fixture";
 import { TryCpConductorLogLevel } from "./trycp";
 
+export type CellZomeCallRequest = Omit<
+  CallZomeRequest,
+  "cap_secret" | "cell_id" | "provenance"
+> & {
+  cap_secret?: Uint8Array;
+  provenance?: Uint8Array;
+};
+
+export type CallZomeFn = <T extends ZomeResponsePayload>(
+  request: CellZomeCallRequest
+) => Promise<T>;
+
 export interface AgentCells {
   agentPubKey: Uint8Array;
-  cells: InstalledCell[];
+  cells: Array<InstalledCell & { callZome: CallZomeFn }>;
 }
 export interface Conductor
   extends Pick<
