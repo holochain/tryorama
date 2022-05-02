@@ -15,7 +15,7 @@ test("Local Conductor - Spawn a conductor and check for admin and app ws", async
 
 test("Local Conductor - Get app info", async (t) => {
   const conductor = await createLocalConductor();
-  const [alice] = await conductor.installAgentsDnas({
+  const [alice] = await conductor.installAgentsHapps({
     agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
   });
   const appInfo = await conductor.appInfo({ installed_app_id: alice.happId });
@@ -26,7 +26,7 @@ test("Local Conductor - Get app info", async (t) => {
 
 test("Local Conductor - Install multiple agents and DNAs and get access to agents and cells", async (t) => {
   const conductor = await createLocalConductor();
-  const [alice, bob] = await conductor.installAgentsDnas({
+  const [alice, bob] = await conductor.installAgentsHapps({
     agentsDnas: [
       [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
       [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
@@ -102,8 +102,8 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
   const conductor1 = await createLocalConductor();
   const conductor2 = await createLocalConductor();
-  const [alice] = await conductor1.installAgentsDnas({ agentsDnas: [dnas] });
-  const [bob] = await conductor2.installAgentsDnas({ agentsDnas: [dnas] });
+  const [alice] = await conductor1.installAgentsHapps({ agentsDnas: [dnas] });
+  const [bob] = await conductor2.installAgentsHapps({ agentsDnas: [dnas] });
 
   const entryContent = "test-content";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({

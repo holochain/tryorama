@@ -376,7 +376,7 @@ export class TryCpConductor implements Conductor {
    *
    * @public
    */
-  async installAgentsDnas(options: {
+  async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
     uid?: string;
   }) {

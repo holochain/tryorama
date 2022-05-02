@@ -90,7 +90,7 @@ test("TryCP Scenario - Reading an entry without having created one will return N
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
   );
   const dnas = [{ path: FIXTURE_DNA_URL.pathname }];
-  const [alice] = await conductor.installAgentsDnas({
+  const [alice] = await conductor.installAgentsHapps({
     agentsDnas: [dnas],
   });
 
@@ -204,7 +204,7 @@ test("TryCP Scenario - Create and read an entry using the entry zome, 2 conducto
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
     { partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG }
   );
-  const [alice] = await conductor1.installAgentsDnas({ agentsDnas: [dnas] });
+  const [alice] = await conductor1.installAgentsHapps({ agentsDnas: [dnas] });
 
   const conductor2 = await createTryCpConductor(
     `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
@@ -213,7 +213,7 @@ test("TryCP Scenario - Create and read an entry using the entry zome, 2 conducto
       cleanAllConductors: false,
     }
   );
-  const [bob] = await conductor2.installAgentsDnas({ agentsDnas: [dnas] });
+  const [bob] = await conductor2.installAgentsHapps({ agentsDnas: [dnas] });
 
   const entryContent = "test-content";
   const createEntry1Hash = await conductor1.callZome<EntryHash>({

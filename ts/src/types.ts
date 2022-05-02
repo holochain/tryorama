@@ -50,7 +50,7 @@ export interface Conductor
     request: CallZomeRequest
   ) => Promise<T>;
 
-  installAgentsDnas: (options: {
+  installAgentsHapps: (options: {
     agentsDnas: DnaSource[][];
     uid?: string;
   }) => Promise<AgentHapp[]>;

@@ -250,7 +250,7 @@ export class LocalConductor implements Conductor {
     }
   }
 
-  async installAgentsDnas(options: {
+  async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
     uid?: string;
   }) {

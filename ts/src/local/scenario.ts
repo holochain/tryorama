@@ -20,7 +20,7 @@ export class Scenario {
 
   async addPlayer(dnas: DnaSource[]): Promise<Player> {
     const conductor = await createLocalConductor();
-    const [agentCells] = await conductor.installAgentsDnas({
+    const [agentCells] = await conductor.installAgentsHapps({
       agentsDnas: [dnas],
       uid: this.uid,
     });
