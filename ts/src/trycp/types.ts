@@ -376,7 +376,7 @@ export type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall;
  */
 export interface AppApiResponseAppInfo {
   type: "app_info";
-  data: AppInfoResponse | null;
+  data: AppInfoResponse;
 }
 
 /**

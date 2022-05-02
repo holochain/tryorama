@@ -24,7 +24,8 @@ export interface CallableCell extends InstalledCell {
   callZome: CallZomeFn;
 }
 
-export interface AgentCells {
+export interface AgentHapp {
+  happId: string;
   agentPubKey: Uint8Array;
   cells: CallableCell[];
 }
@@ -41,11 +42,9 @@ export interface Conductor
       | "dumpState"
       | "dumpFullState"
     >,
-    Pick<AppWebsocket, "callZome"> {
+    Pick<AppWebsocket, "callZome" | "appInfo"> {
   startUp: (log_level?: TryCpConductorLogLevel) => Promise<void | null>;
   shutDown: () => Promise<number | null>;
-
-  // appInfo: (installed_app_id: string) => Promise<InstalledAppInfo | null>;
 
   callZome: <T extends ZomeResponsePayload>(
     request: CallZomeRequest
@@ -54,5 +53,5 @@ export interface Conductor
   installAgentsDnas: (options: {
     agentsDnas: DnaSource[][];
     uid?: string;
-  }) => Promise<AgentCells[]>;
+  }) => Promise<AgentHapp[]>;
 }

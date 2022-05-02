@@ -2,11 +2,12 @@ import assert from "assert";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import getPort, { portNumbers } from "get-port";
-import { AgentCells, CellZomeCallRequest, Conductor } from "../../types";
+import { AgentHapp, CellZomeCallRequest, Conductor } from "../../types";
 import { TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AddAgentInfoRequest,
   AgentPubKey,
+  AppInfoRequest,
   AttachAppInterfaceRequest,
   CallZomeRequest,
   DnaHash,
@@ -124,7 +125,7 @@ export class TryCpConductor implements Conductor {
   }
 
   async shutDown() {
-    await this.shutdownConductor();
+    await this.shutDownConductor();
     const response = await this.tryCpClient.close();
     assert(response === 1000);
     return response;
@@ -157,7 +158,7 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
-  async shutdownConductor() {
+  async shutDownConductor() {
     const response = await this.tryCpClient.call({
       type: "shutdown",
       id: this.id,
@@ -332,10 +333,10 @@ export class TryCpConductor implements Conductor {
    *
    * @public
    */
-  async appInfo(installed_app_id: string) {
+  async appInfo(request: AppInfoRequest) {
     const response = await this.callAppApi({
       type: "app_info",
-      data: { installed_app_id },
+      data: request,
     });
     assert(response.type === "app_info");
     return response.data;
@@ -379,7 +380,7 @@ export class TryCpConductor implements Conductor {
     agentsDnas: DnaSource[][];
     uid?: string;
   }) {
-    const agentsCells: AgentCells[] = [];
+    const agentsCells: AgentHapp[] = [];
 
     for (const agentDnas of options.agentsDnas) {
       const dnaHashes: DnaHash[] = [];
@@ -435,7 +436,11 @@ export class TryCpConductor implements Conductor {
               provenance: request.provenance || agentPubKey,
             }),
         }));
-        agentsCells.push({ agentPubKey, cells });
+        agentsCells.push({
+          happId: installedAppInfo.installed_app_id,
+          agentPubKey,
+          cells,
+        });
       }
     }
 

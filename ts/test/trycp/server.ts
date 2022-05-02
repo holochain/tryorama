@@ -13,7 +13,7 @@ import { createTryCpConductor, DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
 const LOCAL_SERVER_URL = `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`;
 const createTryCpClient = () => TryCpClient.create(LOCAL_SERVER_URL);
 
-test("TryCP - ping", async (t) => {
+test("TryCP - Ping", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -26,7 +26,7 @@ test("TryCP - ping", async (t) => {
   t.equal(actual, expected);
 });
 
-test("TryCP call - non-existent call throws", async (t) => {
+test("TryCP call - Non-existent call throws", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -43,7 +43,7 @@ test("TryCP call - non-existent call throws", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP call - download DNA from web", async (t) => {
+test("TryCP call - Download DNA from web", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -60,7 +60,7 @@ test("TryCP call - download DNA from web", async (t) => {
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 });
 
-test("TryCP call - download DNA from file system", async (t) => {
+test("TryCP call - Download DNA from file system", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -76,7 +76,7 @@ test("TryCP call - download DNA from file system", async (t) => {
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 });
 
-test("TryCP call - save DNA to file system", async (t) => {
+test("TryCP call - Save DNA to file system", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -92,7 +92,7 @@ test("TryCP call - save DNA to file system", async (t) => {
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(dnaId));
 });
 
-test("TryCP call - configure player", async (t) => {
+test("TryCP call - Configure player", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -157,7 +157,7 @@ test("TryCP - 2 parallel calls from two clients return correct responses", async
   t.equal(response2, TRYCP_SUCCESS_RESPONSE);
 });
 
-test("TryCP call - startup and shutdown", async (t) => {
+test("TryCP call - Startup and shutdown", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -184,7 +184,7 @@ test("TryCP call - startup and shutdown", async (t) => {
   t.equal(actualShutdown, TRYCP_SUCCESS_RESPONSE);
 });
 
-test("TryCP call - reset", async (t) => {
+test("TryCP call - Reset", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -214,7 +214,7 @@ test("TryCP call - reset", async (t) => {
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
 });
 
-test("TryCP call - Admin API - connect app interface", async (t) => {
+test("TryCP call - Admin API - Connect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTryCpConductor(LOCAL_SERVER_URL);
 
@@ -224,8 +224,22 @@ test("TryCP call - Admin API - connect app interface", async (t) => {
   const connectAppInterfaceResponse = await conductor.connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
-  const appInfoResponse = await conductor.appInfo("");
+  const appInfoResponse = await conductor.appInfo({ installed_app_id: "" });
   t.equal(appInfoResponse, null);
+
+  await conductor.shutDown();
+  await localTryCpServer.stop();
+});
+
+test("TryCP call - App API - Get app info", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const conductor = await createTryCpConductor(LOCAL_SERVER_URL);
+  const [alice] = await conductor.installAgentsDnas({
+    agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
+  });
+
+  const appInfo = await conductor.appInfo({ installed_app_id: alice.happId });
+  t.deepEqual(appInfo.status, { running: null });
 
   await conductor.shutDown();
   await localTryCpServer.stop();

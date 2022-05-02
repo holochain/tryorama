@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from "uuid";
 import {
   AddAgentInfoRequest,
   AdminWebsocket,
+  AppInfoRequest,
   AppWebsocket,
   AttachAppInterfaceRequest,
   CallZomeRequest,
@@ -19,7 +20,7 @@ import {
   RequestAgentInfoRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
-import { AgentCells, CellZomeCallRequest, Conductor } from "../types";
+import { AgentHapp, CellZomeCallRequest, Conductor } from "../types";
 import { ZomeResponsePayload } from "../../test/fixture";
 
 const logger = makeLogger("Local conductor");
@@ -232,6 +233,10 @@ export class LocalConductor implements Conductor {
     return this.adminWs().dumpFullState(request);
   }
 
+  async appInfo(request: AppInfoRequest) {
+    return this.appWs().appInfo(request);
+  }
+
   async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
     try {
       const zomeResponse = await this.appWs().callZome(request);
@@ -249,7 +254,7 @@ export class LocalConductor implements Conductor {
     agentsDnas: DnaSource[][];
     uid?: string;
   }) {
-    const agentsCells: AgentCells[] = [];
+    const agentsCells: AgentHapp[] = [];
 
     for (const agent of options.agentsDnas) {
       const dnaHashes: DnaHash[] = [];
@@ -296,6 +301,7 @@ export class LocalConductor implements Conductor {
       }));
 
       agentsCells.push({
+        happId: installedAppInfo.installed_app_id,
         agentPubKey,
         cells,
       });

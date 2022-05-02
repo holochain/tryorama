@@ -4,11 +4,22 @@ import { cleanAllConductors, createLocalConductor } from "../../src/local";
 import { FIXTURE_DNA_URL } from "../fixture";
 import { pause } from "../../src/util";
 
-test("Local Conductor - spawn a conductor and check for admin and app ws", async (t) => {
+test("Local Conductor - Spawn a conductor and check for admin and app ws", async (t) => {
   const conductor = await createLocalConductor();
   t.ok(conductor.adminWs());
   t.ok(conductor.appWs());
 
+  await conductor.shutDown();
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Get app info", async (t) => {
+  const conductor = await createLocalConductor();
+  const [alice] = await conductor.installAgentsDnas({
+    agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
+  });
+  const appInfo = await conductor.appInfo({ installed_app_id: alice.happId });
+  t.deepEqual(appInfo.status, { running: null });
   await conductor.shutDown();
   await cleanAllConductors();
 });
