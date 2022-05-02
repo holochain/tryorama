@@ -1,2 +1,2 @@
-import "./holo-port";
+import "./local";
 import "./trycp";
