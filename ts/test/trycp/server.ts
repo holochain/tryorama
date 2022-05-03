@@ -9,11 +9,12 @@ import { TryCpClient } from "../../src/trycp/trycp-client";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { FIXTURE_DNA_URL } from "../fixture";
 import { createTryCpConductor, DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
+import { URL } from "url";
 
-const LOCAL_SERVER_URL = `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`;
-const createTryCpClient = () => TryCpClient.create(LOCAL_SERVER_URL);
+const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
+const createTryCpClient = () => TryCpClient.create(SERVER_URL);
 
-test("TryCP - Ping", async (t) => {
+test("TryCP Server - Ping", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -26,7 +27,7 @@ test("TryCP - Ping", async (t) => {
   t.equal(actual, expected);
 });
 
-test("TryCP call - Non-existent call throws", async (t) => {
+test("TryCP Server - Non-existent call throws", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -43,7 +44,7 @@ test("TryCP call - Non-existent call throws", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP call - Download DNA from web", async (t) => {
+test("TryCP Server - Download DNA from web", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -60,7 +61,7 @@ test("TryCP call - Download DNA from web", async (t) => {
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 });
 
-test("TryCP call - Download DNA from file system", async (t) => {
+test("TryCP Server - Download DNA from file system", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -76,7 +77,7 @@ test("TryCP call - Download DNA from file system", async (t) => {
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 });
 
-test("TryCP call - Save DNA to file system", async (t) => {
+test("TryCP Server - Save DNA to file system", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -92,7 +93,7 @@ test("TryCP call - Save DNA to file system", async (t) => {
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(dnaId));
 });
 
-test("TryCP call - Configure player", async (t) => {
+test("TryCP Server - Configure player", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -107,7 +108,7 @@ test("TryCP call - Configure player", async (t) => {
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
 });
 
-test("TryCP - 2 parallel calls from one client return corresponding responses", async (t) => {
+test("TryCP Server - 2 parallel calls from one client return corresponding responses", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -131,7 +132,7 @@ test("TryCP - 2 parallel calls from one client return corresponding responses", 
   t.equal(response2, TRYCP_SUCCESS_RESPONSE);
 });
 
-test("TryCP - 2 parallel calls from two clients return correct responses", async (t) => {
+test("TryCP Server - 2 parallel calls from two clients return correct responses", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient1 = await createTryCpClient();
   const tryCpClient2 = await createTryCpClient();
@@ -157,7 +158,7 @@ test("TryCP - 2 parallel calls from two clients return correct responses", async
   t.equal(response2, TRYCP_SUCCESS_RESPONSE);
 });
 
-test("TryCP call - Startup and shutdown", async (t) => {
+test("TryCP Server - Startup and shutdown", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -184,7 +185,7 @@ test("TryCP call - Startup and shutdown", async (t) => {
   t.equal(actualShutdown, TRYCP_SUCCESS_RESPONSE);
 });
 
-test("TryCP call - Reset", async (t) => {
+test("TryCP Server - Reset", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -214,9 +215,9 @@ test("TryCP call - Reset", async (t) => {
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
 });
 
-test("TryCP call - Admin API - Connect app interface", async (t) => {
+test("TryCP Server - Admin API - Connect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createTryCpConductor(LOCAL_SERVER_URL);
+  const conductor = await createTryCpConductor(SERVER_URL);
 
   const { port } = await conductor.attachAppInterface();
   t.ok(typeof port === "number");
@@ -231,9 +232,9 @@ test("TryCP call - Admin API - Connect app interface", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP call - App API - Get app info", async (t) => {
+test("TryCP Server - App API - Get app info", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createTryCpConductor(LOCAL_SERVER_URL);
+  const conductor = await createTryCpConductor(SERVER_URL);
   const [alice] = await conductor.installAgentsHapps({
     agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
   });

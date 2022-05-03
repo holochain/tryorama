@@ -12,6 +12,7 @@ import {
   _TryCpApiResponse,
 } from "./types";
 import { deserializeTryCpResponse, deserializeApiResponse } from "./util";
+import { URL } from "url";
 
 const logger = makeLogger("TryCP client");
 let requestId = 0;
@@ -30,27 +31,29 @@ export class TryCpClient {
     };
   };
 
-  private constructor(url: string) {
-    this.ws = new WebSocket(url);
+  private constructor(serverUrl: URL) {
+    this.ws = new WebSocket(serverUrl);
     this.requestPromises = {};
   }
 
   /**
    * Create a client connection to a running TryCP server.
    *
-   * @param url - The URL of the TryCP server.
+   * @param serverUrl - The URL of the TryCP server.
    * @returns A client connection.
    */
-  static async create(url: string) {
-    const tryCpClient = new TryCpClient(url);
+  static async create(serverUrl: URL) {
+    const tryCpClient = new TryCpClient(serverUrl);
     const connectPromise = new Promise<TryCpClient>((resolve, reject) => {
       tryCpClient.ws.once("open", () => {
-        logger.verbose(`connected to TryCP server @ ${url}`);
+        logger.verbose(`connected to TryCP server @ ${serverUrl}`);
         tryCpClient.ws.removeEventListener("error", reject);
         resolve(tryCpClient);
       });
       tryCpClient.ws.once("error", (err) => {
-        logger.error(`could not connect to TryCP server @ ${url}: ${err}`);
+        logger.error(
+          `could not connect to TryCP server @ ${serverUrl.href}: ${err}`
+        );
         reject(err);
       });
     });

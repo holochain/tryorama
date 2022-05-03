@@ -29,11 +29,13 @@
     "prepublishOnly": "npm test",
     "lint": "eslint --fix --ext .ts src test .eslintrc.cjs",
     "test": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/index.ts | tap-diff",
-    "test:local": "npm run test:local:conductor",
+    "test:local": "npm run test:local:conductor && npm run test:local:scenario",
     "test:local:conductor": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/local/conductor.ts",
-    "test:trycp": "npm run test:trycp:server && npm run test:trycp:scenarios",
+    "test:local:scenario": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/local/scenario.ts",
+    "test:trycp": "npm run test:trycp:server && npm run test:trycp:conductor && npm run test:trycp:scenario",
     "test:trycp:server": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/server.ts",
-    "test:trycp:scenarios": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/scenarios.ts",
+    "test:trycp:conductor": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/conductor.ts",
+    "test:trycp:scenario": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/scenario.ts",
     "test:holoport": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/holo-port.ts"
   },
   "dependencies": {

@@ -29,6 +29,7 @@ export interface AgentHapp {
   agentPubKey: Uint8Array;
   cells: CallableCell[];
 }
+
 export interface Conductor
   extends Pick<
       AdminWebsocket,
@@ -55,3 +56,9 @@ export interface Conductor
     uid?: string;
   }) => Promise<AgentHapp[]>;
 }
+
+export type Player = {
+  conductor: Conductor;
+  agentPubKey: Uint8Array;
+  cells: CallableCell[];
+};

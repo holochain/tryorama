@@ -7,11 +7,16 @@ import {
 } from "../../src/trycp/trycp-server";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { DnaSource, EntryHash } from "@holochain/client";
-import { createTryCpConductor } from "../../src/trycp/conductor";
+import {
+  cleanAllConductors,
+  createTryCpConductor,
+} from "../../src/trycp/conductor";
 import { FIXTURE_DNA_URL } from "../fixture";
 import { pause } from "../../src/util";
+import { URL } from "url";
 
-const LOCAL_TEST_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
+const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
+const LOCAL_TEST_PARTIAL_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
 dpki: ~
@@ -20,12 +25,14 @@ network:
     - type: quic
   network_type: quic_mdns`;
 
-test("TryCP Scenario - Create and read an entry using the entry zome", async (t) => {
+const createTestTryCpConductor = () =>
+  createTryCpConductor(SERVER_URL, {
+    partialConfig: LOCAL_TEST_PARTIAL_CONFIG,
+  });
+
+test("TryCP Conductor - Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createTryCpConductor(
-    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
-    { partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG }
-  );
+  const conductor = await createTestTryCpConductor();
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
   const dnaHash = await conductor.registerDna({ path: relativePath });
@@ -80,15 +87,19 @@ test("TryCP Scenario - Create and read an entry using the entry zome", async (t)
   });
   t.equal(readEntryResponse, entryContent);
 
+  const disconnectAppInterfaceResponse =
+    await conductor.disconnectAppInterface();
+  t.equal(disconnectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
+
   await conductor.shutDown();
+  await conductor.disconnect();
+  await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
 
-test("TryCP Scenario - Reading an entry without having created one will return None", async (t) => {
+test("TryCP Conductor - Reading a non-existent entry returns null", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createTryCpConductor(
-    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
-  );
+  const conductor = await createTestTryCpConductor();
   const dnas = [{ path: FIXTURE_DNA_URL.pathname }];
   const [alice] = await conductor.installAgentsHapps({
     agentsDnas: [dnas],
@@ -103,16 +114,17 @@ test("TryCP Scenario - Reading an entry without having created one will return N
     payload: Buffer.from("hCkk", "base64"),
   });
   t.equal(actual, null);
+
+  await conductor.disconnectAppInterface();
   await conductor.shutDown();
+  await conductor.disconnect();
+  await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
 
-test("TryCP Scenario - Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
+test("TryCP Conductor - Create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createTryCpConductor(
-    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
-    { partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG }
-  );
+  const conductor = await createTestTryCpConductor();
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
   const dnaHash1 = await conductor.registerDna({ path: relativePath });
@@ -191,28 +203,22 @@ test("TryCP Scenario - Create and read an entry using the entry zome, 1 conducto
   });
   t.equal(readEntryResponse, entryContent);
 
+  await conductor.disconnectAppInterface();
   await conductor.shutDown();
+  await conductor.disconnect();
+  await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
 
-test("TryCP Scenario - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test("TryCP Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
 
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
-  const conductor1 = await createTryCpConductor(
-    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
-    { partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG }
-  );
+  const conductor1 = await createTestTryCpConductor();
   const [alice] = await conductor1.installAgentsHapps({ agentsDnas: [dnas] });
 
-  const conductor2 = await createTryCpConductor(
-    `ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`,
-    {
-      partialConfig: LOCAL_TEST_PARTIAL_PLAYER_CONFIG,
-      cleanAllConductors: false,
-    }
-  );
+  const conductor2 = await createTestTryCpConductor();
   const [bob] = await conductor2.installAgentsHapps({ agentsDnas: [dnas] });
 
   const entryContent = "test-content";
@@ -228,7 +234,7 @@ test("TryCP Scenario - Create and read an entry using the entry zome, 2 conducto
   t.equal(createEntry1Hash.length, 39);
   t.ok(createdEntry1HashB64.startsWith("hCkk"));
 
-  await pause(1000);
+  await pause(500);
 
   const readEntryResponse = await conductor2.callZome<typeof entryContent>({
     cap_secret: null,
@@ -240,7 +246,14 @@ test("TryCP Scenario - Create and read an entry using the entry zome, 2 conducto
   });
   t.equal(readEntryResponse, entryContent);
 
+  await conductor1.disconnectAppInterface();
   await conductor1.shutDown();
+  await conductor1.disconnect();
+
+  await conductor2.disconnectAppInterface();
   await conductor2.shutDown();
+  await conductor2.disconnect();
+
+  await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });

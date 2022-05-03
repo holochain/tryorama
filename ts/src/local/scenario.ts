@@ -1,13 +1,7 @@
-import { DnaSource } from "@holochain/client";
 import { v4 as uuidv4 } from "uuid";
-import { CallableCell } from "../types";
+import { DnaSource } from "@holochain/client";
+import { Player } from "../types";
 import { createLocalConductor, LocalConductor } from "./conductor";
-
-export type Player = {
-  conductor: LocalConductor;
-  agentPubKey: Uint8Array;
-  cells: CallableCell[];
-};
 
 export class Scenario {
   uid: string;
@@ -30,10 +24,12 @@ export class Scenario {
 
   async addPlayers(playersDnas: DnaSource[][]): Promise<Player[]> {
     const players: Player[] = [];
-    for (const playerDnas of playersDnas) {
-      const player = await this.addPlayer(playerDnas);
-      players.push(player);
-    }
+    await Promise.all(
+      playersDnas.map(async (playerDnas) => {
+        const player = await this.addPlayer(playerDnas);
+        players.push(player);
+      })
+    );
     return players;
   }
 

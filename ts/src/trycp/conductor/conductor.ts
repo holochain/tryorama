@@ -8,6 +8,7 @@ import {
   AddAgentInfoRequest,
   AgentPubKey,
   AppInfoRequest,
+  AppSignalCb,
   AttachAppInterfaceRequest,
   CallZomeRequest,
   DnaHash,
@@ -15,7 +16,6 @@ import {
   DumpFullStateRequest,
   DumpStateRequest,
   EnableAppRequest,
-  EnableAppResponse,
   InstallAppRequest,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
@@ -29,6 +29,7 @@ import { ZomeResponsePayload } from "../../../test/fixture";
 import { deserializeZomeResponsePayload } from "../util";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { makeLogger } from "../../logger";
+import { URL } from "url";
 
 const logger = makeLogger("TryCP conductor");
 
@@ -51,13 +52,12 @@ export interface TryCpConductorOptions {
   partialConfig?: string;
   startup?: boolean;
   logLevel?: TryCpConductorLogLevel;
-  cleanAllConductors?: boolean;
 }
 
 /**
  * The function to create a TryCP Conductor (aka "Player").
  *
- * @param url - The URL of the TryCP server to connect to.
+ * @param serverUrl - The URL of the TryCP server to connect to.
  * @param options - Optional parameters to name, configure and start the
  * Conductor as well as clean all existing conductors. `cleanAllConductors` is
  * `true` by default, as `startup`.
@@ -66,19 +66,15 @@ export interface TryCpConductorOptions {
  * @public
  */
 export const createTryCpConductor = async (
-  url: string,
+  serverUrl: URL,
   options?: TryCpConductorOptions
 ) => {
-  const client = await TryCpClient.create(url);
+  const client = await TryCpClient.create(serverUrl);
   const conductor = new TryCpConductor(client, options?.id);
-  if (options?.cleanAllConductors !== false) {
-    // clean all conductors by default
-    await conductor.cleanAllConductors();
-  }
   if (options?.startup !== false) {
     // configure and startup conductor by default
     await conductor.configure(options?.partialConfig);
-    await conductor.startUp(options?.logLevel);
+    await conductor.startUp({ logLevel: options?.logLevel });
   }
   return conductor;
 };
@@ -90,10 +86,7 @@ export class TryCpConductor implements Conductor {
   private id: string;
   private appInterfacePort: undefined | number;
 
-  public constructor(
-    private readonly tryCpClient: TryCpClient,
-    id?: ConductorId
-  ) {
+  constructor(private readonly tryCpClient: TryCpClient, id?: ConductorId) {
     this.id = id || "conductor-" + uuidv4();
   }
 
@@ -114,28 +107,31 @@ export class TryCpConductor implements Conductor {
    *
    * @public
    */
-  async startUp(log_level?: TryCpConductorLogLevel) {
+  async startUp(options: {
+    signalHandler?: AppSignalCb;
+    logLevel?: TryCpConductorLogLevel;
+  }) {
     const response = await this.tryCpClient.call({
       type: "startup",
       id: this.id,
-      log_level,
+      log_level: options.logLevel,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }
 
   async shutDown() {
-    await this.shutDownConductor();
-    const response = await this.tryCpClient.close();
-    assert(response === 1000);
+    const response = await this.tryCpClient.call({
+      type: "shutdown",
+      id: this.id,
+    });
+    assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }
 
-  async cleanAllConductors() {
-    const response = await this.tryCpClient.call({
-      type: "reset",
-    });
-    assert(response === TRYCP_SUCCESS_RESPONSE);
+  async disconnect() {
+    const response = await this.tryCpClient.close();
+    assert(response === 1000);
     return response;
   }
 
@@ -158,15 +154,6 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
-  async shutDownConductor() {
-    const response = await this.tryCpClient.call({
-      type: "shutdown",
-      id: this.id,
-    });
-    assert(response === TRYCP_SUCCESS_RESPONSE);
-    return response;
-  }
-
   async callAdminApi(message: RequestAdminInterfaceData) {
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
@@ -179,7 +166,6 @@ export class TryCpConductor implements Conductor {
   }
 
   async registerDna(request: RegisterDnaRequest & DnaSource): Promise<DnaHash> {
-    // assert("path" in request);
     const response = await this.callAdminApi({
       type: "register_dna",
       data: request,
@@ -205,7 +191,7 @@ export class TryCpConductor implements Conductor {
     return response.data;
   }
 
-  async enableApp(request: EnableAppRequest): Promise<EnableAppResponse> {
+  async enableApp(request: EnableAppRequest) {
     const response = await this.callAdminApi({
       type: "enable_app",
       data: request,
@@ -225,6 +211,17 @@ export class TryCpConductor implements Conductor {
     assert(response.type === "app_interface_attached");
     this.appInterfacePort = request.port;
     return { port: response.data.port };
+  }
+
+  async disconnectAppInterface() {
+    assert(this.appInterfacePort, "no app interface attached");
+    const response = await this.tryCpClient.call({
+      type: "disconnect_app_interface",
+      port: this.appInterfacePort,
+    });
+    assert(response === TRYCP_SUCCESS_RESPONSE);
+    this.appInterfacePort = undefined;
+    return response;
   }
 
   async connectAppInterface() {
@@ -450,3 +447,11 @@ export class TryCpConductor implements Conductor {
     return agentsCells;
   }
 }
+
+export const cleanAllConductors = async (serverUrl: URL) => {
+  const client = await TryCpClient.create(serverUrl);
+  const response = await client.call({ type: "reset" });
+  assert(response === TRYCP_SUCCESS_RESPONSE);
+  await client.close();
+  return response;
+};

@@ -41,7 +41,7 @@ test("Local Conductor - Install multiple agents and DNAs and get access to agent
   await cleanAllConductors();
 });
 
-test("Local Conductor - Create and read an entry using the entry zome", async (t) => {
+test.only("Local Conductor - Create and read an entry using the entry zome", async (t) => {
   const conductor = await createLocalConductor();
   t.ok(conductor.adminWs());
   t.ok(conductor.appWs());
@@ -94,7 +94,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
-  await cleanAllConductors();
+  // await cleanAllConductors();
 });
 
 test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
