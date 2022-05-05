@@ -85,7 +85,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome", async (t
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
-  const createEntryHash = await conductor.callZome<EntryHash>({
+  const createEntryHash = await conductor.appWs().callZome<EntryHash>({
     cap_secret: null,
     cell_id,
     zome_name: "crud",
@@ -97,14 +97,16 @@ test("TryCP Conductor - Create and read an entry using the entry zome", async (t
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  const readEntryResponse = await conductor.callZome<typeof entryContent>({
-    cap_secret: null,
-    cell_id,
-    zome_name: "crud",
-    fn_name: "read",
-    provenance: agentPubKey,
-    payload: createEntryHash,
-  });
+  const readEntryResponse = await conductor
+    .appWs()
+    .callZome<typeof entryContent>({
+      cap_secret: null,
+      cell_id,
+      zome_name: "crud",
+      fn_name: "read",
+      provenance: agentPubKey,
+      payload: createEntryHash,
+    });
   t.equal(readEntryResponse, entryContent);
 
   const disconnectAppInterfaceResponse =
@@ -121,16 +123,14 @@ test("TryCP Conductor - Reading a non-existent entry returns null", async (t) =>
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTestTryCpConductor();
   const dnas = [{ path: FIXTURE_DNA_URL.pathname }];
-  const [alice] = await conductor.installAgentsHapps({
+  const [alice_happs] = await conductor.installAgentsHapps({
     agentsDnas: [dnas],
   });
 
-  const actual = await conductor.callZome<null>({
-    cap_secret: null,
-    cell_id: alice.cells[0].cell_id,
+  const actual = await alice_happs.cells[0].callZome<null>({
     zome_name: "crud",
     fn_name: "read",
-    provenance: alice.agentPubKey,
+    provenance: alice_happs.agentPubKey,
     payload: Buffer.from("hCkk", "base64"),
   });
   t.equal(actual, null);
@@ -200,7 +200,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
-  const createEntryHash = await conductor.callZome<EntryHash>({
+  const createEntryHash = await conductor.appWs().callZome<EntryHash>({
     cap_secret: null,
     cell_id: cellId1,
     zome_name: "crud",
@@ -212,14 +212,16 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  const readEntryResponse = await conductor.callZome<typeof entryContent>({
-    cap_secret: null,
-    cell_id: cellId2,
-    zome_name: "crud",
-    fn_name: "read",
-    provenance: agent2PubKey,
-    payload: createEntryHash,
-  });
+  const readEntryResponse = await conductor
+    .appWs()
+    .callZome<typeof entryContent>({
+      cap_secret: null,
+      cell_id: cellId2,
+      zome_name: "crud",
+      fn_name: "read",
+      provenance: agent2PubKey,
+      payload: createEntryHash,
+    });
   t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
@@ -240,7 +242,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 2 conduct
   const [bob] = await conductor2.installAgentsHapps({ agentsDnas: [dnas] });
 
   const entryContent = "test-content";
-  const createEntry1Hash = await conductor1.callZome<EntryHash>({
+  const createEntry1Hash = await conductor1.appWs().callZome<EntryHash>({
     cap_secret: null,
     cell_id: alice.cells[0].cell_id,
     zome_name: "crud",
@@ -254,14 +256,16 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 2 conduct
 
   await pause(500);
 
-  const readEntryResponse = await conductor2.callZome<typeof entryContent>({
-    cap_secret: null,
-    cell_id: bob.cells[0].cell_id,
-    zome_name: "crud",
-    fn_name: "read",
-    provenance: bob.agentPubKey,
-    payload: createEntry1Hash,
-  });
+  const readEntryResponse = await conductor2
+    .appWs()
+    .callZome<typeof entryContent>({
+      cap_secret: null,
+      cell_id: bob.cells[0].cell_id,
+      zome_name: "crud",
+      fn_name: "read",
+      provenance: bob.agentPubKey,
+      payload: createEntry1Hash,
+    });
   t.equal(readEntryResponse, entryContent);
 
   await conductor1.shutDown();

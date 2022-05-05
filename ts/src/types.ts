@@ -32,33 +32,30 @@ export interface AgentHapp {
 
 export interface Conductor
   extends Pick<
-      AdminWebsocket,
-      | "addAgentInfo"
-      | "attachAppInterface"
-      // | "createCloneCell"
-      // | "disableApp"
-      | "enableApp"
-      | "dumpState"
-      | "dumpFullState"
-      | "generateAgentPubKey"
-      | "installApp"
-      // | "installAppBundle"
-      // | "listAppInterfaces"
-      // | "listApps"
-      // | "listCellIds"
-      // | "listDnas"
-      | "registerDna"
-      | "requestAgentInfo"
-      // | "startApp"
-      // | "uninstallApp"
-    >,
-    Pick<AppWebsocket, "callZome" | "appInfo"> {
+    AdminWebsocket,
+    | "addAgentInfo"
+    | "attachAppInterface"
+    // | "createCloneCell"
+    // | "disableApp"
+    | "enableApp"
+    | "dumpState"
+    | "dumpFullState"
+    | "generateAgentPubKey"
+    | "installApp"
+    // | "installAppBundle"
+    // | "listAppInterfaces"
+    // | "listApps"
+    // | "listCellIds"
+    // | "listDnas"
+    | "registerDna"
+    | "requestAgentInfo"
+    // | "startApp"
+    // | "uninstallApp"
+  > {
   startUp: (options: { signalHandler?: AppSignalCb }) => Promise<void | null>;
   shutDown: () => Promise<number | null>;
 
-  callZome: <T extends ZomeResponsePayload>(
-    request: CallZomeRequest
-  ) => Promise<T>;
+  appWs: () => Pick<AppWebsocket, "callZome" | "appInfo">;
 
   installAgentsHapps: (options: {
     agentsDnas: DnaSource[][];

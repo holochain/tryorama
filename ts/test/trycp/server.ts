@@ -233,7 +233,9 @@ test("TryCP Server - Admin API - Connect app interface", async (t) => {
   const connectAppInterfaceResponse = await conductor.connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
-  const appInfoResponse = await conductor.appInfo({ installed_app_id: "" });
+  const appInfoResponse = await conductor
+    .appWs()
+    .appInfo({ installed_app_id: "" });
   t.equal(appInfoResponse, null);
 
   const disconnectAppInterfaceResponse =
@@ -252,7 +254,9 @@ test("TryCP Server - App API - Get app info", async (t) => {
     agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
   });
 
-  const appInfo = await conductor.appInfo({ installed_app_id: alice.happId });
+  const appInfo = await conductor
+    .appWs()
+    .appInfo({ installed_app_id: alice.happId });
   t.deepEqual(appInfo.status, { running: null });
 
   await conductor.disconnectAppInterface();

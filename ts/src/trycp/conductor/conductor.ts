@@ -325,42 +325,48 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
-  /**
-   * Request info of an installed hApp.
-   *
-   * @param installed_app_id - The id of the hApp to query.
-   * @returns The app info.
-   *
-   * @public
-   */
-  async appInfo(request: AppInfoRequest) {
-    const response = await this.callAppApi({
-      type: "app_info",
-      data: request,
-    });
-    assert(response.type === "app_info");
-    return response.data;
-  }
+  appWs() {
+    /**
+     * Request info of an installed hApp.
+     *
+     * @param installed_app_id - The id of the hApp to query.
+     * @returns The app info.
+     *
+     * @public
+     */
+    const appInfo = async (request: AppInfoRequest) => {
+      const response = await this.callAppApi({
+        type: "app_info",
+        data: request,
+      });
+      assert(response.type === "app_info");
+      return response.data;
+    };
 
-  /**
-   * Make a zome call to a conductor through the TryCP server.
-   *
-   * @param request - The zome call parameters.
-   * @returns The result of the zome call.
-   *
-   * @public
-   */
-  async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
-    const response = await this.callAppApi({
-      type: "zome_call",
-      data: request,
-    });
-    assert(response.data);
-    assert("BYTES_PER_ELEMENT" in response.data);
-    const deserializedPayload = deserializeZomeResponsePayload<T>(
-      response.data
-    );
-    return deserializedPayload;
+    /**
+     * Make a zome call to a conductor through the TryCP server.
+     *
+     * @param request - The zome call parameters.
+     * @returns The result of the zome call.
+     *
+     * @public
+     */
+    const callZome = async <T extends ZomeResponsePayload>(
+      request: CallZomeRequest
+    ) => {
+      const response = await this.callAppApi({
+        type: "zome_call",
+        data: request,
+      });
+      assert(response.data);
+      assert("BYTES_PER_ELEMENT" in response.data);
+      const deserializedPayload = deserializeZomeResponsePayload<T>(
+        response.data
+      );
+      return deserializedPayload;
+    };
+
+    return { appInfo, callZome };
   }
 
   /**
@@ -429,7 +435,7 @@ export class TryCpConductor implements Conductor {
           callZome: async <T extends ZomeResponsePayload>(
             request: CellZomeCallRequest
           ) =>
-            this.callZome<T>({
+            this.appWs().callZome<T>({
               ...request,
               cap_secret: request.cap_secret || null,
               cell_id: cell.cell_id,
