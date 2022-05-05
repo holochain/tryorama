@@ -1,6 +1,14 @@
 module.exports = {
   root: true,
+  env: {
+    es2021: true,
+    node: true,
+  },
   parser: "@typescript-eslint/parser",
+  parserOptions: {
+    ecmaVersion: "latest",
+    sourceType: "module",
+  },
   plugins: ["@typescript-eslint", "eslint-plugin-tsdoc", "prettier"],
   extends: [
     "eslint:recommended",
@@ -8,6 +16,6 @@ module.exports = {
     "plugin:prettier/recommended",
   ],
   rules: {
-    "tsdoc/syntax": "warn"
-  }
+    "tsdoc/syntax": "warn",
+  },
 };
