@@ -1,6 +1,11 @@
+import { AppSignal } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import assert from "assert";
-import { _TryCpApiResponse, _TryCpResponseWrapper } from "./types";
+import {
+  _TryCpApiResponse,
+  _TryCpResponseWrapper,
+  _TryCpSignal,
+} from "./types";
 
 /**
  * Deserialize the binary response from TryCP
@@ -13,8 +18,24 @@ import { _TryCpApiResponse, _TryCpResponseWrapper } from "./types";
 export const deserializeTryCpResponse = (response: Uint8Array) => {
   const decodedData = msgpack.decode(response);
   assertIsResponseWrapper(decodedData);
-  const tryCpResponse = decodedData;
-  return tryCpResponse;
+  return decodedData;
+};
+
+/**
+ * Deserialize a binary signal from TryCP
+ *
+ * @param signal - The signal to deserialize.
+ * @returns The deserialized signal.
+ */
+export const deserializeTryCpSignal = <T>(signal: Uint8Array): AppSignal => {
+  const deserializedSignal = msgpack.decode(signal);
+  assertIsSignal(deserializedSignal);
+  deserializedSignal;
+  const {
+    App: [cellId, payload],
+  } = deserializedSignal;
+  const decodedPayload = msgpack.decode(payload) as T;
+  return { type: "signal", data: { cellId, payload: decodedPayload } };
 };
 
 /**
@@ -52,9 +73,11 @@ function assertIsResponseWrapper(
   assert(
     response !== null &&
       typeof response === "object" &&
-      "id" in response &&
       "type" in response &&
-      "response" in response
+      // responses contain "id" and "response"
+      (("id" in response && "response" in response) ||
+        //and signals contain "port" and "data"
+        ("port" in response && "data" in response))
   );
 }
 
@@ -62,4 +85,8 @@ function assertIsApiResponse(
   response: unknown
 ): asserts response is _TryCpApiResponse {
   assert(response && typeof response === "object" && "type" in response);
+}
+
+function assertIsSignal(signal: unknown): asserts signal is _TryCpSignal {
+  assert(signal && typeof signal === "object" && "App" in signal);
 }

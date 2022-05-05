@@ -11,8 +11,13 @@ import {
   TryCpSuccessResponse,
   _TryCpApiResponse,
 } from "./types";
-import { deserializeTryCpResponse, deserializeApiResponse } from "./util";
+import {
+  deserializeTryCpResponse,
+  deserializeApiResponse,
+  deserializeTryCpSignal,
+} from "./util";
 import { URL } from "url";
+import { AppSignalCb } from "@holochain/client";
 
 const logger = makeLogger("TryCP client");
 let requestId = 0;
@@ -30,6 +35,7 @@ export class TryCpClient {
       responseReject: (reason: TryCpResponseErrorValue) => void;
     };
   };
+  signalHandler: AppSignalCb | undefined;
 
   private constructor(serverUrl: URL) {
     this.ws = new WebSocket(serverUrl);
@@ -59,36 +65,53 @@ export class TryCpClient {
     });
 
     tryCpClient.ws.on("message", (encodedResponse: Buffer) => {
-      const responseWrapper = deserializeTryCpResponse(encodedResponse);
-      const { responseResolve, responseReject } =
-        tryCpClient.requestPromises[responseWrapper.id];
+      try {
+        const responseWrapper = deserializeTryCpResponse(encodedResponse);
 
-      // the server responds with an object
-      // for formally correct requests it contains `0` as property and otherwise `1` when the format was incorrect
-      if ("0" in responseWrapper.response) {
-        try {
-          const innerResponse = tryCpClient.processSuccessResponse(
-            responseWrapper.response[0]
-          );
-          responseResolve(innerResponse);
-        } catch (error) {
-          if (error instanceof Error) {
-            responseReject(error);
+        if (responseWrapper.type === "signal") {
+          if (tryCpClient.signalHandler) {
+            const signal = deserializeTryCpSignal(responseWrapper.data);
+            tryCpClient.signalHandler(signal);
           } else {
-            const errorMessage = JSON.stringify(error, null, 4);
-            responseReject(errorMessage);
+            logger.info(
+              "received signal from TryCP server, but no signal handler registered"
+            );
           }
+        } else if (responseWrapper.type === "response") {
+          const { responseResolve, responseReject } =
+            tryCpClient.requestPromises[responseWrapper.id];
+
+          // the server responds with an object
+          // it contains `0` as property for formally correct requests
+          // and `1` when the format was incorrect
+          if ("0" in responseWrapper.response) {
+            try {
+              const innerResponse = tryCpClient.processSuccessResponse(
+                responseWrapper.response[0]
+              );
+              responseResolve(innerResponse);
+            } catch (error) {
+              if (error instanceof Error) {
+                responseReject(error);
+              } else {
+                const errorMessage = JSON.stringify(error, null, 4);
+                responseReject(errorMessage);
+              }
+            }
+          } else if ("1" in responseWrapper.response) {
+            responseReject(responseWrapper.response[1]);
+          } else {
+            logger.error(
+              "unknown response type",
+              JSON.stringify(responseWrapper.response, null, 4)
+            );
+            throw new Error("Unknown response type");
+          }
+          delete tryCpClient.requestPromises[responseWrapper.id];
         }
-      } else if ("1" in responseWrapper.response) {
-        responseReject(responseWrapper.response[1]);
-      } else {
-        logger.error(
-          "unknown response type",
-          JSON.stringify(responseWrapper.response, null, 4)
-        );
-        throw new Error("Unknown response type");
+      } catch (error) {
+        console.error("eeafdf", error);
       }
-      delete tryCpClient.requestPromises[responseWrapper.id];
     });
     tryCpClient.ws.on("error", (err) => {
       logger.error(err);

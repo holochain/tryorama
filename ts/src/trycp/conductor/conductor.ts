@@ -57,6 +57,7 @@ export interface TryCpConductorOptions {
   partialConfig?: string;
   startup?: boolean;
   logLevel?: TryCpConductorLogLevel;
+  signalHandler?: AppSignalCb;
 }
 
 /**
@@ -79,7 +80,10 @@ export const createTryCpConductor = async (
   if (options?.startup !== false) {
     // configure and startup conductor by default
     await conductor.configure(options?.partialConfig);
-    await conductor.startUp({ logLevel: options?.logLevel });
+    await conductor.startUp({
+      signalHandler: options?.signalHandler,
+      logLevel: options?.logLevel,
+    });
   }
   return conductor;
 };
@@ -88,9 +92,9 @@ export const createTryCpConductor = async (
  * @public
  */
 export class TryCpConductor implements Conductor {
-  private id: string;
-  private appInterfacePort: undefined | number;
+  private readonly id: string;
   private readonly tryCpClient: TryCpClient;
+  private appInterfacePort: undefined | number;
 
   constructor(tryCpClient: TryCpClient, id?: ConductorId) {
     this.tryCpClient = tryCpClient;
@@ -123,6 +127,7 @@ export class TryCpConductor implements Conductor {
       id: this.id,
       log_level: options.logLevel,
     });
+    this.tryCpClient.signalHandler = options.signalHandler;
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }

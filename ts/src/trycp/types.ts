@@ -5,6 +5,7 @@ import {
   AttachAppInterfaceRequest,
   AttachAppInterfaceResponse,
   CallZomeRequest,
+  CellId,
   CreateCloneCellRequest,
   CreateCloneCellResponse,
   DisableAppRequest,
@@ -232,10 +233,33 @@ export interface RequestAdminInterfaceData {
 /**
  * @internal
  */
-export interface _TryCpResponseWrapper {
+export type _TryCpResponseWrapper =
+  | _TryCpResponseWrapperResponse
+  | _TryCpResponseWrapperSignal;
+
+/**
+ * @internal
+ */
+export interface _TryCpResponseWrapperResponse {
   type: "response";
   id: number;
   response: _TryCpResponse;
+}
+
+/**
+ * @internal
+ */
+export interface _TryCpResponseWrapperSignal {
+  type: "signal";
+  port: number;
+  data: Uint8Array;
+}
+
+/**
+ * @internal
+ */
+export interface _TryCpSignal {
+  App: [CellId, Uint8Array];
 }
 
 /**

@@ -6,10 +6,11 @@ import {
   TRYCP_SERVER_HOST,
 } from "../../src/trycp/trycp-server";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
-import { DnaSource, EntryHash } from "@holochain/client";
+import { AppSignal, DnaSource, EntryHash } from "@holochain/client";
 import {
   cleanAllTryCpConductors,
   createTryCpConductor,
+  TryCpConductorOptions,
 } from "../../src/trycp/conductor";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 import { pause } from "../../src/util";
@@ -25,9 +26,10 @@ network:
     - type: quic
   network_type: quic_mdns`;
 
-const createTestTryCpConductor = () =>
+const createTestTryCpConductor = (options?: TryCpConductorOptions) =>
   createTryCpConductor(SERVER_URL, {
     partialConfig: LOCAL_TEST_PARTIAL_CONFIG,
+    ...options,
   });
 
 test("TryCP Conductor - Stop and restart a conductor", async (t) => {
@@ -54,12 +56,56 @@ test("TryCP Conductor - Install a hApp bundle", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTestTryCpConductor();
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-  const resopnse = await conductor.adminWs().installAppBundle({
+  const installedAppBundle = await conductor.adminWs().installAppBundle({
     agent_key: agentPubKey,
     membrane_proofs: {},
     path: FIXTURE_HAPP_URL.pathname,
   });
-  t.ok(resopnse && typeof resopnse.installed_app_id === "string");
+  t.ok(
+    installedAppBundle &&
+      typeof installedAppBundle.installed_app_id === "string"
+  );
+
+  await conductor.shutDown();
+  await conductor.disconnectClient();
+  await cleanAllTryCpConductors(SERVER_URL);
+  await localTryCpServer.stop();
+});
+
+test.only("Local Conductor - Receive a signal", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const testSignal = { value: "signal" };
+
+  let signalHandler;
+  const signalPromise = new Promise<AppSignal>((resolve) => {
+    signalHandler = (signal: AppSignal) => {
+      resolve(signal);
+    };
+  });
+
+  const conductor = await createTestTryCpConductor({ signalHandler });
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+  const installedAppBundle = await conductor.adminWs().installAppBundle({
+    agent_key: agentPubKey,
+    membrane_proofs: {},
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  await conductor.adminWs().attachAppInterface();
+  await conductor.adminWs().connectAppInterface();
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: installedAppBundle.installed_app_id });
+
+  conductor.appWs().callZome({
+    cap_secret: null,
+    cell_id: installedAppBundle.cell_data[0].cell_id,
+    zome_name: "crud",
+    fn_name: "signal_loopback",
+    provenance: agentPubKey,
+    payload: testSignal,
+  });
+  const actualSignal = await signalPromise;
+  t.deepEqual(actualSignal.data.payload, testSignal);
 
   await conductor.shutDown();
   await conductor.disconnectClient();
