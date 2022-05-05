@@ -51,7 +51,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   t.equal(readContent, content);
 
   await bob.conductor.shutDown();
-  t.rejects(bob.conductor.generateAgentPubKey);
+  t.rejects(bob.conductor.adminWs().generateAgentPubKey);
 
   await bob.conductor.startUp({});
   const readContentAfterRestart = await bob.cells[0].callZome<typeof content>({

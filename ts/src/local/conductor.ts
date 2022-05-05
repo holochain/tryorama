@@ -4,9 +4,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { makeLogger } from "../logger";
 import { v4 as uuidv4 } from "uuid";
 import {
-  AddAgentInfoRequest,
   AdminWebsocket,
-  AppInfoRequest,
   AppSignalCb,
   AppWebsocket,
   AttachAppInterfaceRequest,
@@ -14,12 +12,6 @@ import {
   CallZomeResponse,
   DnaHash,
   DnaSource,
-  DumpFullStateRequest,
-  DumpStateRequest,
-  EnableAppRequest,
-  InstallAppRequest,
-  RegisterDnaRequest,
-  RequestAgentInfoRequest,
 } from "@holochain/client";
 import { AgentHapp, CellZomeCallRequest, Conductor } from "../types";
 import { URL } from "url";
@@ -192,36 +184,13 @@ export class LocalConductor implements Conductor {
   }
 
   adminWs() {
-    assert(
-      this._adminWs,
-      "error getting admin ws: admin ws has not been connected"
-    );
+    assert(this._adminWs, "admin ws has not been connected");
     return this._adminWs;
   }
 
   appWs() {
-    assert(this._appWs, "error getting app ws: app ws has not been connected");
+    assert(this._appWs, "app ws has not been connected");
     return this._appWs;
-  }
-
-  async generateAgentPubKey() {
-    return this.adminWs().generateAgentPubKey();
-  }
-
-  async requestAgentInfo(request: RequestAgentInfoRequest) {
-    return this.adminWs().requestAgentInfo(request);
-  }
-
-  async registerDna(request: RegisterDnaRequest) {
-    return this.adminWs().registerDna(request);
-  }
-
-  async installApp(request: InstallAppRequest) {
-    return this.adminWs().installApp(request);
-  }
-
-  async enableApp(request: EnableAppRequest) {
-    return this.adminWs().enableApp(request);
   }
 
   async attachAppInterface(request?: AttachAppInterfaceRequest) {
@@ -229,22 +198,6 @@ export class LocalConductor implements Conductor {
       port: await getPort({ port: portNumbers(30000, 40000) }),
     };
     return this.adminWs().attachAppInterface(request);
-  }
-
-  async addAgentInfo(request: AddAgentInfoRequest) {
-    return this.adminWs().addAgentInfo(request);
-  }
-
-  async dumpState(request: DumpStateRequest) {
-    return this.adminWs().dumpState(request);
-  }
-
-  async dumpFullState(request: DumpFullStateRequest) {
-    return this.adminWs().dumpFullState(request);
-  }
-
-  async appInfo(request: AppInfoRequest) {
-    return this.appWs().appInfo(request);
   }
 
   async callZome<T>(request: CallZomeRequest) {
@@ -268,15 +221,15 @@ export class LocalConductor implements Conductor {
 
     for (const agent of options.agentsDnas) {
       const dnaHashes: DnaHash[] = [];
-      const agentPubKey = await this.generateAgentPubKey();
+      const agentPubKey = await this.adminWs().generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
 
       for (const dna of agent) {
         if ("path" in dna) {
-          const dnaHash = await this.registerDna({ path: dna.path });
+          const dnaHash = await this.adminWs().registerDna({ path: dna.path });
           dnaHashes.push(dnaHash);
         } else if ("hash" in dna) {
-          const dnaHash = await this.registerDna({
+          const dnaHash = await this.adminWs().registerDna({
             hash: dna.hash,
             uid: `dna-${uuidv4()}`,
           });
@@ -291,12 +244,12 @@ export class LocalConductor implements Conductor {
         role_id: `dna-${uuidv4()}`,
       }));
 
-      const installedAppInfo = await this.installApp({
+      const installedAppInfo = await this.adminWs().installApp({
         installed_app_id: appId,
         agent_key: agentPubKey,
         dnas,
       });
-      const enableAppResponse = await this.enableApp({
+      const enableAppResponse = await this.adminWs().enableApp({
         installed_app_id: appId,
       });
       if (enableAppResponse.errors.length) {
