@@ -23,8 +23,11 @@ import {
 } from "@holochain/client";
 import { AgentHapp, CellZomeCallRequest, Conductor } from "../types";
 import { ZomeResponsePayload } from "../../test/fixture";
+import { URL } from "url";
 
 const logger = makeLogger("Local conductor");
+
+const HOST_URL = new URL("ws://127.0.0.1");
 
 export interface LocalConductorOptions {
   startup?: boolean;
@@ -53,14 +56,16 @@ export const createLocalConductor = async (options?: LocalConductorOptions) => {
 export class LocalConductor implements Conductor {
   private conductorProcess: ChildProcessWithoutNullStreams | undefined;
   private conductorDir: string | undefined;
-  private adminInterfacePort: number | undefined;
+  private adminApiUrl: URL;
+  private appApiPort: number | undefined;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
 
   private constructor() {
     this.conductorProcess = undefined;
     this.conductorDir = undefined;
-    this.adminInterfacePort = undefined;
+    this.adminApiUrl = HOST_URL;
+    this.appApiPort = undefined;
     this._adminWs = undefined;
     this._appWs = undefined;
   }
@@ -106,7 +111,7 @@ export class LocalConductor implements Conductor {
         detached: true, // without this option, killing the process doesn't kill the conductor
       }
     );
-    const startPromise = new Promise<number>((resolve, reject) => {
+    const startPromise = new Promise<void>((resolve, reject) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`starting conductor\n${data}`);
 
@@ -114,8 +119,8 @@ export class LocalConductor implements Conductor {
           .toString()
           .match(/Running conductor on admin port (\d+)/);
         if (numberMatches) {
-          this.adminInterfacePort = parseInt(numberMatches[1]);
-          logger.debug(`admin port ${this.adminInterfacePort}\n`);
+          this.adminApiUrl.port = numberMatches[1];
+          logger.debug(`admin port ${this.adminApiUrl.port}\n`);
         }
 
         if (
@@ -123,11 +128,8 @@ export class LocalConductor implements Conductor {
             .toString()
             .includes("Connected successfully to a running holochain")
         ) {
-          assert(
-            this.adminInterfacePort,
-            "admin interface port has not been defined"
-          );
-          resolve(this.adminInterfacePort);
+          // this is the last output of the startup process
+          resolve();
         }
       });
 
@@ -142,8 +144,8 @@ export class LocalConductor implements Conductor {
       });
     });
     this.conductorProcess = runConductorProcess;
-    const adminApiPort = await startPromise;
-    await this.connectAdminWs(`ws://127.0.0.1:${adminApiPort}`);
+    await startPromise;
+    await this.connectAdminWs();
     await this.connectAppWs(options.signalHandler);
   }
 
@@ -167,19 +169,19 @@ export class LocalConductor implements Conductor {
     return destroyPromise;
   }
 
-  private async connectAdminWs(url: string) {
-    this._adminWs = await AdminWebsocket.connect(url);
-    logger.debug(`connected to Admin API @ ${url}\n`);
+  private async connectAdminWs() {
+    this._adminWs = await AdminWebsocket.connect(this.adminApiUrl.href);
+    logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
   }
 
   private async connectAppWs(signalHandler?: AppSignalCb) {
     assert(this._adminWs, "error connecting to app: admin is not defined");
-    const appApiPort = await getPort({ port: portNumbers(30000, 40000) });
+    const appApiPort =
+      this.appApiPort ?? (await getPort({ port: portNumbers(30000, 40000) }));
     logger.debug(`attaching App API to port ${appApiPort}\n`);
     await this._adminWs.attachAppInterface({ port: appApiPort });
 
-    const adminApiUrl = new URL(this._adminWs.client.socket.url);
-    const appApiUrl = `${adminApiUrl.protocol}//${adminApiUrl.hostname}:${appApiPort}`;
+    const appApiUrl = `${this.adminApiUrl.protocol}//${this.adminApiUrl.hostname}:${appApiPort}`;
     this._appWs = await AppWebsocket.connect(
       appApiUrl,
       undefined,
