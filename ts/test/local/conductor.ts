@@ -24,6 +24,25 @@ test("Local Conductor - Get app info", async (t) => {
   await cleanAllConductors();
 });
 
+test("Local Conductor - Install hApp through DNA hash", async (t) => {
+  const conductor = await createLocalConductor();
+  try {
+    const dnaHash = await conductor.registerDna({
+      path: FIXTURE_DNA_URL.pathname,
+    });
+    const [alice] = await conductor.installAgentsHapps({
+      agentsDnas: [[{ hash: dnaHash }]],
+    });
+    const appInfo = await conductor.appInfo({ installed_app_id: alice.happId });
+    t.deepEqual(appInfo.status, { running: null });
+  } catch (e) {
+    console.error("erererdfad", e);
+  } finally {
+    await conductor.shutDown();
+    await cleanAllConductors();
+  }
+});
+
 test("Local Conductor - Install multiple agents and DNAs and get access to agents and cells", async (t) => {
   const conductor = await createLocalConductor();
   const [alice, bob] = await conductor.installAgentsHapps({

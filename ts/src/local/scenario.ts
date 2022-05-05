@@ -1,7 +1,14 @@
 import { v4 as uuidv4 } from "uuid";
 import { DnaSource } from "@holochain/client";
-import { Player } from "../types";
 import { createLocalConductor, LocalConductor } from "./conductor";
+import { Player } from "../types";
+
+/**
+ * @public
+ */
+export interface LocalPlayer extends Player {
+  conductor: LocalConductor;
+}
 
 export class Scenario {
   uid: string;
@@ -12,7 +19,7 @@ export class Scenario {
     this.conductors = [];
   }
 
-  async addPlayer(dnas: DnaSource[]): Promise<Player> {
+  async addPlayer(dnas: DnaSource[]): Promise<LocalPlayer> {
     const conductor = await createLocalConductor();
     const [agentCells] = await conductor.installAgentsHapps({
       agentsDnas: [dnas],
@@ -22,8 +29,8 @@ export class Scenario {
     return { conductor, ...agentCells };
   }
 
-  async addPlayers(playersDnas: DnaSource[][]): Promise<Player[]> {
-    const players: Player[] = [];
+  async addPlayers(playersDnas: DnaSource[][]): Promise<LocalPlayer[]> {
+    const players: LocalPlayer[] = [];
     await Promise.all(
       playersDnas.map(async (playerDnas) => {
         const player = await this.addPlayer(playerDnas);

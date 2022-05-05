@@ -241,7 +241,7 @@ test("TryCP Server - Admin API - Connect app interface", async (t) => {
   t.equal(disconnectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   await conductor.shutDown();
-  await conductor.disconnect();
+  await conductor.disconnectClient();
   await localTryCpServer.stop();
 });
 
@@ -257,6 +257,6 @@ test("TryCP Server - App API - Get app info", async (t) => {
 
   await conductor.disconnectAppInterface();
   await conductor.shutDown();
-  await conductor.disconnect();
+  await conductor.disconnectClient();
   await localTryCpServer.stop();
 });

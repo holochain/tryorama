@@ -5,10 +5,10 @@ import {
   cleanAllConductors,
   createTryCpConductor,
   TryCpConductor,
-  TryCpPlayer,
 } from "./conductor";
 import { URL } from "url";
 import { addAllAgentsToAllConductors } from "../../util";
+import { Player } from "../../types";
 
 const partialConfig = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -18,6 +18,13 @@ network:
   transport_pool:
     - type: quic
   network_type: quic_mdns`;
+
+/**
+ * @public
+ */
+export interface TryCpPlayer extends Player {
+  conductor: TryCpConductor;
+}
 
 export class TryCpScenario {
   uid: string;
@@ -66,12 +73,9 @@ export class TryCpScenario {
   }
 
   async cleanUp(): Promise<void> {
-    await Promise.all(
-      this.conductors.map((conductor) => conductor.disconnectAppInterface())
-    );
     await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
     await Promise.all(
-      this.conductors.map((conductor) => conductor.disconnect())
+      this.conductors.map((conductor) => conductor.disconnectClient())
     );
     await cleanAllConductors(this.serverUrl);
     this.conductors = [];

@@ -45,7 +45,7 @@ test("TryCP Conductor - Stop and restart a conductor", async (t) => {
   t.ok(agentPubKeyResponse2);
 
   await conductor.shutDown();
-  await conductor.disconnect();
+  await conductor.disconnectClient();
   await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
@@ -112,7 +112,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome", async (t
   t.equal(disconnectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   await conductor.shutDown();
-  await conductor.disconnect();
+  await conductor.disconnectClient();
   await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
@@ -136,7 +136,7 @@ test("TryCP Conductor - Reading a non-existent entry returns null", async (t) =>
   t.equal(actual, null);
 
   await conductor.shutDown();
-  await conductor.disconnect();
+  await conductor.disconnectClient();
   await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
@@ -223,7 +223,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
-  await conductor.disconnect();
+  await conductor.disconnectClient();
   await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
@@ -265,9 +265,9 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 2 conduct
   t.equal(readEntryResponse, entryContent);
 
   await conductor1.shutDown();
-  await conductor1.disconnect();
+  await conductor1.disconnectClient();
   await conductor2.shutDown();
-  await conductor2.disconnect();
+  await conductor2.disconnectClient();
   await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });

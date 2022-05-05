@@ -175,13 +175,16 @@ export class LocalConductor implements Conductor {
   }
 
   private async connectAppWs(signalHandler?: AppSignalCb) {
-    assert(this._adminWs, "error connecting to app: admin is not defined");
-    const appApiPort =
-      this.appApiPort ?? (await getPort({ port: portNumbers(30000, 40000) }));
-    logger.debug(`attaching App API to port ${appApiPort}\n`);
-    await this._adminWs.attachAppInterface({ port: appApiPort });
+    if (!this.appApiPort) {
+      assert(this._adminWs, "error connecting to app: admin is not defined");
+      const appApiPort = await getPort({ port: portNumbers(30000, 40000) });
+      logger.debug(`attaching App API to port ${appApiPort}\n`);
+      await this._adminWs.attachAppInterface({ port: appApiPort });
+      this.appApiPort = appApiPort;
+    }
 
-    const appApiUrl = `${this.adminApiUrl.protocol}//${this.adminApiUrl.hostname}:${appApiPort}`;
+    const appApiUrl = `${this.adminApiUrl.protocol}//${this.adminApiUrl.hostname}:${this.appApiPort}`;
+    logger.debug(`connecting App API to port ${this.appApiPort}\n`);
     this._appWs = await AppWebsocket.connect(
       appApiUrl,
       undefined,
@@ -272,6 +275,12 @@ export class LocalConductor implements Conductor {
       for (const dna of agent) {
         if ("path" in dna) {
           const dnaHash = await this.registerDna({ path: dna.path });
+          dnaHashes.push(dnaHash);
+        } else if ("hash" in dna) {
+          const dnaHash = await this.registerDna({
+            hash: dna.hash,
+            uid: `dna-${uuidv4()}`,
+          });
           dnaHashes.push(dnaHash);
         } else {
           throw new Error("no dna found like");

@@ -7,7 +7,6 @@ import {
   InstalledCell,
 } from "@holochain/client";
 import { ZomeResponsePayload } from "../test/fixture";
-import { TryCpConductorLogLevel } from "./trycp";
 
 export type CellZomeCallRequest = Omit<
   CallZomeRequest,
