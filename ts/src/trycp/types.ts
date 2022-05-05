@@ -5,17 +5,32 @@ import {
   AttachAppInterfaceRequest,
   AttachAppInterfaceResponse,
   CallZomeRequest,
+  CreateCloneCellRequest,
+  CreateCloneCellResponse,
+  DisableAppRequest,
+  DisableAppResponse,
   DumpFullStateRequest,
   DumpStateRequest,
   DumpStateResponse,
   EnableAppRequest,
   EnableAppResponse,
   HoloHash,
+  InstallAppBundleRequest,
+  InstallAppBundleResponse,
   InstallAppRequest,
   InstalledAppInfo,
+  ListAppInterfacesResponse,
+  ListAppsRequest,
+  ListAppsResponse,
+  ListCellIdsResponse,
+  ListDnasResponse,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
   RequestAgentInfoResponse,
+  StartAppRequest,
+  StartAppResponse,
+  UninstallAppRequest,
+  UninstallAppResponse,
 } from "@holochain/client";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { ConductorId } from "./conductor";
@@ -178,25 +193,40 @@ export interface RequestCallAdminInterface {
  */
 export interface RequestAdminInterfaceData {
   type:
-    | "generate_agent_pub_key"
-    | "connect_app_interface"
     | "add_agent_info"
     | "attach_app_interface"
-    | "dump_state"
+    | "connect_app_interface"
+    | "create_clone_cell"
+    | "disable_app"
     | "dump_full_state"
+    | "dump_state"
     | "enable_app"
+    | "generate_agent_pub_key"
     | "install_app"
+    | "install_app_bundle"
+    | "list_apps"
+    | "list_app_interfaces"
+    | "list_cell_ids"
+    | "list_dnas"
+    | "register_dna"
     | "request_agent_info"
-    | "register_dna";
+    | "start_app"
+    | "uninstall_app";
   data?:
     | AddAgentInfoRequest
     | AttachAppInterfaceRequest
-    | DumpStateRequest
+    | CreateCloneCellRequest
+    | DisableAppRequest
     | DumpFullStateRequest
+    | DumpStateRequest
     | EnableAppRequest
     | InstallAppRequest
+    | InstallAppBundleRequest
+    | ListAppsRequest
     | RegisterDnaRequest
-    | RequestAgentInfoRequest;
+    | RequestAgentInfoRequest
+    | StartAppRequest
+    | UninstallAppRequest;
 }
 
 /**
@@ -280,9 +310,18 @@ export type AdminApiResponse =
   | AdminApiResponseAgentInfoAdded
   | AdminApiResponseAgentInfoRequested
   | AdminApiResponseAgentPubKeyGenerated
+  | AdminApiResponseAppBundleInstalled
+  | AdminApiResponseAppDisabled
   | AdminApiResponseAppEnabled
   | AdminApiResponseAppInstalled
   | AdminApiResponseAppInterfaceAttached
+  | AdminApiResponseAppInterfacesListed
+  | AdminApiResponseAppStarted
+  | AdminApiResponseAppUninstalled
+  | AdminApiResponseAppsListed
+  | AdminApiResponseCellIdsListed
+  | AdminApiResponseCloneCellCreated
+  | AdminApiResponseDnasListed
   | AdminApiResponseDnaRegistered
   | AdminApiResponseStateDumped
   | AdminApiResponseFullStateDumped;
@@ -338,9 +377,81 @@ export interface AdminApiResponseAppInstalled {
 /**
  * @public
  */
+export interface AdminApiResponseAppBundleInstalled {
+  type: "app_bundle_installed";
+  data: InstallAppBundleResponse;
+}
+
+/**
+ * @public
+ */
 export interface AdminApiResponseAppEnabled {
   type: "app_enabled";
   data: EnableAppResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppDisabled {
+  type: "app_disabled";
+  data: DisableAppResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppStarted {
+  type: "app_started";
+  data: StartAppResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppUninstalled {
+  type: "app_uninstalled";
+  data: UninstallAppResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppsListed {
+  type: "apps_listed";
+  data: ListAppsResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppInterfacesListed {
+  type: "app_interfaces_listed";
+  data: ListAppInterfacesResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseCellIdsListed {
+  type: "cell_ids_listed";
+  data: ListCellIdsResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseDnasListed {
+  type: "dnas_listed";
+  data: ListDnasResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseCloneCellCreated {
+  type: "clone_cell_created";
+  data: CreateCloneCellResponse;
 }
 
 /**

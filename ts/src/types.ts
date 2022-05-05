@@ -31,26 +31,14 @@ export interface Conductor {
   startUp: (options: { signalHandler?: AppSignalCb }) => Promise<void | null>;
   shutDown: () => Promise<number | null>;
 
-  adminWs: () => Pick<
+  adminWs: () => Omit<
     AdminWebsocket,
-    | "addAgentInfo"
-    | "attachAppInterface"
-    // | "createCloneCell"
-    // | "disableApp"
-    | "enableApp"
-    | "dumpState"
-    | "dumpFullState"
-    | "generateAgentPubKey"
-    | "installApp"
-    // | "installAppBundle"
-    // | "listAppInterfaces"
-    // | "listApps"
-    // | "listCellIds"
-    // | "listDnas"
-    | "registerDna"
-    | "requestAgentInfo"
-    // | "startApp"
-    // | "uninstallApp"
+    | "_requester"
+    | "client"
+    | "activateApp"
+    | "deactivateApp"
+    | "defaultTimeout"
+    | "listActiveApps"
   >;
   appWs: () => Pick<AppWebsocket, "callZome" | "appInfo">;
 

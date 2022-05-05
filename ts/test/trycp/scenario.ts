@@ -11,6 +11,27 @@ import { FIXTURE_DNA_URL } from "../fixture";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 
+test("TryCP Scenario - List everything", async (t) => {
+  const scenario = await TryCpScenario.create(SERVER_URL);
+  const alice = await scenario.addPlayer([{ path: FIXTURE_DNA_URL.pathname }]);
+
+  const listedApps = await alice.conductor.adminWs().listApps({});
+  t.equal(listedApps.length, 1);
+
+  const listedAppInterfaces = await alice.conductor
+    .adminWs()
+    .listAppInterfaces();
+  t.equal(listedAppInterfaces.length, 1);
+
+  const listCellIds = await alice.conductor.adminWs().listCellIds();
+  t.equal(listCellIds.length, 1);
+
+  const listedDnas = await alice.conductor.adminWs().listDnas();
+  t.equal(listedDnas.length, 1);
+
+  await scenario.cleanUp();
+});
+
 test("TryCp Scenario - Create and read an entry, 2 conductors", async (t) => {
   const scenario = await TryCpScenario.create(SERVER_URL);
   t.ok(scenario.uid);

@@ -11,7 +11,7 @@ import {
   cleanAllTryCpConductors,
   createTryCpConductor,
 } from "../../src/trycp/conductor";
-import { FIXTURE_DNA_URL } from "../fixture";
+import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 import { pause } from "../../src/util";
 import { URL } from "url";
 
@@ -43,6 +43,23 @@ test("TryCP Conductor - Stop and restart a conductor", async (t) => {
   await conductor.startUp({});
   const agentPubKeyResponse2 = await conductor.adminWs().generateAgentPubKey();
   t.ok(agentPubKeyResponse2);
+
+  await conductor.shutDown();
+  await conductor.disconnectClient();
+  await cleanAllTryCpConductors(SERVER_URL);
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - Install a hApp bundle", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const conductor = await createTestTryCpConductor();
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+  const resopnse = await conductor.adminWs().installAppBundle({
+    agent_key: agentPubKey,
+    membrane_proofs: {},
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  t.ok(resopnse && typeof resopnse.installed_app_id === "string");
 
   await conductor.shutDown();
   await conductor.disconnectClient();

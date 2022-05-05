@@ -11,14 +11,20 @@ import {
   AppSignalCb,
   AttachAppInterfaceRequest,
   CallZomeRequest,
+  CreateCloneCellRequest,
+  DisableAppRequest,
   DnaHash,
   DnaSource,
   DumpFullStateRequest,
   DumpStateRequest,
   EnableAppRequest,
+  InstallAppBundleRequest,
   InstallAppRequest,
+  ListAppsRequest,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
+  StartAppRequest,
+  UninstallAppRequest,
 } from "@holochain/client";
 import {
   TRYCP_SUCCESS_RESPONSE,
@@ -84,9 +90,11 @@ export const createTryCpConductor = async (
 export class TryCpConductor implements Conductor {
   private id: string;
   private appInterfacePort: undefined | number;
+  private readonly tryCpClient: TryCpClient;
 
-  constructor(private readonly tryCpClient: TryCpClient, id?: ConductorId) {
-    this.id = id || "conductor-" + uuidv4();
+  constructor(tryCpClient: TryCpClient, id?: ConductorId) {
+    this.tryCpClient = tryCpClient;
+    this.id = id || `conductor-${uuidv4()}`;
   }
 
   async configure(partialConfig?: string) {
@@ -157,7 +165,7 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
-  async callAdminApi(message: RequestAdminInterfaceData) {
+  private async callAdminApi(message: RequestAdminInterfaceData) {
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
@@ -197,12 +205,78 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    const installAppBundle = async (data: InstallAppBundleRequest) => {
+      const response = await this.callAdminApi({
+        type: "install_app_bundle",
+        data,
+      });
+      assert(response.type === "app_bundle_installed");
+      return response.data;
+    };
+
     const enableApp = async (request: EnableAppRequest) => {
       const response = await this.callAdminApi({
         type: "enable_app",
         data: request,
       });
       assert(response.type === "app_enabled");
+      return response.data;
+    };
+
+    const disableApp = async (request: DisableAppRequest) => {
+      const response = await this.callAdminApi({
+        type: "disable_app",
+        data: request,
+      });
+      assert(response.type === "app_disabled");
+      return response.data;
+    };
+
+    const startApp = async (request: StartAppRequest) => {
+      const response = await this.callAdminApi({
+        type: "start_app",
+        data: request,
+      });
+      assert(response.type === "app_started");
+      return response.data;
+    };
+
+    const uninstallApp = async (request: UninstallAppRequest) => {
+      const response = await this.callAdminApi({
+        type: "uninstall_app",
+        data: request,
+      });
+      assert(response.type === "app_uninstalled");
+      return response.data;
+    };
+
+    const createCloneCell = async (request: CreateCloneCellRequest) => {
+      const response = await this.callAdminApi({
+        type: "create_clone_cell",
+        data: request,
+      });
+      assert(response.type === "clone_cell_created");
+      return response.data;
+    };
+
+    const listApps = async (request: ListAppsRequest) => {
+      const response = await this.callAdminApi({
+        type: "list_apps",
+        data: request,
+      });
+      assert(response.type === "apps_listed");
+      return response.data;
+    };
+
+    const listCellIds = async () => {
+      const response = await this.callAdminApi({ type: "list_cell_ids" });
+      assert(response.type === "cell_ids_listed");
+      return response.data;
+    };
+
+    const listDnas = async () => {
+      const response = await this.callAdminApi({ type: "list_dnas" });
+      assert(response.type === "dnas_listed");
       return response.data;
     };
 
@@ -237,6 +311,12 @@ export class TryCpConductor implements Conductor {
       });
       assert(response === TRYCP_SUCCESS_RESPONSE);
       return response;
+    };
+
+    const listAppInterfaces = async () => {
+      const response = await this.callAdminApi({ type: "list_app_interfaces" });
+      assert(response.type === "app_interfaces_listed");
+      return response.data;
     };
 
     /**
@@ -313,23 +393,32 @@ export class TryCpConductor implements Conductor {
       addAgentInfo,
       attachAppInterface,
       connectAppInterface,
+      createCloneCell,
+      disableApp,
       disconnectAppInterface,
       dumpFullState,
       dumpState,
       enableApp,
       generateAgentPubKey,
       installApp,
+      installAppBundle,
+      listAppInterfaces,
+      listApps,
+      listCellIds,
+      listDnas,
       registerDna,
       requestAgentInfo,
+      startApp,
+      uninstallApp,
     };
   }
 
   /**
    * Call conductor's App API.
    *
-   * @public
+   * @internal
    */
-  async callAppApi(message: RequestCallAppInterfaceMessage) {
+  private async callAppApi(message: RequestCallAppInterfaceMessage) {
     assert(this.appInterfacePort, "No App interface attached to conductor");
     const response = await this.tryCpClient.call({
       type: "call_app_interface",
