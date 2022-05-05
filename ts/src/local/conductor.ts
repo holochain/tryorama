@@ -22,7 +22,6 @@ import {
   RequestAgentInfoRequest,
 } from "@holochain/client";
 import { AgentHapp, CellZomeCallRequest, Conductor } from "../types";
-import { ZomeResponsePayload } from "../../test/fixture";
 import { URL } from "url";
 
 const logger = makeLogger("Local conductor");
@@ -248,7 +247,7 @@ export class LocalConductor implements Conductor {
     return this.appWs().appInfo(request);
   }
 
-  async callZome<T extends ZomeResponsePayload>(request: CallZomeRequest) {
+  async callZome<T>(request: CallZomeRequest) {
     try {
       const zomeResponse = await this.appWs().callZome(request);
       assertZomeResponse<T>(zomeResponse);
@@ -306,9 +305,7 @@ export class LocalConductor implements Conductor {
 
       const cells = installedAppInfo.cell_data.map((cell) => ({
         ...cell,
-        callZome: async <T extends ZomeResponsePayload>(
-          request: CellZomeCallRequest
-        ) =>
+        callZome: async <T>(request: CellZomeCallRequest) =>
           this.callZome<T>({
             ...request,
             cap_secret: request.cap_secret || null,
@@ -340,7 +337,7 @@ export const cleanAllConductors = async () => {
   return cleanPromise;
 };
 
-function assertZomeResponse<T extends ZomeResponsePayload>(
+function assertZomeResponse<T>(
   response: CallZomeResponse
 ): asserts response is T {
   return;

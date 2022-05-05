@@ -15,7 +15,7 @@ export interface RequestConfigurePlayer
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [id](./tryorama.requestconfigureplayer.id.md) | [PlayerId](./tryorama.playerid.md) |  |
+|  [id](./tryorama.requestconfigureplayer.id.md) | [ConductorId](./tryorama.conductorid.md) |  |
 |  [partial\_config](./tryorama.requestconfigureplayer.partial_config.md) | string |  |
 |  [type](./tryorama.requestconfigureplayer.type.md) | "configure\_player" |  |
 

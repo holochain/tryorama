@@ -4,32 +4,50 @@
 
 ## tryorama package
 
-Tryorama Control Protocol (TryCP) server
+Tryorama
 
-TryCP is a protocol to enable remote management of Holochain conductors on network hosts.
+Tools for managing Holochain [Local Conductors](./tryorama.localconductor.md) and [TryCP Server Conductors](./tryorama.trycpconductor.md)<!-- -->.
+
+TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable remote management of Holochain Conductors on network hosts.
 
 ## Classes
 
 |  Class | Description |
 |  --- | --- |
-|  [Player](./tryorama.player.md) |  |
+|  [LocalConductor](./tryorama.localconductor.md) |  |
+|  [Scenario](./tryorama.scenario.md) |  |
 |  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server. |
+|  [TryCpConductor](./tryorama.trycpconductor.md) |  |
+|  [TryCpScenario](./tryorama.trycpscenario.md) |  |
 |  [TryCpServer](./tryorama.trycpserver.md) | A factory class to start and stop local instances of the TryCP server. |
-
-## Functions
-
-|  Function | Description |
-|  --- | --- |
-|  [installAgentsHapps(dnaUrl, options)](./tryorama.installagentshapps.md) | Helper to install DNAs and create agents. Given an array of DNAs, a conductor is spawned, DNAs are installed, an agent is created and handles to the conductor, the cells and the agents are returned. |
 
 ## Interfaces
 
 |  Interface | Description |
 |  --- | --- |
-|  [\_TryCpAppApiResponse](./tryorama._trycpappapiresponse.md) |  |
+|  [AdminApiResponseAgentInfoAdded](./tryorama.adminapiresponseagentinfoadded.md) |  |
+|  [AdminApiResponseAgentInfoRequested](./tryorama.adminapiresponseagentinforequested.md) |  |
+|  [AdminApiResponseAgentPubKeyGenerated](./tryorama.adminapiresponseagentpubkeygenerated.md) |  |
+|  [AdminApiResponseAppEnabled](./tryorama.adminapiresponseappenabled.md) |  |
+|  [AdminApiResponseAppInstalled](./tryorama.adminapiresponseappinstalled.md) |  |
+|  [AdminApiResponseAppInterfaceAttached](./tryorama.adminapiresponseappinterfaceattached.md) |  |
+|  [AdminApiResponseDnaRegistered](./tryorama.adminapiresponsednaregistered.md) |  |
+|  [AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md) |  |
+|  [AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md) |  |
+|  [AgentHapp](./tryorama.agenthapp.md) |  |
+|  [ApiErrorResponse](./tryorama.apierrorresponse.md) |  |
+|  [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md) |  |
+|  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
+|  [CallableCell](./tryorama.callablecell.md) |  |
+|  [Conductor](./tryorama.conductor.md) |  |
+|  [LocalConductorOptions](./tryorama.localconductoroptions.md) |  |
+|  [LocalPlayer](./tryorama.localplayer.md) |  |
 |  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) |  |
+|  [RequestAppInfo](./tryorama.requestappinfo.md) |  |
 |  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) |  |
 |  [RequestCallAppInterface](./tryorama.requestcallappinterface.md) |  |
+|  [RequestCallAppInterfaceEncoded](./tryorama.requestcallappinterfaceencoded.md) |  |
+|  [RequestCallZome](./tryorama.requestcallzome.md) |  |
 |  [RequestConfigurePlayer](./tryorama.requestconfigureplayer.md) |  |
 |  [RequestConnectAppInterface](./tryorama.requestconnectappinterface.md) |  |
 |  [RequestDisconnectAppInterface](./tryorama.requestdisconnectappinterface.md) |  |
@@ -38,25 +56,34 @@ TryCP is a protocol to enable remote management of Holochain conductors on netwo
 |  [RequestSaveDna](./tryorama.requestsavedna.md) |  |
 |  [RequestShutdown](./tryorama.requestshutdown.md) |  |
 |  [RequestStartup](./tryorama.requeststartup.md) |  |
+|  [TryCpConductorOptions](./tryorama.trycpconductoroptions.md) |  |
+|  [TryCpPlayer](./tryorama.trycpplayer.md) |  |
 
 ## Variables
 
 |  Variable | Description |
 |  --- | --- |
-|  [createConductor](./tryorama.createconductor.md) | The function to create a TryCP Conductor (called "Player"). |
-|  [TRYCP\_RESPONSE\_SUCCESS](./tryorama.trycp_response_success.md) |  |
+|  [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md) |  |
+|  [cleanAllConductors](./tryorama.cleanallconductors.md) |  |
+|  [cleanAllTryCpConductors](./tryorama.cleanalltrycpconductors.md) |  |
+|  [createLocalConductor](./tryorama.createlocalconductor.md) | The function to create a Local Conductor. It starts a sandbox conductor via the Holochain CLI. |
+|  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor (aka "Player"). |
+|  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) |  |
+|  [pause](./tryorama.pause.md) |  |
+|  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) |  |
 
 ## Type Aliases
 
 |  Type Alias | Description |
 |  --- | --- |
 |  [AdminApiResponse](./tryorama.adminapiresponse.md) |  |
-|  [DnaInstallOptions](./tryorama.dnainstalloptions.md) |  |
-|  [PlayerId](./tryorama.playerid.md) |  |
-|  [PlayerLogLevel](./tryorama.playerloglevel.md) |  |
-|  [TryCpReponseSuccessValueVoid](./tryorama.trycpreponsesuccessvaluevoid.md) |  |
+|  [AppApiResponse](./tryorama.appapiresponse.md) |  |
+|  [CallZomeFn](./tryorama.callzomefn.md) |  |
+|  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) |  |
+|  [ConductorId](./tryorama.conductorid.md) |  |
+|  [Player](./tryorama.player.md) |  |
+|  [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) |  |
 |  [TryCpRequest](./tryorama.trycprequest.md) |  |
 |  [TryCpResponseErrorValue](./tryorama.trycpresponseerrorvalue.md) |  |
-|  [TryCpResponseSuccessValue](./tryorama.trycpresponsesuccessvalue.md) | Value for successful responses from the TryCP server. |
-|  [ZomeResponsePayload](./tryorama.zomeresponsepayload.md) |  |
+|  [TryCpSuccessResponse](./tryorama.trycpsuccessresponse.md) | Value for successful responses from the TryCP server. |
 

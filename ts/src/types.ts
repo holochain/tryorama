@@ -6,7 +6,6 @@ import {
   DnaSource,
   InstalledCell,
 } from "@holochain/client";
-import { ZomeResponsePayload } from "../test/fixture";
 
 export type CellZomeCallRequest = Omit<
   CallZomeRequest,
@@ -16,9 +15,7 @@ export type CellZomeCallRequest = Omit<
   provenance?: Uint8Array;
 };
 
-export type CallZomeFn = <T extends ZomeResponsePayload>(
-  request: CellZomeCallRequest
-) => Promise<T>;
+export type CallZomeFn = <T>(request: CellZomeCallRequest) => Promise<T>;
 
 export interface CallableCell extends InstalledCell {
   callZome: CallZomeFn;
@@ -30,8 +27,11 @@ export interface AgentHapp {
   cells: CallableCell[];
 }
 
-export interface Conductor
-  extends Pick<
+export interface Conductor {
+  startUp: (options: { signalHandler?: AppSignalCb }) => Promise<void | null>;
+  shutDown: () => Promise<number | null>;
+
+  adminWs: () => Pick<
     AdminWebsocket,
     | "addAgentInfo"
     | "attachAppInterface"
@@ -51,10 +51,7 @@ export interface Conductor
     | "requestAgentInfo"
     // | "startApp"
     // | "uninstallApp"
-  > {
-  startUp: (options: { signalHandler?: AppSignalCb }) => Promise<void | null>;
-  shutDown: () => Promise<number | null>;
-
+  >;
   appWs: () => Pick<AppWebsocket, "callZome" | "appInfo">;
 
   installAgentsHapps: (options: {

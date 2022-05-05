@@ -15,7 +15,7 @@ export interface RequestCallAppInterface
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [message](./tryorama.requestcallappinterface.message.md) | Uint8Array |  |
+|  [message](./tryorama.requestcallappinterface.message.md) | RequestCallAppInterfaceMessage |  |
 |  [port](./tryorama.requestcallappinterface.port.md) | number |  |
 |  [type](./tryorama.requestcallappinterface.type.md) | "call\_app\_interface" |  |
 

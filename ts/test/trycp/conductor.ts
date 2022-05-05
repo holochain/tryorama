@@ -8,7 +8,7 @@ import {
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { DnaSource, EntryHash } from "@holochain/client";
 import {
-  cleanAllConductors,
+  cleanAllTryCpConductors,
   createTryCpConductor,
 } from "../../src/trycp/conductor";
 import { FIXTURE_DNA_URL } from "../fixture";
@@ -34,19 +34,19 @@ test("TryCP Conductor - Stop and restart a conductor", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTestTryCpConductor();
 
-  const agentPubKeyResponse = await conductor.generateAgentPubKey();
+  const agentPubKeyResponse = await conductor.adminWs().generateAgentPubKey();
   t.ok(agentPubKeyResponse);
 
   await conductor.shutDown();
-  t.rejects(conductor.generateAgentPubKey);
+  t.rejects(conductor.adminWs().generateAgentPubKey);
 
   await conductor.startUp({});
-  const agentPubKeyResponse2 = await conductor.generateAgentPubKey();
+  const agentPubKeyResponse2 = await conductor.adminWs().generateAgentPubKey();
   t.ok(agentPubKeyResponse2);
 
   await conductor.shutDown();
   await conductor.disconnectClient();
-  await cleanAllConductors(SERVER_URL);
+  await cleanAllTryCpConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
 
@@ -55,18 +55,18 @@ test("TryCP Conductor - Create and read an entry using the entry zome", async (t
   const conductor = await createTestTryCpConductor();
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
-  const dnaHash = await conductor.registerDna({ path: relativePath });
+  const dnaHash = await conductor.adminWs().registerDna({ path: relativePath });
   const dnaHashB64 = Buffer.from(dnaHash).toString("base64");
   t.equal(dnaHash.length, 39);
   t.ok(dnaHashB64.startsWith("hC0k"));
 
-  const agentPubKey = await conductor.generateAgentPubKey();
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const agentPubKeyB64 = Buffer.from(agentPubKey).toString("base64");
   t.equal(agentPubKey.length, 39);
   t.ok(agentPubKeyB64.startsWith("hCAk"));
 
   const appId = "entry-app";
-  const installedAppInfo = await conductor.installApp({
+  const installedAppInfo = await conductor.adminWs().installApp({
     installed_app_id: appId,
     agent_key: agentPubKey,
     dnas: [{ hash: dnaHash, role_id: "entry-dna" }],
@@ -75,13 +75,15 @@ test("TryCP Conductor - Create and read an entry using the entry zome", async (t
   t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
 
-  const enabledAppResponse = await conductor.enableApp({
+  const enabledAppResponse = await conductor.adminWs().enableApp({
     installed_app_id: appId,
   });
   t.deepEqual(enabledAppResponse.app.status, { running: null });
 
-  await conductor.attachAppInterface();
-  const connectAppInterfaceResponse = await conductor.connectAppInterface();
+  await conductor.adminWs().attachAppInterface();
+  const connectAppInterfaceResponse = await conductor
+    .adminWs()
+    .connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
@@ -109,13 +111,14 @@ test("TryCP Conductor - Create and read an entry using the entry zome", async (t
     });
   t.equal(readEntryResponse, entryContent);
 
-  const disconnectAppInterfaceResponse =
-    await conductor.disconnectAppInterface();
+  const disconnectAppInterfaceResponse = await conductor
+    .adminWs()
+    .disconnectAppInterface();
   t.equal(disconnectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   await conductor.shutDown();
   await conductor.disconnectClient();
-  await cleanAllConductors(SERVER_URL);
+  await cleanAllTryCpConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
 
@@ -137,7 +140,7 @@ test("TryCP Conductor - Reading a non-existent entry returns null", async (t) =>
 
   await conductor.shutDown();
   await conductor.disconnectClient();
-  await cleanAllConductors(SERVER_URL);
+  await cleanAllTryCpConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
 
@@ -146,8 +149,12 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   const conductor = await createTestTryCpConductor();
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
-  const dnaHash1 = await conductor.registerDna({ path: relativePath });
-  const dnaHash2 = await conductor.registerDna({ path: relativePath });
+  const dnaHash1 = await conductor
+    .adminWs()
+    .registerDna({ path: relativePath });
+  const dnaHash2 = await conductor
+    .adminWs()
+    .registerDna({ path: relativePath });
   const dnaHash1B64 = Buffer.from(dnaHash1).toString("base64");
   const dnaHash2B64 = Buffer.from(dnaHash1).toString("base64");
   t.equal(dnaHash1.length, 39);
@@ -155,18 +162,18 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   t.equal(dnaHash2.length, 39);
   t.ok(dnaHash2B64.startsWith("hC0k"));
 
-  const agent1PubKey = await conductor.generateAgentPubKey();
+  const agent1PubKey = await conductor.adminWs().generateAgentPubKey();
   const agent1PubKeyB64 = Buffer.from(agent1PubKey).toString("base64");
   t.equal(agent1PubKey.length, 39);
   t.ok(agent1PubKeyB64.startsWith("hCAk"));
 
-  const agent2PubKey = await conductor.generateAgentPubKey();
+  const agent2PubKey = await conductor.adminWs().generateAgentPubKey();
   const agent2PubKeyB64 = Buffer.from(agent1PubKey).toString("base64");
   t.equal(agent2PubKey.length, 39);
   t.ok(agent2PubKeyB64.startsWith("hCAk"));
 
   const appId1 = "entry-app1";
-  const installedAppInfo1 = await conductor.installApp({
+  const installedAppInfo1 = await conductor.adminWs().installApp({
     installed_app_id: appId1,
     agent_key: agent1PubKey,
     dnas: [{ hash: dnaHash1, role_id: "entry-dna" }],
@@ -176,7 +183,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   t.ok(Buffer.from(cellId1[1]).toString("base64").startsWith("hCAk"));
 
   const appId2 = "entry-app2";
-  const installedAppInfo2 = await conductor.installApp({
+  const installedAppInfo2 = await conductor.adminWs().installApp({
     installed_app_id: appId2,
     agent_key: agent2PubKey,
     dnas: [{ hash: dnaHash2, role_id: "entry-dna" }],
@@ -186,17 +193,19 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   t.ok(Buffer.from(cellId2[1]).toString("base64").startsWith("hCAk"));
   t.deepEqual(cellId1[0], cellId2[0]);
 
-  const enabledAppResponse1 = await conductor.enableApp({
+  const enabledAppResponse1 = await conductor.adminWs().enableApp({
     installed_app_id: appId1,
   });
   t.deepEqual(enabledAppResponse1.app.status, { running: null });
-  const enabledAppResponse2 = await conductor.enableApp({
+  const enabledAppResponse2 = await conductor.adminWs().enableApp({
     installed_app_id: appId2,
   });
   t.deepEqual(enabledAppResponse2.app.status, { running: null });
 
-  await conductor.attachAppInterface();
-  const connectAppInterfaceResponse = await conductor.connectAppInterface();
+  await conductor.adminWs().attachAppInterface();
+  const connectAppInterfaceResponse = await conductor
+    .adminWs()
+    .connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
@@ -226,7 +235,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
 
   await conductor.shutDown();
   await conductor.disconnectClient();
-  await cleanAllConductors(SERVER_URL);
+  await cleanAllTryCpConductors(SERVER_URL);
   await localTryCpServer.stop();
 });
 
@@ -272,6 +281,6 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 2 conduct
   await conductor1.disconnectClient();
   await conductor2.shutDown();
   await conductor2.disconnectClient();
-  await cleanAllConductors(SERVER_URL);
+  await cleanAllTryCpConductors(SERVER_URL);
   await localTryCpServer.stop();
 });

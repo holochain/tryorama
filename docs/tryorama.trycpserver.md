@@ -16,6 +16,6 @@ export declare class TryCpServer
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [start(port)](./tryorama.trycpserver.start.md) | <code>static</code> | Spawns and starts a local TryCP server on the specified port. |
+|  [start(port)](./tryorama.trycpserver.start.md) | <code>static</code> | Builds and starts a local TryCP server on the specified port. |
 |  [stop()](./tryorama.trycpserver.stop.md) |  | Stops the server instance by killing the server process. |
 

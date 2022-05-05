@@ -4,7 +4,7 @@
 
 ## TryCpServer.start() method
 
-Spawns and starts a local TryCP server on the specified port.
+Builds and starts a local TryCP server on the specified port.
 
 <b>Signature:</b>
 

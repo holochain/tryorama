@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-type: string;
+type: "generate_agent_pub_key" | "connect_app_interface" | "add_agent_info" | "attach_app_interface" | "dump_state" | "dump_full_state" | "enable_app" | "install_app" | "request_agent_info" | "register_dna";
 ```

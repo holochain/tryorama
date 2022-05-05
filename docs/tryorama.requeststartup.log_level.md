@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-log_level?: PlayerLogLevel;
+log_level?: TryCpConductorLogLevel;
 ```

@@ -14,7 +14,7 @@ export interface RequestCallAdminInterface
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [id](./tryorama.requestcalladmininterface.id.md) | [PlayerId](./tryorama.playerid.md) |  |
-|  [message](./tryorama.requestcalladmininterface.message.md) | Uint8Array |  |
+|  [id](./tryorama.requestcalladmininterface.id.md) | [ConductorId](./tryorama.conductorid.md) |  |
+|  [message](./tryorama.requestcalladmininterface.message.md) | [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) |  |
 |  [type](./tryorama.requestcalladmininterface.type.md) | "call\_admin\_interface" |  |
 

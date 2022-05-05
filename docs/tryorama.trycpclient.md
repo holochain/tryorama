@@ -16,8 +16,9 @@ export declare class TryCpClient
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [call(request)](./tryorama.trycpclient.call.md) |  | Call the TryCP server. |
+|  [call(request)](./tryorama.trycpclient.call.md) |  | Send a call to the TryCP server. |
 |  [close()](./tryorama.trycpclient.close.md) |  | Closes the client connection. |
-|  [create(url)](./tryorama.trycpclient.create.md) | <code>static</code> | Create a client connection to a running TryCP server. |
+|  [create(serverUrl)](./tryorama.trycpclient.create.md) | <code>static</code> | Create a client connection to a running TryCP server. |
 |  [ping(data)](./tryorama.trycpclient.ping.md) |  | Send a ping with data. |
+|  [processSuccessResponse(response)](./tryorama.trycpclient.processsuccessresponse.md) |  |  |
 

@@ -2,7 +2,7 @@ import { v4 as uuidv4 } from "uuid";
 import { DnaSource } from "@holochain/client";
 import { TryCpServer } from "../trycp-server";
 import {
-  cleanAllConductors,
+  cleanAllTryCpConductors,
   createTryCpConductor,
   TryCpConductor,
 } from "./conductor";
@@ -77,7 +77,7 @@ export class TryCpScenario {
     await Promise.all(
       this.conductors.map((conductor) => conductor.disconnectClient())
     );
-    await cleanAllConductors(this.serverUrl);
+    await cleanAllTryCpConductors(this.serverUrl);
     this.conductors = [];
     await this.server?.stop();
   }

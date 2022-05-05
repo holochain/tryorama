@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-data: Record<string, string | number>;
+data?: AddAgentInfoRequest | AttachAppInterfaceRequest | DumpStateRequest | DumpFullStateRequest | EnableAppRequest | InstallAppRequest | RegisterDnaRequest | RequestAgentInfoRequest;
 ```

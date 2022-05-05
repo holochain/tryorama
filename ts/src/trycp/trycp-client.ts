@@ -156,7 +156,7 @@ export class TryCpClient {
    * Send a call to the TryCP server.
    *
    * @param request - {@link TryCpRequest}
-   * @returns A promise that resolves to the {@link TryCpResponseSuccessValue}
+   * @returns A promise that resolves to the {@link TryCpSuccessResponse}
    */
   call(request: TryCpRequest) {
     const requestDebugLog = this.getFormattedRequestLog(request);

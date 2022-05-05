@@ -15,6 +15,6 @@ export interface RequestAdminInterfaceData
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [data](./tryorama.requestadmininterfacedata.data.md) | Record&lt;string, string \| number&gt; |  |
-|  [type](./tryorama.requestadmininterfacedata.type.md) | string |  |
+|  [data?](./tryorama.requestadmininterfacedata.data.md) | AddAgentInfoRequest \| AttachAppInterfaceRequest \| DumpStateRequest \| DumpFullStateRequest \| EnableAppRequest \| InstallAppRequest \| RegisterDnaRequest \| RequestAgentInfoRequest | <i>(Optional)</i> |
+|  [type](./tryorama.requestadmininterfacedata.type.md) | "generate\_agent\_pub\_key" \| "connect\_app\_interface" \| "add\_agent\_info" \| "attach\_app\_interface" \| "dump\_state" \| "dump\_full\_state" \| "enable\_app" \| "install\_app" \| "request\_agent\_info" \| "register\_dna" |  |
 

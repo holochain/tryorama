@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-message: Uint8Array;
+message: RequestAdminInterfaceData;
 ```

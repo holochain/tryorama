@@ -8,5 +8,5 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type TryCpResponseErrorValue = string;
+export declare type TryCpResponseErrorValue = string | Error;
 ```

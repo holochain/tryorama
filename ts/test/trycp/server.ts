@@ -9,7 +9,7 @@ import { TryCpClient } from "../../src/trycp/trycp-client";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { FIXTURE_DNA_URL } from "../fixture";
 import {
-  cleanAllConductors,
+  cleanAllTryCpConductors,
   createTryCpConductor,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
 } from "../../src";
@@ -218,7 +218,7 @@ test("TryCP Server - Reset", async (t) => {
 
 test("TryCP Server - Reset function", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const actual = await cleanAllConductors(SERVER_URL);
+  const actual = await cleanAllTryCpConductors(SERVER_URL);
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
   await localTryCpServer.stop();
 });
@@ -227,10 +227,12 @@ test("TryCP Server - Admin API - Connect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTryCpConductor(SERVER_URL);
 
-  const { port } = await conductor.attachAppInterface();
+  const { port } = await conductor.adminWs().attachAppInterface();
   t.ok(typeof port === "number");
 
-  const connectAppInterfaceResponse = await conductor.connectAppInterface();
+  const connectAppInterfaceResponse = await conductor
+    .adminWs()
+    .connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const appInfoResponse = await conductor
@@ -238,8 +240,9 @@ test("TryCP Server - Admin API - Connect app interface", async (t) => {
     .appInfo({ installed_app_id: "" });
   t.equal(appInfoResponse, null);
 
-  const disconnectAppInterfaceResponse =
-    await conductor.disconnectAppInterface();
+  const disconnectAppInterfaceResponse = await conductor
+    .adminWs()
+    .disconnectAppInterface();
   t.equal(disconnectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   await conductor.shutDown();
@@ -259,7 +262,7 @@ test("TryCP Server - App API - Get app info", async (t) => {
     .appInfo({ installed_app_id: alice.happId });
   t.deepEqual(appInfo.status, { running: null });
 
-  await conductor.disconnectAppInterface();
+  await conductor.adminWs().disconnectAppInterface();
   await conductor.shutDown();
   await conductor.disconnectClient();
   await localTryCpServer.stop();

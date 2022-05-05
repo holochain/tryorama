@@ -25,7 +25,6 @@ import {
   RequestAdminInterfaceData,
   RequestCallAppInterfaceMessage,
 } from "../types";
-import { ZomeResponsePayload } from "../../../test/fixture";
 import { deserializeZomeResponsePayload } from "../util";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { makeLogger } from "../../logger";
@@ -122,7 +121,7 @@ export class TryCpConductor implements Conductor {
 
   async shutDown() {
     if (this.appInterfacePort) {
-      const response = await this.disconnectAppInterface();
+      const response = await this.adminWs().disconnectAppInterface();
       assert(response === TRYCP_SUCCESS_RESPONSE);
     }
     const response = await this.tryCpClient.call({
@@ -169,142 +168,160 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
-  async registerDna(request: RegisterDnaRequest & DnaSource): Promise<DnaHash> {
-    const response = await this.callAdminApi({
-      type: "register_dna",
-      data: request,
-    });
-    assert(response.type === "dna_registered");
-    return response.data;
-  }
-
-  async generateAgentPubKey(): Promise<AgentPubKey> {
-    const response = await this.callAdminApi({
-      type: "generate_agent_pub_key",
-    });
-    assert(response.type === "agent_pub_key_generated");
-    return response.data;
-  }
-
-  async installApp(data: InstallAppRequest) {
-    const response = await this.callAdminApi({
-      type: "install_app",
-      data,
-    });
-    assert(response.type === "app_installed");
-    return response.data;
-  }
-
-  async enableApp(request: EnableAppRequest) {
-    const response = await this.callAdminApi({
-      type: "enable_app",
-      data: request,
-    });
-    assert(response.type === "app_enabled");
-    return response.data;
-  }
-
-  async attachAppInterface(request?: AttachAppInterfaceRequest) {
-    request = request ?? {
-      port: await getPort({ port: portNumbers(30000, 40000) }),
+  adminWs() {
+    const registerDna = async (
+      request: RegisterDnaRequest & DnaSource
+    ): Promise<DnaHash> => {
+      const response = await this.callAdminApi({
+        type: "register_dna",
+        data: request,
+      });
+      assert(response.type === "dna_registered");
+      return response.data;
     };
-    const response = await this.callAdminApi({
-      type: "attach_app_interface",
-      data: request,
-    });
-    assert(response.type === "app_interface_attached");
-    this.appInterfacePort = request.port;
-    return { port: response.data.port };
-  }
 
-  async disconnectAppInterface() {
-    assert(this.appInterfacePort, "no app interface attached");
-    const response = await this.tryCpClient.call({
-      type: "disconnect_app_interface",
-      port: this.appInterfacePort,
-    });
-    assert(response === TRYCP_SUCCESS_RESPONSE);
-    return response;
-  }
+    const generateAgentPubKey = async (): Promise<AgentPubKey> => {
+      const response = await this.callAdminApi({
+        type: "generate_agent_pub_key",
+      });
+      assert(response.type === "agent_pub_key_generated");
+      return response.data;
+    };
 
-  async connectAppInterface() {
-    assert(this.appInterfacePort, "no app interface attached to conductor");
-    const response = await this.tryCpClient.call({
-      type: "connect_app_interface",
-      port: this.appInterfacePort,
-    });
-    assert(response === TRYCP_SUCCESS_RESPONSE);
-    return response;
-  }
+    const installApp = async (data: InstallAppRequest) => {
+      const response = await this.callAdminApi({
+        type: "install_app",
+        data,
+      });
+      assert(response.type === "app_installed");
+      return response.data;
+    };
 
-  /**
-   * Get agent infos, optionally of a particular cell.
-   * @param req - The cell id to get agent infos of.
-   * @returns The agent infos.
-   *
-   * @public
-   */
-  async requestAgentInfo(req: RequestAgentInfoRequest) {
-    const response = await this.callAdminApi({
-      type: "request_agent_info",
-      data: {
-        cell_id: req.cell_id || null,
-      },
-    });
-    assert(response.type === "agent_info_requested");
-    return response.data;
-  }
+    const enableApp = async (request: EnableAppRequest) => {
+      const response = await this.callAdminApi({
+        type: "enable_app",
+        data: request,
+      });
+      assert(response.type === "app_enabled");
+      return response.data;
+    };
 
-  /**
-   * Add agents to a conductor.
-   * @param request - The agents to add to the conductor.
-   *
-   * @public
-   */
-  async addAgentInfo(request: AddAgentInfoRequest) {
-    const response = await this.callAdminApi({
-      type: "add_agent_info",
-      data: request,
-    });
-    assert(response.type === "agent_info_added");
-    return response;
-  }
+    const attachAppInterface = async (request?: AttachAppInterfaceRequest) => {
+      request = request ?? {
+        port: await getPort({ port: portNumbers(30000, 40000) }),
+      };
+      const response = await this.callAdminApi({
+        type: "attach_app_interface",
+        data: request,
+      });
+      assert(response.type === "app_interface_attached");
+      this.appInterfacePort = request.port;
+      return { port: response.data.port };
+    };
 
-  /**
-   * Request a dump of the cell's state.
-   *
-   * @param request - The cell id for which state should be dumped.
-   * @returns The cell's state as JSON.
-   *
-   * @public
-   */
-  async dumpState(request: DumpStateRequest) {
-    const response = await this.callAdminApi({
-      type: "dump_state",
-      data: request,
-    });
-    assert("data" in response);
-    assert(typeof response.data === "string");
-    const stateDump = JSON.parse(response.data.replace(/\\n/g, ""));
-    return stateDump as [FullStateDump, string];
-  }
+    const disconnectAppInterface = async () => {
+      assert(this.appInterfacePort, "no app interface attached");
+      const response = await this.tryCpClient.call({
+        type: "disconnect_app_interface",
+        port: this.appInterfacePort,
+      });
+      assert(response === TRYCP_SUCCESS_RESPONSE);
+      return response;
+    };
 
-  /**
-   * Request a full state dump of the cell's source chain.
-   *
-   * @param request - The cell id for which state should be dumped and
-   * optionally a DHT Ops cursor.
-   * @returns The cell's state as JSON.
-   *
-   * @public
-   */
-  async dumpFullState(request: DumpFullStateRequest) {
-    const response = await this.callAdminApi({
-      type: "dump_full_state",
-      data: request,
-    });
-    assert(response.type === "full_state_dumped");
-    return response.data;
+    const connectAppInterface = async () => {
+      assert(this.appInterfacePort, "no app interface attached to conductor");
+      const response = await this.tryCpClient.call({
+        type: "connect_app_interface",
+        port: this.appInterfacePort,
+      });
+      assert(response === TRYCP_SUCCESS_RESPONSE);
+      return response;
+    };
+
+    /**
+     * Get agent infos, optionally of a particular cell.
+     * @param req - The cell id to get agent infos of.
+     * @returns The agent infos.
+     *
+     * @public
+     */
+    const requestAgentInfo = async (req: RequestAgentInfoRequest) => {
+      const response = await this.callAdminApi({
+        type: "request_agent_info",
+        data: {
+          cell_id: req.cell_id || null,
+        },
+      });
+      assert(response.type === "agent_info_requested");
+      return response.data;
+    };
+
+    /**
+     * Add agents to a conductor.
+     * @param request - The agents to add to the conductor.
+     *
+     * @public
+     */
+    const addAgentInfo = async (request: AddAgentInfoRequest) => {
+      const response = await this.callAdminApi({
+        type: "add_agent_info",
+        data: request,
+      });
+      assert(response.type === "agent_info_added");
+      return response;
+    };
+
+    /**
+     * Request a dump of the cell's state.
+     *
+     * @param request - The cell id for which state should be dumped.
+     * @returns The cell's state as JSON.
+     *
+     * @public
+     */
+    const dumpState = async (request: DumpStateRequest) => {
+      const response = await this.callAdminApi({
+        type: "dump_state",
+        data: request,
+      });
+      assert("data" in response);
+      assert(typeof response.data === "string");
+      const stateDump = JSON.parse(response.data.replace(/\\n/g, ""));
+      return stateDump as [FullStateDump, string];
+    };
+
+    /**
+     * Request a full state dump of the cell's source chain.
+     *
+     * @param request - The cell id for which state should be dumped and
+     * optionally a DHT Ops cursor.
+     * @returns The cell's state as JSON.
+     *
+     * @public
+     */
+    const dumpFullState = async (request: DumpFullStateRequest) => {
+      const response = await this.callAdminApi({
+        type: "dump_full_state",
+        data: request,
+      });
+      assert(response.type === "full_state_dumped");
+      return response.data;
+    };
+
+    return {
+      addAgentInfo,
+      attachAppInterface,
+      connectAppInterface,
+      disconnectAppInterface,
+      dumpFullState,
+      dumpState,
+      enableApp,
+      generateAgentPubKey,
+      installApp,
+      registerDna,
+      requestAgentInfo,
+    };
   }
 
   /**
@@ -351,9 +368,7 @@ export class TryCpConductor implements Conductor {
      *
      * @public
      */
-    const callZome = async <T extends ZomeResponsePayload>(
-      request: CallZomeRequest
-    ) => {
+    const callZome = async <T>(request: CallZomeRequest) => {
       const response = await this.callAppApi({
         type: "zome_call",
         data: request,
@@ -390,7 +405,7 @@ export class TryCpConductor implements Conductor {
 
     for (const agentDnas of options.agentsDnas) {
       const dnaHashes: DnaHash[] = [];
-      const agentPubKey = await this.generateAgentPubKey();
+      const agentPubKey = await this.adminWs().generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
       logger.debug(
         `installing app with id ${appId} for agent ${Buffer.from(
@@ -409,7 +424,7 @@ export class TryCpConductor implements Conductor {
             });
           });
           const relativePath = await this.saveDna(dnaContent);
-          const dnaHash = await this.registerDna({
+          const dnaHash = await this.adminWs().registerDna({
             path: relativePath,
             uid: options.uid,
           });
@@ -423,18 +438,16 @@ export class TryCpConductor implements Conductor {
           role_id: `dna-${uuidv4()}`,
         }));
 
-        const installedAppInfo = await this.installApp({
+        const installedAppInfo = await this.adminWs().installApp({
           installed_app_id: appId,
           agent_key: agentPubKey,
           dnas,
         });
-        await this.enableApp({ installed_app_id: appId });
+        await this.adminWs().enableApp({ installed_app_id: appId });
 
         const cells = installedAppInfo.cell_data.map((cell) => ({
           ...cell,
-          callZome: async <T extends ZomeResponsePayload>(
-            request: CellZomeCallRequest
-          ) =>
+          callZome: async <T>(request: CellZomeCallRequest) =>
             this.appWs().callZome<T>({
               ...request,
               cap_secret: request.cap_secret || null,
@@ -450,14 +463,14 @@ export class TryCpConductor implements Conductor {
       }
     }
 
-    await this.attachAppInterface();
-    await this.connectAppInterface();
+    await this.adminWs().attachAppInterface();
+    await this.adminWs().connectAppInterface();
 
     return agentsCells;
   }
 }
 
-export const cleanAllConductors = async (serverUrl: URL) => {
+export const cleanAllTryCpConductors = async (serverUrl: URL) => {
   const client = await TryCpClient.create(serverUrl);
   const response = await client.call({ type: "reset" });
   assert(response === TRYCP_SUCCESS_RESPONSE);

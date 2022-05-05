@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-id: PlayerId;
+id: ConductorId;
 ```

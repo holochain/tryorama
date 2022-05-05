@@ -9,14 +9,14 @@ Create a client connection to a running TryCP server.
 <b>Signature:</b>
 
 ```typescript
-static create(url: string): Promise<TryCpClient>;
+static create(serverUrl: URL): Promise<TryCpClient>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  url | string | The URL of the TryCP server. |
+|  serverUrl | URL | The URL of the TryCP server. |
 
 <b>Returns:</b>
 

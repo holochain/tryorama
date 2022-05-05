@@ -8,5 +8,7 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type AdminApiResponse = HoloHash | InstalledAppInfo | EnableAppResponse | AttachAppInterfaceResponse | AgentInfoSigned[];
+export declare type AdminApiResponse = AdminApiResponseAgentInfoAdded | AdminApiResponseAgentInfoRequested | AdminApiResponseAgentPubKeyGenerated | AdminApiResponseAppEnabled | AdminApiResponseAppInstalled | AdminApiResponseAppInterfaceAttached | AdminApiResponseDnaRegistered | AdminApiResponseStateDumped | AdminApiResponseFullStateDumped;
 ```
+<b>References:</b> [AdminApiResponseAgentInfoAdded](./tryorama.adminapiresponseagentinfoadded.md)<!-- -->, [AdminApiResponseAgentInfoRequested](./tryorama.adminapiresponseagentinforequested.md)<!-- -->, [AdminApiResponseAgentPubKeyGenerated](./tryorama.adminapiresponseagentpubkeygenerated.md)<!-- -->, [AdminApiResponseAppEnabled](./tryorama.adminapiresponseappenabled.md)<!-- -->, [AdminApiResponseAppInstalled](./tryorama.adminapiresponseappinstalled.md)<!-- -->, [AdminApiResponseAppInterfaceAttached](./tryorama.adminapiresponseappinterfaceattached.md)<!-- -->, [AdminApiResponseDnaRegistered](./tryorama.adminapiresponsednaregistered.md)<!-- -->, [AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md)<!-- -->, [AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md)
+

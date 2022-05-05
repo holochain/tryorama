@@ -1,6 +1,5 @@
 import msgpack from "@msgpack/msgpack";
 import assert from "assert";
-import { ZomeResponsePayload } from "../../test/fixture";
 import { _TryCpApiResponse, _TryCpResponseWrapper } from "./types";
 
 /**
@@ -42,9 +41,7 @@ export const deserializeApiResponse = (response: Uint8Array) => {
  *
  * @internal
  */
-export const deserializeZomeResponsePayload = <T extends ZomeResponsePayload>(
-  payload: Uint8Array
-): T => {
+export const deserializeZomeResponsePayload = <T>(payload: Uint8Array): T => {
   const deserializedPayload = msgpack.decode(payload);
   return deserializedPayload as T;
 };
