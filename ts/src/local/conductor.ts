@@ -1,4 +1,5 @@
 import assert from "assert";
+import getPort, { portNumbers } from "get-port";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { makeLogger } from "../logger";
 import { v4 as uuidv4 } from "uuid";
@@ -6,6 +7,7 @@ import {
   AddAgentInfoRequest,
   AdminWebsocket,
   AppInfoRequest,
+  AppSignalCb,
   AppWebsocket,
   AttachAppInterfaceRequest,
   CallZomeRequest,
@@ -19,14 +21,14 @@ import {
   RegisterDnaRequest,
   RequestAgentInfoRequest,
 } from "@holochain/client";
-import getPort, { portNumbers } from "get-port";
 import { AgentHapp, CellZomeCallRequest, Conductor } from "../types";
 import { ZomeResponsePayload } from "../../test/fixture";
 
 const logger = makeLogger("Local conductor");
 
 export interface LocalConductorOptions {
-  startup: boolean;
+  startup?: boolean;
+  signalHandler?: AppSignalCb;
 }
 
 /**
@@ -40,7 +42,7 @@ export interface LocalConductorOptions {
 export const createLocalConductor = async (options?: LocalConductorOptions) => {
   const conductor = await LocalConductor.create();
   if (options?.startup !== false) {
-    await conductor.startUp();
+    await conductor.startUp({ signalHandler: options?.signalHandler });
   }
   return conductor;
 };
@@ -92,7 +94,7 @@ export class LocalConductor implements Conductor {
     return createConductorPromise;
   }
 
-  async startUp() {
+  async startUp(options: { signalHandler?: AppSignalCb }) {
     assert(
       this.conductorDir,
       "error starting conductor: conductor has not been created"
@@ -142,7 +144,7 @@ export class LocalConductor implements Conductor {
     this.conductorProcess = runConductorProcess;
     const adminApiPort = await startPromise;
     await this.connectAdminWs(`ws://127.0.0.1:${adminApiPort}`);
-    await this.connectAppWs();
+    await this.connectAppWs(options.signalHandler);
   }
 
   async shutDown() {
@@ -170,7 +172,7 @@ export class LocalConductor implements Conductor {
     logger.debug(`connected to Admin API @ ${url}\n`);
   }
 
-  private async connectAppWs() {
+  private async connectAppWs(signalHandler?: AppSignalCb) {
     assert(this._adminWs, "error connecting to app: admin is not defined");
     const appApiPort = await getPort({ port: portNumbers(30000, 40000) });
     logger.debug(`attaching App API to port ${appApiPort}\n`);
@@ -178,7 +180,11 @@ export class LocalConductor implements Conductor {
 
     const adminApiUrl = new URL(this._adminWs.client.socket.url);
     const appApiUrl = `${adminApiUrl.protocol}//${adminApiUrl.hostname}:${appApiPort}`;
-    this._appWs = await AppWebsocket.connect(appApiUrl);
+    this._appWs = await AppWebsocket.connect(
+      appApiUrl,
+      undefined,
+      signalHandler
+    );
   }
 
   adminWs() {

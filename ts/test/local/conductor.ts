@@ -1,5 +1,5 @@
 import test from "tape-promise/tape";
-import { DnaSource, EntryHash } from "@holochain/client";
+import { AppSignal, DnaSource, EntryHash } from "@holochain/client";
 import { cleanAllConductors, createLocalConductor } from "../../src/local";
 import { FIXTURE_DNA_URL } from "../fixture";
 import { pause } from "../../src/util";
@@ -41,7 +41,7 @@ test("Local Conductor - Install multiple agents and DNAs and get access to agent
   await cleanAllConductors();
 });
 
-test.only("Local Conductor - Create and read an entry using the entry zome", async (t) => {
+test("Local Conductor - Create and read an entry using the entry zome", async (t) => {
   const conductor = await createLocalConductor();
   t.ok(conductor.adminWs());
   t.ok(conductor.appWs());
@@ -94,7 +94,7 @@ test.only("Local Conductor - Create and read an entry using the entry zome", asy
   t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
-  // await cleanAllConductors();
+  await cleanAllConductors();
 });
 
 test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
@@ -126,5 +126,24 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
   await conductor1.shutDown();
   await conductor2.shutDown();
+  await cleanAllConductors();
+});
+
+test.skip("Local Conductor - Receive a signal", async (t) => {
+  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const conductor = await createLocalConductor({
+    signalHandler: (signal: AppSignal) => {
+      console.log("app signal called", signal);
+    },
+  });
+  const [alice] = await conductor.installAgentsHapps({ agentsDnas: [dnas] });
+  const resopnse = await alice.cells[0].callZome({
+    zome_name: "crud",
+    fn_name: "signal_loopback",
+    payload: { value: "signal" },
+  });
+  await pause(10000);
+  console.log("da", resopnse);
+  await conductor.shutDown();
   await cleanAllConductors();
 });

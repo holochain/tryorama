@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
 import { DnaSource } from "@holochain/client";
-import { Player } from "../../types";
 import { TryCpServer } from "../trycp-server";
 import {
   cleanAllConductors,
   createTryCpConductor,
   TryCpConductor,
+  TryCpPlayer,
 } from "./conductor";
 import { URL } from "url";
 import { addAllAgentsToAllConductors } from "../../util";
@@ -38,7 +38,7 @@ export class TryCpScenario {
     return scenario;
   }
 
-  async addPlayer(dnas: DnaSource[]): Promise<Player> {
+  async addPlayer(dnas: DnaSource[]): Promise<TryCpPlayer> {
     const conductor = await createTryCpConductor(this.serverUrl, {
       partialConfig,
     });
@@ -50,8 +50,8 @@ export class TryCpScenario {
     return { conductor, ...agentCells };
   }
 
-  async addPlayers(playersDnas: DnaSource[][]): Promise<Player[]> {
-    const players: Player[] = [];
+  async addPlayers(playersDnas: DnaSource[][]): Promise<TryCpPlayer[]> {
+    const players: TryCpPlayer[] = [];
     await Promise.all(
       playersDnas.map(async (playerDnas) => {
         const player = await this.addPlayer(playerDnas);
@@ -66,7 +66,13 @@ export class TryCpScenario {
   }
 
   async cleanUp(): Promise<void> {
+    await Promise.all(
+      this.conductors.map((conductor) => conductor.disconnectAppInterface())
+    );
     await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
+    await Promise.all(
+      this.conductors.map((conductor) => conductor.disconnect())
+    );
     await cleanAllConductors(this.serverUrl);
     this.conductors = [];
     await this.server?.stop();

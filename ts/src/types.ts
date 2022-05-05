@@ -1,5 +1,6 @@
 import {
   AdminWebsocket,
+  AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
   DnaSource,
@@ -33,18 +34,27 @@ export interface AgentHapp {
 export interface Conductor
   extends Pick<
       AdminWebsocket,
-      | "generateAgentPubKey"
-      | "registerDna"
-      | "installApp"
-      | "enableApp"
-      | "attachAppInterface"
-      | "requestAgentInfo"
       | "addAgentInfo"
+      | "attachAppInterface"
+      // | "createCloneCell"
+      // | "disableApp"
+      | "enableApp"
       | "dumpState"
       | "dumpFullState"
+      | "generateAgentPubKey"
+      | "installApp"
+      // | "installAppBundle"
+      // | "listAppInterfaces"
+      // | "listApps"
+      // | "listCellIds"
+      // | "listDnas"
+      | "registerDna"
+      | "requestAgentInfo"
+      // | "startApp"
+      // | "uninstallApp"
     >,
     Pick<AppWebsocket, "callZome" | "appInfo"> {
-  startUp: (log_level?: TryCpConductorLogLevel) => Promise<void | null>;
+  startUp: (options: { signalHandler?: AppSignalCb }) => Promise<void | null>;
   shutDown: () => Promise<number | null>;
 
   callZome: <T extends ZomeResponsePayload>(

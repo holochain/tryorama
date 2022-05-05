@@ -8,7 +8,11 @@ import {
 import { TryCpClient } from "../../src/trycp/trycp-client";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { FIXTURE_DNA_URL } from "../fixture";
-import { createTryCpConductor, DEFAULT_PARTIAL_PLAYER_CONFIG } from "../../src";
+import {
+  cleanAllConductors,
+  createTryCpConductor,
+  DEFAULT_PARTIAL_PLAYER_CONFIG,
+} from "../../src";
 import { URL } from "url";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -20,11 +24,10 @@ test("TryCP Server - Ping", async (t) => {
 
   const expected = "peng";
   const actual = (await tryCpClient.ping(expected)).toString();
+  t.equal(actual, expected);
 
   await tryCpClient.close();
   await localTryCpServer.stop();
-
-  t.equal(actual, expected);
 });
 
 test("TryCP Server - Non-existent call throws", async (t) => {
@@ -55,10 +58,10 @@ test("TryCP Server - Download DNA from web", async (t) => {
     type: "download_dna",
     url,
   });
+  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
+
   await tryCpClient.close();
   await localTryCpServer.stop();
-
-  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 });
 
 test("TryCP Server - Download DNA from file system", async (t) => {
@@ -71,10 +74,10 @@ test("TryCP Server - Download DNA from file system", async (t) => {
     type: "download_dna",
     url,
   });
+  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
+
   await tryCpClient.close();
   await localTryCpServer.stop();
-
-  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 });
 
 test("TryCP Server - Save DNA to file system", async (t) => {
@@ -87,10 +90,10 @@ test("TryCP Server - Save DNA to file system", async (t) => {
     id: dnaId,
     content: Buffer.from([0, 1, 2, 3, 4]),
   });
+  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(dnaId));
+
   await tryCpClient.close();
   await localTryCpServer.stop();
-
-  t.ok(typeof actualUrl === "string" && actualUrl.endsWith(dnaId));
 });
 
 test("TryCP Server - Configure player", async (t) => {
@@ -102,10 +105,10 @@ test("TryCP Server - Configure player", async (t) => {
     id: "player-1",
     partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
   });
+  t.equal(actual, TRYCP_SUCCESS_RESPONSE);
+
   await tryCpClient.close();
   await localTryCpServer.stop();
-
-  t.equal(actual, TRYCP_SUCCESS_RESPONSE);
 });
 
 test("TryCP Server - 2 parallel calls from one client return corresponding responses", async (t) => {
@@ -125,11 +128,11 @@ test("TryCP Server - 2 parallel calls from one client return corresponding respo
     }),
   ];
   const [response1, response2] = await Promise.all(parallelCallPromises);
-  await tryCpClient.close();
-  await localTryCpServer.stop();
-
   t.equal(response1, TRYCP_SUCCESS_RESPONSE);
   t.equal(response2, TRYCP_SUCCESS_RESPONSE);
+
+  await tryCpClient.close();
+  await localTryCpServer.stop();
 });
 
 test("TryCP Server - 2 parallel calls from two clients return correct responses", async (t) => {
@@ -150,12 +153,12 @@ test("TryCP Server - 2 parallel calls from two clients return correct responses"
     }),
   ];
   const [response1, response2] = await Promise.all(parallelCallPromises);
+  t.equal(response1, TRYCP_SUCCESS_RESPONSE);
+  t.equal(response2, TRYCP_SUCCESS_RESPONSE);
+
   await tryCpClient1.close();
   await tryCpClient2.close();
   await localTryCpServer.stop();
-
-  t.equal(response1, TRYCP_SUCCESS_RESPONSE);
-  t.equal(response2, TRYCP_SUCCESS_RESPONSE);
 });
 
 test("TryCP Server - Startup and shutdown", async (t) => {
@@ -172,17 +175,16 @@ test("TryCP Server - Startup and shutdown", async (t) => {
     type: "startup",
     id: playerId,
   });
+  t.equal(actualStartup, TRYCP_SUCCESS_RESPONSE);
 
   const actualShutdown = await tryCpClient.call({
     type: "shutdown",
     id: playerId,
   });
+  t.equal(actualShutdown, TRYCP_SUCCESS_RESPONSE);
 
   await tryCpClient.close();
   await localTryCpServer.stop();
-
-  t.equal(actualStartup, TRYCP_SUCCESS_RESPONSE);
-  t.equal(actualShutdown, TRYCP_SUCCESS_RESPONSE);
 });
 
 test("TryCP Server - Reset", async (t) => {
@@ -203,6 +205,7 @@ test("TryCP Server - Reset", async (t) => {
   const actual = await tryCpClient.call({
     type: "reset",
   });
+  t.equal(actual, TRYCP_SUCCESS_RESPONSE);
   const attemptToStartAgain = tryCpClient.call({
     type: "startup",
     id: playerId,
@@ -211,8 +214,13 @@ test("TryCP Server - Reset", async (t) => {
 
   await tryCpClient.close();
   await localTryCpServer.stop();
+});
 
+test("TryCP Server - Reset function", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const actual = await cleanAllConductors(SERVER_URL);
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
+  await localTryCpServer.stop();
 });
 
 test("TryCP Server - Admin API - Connect app interface", async (t) => {
@@ -228,7 +236,12 @@ test("TryCP Server - Admin API - Connect app interface", async (t) => {
   const appInfoResponse = await conductor.appInfo({ installed_app_id: "" });
   t.equal(appInfoResponse, null);
 
+  const disconnectAppInterfaceResponse =
+    await conductor.disconnectAppInterface();
+  t.equal(disconnectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
+
   await conductor.shutDown();
+  await conductor.disconnect();
   await localTryCpServer.stop();
 });
 
@@ -242,6 +255,8 @@ test("TryCP Server - App API - Get app info", async (t) => {
   const appInfo = await conductor.appInfo({ installed_app_id: alice.happId });
   t.deepEqual(appInfo.status, { running: null });
 
+  await conductor.disconnectAppInterface();
   await conductor.shutDown();
+  await conductor.disconnect();
   await localTryCpServer.stop();
 });

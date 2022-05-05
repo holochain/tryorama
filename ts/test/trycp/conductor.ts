@@ -30,6 +30,26 @@ const createTestTryCpConductor = () =>
     partialConfig: LOCAL_TEST_PARTIAL_CONFIG,
   });
 
+test("TryCP Conductor - Stop and restart a conductor", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const conductor = await createTestTryCpConductor();
+
+  const agentPubKeyResponse = await conductor.generateAgentPubKey();
+  t.ok(agentPubKeyResponse);
+
+  await conductor.shutDown();
+  t.rejects(conductor.generateAgentPubKey);
+
+  await conductor.startUp({});
+  const agentPubKeyResponse2 = await conductor.generateAgentPubKey();
+  t.ok(agentPubKeyResponse2);
+
+  await conductor.shutDown();
+  await conductor.disconnect();
+  await cleanAllConductors(SERVER_URL);
+  await localTryCpServer.stop();
+});
+
 test("TryCP Conductor - Create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTestTryCpConductor();
@@ -115,7 +135,6 @@ test("TryCP Conductor - Reading a non-existent entry returns null", async (t) =>
   });
   t.equal(actual, null);
 
-  await conductor.disconnectAppInterface();
   await conductor.shutDown();
   await conductor.disconnect();
   await cleanAllConductors(SERVER_URL);
@@ -203,7 +222,6 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor.disconnectAppInterface();
   await conductor.shutDown();
   await conductor.disconnect();
   await cleanAllConductors(SERVER_URL);
@@ -246,14 +264,10 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 2 conduct
   });
   t.equal(readEntryResponse, entryContent);
 
-  await conductor1.disconnectAppInterface();
   await conductor1.shutDown();
   await conductor1.disconnect();
-
-  await conductor2.disconnectAppInterface();
   await conductor2.shutDown();
   await conductor2.disconnect();
-
   await cleanAllConductors(SERVER_URL);
   await localTryCpServer.stop();
 });

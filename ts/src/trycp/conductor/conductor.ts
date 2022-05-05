@@ -2,7 +2,7 @@ import assert from "assert";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import getPort, { portNumbers } from "get-port";
-import { AgentHapp, CellZomeCallRequest, Conductor } from "../../types";
+import { AgentHapp, CellZomeCallRequest, Conductor, Player } from "../../types";
 import { TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AddAgentInfoRequest,
@@ -52,6 +52,13 @@ export interface TryCpConductorOptions {
   partialConfig?: string;
   startup?: boolean;
   logLevel?: TryCpConductorLogLevel;
+}
+
+/**
+ * @public
+ */
+export interface TryCpPlayer extends Player {
+  conductor: TryCpConductor;
 }
 
 /**
@@ -121,6 +128,10 @@ export class TryCpConductor implements Conductor {
   }
 
   async shutDown() {
+    if (this.appInterfacePort) {
+      const response = await this.disconnectAppInterface();
+      assert(response === TRYCP_SUCCESS_RESPONSE);
+    }
     const response = await this.tryCpClient.call({
       type: "shutdown",
       id: this.id,
