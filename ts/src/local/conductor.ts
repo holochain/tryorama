@@ -48,15 +48,15 @@ export class LocalConductor implements Conductor {
   private conductorProcess: ChildProcessWithoutNullStreams | undefined;
   private conductorDir: string | undefined;
   private adminApiUrl: URL;
-  private appApiPort: number | undefined;
+  private appApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
 
   private constructor() {
     this.conductorProcess = undefined;
     this.conductorDir = undefined;
-    this.adminApiUrl = HOST_URL;
-    this.appApiPort = undefined;
+    this.adminApiUrl = new URL(HOST_URL.href);
+    this.appApiUrl = new URL(HOST_URL.href);
     this._adminWs = undefined;
     this._appWs = undefined;
   }
@@ -166,18 +166,17 @@ export class LocalConductor implements Conductor {
   }
 
   private async connectAppWs(signalHandler?: AppSignalCb) {
-    if (!this.appApiPort) {
+    if (!this.appApiUrl.port) {
       assert(this._adminWs, "error connecting to app: admin is not defined");
       const appApiPort = await getPort({ port: portNumbers(30000, 40000) });
       logger.debug(`attaching App API to port ${appApiPort}\n`);
       await this._adminWs.attachAppInterface({ port: appApiPort });
-      this.appApiPort = appApiPort;
+      this.appApiUrl.port = appApiPort.toString();
     }
 
-    const appApiUrl = `${this.adminApiUrl.protocol}//${this.adminApiUrl.hostname}:${this.appApiPort}`;
-    logger.debug(`connecting App API to port ${this.appApiPort}\n`);
+    logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
     this._appWs = await AppWebsocket.connect(
-      appApiUrl,
+      this.appApiUrl.href,
       undefined,
       signalHandler
     );
