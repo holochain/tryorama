@@ -22,7 +22,6 @@ const HOST_URL = new URL("ws://127.0.0.1");
 
 export interface LocalConductorOptions {
   startup?: boolean;
-  signalHandler?: AppSignalCb;
 }
 
 /**
@@ -36,7 +35,7 @@ export interface LocalConductorOptions {
 export const createLocalConductor = async (options?: LocalConductorOptions) => {
   const conductor = await LocalConductor.create();
   if (options?.startup !== false) {
-    await conductor.startUp({ signalHandler: options?.signalHandler });
+    await conductor.startUp();
   }
   return conductor;
 };
@@ -90,7 +89,7 @@ export class LocalConductor implements Conductor {
     return createConductorPromise;
   }
 
-  async startUp(options: { signalHandler?: AppSignalCb }) {
+  async startUp() {
     assert(
       this.conductorDir,
       "error starting conductor: conductor has not been created"
@@ -137,7 +136,6 @@ export class LocalConductor implements Conductor {
     this.conductorProcess = runConductorProcess;
     await startPromise;
     await this.connectAdminWs();
-    await this.connectAppWs(options.signalHandler);
   }
 
   async shutDown() {
@@ -165,14 +163,11 @@ export class LocalConductor implements Conductor {
     logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
   }
 
-  private async connectAppWs(signalHandler?: AppSignalCb) {
-    if (!this.appApiUrl.port) {
-      assert(this._adminWs, "error connecting to app: admin is not defined");
-      const appApiPort = await getPort({ port: portNumbers(30000, 40000) });
-      logger.debug(`attaching App API to port ${appApiPort}\n`);
-      await this._adminWs.attachAppInterface({ port: appApiPort });
-      this.appApiUrl.port = appApiPort.toString();
-    }
+  async connectAppInterface(signalHandler?: AppSignalCb) {
+    assert(
+      this.appApiUrl.port,
+      "error connecting app interface: app api port has not been defined"
+    );
 
     logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
     this._appWs = await AppWebsocket.connect(
@@ -180,6 +175,15 @@ export class LocalConductor implements Conductor {
       undefined,
       signalHandler
     );
+  }
+
+  async attachAppInterface(request?: AttachAppInterfaceRequest) {
+    request = request ?? {
+      port: await getPort({ port: portNumbers(30000, 40000) }),
+    };
+    logger.debug(`attaching App API to port ${request.port}\n`);
+    const { port } = await this.adminWs().attachAppInterface(request);
+    this.appApiUrl.port = port.toString();
   }
 
   adminWs() {
@@ -190,13 +194,6 @@ export class LocalConductor implements Conductor {
   appWs() {
     assert(this._appWs, "app ws has not been connected");
     return this._appWs;
-  }
-
-  async attachAppInterface(request?: AttachAppInterfaceRequest) {
-    request = request ?? {
-      port: await getPort({ port: portNumbers(30000, 40000) }),
-    };
-    return this.adminWs().attachAppInterface(request);
   }
 
   async callZome<T>(request: CallZomeRequest) {
@@ -215,6 +212,7 @@ export class LocalConductor implements Conductor {
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
     uid?: string;
+    signalHandler?: AppSignalCb;
   }) {
     const agentsCells: AgentHapp[] = [];
 
@@ -273,6 +271,7 @@ export class LocalConductor implements Conductor {
       });
     }
     await this.attachAppInterface();
+    await this.connectAppInterface(options.signalHandler);
 
     return agentsCells;
   }

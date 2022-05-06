@@ -114,14 +114,11 @@ export class TryCpConductor implements Conductor {
    *
    * @public
    */
-  async startUp(options: {
-    signalHandler?: AppSignalCb;
-    logLevel?: TryCpConductorLogLevel;
-  }) {
+  async startUp(options?: { logLevel?: TryCpConductorLogLevel }) {
     const response = await this.tryCpClient.call({
       type: "startup",
       id: this.id,
-      log_level: options.logLevel,
+      log_level: options?.logLevel,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
@@ -129,7 +126,7 @@ export class TryCpConductor implements Conductor {
 
   async shutDown() {
     if (this.appInterfacePort) {
-      const response = await this.adminWs().disconnectAppInterface();
+      const response = await this.disconnectAppInterface();
       assert(response === TRYCP_SUCCESS_RESPONSE);
     }
     const response = await this.tryCpClient.call({
@@ -162,6 +159,27 @@ export class TryCpConductor implements Conductor {
       content: dnaContent,
     });
     assert(typeof response === "string");
+    return response;
+  }
+
+  async connectAppInterface(signalHandler?: AppSignalCb) {
+    assert(this.appInterfacePort, "no app interface attached to conductor");
+    const response = await this.tryCpClient.call({
+      type: "connect_app_interface",
+      port: this.appInterfacePort,
+    });
+    assert(response === TRYCP_SUCCESS_RESPONSE);
+    this.tryCpClient.setSignalHandler(this.appInterfacePort, signalHandler);
+    return response;
+  }
+
+  async disconnectAppInterface() {
+    assert(this.appInterfacePort, "no app interface attached");
+    const response = await this.tryCpClient.call({
+      type: "disconnect_app_interface",
+      port: this.appInterfacePort,
+    });
+    assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }
 
@@ -293,27 +311,6 @@ export class TryCpConductor implements Conductor {
       return { port: response.data.port };
     };
 
-    const disconnectAppInterface = async () => {
-      assert(this.appInterfacePort, "no app interface attached");
-      const response = await this.tryCpClient.call({
-        type: "disconnect_app_interface",
-        port: this.appInterfacePort,
-      });
-      assert(response === TRYCP_SUCCESS_RESPONSE);
-      return response;
-    };
-
-    const connectAppInterface = async (signalHandler?: AppSignalCb) => {
-      assert(this.appInterfacePort, "no app interface attached to conductor");
-      const response = await this.tryCpClient.call({
-        type: "connect_app_interface",
-        port: this.appInterfacePort,
-      });
-      assert(response === TRYCP_SUCCESS_RESPONSE);
-      this.tryCpClient.setSignalHandler(this.appInterfacePort, signalHandler);
-      return response;
-    };
-
     const listAppInterfaces = async () => {
       const response = await this.callAdminApi({ type: "list_app_interfaces" });
       assert(response.type === "app_interfaces_listed");
@@ -393,10 +390,8 @@ export class TryCpConductor implements Conductor {
     return {
       addAgentInfo,
       attachAppInterface,
-      connectAppInterface,
       createCloneCell,
       disableApp,
-      disconnectAppInterface,
       dumpFullState,
       dumpState,
       enableApp,
@@ -555,7 +550,7 @@ export class TryCpConductor implements Conductor {
     }
 
     await this.adminWs().attachAppInterface();
-    await this.adminWs().connectAppInterface(options.signalHandler);
+    await this.connectAppInterface(options.signalHandler);
 
     return agentsCells;
   }

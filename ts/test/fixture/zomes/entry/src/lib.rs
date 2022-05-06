@@ -38,41 +38,13 @@ pub fn delete(hash: HeaderHash) -> ExternResult<HeaderHash> {
     Ok(deleted_hash)
 }
 
-#[hdk_extern]
-pub fn get_cap_secret(grantee: AgentPubKey) -> ExternResult<CapSecret> {
-    let mut granted_fns = BTreeSet::<GrantedFunction>::new();
-    granted_fns.insert((zome_info()?.name, "read".into()));
-    let _cap_grant_hh = create_cap_grant(CapGrantEntry {
-        tag: "grant_all".into(),
-        access: CapAccess::Unrestricted,
-        functions: granted_fns,
-    })?;
-    let cap_secret = generate_cap_secret()?;
-    call_remote(
-        grantee,
-        zome_info()?.name,
-        "read".into(),
-        None,
-        ClaimInput {
-            grantor: agent_info()?.agent_latest_pubkey,
-            secret: cap_secret,
-        },
-    )?;
-    Ok(cap_secret)
-}
-
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
-pub struct ClaimInput {
-    pub grantor: AgentPubKey,
-    pub secret: CapSecret,
+#[derive(Serialize, Deserialize, SerializedBytes, Debug)]
+pub struct LoopBack {
+    value: String,
 }
 
 #[hdk_extern]
-pub fn commit_cap_claim(claim_unrestricted_access_input: ClaimInput) -> ExternResult<()> {
-    let _create_cap_claim_hh = create_cap_claim(CapClaim {
-        tag: "unrestricted".into(),
-        grantor: claim_unrestricted_access_input.grantor,
-        secret: claim_unrestricted_access_input.secret,
-    })?;
+fn signal_loopback(value: LoopBack) -> ExternResult<()> {
+    emit_signal(&value)?;
     Ok(())
 }

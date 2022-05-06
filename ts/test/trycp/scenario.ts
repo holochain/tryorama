@@ -132,7 +132,7 @@ test("TryCP Scenario - Conductor maintains data after shutdown and restart", asy
   t.rejects(bob.conductor.adminWs().generateAgentPubKey);
 
   await bob.conductor.startUp({});
-  await bob.conductor.adminWs().connectAppInterface();
+  await bob.conductor.connectAppInterface();
   const readContentAfterRestart = await bob.cells[0].callZome<typeof content>({
     zome_name: "crud",
     fn_name: "read",

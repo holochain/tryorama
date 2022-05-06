@@ -1,11 +1,18 @@
 import test from "tape-promise/tape";
-import { AppSignal, DnaSource, EntryHash } from "@holochain/client";
+import {
+  AppSignal,
+  AppSignalCb,
+  DnaSource,
+  EntryHash,
+} from "@holochain/client";
 import { cleanAllConductors, createLocalConductor } from "../../src/local";
 import { FIXTURE_DNA_URL } from "../fixture";
 import { pause } from "../../src/util";
 
 test("Local Conductor - Spawn a conductor and check for admin and app ws", async (t) => {
   const conductor = await createLocalConductor();
+  await conductor.attachAppInterface();
+  await conductor.connectAppInterface();
   t.ok(conductor.adminWs());
   t.ok(conductor.appWs());
 
@@ -28,23 +35,20 @@ test("Local Conductor - Get app info", async (t) => {
 
 test("Local Conductor - Install hApp through DNA hash", async (t) => {
   const conductor = await createLocalConductor();
-  try {
-    const dnaHash = await conductor.adminWs().registerDna({
-      path: FIXTURE_DNA_URL.pathname,
-    });
-    const [aliceHapps] = await conductor.installAgentsHapps({
-      agentsDnas: [[{ hash: dnaHash }]],
-    });
-    const appInfo = await conductor.appWs().appInfo({
-      installed_app_id: aliceHapps.happId,
-    });
-    t.deepEqual(appInfo.status, { running: null });
-  } catch (e) {
-    console.error("erererdfad", e);
-  } finally {
-    await conductor.shutDown();
-    await cleanAllConductors();
-  }
+
+  const dnaHash = await conductor.adminWs().registerDna({
+    path: FIXTURE_DNA_URL.pathname,
+  });
+  const [aliceHapps] = await conductor.installAgentsHapps({
+    agentsDnas: [[{ hash: dnaHash }]],
+  });
+  const appInfo = await conductor.appWs().appInfo({
+    installed_app_id: aliceHapps.happId,
+  });
+  t.deepEqual(appInfo.status, { running: null });
+
+  await conductor.shutDown();
+  await cleanAllConductors();
 });
 
 test("Local Conductor - Install multiple agents and DNAs and get access to agents and cells", async (t) => {
@@ -68,8 +72,8 @@ test("Local Conductor - Install multiple agents and DNAs and get access to agent
 
 test("Local Conductor - Create and read an entry using the entry zome", async (t) => {
   const conductor = await createLocalConductor();
-  t.ok(conductor.adminWs());
-  t.ok(conductor.appWs());
+  await conductor.attachAppInterface();
+  await conductor.connectAppInterface();
 
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const agentPubKeyB64 = Buffer.from(agentPubKey).toString("base64");
@@ -160,23 +164,31 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   await cleanAllConductors();
 });
 
-test.skip("Local Conductor - Receive a signal", async (t) => {
+test("Local Conductor - Receive a signal", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
-  const conductor = await createLocalConductor({
-    signalHandler: (signal: AppSignal) => {
-      console.log("app signal called", signal);
-    },
+  const conductor = await createLocalConductor();
+
+  let signalHandler: AppSignalCb | undefined;
+  const signalReceived = new Promise<AppSignal>((resolve) => {
+    signalHandler = (signal) => {
+      resolve(signal);
+    };
   });
+
   const [aliceHapps] = await conductor.installAgentsHapps({
     agentsDnas: [dnas],
+    signalHandler,
   });
-  const resopnse = await aliceHapps.cells[0].callZome({
+
+  const aliceSignal = { value: "signal" };
+  aliceHapps.cells[0].callZome({
     zome_name: "crud",
     fn_name: "signal_loopback",
-    payload: { value: "signal" },
+    payload: aliceSignal,
   });
-  await pause(10000);
-  console.log("da", resopnse);
+  const actualSignal = await signalReceived;
+  t.deepEqual(actualSignal.data.payload, aliceSignal);
+
   await conductor.shutDown();
   await cleanAllConductors();
 });

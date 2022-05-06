@@ -28,8 +28,10 @@ export interface AgentHapp {
 }
 
 export interface Conductor {
-  startUp: (options: { signalHandler?: AppSignalCb }) => Promise<void | null>;
+  startUp: () => Promise<void | null>;
   shutDown: () => Promise<number | null>;
+
+  connectAppInterface(signalHandler?: AppSignalCb): void;
 
   adminWs: () => Omit<
     AdminWebsocket,
@@ -45,6 +47,7 @@ export interface Conductor {
   installAgentsHapps: (options: {
     agentsDnas: DnaSource[][];
     uid?: string;
+    signalHandler?: AppSignalCb;
   }) => Promise<AgentHapp[]>;
 }
 

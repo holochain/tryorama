@@ -91,7 +91,7 @@ test("Local Conductor - Receive a signal", async (t) => {
     path: FIXTURE_HAPP_URL.pathname,
   });
   await conductor.adminWs().attachAppInterface();
-  await conductor.adminWs().connectAppInterface(signalHandler);
+  await conductor.connectAppInterface(signalHandler);
   await conductor
     .adminWs()
     .enableApp({ installed_app_id: installedAppBundle.installed_app_id });
@@ -144,9 +144,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome", async (t
   t.deepEqual(enabledAppResponse.app.status, { running: null });
 
   await conductor.adminWs().attachAppInterface();
-  const connectAppInterfaceResponse = await conductor
-    .adminWs()
-    .connectAppInterface();
+  const connectAppInterfaceResponse = await conductor.connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
@@ -174,9 +172,8 @@ test("TryCP Conductor - Create and read an entry using the entry zome", async (t
     });
   t.equal(readEntryResponse, entryContent);
 
-  const disconnectAppInterfaceResponse = await conductor
-    .adminWs()
-    .disconnectAppInterface();
+  const disconnectAppInterfaceResponse =
+    await conductor.disconnectAppInterface();
   t.equal(disconnectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   await conductor.shutDown();
@@ -266,9 +263,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 1 conduct
   t.deepEqual(enabledAppResponse2.app.status, { running: null });
 
   await conductor.adminWs().attachAppInterface();
-  const connectAppInterfaceResponse = await conductor
-    .adminWs()
-    .connectAppInterface();
+  const connectAppInterfaceResponse = await conductor.connectAppInterface();
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   const entryContent = "test-content";
