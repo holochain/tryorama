@@ -35,11 +35,16 @@ export class TryCpClient {
       responseReject: (reason: TryCpResponseErrorValue) => void;
     };
   };
-  signalHandler: AppSignalCb | undefined;
+  private signalHandlers: Record<number, AppSignalCb | undefined>;
 
   private constructor(serverUrl: URL) {
     this.ws = new WebSocket(serverUrl);
     this.requestPromises = {};
+    this.signalHandlers = {};
+  }
+
+  setSignalHandler(port: number, signalHandler?: AppSignalCb) {
+    this.signalHandlers[port] = signalHandler;
   }
 
   /**
@@ -69,9 +74,18 @@ export class TryCpClient {
         const responseWrapper = deserializeTryCpResponse(encodedResponse);
 
         if (responseWrapper.type === "signal") {
-          if (tryCpClient.signalHandler) {
+          const signalHandler =
+            tryCpClient.signalHandlers[responseWrapper.port];
+          if (signalHandler) {
             const signal = deserializeTryCpSignal(responseWrapper.data);
-            tryCpClient.signalHandler(signal);
+            logger.debug(
+              `received signal @ port ${responseWrapper.port}: ${JSON.stringify(
+                signal,
+                null,
+                4
+              )}\n`
+            );
+            signalHandler(signal);
           } else {
             logger.info(
               "received signal from TryCP server, but no signal handler registered"

@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { DnaSource } from "@holochain/client";
+import { AppSignalCb, DnaSource } from "@holochain/client";
 import { TryCpServer } from "../trycp-server";
 import {
   cleanAllTryCpConductors,
@@ -45,25 +45,30 @@ export class TryCpScenario {
     return scenario;
   }
 
-  async addPlayer(dnas: DnaSource[]): Promise<TryCpPlayer> {
+  async addPlayer(
+    dnas: DnaSource[],
+    signalHandler?: AppSignalCb
+  ): Promise<TryCpPlayer> {
     const conductor = await createTryCpConductor(this.serverUrl, {
       partialConfig,
     });
     const [agentCells] = await conductor.installAgentsHapps({
       agentsDnas: [dnas],
       uid: this.uid,
+      signalHandler,
     });
     this.conductors.push(conductor);
     return { conductor, ...agentCells };
   }
 
-  async addPlayers(playersDnas: DnaSource[][]): Promise<TryCpPlayer[]> {
-    const players: TryCpPlayer[] = [];
-    await Promise.all(
-      playersDnas.map(async (playerDnas) => {
-        const player = await this.addPlayer(playerDnas);
-        players.push(player);
-      })
+  async addPlayers(
+    playersDnas: DnaSource[][],
+    signalHandlers?: Array<AppSignalCb | undefined>
+  ): Promise<TryCpPlayer[]> {
+    const players = await Promise.all(
+      playersDnas.map((playerDnas, i) =>
+        this.addPlayer(playerDnas, signalHandlers?.[i])
+      )
     );
     return players;
   }

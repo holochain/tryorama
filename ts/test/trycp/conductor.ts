@@ -72,18 +72,18 @@ test("TryCP Conductor - Install a hApp bundle", async (t) => {
   await localTryCpServer.stop();
 });
 
-test.only("Local Conductor - Receive a signal", async (t) => {
+test("Local Conductor - Receive a signal", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const testSignal = { value: "signal" };
 
   let signalHandler;
-  const signalPromise = new Promise<AppSignal>((resolve) => {
+  const signalReceived = new Promise<AppSignal>((resolve) => {
     signalHandler = (signal: AppSignal) => {
       resolve(signal);
     };
   });
 
-  const conductor = await createTestTryCpConductor({ signalHandler });
+  const conductor = await createTestTryCpConductor();
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const installedAppBundle = await conductor.adminWs().installAppBundle({
     agent_key: agentPubKey,
@@ -91,7 +91,7 @@ test.only("Local Conductor - Receive a signal", async (t) => {
     path: FIXTURE_HAPP_URL.pathname,
   });
   await conductor.adminWs().attachAppInterface();
-  await conductor.adminWs().connectAppInterface();
+  await conductor.adminWs().connectAppInterface(signalHandler);
   await conductor
     .adminWs()
     .enableApp({ installed_app_id: installedAppBundle.installed_app_id });
@@ -104,7 +104,7 @@ test.only("Local Conductor - Receive a signal", async (t) => {
     provenance: agentPubKey,
     payload: testSignal,
   });
-  const actualSignal = await signalPromise;
+  const actualSignal = await signalReceived;
   t.deepEqual(actualSignal.data.payload, testSignal);
 
   await conductor.shutDown();

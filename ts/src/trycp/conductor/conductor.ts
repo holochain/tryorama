@@ -57,7 +57,6 @@ export interface TryCpConductorOptions {
   partialConfig?: string;
   startup?: boolean;
   logLevel?: TryCpConductorLogLevel;
-  signalHandler?: AppSignalCb;
 }
 
 /**
@@ -80,10 +79,7 @@ export const createTryCpConductor = async (
   if (options?.startup !== false) {
     // configure and startup conductor by default
     await conductor.configure(options?.partialConfig);
-    await conductor.startUp({
-      signalHandler: options?.signalHandler,
-      logLevel: options?.logLevel,
-    });
+    await conductor.startUp({ logLevel: options?.logLevel });
   }
   return conductor;
 };
@@ -127,7 +123,6 @@ export class TryCpConductor implements Conductor {
       id: this.id,
       log_level: options.logLevel,
     });
-    this.tryCpClient.signalHandler = options.signalHandler;
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
   }
@@ -308,13 +303,14 @@ export class TryCpConductor implements Conductor {
       return response;
     };
 
-    const connectAppInterface = async () => {
+    const connectAppInterface = async (signalHandler?: AppSignalCb) => {
       assert(this.appInterfacePort, "no app interface attached to conductor");
       const response = await this.tryCpClient.call({
         type: "connect_app_interface",
         port: this.appInterfacePort,
       });
       assert(response === TRYCP_SUCCESS_RESPONSE);
+      this.tryCpClient.setSignalHandler(this.appInterfacePort, signalHandler);
       return response;
     };
 
@@ -493,6 +489,7 @@ export class TryCpConductor implements Conductor {
    */
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
+    signalHandler?: AppSignalCb;
     uid?: string;
   }) {
     const agentsCells: AgentHapp[] = [];
@@ -558,7 +555,7 @@ export class TryCpConductor implements Conductor {
     }
 
     await this.adminWs().attachAppInterface();
-    await this.adminWs().connectAppInterface();
+    await this.adminWs().connectAppInterface(options.signalHandler);
 
     return agentsCells;
   }
