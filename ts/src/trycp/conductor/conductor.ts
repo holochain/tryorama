@@ -57,6 +57,7 @@ export interface TryCpConductorOptions {
   partialConfig?: string;
   startup?: boolean;
   logLevel?: TryCpConductorLogLevel;
+  timeout?: number;
 }
 
 /**
@@ -74,7 +75,7 @@ export const createTryCpConductor = async (
   serverUrl: URL,
   options?: TryCpConductorOptions
 ) => {
-  const client = await TryCpClient.create(serverUrl);
+  const client = await TryCpClient.create(serverUrl, options?.timeout);
   const conductor = new TryCpConductor(client, options?.id);
   if (options?.startup !== false) {
     // configure and startup conductor by default

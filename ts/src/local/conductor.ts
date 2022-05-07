@@ -52,7 +52,7 @@ export class LocalConductor implements Conductor {
   private appApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
-  private timeout: number;
+  private readonly timeout: number;
 
   private constructor(timeout?: number) {
     this.conductorProcess = undefined;

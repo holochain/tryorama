@@ -37,8 +37,8 @@ export class TryCpClient {
   };
   private signalHandlers: Record<number, AppSignalCb | undefined>;
 
-  private constructor(serverUrl: URL) {
-    this.ws = new WebSocket(serverUrl);
+  private constructor(serverUrl: URL, timeout = 15000) {
+    this.ws = new WebSocket(serverUrl, { timeout });
     this.requestPromises = {};
     this.signalHandlers = {};
   }
@@ -53,8 +53,8 @@ export class TryCpClient {
    * @param serverUrl - The URL of the TryCP server.
    * @returns A client connection.
    */
-  static async create(serverUrl: URL) {
-    const tryCpClient = new TryCpClient(serverUrl);
+  static async create(serverUrl: URL, timeout?: number) {
+    const tryCpClient = new TryCpClient(serverUrl, timeout);
     const connectPromise = new Promise<TryCpClient>((resolve, reject) => {
       tryCpClient.ws.once("open", () => {
         logger.verbose(`connected to TryCP server @ ${serverUrl}`);
