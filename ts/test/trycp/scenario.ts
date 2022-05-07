@@ -1,4 +1,9 @@
-import { AppSignal, AppSignalCb, EntryHash } from "@holochain/client";
+import {
+  AppSignal,
+  AppSignalCb,
+  DnaSource,
+  EntryHash,
+} from "@holochain/client";
 import test from "tape-promise/tape";
 import { URL } from "url";
 import { TryCpScenario } from "../../src/trycp/conductor/scenario";
@@ -41,19 +46,15 @@ test("TryCP Scenario - Receive signals with 2 conductors", async (t) => {
       resolve(signal);
     };
   });
-
   let signalHandlerBob: AppSignalCb | undefined;
   const signalReceivedBob = new Promise<AppSignal>((resolve) => {
     signalHandlerBob = (signal) => {
       resolve(signal);
     };
   });
-
+  const dna: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
   const [alice, bob] = await scenario.addPlayers(
-    [
-      [{ path: FIXTURE_DNA_URL.pathname }],
-      [{ path: FIXTURE_DNA_URL.pathname }],
-    ],
+    [dna, dna],
     [signalHandlerAlice, signalHandlerBob]
   );
 

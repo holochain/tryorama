@@ -1,11 +1,16 @@
-import { EntryHash } from "@holochain/client";
+import {
+  AppSignal,
+  AppSignalCb,
+  DnaSource,
+  EntryHash,
+} from "@holochain/client";
 import test from "tape-promise/tape";
-import { Scenario } from "../../src/local/scenario";
+import { LocalScenario } from "../../src/local/scenario";
 import { pause } from "../../src/util";
 import { FIXTURE_DNA_URL } from "../fixture";
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
-  const scenario = new Scenario();
+  const scenario = new LocalScenario();
   t.ok(scenario.uid);
 
   const alice = await scenario.addPlayer([{ path: FIXTURE_DNA_URL.pathname }]);
@@ -30,8 +35,8 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   await scenario.cleanUp();
 });
 
-test.only("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
-  const scenario = new Scenario();
+test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
+  const scenario = new LocalScenario();
   const [alice, bob] = await scenario.addPlayers([
     [{ path: FIXTURE_DNA_URL.pathname }],
     [{ path: FIXTURE_DNA_URL.pathname }],
@@ -64,6 +69,52 @@ test.only("Local Scenario - Conductor maintains data after shutdown and restart"
     payload: createEntryHash,
   });
   t.equal(readContentAfterRestart, content);
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - Receive signals with 2 conductors", async (t) => {
+  const scenario = new LocalScenario();
+  const dna: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+
+  let signalHandlerAlice: AppSignalCb | undefined;
+  const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
+    signalHandlerAlice = (signal) => {
+      resolve(signal);
+    };
+  });
+
+  let signalHandlerBob: AppSignalCb | undefined;
+  const signalReceivedBob = new Promise<AppSignal>((resolve) => {
+    signalHandlerBob = (signal) => {
+      resolve(signal);
+    };
+  });
+
+  const [alice, bob] = await scenario.addPlayers(
+    [dna, dna],
+    [signalHandlerAlice, signalHandlerBob]
+  );
+
+  const signalAlice = { value: "hello alice" };
+  alice.cells[0].callZome({
+    zome_name: "crud",
+    fn_name: "signal_loopback",
+    payload: signalAlice,
+  });
+  const signalBob = { value: "hello bob" };
+  bob.cells[0].callZome({
+    zome_name: "crud",
+    fn_name: "signal_loopback",
+    payload: signalBob,
+  });
+
+  const [actualSignalAlice, actualSignalBob] = await Promise.all([
+    signalReceivedAlice,
+    signalReceivedBob,
+  ]);
+  t.deepEqual(actualSignalAlice.data.payload, signalAlice);
+  t.deepEqual(actualSignalBob.data.payload, signalBob);
 
   await scenario.cleanUp();
 });

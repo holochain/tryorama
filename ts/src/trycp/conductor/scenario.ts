@@ -8,7 +8,7 @@ import {
 } from "./conductor";
 import { URL } from "url";
 import { addAllAgentsToAllConductors } from "../../util";
-import { Player } from "../../types";
+import { Player, Scenario } from "../../types";
 
 const partialConfig = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -26,7 +26,7 @@ export interface TryCpPlayer extends Player {
   conductor: TryCpConductor;
 }
 
-export class TryCpScenario {
+export class TryCpScenario implements Scenario {
   uid: string;
   conductors: TryCpConductor[];
   private serverUrl: URL;
@@ -77,7 +77,7 @@ export class TryCpScenario {
     return addAllAgentsToAllConductors(this.conductors);
   }
 
-  async cleanUp(): Promise<void> {
+  async cleanUp() {
     await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
     await Promise.all(
       this.conductors.map((conductor) => conductor.disconnectClient())

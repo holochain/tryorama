@@ -51,8 +51,16 @@ export interface Conductor {
   }) => Promise<AgentHapp[]>;
 }
 
-export type Player = {
+export interface Scenario {
+  addPlayer(dnas: DnaSource[], signalHandler?: AppSignalCb): Promise<Player>;
+  addPlayers(
+    playersDnas: DnaSource[][],
+    signalHandlers?: Array<AppSignalCb | undefined>
+  ): Promise<Player[]>;
+}
+
+export interface Player {
   conductor: Conductor;
   agentPubKey: Uint8Array;
   cells: CallableCell[];
-};
+}

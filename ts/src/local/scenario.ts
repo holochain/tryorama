@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { DnaSource } from "@holochain/client";
+import { AppSignalCb, DnaSource } from "@holochain/client";
 import {
   cleanAllConductors,
   createLocalConductor,
@@ -14,7 +14,7 @@ export interface LocalPlayer extends Player {
   conductor: LocalConductor;
 }
 
-export class Scenario {
+export class LocalScenario {
   private timeout: number | undefined;
   uid: string;
   conductors: LocalConductor[];
@@ -25,19 +25,28 @@ export class Scenario {
     this.conductors = [];
   }
 
-  async addPlayer(dnas: DnaSource[]): Promise<LocalPlayer> {
+  async addPlayer(
+    dnas: DnaSource[],
+    signalHandler?: AppSignalCb
+  ): Promise<LocalPlayer> {
     const conductor = await createLocalConductor({ timeout: this.timeout });
     const [agentCells] = await conductor.installAgentsHapps({
       agentsDnas: [dnas],
       uid: this.uid,
+      signalHandler,
     });
     this.conductors.push(conductor);
     return { conductor, ...agentCells };
   }
 
-  async addPlayers(playersDnas: DnaSource[][]): Promise<LocalPlayer[]> {
+  async addPlayers(
+    playersDnas: DnaSource[][],
+    signalHandlers?: Array<AppSignalCb | undefined>
+  ): Promise<LocalPlayer[]> {
     const players = await Promise.all(
-      playersDnas.map((playerDnas) => this.addPlayer(playerDnas))
+      playersDnas.map((playerDnas, i) =>
+        this.addPlayer(playerDnas, signalHandlers?.[i])
+      )
     );
     return players;
   }
