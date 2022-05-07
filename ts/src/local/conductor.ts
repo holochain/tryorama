@@ -16,12 +16,14 @@ import {
 import { AgentHapp, CellZomeCallRequest, Conductor } from "../types";
 import { URL } from "url";
 
-const logger = makeLogger("Local conductor");
+const logger = makeLogger("Local Conductor");
 
 const HOST_URL = new URL("ws://127.0.0.1");
+const DEFAULT_TIMEOUT = 15000;
 
 export interface LocalConductorOptions {
   startup?: boolean;
+  timeout?: number;
 }
 
 /**
@@ -33,7 +35,7 @@ export interface LocalConductorOptions {
  * @public
  */
 export const createLocalConductor = async (options?: LocalConductorOptions) => {
-  const conductor = await LocalConductor.create();
+  const conductor = await LocalConductor.create(options?.timeout);
   if (options?.startup !== false) {
     await conductor.startUp();
   }
@@ -50,18 +52,20 @@ export class LocalConductor implements Conductor {
   private appApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
+  private timeout: number;
 
-  private constructor() {
+  private constructor(timeout?: number) {
     this.conductorProcess = undefined;
     this.conductorDir = undefined;
     this.adminApiUrl = new URL(HOST_URL.href);
     this.appApiUrl = new URL(HOST_URL.href);
     this._adminWs = undefined;
     this._appWs = undefined;
+    this.timeout = timeout ?? DEFAULT_TIMEOUT;
   }
 
-  static async create() {
-    const localConductor = new LocalConductor();
+  static async create(timeout?: number) {
+    const localConductor = new LocalConductor(timeout);
     const createConductorProcess = spawn("hc", [
       "sandbox",
       "create",
@@ -119,48 +123,66 @@ export class LocalConductor implements Conductor {
             .includes("Connected successfully to a running holochain")
         ) {
           // this is the last output of the startup process
+          this.conductorProcess = runConductorProcess;
           resolve();
         }
       });
 
-      runConductorProcess.stderr.on("data", (data: Buffer) => {
+      runConductorProcess.stderr.once("data", (data: Buffer) => {
         logger.error(`error when starting conductor: ${data.toString()}`);
         reject(data);
       });
-
-      runConductorProcess.on("error", (err) => {
-        logger.error(`error when starting conductor: ${err}\n`);
-        reject(err);
-      });
     });
-    this.conductorProcess = runConductorProcess;
     await startPromise;
     await this.connectAdminWs();
   }
 
   async shutDown() {
-    if (this._adminWs) {
-      await this._adminWs.client.close();
+    if (!this.conductorProcess) {
+      logger.info("shut down conductor: conductor is not running");
+      return null;
     }
+
+    logger.debug("closing admin and app web sockets\n");
+    assert(this._adminWs, "admin websocket is not connected");
+    await this._adminWs.client.close();
+    this._adminWs = undefined;
     if (this._appWs) {
       await this._appWs.client.close();
+      this._appWs = undefined;
     }
-    const destroyPromise = new Promise<number | null>((resolve) => {
-      assert(
-        this.conductorProcess,
-        "error destroying conductor: conductor is not running"
-      );
-      process.kill(-this.conductorProcess.pid);
+
+    logger.debug("shutting down conductor\n");
+    const conductorShutDown = new Promise<number | null>((resolve) => {
+      // I don't know why this is possibly undefined despite the initial guard
+      assert(this.conductorProcess);
       this.conductorProcess.on("exit", (code) => {
+        this.conductorProcess?.removeAllListeners();
+        this.conductorProcess?.stdout.removeAllListeners();
+        this.conductorProcess?.stderr.removeAllListeners();
+        this.conductorProcess = undefined;
         resolve(code);
       });
+      process.kill(-this.conductorProcess.pid);
     });
-    return destroyPromise;
+    return conductorShutDown;
   }
 
   private async connectAdminWs() {
-    this._adminWs = await AdminWebsocket.connect(this.adminApiUrl.href);
+    this._adminWs = await AdminWebsocket.connect(
+      this.adminApiUrl.href,
+      this.timeout
+    );
     logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
+  }
+
+  async attachAppInterface(request?: AttachAppInterfaceRequest) {
+    request = request ?? {
+      port: await getPort({ port: portNumbers(30000, 40000) }),
+    };
+    logger.debug(`attaching App API to port ${request.port}\n`);
+    const { port } = await this.adminWs().attachAppInterface(request);
+    this.appApiUrl.port = port.toString();
   }
 
   async connectAppInterface(signalHandler?: AppSignalCb) {
@@ -172,18 +194,9 @@ export class LocalConductor implements Conductor {
     logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
     this._appWs = await AppWebsocket.connect(
       this.appApiUrl.href,
-      undefined,
+      this.timeout,
       signalHandler
     );
-  }
-
-  async attachAppInterface(request?: AttachAppInterfaceRequest) {
-    request = request ?? {
-      port: await getPort({ port: portNumbers(30000, 40000) }),
-    };
-    logger.debug(`attaching App API to port ${request.port}\n`);
-    const { port } = await this.adminWs().attachAppInterface(request);
-    this.appApiUrl.port = port.toString();
   }
 
   adminWs() {
@@ -281,7 +294,7 @@ export const cleanAllConductors = async () => {
   const conductorProcess = spawn("hc", ["sandbox", "clean"]);
   const cleanPromise = new Promise<void>((resolve) => {
     conductorProcess.stdout.once("end", () => {
-      logger.debug("sandboxed conductors cleaned\n");
+      logger.debug("sandbox conductors cleaned\n");
       resolve();
     });
   });

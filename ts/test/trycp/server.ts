@@ -216,7 +216,7 @@ test("TryCP Server - Reset", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP Server - Reset function", async (t) => {
+test("TryCP Server - Clean all conductors", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const actual = await cleanAllTryCpConductors(SERVER_URL);
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
