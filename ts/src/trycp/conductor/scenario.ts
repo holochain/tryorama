@@ -7,7 +7,7 @@ import {
   TryCpConductor,
 } from "./conductor";
 import { URL } from "url";
-import { addAllAgentsToAllConductors } from "../../util";
+import { addAllAgentsToAllConductors } from "../../common";
 import { Player, Scenario } from "../../types";
 
 const partialConfig = `signing_service_uri: ~

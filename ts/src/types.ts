@@ -5,6 +5,7 @@ import {
   CallZomeRequest,
   DnaSource,
   InstalledCell,
+  RoleId,
 } from "@holochain/client";
 
 export type CellZomeCallRequest = Omit<
@@ -25,6 +26,7 @@ export interface AgentHapp {
   happId: string;
   agentPubKey: Uint8Array;
   cells: CallableCell[];
+  namedCells: Map<RoleId, InstalledCell>;
 }
 
 export interface Conductor {

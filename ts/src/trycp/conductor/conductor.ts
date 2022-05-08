@@ -38,7 +38,7 @@ import { deserializeZomeResponsePayload } from "../util";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { makeLogger } from "../../logger";
 import { URL } from "url";
-import { enableAgentHapp } from "../../util";
+import { enableAndGetAgentHapp } from "../../common";
 
 const logger = makeLogger("TryCP conductor");
 
@@ -550,7 +550,7 @@ export class TryCpConductor implements Conductor {
         dnas,
       });
 
-      const agentHapp = await enableAgentHapp(
+      const agentHapp = await enableAndGetAgentHapp(
         this,
         agentPubKey,
         installedAppInfo
@@ -588,7 +588,7 @@ export class TryCpConductor implements Conductor {
       appBundleOptions
     );
 
-    const agentHapp = await enableAgentHapp(
+    const agentHapp = await enableAndGetAgentHapp(
       this,
       agentPubKey,
       installedAppInfo

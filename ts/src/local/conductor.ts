@@ -17,7 +17,7 @@ import {
 } from "@holochain/client";
 import { AgentHapp, Conductor } from "../types";
 import { URL } from "url";
-import { enableAgentHapp } from "../util";
+import { enableAndGetAgentHapp } from "../common";
 
 const logger = makeLogger("Local Conductor");
 
@@ -260,7 +260,7 @@ export class LocalConductor implements Conductor {
         agent_key: agentPubKey,
         dnas,
       });
-      const agentHapp = await enableAgentHapp(
+      const agentHapp = await enableAndGetAgentHapp(
         this,
         agentPubKey,
         installedAppInfo
@@ -297,7 +297,7 @@ export class LocalConductor implements Conductor {
       appBundleOptions
     );
 
-    const agentHapp = await enableAgentHapp(
+    const agentHapp = await enableAndGetAgentHapp(
       this,
       agentPubKey,
       installedAppInfo

@@ -52,6 +52,20 @@ test("TryCP Conductor - Stop and restart a conductor", async (t) => {
   await localTryCpServer.stop();
 });
 
+test("TryCP Conductor - Install hApp bundle and access cells through role ids", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const conductor = await createTestTryCpConductor();
+  const aliceHapp = await conductor.installHappBundle({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  t.ok(aliceHapp.namedCells.get("test"));
+
+  await conductor.shutDown();
+  await conductor.disconnectClient();
+  await cleanAllTryCpConductors(SERVER_URL);
+  await localTryCpServer.stop();
+});
+
 test("TryCP Conductor - Install and call a hApp bundle", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTestTryCpConductor();
