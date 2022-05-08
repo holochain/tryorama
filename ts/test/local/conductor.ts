@@ -25,6 +25,8 @@ test("Local Conductor - Get app info", async (t) => {
   const [aliceHapps] = await conductor.installAgentsHapps({
     agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
   });
+  await conductor.attachAppInterface();
+  await conductor.connectAppInterface();
   const appInfo = await conductor.appWs().appInfo({
     installed_app_id: aliceHapps.happId,
   });
@@ -95,8 +97,6 @@ test("Local Conductor - Install hApp bundle and access cells through role ids", 
 
 test("Local Conductor - Create and read an entry using the entry zome", async (t) => {
   const conductor = await createLocalConductor();
-  await conductor.attachAppInterface();
-  await conductor.connectAppInterface();
 
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const agentPubKeyB64 = Buffer.from(agentPubKey).toString("base64");
@@ -120,7 +120,9 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
     installed_app_id: appId,
   });
   t.deepEqual(enabledAppResponse.app.status, { running: null });
+
   await conductor.attachAppInterface();
+  await conductor.connectAppInterface();
 
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await conductor.appWs().callZome({
@@ -162,6 +164,10 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   const [bobHapps] = await conductor2.installAgentsHapps({
     agentsDnas: [dnas],
   });
+  await conductor1.attachAppInterface();
+  await conductor1.connectAppInterface();
+  await conductor2.attachAppInterface();
+  await conductor2.connectAppInterface();
 
   const entryContent = "test-content";
   const createEntryHash = await aliceHapps.cells[0].callZome<EntryHash>({
@@ -201,8 +207,10 @@ test("Local Conductor - Receive a signal", async (t) => {
 
   const [aliceHapps] = await conductor.installAgentsHapps({
     agentsDnas: [dnas],
-    signalHandler,
   });
+
+  await conductor.attachAppInterface();
+  await conductor.connectAppInterface(signalHandler);
 
   const aliceSignal = { value: "signal" };
   aliceHapps.cells[0].callZome({

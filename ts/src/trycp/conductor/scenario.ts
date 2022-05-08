@@ -1,5 +1,5 @@
 import { v4 as uuidv4 } from "uuid";
-import { AppSignalCb, DnaSource } from "@holochain/client";
+import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
 import { TryCpServer } from "../trycp-server";
 import {
   cleanAllTryCpConductors,
@@ -8,7 +8,7 @@ import {
 } from "./conductor";
 import { URL } from "url";
 import { addAllAgentsToAllConductors } from "../../common";
-import { Player, Scenario } from "../../types";
+import { HappBundleOptions, Player, Scenario } from "../../types";
 
 const partialConfig = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -45,7 +45,7 @@ export class TryCpScenario implements Scenario {
     return scenario;
   }
 
-  async addPlayer(
+  async addPlayerWithDnas(
     dnas: DnaSource[],
     signalHandler?: AppSignalCb
   ): Promise<TryCpPlayer> {
@@ -61,13 +61,48 @@ export class TryCpScenario implements Scenario {
     return { conductor, ...agentCells };
   }
 
-  async addPlayers(
+  async addPlayersWithDnas(
     playersDnas: DnaSource[][],
     signalHandlers?: Array<AppSignalCb | undefined>
   ): Promise<TryCpPlayer[]> {
     const players = await Promise.all(
       playersDnas.map((playerDnas, i) =>
-        this.addPlayer(playerDnas, signalHandlers?.[i])
+        this.addPlayerWithDnas(playerDnas, signalHandlers?.[i])
+      )
+    );
+    return players;
+  }
+
+  async addPlayerWithHappBundle(
+    appBundleSource: AppBundleSource,
+    options?: HappBundleOptions & { signalHandler?: AppSignalCb }
+  ) {
+    const conductor = await createTryCpConductor(this.serverUrl, {
+      partialConfig,
+    });
+    options = options
+      ? Object.assign(options, { uid: options.uid ?? this.uid })
+      : { uid: this.uid };
+    const agentHapp = await conductor.installHappBundle(
+      appBundleSource,
+      options
+    );
+    this.conductors.push(conductor);
+    return { conductor, ...agentHapp };
+  }
+
+  async addPlayersWithHappBundles(
+    playersHappBundles: Array<{
+      appBundleSource: AppBundleSource;
+      options?: HappBundleOptions & { signalHandler?: AppSignalCb };
+    }>
+  ) {
+    const players = await Promise.all(
+      playersHappBundles.map(async (playerHappBundle) =>
+        this.addPlayerWithHappBundle(
+          playerHappBundle.appBundleSource,
+          playerHappBundle.options
+        )
       )
     );
     return players;

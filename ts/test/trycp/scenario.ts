@@ -18,7 +18,9 @@ const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 
 test("TryCP Scenario - List everything", async (t) => {
   const scenario = await TryCpScenario.create(SERVER_URL);
-  const alice = await scenario.addPlayer([{ path: FIXTURE_DNA_URL.pathname }]);
+  const alice = await scenario.addPlayerWithDnas([
+    { path: FIXTURE_DNA_URL.pathname },
+  ]);
 
   const listedApps = await alice.conductor.adminWs().listApps({});
   t.equal(listedApps.length, 1);
@@ -53,7 +55,7 @@ test("TryCP Scenario - Receive signals with 2 conductors", async (t) => {
     };
   });
   const dna: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
-  const [alice, bob] = await scenario.addPlayers(
+  const [alice, bob] = await scenario.addPlayersWithDnas(
     [dna, dna],
     [signalHandlerAlice, signalHandlerBob]
   );
@@ -85,7 +87,7 @@ test("TryCp Scenario - Create and read an entry, 2 conductors", async (t) => {
   const scenario = await TryCpScenario.create(SERVER_URL);
   t.ok(scenario.uid);
 
-  const [alice, bob] = await scenario.addPlayers([
+  const [alice, bob] = await scenario.addPlayersWithDnas([
     [{ path: FIXTURE_DNA_URL.pathname }],
     [{ path: FIXTURE_DNA_URL.pathname }],
   ]);
@@ -111,7 +113,7 @@ test("TryCp Scenario - Create and read an entry, 2 conductors", async (t) => {
 
 test("TryCP Scenario - Conductor maintains data after shutdown and restart", async (t) => {
   const scenario = await TryCpScenario.create(SERVER_URL);
-  const [alice, bob] = await scenario.addPlayers([
+  const [alice, bob] = await scenario.addPlayersWithDnas([
     [{ path: FIXTURE_DNA_URL.pathname }],
     [{ path: FIXTURE_DNA_URL.pathname }],
   ]);

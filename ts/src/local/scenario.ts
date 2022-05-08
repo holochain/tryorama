@@ -1,11 +1,11 @@
 import { v4 as uuidv4 } from "uuid";
-import { AppSignalCb, DnaSource } from "@holochain/client";
+import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
 import {
   cleanAllConductors,
   createLocalConductor,
   LocalConductor,
 } from "./conductor";
-import { Player } from "../types";
+import { HappBundleOptions, Player, Scenario } from "../types";
 
 /**
  * @public
@@ -14,7 +14,7 @@ export interface LocalPlayer extends Player {
   conductor: LocalConductor;
 }
 
-export class LocalScenario {
+export class LocalScenario implements Scenario {
   private timeout: number | undefined;
   uid: string;
   conductors: LocalConductor[];
@@ -25,7 +25,7 @@ export class LocalScenario {
     this.conductors = [];
   }
 
-  async addPlayer(
+  async addPlayerWithDnas(
     dnas: DnaSource[],
     signalHandler?: AppSignalCb
   ): Promise<LocalPlayer> {
@@ -33,19 +33,55 @@ export class LocalScenario {
     const [agentCells] = await conductor.installAgentsHapps({
       agentsDnas: [dnas],
       uid: this.uid,
-      signalHandler,
     });
+    await conductor.attachAppInterface();
+    await conductor.connectAppInterface(signalHandler);
     this.conductors.push(conductor);
     return { conductor, ...agentCells };
   }
 
-  async addPlayers(
+  async addPlayersWithDnas(
     playersDnas: DnaSource[][],
     signalHandlers?: Array<AppSignalCb | undefined>
   ): Promise<LocalPlayer[]> {
     const players = await Promise.all(
       playersDnas.map((playerDnas, i) =>
-        this.addPlayer(playerDnas, signalHandlers?.[i])
+        this.addPlayerWithDnas(playerDnas, signalHandlers?.[i])
+      )
+    );
+    return players;
+  }
+
+  async addPlayerWithHappBundle(
+    appBundleSource: AppBundleSource,
+    options?: HappBundleOptions & { signalHandler?: AppSignalCb }
+  ): Promise<LocalPlayer> {
+    const conductor = await createLocalConductor({ timeout: this.timeout });
+    options = options
+      ? Object.assign(options, { uid: options.uid ?? this.uid })
+      : { uid: this.uid };
+    const agentHapp = await conductor.installHappBundle(
+      appBundleSource,
+      options
+    );
+    await conductor.attachAppInterface();
+    await conductor.connectAppInterface(options?.signalHandler);
+    this.conductors.push(conductor);
+    return { conductor, ...agentHapp };
+  }
+
+  async addPlayersWithHappBundles(
+    playersHappBundles: Array<{
+      appBundleSource: AppBundleSource;
+      options?: HappBundleOptions & { signalHandler?: AppSignalCb };
+    }>
+  ) {
+    const players = await Promise.all(
+      playersHappBundles.map((playerHappBundle) =>
+        this.addPlayerWithHappBundle(
+          playerHappBundle.appBundleSource,
+          playerHappBundle.options
+        )
       )
     );
     return players;

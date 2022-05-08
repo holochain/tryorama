@@ -5,7 +5,6 @@ import { makeLogger } from "../logger";
 import { v4 as uuidv4 } from "uuid";
 import {
   AdminWebsocket,
-  AgentPubKey,
   AppBundleSource,
   AppSignalCb,
   AppWebsocket,
@@ -13,9 +12,8 @@ import {
   DnaSource,
   InstallAppBundleRequest,
   InstallAppDnaPayload,
-  MembraneProof,
 } from "@holochain/client";
-import { AgentHapp, Conductor } from "../types";
+import { AgentHapp, Conductor, HappBundleOptions } from "../types";
 import { URL } from "url";
 import { enableAndGetAgentHapp } from "../common";
 
@@ -215,7 +213,6 @@ export class LocalConductor implements Conductor {
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
     uid?: string;
-    signalHandler?: AppSignalCb;
   }) {
     const agentsHapps: AgentHapp[] = [];
 
@@ -267,20 +264,13 @@ export class LocalConductor implements Conductor {
       );
       agentsHapps.push(agentHapp);
     }
-    await this.attachAppInterface();
-    await this.connectAppInterface(options.signalHandler);
 
     return agentsHapps;
   }
 
   async installHappBundle(
     appBundleSource: AppBundleSource,
-    options?: {
-      agentPubKey?: AgentPubKey;
-      installedAppId?: string;
-      uid?: string;
-      membraneProofs?: Record<string, MembraneProof>;
-    }
+    options?: HappBundleOptions
   ) {
     const agentPubKey =
       options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());

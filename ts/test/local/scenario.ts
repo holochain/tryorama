@@ -7,14 +7,40 @@ import {
 import test from "tape-promise/tape";
 import { LocalScenario } from "../../src/local/scenario";
 import { pause } from "../../src/util";
-import { FIXTURE_DNA_URL } from "../fixture";
+import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
+
+test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
+  const scenario = new LocalScenario();
+  const alice = await scenario.addPlayerWithHappBundle({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  t.ok(alice.namedCells.get("test"));
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - Add players with hApp bundles", async (t) => {
+  const scenario = new LocalScenario();
+  const [alice, bob] = await scenario.addPlayersWithHappBundles([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  t.ok(alice.namedCells.get("test"));
+  t.ok(bob.namedCells.get("test"));
+
+  await scenario.cleanUp();
+});
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   const scenario = new LocalScenario();
   t.ok(scenario.uid);
 
-  const alice = await scenario.addPlayer([{ path: FIXTURE_DNA_URL.pathname }]);
-  const bob = await scenario.addPlayer([{ path: FIXTURE_DNA_URL.pathname }]);
+  const alice = await scenario.addPlayerWithDnas([
+    { path: FIXTURE_DNA_URL.pathname },
+  ]);
+  const bob = await scenario.addPlayerWithDnas([
+    { path: FIXTURE_DNA_URL.pathname },
+  ]);
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -37,7 +63,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
 test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
   const scenario = new LocalScenario();
-  const [alice, bob] = await scenario.addPlayers([
+  const [alice, bob] = await scenario.addPlayersWithDnas([
     [{ path: FIXTURE_DNA_URL.pathname }],
     [{ path: FIXTURE_DNA_URL.pathname }],
   ]);
@@ -91,7 +117,7 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     };
   });
 
-  const [alice, bob] = await scenario.addPlayers(
+  const [alice, bob] = await scenario.addPlayersWithDnas(
     [dna, dna],
     [signalHandlerAlice, signalHandlerBob]
   );

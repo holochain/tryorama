@@ -1,10 +1,13 @@
 import {
   AdminWebsocket,
+  AgentPubKey,
+  AppBundleSource,
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
   DnaSource,
   InstalledCell,
+  MembraneProof,
   RoleId,
 } from "@holochain/client";
 
@@ -27,6 +30,13 @@ export interface AgentHapp {
   agentPubKey: Uint8Array;
   cells: CallableCell[];
   namedCells: Map<RoleId, InstalledCell>;
+}
+
+export interface HappBundleOptions {
+  agentPubKey?: AgentPubKey;
+  installedAppId?: string;
+  uid?: string;
+  membraneProofs?: Record<string, MembraneProof>;
 }
 
 export interface Conductor {
@@ -54,15 +64,30 @@ export interface Conductor {
 }
 
 export interface Scenario {
-  addPlayer(dnas: DnaSource[], signalHandler?: AppSignalCb): Promise<Player>;
-  addPlayers(
+  addPlayerWithDnas(
+    dnas: DnaSource[],
+    signalHandler?: AppSignalCb
+  ): Promise<Player>;
+  addPlayersWithDnas(
     playersDnas: DnaSource[][],
     signalHandlers?: Array<AppSignalCb | undefined>
   ): Promise<Player[]>;
+  addPlayerWithHappBundle(
+    appBundleSource: AppBundleSource,
+    options?: HappBundleOptions & { signalHandler?: AppSignalCb }
+  ): Promise<Player>;
+  addPlayersWithHappBundles(
+    playersHappBundles: Array<{
+      appBundleSource: AppBundleSource;
+      options?: HappBundleOptions & { signalHandler?: AppSignalCb };
+    }>
+  ): Promise<Player[]>;
+  cleanUp(): Promise<void>;
 }
 
 export interface Player {
   conductor: Conductor;
   agentPubKey: Uint8Array;
   cells: CallableCell[];
+  namedCells: Map<RoleId, InstalledCell>;
 }
