@@ -63,19 +63,21 @@ test("TryCP Conductor - Install and call a hApp bundle", async (t) => {
   await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface();
 
-  const testContent = "Bye bye, world";
-  const createEntryResponse = await installedHappBundle.cells[0].callZome({
-    zome_name: "crud",
-    fn_name: "create",
-    payload: testContent,
-  });
+  const entryContent = "Bye bye, world";
+  const createEntryResponse: EntryHash =
+    await installedHappBundle.cells[0].callZome({
+      zome_name: "crud",
+      fn_name: "create",
+      payload: entryContent,
+    });
   t.ok(createEntryResponse);
-  const readEntryResponse = await installedHappBundle.cells[0].callZome({
-    zome_name: "crud",
-    fn_name: "read",
-    payload: createEntryResponse,
-  });
-  t.equal(readEntryResponse, testContent);
+  const readEntryResponse: typeof entryContent =
+    await installedHappBundle.cells[0].callZome({
+      zome_name: "crud",
+      fn_name: "read",
+      payload: createEntryResponse,
+    });
+  t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
   await conductor.disconnectClient();

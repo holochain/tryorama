@@ -6,7 +6,7 @@ import {
   EntryHash,
 } from "@holochain/client";
 import { cleanAllConductors, createLocalConductor } from "../../src/local";
-import { FIXTURE_DNA_URL } from "../fixture";
+import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 import { pause } from "../../src/util";
 
 test("Local Conductor - Spawn a conductor and check for admin and app ws", async (t) => {
@@ -33,19 +33,31 @@ test("Local Conductor - Get app info", async (t) => {
   await cleanAllConductors();
 });
 
-test("Local Conductor - Install hApp through DNA hash", async (t) => {
+test("Local Conductor - Install and call a hApp bundle", async (t) => {
   const conductor = await createLocalConductor();
+  const installedHappBundle = await conductor.installHappBundle({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  t.ok(installedHappBundle.happId);
 
-  const dnaHash = await conductor.adminWs().registerDna({
-    path: FIXTURE_DNA_URL.pathname,
-  });
-  const [aliceHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [[{ hash: dnaHash }]],
-  });
-  const appInfo = await conductor.appWs().appInfo({
-    installed_app_id: aliceHapps.happId,
-  });
-  t.deepEqual(appInfo.status, { running: null });
+  await conductor.attachAppInterface();
+  await conductor.connectAppInterface();
+
+  const entryContent = "Bye bye, world";
+  const createEntryResponse: EntryHash =
+    await installedHappBundle.cells[0].callZome({
+      zome_name: "crud",
+      fn_name: "create",
+      payload: entryContent,
+    });
+  t.ok(createEntryResponse);
+  const readEntryResponse: typeof entryContent =
+    await installedHappBundle.cells[0].callZome({
+      zome_name: "crud",
+      fn_name: "read",
+      payload: createEntryResponse,
+    });
+  t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
   await cleanAllConductors();
@@ -100,7 +112,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   await conductor.attachAppInterface();
 
   const entryContent = "test-content";
-  const createEntryHash = await conductor.callZome<EntryHash>({
+  const createEntryHash: EntryHash = await conductor.appWs().callZome({
     cap_secret: null,
     cell_id,
     zome_name: "crud",
@@ -112,14 +124,16 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  const readEntryResponse = await conductor.callZome<typeof entryContent>({
-    cap_secret: null,
-    cell_id,
-    zome_name: "crud",
-    fn_name: "read",
-    provenance: agentPubKey,
-    payload: createEntryHash,
-  });
+  const readEntryResponse: typeof entryContent = await conductor
+    .appWs()
+    .callZome({
+      cap_secret: null,
+      cell_id,
+      zome_name: "crud",
+      fn_name: "read",
+      provenance: agentPubKey,
+      payload: createEntryHash,
+    });
   t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
@@ -150,13 +164,12 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
   await pause(500);
 
-  const readEntryResponse = await bobHapps.cells[0].callZome<
-    typeof entryContent
-  >({
-    zome_name: "crud",
-    fn_name: "read",
-    payload: createEntryHash,
-  });
+  const readEntryResponse: typeof entryContent =
+    await bobHapps.cells[0].callZome({
+      zome_name: "crud",
+      fn_name: "read",
+      payload: createEntryHash,
+    });
   t.equal(readEntryResponse, entryContent);
 
   await conductor1.shutDown();

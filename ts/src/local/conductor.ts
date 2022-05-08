@@ -5,16 +5,19 @@ import { makeLogger } from "../logger";
 import { v4 as uuidv4 } from "uuid";
 import {
   AdminWebsocket,
+  AgentPubKey,
+  AppBundleSource,
   AppSignalCb,
   AppWebsocket,
   AttachAppInterfaceRequest,
-  CallZomeRequest,
-  CallZomeResponse,
   DnaSource,
+  InstallAppBundleRequest,
   InstallAppDnaPayload,
+  MembraneProof,
 } from "@holochain/client";
-import { AgentHapp, CellZomeCallRequest, Conductor } from "../types";
+import { AgentHapp, Conductor } from "../types";
 import { URL } from "url";
+import { enableAgentHapp } from "../util";
 
 const logger = makeLogger("Local Conductor");
 
@@ -209,25 +212,12 @@ export class LocalConductor implements Conductor {
     return this._appWs;
   }
 
-  async callZome<T>(request: CallZomeRequest) {
-    try {
-      const zomeResponse = await this.appWs().callZome(request);
-      assertZomeResponse<T>(zomeResponse);
-      return zomeResponse;
-    } catch (error) {
-      logger.error(
-        `local app ws error - call zome:\n${JSON.stringify(error, null, 4)}`
-      );
-      throw error;
-    }
-  }
-
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
     uid?: string;
     signalHandler?: AppSignalCb;
   }) {
-    const agentsCells: AgentHapp[] = [];
+    const agentsHapps: AgentHapp[] = [];
 
     for (const agent of options.agentsDnas) {
       const dnas: InstallAppDnaPayload[] = [];
@@ -270,34 +260,49 @@ export class LocalConductor implements Conductor {
         agent_key: agentPubKey,
         dnas,
       });
-      const enableAppResponse = await this.adminWs().enableApp({
-        installed_app_id: appId,
-      });
-      if (enableAppResponse.errors.length) {
-        logger.error(`error enabling app\n${enableAppResponse.errors}`);
-      }
-
-      const cells = installedAppInfo.cell_data.map((cell) => ({
-        ...cell,
-        callZome: async <T>(request: CellZomeCallRequest) =>
-          this.callZome<T>({
-            ...request,
-            cap_secret: request.cap_secret || null,
-            cell_id: cell.cell_id,
-            provenance: request.provenance || agentPubKey,
-          }),
-      }));
-
-      agentsCells.push({
-        happId: installedAppInfo.installed_app_id,
+      const agentHapp = await enableAgentHapp(
+        this,
         agentPubKey,
-        cells,
-      });
+        installedAppInfo
+      );
+      agentsHapps.push(agentHapp);
     }
     await this.attachAppInterface();
     await this.connectAppInterface(options.signalHandler);
 
-    return agentsCells;
+    return agentsHapps;
+  }
+
+  async installHappBundle(
+    appBundleSource: AppBundleSource,
+    options?: {
+      agentPubKey?: AgentPubKey;
+      installedAppId?: string;
+      uid?: string;
+      membraneProofs?: Record<string, MembraneProof>;
+    }
+  ) {
+    const agentPubKey =
+      options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
+    const appBundleOptions: InstallAppBundleRequest = Object.assign(
+      appBundleSource,
+      {
+        agent_key: agentPubKey,
+        membrane_proofs: options?.membraneProofs ?? {},
+        uid: options?.uid,
+        installed_app_id: options?.installedAppId ?? `app-${uuidv4()}`,
+      }
+    );
+    const installedAppInfo = await this.adminWs().installAppBundle(
+      appBundleOptions
+    );
+
+    const agentHapp = await enableAgentHapp(
+      this,
+      agentPubKey,
+      installedAppInfo
+    );
+    return agentHapp;
   }
 }
 
@@ -311,9 +316,3 @@ export const cleanAllConductors = async () => {
   });
   return cleanPromise;
 };
-
-function assertZomeResponse<T>(
-  response: CallZomeResponse
-): asserts response is T {
-  return;
-}

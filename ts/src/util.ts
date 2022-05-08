@@ -1,4 +1,9 @@
-import { Conductor } from "./types";
+import {
+  AgentPubKey,
+  CallZomeResponse,
+  InstalledAppInfo,
+} from "@holochain/client";
+import { AgentHapp, CellZomeCallRequest, Conductor } from "./types";
 
 export const pause = async (milliseconds: number) => {
   return new Promise((resolve) => {
@@ -25,4 +30,42 @@ export const addAllAgentsToAllConductors = async (conductors: Conductor[]) => {
       );
     })
   );
+};
+
+function assertZomeResponse<T>(
+  response: CallZomeResponse
+): asserts response is T {
+  return;
+}
+
+export const enableAgentHapp = async (
+  conductor: Conductor,
+  agentPubKey: AgentPubKey,
+  installedAppInfo: InstalledAppInfo
+) => {
+  const enableAppResponse = await conductor.adminWs().enableApp({
+    installed_app_id: installedAppInfo.installed_app_id,
+  });
+  if (enableAppResponse.errors.length) {
+    throw new Error(`failed to enable app: ${enableAppResponse.errors}`);
+  }
+  const cells = installedAppInfo.cell_data.map((cell) => ({
+    ...cell,
+    callZome: async <T>(request: CellZomeCallRequest) => {
+      const callZomeResponse = await conductor.appWs().callZome({
+        ...request,
+        cap_secret: request.cap_secret || null,
+        cell_id: cell.cell_id,
+        provenance: request.provenance || agentPubKey,
+      });
+      assertZomeResponse<T>(callZomeResponse);
+      return callZomeResponse;
+    },
+  }));
+  const agentHapp: AgentHapp = {
+    happId: installedAppInfo.installed_app_id,
+    agentPubKey,
+    cells,
+  };
+  return agentHapp;
 };

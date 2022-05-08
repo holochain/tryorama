@@ -2,7 +2,7 @@ import assert from "assert";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import getPort, { portNumbers } from "get-port";
-import { AgentHapp, CellZomeCallRequest, Conductor } from "../../types";
+import { AgentHapp, Conductor } from "../../types";
 import { TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AddAgentInfoRequest,
@@ -22,7 +22,6 @@ import {
   InstallAppBundleRequest,
   InstallAppDnaPayload,
   InstallAppRequest,
-  InstalledAppInfo,
   ListAppsRequest,
   MembraneProof,
   RegisterDnaRequest,
@@ -39,6 +38,7 @@ import { deserializeZomeResponsePayload } from "../util";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { makeLogger } from "../../logger";
 import { URL } from "url";
+import { enableAgentHapp } from "../../util";
 
 const logger = makeLogger("TryCP conductor");
 
@@ -550,7 +550,8 @@ export class TryCpConductor implements Conductor {
         dnas,
       });
 
-      const agentHapp = await this.enableAgentHapp(
+      const agentHapp = await enableAgentHapp(
+        this,
         agentPubKey,
         installedAppInfo
       );
@@ -587,35 +588,11 @@ export class TryCpConductor implements Conductor {
       appBundleOptions
     );
 
-    const agentHapp = await this.enableAgentHapp(agentPubKey, installedAppInfo);
-    return agentHapp;
-  }
-
-  private async enableAgentHapp(
-    agentPubKey: AgentPubKey,
-    installedAppInfo: InstalledAppInfo
-  ) {
-    const enableAppResponse = await this.adminWs().enableApp({
-      installed_app_id: installedAppInfo.installed_app_id,
-    });
-    if (enableAppResponse.errors.length) {
-      throw new Error(`failed to enable app: ${enableAppResponse.errors}`);
-    }
-    const cells = installedAppInfo.cell_data.map((cell) => ({
-      ...cell,
-      callZome: async <T>(request: CellZomeCallRequest) =>
-        this.appWs().callZome<T>({
-          ...request,
-          cap_secret: request.cap_secret || null,
-          cell_id: cell.cell_id,
-          provenance: request.provenance || agentPubKey,
-        }),
-    }));
-    const agentHapp: AgentHapp = {
-      happId: installedAppInfo.installed_app_id,
+    const agentHapp = await enableAgentHapp(
+      this,
       agentPubKey,
-      cells,
-    };
+      installedAppInfo
+    );
     return agentHapp;
   }
 }
