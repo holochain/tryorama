@@ -19,6 +19,7 @@ import {
   DumpStateRequest,
   EnableAppRequest,
   InstallAppBundleRequest,
+  InstallAppDnaPayload,
   InstallAppRequest,
   ListAppsRequest,
   RegisterDnaRequest,
@@ -491,7 +492,7 @@ export class TryCpConductor implements Conductor {
     const agentsCells: AgentHapp[] = [];
 
     for (const agentDnas of options.agentsDnas) {
-      const dnaHashes: DnaHash[] = [];
+      const dnas: InstallAppDnaPayload[] = [];
       const agentPubKey = await this.adminWs().generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
       logger.debug(
@@ -515,15 +516,29 @@ export class TryCpConductor implements Conductor {
             path: relativePath,
             uid: options.uid,
           });
-          dnaHashes.push(dnaHash);
+          dnas.push({
+            hash: dnaHash,
+            role_id: `${dna.path}-${uuidv4()}`,
+          });
+        } else if ("hash" in dna) {
+          const dnaHash = await this.adminWs().registerDna({
+            hash: dna.hash,
+            uid: options.uid,
+          });
+          dnas.push({
+            hash: dnaHash,
+            role_id: `dna-${uuidv4()}`,
+          });
         } else {
-          throw new Error("Not dnaHashed");
+          const dnaHash = await this.adminWs().registerDna({
+            bundle: dna.bundle,
+            uid: options.uid,
+          });
+          dnas.push({
+            hash: dnaHash,
+            role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
+          });
         }
-
-        const dnas = dnaHashes.map((dnaHash) => ({
-          hash: dnaHash,
-          role_id: `dna-${uuidv4()}`,
-        }));
 
         const installedAppInfo = await this.adminWs().installApp({
           installed_app_id: appId,

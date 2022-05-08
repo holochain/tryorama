@@ -10,8 +10,8 @@ import {
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CallZomeResponse,
-  DnaHash,
   DnaSource,
+  InstallAppDnaPayload,
 } from "@holochain/client";
 import { AgentHapp, CellZomeCallRequest, Conductor } from "../types";
 import { URL } from "url";
@@ -230,29 +230,40 @@ export class LocalConductor implements Conductor {
     const agentsCells: AgentHapp[] = [];
 
     for (const agent of options.agentsDnas) {
-      const dnaHashes: DnaHash[] = [];
+      const dnas: InstallAppDnaPayload[] = [];
       const agentPubKey = await this.adminWs().generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
 
       for (const dna of agent) {
         if ("path" in dna) {
-          const dnaHash = await this.adminWs().registerDna({ path: dna.path });
-          dnaHashes.push(dnaHash);
+          const dnaHash = await this.adminWs().registerDna({
+            path: dna.path,
+            uid: options.uid,
+          });
+          dnas.push({
+            hash: dnaHash,
+            role_id: `${dna.path}-${uuidv4()}`,
+          });
         } else if ("hash" in dna) {
           const dnaHash = await this.adminWs().registerDna({
             hash: dna.hash,
-            uid: `dna-${uuidv4()}`,
+            uid: options.uid,
           });
-          dnaHashes.push(dnaHash);
+          dnas.push({
+            hash: dnaHash,
+            role_id: `dna-${uuidv4()}`,
+          });
         } else {
-          throw new Error("no dna found like");
+          const dnaHash = await this.adminWs().registerDna({
+            bundle: dna.bundle,
+            uid: options.uid,
+          });
+          dnas.push({
+            hash: dnaHash,
+            role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
+          });
         }
       }
-
-      const dnas = dnaHashes.map((dnaHash) => ({
-        hash: dnaHash,
-        role_id: `dna-${uuidv4()}`,
-      }));
 
       const installedAppInfo = await this.adminWs().installApp({
         installed_app_id: appId,
