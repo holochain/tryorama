@@ -52,19 +52,30 @@ test("TryCP Conductor - Stop and restart a conductor", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP Conductor - Install a hApp bundle", async (t) => {
+test("TryCP Conductor - Install and call a hApp bundle", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTestTryCpConductor();
-  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-  const installedAppBundle = await conductor.adminWs().installAppBundle({
-    agent_key: agentPubKey,
-    membrane_proofs: {},
+  const installedHappBundle = await conductor.installHappBundle({
     path: FIXTURE_HAPP_URL.pathname,
   });
-  t.ok(
-    installedAppBundle &&
-      typeof installedAppBundle.installed_app_id === "string"
-  );
+  t.ok(installedHappBundle.happId);
+
+  await conductor.adminWs().attachAppInterface();
+  await conductor.connectAppInterface();
+
+  const testContent = "Bye bye, world";
+  const createEntryResponse = await installedHappBundle.cells[0].callZome({
+    zome_name: "crud",
+    fn_name: "create",
+    payload: testContent,
+  });
+  t.ok(createEntryResponse);
+  const readEntryResponse = await installedHappBundle.cells[0].callZome({
+    zome_name: "crud",
+    fn_name: "read",
+    payload: createEntryResponse,
+  });
+  t.equal(readEntryResponse, testContent);
 
   await conductor.shutDown();
   await conductor.disconnectClient();
@@ -72,7 +83,7 @@ test("TryCP Conductor - Install a hApp bundle", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("Local Conductor - Receive a signal", async (t) => {
+test("TryCP Conductor - Receive a signal", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const testSignal = { value: "signal" };
 

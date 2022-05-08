@@ -7,6 +7,7 @@ import { TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AddAgentInfoRequest,
   AgentPubKey,
+  AppBundleSource,
   AppInfoRequest,
   AppSignalCb,
   AttachAppInterfaceRequest,
@@ -21,7 +22,9 @@ import {
   InstallAppBundleRequest,
   InstallAppDnaPayload,
   InstallAppRequest,
+  InstalledAppInfo,
   ListAppsRequest,
+  MembraneProof,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
   StartAppRequest,
@@ -489,7 +492,7 @@ export class TryCpConductor implements Conductor {
     signalHandler?: AppSignalCb;
     uid?: string;
   }) {
-    const agentsCells: AgentHapp[] = [];
+    const agentsHapps: AgentHapp[] = [];
 
     for (const agentDnas of options.agentsDnas) {
       const dnas: InstallAppDnaPayload[] = [];
@@ -539,36 +542,81 @@ export class TryCpConductor implements Conductor {
             role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
           });
         }
-
-        const installedAppInfo = await this.adminWs().installApp({
-          installed_app_id: appId,
-          agent_key: agentPubKey,
-          dnas,
-        });
-        await this.adminWs().enableApp({ installed_app_id: appId });
-
-        const cells = installedAppInfo.cell_data.map((cell) => ({
-          ...cell,
-          callZome: async <T>(request: CellZomeCallRequest) =>
-            this.appWs().callZome<T>({
-              ...request,
-              cap_secret: request.cap_secret || null,
-              cell_id: cell.cell_id,
-              provenance: request.provenance || agentPubKey,
-            }),
-        }));
-        agentsCells.push({
-          happId: installedAppInfo.installed_app_id,
-          agentPubKey,
-          cells,
-        });
       }
+
+      const installedAppInfo = await this.adminWs().installApp({
+        installed_app_id: appId,
+        agent_key: agentPubKey,
+        dnas,
+      });
+
+      const agentHapp = await this.enableAgentHapp(
+        agentPubKey,
+        installedAppInfo
+      );
+      agentsHapps.push(agentHapp);
     }
 
     await this.adminWs().attachAppInterface();
     await this.connectAppInterface(options.signalHandler);
 
-    return agentsCells;
+    return agentsHapps;
+  }
+
+  async installHappBundle(
+    appBundleSource: AppBundleSource,
+    options?: {
+      agentPubKey?: AgentPubKey;
+      installedAppId?: string;
+      uid?: string;
+      membraneProofs?: Record<string, MembraneProof>;
+    }
+  ) {
+    const agentPubKey =
+      options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
+    const appBundleOptions: InstallAppBundleRequest = Object.assign(
+      appBundleSource,
+      {
+        agent_key: agentPubKey,
+        membrane_proofs: options?.membraneProofs ?? {},
+        uid: options?.uid,
+        installed_app_id: options?.installedAppId ?? `app-${uuidv4()}`,
+      }
+    );
+    const installedAppInfo = await this.adminWs().installAppBundle(
+      appBundleOptions
+    );
+
+    const agentHapp = await this.enableAgentHapp(agentPubKey, installedAppInfo);
+    return agentHapp;
+  }
+
+  private async enableAgentHapp(
+    agentPubKey: AgentPubKey,
+    installedAppInfo: InstalledAppInfo
+  ) {
+    const enableAppResponse = await this.adminWs().enableApp({
+      installed_app_id: installedAppInfo.installed_app_id,
+    });
+    if (enableAppResponse.errors.length) {
+      throw new Error(`failed to enable app: ${enableAppResponse.errors}`);
+    }
+    const cells = installedAppInfo.cell_data.map((cell) => ({
+      ...cell,
+      callZome: async <T>(request: CellZomeCallRequest) =>
+        this.appWs().callZome<T>({
+          ...request,
+          cap_secret: request.cap_secret || null,
+          cell_id: cell.cell_id,
+          provenance: request.provenance || agentPubKey,
+        }),
+    }));
+    const agentHapp: AgentHapp = {
+      happId: installedAppInfo.installed_app_id,
+      agentPubKey,
+      cells,
+    };
+    return agentHapp;
   }
 }
 
