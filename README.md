@@ -6,14 +6,18 @@ An end-to-end/scenario testing framework for Holochain applications, written in 
 [![Chat](https://img.shields.io/badge/chat-chat%2eholochain%2enet-blue.svg?style=flat-square)](https://chat.holochain.net)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Tryorama provides a convenient way to run an arbitrary amount of sandboxed conductors on your local machine, as well as on network nodes that are running the TryCP service. In combination with the test runner and assertion library of your choice, you can test the behavior of multiple Holochain nodes which are networked together, while ensuring that test nodes in different tests do not accidentally join a network.
+Tryorama provides a convenient way to run an arbitrary amount of sandboxed
+conductors on your local machine, as well as on network nodes that are running
+the TryCP service. In combination with the test runner and assertion library of
+your choice, you can test the behavior of multiple Holochain nodes in a
+network. Included functions to clean up used resources make sure that your
+tests are independent of one another.
 
-Note: this version of tryorama is tested against holochain rev ab02f36c87999d42026b7429164ded503bb39853
-Please see [testing Readme](test/README.md) for details on how to run tryorama's own tests.
-
-```bash
+```sh
 npm install @holochain/tryorama
 ```
+
+[Tryorama's complete API documentation](./docs/index.md)
 
 Take a look at the sample below, or skip to the [Conceptual Overview](#conceptual-overview) for a more in depth look.
 
@@ -23,7 +27,7 @@ Check out this heavily commented example for an idea of how to use tryorama
 
 You can also check out the [example](./example) folder.
 
-```javascript
+```typescript
 import { Orchestrator, Config, InstallAgentsHapps } from '@holochain/tryorama'
 import path from 'path'
 
@@ -343,13 +347,11 @@ orchestrator.registerScenario('description of this scenario', async (s, t) => {
 # License
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
 
-Copyright (C) 2019-2020, Holochain Foundation
+Copyright (C) Holochain Foundation
 
-Licensed under the Apache License, Version 2.0 (the "License");
+Licensed under the Cryptographic Autonomy License version 1.0 (the "License");
 you may not use this file except in compliance with the License.
-You may obtain a copy of the License at
-
-[http://www.apache.org/licenses/LICENSE-2.0](http://www.apache.org/licenses/LICENSE-2.0)
+You may view the [License's specification](./LICENSE).
 
 Unless required by applicable law or agreed to in writing, software
 distributed under the License is distributed on an "AS IS" BASIS,
