@@ -10,9 +10,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Fixed
 
 ## [0.5.0]
-Re-write Tryorama
+- Re-write Tryorama
 
 ### Added
+- Use of `niv` for Holochain revision upgrades
+- Complete typings for Tryorama
 ### Removed
 - Middleware
 - Conductor configuration
