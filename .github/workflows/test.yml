@@ -37,4 +37,4 @@ jobs:
     - name: Prepare Nix environment
       run: nix-shell --command "echo Completed"
     - name: Run all tests
-      run: nix-shell --command "ci_scripts/run-test.sh"
+      run: nix-shell --command "./run-test.sh"
