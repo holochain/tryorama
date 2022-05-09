@@ -99,7 +99,7 @@ test("TryCp Scenario - Create and read an entry, 2 conductors", async (t) => {
     payload: content,
   });
 
-  await pause(1000);
+  await pause(2000);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "crud",
@@ -123,7 +123,7 @@ test("TryCP Scenario - Conductor maintains data after shutdown and restart", asy
     fn_name: "create",
     payload: content,
   });
-  await pause(1000);
+  await pause(2000);
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "crud",
     fn_name: "read",

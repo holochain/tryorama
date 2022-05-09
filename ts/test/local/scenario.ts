@@ -49,7 +49,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
     payload: content,
   });
 
-  await pause(1000);
+  await pause(2000);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "crud",
@@ -75,7 +75,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
     payload: content,
   });
 
-  await pause(1000);
+  await pause(2000);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "crud",
