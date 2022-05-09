@@ -153,7 +153,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   await cleanAllConductors();
 });
 
-test.only("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   const conductor1 = await createLocalConductor();
@@ -179,7 +179,7 @@ test.only("Local Conductor - Create and read an entry using the entry zome, 2 co
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  await pause(500);
+  await pause(1000);
 
   const readEntryResponse: typeof entryContent =
     await bobHapps.cells[0].callZome({

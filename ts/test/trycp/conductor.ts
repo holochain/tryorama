@@ -355,7 +355,7 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 2 conduct
   t.equal(createEntry1Hash.length, 39);
   t.ok(createdEntry1HashB64.startsWith("hCkk"));
 
-  await pause(500);
+  await pause(1000);
 
   const readEntryResponse = await conductor2
     .appWs()
