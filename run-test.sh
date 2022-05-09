@@ -7,5 +7,4 @@ cd ../../ # into fixtures
 hc dna pack . -o entry.dna
 hc app pack . -o entry.happ
 cd ../../..
-npm install
-npm run test
+npm cit
