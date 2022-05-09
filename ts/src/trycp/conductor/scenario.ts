@@ -117,11 +117,15 @@ export class TryCpScenario implements Scenario {
     return addAllAgentsToAllConductors(this.conductors);
   }
 
-  async cleanUp() {
+  async shutDown() {
     await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
     await Promise.all(
       this.conductors.map((conductor) => conductor.disconnectClient())
     );
+  }
+
+  async cleanUp() {
+    await this.shutDown();
     await cleanAllTryCpConductors(this.serverUrl);
     this.conductors = [];
     await this.server?.stop();

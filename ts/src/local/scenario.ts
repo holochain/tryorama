@@ -89,8 +89,12 @@ export class LocalScenario implements Scenario {
     return players;
   }
 
-  async cleanUp() {
+  async shutDown() {
     await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
+  }
+
+  async cleanUp() {
+    await this.shutDown();
     await cleanAllConductors();
     this.conductors = [];
   }

@@ -83,6 +83,7 @@ export interface Scenario {
       options?: HappBundleOptions & { signalHandler?: AppSignalCb };
     }>
   ): Promise<Player[]>;
+  shutDown(): Promise<void>;
   cleanUp(): Promise<void>;
 }
 
