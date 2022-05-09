@@ -8,4 +8,4 @@ hc dna pack . -o entry.dna
 hc app pack . -o entry.happ
 cd ../../..
 npm ci
-npm run test:local:conductor
+npm run test:local
