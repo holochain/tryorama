@@ -19,18 +19,15 @@ jobs:
       with:
         nix_path: nixpkgs=channel:nixos-21.11
 
-    - name: Configure Nix substituters
-      run: |
-        set -xe
-        mkdir -p ~/.config/nix/
-        cp ./.github/nix.conf ~/.config/nix/
+    # - name: Configure Nix substituters
+    #   run: |
+    #     set -xe
+    #     mkdir -p ~/.config/nix/
+    #     cp ./.github/nix.conf ~/.config/nix/
 
     - uses: cachix/cachix-action@v10
       with:
         name: holochain-ci
 
-    - name: Prepare Nix environment
-      run: nix-shell --command "echo Completed"
-
     - name: Run all tests
-      run: nix-shell --command "./run-test.sh"
+      run: nix-shell --pure --run "./run-test.sh"
