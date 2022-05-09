@@ -2,16 +2,20 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Player](./tryorama.player.md)
 
-## Player type
+## Player interface
 
 <b>Signature:</b>
 
 ```typescript
-export declare type Player = {
-    conductor: Conductor;
-    agentPubKey: Uint8Array;
-    cells: CallableCell[];
-};
+export interface Player 
 ```
-<b>References:</b> [Conductor](./tryorama.conductor.md)<!-- -->, [CallableCell](./tryorama.callablecell.md)
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [agentPubKey](./tryorama.player.agentpubkey.md) | Uint8Array |  |
+|  [cells](./tryorama.player.cells.md) | [CallableCell](./tryorama.callablecell.md)<!-- -->\[\] |  |
+|  [conductor](./tryorama.player.conductor.md) | [Conductor](./tryorama.conductor.md) |  |
+|  [namedCells](./tryorama.player.namedcells.md) | Map&lt;RoleId, InstalledCell&gt; |  |
 

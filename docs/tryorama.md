@@ -15,7 +15,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  Class | Description |
 |  --- | --- |
 |  [LocalConductor](./tryorama.localconductor.md) |  |
-|  [Scenario](./tryorama.scenario.md) |  |
+|  [LocalScenario](./tryorama.localscenario.md) |  |
 |  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server. |
 |  [TryCpConductor](./tryorama.trycpconductor.md) |  |
 |  [TryCpScenario](./tryorama.trycpscenario.md) |  |
@@ -28,10 +28,19 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AdminApiResponseAgentInfoAdded](./tryorama.adminapiresponseagentinfoadded.md) |  |
 |  [AdminApiResponseAgentInfoRequested](./tryorama.adminapiresponseagentinforequested.md) |  |
 |  [AdminApiResponseAgentPubKeyGenerated](./tryorama.adminapiresponseagentpubkeygenerated.md) |  |
+|  [AdminApiResponseAppBundleInstalled](./tryorama.adminapiresponseappbundleinstalled.md) |  |
+|  [AdminApiResponseAppDisabled](./tryorama.adminapiresponseappdisabled.md) |  |
 |  [AdminApiResponseAppEnabled](./tryorama.adminapiresponseappenabled.md) |  |
 |  [AdminApiResponseAppInstalled](./tryorama.adminapiresponseappinstalled.md) |  |
 |  [AdminApiResponseAppInterfaceAttached](./tryorama.adminapiresponseappinterfaceattached.md) |  |
+|  [AdminApiResponseAppInterfacesListed](./tryorama.adminapiresponseappinterfaceslisted.md) |  |
+|  [AdminApiResponseAppsListed](./tryorama.adminapiresponseappslisted.md) |  |
+|  [AdminApiResponseAppStarted](./tryorama.adminapiresponseappstarted.md) |  |
+|  [AdminApiResponseAppUninstalled](./tryorama.adminapiresponseappuninstalled.md) |  |
+|  [AdminApiResponseCellIdsListed](./tryorama.adminapiresponsecellidslisted.md) |  |
+|  [AdminApiResponseCloneCellCreated](./tryorama.adminapiresponseclonecellcreated.md) |  |
 |  [AdminApiResponseDnaRegistered](./tryorama.adminapiresponsednaregistered.md) |  |
+|  [AdminApiResponseDnasListed](./tryorama.adminapiresponsednaslisted.md) |  |
 |  [AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md) |  |
 |  [AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md) |  |
 |  [AgentHapp](./tryorama.agenthapp.md) |  |
@@ -40,8 +49,10 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
 |  [CallableCell](./tryorama.callablecell.md) |  |
 |  [Conductor](./tryorama.conductor.md) |  |
+|  [HappBundleOptions](./tryorama.happbundleoptions.md) |  |
 |  [LocalConductorOptions](./tryorama.localconductoroptions.md) |  |
 |  [LocalPlayer](./tryorama.localplayer.md) |  |
+|  [Player](./tryorama.player.md) |  |
 |  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) |  |
 |  [RequestAppInfo](./tryorama.requestappinfo.md) |  |
 |  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) |  |
@@ -56,6 +67,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [RequestSaveDna](./tryorama.requestsavedna.md) |  |
 |  [RequestShutdown](./tryorama.requestshutdown.md) |  |
 |  [RequestStartup](./tryorama.requeststartup.md) |  |
+|  [Scenario](./tryorama.scenario.md) |  |
 |  [TryCpConductorOptions](./tryorama.trycpconductoroptions.md) |  |
 |  [TryCpPlayer](./tryorama.trycpplayer.md) |  |
 
@@ -63,7 +75,6 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 
 |  Variable | Description |
 |  --- | --- |
-|  [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md) |  |
 |  [cleanAllConductors](./tryorama.cleanallconductors.md) |  |
 |  [cleanAllTryCpConductors](./tryorama.cleanalltrycpconductors.md) |  |
 |  [createLocalConductor](./tryorama.createlocalconductor.md) | The function to create a Local Conductor. It starts a sandbox conductor via the Holochain CLI. |
@@ -81,7 +92,6 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [CallZomeFn](./tryorama.callzomefn.md) |  |
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) |  |
 |  [ConductorId](./tryorama.conductorid.md) |  |
-|  [Player](./tryorama.player.md) |  |
 |  [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) |  |
 |  [TryCpRequest](./tryorama.trycprequest.md) |  |
 |  [TryCpResponseErrorValue](./tryorama.trycpresponseerrorvalue.md) |  |

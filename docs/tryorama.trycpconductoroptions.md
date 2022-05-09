@@ -19,4 +19,5 @@ export interface TryCpConductorOptions
 |  [logLevel?](./tryorama.trycpconductoroptions.loglevel.md) | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | <i>(Optional)</i> |
 |  [partialConfig?](./tryorama.trycpconductoroptions.partialconfig.md) | string | <i>(Optional)</i> |
 |  [startup?](./tryorama.trycpconductoroptions.startup.md) | boolean | <i>(Optional)</i> |
+|  [timeout?](./tryorama.trycpconductoroptions.timeout.md) | number | <i>(Optional)</i> |
 

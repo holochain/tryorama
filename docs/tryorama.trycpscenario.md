@@ -7,8 +7,9 @@
 <b>Signature:</b>
 
 ```typescript
-export declare class TryCpScenario 
+export declare class TryCpScenario implements Scenario 
 ```
+<b>Implements:</b> [Scenario](./tryorama.scenario.md)
 
 ## Properties
 
@@ -22,8 +23,11 @@ export declare class TryCpScenario
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [addAllAgentsToAllConductors()](./tryorama.trycpscenario.addallagentstoallconductors.md) |  |  |
-|  [addPlayer(dnas)](./tryorama.trycpscenario.addplayer.md) |  |  |
-|  [addPlayers(playersDnas)](./tryorama.trycpscenario.addplayers.md) |  |  |
+|  [addConductor(signalHandler)](./tryorama.trycpscenario.addconductor.md) |  |  |
+|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.trycpscenario.addplayerswithhappbundles.md) |  |  |
+|  [addPlayersWithHapps(playersDnas, signalHandlers)](./tryorama.trycpscenario.addplayerswithhapps.md) |  |  |
+|  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.trycpscenario.addplayerwithhapp.md) |  |  |
+|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.trycpscenario.addplayerwithhappbundle.md) |  |  |
 |  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  |  |
 |  [create(serverUrl)](./tryorama.trycpscenario.create.md) | <code>static</code> |  |
 

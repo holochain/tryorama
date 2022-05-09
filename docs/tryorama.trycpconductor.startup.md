@@ -9,8 +9,7 @@ Start a configured conductor.
 <b>Signature:</b>
 
 ```typescript
-startUp(options: {
-        signalHandler?: AppSignalCb;
+startUp(options?: {
         logLevel?: TryCpConductorLogLevel;
     }): Promise<null>;
 ```
@@ -19,7 +18,7 @@ startUp(options: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { signalHandler?: AppSignalCb; logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; } |  |
+|  options | { logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; } |  |
 
 <b>Returns:</b>
 

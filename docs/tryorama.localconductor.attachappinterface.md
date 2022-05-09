@@ -7,7 +7,7 @@
 <b>Signature:</b>
 
 ```typescript
-attachAppInterface(request?: AttachAppInterfaceRequest): Promise<import("@holochain/client").AttachAppInterfaceResponse>;
+attachAppInterface(request?: AttachAppInterfaceRequest): Promise<void>;
 ```
 
 ## Parameters
@@ -18,5 +18,5 @@ attachAppInterface(request?: AttachAppInterfaceRequest): Promise<import("@holoch
 
 <b>Returns:</b>
 
-Promise&lt;import("@holochain/client").AttachAppInterfaceResponse&gt;
+Promise&lt;void&gt;
 

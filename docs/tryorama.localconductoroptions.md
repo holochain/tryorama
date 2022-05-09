@@ -14,6 +14,6 @@ export interface LocalConductorOptions
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [signalHandler?](./tryorama.localconductoroptions.signalhandler.md) | AppSignalCb | <i>(Optional)</i> |
 |  [startup?](./tryorama.localconductoroptions.startup.md) | boolean | <i>(Optional)</i> |
+|  [timeout?](./tryorama.localconductoroptions.timeout.md) | number | <i>(Optional)</i> |
 

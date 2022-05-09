@@ -15,6 +15,6 @@ export interface RequestAdminInterfaceData
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [data?](./tryorama.requestadmininterfacedata.data.md) | AddAgentInfoRequest \| AttachAppInterfaceRequest \| DumpStateRequest \| DumpFullStateRequest \| EnableAppRequest \| InstallAppRequest \| RegisterDnaRequest \| RequestAgentInfoRequest | <i>(Optional)</i> |
-|  [type](./tryorama.requestadmininterfacedata.type.md) | "generate\_agent\_pub\_key" \| "connect\_app\_interface" \| "add\_agent\_info" \| "attach\_app\_interface" \| "dump\_state" \| "dump\_full\_state" \| "enable\_app" \| "install\_app" \| "request\_agent\_info" \| "register\_dna" |  |
+|  [data?](./tryorama.requestadmininterfacedata.data.md) | AddAgentInfoRequest \| AttachAppInterfaceRequest \| CreateCloneCellRequest \| DisableAppRequest \| DumpFullStateRequest \| DumpStateRequest \| EnableAppRequest \| InstallAppRequest \| InstallAppBundleRequest \| ListAppsRequest \| RegisterDnaRequest \| RequestAgentInfoRequest \| StartAppRequest \| UninstallAppRequest | <i>(Optional)</i> |
+|  [type](./tryorama.requestadmininterfacedata.type.md) | "add\_agent\_info" \| "attach\_app\_interface" \| "connect\_app\_interface" \| "create\_clone\_cell" \| "disable\_app" \| "dump\_full\_state" \| "dump\_state" \| "enable\_app" \| "generate\_agent\_pub\_key" \| "install\_app" \| "install\_app\_bundle" \| "list\_apps" \| "list\_app\_interfaces" \| "list\_cell\_ids" \| "list\_dnas" \| "register\_dna" \| "request\_agent\_info" \| "start\_app" \| "uninstall\_app" |  |
 

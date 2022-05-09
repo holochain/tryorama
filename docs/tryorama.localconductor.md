@@ -16,21 +16,13 @@ export declare class LocalConductor implements Conductor
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [addAgentInfo(request)](./tryorama.localconductor.addagentinfo.md) |  |  |
 |  [adminWs()](./tryorama.localconductor.adminws.md) |  |  |
-|  [appInfo(request)](./tryorama.localconductor.appinfo.md) |  |  |
 |  [appWs()](./tryorama.localconductor.appws.md) |  |  |
 |  [attachAppInterface(request)](./tryorama.localconductor.attachappinterface.md) |  |  |
-|  [callZome(request)](./tryorama.localconductor.callzome.md) |  |  |
-|  [create()](./tryorama.localconductor.create.md) | <code>static</code> |  |
-|  [dumpFullState(request)](./tryorama.localconductor.dumpfullstate.md) |  |  |
-|  [dumpState(request)](./tryorama.localconductor.dumpstate.md) |  |  |
-|  [enableApp(request)](./tryorama.localconductor.enableapp.md) |  |  |
-|  [generateAgentPubKey()](./tryorama.localconductor.generateagentpubkey.md) |  |  |
+|  [connectAppInterface(signalHandler)](./tryorama.localconductor.connectappinterface.md) |  |  |
+|  [create(timeout)](./tryorama.localconductor.create.md) | <code>static</code> |  |
 |  [installAgentsHapps(options)](./tryorama.localconductor.installagentshapps.md) |  |  |
-|  [installApp(request)](./tryorama.localconductor.installapp.md) |  |  |
-|  [registerDna(request)](./tryorama.localconductor.registerdna.md) |  |  |
-|  [requestAgentInfo(request)](./tryorama.localconductor.requestagentinfo.md) |  |  |
+|  [installHappBundle(appBundleSource, options)](./tryorama.localconductor.installhappbundle.md) |  |  |
 |  [shutDown()](./tryorama.localconductor.shutdown.md) |  |  |
-|  [startUp(options)](./tryorama.localconductor.startup.md) |  |  |
+|  [startUp()](./tryorama.localconductor.startup.md) |  |  |
 

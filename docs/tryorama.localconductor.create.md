@@ -7,8 +7,15 @@
 <b>Signature:</b>
 
 ```typescript
-static create(): Promise<LocalConductor>;
+static create(timeout?: number): Promise<LocalConductor>;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  timeout | number |  |
+
 <b>Returns:</b>
 
 Promise&lt;[LocalConductor](./tryorama.localconductor.md)<!-- -->&gt;

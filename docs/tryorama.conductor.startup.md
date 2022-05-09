@@ -7,7 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-startUp: (options: {
-        signalHandler?: AppSignalCb;
-    }) => Promise<void | null>;
+startUp: () => Promise<void | null>;
 ```

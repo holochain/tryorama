@@ -9,7 +9,7 @@ Create a client connection to a running TryCP server.
 <b>Signature:</b>
 
 ```typescript
-static create(serverUrl: URL): Promise<TryCpClient>;
+static create(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
 ```
 
 ## Parameters
@@ -17,6 +17,7 @@ static create(serverUrl: URL): Promise<TryCpClient>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  serverUrl | URL | The URL of the TryCP server. |
+|  timeout | number |  |
 
 <b>Returns:</b>
 

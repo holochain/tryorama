@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-adminWs: () => Pick<AdminWebsocket, "addAgentInfo" | "attachAppInterface" | "enableApp" | "dumpState" | "dumpFullState" | "generateAgentPubKey" | "installApp" | "registerDna" | "requestAgentInfo">;
+adminWs: () => Omit<AdminWebsocket, "_requester" | "client" | "activateApp" | "deactivateApp" | "defaultTimeout" | "listActiveApps">;
 ```

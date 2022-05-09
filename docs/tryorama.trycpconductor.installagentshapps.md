@@ -11,6 +11,7 @@ Helper to install DNAs and create agents. Given an array of DNAs for each agent 
 ```typescript
 installAgentsHapps(options: {
         agentsDnas: DnaSource[][];
+        signalHandler?: AppSignalCb;
         uid?: string;
     }): Promise<AgentHapp[]>;
 ```
@@ -19,7 +20,7 @@ installAgentsHapps(options: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { agentsDnas: DnaSource\[\]\[\]; uid?: string; } | An array of DNA sources for each agent (= two-dimensional array) and optionally a unique id of the hApp. |
+|  options | { agentsDnas: DnaSource\[\]\[\]; signalHandler?: AppSignalCb; uid?: string; } | An array of DNA sources for each agent (= two-dimensional array) and optionally a unique id of the hApp. |
 
 <b>Returns:</b>
 

@@ -2,32 +2,22 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Scenario](./tryorama.scenario.md)
 
-## Scenario class
+## Scenario interface
 
 <b>Signature:</b>
 
 ```typescript
-export declare class Scenario 
+export interface Scenario 
 ```
-
-## Constructors
-
-|  Constructor | Modifiers | Description |
-|  --- | --- | --- |
-|  [(constructor)()](./tryorama.scenario._constructor_.md) |  | Constructs a new instance of the <code>Scenario</code> class |
-
-## Properties
-
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [conductors](./tryorama.scenario.conductors.md) |  | [LocalConductor](./tryorama.localconductor.md)<!-- -->\[\] |  |
-|  [uid](./tryorama.scenario.uid.md) |  | string |  |
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [addPlayer(dnas)](./tryorama.scenario.addplayer.md) |  |  |
-|  [addPlayers(playersDnas)](./tryorama.scenario.addplayers.md) |  |  |
-|  [cleanUp()](./tryorama.scenario.cleanup.md) |  |  |
+|  Method | Description |
+|  --- | --- |
+|  [addConductor(signalHandler)](./tryorama.scenario.addconductor.md) |  |
+|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.scenario.addplayerswithhappbundles.md) |  |
+|  [addPlayersWithHapps(playersDnas, signalHandlers)](./tryorama.scenario.addplayerswithhapps.md) |  |
+|  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.scenario.addplayerwithhapp.md) |  |
+|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.scenario.addplayerwithhappbundle.md) |  |
+|  [cleanUp()](./tryorama.scenario.cleanup.md) |  |
 

@@ -14,9 +14,15 @@ export interface Conductor
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [adminWs](./tryorama.conductor.adminws.md) | () =&gt; Pick&lt;AdminWebsocket, "addAgentInfo" \| "attachAppInterface" \| "enableApp" \| "dumpState" \| "dumpFullState" \| "generateAgentPubKey" \| "installApp" \| "registerDna" \| "requestAgentInfo"&gt; |  |
+|  [adminWs](./tryorama.conductor.adminws.md) | () =&gt; Omit&lt;AdminWebsocket, "\_requester" \| "client" \| "activateApp" \| "deactivateApp" \| "defaultTimeout" \| "listActiveApps"&gt; |  |
 |  [appWs](./tryorama.conductor.appws.md) | () =&gt; Pick&lt;AppWebsocket, "callZome" \| "appInfo"&gt; |  |
-|  [installAgentsHapps](./tryorama.conductor.installagentshapps.md) | (options: { agentsDnas: DnaSource\[\]\[\]; uid?: string; }) =&gt; Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt; |  |
+|  [installAgentsHapps](./tryorama.conductor.installagentshapps.md) | (options: { agentsDnas: DnaSource\[\]\[\]; uid?: string; signalHandler?: AppSignalCb; }) =&gt; Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt; |  |
 |  [shutDown](./tryorama.conductor.shutdown.md) | () =&gt; Promise&lt;number \| null&gt; |  |
-|  [startUp](./tryorama.conductor.startup.md) | (options: { signalHandler?: AppSignalCb; }) =&gt; Promise&lt;void \| null&gt; |  |
+|  [startUp](./tryorama.conductor.startup.md) | () =&gt; Promise&lt;void \| null&gt; |  |
+
+## Methods
+
+|  Method | Description |
+|  --- | --- |
+|  [connectAppInterface(signalHandler)](./tryorama.conductor.connectappinterface.md) |  |
 

@@ -7,17 +7,8 @@
 <b>Signature:</b>
 
 ```typescript
-startUp(options: {
-        signalHandler?: AppSignalCb;
-    }): Promise<void>;
+startUp(): Promise<void>;
 ```
-
-## Parameters
-
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  options | { signalHandler?: AppSignalCb; } |  |
-
 <b>Returns:</b>
 
 Promise&lt;void&gt;

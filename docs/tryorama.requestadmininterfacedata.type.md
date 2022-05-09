@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-type: "generate_agent_pub_key" | "connect_app_interface" | "add_agent_info" | "attach_app_interface" | "dump_state" | "dump_full_state" | "enable_app" | "install_app" | "request_agent_info" | "register_dna";
+type: "add_agent_info" | "attach_app_interface" | "connect_app_interface" | "create_clone_cell" | "disable_app" | "dump_full_state" | "dump_state" | "enable_app" | "generate_agent_pub_key" | "install_app" | "install_app_bundle" | "list_apps" | "list_app_interfaces" | "list_cell_ids" | "list_dnas" | "register_dna" | "request_agent_info" | "start_app" | "uninstall_app";
 ```
