@@ -5,6 +5,7 @@ import {
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
+  CapSecret,
   DnaSource,
   InstalledCell,
   MembraneProof,
@@ -13,10 +14,11 @@ import {
 
 export type CellZomeCallRequest = Omit<
   CallZomeRequest,
-  "cap_secret" | "cell_id" | "provenance"
+  "cap_secret" | "cell_id" | "payload" | "provenance"
 > & {
-  cap_secret?: Uint8Array;
-  provenance?: Uint8Array;
+  cap_secret?: CapSecret;
+  provenance?: AgentPubKey;
+  payload?: unknown;
 };
 
 export type CallZomeFn = <T>(request: CellZomeCallRequest) => Promise<T>;
@@ -29,7 +31,7 @@ export interface AgentHapp {
   happId: string;
   agentPubKey: Uint8Array;
   cells: CallableCell[];
-  namedCells: Map<RoleId, InstalledCell>;
+  namedCells: Map<RoleId, CallableCell>;
 }
 
 export interface HappBundleOptions {
@@ -90,6 +92,6 @@ export interface Scenario {
 export interface Player {
   agentPubKey: Uint8Array;
   cells: CallableCell[];
-  namedCells: Map<RoleId, InstalledCell>;
+  namedCells: Map<RoleId, CallableCell>;
   conductor: Conductor;
 }
