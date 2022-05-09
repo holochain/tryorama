@@ -84,7 +84,7 @@ test("Local Conductor - Install multiple agents and DNAs and get access to agent
   await cleanAllConductors();
 });
 
-test("Local Conductor - Install hApp bundle and access cells through role ids", async (t) => {
+test("Local Conductor - Install hApp bundle and access cells with role ids", async (t) => {
   const conductor = await createLocalConductor();
   const aliceHapp = await conductor.installHappBundle({
     path: FIXTURE_HAPP_URL.pathname,

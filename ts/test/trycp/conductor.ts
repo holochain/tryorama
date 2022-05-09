@@ -40,7 +40,7 @@ test("TryCP Conductor - Stop and restart a conductor", async (t) => {
   t.ok(agentPubKeyResponse);
 
   await conductor.shutDown();
-  t.rejects(conductor.adminWs().generateAgentPubKey);
+  await t.rejects(conductor.adminWs().generateAgentPubKey);
 
   await conductor.startUp({});
   const agentPubKeyResponse2 = await conductor.adminWs().generateAgentPubKey();
@@ -52,7 +52,7 @@ test("TryCP Conductor - Stop and restart a conductor", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP Conductor - Install hApp bundle and access cells through role ids", async (t) => {
+test("TryCP Conductor - Install hApp bundle and access cells with role ids", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const conductor = await createTestTryCpConductor();
   const aliceHapp = await conductor.installHappBundle({
@@ -217,6 +217,9 @@ test("TryCP Conductor - Reading a non-existent entry returns null", async (t) =>
     agentsDnas: [dnas],
   });
 
+  await conductor.adminWs().attachAppInterface();
+  await conductor.connectAppInterface();
+
   const actual = await alice_happs.cells[0].callZome<null>({
     zome_name: "crud",
     fn_name: "read",
@@ -331,9 +334,13 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 2 conduct
 
   const conductor1 = await createTestTryCpConductor();
   const [alice] = await conductor1.installAgentsHapps({ agentsDnas: [dnas] });
+  await conductor1.adminWs().attachAppInterface();
+  await conductor1.connectAppInterface();
 
   const conductor2 = await createTestTryCpConductor();
   const [bob] = await conductor2.installAgentsHapps({ agentsDnas: [dnas] });
+  await conductor2.adminWs().attachAppInterface();
+  await conductor2.connectAppInterface();
 
   const entryContent = "test-content";
   const createEntry1Hash = await conductor1.appWs().callZome<EntryHash>({

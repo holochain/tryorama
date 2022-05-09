@@ -558,9 +558,6 @@ export class TryCpConductor implements Conductor {
       agentsHapps.push(agentHapp);
     }
 
-    await this.adminWs().attachAppInterface();
-    await this.connectAppInterface(options.signalHandler);
-
     return agentsHapps;
   }
 

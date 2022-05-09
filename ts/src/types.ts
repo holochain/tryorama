@@ -64,11 +64,12 @@ export interface Conductor {
 }
 
 export interface Scenario {
-  addPlayerWithDnas(
+  addConductor(signalHandler?: AppSignalCb): Promise<Conductor>;
+  addPlayerWithHapp(
     dnas: DnaSource[],
     signalHandler?: AppSignalCb
   ): Promise<Player>;
-  addPlayersWithDnas(
+  addPlayersWithHapps(
     playersDnas: DnaSource[][],
     signalHandlers?: Array<AppSignalCb | undefined>
   ): Promise<Player[]>;
@@ -86,8 +87,8 @@ export interface Scenario {
 }
 
 export interface Player {
-  conductor: Conductor;
   agentPubKey: Uint8Array;
   cells: CallableCell[];
   namedCells: Map<RoleId, InstalledCell>;
+  conductor: Conductor;
 }

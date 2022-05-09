@@ -210,7 +210,7 @@ test("TryCP Server - Reset", async (t) => {
     type: "startup",
     id: playerId,
   });
-  t.rejects(attemptToStartAgain);
+  await t.rejects(attemptToStartAgain);
 
   await tryCpClient.close();
   await localTryCpServer.stop();
@@ -253,6 +253,8 @@ test("TryCP Server - App API - Get app info", async (t) => {
   const [alice] = await conductor.installAgentsHapps({
     agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
   });
+  await conductor.adminWs().attachAppInterface();
+  await conductor.connectAppInterface();
 
   const appInfo = await conductor
     .appWs()

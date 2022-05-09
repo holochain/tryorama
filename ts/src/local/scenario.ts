@@ -25,28 +25,33 @@ export class LocalScenario implements Scenario {
     this.conductors = [];
   }
 
-  async addPlayerWithDnas(
+  async addConductor(signalHandler?: AppSignalCb) {
+    const conductor = await createLocalConductor({ timeout: this.timeout });
+    await conductor.attachAppInterface();
+    await conductor.connectAppInterface(signalHandler);
+    this.conductors.push(conductor);
+    return conductor;
+  }
+
+  async addPlayerWithHapp(
     dnas: DnaSource[],
     signalHandler?: AppSignalCb
   ): Promise<LocalPlayer> {
-    const conductor = await createLocalConductor({ timeout: this.timeout });
+    const conductor = await this.addConductor(signalHandler);
     const [agentCells] = await conductor.installAgentsHapps({
       agentsDnas: [dnas],
       uid: this.uid,
     });
-    await conductor.attachAppInterface();
-    await conductor.connectAppInterface(signalHandler);
-    this.conductors.push(conductor);
     return { conductor, ...agentCells };
   }
 
-  async addPlayersWithDnas(
+  async addPlayersWithHapps(
     playersDnas: DnaSource[][],
     signalHandlers?: Array<AppSignalCb | undefined>
   ): Promise<LocalPlayer[]> {
     const players = await Promise.all(
       playersDnas.map((playerDnas, i) =>
-        this.addPlayerWithDnas(playerDnas, signalHandlers?.[i])
+        this.addPlayerWithHapp(playerDnas, signalHandlers?.[i])
       )
     );
     return players;
@@ -56,7 +61,7 @@ export class LocalScenario implements Scenario {
     appBundleSource: AppBundleSource,
     options?: HappBundleOptions & { signalHandler?: AppSignalCb }
   ): Promise<LocalPlayer> {
-    const conductor = await createLocalConductor({ timeout: this.timeout });
+    const conductor = await this.addConductor(options?.signalHandler);
     options = options
       ? Object.assign(options, { uid: options.uid ?? this.uid })
       : { uid: this.uid };
@@ -64,9 +69,6 @@ export class LocalScenario implements Scenario {
       appBundleSource,
       options
     );
-    await conductor.attachAppInterface();
-    await conductor.connectAppInterface(options?.signalHandler);
-    this.conductors.push(conductor);
     return { conductor, ...agentHapp };
   }
 

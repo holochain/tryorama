@@ -35,10 +35,10 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   const scenario = new LocalScenario();
   t.ok(scenario.uid);
 
-  const alice = await scenario.addPlayerWithDnas([
+  const alice = await scenario.addPlayerWithHapp([
     { path: FIXTURE_DNA_URL.pathname },
   ]);
-  const bob = await scenario.addPlayerWithDnas([
+  const bob = await scenario.addPlayerWithHapp([
     { path: FIXTURE_DNA_URL.pathname },
   ]);
 
@@ -63,7 +63,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
 test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
   const scenario = new LocalScenario();
-  const [alice, bob] = await scenario.addPlayersWithDnas([
+  const [alice, bob] = await scenario.addPlayersWithHapps([
     [{ path: FIXTURE_DNA_URL.pathname }],
     [{ path: FIXTURE_DNA_URL.pathname }],
   ]);
@@ -117,7 +117,7 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     };
   });
 
-  const [alice, bob] = await scenario.addPlayersWithDnas(
+  const [alice, bob] = await scenario.addPlayersWithHapps(
     [dna, dna],
     [signalHandlerAlice, signalHandlerBob]
   );
