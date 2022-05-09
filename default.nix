@@ -9,6 +9,5 @@ nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
   packages = with nixpkgs; [
     niv
-    pkgs.darwin.apple_sdk.frameworks.Security
   ];
 }
