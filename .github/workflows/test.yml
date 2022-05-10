@@ -14,6 +14,23 @@ jobs:
     - name: Fetch source code
       uses: actions/checkout@v2
 
+    - name: Cache nix env take N+1
+      uses: actions/cache@v2
+      with:
+        path: |
+          # See https://github.com/actions/cache/pull/726
+          /nix/store/**
+          # Missing something?
+          /nix/var/nix/*/*
+          /nix/var/nix/db/*
+          /nix/var/nix/db/*/**
+          !/nix/var/nix/daemon-socket/socket
+          !/nix/var/nix/userpool/*
+          !/nix/var/nix/gc.lock
+          !/nix/var/nix/db/big-lock
+          !/nix/var/nix/db/reserved
+        key: ${{ runner.os }}-nix-store
+
     - name: Use Nix
       uses: cachix/install-nix-action@v16
       with:

@@ -2,12 +2,12 @@
 name = "test_wasm"
 version = "0.0.1"
 authors = [ "thedavidmeister", "thedavidmeister@gmail.com" ]
-edition = "2018"
+edition = "2021"
 
 [lib]
 name = "test_wasm"
 crate-type = [ "cdylib", "rlib" ]
 
 [dependencies]
-hdk = "0.0.117"
+hdk = "0.0.126"
 serde = "*"
