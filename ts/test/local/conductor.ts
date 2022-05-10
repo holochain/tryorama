@@ -179,7 +179,7 @@ test.only("Local Conductor - Create and read an entry using the entry zome, 2 co
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  await pause(1000);
+  await pause(5000);
 
   const readEntryResponse: typeof entryContent =
     await bobHapps.cells[0].callZome({
