@@ -60,12 +60,12 @@ export class TryCpScenario implements Scenario {
     signalHandler?: AppSignalCb
   ): Promise<TryCpPlayer> {
     const conductor = await this.addConductor(signalHandler);
-    const [agentCells] = await conductor.installAgentsHapps({
+    const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas: [dnas],
       uid: this.uid,
       signalHandler,
     });
-    return { conductor, ...agentCells };
+    return { conductor, ...agentHapp };
   }
 
   async addPlayersWithHapps(

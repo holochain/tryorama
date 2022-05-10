@@ -38,11 +38,11 @@ export class LocalScenario implements Scenario {
     signalHandler?: AppSignalCb
   ): Promise<LocalPlayer> {
     const conductor = await this.addConductor(signalHandler);
-    const [agentCells] = await conductor.installAgentsHapps({
+    const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas: [dnas],
       uid: this.uid,
     });
-    return { conductor, ...agentCells };
+    return { conductor, ...agentHapp };
   }
 
   async addPlayersWithHapps(
