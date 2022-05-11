@@ -4,6 +4,8 @@
 
 ## TryCpConductorOptions.timeout property
 
+Timeout for requests to Admin and App API.
+
 <b>Signature:</b>
 
 ```typescript

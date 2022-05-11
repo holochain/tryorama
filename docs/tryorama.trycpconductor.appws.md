@@ -4,6 +4,8 @@
 
 ## TryCpConductor.appWs() method
 
+Get all App API methods.
+
 <b>Signature:</b>
 
 ```typescript
@@ -15,4 +17,6 @@ appWs(): {
 <b>Returns:</b>
 
 { appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest) =&gt; Promise&lt;T&gt;; }
+
+The App API web socket.
 

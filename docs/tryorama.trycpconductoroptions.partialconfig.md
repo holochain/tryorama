@@ -4,6 +4,8 @@
 
 ## TryCpConductorOptions.partialConfig property
 
+Configuration for the conductor (optional).
+
 <b>Signature:</b>
 
 ```typescript

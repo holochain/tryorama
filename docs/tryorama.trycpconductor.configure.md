@@ -4,6 +4,8 @@
 
 ## TryCpConductor.configure() method
 
+Create conductor configuration.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ configure(partialConfig?: string): Promise<null>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  partialConfig | string |  |
+|  partialConfig | string | The configuration to add to the default configuration. |
 
 <b>Returns:</b>
 
 Promise&lt;null&gt;
+
+An empty success response.
 

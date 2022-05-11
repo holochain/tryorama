@@ -4,7 +4,7 @@
 
 ## TryCpConductor.installAgentsHapps() method
 
-Helper to install DNAs and create agents. Given an array of DNAs for each agent to be created, an agentPubKey is generated and the DNAs for the agent are installed. and handles to the conductor, the cells and the agents are returned.
+Install a set of DNAs for multiple agents into the conductor.
 
 <b>Signature:</b>
 
@@ -20,11 +20,11 @@ installAgentsHapps(options: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { agentsDnas: DnaSource\[\]\[\]; signalHandler?: AppSignalCb; uid?: string; } | An array of DNA sources for each agent (= two-dimensional array) and optionally a unique id of the hApp. |
+|  options | { agentsDnas: DnaSource\[\]\[\]; signalHandler?: AppSignalCb; uid?: string; } | An array of DNAs for each agent, resulting in a 2-dimensional array, and a UID for the DNAs (optional). |
 
 <b>Returns:</b>
 
 Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt;
 
-An array of agents and handles to their created cells (= two- dimensional array).
+An array with each agent's hApp.
 

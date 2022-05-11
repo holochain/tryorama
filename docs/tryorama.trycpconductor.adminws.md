@@ -4,6 +4,8 @@
 
 ## TryCpConductor.adminWs() method
 
+Get all Admin API methods.
+
 <b>Signature:</b>
 
 ```typescript
@@ -33,4 +35,6 @@ adminWs(): {
 <b>Returns:</b>
 
 { addAgentInfo: (request: AddAgentInfoRequest) =&gt; Promise&lt;import("..").[AdminApiResponseAgentInfoAdded](./tryorama.adminapiresponseagentinfoadded.md)<!-- -->&gt;; attachAppInterface: (request?: AttachAppInterfaceRequest \| undefined) =&gt; Promise&lt;{ port: number; }&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").CellId&gt;; disableApp: (request: DisableAppRequest) =&gt; Promise&lt;null&gt;; dumpFullState: (request: DumpFullStateRequest) =&gt; Promise&lt;FullStateDump&gt;; dumpState: (request: DumpStateRequest) =&gt; Promise&lt;\[FullStateDump, string\]&gt;; enableApp: (request: EnableAppRequest) =&gt; Promise&lt;import("@holochain/client").EnableAppResponse&gt;; generateAgentPubKey: () =&gt; Promise&lt;AgentPubKey&gt;; installApp: (data: InstallAppRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; installAppBundle: (data: InstallAppBundleRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; listAppInterfaces: () =&gt; Promise&lt;import("@holochain/client").ListAppInterfacesResponse&gt;; listApps: (request: ListAppsRequest) =&gt; Promise&lt;import("@holochain/client").ListAppsResponse&gt;; listCellIds: () =&gt; Promise&lt;import("@holochain/client").ListCellIdsResponse&gt;; listDnas: () =&gt; Promise&lt;import("@holochain/client").ListDnasResponse&gt;; registerDna: (request: RegisterDnaRequest &amp; DnaSource) =&gt; Promise&lt;DnaHash&gt;; requestAgentInfo: (req: RequestAgentInfoRequest) =&gt; Promise&lt;import("@holochain/client").RequestAgentInfoResponse&gt;; startApp: (request: StartAppRequest) =&gt; Promise&lt;boolean&gt;; uninstallApp: (request: UninstallAppRequest) =&gt; Promise&lt;null&gt;; }
+
+The Admin API web socket.
 

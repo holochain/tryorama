@@ -4,6 +4,8 @@
 
 ## cleanAllTryCpConductors variable
 
+Run the `reset` command on the TryCP server to delete all conductor data.
+
 <b>Signature:</b>
 
 ```typescript

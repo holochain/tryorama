@@ -4,6 +4,8 @@
 
 ## DEFAULT\_PARTIAL\_PLAYER\_CONFIG variable
 
+The default partial config for a TryCP conductor.
+
 <b>Signature:</b>
 
 ```typescript

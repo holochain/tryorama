@@ -42,6 +42,11 @@ import { enableAndGetAgentHapp } from "../../common";
 
 const logger = makeLogger("TryCP conductor");
 
+/**
+ * The default partial config for a TryCP conductor.
+ *
+ * @public
+ */
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
@@ -57,10 +62,33 @@ export type ConductorId = string;
  * @public
  */
 export interface TryCpConductorOptions {
+  /**
+   * Identifier for the conductor (optional).
+   */
   id?: ConductorId;
+
+  /**
+   * Configuration for the conductor (optional).
+   */
   partialConfig?: string;
+
+  /**
+   * Start up conductor after creation.
+   *
+   * default: true
+   */
   startup?: boolean;
+
+  /**
+   * Log level of the conductor (optional).
+   *
+   * default: "info"
+   */
   logLevel?: TryCpConductorLogLevel;
+
+  /**
+   * Timeout for requests to Admin and App API.
+   */
   timeout?: number;
 }
 
@@ -68,9 +96,6 @@ export interface TryCpConductorOptions {
  * The function to create a TryCP Conductor (aka "Player").
  *
  * @param serverUrl - The URL of the TryCP server to connect to.
- * @param options - Optional parameters to name, configure and start the
- * Conductor as well as clean all existing conductors. `cleanAllConductors` is
- * `true` by default, as `startup`.
  * @returns A configured Conductor instance.
  *
  * @public
@@ -90,6 +115,8 @@ export const createTryCpConductor = async (
 };
 
 /**
+ * A class to manage a conductor running on a TryCP server.
+ *
  * @public
  */
 export class TryCpConductor implements Conductor {
@@ -102,6 +129,12 @@ export class TryCpConductor implements Conductor {
     this.id = id || `conductor-${uuidv4()}`;
   }
 
+  /**
+   * Create conductor configuration.
+   *
+   * @param partialConfig - The configuration to add to the default configuration.
+   * @returns An empty success response.
+   */
   async configure(partialConfig?: string) {
     const response = await this.tryCpClient.call({
       type: "configure_player",
@@ -115,7 +148,8 @@ export class TryCpConductor implements Conductor {
   /**
    * Start a configured conductor.
    *
-   * @param log_level - Defaults to "info" on the TryCP server.
+   * @param options - Log level of the conductor. Defaults to "info".
+   * @returns An empty success response.
    *
    * @public
    */
@@ -129,6 +163,13 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Disconnect App interface and shut down the conductor.
+   *
+   * @returns An empty success response.
+   *
+   * @public
+   */
   async shutDown() {
     if (this.appInterfacePort) {
       const response = await this.disconnectAppInterface();
@@ -142,12 +183,22 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Disconnect the TryCP client from the TryCP server.
+   *
+   * @returns The web socket close code.
+   */
   async disconnectClient() {
     const response = await this.tryCpClient.close();
     assert(response === 1000);
     return response;
   }
 
+  /**
+   * Download a DNA from a URL to the server's file system.
+   *
+   * @returns The relative path to the downloaded DNA file.
+   */
   async downloadDna(url: URL) {
     const response = await this.tryCpClient.call({
       type: "download_dna",
@@ -157,6 +208,12 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Upload a DNA file from the local file system to the server.
+   *
+   * @param dnaContent - The DNA as binary content.
+   * @returns The relative path to the saved DNA file.
+   */
   async saveDna(dnaContent: Buffer) {
     const response = await this.tryCpClient.call({
       type: "save_dna",
@@ -167,6 +224,12 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Connect a web socket to the App API.
+   *
+   * @param signalHandler - A callback function to handle signals.
+   * @returns An empty success response.
+   */
   async connectAppInterface(signalHandler?: AppSignalCb) {
     assert(this.appInterfacePort, "no app interface attached to conductor");
     const response = await this.tryCpClient.call({
@@ -178,6 +241,11 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Disconnect the web socket from the App API.
+   *
+   * @returns An empty success response.
+   */
   async disconnectAppInterface() {
     assert(this.appInterfacePort, "no app interface attached");
     const response = await this.tryCpClient.call({
@@ -188,6 +256,14 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Send a call to the Admin API.
+   *
+   * @param message - The call to send to the Admin API.
+   * @returns The response of the call.
+   *
+   * @internal
+   */
   private async callAdminApi(message: RequestAdminInterfaceData) {
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
@@ -199,7 +275,18 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Get all Admin API methods.
+   *
+   * @returns The Admin API web socket.
+   */
   adminWs() {
+    /**
+     * Upload and register a DNA file.
+     *
+     * @param request - {@link RegisterDnaRequest} & {@link DnaSource}
+     * @returns The registered DNA's {@link HoloHash}.
+     */
     const registerDna = async (
       request: RegisterDnaRequest & DnaSource
     ): Promise<DnaHash> => {
@@ -211,6 +298,11 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * Generate a new agent pub key.
+     *
+     * @returns The generated {@link AgentPubKey}.
+     */
     const generateAgentPubKey = async (): Promise<AgentPubKey> => {
       const response = await this.callAdminApi({
         type: "generate_agent_pub_key",
@@ -219,6 +311,12 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * Install a hApp consisting of a set of DNAs.
+     *
+     * @param data - {@link InstallAppRequest}.
+     * @returns {@link InstalledAppInfo}
+     */
     const installApp = async (data: InstallAppRequest) => {
       const response = await this.callAdminApi({
         type: "install_app",
@@ -228,6 +326,11 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * Install a bundled hApp.
+     *
+     * @param data - {@link InstallAppBundleRequest}.
+     */
     const installAppBundle = async (data: InstallAppBundleRequest) => {
       const response = await this.callAdminApi({
         type: "install_app_bundle",
@@ -237,6 +340,11 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * Enable an installed hApp.
+     *
+     * @param request -{@link EnableAppRequest}.
+     */
     const enableApp = async (request: EnableAppRequest) => {
       const response = await this.callAdminApi({
         type: "enable_app",
@@ -246,6 +354,11 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * Disable an installed hApp.
+     *
+     * @param request -{@link DisableAppRequest}.
+     */
     const disableApp = async (request: DisableAppRequest) => {
       const response = await this.callAdminApi({
         type: "disable_app",
@@ -255,6 +368,12 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * Start an installed hApp.
+     *
+     * @param request -{@link StartAppRequest}.
+     * @returns {@link StartAppResponse}.
+     */
     const startApp = async (request: StartAppRequest) => {
       const response = await this.callAdminApi({
         type: "start_app",
@@ -264,6 +383,12 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * Uninstall an installed hApp.
+     *
+     * @param request - {@link UninstallAppRequest}.
+     * @returns {@link UninstallAppResponse}.
+     */
     const uninstallApp = async (request: UninstallAppRequest) => {
       const response = await this.callAdminApi({
         type: "uninstall_app",
@@ -273,6 +398,12 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * Clone an existing cell.
+     *
+     * @param request - {@link CreateCloneCellRequest}.
+     * @returns The {@link CellId} of the cloned cell.
+     */
     const createCloneCell = async (request: CreateCloneCellRequest) => {
       const response = await this.callAdminApi({
         type: "create_clone_cell",
@@ -377,9 +508,8 @@ export class TryCpConductor implements Conductor {
     /**
      * Request a full state dump of the cell's source chain.
      *
-     * @param request - The cell id for which state should be dumped and
-     * optionally a DHT Ops cursor.
-     * @returns The cell's state as JSON.
+     * @param request - {@link DumpFullStateRequest}
+     * @returns {@link FullStateDump}.
      *
      * @public
      */
@@ -432,6 +562,11 @@ export class TryCpConductor implements Conductor {
     return response;
   }
 
+  /**
+   * Get all App API methods.
+   *
+   * @returns The App API web socket.
+   */
   appWs() {
     /**
      * Request info of an installed hApp.
@@ -475,17 +610,11 @@ export class TryCpConductor implements Conductor {
   }
 
   /**
-   * Helper to install DNAs and create agents. Given an array of DNAs for each
-   * agent to be created, an agentPubKey is generated and the DNAs for the
-   * agent are installed.  and handles to the
-   * conductor, the cells and the agents are returned.
+   * Install a set of DNAs for multiple agents into the conductor.
    *
-   * @param options - An array of DNA sources for each agent (= two-dimensional
-   * array) and optionally a unique id of the hApp.
-   * @returns An array of agents and handles to their created cells (= two-
-   * dimensional array).
-   *
-   * @public
+   * @param options - An array of DNAs for each agent, resulting in a
+   * 2-dimensional array, and a UID for the DNAs (optional).
+   * @returns An array with each agent's hApp.
    */
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
@@ -561,6 +690,13 @@ export class TryCpConductor implements Conductor {
     return agentsHapps;
   }
 
+  /**
+   * Install a hApp bundle into the conductor.
+   *
+   * @param appBundleSource - The bundle or path to the bundle.
+   * @param options - {@link HappBundleOptions} for the hApp bundle (optional).
+   * @returns A hApp for the agent.
+   */
   async installHappBundle(
     appBundleSource: AppBundleSource,
     options?: {
@@ -594,6 +730,14 @@ export class TryCpConductor implements Conductor {
   }
 }
 
+/**
+ * Run the `reset` command on the TryCP server to delete all conductor data.
+ *
+ * @param serverUrl - The TryCP server to connect to.
+ * @returns An empty success response.
+ *
+ * @public
+ */
 export const cleanAllTryCpConductors = async (serverUrl: URL) => {
   const client = await TryCpClient.create(serverUrl);
   const response = await client.call({ type: "reset" });

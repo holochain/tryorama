@@ -4,6 +4,8 @@
 
 ## TryCpConductor.saveDna() method
 
+Upload a DNA file from the local file system to the server.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ saveDna(dnaContent: Buffer): Promise<string>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  dnaContent | Buffer |  |
+|  dnaContent | Buffer | The DNA as binary content. |
 
 <b>Returns:</b>
 
 Promise&lt;string&gt;
+
+The relative path to the saved DNA file.
 

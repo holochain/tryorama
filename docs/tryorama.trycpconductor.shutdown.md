@@ -4,6 +4,8 @@
 
 ## TryCpConductor.shutDown() method
 
+Disconnect App interface and shut down the conductor.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,6 @@ shutDown(): Promise<null>;
 <b>Returns:</b>
 
 Promise&lt;null&gt;
+
+An empty success response.
 

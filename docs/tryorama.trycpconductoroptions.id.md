@@ -4,6 +4,8 @@
 
 ## TryCpConductorOptions.id property
 
+Identifier for the conductor (optional).
+
 <b>Signature:</b>
 
 ```typescript

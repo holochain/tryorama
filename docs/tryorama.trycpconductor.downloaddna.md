@@ -4,6 +4,8 @@
 
 ## TryCpConductor.downloadDna() method
 
+Download a DNA from a URL to the server's file system.
+
 <b>Signature:</b>
 
 ```typescript
@@ -19,4 +21,6 @@ downloadDna(url: URL): Promise<string>;
 <b>Returns:</b>
 
 Promise&lt;string&gt;
+
+The relative path to the downloaded DNA file.
 

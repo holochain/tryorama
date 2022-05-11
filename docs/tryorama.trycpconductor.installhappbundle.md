@@ -4,6 +4,8 @@
 
 ## TryCpConductor.installHappBundle() method
 
+Install a hApp bundle into the conductor.
+
 <b>Signature:</b>
 
 ```typescript
@@ -19,10 +21,12 @@ installHappBundle(appBundleSource: AppBundleSource, options?: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  appBundleSource | AppBundleSource |  |
-|  options | { agentPubKey?: AgentPubKey; installedAppId?: string; uid?: string; membraneProofs?: Record&lt;string, MembraneProof&gt;; } |  |
+|  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
+|  options | { agentPubKey?: AgentPubKey; installedAppId?: string; uid?: string; membraneProofs?: Record&lt;string, MembraneProof&gt;; } | [HappBundleOptions](./tryorama.happbundleoptions.md) for the hApp bundle (optional). |
 
 <b>Returns:</b>
 
 Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->&gt;
+
+A hApp for the agent.
 

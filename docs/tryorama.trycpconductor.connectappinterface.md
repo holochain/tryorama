@@ -4,6 +4,8 @@
 
 ## TryCpConductor.connectAppInterface() method
 
+Connect a web socket to the App API.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ connectAppInterface(signalHandler?: AppSignalCb): Promise<null>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signalHandler | AppSignalCb |  |
+|  signalHandler | AppSignalCb | A callback function to handle signals. |
 
 <b>Returns:</b>
 
 Promise&lt;null&gt;
+
+An empty success response.
 

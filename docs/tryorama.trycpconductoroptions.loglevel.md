@@ -4,6 +4,10 @@
 
 ## TryCpConductorOptions.logLevel property
 
+Log level of the conductor (optional).
+
+default: "info"
+
 <b>Signature:</b>
 
 ```typescript

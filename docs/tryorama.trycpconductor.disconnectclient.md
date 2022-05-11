@@ -4,6 +4,8 @@
 
 ## TryCpConductor.disconnectClient() method
 
+Disconnect the TryCP client from the TryCP server.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,6 @@ disconnectClient(): Promise<number>;
 <b>Returns:</b>
 
 Promise&lt;number&gt;
+
+The web socket close code.
 

@@ -15,9 +15,9 @@ export interface TryCpConductorOptions
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [id?](./tryorama.trycpconductoroptions.id.md) | [ConductorId](./tryorama.conductorid.md) | <i>(Optional)</i> |
-|  [logLevel?](./tryorama.trycpconductoroptions.loglevel.md) | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | <i>(Optional)</i> |
-|  [partialConfig?](./tryorama.trycpconductoroptions.partialconfig.md) | string | <i>(Optional)</i> |
-|  [startup?](./tryorama.trycpconductoroptions.startup.md) | boolean | <i>(Optional)</i> |
-|  [timeout?](./tryorama.trycpconductoroptions.timeout.md) | number | <i>(Optional)</i> |
+|  [id?](./tryorama.trycpconductoroptions.id.md) | [ConductorId](./tryorama.conductorid.md) | <i>(Optional)</i> Identifier for the conductor (optional). |
+|  [logLevel?](./tryorama.trycpconductoroptions.loglevel.md) | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | <i>(Optional)</i> Log level of the conductor (optional).<!-- -->default: "info" |
+|  [partialConfig?](./tryorama.trycpconductoroptions.partialconfig.md) | string | <i>(Optional)</i> Configuration for the conductor (optional). |
+|  [startup?](./tryorama.trycpconductoroptions.startup.md) | boolean | <i>(Optional)</i> Start up conductor after creation.<!-- -->default: true |
+|  [timeout?](./tryorama.trycpconductoroptions.timeout.md) | number | <i>(Optional)</i> Timeout for requests to Admin and App API. |
 

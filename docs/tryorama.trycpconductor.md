@@ -4,6 +4,7 @@
 
 ## TryCpConductor class
 
+A class to manage a conductor running on a TryCP server.
 
 <b>Signature:</b>
 
@@ -22,16 +23,16 @@ export declare class TryCpConductor implements Conductor
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [adminWs()](./tryorama.trycpconductor.adminws.md) |  |  |
-|  [appWs()](./tryorama.trycpconductor.appws.md) |  |  |
-|  [configure(partialConfig)](./tryorama.trycpconductor.configure.md) |  |  |
-|  [connectAppInterface(signalHandler)](./tryorama.trycpconductor.connectappinterface.md) |  |  |
-|  [disconnectAppInterface()](./tryorama.trycpconductor.disconnectappinterface.md) |  |  |
-|  [disconnectClient()](./tryorama.trycpconductor.disconnectclient.md) |  |  |
-|  [downloadDna(url)](./tryorama.trycpconductor.downloaddna.md) |  |  |
-|  [installAgentsHapps(options)](./tryorama.trycpconductor.installagentshapps.md) |  | Helper to install DNAs and create agents. Given an array of DNAs for each agent to be created, an agentPubKey is generated and the DNAs for the agent are installed. and handles to the conductor, the cells and the agents are returned. |
-|  [installHappBundle(appBundleSource, options)](./tryorama.trycpconductor.installhappbundle.md) |  |  |
-|  [saveDna(dnaContent)](./tryorama.trycpconductor.savedna.md) |  |  |
-|  [shutDown()](./tryorama.trycpconductor.shutdown.md) |  |  |
+|  [adminWs()](./tryorama.trycpconductor.adminws.md) |  | Get all Admin API methods. |
+|  [appWs()](./tryorama.trycpconductor.appws.md) |  | Get all App API methods. |
+|  [configure(partialConfig)](./tryorama.trycpconductor.configure.md) |  | Create conductor configuration. |
+|  [connectAppInterface(signalHandler)](./tryorama.trycpconductor.connectappinterface.md) |  | Connect a web socket to the App API. |
+|  [disconnectAppInterface()](./tryorama.trycpconductor.disconnectappinterface.md) |  | Disconnect the web socket from the App API. |
+|  [disconnectClient()](./tryorama.trycpconductor.disconnectclient.md) |  | Disconnect the TryCP client from the TryCP server. |
+|  [downloadDna(url)](./tryorama.trycpconductor.downloaddna.md) |  | Download a DNA from a URL to the server's file system. |
+|  [installAgentsHapps(options)](./tryorama.trycpconductor.installagentshapps.md) |  | Install a set of DNAs for multiple agents into the conductor. |
+|  [installHappBundle(appBundleSource, options)](./tryorama.trycpconductor.installhappbundle.md) |  | Install a hApp bundle into the conductor. |
+|  [saveDna(dnaContent)](./tryorama.trycpconductor.savedna.md) |  | Upload a DNA file from the local file system to the server. |
+|  [shutDown()](./tryorama.trycpconductor.shutdown.md) |  | Disconnect App interface and shut down the conductor. |
 |  [startUp(options)](./tryorama.trycpconductor.startup.md) |  | Start a configured conductor. |
 

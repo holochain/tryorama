@@ -4,6 +4,8 @@
 
 ## TryCpConductor.disconnectAppInterface() method
 
+Disconnect the web socket from the App API.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,6 @@ disconnectAppInterface(): Promise<null>;
 <b>Returns:</b>
 
 Promise&lt;null&gt;
+
+An empty success response.
 
