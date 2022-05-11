@@ -89,9 +89,6 @@ export interface Scenario {
   cleanUp(): Promise<void>;
 }
 
-export interface Player {
-  agentPubKey: Uint8Array;
-  cells: CallableCell[];
-  namedCells: Map<RoleId, CallableCell>;
+export interface Player extends AgentHapp {
   conductor: Conductor;
 }
