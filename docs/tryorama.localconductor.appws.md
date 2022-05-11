@@ -4,6 +4,8 @@
 
 ## LocalConductor.appWs() method
 
+Get all App API methods.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,6 @@ appWs(): AppWebsocket;
 <b>Returns:</b>
 
 AppWebsocket
+
+The App API web socket.
 

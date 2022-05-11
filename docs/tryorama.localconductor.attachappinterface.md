@@ -4,6 +4,8 @@
 
 ## LocalConductor.attachAppInterface() method
 
+Attach a web socket to the App API.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,7 +16,7 @@ attachAppInterface(request?: AttachAppInterfaceRequest): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  request | AttachAppInterfaceRequest |  |
+|  request | AttachAppInterfaceRequest | Specify a port for the web socket (optional). |
 
 <b>Returns:</b>
 

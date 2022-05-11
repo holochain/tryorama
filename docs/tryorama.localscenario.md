@@ -4,6 +4,8 @@
 
 ## LocalScenario class
 
+An abstraction of a test scenario to write tests against Holochain hApps.
+
 <b>Signature:</b>
 
 ```typescript
@@ -15,7 +17,7 @@ export declare class LocalScenario implements Scenario
 
 |  Constructor | Modifiers | Description |
 |  --- | --- | --- |
-|  [(constructor)(options)](./tryorama.localscenario._constructor_.md) |  | Constructs a new instance of the <code>LocalScenario</code> class |
+|  [(constructor)(options)](./tryorama.localscenario._constructor_.md) |  | LocalScenario constructor. |
 
 ## Properties
 
@@ -28,10 +30,11 @@ export declare class LocalScenario implements Scenario
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [addConductor(signalHandler)](./tryorama.localscenario.addconductor.md) |  |  |
-|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.localscenario.addplayerswithhappbundles.md) |  |  |
-|  [addPlayersWithHapps(playersDnas, signalHandlers)](./tryorama.localscenario.addplayerswithhapps.md) |  |  |
-|  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.localscenario.addplayerwithhapp.md) |  |  |
-|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.localscenario.addplayerwithhappbundle.md) |  |  |
-|  [cleanUp()](./tryorama.localscenario.cleanup.md) |  |  |
+|  [addConductor(signalHandler)](./tryorama.localscenario.addconductor.md) |  | Create and add a conductor to the scenario. |
+|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.localscenario.addplayerswithhappbundles.md) |  | Create and add multiple players to the scenario, with a hApp bundle installed for each player. |
+|  [addPlayersWithHapps(playersDnas, signalHandlers)](./tryorama.localscenario.addplayerswithhapps.md) |  | Create and add multiple players to the scenario, with a set of DNAs installed for each player. |
+|  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.localscenario.addplayerwithhapp.md) |  | Create and add a single player to the scenario, with a set of DNAs installed. |
+|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.localscenario.addplayerwithhappbundle.md) |  | Create and add a single player to the scenario, with a hApp bundle installed. |
+|  [cleanUp()](./tryorama.localscenario.cleanup.md) |  | Shut down and delete all conductors in the scenario. |
+|  [shutDown()](./tryorama.localscenario.shutdown.md) |  | Shut down all conductors in the scenario. |
 

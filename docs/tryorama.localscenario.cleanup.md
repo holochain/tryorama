@@ -4,6 +4,8 @@
 
 ## LocalScenario.cleanUp() method
 
+Shut down and delete all conductors in the scenario.
+
 <b>Signature:</b>
 
 ```typescript

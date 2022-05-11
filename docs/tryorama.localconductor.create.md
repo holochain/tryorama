@@ -4,6 +4,8 @@
 
 ## LocalConductor.create() method
 
+Factory method to create a local conductor.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ static create(timeout?: number): Promise<LocalConductor>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  timeout | number |  |
+|  timeout | number | Timeout for requests to Admin and App API. |
 
 <b>Returns:</b>
 
 Promise&lt;[LocalConductor](./tryorama.localconductor.md)<!-- -->&gt;
+
+A configured instance of local conductor, not yet running.
 

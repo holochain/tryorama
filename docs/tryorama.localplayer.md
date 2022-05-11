@@ -4,6 +4,7 @@
 
 ## LocalPlayer interface
 
+A player with a [LocalConductor](./tryorama.localconductor.md) property.
 
 <b>Signature:</b>
 

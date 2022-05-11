@@ -4,6 +4,7 @@
 
 ## LocalConductorOptions interface
 
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,6 +15,6 @@ export interface LocalConductorOptions
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [startup?](./tryorama.localconductoroptions.startup.md) | boolean | <i>(Optional)</i> |
-|  [timeout?](./tryorama.localconductoroptions.timeout.md) | number | <i>(Optional)</i> |
+|  [startup?](./tryorama.localconductoroptions.startup.md) | boolean | <i>(Optional)</i> Start up conductor after creation.<!-- -->default: true |
+|  [timeout?](./tryorama.localconductoroptions.timeout.md) | number | <i>(Optional)</i> Timeout for requests to Admin and App API. |
 

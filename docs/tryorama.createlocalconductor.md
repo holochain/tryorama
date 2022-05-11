@@ -4,7 +4,7 @@
 
 ## createLocalConductor variable
 
-The function to create a Local Conductor. It starts a sandbox conductor via the Holochain CLI.
+The function to create a local conductor. It starts a sandbox conductor via the Holochain CLI.
 
 <b>Signature:</b>
 

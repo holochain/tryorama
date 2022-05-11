@@ -4,6 +4,8 @@
 
 ## LocalConductor.installHappBundle() method
 
+Install a hApp bundle into the conductor.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,10 +16,12 @@ installHappBundle(appBundleSource: AppBundleSource, options?: HappBundleOptions)
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  appBundleSource | AppBundleSource |  |
-|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) |  |
+|  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
+|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) | Options for the hApp bundle (optional). |
 
 <b>Returns:</b>
 
 Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->&gt;
+
+A hApp for the agent.
 

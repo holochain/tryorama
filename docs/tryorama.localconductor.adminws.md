@@ -4,6 +4,8 @@
 
 ## LocalConductor.adminWs() method
 
+Get all Admin API methods.
+
 <b>Signature:</b>
 
 ```typescript
@@ -12,4 +14,6 @@ adminWs(): AdminWebsocket;
 <b>Returns:</b>
 
 AdminWebsocket
+
+The Admin API web socket.
 

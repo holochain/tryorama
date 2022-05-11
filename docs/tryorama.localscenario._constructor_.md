@@ -4,7 +4,7 @@
 
 ## LocalScenario.(constructor)
 
-Constructs a new instance of the `LocalScenario` class
+LocalScenario constructor.
 
 <b>Signature:</b>
 
@@ -18,5 +18,5 @@ constructor(options?: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { timeout?: number; } |  |
+|  options | { timeout?: number; } | Timeout for requests to Admin and App API calls. |
 

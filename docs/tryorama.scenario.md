@@ -20,4 +20,5 @@ export interface Scenario
 |  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.scenario.addplayerwithhapp.md) |  |
 |  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.scenario.addplayerwithhappbundle.md) |  |
 |  [cleanUp()](./tryorama.scenario.cleanup.md) |  |
+|  [shutDown()](./tryorama.scenario.shutdown.md) |  |
 

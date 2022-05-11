@@ -22,13 +22,25 @@ const logger = makeLogger("Local Conductor");
 const HOST_URL = new URL("ws://127.0.0.1");
 const DEFAULT_TIMEOUT = 15000;
 
+/**
+ * @public
+ */
 export interface LocalConductorOptions {
+  /**
+   * Start up conductor after creation.
+   *
+   * default: true
+   */
   startup?: boolean;
+
+  /**
+   * Timeout for requests to Admin and App API.
+   */
   timeout?: number;
 }
 
 /**
- * The function to create a Local Conductor. It starts a sandbox conductor via
+ * The function to create a local conductor. It starts a sandbox conductor via
  * the Holochain CLI.
  *
  * @returns A local conductor instance.
@@ -44,6 +56,8 @@ export const createLocalConductor = async (options?: LocalConductorOptions) => {
 };
 
 /**
+ * A class to manage a conductor running on localhost.
+ *
  * @public
  */
 export class LocalConductor implements Conductor {
@@ -65,6 +79,12 @@ export class LocalConductor implements Conductor {
     this.timeout = timeout ?? DEFAULT_TIMEOUT;
   }
 
+  /**
+   * Factory method to create a local conductor.
+   *
+   * @param timeout - Timeout for requests to Admin and App API.
+   * @returns A configured instance of local conductor, not yet running.
+   */
   static async create(timeout?: number) {
     const localConductor = new LocalConductor(timeout);
     const createConductorProcess = spawn("hc", [
@@ -94,6 +114,10 @@ export class LocalConductor implements Conductor {
     return createConductorPromise;
   }
 
+  /**
+   * Start the conductor and establish a web socket connection to the Admin
+   * API.
+   */
   async startUp() {
     assert(
       this.conductorDir,
@@ -103,7 +127,8 @@ export class LocalConductor implements Conductor {
       "hc",
       ["sandbox", "run", "-e", this.conductorDir],
       {
-        detached: true, // without this option, killing the process doesn't kill the conductor
+        detached: true, // create a process group; without this option, killing
+        // the process doesn't kill the conductor
       }
     );
     const startPromise = new Promise<void>((resolve, reject) => {
@@ -138,6 +163,9 @@ export class LocalConductor implements Conductor {
     await this.connectAdminWs();
   }
 
+  /**
+   * Close Admin and App API connections and kill the conductor process.
+   */
   async shutDown() {
     if (!this.conductorProcess) {
       logger.info("shut down conductor: conductor is not running");
@@ -177,6 +205,11 @@ export class LocalConductor implements Conductor {
     logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
   }
 
+  /**
+   * Attach a web socket to the App API.
+   *
+   * @param request - Specify a port for the web socket (optional).
+   */
   async attachAppInterface(request?: AttachAppInterfaceRequest) {
     request = request ?? {
       port: await getPort({ port: portNumbers(30000, 40000) }),
@@ -186,6 +219,11 @@ export class LocalConductor implements Conductor {
     this.appApiUrl.port = port.toString();
   }
 
+  /**
+   * Connect a web socket to the App API.
+   *
+   * @param signalHandler - A callback function to handle signals.
+   */
   async connectAppInterface(signalHandler?: AppSignalCb) {
     assert(
       this.appApiUrl.port,
@@ -200,16 +238,33 @@ export class LocalConductor implements Conductor {
     );
   }
 
+  /**
+   * Get all Admin API methods.
+   *
+   * @returns The Admin API web socket.
+   */
   adminWs() {
     assert(this._adminWs, "admin ws has not been connected");
     return this._adminWs;
   }
 
+  /**
+   * Get all App API methods.
+   *
+   * @returns The App API web socket.
+   */
   appWs() {
     assert(this._appWs, "app ws has not been connected");
     return this._appWs;
   }
 
+  /**
+   * Install a set of DNAs for multiple agents into the conductor.
+   *
+   * @param options - An array of DNAs for each agent, resulting in a
+   * 2-dimensional array, and a UID for the DNAs (optional).
+   * @returns An array with each agent's hApp.
+   */
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
     uid?: string;
@@ -268,6 +323,13 @@ export class LocalConductor implements Conductor {
     return agentsHapps;
   }
 
+  /**
+   * Install a hApp bundle into the conductor.
+   *
+   * @param appBundleSource - The bundle or path to the bundle.
+   * @param options - Options for the hApp bundle (optional).
+   * @returns A hApp for the agent.
+   */
   async installHappBundle(
     appBundleSource: AppBundleSource,
     options?: HappBundleOptions

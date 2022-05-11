@@ -7,8 +7,9 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type CellZomeCallRequest = Omit<CallZomeRequest, "cap_secret" | "cell_id" | "provenance"> & {
-    cap_secret?: Uint8Array;
-    provenance?: Uint8Array;
+export declare type CellZomeCallRequest = Omit<CallZomeRequest, "cap_secret" | "cell_id" | "payload" | "provenance"> & {
+    cap_secret?: CapSecret;
+    provenance?: AgentPubKey;
+    payload?: unknown;
 };
 ```

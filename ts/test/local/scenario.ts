@@ -11,6 +11,7 @@ import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 
 test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
   const scenario = new LocalScenario();
+
   const alice = await scenario.addPlayerWithHappBundle({
     path: FIXTURE_HAPP_URL.pathname,
   });

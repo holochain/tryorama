@@ -4,6 +4,8 @@
 
 ## LocalScenario.addPlayerWithHapp() method
 
+Create and add a single player to the scenario, with a set of DNAs installed.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,10 +16,12 @@ addPlayerWithHapp(dnas: DnaSource[], signalHandler?: AppSignalCb): Promise<Local
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  dnas | DnaSource\[\] |  |
-|  signalHandler | AppSignalCb |  |
+|  dnas | DnaSource\[\] | An array of DNAs. |
+|  signalHandler | AppSignalCb | A callback function to handle signals. |
 
 <b>Returns:</b>
 
 Promise&lt;[LocalPlayer](./tryorama.localplayer.md)<!-- -->&gt;
+
+A local player instance.
 

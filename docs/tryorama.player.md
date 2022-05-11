@@ -7,15 +7,13 @@
 <b>Signature:</b>
 
 ```typescript
-export interface Player 
+export interface Player extends AgentHapp 
 ```
+<b>Extends:</b> [AgentHapp](./tryorama.agenthapp.md)
 
 ## Properties
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [agentPubKey](./tryorama.player.agentpubkey.md) | Uint8Array |  |
-|  [cells](./tryorama.player.cells.md) | [CallableCell](./tryorama.callablecell.md)<!-- -->\[\] |  |
 |  [conductor](./tryorama.player.conductor.md) | [Conductor](./tryorama.conductor.md) |  |
-|  [namedCells](./tryorama.player.namedcells.md) | Map&lt;RoleId, InstalledCell&gt; |  |
 

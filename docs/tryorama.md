@@ -14,8 +14,8 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 
 |  Class | Description |
 |  --- | --- |
-|  [LocalConductor](./tryorama.localconductor.md) |  |
-|  [LocalScenario](./tryorama.localscenario.md) |  |
+|  [LocalConductor](./tryorama.localconductor.md) | A class to manage a conductor running on localhost. |
+|  [LocalScenario](./tryorama.localscenario.md) | An abstraction of a test scenario to write tests against Holochain hApps. |
 |  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server. |
 |  [TryCpConductor](./tryorama.trycpconductor.md) |  |
 |  [TryCpScenario](./tryorama.trycpscenario.md) |  |
@@ -51,7 +51,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [Conductor](./tryorama.conductor.md) |  |
 |  [HappBundleOptions](./tryorama.happbundleoptions.md) |  |
 |  [LocalConductorOptions](./tryorama.localconductoroptions.md) |  |
-|  [LocalPlayer](./tryorama.localplayer.md) |  |
+|  [LocalPlayer](./tryorama.localplayer.md) | A player with a [LocalConductor](./tryorama.localconductor.md) property. |
 |  [Player](./tryorama.player.md) |  |
 |  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) |  |
 |  [RequestAppInfo](./tryorama.requestappinfo.md) |  |
@@ -77,7 +77,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  --- | --- |
 |  [cleanAllConductors](./tryorama.cleanallconductors.md) |  |
 |  [cleanAllTryCpConductors](./tryorama.cleanalltrycpconductors.md) |  |
-|  [createLocalConductor](./tryorama.createlocalconductor.md) | The function to create a Local Conductor. It starts a sandbox conductor via the Holochain CLI. |
+|  [createLocalConductor](./tryorama.createlocalconductor.md) | The function to create a local conductor. It starts a sandbox conductor via the Holochain CLI. |
 |  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor (aka "Player"). |
 |  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) |  |
 |  [pause](./tryorama.pause.md) |  |

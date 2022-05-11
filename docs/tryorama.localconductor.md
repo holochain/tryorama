@@ -4,6 +4,7 @@
 
 ## LocalConductor class
 
+A class to manage a conductor running on localhost.
 
 <b>Signature:</b>
 
@@ -16,13 +17,13 @@ export declare class LocalConductor implements Conductor
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [adminWs()](./tryorama.localconductor.adminws.md) |  |  |
-|  [appWs()](./tryorama.localconductor.appws.md) |  |  |
-|  [attachAppInterface(request)](./tryorama.localconductor.attachappinterface.md) |  |  |
-|  [connectAppInterface(signalHandler)](./tryorama.localconductor.connectappinterface.md) |  |  |
-|  [create(timeout)](./tryorama.localconductor.create.md) | <code>static</code> |  |
-|  [installAgentsHapps(options)](./tryorama.localconductor.installagentshapps.md) |  |  |
-|  [installHappBundle(appBundleSource, options)](./tryorama.localconductor.installhappbundle.md) |  |  |
-|  [shutDown()](./tryorama.localconductor.shutdown.md) |  |  |
-|  [startUp()](./tryorama.localconductor.startup.md) |  |  |
+|  [adminWs()](./tryorama.localconductor.adminws.md) |  | Get all Admin API methods. |
+|  [appWs()](./tryorama.localconductor.appws.md) |  | Get all App API methods. |
+|  [attachAppInterface(request)](./tryorama.localconductor.attachappinterface.md) |  | Attach a web socket to the App API. |
+|  [connectAppInterface(signalHandler)](./tryorama.localconductor.connectappinterface.md) |  | Connect a web socket to the App API. |
+|  [create(timeout)](./tryorama.localconductor.create.md) | <code>static</code> | Factory method to create a local conductor. |
+|  [installAgentsHapps(options)](./tryorama.localconductor.installagentshapps.md) |  | Install a set of DNAs for multiple agents into the conductor. |
+|  [installHappBundle(appBundleSource, options)](./tryorama.localconductor.installhappbundle.md) |  | Install a hApp bundle into the conductor. |
+|  [shutDown()](./tryorama.localconductor.shutdown.md) |  | Close Admin and App API connections and kill the conductor process. |
+|  [startUp()](./tryorama.localconductor.startup.md) |  | Start the conductor and establish a web socket connection to the Admin API. |
 

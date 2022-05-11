@@ -30,4 +30,5 @@ export declare class TryCpScenario implements Scenario
 |  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.trycpscenario.addplayerwithhappbundle.md) |  |  |
 |  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  |  |
 |  [create(serverUrl)](./tryorama.trycpscenario.create.md) | <code>static</code> |  |
+|  [shutDown()](./tryorama.trycpscenario.shutdown.md) |  |  |
 

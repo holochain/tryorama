@@ -4,6 +4,8 @@
 
 ## LocalScenario.addPlayersWithHapps() method
 
+Create and add multiple players to the scenario, with a set of DNAs installed for each player.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,10 +16,12 @@ addPlayersWithHapps(playersDnas: DnaSource[][], signalHandlers?: Array<AppSignal
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  playersDnas | DnaSource\[\]\[\] |  |
-|  signalHandlers | Array&lt;AppSignalCb \| undefined&gt; |  |
+|  playersDnas | DnaSource\[\]\[\] | An array of DNAs for each player, resulting in a 2-dimensional array. |
+|  signalHandlers | Array&lt;AppSignalCb \| undefined&gt; | An array of signal handlers for the players (optional). |
 
 <b>Returns:</b>
 
 Promise&lt;[LocalPlayer](./tryorama.localplayer.md)<!-- -->\[\]&gt;
+
+An array with the added players.
 
