@@ -4,6 +4,7 @@
 
 ## TryCpPlayer interface
 
+A player tied to a [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->.
 
 <b>Signature:</b>
 

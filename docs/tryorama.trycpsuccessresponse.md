@@ -4,12 +4,12 @@
 
 ## TryCpSuccessResponse type
 
-Value for successful responses from the TryCP server.
+Possible values a for success response from the TryCP server.
 
 <b>Signature:</b>
 
 ```typescript
-export declare type TryCpSuccessResponse = typeof TRYCP_SUCCESS_RESPONSE | string | _TryCpApiResponse;
+export declare type TryCpSuccessResponse = typeof TRYCP_SUCCESS_RESPONSE | string | TryCpApiResponse;
 ```
-<b>References:</b> [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md)
+<b>References:</b> [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md)<!-- -->, [TryCpApiResponse](./tryorama.trycpapiresponse.md)
 

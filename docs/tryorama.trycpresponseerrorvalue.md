@@ -4,6 +4,7 @@
 
 ## TryCpResponseErrorValue type
 
+Error response values.
 
 <b>Signature:</b>
 

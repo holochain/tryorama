@@ -8,7 +8,7 @@ import {
 import { HappBundleOptions, Player, Scenario } from "../types";
 
 /**
- * A player with a {@link LocalConductor} property.
+ * A player tied to a {@link LocalConductor}.
  *
  * @public
  */
@@ -17,7 +17,8 @@ export interface LocalPlayer extends Player {
 }
 
 /**
- * An abstraction of a test scenario to write tests against Holochain hApps.
+ * An abstraction of a test scenario to write tests against Holochain hApps,
+ * running on a local conductor.
  *
  * @public
  */
@@ -98,7 +99,7 @@ export class LocalScenario implements Scenario {
    * installed.
    *
    * @param appBundleSource - The bundle or path to the bundle.
-   * @param options - Options for the hApp bundle plus a signal handler
+   * @param options - {@link HappBundleOptions} plus a signal handler
    * (optional).
    * @returns A local player instance.
    */

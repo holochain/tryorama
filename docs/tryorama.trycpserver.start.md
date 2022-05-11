@@ -16,11 +16,11 @@ static start(port?: number): Promise<TryCpServer>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  port | number | the network port the server should listen on |
+|  port | number | The network port the server should listen on. |
 
 <b>Returns:</b>
 
 Promise&lt;[TryCpServer](./tryorama.trycpserver.md)<!-- -->&gt;
 
-a promise that resolves to the newly created server instance
+A promise that resolves to the newly created server instance.
 

@@ -36,8 +36,8 @@ export class TryCpServer {
   /**
    * Builds and starts a local TryCP server on the specified port.
    *
-   * @param port - the network port the server should listen on
-   * @returns a promise that resolves to the newly created server instance
+   * @param port - The network port the server should listen on.
+   * @returns A promise that resolves to the newly created server instance.
    */
   static async start(port = TRYCP_SERVER_PORT) {
     const tryCpServer = new TryCpServer(port);
@@ -74,7 +74,7 @@ export class TryCpServer {
   /**
    * Stops the server instance by killing the server process.
    *
-   * @returns a promise that resolves when the process has exited
+   * @returns A promise that resolves when the process has exited.
    */
   async stop() {
     const killPromise = new Promise<void>((resolve) => {

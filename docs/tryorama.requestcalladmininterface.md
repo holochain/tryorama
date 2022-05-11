@@ -4,6 +4,8 @@
 
 ## RequestCallAdminInterface interface
 
+Request a call to the admin interface of a conductor.
+
 <b>Signature:</b>
 
 ```typescript

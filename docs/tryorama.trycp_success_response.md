@@ -4,6 +4,7 @@
 
 ## TRYCP\_SUCCESS\_RESPONSE variable
 
+Empty success response.
 
 <b>Signature:</b>
 

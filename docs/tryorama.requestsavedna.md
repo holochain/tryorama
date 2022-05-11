@@ -4,6 +4,7 @@
 
 ## RequestSaveDna interface
 
+Request to save a DNA to the server's file system.
 
 <b>Signature:</b>
 

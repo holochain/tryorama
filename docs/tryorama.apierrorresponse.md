@@ -4,6 +4,7 @@
 
 ## ApiErrorResponse interface
 
+Error response from the Admin or App API.
 
 <b>Signature:</b>
 

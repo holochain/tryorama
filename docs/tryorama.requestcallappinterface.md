@@ -4,6 +4,7 @@
 
 ## RequestCallAppInterface interface
 
+Request a call to a conductor's app interface.
 
 <b>Signature:</b>
 
@@ -15,7 +16,7 @@ export interface RequestCallAppInterface
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [message](./tryorama.requestcallappinterface.message.md) | RequestCallAppInterfaceMessage |  |
+|  [message](./tryorama.requestcallappinterface.message.md) | [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) |  |
 |  [port](./tryorama.requestcallappinterface.port.md) | number |  |
 |  [type](./tryorama.requestcallappinterface.type.md) | "call\_app\_interface" |  |
 

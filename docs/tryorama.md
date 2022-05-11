@@ -15,10 +15,10 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  Class | Description |
 |  --- | --- |
 |  [LocalConductor](./tryorama.localconductor.md) | A class to manage a conductor running on localhost. |
-|  [LocalScenario](./tryorama.localscenario.md) | An abstraction of a test scenario to write tests against Holochain hApps. |
+|  [LocalScenario](./tryorama.localscenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a local conductor. |
 |  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server. |
 |  [TryCpConductor](./tryorama.trycpconductor.md) |  |
-|  [TryCpScenario](./tryorama.trycpscenario.md) |  |
+|  [TryCpScenario](./tryorama.trycpscenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a TryCp conductor. |
 |  [TryCpServer](./tryorama.trycpserver.md) | A factory class to start and stop local instances of the TryCP server. |
 
 ## Interfaces
@@ -43,57 +43,59 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AdminApiResponseDnasListed](./tryorama.adminapiresponsednaslisted.md) |  |
 |  [AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md) |  |
 |  [AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md) |  |
-|  [AgentHapp](./tryorama.agenthapp.md) |  |
-|  [ApiErrorResponse](./tryorama.apierrorresponse.md) |  |
+|  [AgentHapp](./tryorama.agenthapp.md) | Provides direct access to cells of a hApp and the agent key. |
+|  [ApiErrorResponse](./tryorama.apierrorresponse.md) | Error response from the Admin or App API. |
 |  [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md) |  |
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
-|  [CallableCell](./tryorama.callablecell.md) |  |
-|  [Conductor](./tryorama.conductor.md) |  |
-|  [HappBundleOptions](./tryorama.happbundleoptions.md) |  |
+|  [CallableCell](./tryorama.callablecell.md) | Extends an installed cell by a function to call a zome. |
+|  [Conductor](./tryorama.conductor.md) | Base interface of a Tryorama conductor. Both [LocalConductor](./tryorama.localconductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface. |
+|  [HappBundleOptions](./tryorama.happbundleoptions.md) | Optional arguments when installing a hApp bundle. |
 |  [LocalConductorOptions](./tryorama.localconductoroptions.md) |  |
-|  [LocalPlayer](./tryorama.localplayer.md) | A player with a [LocalConductor](./tryorama.localconductor.md) property. |
-|  [Player](./tryorama.player.md) |  |
-|  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) |  |
-|  [RequestAppInfo](./tryorama.requestappinfo.md) |  |
-|  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) |  |
-|  [RequestCallAppInterface](./tryorama.requestcallappinterface.md) |  |
-|  [RequestCallAppInterfaceEncoded](./tryorama.requestcallappinterfaceencoded.md) |  |
-|  [RequestCallZome](./tryorama.requestcallzome.md) |  |
-|  [RequestConfigurePlayer](./tryorama.requestconfigureplayer.md) |  |
-|  [RequestConnectAppInterface](./tryorama.requestconnectappinterface.md) |  |
-|  [RequestDisconnectAppInterface](./tryorama.requestdisconnectappinterface.md) |  |
+|  [LocalPlayer](./tryorama.localplayer.md) | A player tied to a [LocalConductor](./tryorama.localconductor.md)<!-- -->. |
+|  [Player](./tryorama.player.md) | Combines an agent hApp with the conductor they belong to. |
+|  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) | All possible calls to an admin interface. |
+|  [RequestAppInfo](./tryorama.requestappinfo.md) | Request app info from a conductor. |
+|  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) | Request a call to the admin interface of a conductor. |
+|  [RequestCallAppInterface](./tryorama.requestcallappinterface.md) | Request a call to a conductor's app interface. |
+|  [RequestCallAppInterfaceEncoded](./tryorama.requestcallappinterfaceencoded.md) | Msgpack encoded request to call an app interface. |
+|  [RequestCallZome](./tryorama.requestcallzome.md) | Request to call a zome on a conductor's app interface. |
+|  [RequestConfigurePlayer](./tryorama.requestconfigureplayer.md) | Request to create configuration files and directories for a conductor. |
+|  [RequestConnectAppInterface](./tryorama.requestconnectappinterface.md) | Request to connect an app interface to a conductor. |
+|  [RequestDisconnectAppInterface](./tryorama.requestdisconnectappinterface.md) | Request to disconnect a connected app interface from a conductor. |
 |  [RequestDownloadDna](./tryorama.requestdownloaddna.md) | Request to download a DNA from a URL. |
-|  [RequestReset](./tryorama.requestreset.md) |  |
-|  [RequestSaveDna](./tryorama.requestsavedna.md) |  |
-|  [RequestShutdown](./tryorama.requestshutdown.md) |  |
-|  [RequestStartup](./tryorama.requeststartup.md) |  |
-|  [Scenario](./tryorama.scenario.md) |  |
+|  [RequestReset](./tryorama.requestreset.md) | Request deletion of \*\*all\*\* conductors. |
+|  [RequestSaveDna](./tryorama.requestsavedna.md) | Request to save a DNA to the server's file system. |
+|  [RequestShutdown](./tryorama.requestshutdown.md) | Request shutdown of a conductor. |
+|  [RequestStartup](./tryorama.requeststartup.md) | Request startup of a conductor. |
+|  [Scenario](./tryorama.scenario.md) | Base interface of a Tryorama test scenario. Both [LocalScenario](./tryorama.localscenario.md) and [TryCpScenario](./tryorama.trycpscenario.md) implement this interface. |
 |  [TryCpConductorOptions](./tryorama.trycpconductoroptions.md) |  |
-|  [TryCpPlayer](./tryorama.trycpplayer.md) |  |
+|  [TryCpPlayer](./tryorama.trycpplayer.md) | A player tied to a [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->. |
 
 ## Variables
 
 |  Variable | Description |
 |  --- | --- |
-|  [cleanAllConductors](./tryorama.cleanallconductors.md) |  |
+|  [cleanAllConductors](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
 |  [cleanAllTryCpConductors](./tryorama.cleanalltrycpconductors.md) |  |
 |  [createLocalConductor](./tryorama.createlocalconductor.md) | The function to create a local conductor. It starts a sandbox conductor via the Holochain CLI. |
 |  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor (aka "Player"). |
 |  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) |  |
-|  [pause](./tryorama.pause.md) |  |
-|  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) |  |
+|  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |
+|  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) | Empty success response. |
 
 ## Type Aliases
 
 |  Type Alias | Description |
 |  --- | --- |
-|  [AdminApiResponse](./tryorama.adminapiresponse.md) |  |
-|  [AppApiResponse](./tryorama.appapiresponse.md) |  |
-|  [CallZomeFn](./tryorama.callzomefn.md) |  |
-|  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) |  |
+|  [AdminApiResponse](./tryorama.adminapiresponse.md) | All possible responses from the Admin API. |
+|  [AppApiResponse](./tryorama.appapiresponse.md) | Possible responses from the App API. |
+|  [CallZomeFn](./tryorama.callzomefn.md) | The function for calling a zome from a specific cell. |
+|  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |
 |  [ConductorId](./tryorama.conductorid.md) |  |
-|  [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) |  |
-|  [TryCpRequest](./tryorama.trycprequest.md) |  |
-|  [TryCpResponseErrorValue](./tryorama.trycpresponseerrorvalue.md) |  |
-|  [TryCpSuccessResponse](./tryorama.trycpsuccessresponse.md) | Value for successful responses from the TryCP server. |
+|  [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) | All possible calls to an app interface. |
+|  [TryCpApiResponse](./tryorama.trycpapiresponse.md) | Possible responses from the Admin and App APIs. |
+|  [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | Log level for a TryCP conductor. |
+|  [TryCpRequest](./tryorama.trycprequest.md) | Contains all possible request types. |
+|  [TryCpResponseErrorValue](./tryorama.trycpresponseerrorvalue.md) | Error response values. |
+|  [TryCpSuccessResponse](./tryorama.trycpsuccessresponse.md) | Possible values a for success response from the TryCP server. |
 

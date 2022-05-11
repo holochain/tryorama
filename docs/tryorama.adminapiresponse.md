@@ -4,6 +4,7 @@
 
 ## AdminApiResponse type
 
+All possible responses from the Admin API.
 
 <b>Signature:</b>
 

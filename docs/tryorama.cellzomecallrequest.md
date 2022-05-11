@@ -4,6 +4,8 @@
 
 ## CellZomeCallRequest type
 
+The zome request options adapted to a specific cell.
+
 <b>Signature:</b>
 
 ```typescript

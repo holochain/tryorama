@@ -4,6 +4,8 @@
 
 ## TryCpScenario.cleanUp() method
 
+Shut down and delete all conductors in the scenario, and stop the TryCP server.
+
 <b>Signature:</b>
 
 ```typescript

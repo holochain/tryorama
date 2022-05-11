@@ -4,6 +4,7 @@
 
 ## TryCpRequest type
 
+Contains all possible request types.
 
 <b>Signature:</b>
 

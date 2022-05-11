@@ -4,6 +4,7 @@
 
 ## RequestAdminInterfaceData interface
 
+All possible calls to an admin interface.
 
 <b>Signature:</b>
 

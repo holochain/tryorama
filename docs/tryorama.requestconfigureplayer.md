@@ -4,6 +4,7 @@
 
 ## RequestConfigurePlayer interface
 
+Request to create configuration files and directories for a conductor.
 
 <b>Signature:</b>
 

@@ -4,6 +4,7 @@
 
 ## RequestCallAppInterfaceEncoded interface
 
+Msgpack encoded request to call an app interface.
 
 <b>Signature:</b>
 

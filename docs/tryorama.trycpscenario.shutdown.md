@@ -4,6 +4,8 @@
 
 ## TryCpScenario.shutDown() method
 
+Shut down all conductors in the scenario.
+
 <b>Signature:</b>
 
 ```typescript

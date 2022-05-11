@@ -9,7 +9,7 @@ import {
   TryCpRequest,
   TRYCP_SUCCESS_RESPONSE,
   TryCpSuccessResponse,
-  _TryCpApiResponse,
+  TryCpApiResponse,
 } from "./types";
 import {
   deserializeTryCpResponse,
@@ -134,7 +134,7 @@ export class TryCpClient {
     return connectPromise;
   }
 
-  processSuccessResponse(response: _TryCpSuccessResponseSeralized) {
+  private processSuccessResponse(response: _TryCpSuccessResponseSeralized) {
     if (response === TRYCP_SUCCESS_RESPONSE || typeof response === "string") {
       logger.debug(`response ${JSON.stringify(response, null, 4)}\n`);
       return response;
@@ -238,7 +238,7 @@ export class TryCpClient {
     return callPromise;
   }
 
-  private getFormattedResponseLog(response: _TryCpApiResponse) {
+  private getFormattedResponseLog(response: TryCpApiResponse) {
     let debugLog;
     if (
       "data" in response &&

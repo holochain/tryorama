@@ -4,6 +4,8 @@
 
 ## Conductor interface
 
+Base interface of a Tryorama conductor. Both [LocalConductor](./tryorama.localconductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface.
+
 <b>Signature:</b>
 
 ```typescript

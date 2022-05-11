@@ -15,5 +15,5 @@ stop(): Promise<void>;
 
 Promise&lt;void&gt;
 
-a promise that resolves when the process has exited
+A promise that resolves when the process has exited.
 

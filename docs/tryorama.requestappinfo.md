@@ -4,6 +4,7 @@
 
 ## RequestAppInfo interface
 
+Request app info from a conductor.
 
 <b>Signature:</b>
 

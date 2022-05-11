@@ -20,6 +20,5 @@ export declare class TryCpClient
 |  [close()](./tryorama.trycpclient.close.md) |  | Closes the client connection. |
 |  [create(serverUrl, timeout)](./tryorama.trycpclient.create.md) | <code>static</code> | Create a client connection to a running TryCP server. |
 |  [ping(data)](./tryorama.trycpclient.ping.md) |  | Send a ping with data. |
-|  [processSuccessResponse(response)](./tryorama.trycpclient.processsuccessresponse.md) |  |  |
 |  [setSignalHandler(port, signalHandler)](./tryorama.trycpclient.setsignalhandler.md) |  |  |
 

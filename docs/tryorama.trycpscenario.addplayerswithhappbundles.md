@@ -4,6 +4,8 @@
 
 ## TryCpScenario.addPlayersWithHappBundles() method
 
+Create and add multiple players to the scenario, with a hApp bundle installed for each player.
+
 <b>Signature:</b>
 
 ```typescript
@@ -25,9 +27,10 @@ addPlayersWithHappBundles(playersHappBundles: Array<{
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  playersHappBundles | Array&lt;{ appBundleSource: AppBundleSource; options?: [HappBundleOptions](./tryorama.happbundleoptions.md) &amp; { signalHandler?: AppSignalCb; }; }&gt; |  |
+|  playersHappBundles | Array&lt;{ appBundleSource: AppBundleSource; options?: [HappBundleOptions](./tryorama.happbundleoptions.md) &amp; { signalHandler?: AppSignalCb; }; }&gt; | An array with a hApp bundle for each player, and a signal handler (optional). |
 
 <b>Returns:</b>
 
 Promise&lt;{ happId: string; agentPubKey: Uint8Array; cells: import("../../types").[CallableCell](./tryorama.callablecell.md)<!-- -->\[\]; namedCells: Map&lt;string, import("../../types").[CallableCell](./tryorama.callablecell.md)<!-- -->&gt;; conductor: [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->; }\[\]&gt;
+
 

@@ -4,6 +4,8 @@
 
 ## HappBundleOptions interface
 
+Optional arguments when installing a hApp bundle.
+
 <b>Signature:</b>
 
 ```typescript

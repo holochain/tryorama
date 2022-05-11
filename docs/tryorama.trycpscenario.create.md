@@ -4,6 +4,8 @@
 
 ## TryCpScenario.create() method
 
+Factory method to create a new scenario.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ static create(serverUrl: URL): Promise<TryCpScenario>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  serverUrl | URL |  |
+|  serverUrl | URL | The URL of the TryCp server to connect to. |
 
 <b>Returns:</b>
 
 Promise&lt;[TryCpScenario](./tryorama.trycpscenario.md)<!-- -->&gt;
+
+A new scenario instance.
 

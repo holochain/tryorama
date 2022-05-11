@@ -4,6 +4,8 @@
 
 ## Scenario interface
 
+Base interface of a Tryorama test scenario. Both [LocalScenario](./tryorama.localscenario.md) and [TryCpScenario](./tryorama.trycpscenario.md) implement this interface.
+
 <b>Signature:</b>
 
 ```typescript

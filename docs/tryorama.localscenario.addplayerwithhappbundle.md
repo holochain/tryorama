@@ -19,7 +19,7 @@ addPlayerWithHappBundle(appBundleSource: AppBundleSource, options?: HappBundleOp
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
-|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) &amp; { signalHandler?: AppSignalCb; } | Options for the hApp bundle plus a signal handler (optional). |
+|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) &amp; { signalHandler?: AppSignalCb; } | [HappBundleOptions](./tryorama.happbundleoptions.md) plus a signal handler (optional). |
 
 <b>Returns:</b>
 

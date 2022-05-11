@@ -45,6 +45,8 @@ export interface _TryCpCall {
 }
 
 /**
+ * Contains all possible request types.
+ *
  * @public
  */
 export type TryCpRequest =
@@ -73,6 +75,8 @@ export interface RequestDownloadDna {
 }
 
 /**
+ * Request to save a DNA to the server's file system.
+ *
  * @public
  */
 export interface RequestSaveDna {
@@ -82,6 +86,8 @@ export interface RequestSaveDna {
 }
 
 /**
+ * Request to create configuration files and directories for a conductor.
+ *
  * @public
  */
 export interface RequestConfigurePlayer {
@@ -91,6 +97,8 @@ export interface RequestConfigurePlayer {
 }
 
 /**
+ * Log level for a TryCP conductor.
+ *
  * @public
  */
 export type TryCpConductorLogLevel =
@@ -101,6 +109,8 @@ export type TryCpConductorLogLevel =
   | "trace";
 
 /**
+ * Request startup of a conductor.
+ *
  * @public
  */
 export interface RequestStartup {
@@ -110,6 +120,8 @@ export interface RequestStartup {
 }
 
 /**
+ * Request shutdown of a conductor.
+ *
  * @public
  */
 export interface RequestShutdown {
@@ -119,6 +131,8 @@ export interface RequestShutdown {
 }
 
 /**
+ * Request deletion of **all** conductors.
+ *
  * @public
  */
 export interface RequestReset {
@@ -126,6 +140,8 @@ export interface RequestReset {
 }
 
 /**
+ * Request to connect an app interface to a conductor.
+ *
  * @public
  */
 export interface RequestConnectAppInterface {
@@ -134,6 +150,8 @@ export interface RequestConnectAppInterface {
 }
 
 /**
+ * Request to disconnect a connected app interface from a conductor.
+ *
  * @public
  */
 export interface RequestDisconnectAppInterface {
@@ -142,6 +160,8 @@ export interface RequestDisconnectAppInterface {
 }
 
 /**
+ * Request a call to a conductor's app interface.
+ *
  * @public
  */
 export interface RequestCallAppInterface {
@@ -151,11 +171,15 @@ export interface RequestCallAppInterface {
 }
 
 /**
- * @internal
+ * All possible calls to an app interface.
+ *
+ * @public
  */
 export type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo;
 
 /**
+ * Request to call a zome on a conductor's app interface.
+ *
  * @public
  */
 export interface RequestCallZome {
@@ -164,6 +188,8 @@ export interface RequestCallZome {
 }
 
 /**
+ * Request app info from a conductor.
+ *
  * @public
  */
 export interface RequestAppInfo {
@@ -172,6 +198,8 @@ export interface RequestAppInfo {
 }
 
 /**
+ * Msgpack encoded request to call an app interface.
+ *
  * @public
  */
 export interface RequestCallAppInterfaceEncoded
@@ -180,7 +208,8 @@ export interface RequestCallAppInterfaceEncoded
 }
 
 /**
- * @param message - Byte code with format RequestAdminInterfaceData
+ * Request a call to the admin interface of a conductor.
+ *
  * @public
  */
 export interface RequestCallAdminInterface {
@@ -190,6 +219,8 @@ export interface RequestCallAdminInterface {
 }
 
 /**
+ * All possible calls to an admin interface.
+ *
  * @public
  */
 export interface RequestAdminInterfaceData {
@@ -292,34 +323,42 @@ export type _TryCpSuccessResponseSeralized =
   | Uint8Array;
 
 /**
- * Value for successful responses from the TryCP server.
+ * Possible values a for success response from the TryCP server.
  *
  * @public
  */
 export type TryCpSuccessResponse =
   | typeof TRYCP_SUCCESS_RESPONSE
   | string
-  | _TryCpApiResponse;
+  | TryCpApiResponse;
 
 /**
+ * Empty success response.
+ *
  * @public
  */
 export const TRYCP_SUCCESS_RESPONSE = null;
 
 /**
+ * Error response values.
+ *
  * @public
  */
 export type TryCpResponseErrorValue = string | Error;
 
 /**
- * @internal
+ * Possible responses from the Admin and App APIs.
+ *
+ * @public
  */
-export type _TryCpApiResponse =
+export type TryCpApiResponse =
   | AdminApiResponse
   | AppApiResponse
   | ApiErrorResponse;
 
 /**
+ * Error response from the Admin or App API.
+ *
  * @public
  */
 export interface ApiErrorResponse {
@@ -328,6 +367,8 @@ export interface ApiErrorResponse {
 }
 
 /**
+ * All possible responses from the Admin API.
+ *
  * @public
  */
 export type AdminApiResponse =
@@ -502,6 +543,8 @@ export interface AdminApiResponseAgentInfoRequested {
 }
 
 /**
+ * Possible responses from the App API.
+ *
  * @public
  */
 export type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall;

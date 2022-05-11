@@ -4,6 +4,7 @@
 
 ## RequestConnectAppInterface interface
 
+Request to connect an app interface to a conductor.
 
 <b>Signature:</b>
 

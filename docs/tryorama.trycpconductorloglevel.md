@@ -4,6 +4,7 @@
 
 ## TryCpConductorLogLevel type
 
+Log level for a TryCP conductor.
 
 <b>Signature:</b>
 

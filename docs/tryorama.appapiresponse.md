@@ -4,6 +4,7 @@
 
 ## AppApiResponse type
 
+Possible responses from the App API.
 
 <b>Signature:</b>
 

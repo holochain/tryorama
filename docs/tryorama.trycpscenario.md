@@ -4,6 +4,8 @@
 
 ## TryCpScenario class
 
+An abstraction of a test scenario to write tests against Holochain hApps, running on a TryCp conductor.
+
 <b>Signature:</b>
 
 ```typescript
@@ -22,13 +24,13 @@ export declare class TryCpScenario implements Scenario
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [addAllAgentsToAllConductors()](./tryorama.trycpscenario.addallagentstoallconductors.md) |  |  |
-|  [addConductor(signalHandler)](./tryorama.trycpscenario.addconductor.md) |  |  |
-|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.trycpscenario.addplayerswithhappbundles.md) |  |  |
-|  [addPlayersWithHapps(playersDnas, signalHandlers)](./tryorama.trycpscenario.addplayerswithhapps.md) |  |  |
-|  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.trycpscenario.addplayerwithhapp.md) |  |  |
-|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.trycpscenario.addplayerwithhappbundle.md) |  |  |
-|  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  |  |
-|  [create(serverUrl)](./tryorama.trycpscenario.create.md) | <code>static</code> |  |
-|  [shutDown()](./tryorama.trycpscenario.shutdown.md) |  |  |
+|  [addAllAgentsToAllConductors()](./tryorama.trycpscenario.addallagentstoallconductors.md) |  | Register all agents of all passed in conductors to each other. This skips peer discovery and thus accelerates test runs. |
+|  [addConductor(signalHandler)](./tryorama.trycpscenario.addconductor.md) |  | Create and add a conductor to the scenario. |
+|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.trycpscenario.addplayerswithhappbundles.md) |  | Create and add multiple players to the scenario, with a hApp bundle installed for each player. |
+|  [addPlayersWithHapps(playersDnas, signalHandlers)](./tryorama.trycpscenario.addplayerswithhapps.md) |  | Create and add multiple players to the scenario, with a set of DNAs installed for each player. |
+|  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.trycpscenario.addplayerwithhapp.md) |  | Create and add a single player to the scenario, with a set of DNAs installed. |
+|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.trycpscenario.addplayerwithhappbundle.md) |  | Create and add a single player to the scenario, with a hApp bundle installed. |
+|  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  | Shut down and delete all conductors in the scenario, and stop the TryCP server. |
+|  [create(serverUrl)](./tryorama.trycpscenario.create.md) | <code>static</code> | Factory method to create a new scenario. |
+|  [shutDown()](./tryorama.trycpscenario.shutdown.md) |  | Shut down all conductors in the scenario. |
 

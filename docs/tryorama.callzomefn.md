@@ -4,6 +4,8 @@
 
 ## CallZomeFn type
 
+The function for calling a zome from a specific cell.
+
 <b>Signature:</b>
 
 ```typescript

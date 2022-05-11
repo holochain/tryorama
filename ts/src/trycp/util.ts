@@ -1,11 +1,7 @@
 import { AppSignal } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import assert from "assert";
-import {
-  _TryCpApiResponse,
-  _TryCpResponseWrapper,
-  _TryCpSignal,
-} from "./types";
+import { TryCpApiResponse, _TryCpResponseWrapper, _TryCpSignal } from "./types";
 
 /**
  * Deserialize the binary response from TryCP
@@ -83,7 +79,7 @@ function assertIsResponseWrapper(
 
 function assertIsApiResponse(
   response: unknown
-): asserts response is _TryCpApiResponse {
+): asserts response is TryCpApiResponse {
   assert(response && typeof response === "object" && "type" in response);
 }
 

@@ -4,6 +4,8 @@
 
 ## AgentHapp interface
 
+Provides direct access to cells of a hApp and the agent key.
+
 <b>Signature:</b>
 
 ```typescript

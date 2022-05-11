@@ -4,6 +4,7 @@
 
 ## RequestCallZome interface
 
+Request to call a zome on a conductor's app interface.
 
 <b>Signature:</b>
 

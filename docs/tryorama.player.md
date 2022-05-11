@@ -4,6 +4,8 @@
 
 ## Player interface
 
+Combines an agent hApp with the conductor they belong to.
+
 <b>Signature:</b>
 
 ```typescript

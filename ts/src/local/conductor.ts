@@ -327,7 +327,7 @@ export class LocalConductor implements Conductor {
    * Install a hApp bundle into the conductor.
    *
    * @param appBundleSource - The bundle or path to the bundle.
-   * @param options - Options for the hApp bundle (optional).
+   * @param options - {@link HappBundleOptions} for the hApp bundle (optional).
    * @returns A hApp for the agent.
    */
   async installHappBundle(
@@ -358,6 +358,13 @@ export class LocalConductor implements Conductor {
   }
 }
 
+/**
+ * Run the `hc` command to delete all conductor data.
+ *
+ * @returns A promise that resolves when the command is complete.
+ *
+ * @public
+ */
 export const cleanAllConductors = async () => {
   const conductorProcess = spawn("hc", ["sandbox", "clean"]);
   const cleanPromise = new Promise<void>((resolve) => {

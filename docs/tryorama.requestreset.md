@@ -4,6 +4,7 @@
 
 ## RequestReset interface
 
+Request deletion of \*\*all\*\* conductors.
 
 <b>Signature:</b>
 

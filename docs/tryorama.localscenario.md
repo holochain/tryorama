@@ -4,7 +4,7 @@
 
 ## LocalScenario class
 
-An abstraction of a test scenario to write tests against Holochain hApps.
+An abstraction of a test scenario to write tests against Holochain hApps, running on a local conductor.
 
 <b>Signature:</b>
 

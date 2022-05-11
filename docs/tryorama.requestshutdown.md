@@ -4,6 +4,7 @@
 
 ## RequestShutdown interface
 
+Request shutdown of a conductor.
 
 <b>Signature:</b>
 

@@ -4,6 +4,8 @@
 
 ## CallableCell interface
 
+Extends an installed cell by a function to call a zome.
+
 <b>Signature:</b>
 
 ```typescript
