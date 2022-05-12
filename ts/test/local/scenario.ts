@@ -5,9 +5,18 @@ import {
   EntryHash,
 } from "@holochain/client";
 import test from "tape-promise/tape";
-import { LocalScenario } from "../../src/local/scenario";
+import { LocalScenario, runScenario } from "../../src/local/scenario";
 import { pause } from "../../src/util";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
+
+test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
+  await runScenario(async (scenario: LocalScenario) => {
+    const alice = await scenario.addPlayerWithHappBundle({
+      path: FIXTURE_HAPP_URL.pathname,
+    });
+    t.ok(alice.namedCells.get("test"));
+  });
+});
 
 test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
   const scenario = new LocalScenario();
@@ -16,7 +25,6 @@ test("Local Scenario - Install hApp bundle and access cells through role ids", a
     path: FIXTURE_HAPP_URL.pathname,
   });
   t.ok(alice.namedCells.get("test"));
-
   await scenario.cleanUp();
 });
 
@@ -102,7 +110,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new LocalScenario();
-  const dna: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   let signalHandlerAlice: AppSignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
@@ -118,10 +126,10 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     };
   });
 
-  const [alice, bob] = await scenario.addPlayersWithHapps(
-    [dna, dna],
-    [signalHandlerAlice, signalHandlerBob]
-  );
+  const [alice, bob] = await scenario.addPlayersWithHapps([
+    { dnas, signalHandler: signalHandlerAlice },
+    { dnas, signalHandler: signalHandlerBob },
+  ]);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({

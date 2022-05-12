@@ -32,8 +32,8 @@ export declare class LocalScenario implements Scenario
 |  --- | --- | --- |
 |  [addConductor(signalHandler)](./tryorama.localscenario.addconductor.md) |  | Create and add a conductor to the scenario. |
 |  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.localscenario.addplayerswithhappbundles.md) |  | Create and add multiple players to the scenario, with a hApp bundle installed for each player. |
-|  [addPlayersWithHapps(playersDnas, signalHandlers)](./tryorama.localscenario.addplayerswithhapps.md) |  | Create and add multiple players to the scenario, with a set of DNAs installed for each player. |
-|  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.localscenario.addplayerwithhapp.md) |  | Create and add a single player to the scenario, with a set of DNAs installed. |
+|  [addPlayersWithHapps(agentHappOptions)](./tryorama.localscenario.addplayerswithhapps.md) |  | Create and add multiple players to the scenario, with a set of DNAs installed for each player. |
+|  [addPlayerWithHapp(agentHappOptions)](./tryorama.localscenario.addplayerwithhapp.md) |  | Create and add a single player to the scenario, with a set of DNAs installed. |
 |  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.localscenario.addplayerwithhappbundle.md) |  | Create and add a single player to the scenario, with a hApp bundle installed. |
 |  [cleanUp()](./tryorama.localscenario.cleanup.md) |  | Shut down and delete all conductors in the scenario. |
 |  [shutDown()](./tryorama.localscenario.shutdown.md) |  | Shut down all conductors in the scenario. |

@@ -9,15 +9,14 @@ Create and add a single player to the scenario, with a set of DNAs installed.
 <b>Signature:</b>
 
 ```typescript
-addPlayerWithHapp(dnas: DnaSource[], signalHandler?: AppSignalCb): Promise<LocalPlayer>;
+addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<LocalPlayer>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  dnas | DnaSource\[\] | An array of DNAs. |
-|  signalHandler | AppSignalCb | A callback function to handle signals. |
+|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md) | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->. |
 
 <b>Returns:</b>
 

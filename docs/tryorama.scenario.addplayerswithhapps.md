@@ -7,15 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-addPlayersWithHapps(playersDnas: DnaSource[][], signalHandlers?: Array<AppSignalCb | undefined>): Promise<Player[]>;
+addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<Player[]>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  playersDnas | DnaSource\[\]\[\] |  |
-|  signalHandlers | Array&lt;AppSignalCb \| undefined&gt; |  |
+|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->\[\] |  |
 
 <b>Returns:</b>
 

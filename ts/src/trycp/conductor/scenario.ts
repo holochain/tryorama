@@ -8,7 +8,13 @@ import {
 } from "./conductor";
 import { URL } from "url";
 import { addAllAgentsToAllConductors } from "../../common";
-import { HappBundleOptions, Player, Scenario } from "../../types";
+import {
+  AgentHapp,
+  AgentHappOptions,
+  HappBundleOptions,
+  Player,
+  Scenario,
+} from "../../types";
 
 const partialConfig = `signing_service_uri: ~
 encryption_service_uri: ~
@@ -79,17 +85,21 @@ export class TryCpScenario implements Scenario {
    * Create and add a single player to the scenario, with a set of DNAs
    * installed.
    *
-   * @param dnas - An array of DNAs.
-   * @param signalHandler - A callback function to handle signals.
+   * @param agentHappOptions - {@link AgentHappOptions}.
    * @returns A local player instance.
    */
   async addPlayerWithHapp(
-    dnas: DnaSource[],
-    signalHandler?: AppSignalCb
+    agentHappOptions: AgentHappOptions
   ): Promise<TryCpPlayer> {
+    const signalHandler = Array.isArray(agentHappOptions)
+      ? undefined
+      : agentHappOptions.signalHandler;
+    const agentsDnas: DnaSource[][] = Array.isArray(agentHappOptions)
+      ? [agentHappOptions]
+      : [agentHappOptions.dnas];
     const conductor = await this.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
-      agentsDnas: [dnas],
+      agentsDnas,
       uid: this.uid,
       signalHandler,
     });
@@ -100,20 +110,14 @@ export class TryCpScenario implements Scenario {
    * Create and add multiple players to the scenario, with a set of DNAs
    * installed for each player.
    *
-   * @param playersDnas - An array of DNAs for each player, resulting in a
-   * 2-dimensional array.
-   * @param signalHandlers - An array of signal handlers for the players
-   * (optional).
+   * @param agentHappOptions - {@link AgentHappOptions} for each player.
    * @returns An array with the added players.
    */
   async addPlayersWithHapps(
-    playersDnas: DnaSource[][],
-    signalHandlers?: Array<AppSignalCb | undefined>
+    agentHappOptions: AgentHappOptions[]
   ): Promise<TryCpPlayer[]> {
     const players = await Promise.all(
-      playersDnas.map((playerDnas, i) =>
-        this.addPlayerWithHapp(playerDnas, signalHandlers?.[i])
-      )
+      agentHappOptions.map((options) => this.addPlayerWithHapp(options))
     );
     return players;
   }

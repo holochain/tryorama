@@ -54,11 +54,11 @@ test("TryCP Scenario - Receive signals with 2 conductors", async (t) => {
       resolve(signal);
     };
   });
-  const dna: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
-  const [alice, bob] = await scenario.addPlayersWithHapps(
-    [dna, dna],
-    [signalHandlerAlice, signalHandlerBob]
-  );
+  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const [alice, bob] = await scenario.addPlayersWithHapps([
+    { dnas, signalHandler: signalHandlerAlice },
+    { dnas, signalHandler: signalHandlerBob },
+  ]);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({

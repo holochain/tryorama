@@ -9,15 +9,14 @@ Create and add multiple players to the scenario, with a set of DNAs installed fo
 <b>Signature:</b>
 
 ```typescript
-addPlayersWithHapps(playersDnas: DnaSource[][], signalHandlers?: Array<AppSignalCb | undefined>): Promise<TryCpPlayer[]>;
+addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<TryCpPlayer[]>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  playersDnas | DnaSource\[\]\[\] | An array of DNAs for each player, resulting in a 2-dimensional array. |
-|  signalHandlers | Array&lt;AppSignalCb \| undefined&gt; | An array of signal handlers for the players (optional). |
+|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->\[\] | [AgentHappOptions](./tryorama.agenthappoptions.md) for each player. |
 
 <b>Returns:</b>
 

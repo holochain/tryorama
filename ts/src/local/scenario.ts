@@ -5,7 +5,15 @@ import {
   createLocalConductor,
   LocalConductor,
 } from "./conductor";
-import { HappBundleOptions, Player, Scenario } from "../types";
+import {
+  AgentHappOptions,
+  HappBundleOptions,
+  Player,
+  Scenario,
+} from "../types";
+import { makeLogger } from "../logger";
+
+const logger = makeLogger("Scenario");
 
 /**
  * A player tied to a {@link LocalConductor}.
@@ -56,17 +64,21 @@ export class LocalScenario implements Scenario {
    * Create and add a single player to the scenario, with a set of DNAs
    * installed.
    *
-   * @param dnas - An array of DNAs.
-   * @param signalHandler - A callback function to handle signals.
+   * @param agentHappOptions - {@link AgentHappOptions}.
    * @returns A local player instance.
    */
   async addPlayerWithHapp(
-    dnas: DnaSource[],
-    signalHandler?: AppSignalCb
+    agentHappOptions: AgentHappOptions
   ): Promise<LocalPlayer> {
+    const signalHandler = Array.isArray(agentHappOptions)
+      ? undefined
+      : agentHappOptions.signalHandler;
+    const agentsDnas: DnaSource[][] = Array.isArray(agentHappOptions)
+      ? [agentHappOptions]
+      : [agentHappOptions.dnas];
     const conductor = await this.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
-      agentsDnas: [dnas],
+      agentsDnas,
       uid: this.uid,
     });
     return { conductor, ...agentHapp };
@@ -76,20 +88,14 @@ export class LocalScenario implements Scenario {
    * Create and add multiple players to the scenario, with a set of DNAs
    * installed for each player.
    *
-   * @param playersDnas - An array of DNAs for each player, resulting in a
-   * 2-dimensional array.
-   * @param signalHandlers - An array of signal handlers for the players
-   * (optional).
+   * @param agentHappOptions - {@link AgentHappOptions} for each player.
    * @returns An array with the added players.
    */
   async addPlayersWithHapps(
-    playersDnas: DnaSource[][],
-    signalHandlers?: Array<AppSignalCb | undefined>
+    agentHappOptions: AgentHappOptions[]
   ): Promise<LocalPlayer[]> {
     const players = await Promise.all(
-      playersDnas.map((playerDnas, i) =>
-        this.addPlayerWithHapp(playerDnas, signalHandlers?.[i])
-      )
+      agentHappOptions.map((options) => this.addPlayerWithHapp(options))
     );
     return players;
   }
@@ -159,3 +165,31 @@ export class LocalScenario implements Scenario {
     this.conductors = [];
   }
 }
+
+/**
+ * A wrapper function to create and run a scenario. A scenario is created
+ * and all involved conductors are shut down after running. Any error that
+ * occurs during the test is logged.
+ *
+ * @param testScenario - The test to be run.
+ * @param cleanUp - Whether to delete conductors after running.
+ *
+ * @public
+ */
+export const runScenario = async (
+  testScenario: (scenario: LocalScenario) => Promise<void>,
+  cleanUp = false
+) => {
+  const scenario = new LocalScenario();
+  try {
+    await testScenario(scenario);
+  } catch (error) {
+    logger.error(error);
+  } finally {
+    if (cleanUp) {
+      await scenario.cleanUp();
+    } else {
+      await scenario.shutDown();
+    }
+  }
+};

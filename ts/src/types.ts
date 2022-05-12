@@ -106,6 +106,16 @@ export interface Conductor {
 }
 
 /**
+ * A type that specifies either only the DNAs that the hApp to be installed
+ * consists of, or the DNAs and a signal handler to be registered.
+ *
+ * @public
+ */
+export type AgentHappOptions =
+  | DnaSource[]
+  | { dnas: DnaSource[]; signalHandler?: AppSignalCb };
+
+/**
  * Base interface of a Tryorama test scenario. Both {@link LocalScenario} and
  * {@link TryCpScenario} implement this interface.
  *
@@ -113,14 +123,8 @@ export interface Conductor {
  */
 export interface Scenario {
   addConductor(signalHandler?: AppSignalCb): Promise<Conductor>;
-  addPlayerWithHapp(
-    dnas: DnaSource[],
-    signalHandler?: AppSignalCb
-  ): Promise<Player>;
-  addPlayersWithHapps(
-    playersDnas: DnaSource[][],
-    signalHandlers?: Array<AppSignalCb | undefined>
-  ): Promise<Player[]>;
+  addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<Player>;
+  addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<Player[]>;
   addPlayerWithHappBundle(
     appBundleSource: AppBundleSource,
     options?: HappBundleOptions & { signalHandler?: AppSignalCb }

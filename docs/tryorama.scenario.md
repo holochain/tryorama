@@ -18,8 +18,8 @@ export interface Scenario
 |  --- | --- |
 |  [addConductor(signalHandler)](./tryorama.scenario.addconductor.md) |  |
 |  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.scenario.addplayerswithhappbundles.md) |  |
-|  [addPlayersWithHapps(playersDnas, signalHandlers)](./tryorama.scenario.addplayerswithhapps.md) |  |
-|  [addPlayerWithHapp(dnas, signalHandler)](./tryorama.scenario.addplayerwithhapp.md) |  |
+|  [addPlayersWithHapps(agentHappOptions)](./tryorama.scenario.addplayerswithhapps.md) |  |
+|  [addPlayerWithHapp(agentHappOptions)](./tryorama.scenario.addplayerwithhapp.md) |  |
 |  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.scenario.addplayerwithhappbundle.md) |  |
 |  [cleanUp()](./tryorama.scenario.cleanup.md) |  |
 |  [shutDown()](./tryorama.scenario.shutdown.md) |  |
