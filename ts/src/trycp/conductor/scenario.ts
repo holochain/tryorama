@@ -9,11 +9,10 @@ import {
 import { URL } from "url";
 import { addAllAgentsToAllConductors } from "../../common";
 import {
-  AgentHapp,
   AgentHappOptions,
   HappBundleOptions,
-  Player,
-  Scenario,
+  IPlayer,
+  IScenario,
 } from "../../types";
 
 const partialConfig = `signing_service_uri: ~
@@ -30,7 +29,7 @@ network:
  *
  * @public
  */
-export interface TryCpPlayer extends Player {
+export interface TryCpPlayer extends IPlayer {
   conductor: TryCpConductor;
 }
 
@@ -40,7 +39,7 @@ export interface TryCpPlayer extends Player {
  *
  * @public
  */
-export class TryCpScenario implements Scenario {
+export class TryCpScenario implements IScenario {
   uid: string;
   conductors: TryCpConductor[];
   private serverUrl: URL;

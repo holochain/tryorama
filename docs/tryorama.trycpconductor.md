@@ -9,9 +9,9 @@ A class to manage a conductor running on a TryCP server.
 <b>Signature:</b>
 
 ```typescript
-export declare class TryCpConductor implements Conductor 
+export declare class TryCpConductor implements IConductor 
 ```
-<b>Implements:</b> [Conductor](./tryorama.conductor.md)
+<b>Implements:</b> [IConductor](./tryorama.iconductor.md)
 
 ## Constructors
 

@@ -1,27 +1,23 @@
 import { v4 as uuidv4 } from "uuid";
 import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
-import {
-  cleanAllConductors,
-  createLocalConductor,
-  LocalConductor,
-} from "./conductor";
+import { cleanAllConductors, createConductor, Conductor } from "./conductor";
 import {
   AgentHappOptions,
   HappBundleOptions,
-  Player,
-  Scenario,
+  IPlayer,
+  IScenario,
 } from "../types";
 import { makeLogger } from "../logger";
 
 const logger = makeLogger("Scenario");
 
 /**
- * A player tied to a {@link LocalConductor}.
+ * A player tied to a {@link Conductor}.
  *
  * @public
  */
-export interface LocalPlayer extends Player {
-  conductor: LocalConductor;
+export interface Player extends IPlayer {
+  conductor: Conductor;
 }
 
 /**
@@ -30,13 +26,13 @@ export interface LocalPlayer extends Player {
  *
  * @public
  */
-export class LocalScenario implements Scenario {
+export class Scenario implements IScenario {
   private timeout: number | undefined;
   uid: string;
-  conductors: LocalConductor[];
+  conductors: Conductor[];
 
   /**
-   * LocalScenario constructor.
+   * Scenario constructor.
    *
    * @param options - Timeout for requests to Admin and App API calls.
    */
@@ -53,7 +49,7 @@ export class LocalScenario implements Scenario {
    * @returns The newly added conductor instance.
    */
   async addConductor(signalHandler?: AppSignalCb) {
-    const conductor = await createLocalConductor({ timeout: this.timeout });
+    const conductor = await createConductor({ timeout: this.timeout });
     await conductor.attachAppInterface();
     await conductor.connectAppInterface(signalHandler);
     this.conductors.push(conductor);
@@ -67,9 +63,7 @@ export class LocalScenario implements Scenario {
    * @param agentHappOptions - {@link AgentHappOptions}.
    * @returns A local player instance.
    */
-  async addPlayerWithHapp(
-    agentHappOptions: AgentHappOptions
-  ): Promise<LocalPlayer> {
+  async addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<Player> {
     const signalHandler = Array.isArray(agentHappOptions)
       ? undefined
       : agentHappOptions.signalHandler;
@@ -93,7 +87,7 @@ export class LocalScenario implements Scenario {
    */
   async addPlayersWithHapps(
     agentHappOptions: AgentHappOptions[]
-  ): Promise<LocalPlayer[]> {
+  ): Promise<Player[]> {
     const players = await Promise.all(
       agentHappOptions.map((options) => this.addPlayerWithHapp(options))
     );
@@ -112,7 +106,7 @@ export class LocalScenario implements Scenario {
   async addPlayerWithHappBundle(
     appBundleSource: AppBundleSource,
     options?: HappBundleOptions & { signalHandler?: AppSignalCb }
-  ): Promise<LocalPlayer> {
+  ): Promise<Player> {
     const conductor = await this.addConductor(options?.signalHandler);
     options = options
       ? Object.assign(options, { uid: options.uid ?? this.uid })
@@ -177,10 +171,10 @@ export class LocalScenario implements Scenario {
  * @public
  */
 export const runScenario = async (
-  testScenario: (scenario: LocalScenario) => Promise<void>,
+  testScenario: (scenario: Scenario) => Promise<void>,
   cleanUp = false
 ) => {
-  const scenario = new LocalScenario();
+  const scenario = new Scenario();
   try {
     await testScenario(scenario);
   } catch (error) {

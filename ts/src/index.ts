@@ -1,7 +1,7 @@
 /**
  * Tryorama
  *
- * Tools for managing Holochain {@link @holochain/tryorama#LocalConductor | Local Conductors}
+ * Tools for managing Holochain {@link @holochain/tryorama#Conductor | Conductors}
  * and {@link @holochain/tryorama#TryCpConductor | TryCP Conductors}.
  *
  * @remarks

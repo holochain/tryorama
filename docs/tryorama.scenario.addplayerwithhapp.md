@@ -4,6 +4,8 @@
 
 ## Scenario.addPlayerWithHapp() method
 
+Create and add a single player to the scenario, with a set of DNAs installed.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<Player>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md) |  |
+|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md) | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->. |
 
 <b>Returns:</b>
 
 Promise&lt;[Player](./tryorama.player.md)<!-- -->&gt;
+
+A local player instance.
 

@@ -4,6 +4,8 @@
 
 ## Scenario.addPlayersWithHapps() method
 
+Create and add multiple players to the scenario, with a set of DNAs installed for each player.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<Player[]>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->\[\] |  |
+|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->\[\] | [AgentHappOptions](./tryorama.agenthappoptions.md) for each player. |
 
 <b>Returns:</b>
 
 Promise&lt;[Player](./tryorama.player.md)<!-- -->\[\]&gt;
+
+An array with the added players.
 

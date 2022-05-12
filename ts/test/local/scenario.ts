@@ -5,12 +5,12 @@ import {
   EntryHash,
 } from "@holochain/client";
 import test from "tape-promise/tape";
-import { LocalScenario, runScenario } from "../../src/local/scenario";
+import { Scenario, runScenario } from "../../src/local/scenario";
 import { pause } from "../../src/util";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 
 test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
-  await runScenario(async (scenario: LocalScenario) => {
+  await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithHappBundle({
       path: FIXTURE_HAPP_URL.pathname,
     });
@@ -19,7 +19,7 @@ test("Local Scenario - runScenario - Install hApp bundle and access cells throug
 });
 
 test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
-  const scenario = new LocalScenario();
+  const scenario = new Scenario();
 
   const alice = await scenario.addPlayerWithHappBundle({
     path: FIXTURE_HAPP_URL.pathname,
@@ -29,7 +29,7 @@ test("Local Scenario - Install hApp bundle and access cells through role ids", a
 });
 
 test("Local Scenario - Add players with hApp bundles", async (t) => {
-  const scenario = new LocalScenario();
+  const scenario = new Scenario();
   const [alice, bob] = await scenario.addPlayersWithHappBundles([
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
@@ -41,7 +41,7 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
 });
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
-  const scenario = new LocalScenario();
+  const scenario = new Scenario();
   t.ok(scenario.uid);
 
   const alice = await scenario.addPlayerWithHapp([
@@ -71,7 +71,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 });
 
 test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
-  const scenario = new LocalScenario();
+  const scenario = new Scenario();
   const [alice, bob] = await scenario.addPlayersWithHapps([
     [{ path: FIXTURE_DNA_URL.pathname }],
     [{ path: FIXTURE_DNA_URL.pathname }],
@@ -109,7 +109,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 });
 
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
-  const scenario = new LocalScenario();
+  const scenario = new Scenario();
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   let signalHandlerAlice: AppSignalCb | undefined;

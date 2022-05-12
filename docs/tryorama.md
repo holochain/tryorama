@@ -6,7 +6,7 @@
 
 Tryorama
 
-Tools for managing Holochain [Local Conductors](./tryorama.localconductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->.
+Tools for managing Holochain [Local Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->.
 
 ## Remarks
 
@@ -16,8 +16,8 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 
 |  Class | Description |
 |  --- | --- |
-|  [LocalConductor](./tryorama.localconductor.md) | A class to manage a conductor running on localhost. |
-|  [LocalScenario](./tryorama.localscenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a local conductor. |
+|  [Conductor](./tryorama.conductor.md) | A class to manage a conductor running on localhost. |
+|  [Scenario](./tryorama.scenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a local conductor. |
 |  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server. |
 |  [TryCpConductor](./tryorama.trycpconductor.md) | A class to manage a conductor running on a TryCP server. |
 |  [TryCpScenario](./tryorama.trycpscenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a TryCp conductor. |
@@ -50,11 +50,12 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md) |  |
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
 |  [CallableCell](./tryorama.callablecell.md) | Extends an installed cell by a function to call a zome. |
-|  [Conductor](./tryorama.conductor.md) | Base interface of a Tryorama conductor. Both [LocalConductor](./tryorama.localconductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface. |
+|  [ConductorOptions](./tryorama.conductoroptions.md) |  |
 |  [HappBundleOptions](./tryorama.happbundleoptions.md) | Optional arguments when installing a hApp bundle. |
-|  [LocalConductorOptions](./tryorama.localconductoroptions.md) |  |
-|  [LocalPlayer](./tryorama.localplayer.md) | A player tied to a [LocalConductor](./tryorama.localconductor.md)<!-- -->. |
-|  [Player](./tryorama.player.md) | Combines an agent hApp with the conductor they belong to. |
+|  [IConductor](./tryorama.iconductor.md) | Base interface of a Tryorama conductor. Both [Conductor](./tryorama.conductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface. |
+|  [IPlayer](./tryorama.iplayer.md) | Combines an agent hApp with the conductor they belong to. |
+|  [IScenario](./tryorama.iscenario.md) | Base interface of a Tryorama test scenario. Both [Scenario](./tryorama.scenario.md) and [TryCpScenario](./tryorama.trycpscenario.md) implement this interface. |
+|  [Player](./tryorama.player.md) | A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->. |
 |  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) | All possible calls to an admin interface. |
 |  [RequestAppInfo](./tryorama.requestappinfo.md) | Request app info from a conductor. |
 |  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) | Request a call to the admin interface of a conductor. |
@@ -69,7 +70,6 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [RequestSaveDna](./tryorama.requestsavedna.md) | Request to save a DNA to the server's file system. |
 |  [RequestShutdown](./tryorama.requestshutdown.md) | Request shutdown of a conductor. |
 |  [RequestStartup](./tryorama.requeststartup.md) | Request startup of a conductor. |
-|  [Scenario](./tryorama.scenario.md) | Base interface of a Tryorama test scenario. Both [LocalScenario](./tryorama.localscenario.md) and [TryCpScenario](./tryorama.trycpscenario.md) implement this interface. |
 |  [TryCpConductorOptions](./tryorama.trycpconductoroptions.md) |  |
 |  [TryCpPlayer](./tryorama.trycpplayer.md) | A player tied to a [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->. |
 
@@ -79,7 +79,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  --- | --- |
 |  [cleanAllConductors](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
 |  [cleanAllTryCpConductors](./tryorama.cleanalltrycpconductors.md) | Run the <code>reset</code> command on the TryCP server to delete all conductor data. |
-|  [createLocalConductor](./tryorama.createlocalconductor.md) | The function to create a local conductor. It starts a sandbox conductor via the Holochain CLI. |
+|  [createConductor](./tryorama.createconductor.md) | The function to create a conductor. It starts a sandbox conductor via the Holochain CLI. |
 |  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor (aka "Player"). |
 |  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) | The default partial config for a TryCP conductor. |
 |  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |

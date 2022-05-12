@@ -4,9 +4,9 @@ import {
   InstalledAppInfo,
   InstalledCell,
 } from "@holochain/client";
-import { AgentHapp, CellZomeCallRequest, Conductor } from "./types";
+import { AgentHapp, CellZomeCallRequest, IConductor } from "./types";
 
-export const addAllAgentsToAllConductors = async (conductors: Conductor[]) => {
+export const addAllAgentsToAllConductors = async (conductors: IConductor[]) => {
   await Promise.all(
     conductors.map(async (playerToShareAbout, playerToShareAboutIdx) => {
       const agentInfosToShareAbout = await playerToShareAbout
@@ -34,7 +34,7 @@ function assertZomeResponse<T>(
 }
 
 export const enableAndGetAgentHapp = async (
-  conductor: Conductor,
+  conductor: IConductor,
   agentPubKey: AgentPubKey,
   installedAppInfo: InstalledAppInfo
 ) => {
@@ -63,7 +63,7 @@ export const enableAndGetAgentHapp = async (
 };
 
 const getCallableCell = (
-  conductor: Conductor,
+  conductor: IConductor,
   cell: InstalledCell,
   agentPubKey: AgentPubKey
 ) => ({

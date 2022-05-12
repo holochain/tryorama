@@ -5,12 +5,12 @@ import {
   DnaSource,
   EntryHash,
 } from "@holochain/client";
-import { cleanAllConductors, createLocalConductor } from "../../src/local";
+import { cleanAllConductors, createConductor } from "../../src/local";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 import { pause } from "../../src/util";
 
 test("Local Conductor - Spawn a conductor and check for admin and app ws", async (t) => {
-  const conductor = await createLocalConductor();
+  const conductor = await createConductor();
   await conductor.attachAppInterface();
   await conductor.connectAppInterface();
   t.ok(conductor.adminWs());
@@ -21,7 +21,7 @@ test("Local Conductor - Spawn a conductor and check for admin and app ws", async
 });
 
 test("Local Conductor - Get app info", async (t) => {
-  const conductor = await createLocalConductor();
+  const conductor = await createConductor();
   const [aliceHapps] = await conductor.installAgentsHapps({
     agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
   });
@@ -36,7 +36,7 @@ test("Local Conductor - Get app info", async (t) => {
 });
 
 test("Local Conductor - Install and call a hApp bundle", async (t) => {
-  const conductor = await createLocalConductor();
+  const conductor = await createConductor();
   const installedHappBundle = await conductor.installHappBundle({
     path: FIXTURE_HAPP_URL.pathname,
   });
@@ -66,7 +66,7 @@ test("Local Conductor - Install and call a hApp bundle", async (t) => {
 });
 
 test("Local Conductor - Install multiple agents and DNAs and get access to agents and cells", async (t) => {
-  const conductor = await createLocalConductor();
+  const conductor = await createConductor();
   const [aliceHapps, bobHapps] = await conductor.installAgentsHapps({
     agentsDnas: [
       [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
@@ -85,7 +85,7 @@ test("Local Conductor - Install multiple agents and DNAs and get access to agent
 });
 
 test("Local Conductor - Install hApp bundle and access cells with role ids", async (t) => {
-  const conductor = await createLocalConductor();
+  const conductor = await createConductor();
   const aliceHapp = await conductor.installHappBundle({
     path: FIXTURE_HAPP_URL.pathname,
   });
@@ -96,7 +96,7 @@ test("Local Conductor - Install hApp bundle and access cells with role ids", asy
 });
 
 test("Local Conductor - Create and read an entry using the entry zome", async (t) => {
-  const conductor = await createLocalConductor();
+  const conductor = await createConductor();
 
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const agentPubKeyB64 = Buffer.from(agentPubKey).toString("base64");
@@ -156,8 +156,8 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
 test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
-  const conductor1 = await createLocalConductor();
-  const conductor2 = await createLocalConductor();
+  const conductor1 = await createConductor();
+  const conductor2 = await createConductor();
   const [aliceHapps] = await conductor1.installAgentsHapps({
     agentsDnas: [dnas],
   });
@@ -196,7 +196,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
 test("Local Conductor - Receive a signal", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
-  const conductor = await createLocalConductor();
+  const conductor = await createConductor();
 
   let signalHandler: AppSignalCb | undefined;
   const signalReceived = new Promise<AppSignal>((resolve) => {

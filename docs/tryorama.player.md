@@ -4,14 +4,14 @@
 
 ## Player interface
 
-Combines an agent hApp with the conductor they belong to.
+A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->.
 
 <b>Signature:</b>
 
 ```typescript
-export interface Player extends AgentHapp 
+export interface Player extends IPlayer 
 ```
-<b>Extends:</b> [AgentHapp](./tryorama.agenthapp.md)
+<b>Extends:</b> [IPlayer](./tryorama.iplayer.md)
 
 ## Properties
 

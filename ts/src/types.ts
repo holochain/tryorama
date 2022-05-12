@@ -59,8 +59,8 @@ export interface AgentHapp {
  *
  * @public
  */
-export interface Player extends AgentHapp {
-  conductor: Conductor;
+export interface IPlayer extends AgentHapp {
+  conductor: IConductor;
 }
 
 /**
@@ -76,12 +76,12 @@ export interface HappBundleOptions {
 }
 
 /**
- * Base interface of a Tryorama conductor. Both {@link LocalConductor} and
+ * Base interface of a Tryorama conductor. Both {@link Conductor} and
  * {@link TryCpConductor} implement this interface.
  *
  * @public
  */
-export interface Conductor {
+export interface IConductor {
   startUp: () => Promise<void | null>;
   shutDown: () => Promise<number | null>;
 
@@ -116,25 +116,25 @@ export type AgentHappOptions =
   | { dnas: DnaSource[]; signalHandler?: AppSignalCb };
 
 /**
- * Base interface of a Tryorama test scenario. Both {@link LocalScenario} and
+ * Base interface of a Tryorama test scenario. Both {@link Scenario} and
  * {@link TryCpScenario} implement this interface.
  *
  * @public
  */
-export interface Scenario {
-  addConductor(signalHandler?: AppSignalCb): Promise<Conductor>;
-  addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<Player>;
-  addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<Player[]>;
+export interface IScenario {
+  addConductor(signalHandler?: AppSignalCb): Promise<IConductor>;
+  addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<IPlayer>;
+  addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<IPlayer[]>;
   addPlayerWithHappBundle(
     appBundleSource: AppBundleSource,
     options?: HappBundleOptions & { signalHandler?: AppSignalCb }
-  ): Promise<Player>;
+  ): Promise<IPlayer>;
   addPlayersWithHappBundles(
     playersHappBundles: Array<{
       appBundleSource: AppBundleSource;
       options?: HappBundleOptions & { signalHandler?: AppSignalCb };
     }>
-  ): Promise<Player[]>;
+  ): Promise<IPlayer[]>;
   shutDown(): Promise<void>;
   cleanUp(): Promise<void>;
 }

@@ -2,10 +2,16 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Conductor](./tryorama.conductor.md) &gt; [shutDown](./tryorama.conductor.shutdown.md)
 
-## Conductor.shutDown property
+## Conductor.shutDown() method
+
+Close Admin and App API connections and kill the conductor process.
 
 <b>Signature:</b>
 
 ```typescript
-shutDown: () => Promise<number | null>;
+shutDown(): Promise<number | null>;
 ```
+<b>Returns:</b>
+
+Promise&lt;number \| null&gt;
+

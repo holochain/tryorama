@@ -2,10 +2,16 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Conductor](./tryorama.conductor.md) &gt; [startUp](./tryorama.conductor.startup.md)
 
-## Conductor.startUp property
+## Conductor.startUp() method
+
+Start the conductor and establish a web socket connection to the Admin API.
 
 <b>Signature:</b>
 
 ```typescript
-startUp: () => Promise<void | null>;
+startUp(): Promise<void>;
 ```
+<b>Returns:</b>
+
+Promise&lt;void&gt;
+

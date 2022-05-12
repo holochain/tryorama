@@ -4,6 +4,8 @@
 
 ## Scenario.addPlayerWithHappBundle() method
 
+Create and add a single player to the scenario, with a hApp bundle installed.
+
 <b>Signature:</b>
 
 ```typescript
@@ -16,10 +18,12 @@ addPlayerWithHappBundle(appBundleSource: AppBundleSource, options?: HappBundleOp
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  appBundleSource | AppBundleSource |  |
-|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) &amp; { signalHandler?: AppSignalCb; } |  |
+|  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
+|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) &amp; { signalHandler?: AppSignalCb; } | [HappBundleOptions](./tryorama.happbundleoptions.md) plus a signal handler (optional). |
 
 <b>Returns:</b>
 
 Promise&lt;[Player](./tryorama.player.md)<!-- -->&gt;
+
+A local player instance.
 

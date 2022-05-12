@@ -2,10 +2,18 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Conductor](./tryorama.conductor.md) &gt; [appWs](./tryorama.conductor.appws.md)
 
-## Conductor.appWs property
+## Conductor.appWs() method
+
+Get all App API methods.
 
 <b>Signature:</b>
 
 ```typescript
-appWs: () => Pick<AppWebsocket, "callZome" | "appInfo">;
+appWs(): AppWebsocket;
 ```
+<b>Returns:</b>
+
+AppWebsocket
+
+The App API web socket.
+

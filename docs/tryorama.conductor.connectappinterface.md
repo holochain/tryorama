@@ -4,19 +4,21 @@
 
 ## Conductor.connectAppInterface() method
 
+Connect a web socket to the App API.
+
 <b>Signature:</b>
 
 ```typescript
-connectAppInterface(signalHandler?: AppSignalCb): void;
+connectAppInterface(signalHandler?: AppSignalCb): Promise<void>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signalHandler | AppSignalCb |  |
+|  signalHandler | AppSignalCb | A callback function to handle signals. |
 
 <b>Returns:</b>
 
-void
+Promise&lt;void&gt;
 

@@ -2,14 +2,28 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Conductor](./tryorama.conductor.md) &gt; [installAgentsHapps](./tryorama.conductor.installagentshapps.md)
 
-## Conductor.installAgentsHapps property
+## Conductor.installAgentsHapps() method
+
+Install a set of DNAs for multiple agents into the conductor.
 
 <b>Signature:</b>
 
 ```typescript
-installAgentsHapps: (options: {
+installAgentsHapps(options: {
         agentsDnas: DnaSource[][];
         uid?: string;
-        signalHandler?: AppSignalCb;
-    }) => Promise<AgentHapp[]>;
+    }): Promise<AgentHapp[]>;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  options | { agentsDnas: DnaSource\[\]\[\]; uid?: string; } | An array of DNAs for each agent, resulting in a 2-dimensional array, and a UID for the DNAs (optional). |
+
+<b>Returns:</b>
+
+Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt;
+
+An array with each agent's hApp.
+

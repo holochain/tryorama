@@ -2,25 +2,39 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Scenario](./tryorama.scenario.md)
 
-## Scenario interface
+## Scenario class
 
-Base interface of a Tryorama test scenario. Both [LocalScenario](./tryorama.localscenario.md) and [TryCpScenario](./tryorama.trycpscenario.md) implement this interface.
+An abstraction of a test scenario to write tests against Holochain hApps, running on a local conductor.
 
 <b>Signature:</b>
 
 ```typescript
-export interface Scenario 
+export declare class Scenario implements IScenario 
 ```
+<b>Implements:</b> [IScenario](./tryorama.iscenario.md)
+
+## Constructors
+
+|  Constructor | Modifiers | Description |
+|  --- | --- | --- |
+|  [(constructor)(options)](./tryorama.scenario._constructor_.md) |  | Scenario constructor. |
+
+## Properties
+
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [conductors](./tryorama.scenario.conductors.md) |  | [Conductor](./tryorama.conductor.md)<!-- -->\[\] |  |
+|  [uid](./tryorama.scenario.uid.md) |  | string |  |
 
 ## Methods
 
-|  Method | Description |
-|  --- | --- |
-|  [addConductor(signalHandler)](./tryorama.scenario.addconductor.md) |  |
-|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.scenario.addplayerswithhappbundles.md) |  |
-|  [addPlayersWithHapps(agentHappOptions)](./tryorama.scenario.addplayerswithhapps.md) |  |
-|  [addPlayerWithHapp(agentHappOptions)](./tryorama.scenario.addplayerwithhapp.md) |  |
-|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.scenario.addplayerwithhappbundle.md) |  |
-|  [cleanUp()](./tryorama.scenario.cleanup.md) |  |
-|  [shutDown()](./tryorama.scenario.shutdown.md) |  |
+|  Method | Modifiers | Description |
+|  --- | --- | --- |
+|  [addConductor(signalHandler)](./tryorama.scenario.addconductor.md) |  | Create and add a conductor to the scenario. |
+|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.scenario.addplayerswithhappbundles.md) |  | Create and add multiple players to the scenario, with a hApp bundle installed for each player. |
+|  [addPlayersWithHapps(agentHappOptions)](./tryorama.scenario.addplayerswithhapps.md) |  | Create and add multiple players to the scenario, with a set of DNAs installed for each player. |
+|  [addPlayerWithHapp(agentHappOptions)](./tryorama.scenario.addplayerwithhapp.md) |  | Create and add a single player to the scenario, with a set of DNAs installed. |
+|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.scenario.addplayerwithhappbundle.md) |  | Create and add a single player to the scenario, with a hApp bundle installed. |
+|  [cleanUp()](./tryorama.scenario.cleanup.md) |  | Shut down and delete all conductors in the scenario. |
+|  [shutDown()](./tryorama.scenario.shutdown.md) |  | Shut down all conductors in the scenario. |
 

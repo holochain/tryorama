@@ -4,6 +4,8 @@
 
 ## Scenario.addConductor() method
 
+Create and add a conductor to the scenario.
+
 <b>Signature:</b>
 
 ```typescript
@@ -14,9 +16,11 @@ addConductor(signalHandler?: AppSignalCb): Promise<Conductor>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signalHandler | AppSignalCb |  |
+|  signalHandler | AppSignalCb | A callback function to handle signals. |
 
 <b>Returns:</b>
 
 Promise&lt;[Conductor](./tryorama.conductor.md)<!-- -->&gt;
+
+The newly added conductor instance.
 

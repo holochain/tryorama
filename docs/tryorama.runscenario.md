@@ -9,5 +9,5 @@ A wrapper function to create and run a scenario. A scenario is created and all i
 <b>Signature:</b>
 
 ```typescript
-runScenario: (testScenario: (scenario: LocalScenario) => Promise<void>, cleanUp?: boolean) => Promise<void>
+runScenario: (testScenario: (scenario: Scenario) => Promise<void>, cleanUp?: boolean) => Promise<void>
 ```

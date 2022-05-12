@@ -2,29 +2,28 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Conductor](./tryorama.conductor.md)
 
-## Conductor interface
+## Conductor class
 
-Base interface of a Tryorama conductor. Both [LocalConductor](./tryorama.localconductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface.
+A class to manage a conductor running on localhost.
 
 <b>Signature:</b>
 
 ```typescript
-export interface Conductor 
+export declare class Conductor implements IConductor 
 ```
-
-## Properties
-
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [adminWs](./tryorama.conductor.adminws.md) | () =&gt; Omit&lt;AdminWebsocket, "\_requester" \| "client" \| "activateApp" \| "deactivateApp" \| "defaultTimeout" \| "listActiveApps"&gt; |  |
-|  [appWs](./tryorama.conductor.appws.md) | () =&gt; Pick&lt;AppWebsocket, "callZome" \| "appInfo"&gt; |  |
-|  [installAgentsHapps](./tryorama.conductor.installagentshapps.md) | (options: { agentsDnas: DnaSource\[\]\[\]; uid?: string; signalHandler?: AppSignalCb; }) =&gt; Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt; |  |
-|  [shutDown](./tryorama.conductor.shutdown.md) | () =&gt; Promise&lt;number \| null&gt; |  |
-|  [startUp](./tryorama.conductor.startup.md) | () =&gt; Promise&lt;void \| null&gt; |  |
+<b>Implements:</b> [IConductor](./tryorama.iconductor.md)
 
 ## Methods
 
-|  Method | Description |
-|  --- | --- |
-|  [connectAppInterface(signalHandler)](./tryorama.conductor.connectappinterface.md) |  |
+|  Method | Modifiers | Description |
+|  --- | --- | --- |
+|  [adminWs()](./tryorama.conductor.adminws.md) |  | Get all Admin API methods. |
+|  [appWs()](./tryorama.conductor.appws.md) |  | Get all App API methods. |
+|  [attachAppInterface(request)](./tryorama.conductor.attachappinterface.md) |  | Attach a web socket to the App API. |
+|  [connectAppInterface(signalHandler)](./tryorama.conductor.connectappinterface.md) |  | Connect a web socket to the App API. |
+|  [create(timeout)](./tryorama.conductor.create.md) | <code>static</code> | Factory method to create a local conductor. |
+|  [installAgentsHapps(options)](./tryorama.conductor.installagentshapps.md) |  | Install a set of DNAs for multiple agents into the conductor. |
+|  [installHappBundle(appBundleSource, options)](./tryorama.conductor.installhappbundle.md) |  | Install a hApp bundle into the conductor. |
+|  [shutDown()](./tryorama.conductor.shutdown.md) |  | Close Admin and App API connections and kill the conductor process. |
+|  [startUp()](./tryorama.conductor.startup.md) |  | Start the conductor and establish a web socket connection to the Admin API. |
 

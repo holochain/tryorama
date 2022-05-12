@@ -9,9 +9,9 @@ A player tied to a [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->.
 <b>Signature:</b>
 
 ```typescript
-export interface TryCpPlayer extends Player 
+export interface TryCpPlayer extends IPlayer 
 ```
-<b>Extends:</b> [Player](./tryorama.player.md)
+<b>Extends:</b> [IPlayer](./tryorama.iplayer.md)
 
 ## Properties
 

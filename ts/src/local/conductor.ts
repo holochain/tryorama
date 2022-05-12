@@ -13,7 +13,7 @@ import {
   InstallAppBundleRequest,
   InstallAppDnaPayload,
 } from "@holochain/client";
-import { AgentHapp, Conductor, HappBundleOptions } from "../types";
+import { AgentHapp, IConductor, HappBundleOptions } from "../types";
 import { URL } from "url";
 import { enableAndGetAgentHapp } from "../common";
 
@@ -25,7 +25,7 @@ const DEFAULT_TIMEOUT = 15000;
 /**
  * @public
  */
-export interface LocalConductorOptions {
+export interface ConductorOptions {
   /**
    * Start up conductor after creation.
    *
@@ -40,15 +40,15 @@ export interface LocalConductorOptions {
 }
 
 /**
- * The function to create a local conductor. It starts a sandbox conductor via
- * the Holochain CLI.
+ * The function to create a conductor. It starts a sandbox conductor via the
+ * Holochain CLI.
  *
- * @returns A local conductor instance.
+ * @returns A conductor instance.
  *
  * @public
  */
-export const createLocalConductor = async (options?: LocalConductorOptions) => {
-  const conductor = await LocalConductor.create(options?.timeout);
+export const createConductor = async (options?: ConductorOptions) => {
+  const conductor = await Conductor.create(options?.timeout);
   if (options?.startup !== false) {
     await conductor.startUp();
   }
@@ -60,7 +60,7 @@ export const createLocalConductor = async (options?: LocalConductorOptions) => {
  *
  * @public
  */
-export class LocalConductor implements Conductor {
+export class Conductor implements IConductor {
   private conductorProcess: ChildProcessWithoutNullStreams | undefined;
   private conductorDir: string | undefined;
   private adminApiUrl: URL;
@@ -86,31 +86,29 @@ export class LocalConductor implements Conductor {
    * @returns A configured instance of local conductor, not yet running.
    */
   static async create(timeout?: number) {
-    const localConductor = new LocalConductor(timeout);
+    const conductor = new Conductor(timeout);
     const createConductorProcess = spawn("hc", [
       "sandbox",
       "create",
       "network",
       "mdns",
     ]);
-    const createConductorPromise = new Promise<LocalConductor>(
-      (resolve, reject) => {
-        createConductorProcess.stdout.on("data", (data: Buffer) => {
-          logger.debug(`creating conductor config\n${data.toString()}`);
-          const tmpDirMatches = data.toString().match(/Created (\[".+"])/);
-          if (tmpDirMatches) {
-            localConductor.conductorDir = JSON.parse(tmpDirMatches[1])[0];
-          }
-        });
-        createConductorProcess.stdout.on("end", () => {
-          resolve(localConductor);
-        });
-        createConductorProcess.on("error", (err) => {
-          logger.error(`error when creating conductor config: ${err}\n`);
-          reject(err);
-        });
-      }
-    );
+    const createConductorPromise = new Promise<Conductor>((resolve, reject) => {
+      createConductorProcess.stdout.on("data", (data: Buffer) => {
+        logger.debug(`creating conductor config\n${data.toString()}`);
+        const tmpDirMatches = data.toString().match(/Created (\[".+"])/);
+        if (tmpDirMatches) {
+          conductor.conductorDir = JSON.parse(tmpDirMatches[1])[0];
+        }
+      });
+      createConductorProcess.stdout.on("end", () => {
+        resolve(conductor);
+      });
+      createConductorProcess.on("error", (err) => {
+        logger.error(`error when creating conductor config: ${err}\n`);
+        reject(err);
+      });
+    });
     return createConductorPromise;
   }
 

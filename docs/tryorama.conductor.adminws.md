@@ -2,10 +2,18 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Conductor](./tryorama.conductor.md) &gt; [adminWs](./tryorama.conductor.adminws.md)
 
-## Conductor.adminWs property
+## Conductor.adminWs() method
+
+Get all Admin API methods.
 
 <b>Signature:</b>
 
 ```typescript
-adminWs: () => Omit<AdminWebsocket, "_requester" | "client" | "activateApp" | "deactivateApp" | "defaultTimeout" | "listActiveApps">;
+adminWs(): AdminWebsocket;
 ```
+<b>Returns:</b>
+
+AdminWebsocket
+
+The Admin API web socket.
+

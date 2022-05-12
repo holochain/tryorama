@@ -2,7 +2,7 @@ import assert from "assert";
 import fs from "fs";
 import { v4 as uuidv4 } from "uuid";
 import getPort, { portNumbers } from "get-port";
-import { AgentHapp, Conductor } from "../../types";
+import { AgentHapp, IConductor } from "../../types";
 import { TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AddAgentInfoRequest,
@@ -119,7 +119,7 @@ export const createTryCpConductor = async (
  *
  * @public
  */
-export class TryCpConductor implements Conductor {
+export class TryCpConductor implements IConductor {
   private readonly id: string;
   private readonly tryCpClient: TryCpClient;
   private appInterfacePort: undefined | number;
