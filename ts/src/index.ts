@@ -1,11 +1,12 @@
 /**
- * ## Tryorama
+ * Tryorama
  *
  * Tools for managing Holochain {@link @holochain/tryorama#LocalConductor | Local Conductors}
- * and {@link @holochain/tryorama#TryCpConductor | TryCP Server Conductors}.
+ * and {@link @holochain/tryorama#TryCpConductor | TryCP Conductors}.
  *
+ * @remarks
  * TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to
- * enable remote management of Holochain Conductors on network hosts.
+ * enable remote management of Holochain conductors on network hosts.
  *
  * @packageDocumentation
  */

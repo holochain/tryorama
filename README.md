@@ -3,9 +3,10 @@
 An end-to-end/scenario testing framework for Holochain applications, written in
 TypeScript.
 
-[![Project](https://img.shields.io/badge/project-holochain-blue.svg?style=flat-square)](http://holochain.org/)
-[![Chat](https://img.shields.io/badge/chat-chat%2eholochain%2enet-blue.svg?style=flat-square)](https://chat.holochain.net)
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://www.apache.org/licenses/LICENSE-2.0)
+[![Project](https://img.shields.io/badge/Project-Holochain-blue.svg?style=flat-square)](http://holochain.org/)
+[![Forum](https://img.shields.io/badge/Forum-forum%2eholochain%2enet-blue.svg?style=flat-square)](https://forum.holochain.org)
+[![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
+![Test](https://github.com/holochain/holochain-client-js/actions/workflows/test.yml/badge.svg?branch=main)
 
 Tryorama provides a convenient way to run an arbitrary amount of Holochain
 conductors on your local machine, as well as on network nodes that are running
@@ -20,7 +21,7 @@ npm install @holochain/tryorama
 
 [Complete API reference](./docs/tryorama.md)
 
-## Example test scenario
+## Example
 
 With a few lines of code you can start testing your Holochain application. This
 example uses [tape](https://github.com/substack/tape) as test runner and
@@ -74,6 +75,8 @@ test("Create 2 players and create and read an entry", async (t) => {
   await scenario.cleanUp();
 });
 ```
+
+Have a look at the [tests](./ts/test/local/scenario.ts) for many more examples.
 
 ## Concepts
 
@@ -150,14 +153,3 @@ t.deepEqual(actualSignalAlice.data.payload, signal);
 
 await scenario.cleanUp();
 ```
-
-# License
-[![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
-
-Copyright (C) 2019, Holochain Foundation
-
-This program is free software: you can redistribute it and/or modify it under
-the terms of the license provided in the LICENSE file (CAL-1.0). This program
-is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
-without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.
