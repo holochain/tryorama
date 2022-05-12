@@ -29,41 +29,79 @@ assertion library. You can choose any other library you want.
 
 ```typescript
 import test from "tape";
-import { LocalScenario, pause } from "@holochain/tryorama";
+import { Scenario, pause, runScenario } from "../../../lib";
 import { dirname } from "path";
-import { fileURLToPath, pathToFileURL } from "url";
+import { fileURLToPath } from "url";
+import { EntryHash } from "@holochain/client";
 
 test("Create 2 players and create and read an entry", async (t) => {
+  runScenario(async (scenario: Scenario) => {
+    // Construct proper paths for your DNAs
+    // This assumes DNA files created by the `hc dna pack` command
+    const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
 
-  // Construct proper paths for your DNAs
-  // This assumes DNA files created by the `hc dna pack` command
+    // Add 2 players to the Scenario and specify only one DNA for each, being the
+    // test DNA. The returned players can be destructured.
+    const [alice, bob] = await scenario.addPlayersWithHapps([
+      [{ path: testDnaPath }],
+      [{ path: testDnaPath }],
+    ]);
+
+    // Content to be passed to the zome function that create an entry
+    const content = "Hello Tryorama";
+
+    // The cells of the installed hApp are returned in the same order as the DNAs
+    // that were passed into the player creation.
+    const createEntryHash = await alice.cells[0].callZome<EntryHash>({
+      zome_name: "crud",
+      fn_name: "create",
+      payload: content,
+    });
+
+    // Wait for the created entry to be propagated to the other node.
+    await pause(500);
+
+    // Using the same cell and zome as before, the second player reads the
+    // created entry.
+    const readContent = await bob.cells[0].callZome<typeof content>({
+      zome_name: "crud",
+      fn_name: "read",
+      payload: createEntryHash,
+    });
+    t.equal(readContent, content);
+  });
+});
+```
+
+Written out without the wrapper function, the same example looks like this:
+
+```typescript
+import test from "tape";
+import { Scenario, pause } from "@holochain/tryorama";
+import { dirname } from "path";
+import { fileURLToPath } from "url";
+import { EntryHash } from "@holochain/client";
+
+test("Create 2 players and create and read an entry", async (t) => {
   const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
 
   // Create a Scenario that uses conductors on the localhost
-  const scenario = new LocalScenario();
+  const scenario = new Scenario();
 
-  // Add 2 players to the Scenario and specify only one DNA for each, being the
-  // test DNA. The returned players can be destructured.
   const [alice, bob] = await scenario.addPlayersWithHapps([
     [{ path: testDnaPath }],
     [{ path: testDnaPath }],
   ]);
 
-  // Content to be passed to the zome function that create an entry
   const content = "Hello Tryorama";
-  // The cells of the installed hApp are returned in the same order as the DNAs
-  // that were passed into the player creation.
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
     zome_name: "crud",
     fn_name: "create",
     payload: content,
   });
 
-  // Wait for the created entry to be propagated to the other node.
   await pause(500);
 
-  // Using the same cell and zome as before, the second player reads the
-  // created entry.
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "crud",
     fn_name: "read",
@@ -75,6 +113,10 @@ test("Create 2 players and create and read an entry", async (t) => {
   await scenario.cleanUp();
 });
 ```
+
+> The wrapper takes care of creating a scenario, logging any error that occurs
+while running the test and shutting down or deleting all conductors involved in
+the test scenario.
 
 Have a look at the [tests](./ts/test/local/scenario.ts) for many more examples.
 
