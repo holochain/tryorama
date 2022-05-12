@@ -35,7 +35,7 @@ import { fileURLToPath } from "url";
 import { EntryHash } from "@holochain/client";
 
 test("Create 2 players and create and read an entry", async (t) => {
-  runScenario(async (scenario: Scenario) => {
+  await runScenario(async (scenario: Scenario) => {
     // Construct proper paths for your DNAs
     // This assumes DNA files created by the `hc dna pack` command
     const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
@@ -117,6 +117,21 @@ test("Create 2 players and create and read an entry", async (t) => {
 > The wrapper takes care of creating a scenario, logging any error that occurs
 while running the test and shutting down or deleting all conductors involved in
 the test scenario.
+
+When opting for writing the test without the wrapper, errors need to be handled
+too. Uncaught errors will cause the conductor process and therefore the test to
+hang. While developing the test, you can treat errors like this:
+
+```typescript
+const scenario = new LocalScenario();
+try {
+  /* operations on the scenario */
+} catch (error) {
+  console.error("an error occurred during the test", error);
+} finally (
+  await secnario.cleanUp()
+}
+```
 
 Have a look at the [tests](./ts/test/local/scenario.ts) for many more examples.
 
