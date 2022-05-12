@@ -4,7 +4,7 @@
 
 ## TryCpConductor.appWs() method
 
-Get all App API methods.
+Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_appwebsocket.md) of the Holochain client.
 
 <b>Signature:</b>
 

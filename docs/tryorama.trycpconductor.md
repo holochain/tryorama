@@ -23,8 +23,8 @@ export declare class TryCpConductor implements Conductor
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [adminWs()](./tryorama.trycpconductor.adminws.md) |  | Get all Admin API methods. |
-|  [appWs()](./tryorama.trycpconductor.appws.md) |  | Get all App API methods. |
+|  [adminWs()](./tryorama.trycpconductor.adminws.md) |  | Get all [Admin API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_adminwebsocket.md) of the Holochain client. |
+|  [appWs()](./tryorama.trycpconductor.appws.md) |  | Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_appwebsocket.md) of the Holochain client. |
 |  [configure(partialConfig)](./tryorama.trycpconductor.configure.md) |  | Create conductor configuration. |
 |  [connectAppInterface(signalHandler)](./tryorama.trycpconductor.connectappinterface.md) |  | Connect a web socket to the App API. |
 |  [disconnectAppInterface()](./tryorama.trycpconductor.disconnectappinterface.md) |  | Disconnect the web socket from the App API. |

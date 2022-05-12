@@ -4,7 +4,7 @@
 
 ## TryCpConductor.adminWs() method
 
-Get all Admin API methods.
+Get all [Admin API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_adminwebsocket.md) of the Holochain client.
 
 <b>Signature:</b>
 

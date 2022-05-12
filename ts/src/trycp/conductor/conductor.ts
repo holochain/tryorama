@@ -35,10 +35,10 @@ import {
   RequestCallAppInterfaceMessage,
 } from "../types";
 import { deserializeZomeResponsePayload } from "../util";
-import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { makeLogger } from "../../logger";
 import { URL } from "url";
 import { enableAndGetAgentHapp } from "../../common";
+import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 
 const logger = makeLogger("TryCP conductor");
 
@@ -276,7 +276,9 @@ export class TryCpConductor implements Conductor {
   }
 
   /**
-   * Get all Admin API methods.
+   * Get all
+   * {@link https://github.com/holochain/holochain-client-js/blob/develop/docs/API_adminwebsocket.md | Admin API methods}
+   * of the Holochain client.
    *
    * @returns The Admin API web socket.
    */
@@ -315,7 +317,7 @@ export class TryCpConductor implements Conductor {
      * Install a hApp consisting of a set of DNAs.
      *
      * @param data - {@link InstallAppRequest}.
-     * @returns {@link InstalledAppInfo}
+     * @returns {@link @holochain/client#InstalledAppInfo}.
      */
     const installApp = async (data: InstallAppRequest) => {
       const response = await this.callAdminApi({
@@ -330,6 +332,7 @@ export class TryCpConductor implements Conductor {
      * Install a bundled hApp.
      *
      * @param data - {@link InstallAppBundleRequest}.
+     * @returns {@link @holochain/client#InstalledAppInfo}.
      */
     const installAppBundle = async (data: InstallAppBundleRequest) => {
       const response = await this.callAdminApi({
@@ -344,6 +347,7 @@ export class TryCpConductor implements Conductor {
      * Enable an installed hApp.
      *
      * @param request -{@link EnableAppRequest}.
+     * @returns {@link @holochain/client#EnableAppResonse}.
      */
     const enableApp = async (request: EnableAppRequest) => {
       const response = await this.callAdminApi({
@@ -358,6 +362,7 @@ export class TryCpConductor implements Conductor {
      * Disable an installed hApp.
      *
      * @param request -{@link DisableAppRequest}.
+     * @returns An empty success response.
      */
     const disableApp = async (request: DisableAppRequest) => {
       const response = await this.callAdminApi({
@@ -372,7 +377,7 @@ export class TryCpConductor implements Conductor {
      * Start an installed hApp.
      *
      * @param request -{@link StartAppRequest}.
-     * @returns {@link StartAppResponse}.
+     * @returns {@link @holochain/client#StartAppResponse}.
      */
     const startApp = async (request: StartAppRequest) => {
       const response = await this.callAdminApi({
@@ -387,7 +392,7 @@ export class TryCpConductor implements Conductor {
      * Uninstall an installed hApp.
      *
      * @param request - {@link UninstallAppRequest}.
-     * @returns {@link UninstallAppResponse}.
+     * @returns An empty success response.
      */
     const uninstallApp = async (request: UninstallAppRequest) => {
       const response = await this.callAdminApi({
@@ -413,6 +418,12 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * List all installed hApps.
+     *
+     * @param request - Filter by hApp status (optional).
+     * @returns A list of all installed hApps.
+     */
     const listApps = async (request: ListAppsRequest) => {
       const response = await this.callAdminApi({
         type: "list_apps",
@@ -422,18 +433,34 @@ export class TryCpConductor implements Conductor {
       return response.data;
     };
 
+    /**
+     * List all installed Cell ids.
+     *
+     * @returns A list of all installed {@link Cell} ids.
+     */
     const listCellIds = async () => {
       const response = await this.callAdminApi({ type: "list_cell_ids" });
       assert(response.type === "cell_ids_listed");
       return response.data;
     };
 
+    /**
+     * List all installed DNAs.
+     *
+     * @returns A list of all installed DNAs' role ids.
+     */
     const listDnas = async () => {
       const response = await this.callAdminApi({ type: "list_dnas" });
       assert(response.type === "dnas_listed");
       return response.data;
     };
 
+    /**
+     * Attach an App interface to the conductor.
+     *
+     * @param request - The port to attach to.
+     * @returns The port the App interface was attached to.
+     */
     const attachAppInterface = async (request?: AttachAppInterfaceRequest) => {
       request = request ?? {
         port: await getPort({ port: portNumbers(30000, 40000) }),
@@ -447,6 +474,11 @@ export class TryCpConductor implements Conductor {
       return { port: response.data.port };
     };
 
+    /**
+     * List all App interfaces.
+     *
+     * @returns A list of all attached App interfaces.
+     */
     const listAppInterfaces = async () => {
       const response = await this.callAdminApi({ type: "list_app_interfaces" });
       assert(response.type === "app_interfaces_listed");
@@ -455,10 +487,9 @@ export class TryCpConductor implements Conductor {
 
     /**
      * Get agent infos, optionally of a particular cell.
-     * @param req - The cell id to get agent infos of.
-     * @returns The agent infos.
      *
-     * @public
+     * @param req - The cell id to get agent infos of (optional).
+     * @returns The agent infos.
      */
     const requestAgentInfo = async (req: RequestAgentInfoRequest) => {
       const response = await this.callAdminApi({
@@ -473,9 +504,9 @@ export class TryCpConductor implements Conductor {
 
     /**
      * Add agents to a conductor.
-     * @param request - The agents to add to the conductor.
      *
-     * @public
+     * @param request - The agents to add to the conductor.
+     * @returns A confirmation without any data.
      */
     const addAgentInfo = async (request: AddAgentInfoRequest) => {
       const response = await this.callAdminApi({
@@ -491,8 +522,6 @@ export class TryCpConductor implements Conductor {
      *
      * @param request - The cell id for which state should be dumped.
      * @returns The cell's state as JSON.
-     *
-     * @public
      */
     const dumpState = async (request: DumpStateRequest) => {
       const response = await this.callAdminApi({
@@ -509,9 +538,7 @@ export class TryCpConductor implements Conductor {
      * Request a full state dump of the cell's source chain.
      *
      * @param request - {@link DumpFullStateRequest}
-     * @returns {@link FullStateDump}.
-     *
-     * @public
+     * @returns {@link @holochain/client#FullStateDump}.
      */
     const dumpFullState = async (request: DumpFullStateRequest) => {
       const response = await this.callAdminApi({
@@ -545,9 +572,7 @@ export class TryCpConductor implements Conductor {
   }
 
   /**
-   * Call conductor's App API.
-   *
-   * @internal
+   * Call to the conductor's App API.
    */
   private async callAppApi(message: RequestCallAppInterfaceMessage) {
     assert(this.appInterfacePort, "No App interface attached to conductor");
@@ -563,7 +588,9 @@ export class TryCpConductor implements Conductor {
   }
 
   /**
-   * Get all App API methods.
+   * Get all
+   * {@link https://github.com/holochain/holochain-client-js/blob/develop/docs/API_appwebsocket.md | App API methods}
+   * of the Holochain client.
    *
    * @returns The App API web socket.
    */
@@ -571,10 +598,8 @@ export class TryCpConductor implements Conductor {
     /**
      * Request info of an installed hApp.
      *
-     * @param installed_app_id - The id of the hApp to query.
+     * @param request - The hApp id to query.
      * @returns The app info.
-     *
-     * @public
      */
     const appInfo = async (request: AppInfoRequest) => {
       const response = await this.callAppApi({
@@ -586,12 +611,10 @@ export class TryCpConductor implements Conductor {
     };
 
     /**
-     * Make a zome call to a conductor through the TryCP server.
+     * Make a zome call to a cell in the conductor.
      *
-     * @param request - The zome call parameters.
+     * @param request - {@link CallZomeRequest}.
      * @returns The result of the zome call.
-     *
-     * @public
      */
     const callZome = async <T>(request: CallZomeRequest) => {
       const response = await this.callAppApi({

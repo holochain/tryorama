@@ -4,7 +4,7 @@
 
 ## tryorama package
 
-Tryorama
+\#\# Tryorama
 
 Tools for managing Holochain [Local Conductors](./tryorama.localconductor.md) and [TryCP Server Conductors](./tryorama.trycpconductor.md)<!-- -->.
 
