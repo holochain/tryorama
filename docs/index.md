@@ -8,5 +8,5 @@
 
 |  Package | Description |
 |  --- | --- |
-|  [@holochain/tryorama](./tryorama.md) | Tryorama<!-- -->Tools for managing Holochain [Local Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->. |
+|  [@holochain/tryorama](./tryorama.md) | Tryorama<!-- -->Tools for managing Holochain [Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->. |
 

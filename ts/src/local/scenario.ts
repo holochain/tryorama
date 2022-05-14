@@ -178,7 +178,11 @@ export const runScenario = async (
   try {
     await testScenario(scenario);
   } catch (error) {
-    logger.error(error);
+    if (typeof error === "object") {
+      logger.log("error", "%o", error);
+    } else {
+      logger.error(error);
+    }
   } finally {
     if (cleanUp) {
       await scenario.cleanUp();

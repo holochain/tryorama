@@ -6,7 +6,7 @@
 
 Tryorama
 
-Tools for managing Holochain [Local Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->.
+Tools for managing Holochain [Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->.
 
 ## Remarks
 

@@ -121,6 +121,11 @@ export class Conductor implements IConductor {
       this.conductorDir,
       "error starting conductor: conductor has not been created"
     );
+    if (this.conductorProcess) {
+      logger.error("error starting conductor: conductor is already running\n");
+      return;
+    }
+
     const runConductorProcess = spawn(
       "hc",
       ["sandbox", "run", "-e", this.conductorDir],

@@ -18,6 +18,70 @@ test("Local Scenario - runScenario - Install hApp bundle and access cells throug
   });
 });
 
+test("Local Scenario - runScenario - Catch error when calling non-existent zome", async (t) => {
+  await runScenario(async (scenario: Scenario) => {
+    const alice = await scenario.addPlayerWithHapp([
+      { path: FIXTURE_DNA_URL.pathname },
+    ]);
+
+    await alice.cells[0].callZome<EntryHash>({
+      zome_name: "crude",
+      fn_name: "create",
+    });
+  });
+  t.pass();
+});
+
+test("Local Scenario - runScenario - Catch error when attaching a protected port", async (t) => {
+  await runScenario(async (scenario: Scenario) => {
+    const alice = await scenario.addPlayerWithHapp([
+      { path: FIXTURE_DNA_URL.pathname },
+    ]);
+
+    await alice.conductor.attachAppInterface({ port: 300 });
+  });
+  t.pass();
+});
+
+test("Local Scenario - runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
+  await runScenario(async (scenario: Scenario) => {
+    const alice = await scenario.addPlayerWithHapp([
+      { path: FIXTURE_DNA_URL.pathname },
+    ]);
+
+    await alice.cells[2].callZome({ zome_name: "", fn_name: "" });
+  });
+  t.pass();
+});
+
+test("Local Scenario - runScenario - Catch error that occurs in a signal handler", async (t) => {
+  await runScenario(async (scenario: Scenario) => {
+    let signalHandlerAlice: AppSignalCb | undefined;
+    const signalReceivedAlice = new Promise<AppSignal>((_, reject) => {
+      signalHandlerAlice = () => {
+        reject();
+      };
+    });
+
+    const [alice] = await scenario.addPlayersWithHapps([
+      {
+        dnas: [{ path: FIXTURE_DNA_URL.pathname }],
+        signalHandler: signalHandlerAlice,
+      },
+    ]);
+
+    const signalAlice = { value: "hello alice" };
+    alice.cells[0].callZome({
+      zome_name: "crud",
+      fn_name: "signal_loopback",
+      payload: signalAlice,
+    });
+
+    await signalReceivedAlice;
+  });
+  t.pass();
+});
+
 test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
   const scenario = new Scenario();
 
