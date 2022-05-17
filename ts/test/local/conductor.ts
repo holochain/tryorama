@@ -170,7 +170,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   await conductor2.connectAppInterface();
 
   const entryContent = "test-content";
-  const createEntryHash = await aliceHapps.cells[0].callZome<EntryHash>({
+  const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
     zome_name: "crud",
     fn_name: "create",
     payload: entryContent,
@@ -179,7 +179,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  await pause(5000);
+  await pause(2000);
 
   const readEntryResponse: typeof entryContent =
     await bobHapps.cells[0].callZome({
