@@ -23,17 +23,14 @@ jobs:
       with:
         name: holochain-ci
 
-    - name: Cache Rust builds
-      id: cache-rust
+    - name: Cache TryCP server build
+      id: cache-trycp-server
       uses: actions/cache@v3
       env:
-        cache-name: cache-rust
+        cache-name: cache-trycp-server
       with:
-        path: |
-          ./.cargo
-          ./.target
-          ./crates/trycp_server/target
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('**/Cargo.lock') }}
+        path: crates/trycp_server/target
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
         restore-keys: |
           ${{ runner.os }}-build-${{ env.cache-name }}-
           ${{ runner.os }}-build-
