@@ -37,10 +37,17 @@ jobs:
       with:
         path: crates/trycp_server/target
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
-        restore-keys: |
-          ${{ runner.os }}-build-${{ env.cache-name }}-
-          ${{ runner.os }}-build-
-          ${{ runner.os }}-
+        restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-
+
+    - name: Cache test zome build
+      id: cache-test-zomes
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-test-zomes
+      with:
+        path: target
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+        restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-
 
     - name: Build TryCP server and test hApp and run tests
       run: nix-shell --pure --run "./run-test.sh"
