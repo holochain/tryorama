@@ -5,7 +5,6 @@ import {
   EntryHash,
 } from "@holochain/client";
 import test from "tape-promise/tape";
-import { addAllAgentsToAllConductors } from "../../src/common";
 import { Scenario, runScenario } from "../../src/local/scenario";
 import { pause } from "../../src/util";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
@@ -116,7 +115,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
     { path: FIXTURE_DNA_URL.pathname },
   ]);
 
-  await addAllAgentsToAllConductors([alice.conductor, bob.conductor]);
+  await scenario.shareAllAgents();
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -144,7 +143,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
     [{ path: FIXTURE_DNA_URL.pathname }],
   ]);
 
-  await addAllAgentsToAllConductors([alice.conductor, bob.conductor]);
+  await scenario.shareAllAgents();
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({

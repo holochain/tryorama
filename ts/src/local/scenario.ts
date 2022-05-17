@@ -8,6 +8,7 @@ import {
   IScenario,
 } from "../types";
 import { makeLogger } from "../logger";
+import { addAllAgentsToAllConductors } from "../common";
 
 const logger = makeLogger("Scenario");
 
@@ -141,6 +142,16 @@ export class Scenario implements IScenario {
       )
     );
     return players;
+  }
+
+  /**
+   * Register all agents of all passed in conductors to each other. This skips
+   * peer discovery through gossip and thus accelerates test runs.
+   *
+   * @public
+   */
+  async shareAllAgents() {
+    return addAllAgentsToAllConductors(this.conductors);
   }
 
   /**

@@ -135,6 +135,7 @@ export interface IScenario {
       options?: HappBundleOptions & { signalHandler?: AppSignalCb };
     }>
   ): Promise<IPlayer[]>;
+  shareAllAgents(conductors: IConductor[]): Promise<void>;
   shutDown(): Promise<void>;
   cleanUp(): Promise<void>;
 }

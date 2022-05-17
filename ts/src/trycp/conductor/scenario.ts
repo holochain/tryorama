@@ -7,7 +7,7 @@ import {
   TryCpConductor,
 } from "./conductor";
 import { URL } from "url";
-import { addAllAgentsToAllConductors } from "../../common";
+import { addAllAgentsToAllConductors as shareAllAgents } from "../../common";
 import {
   AgentHappOptions,
   HappBundleOptions,
@@ -173,12 +173,12 @@ export class TryCpScenario implements IScenario {
 
   /**
    * Register all agents of all passed in conductors to each other. This skips
-   * peer discovery and thus accelerates test runs.
+   * peer discovery through gossip and thus accelerates test runs.
    *
    * @public
    */
-  async addAllAgentsToAllConductors() {
-    return addAllAgentsToAllConductors(this.conductors);
+  async shareAllAgents() {
+    return shareAllAgents(this.conductors);
   }
 
   /**

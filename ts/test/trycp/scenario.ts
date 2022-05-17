@@ -6,7 +6,6 @@ import {
 } from "@holochain/client";
 import test from "tape-promise/tape";
 import { URL } from "url";
-import { addAllAgentsToAllConductors } from "../../src/common";
 import { TryCpScenario } from "../../src/trycp/conductor/scenario";
 import {
   TRYCP_SERVER_HOST,
@@ -92,7 +91,7 @@ test("TryCp Scenario - Create and read an entry, 2 conductors", async (t) => {
     [{ path: FIXTURE_DNA_URL.pathname }],
     [{ path: FIXTURE_DNA_URL.pathname }],
   ]);
-  await addAllAgentsToAllConductors([alice.conductor, bob.conductor]);
+  await scenario.shareAllAgents();
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -119,7 +118,7 @@ test("TryCP Scenario - Conductor maintains data after shutdown and restart", asy
     [{ path: FIXTURE_DNA_URL.pathname }],
     [{ path: FIXTURE_DNA_URL.pathname }],
   ]);
-  await addAllAgentsToAllConductors([alice.conductor, bob.conductor]);
+  await scenario.shareAllAgents();
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
     zome_name: "crud",
