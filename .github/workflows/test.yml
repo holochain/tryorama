@@ -46,8 +46,8 @@ jobs:
       with:
         name: holochain-ci
     
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
 
     - name: Run all tests
       run: nix-shell --pure --run "./run-test.sh"
