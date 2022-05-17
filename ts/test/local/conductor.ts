@@ -8,6 +8,7 @@ import {
 import { cleanAllConductors, createConductor } from "../../src/local";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 import { pause } from "../../src/util";
+import { addAllAgentsToAllConductors } from "../../src/common";
 
 test("Local Conductor - Spawn a conductor and check for admin and app ws", async (t) => {
   const conductor = await createConductor();
@@ -169,6 +170,8 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   await conductor2.attachAppInterface();
   await conductor2.connectAppInterface();
 
+  await addAllAgentsToAllConductors([conductor1, conductor2]);
+
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
     zome_name: "crud",
@@ -179,7 +182,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  await pause(2000);
+  await pause(100);
 
   const readEntryResponse: typeof entryContent =
     await bobHapps.cells[0].callZome({

@@ -15,6 +15,7 @@ import {
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 import { pause } from "../../src/util";
 import { URL } from "url";
+import { addAllAgentsToAllConductors } from "../../src/common";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const LOCAL_TEST_PARTIAL_CONFIG = `signing_service_uri: ~
@@ -341,6 +342,8 @@ test("TryCP Conductor - Create and read an entry using the entry zome, 2 conduct
   const [bob] = await conductor2.installAgentsHapps({ agentsDnas: [dnas] });
   await conductor2.adminWs().attachAppInterface();
   await conductor2.connectAppInterface();
+
+  await addAllAgentsToAllConductors([conductor1, conductor2]);
 
   const entryContent = "test-content";
   const createEntry1Hash = await conductor1.appWs().callZome<EntryHash>({
