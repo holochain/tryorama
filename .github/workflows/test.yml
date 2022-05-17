@@ -7,8 +7,13 @@ on:
     branches: [ master, develop ]
 
 jobs:
-  build:
-    runs-on: ubuntu-latest
+  tests:
+    strategy:
+      matrix:
+        platform:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.platform }}
 
     steps:
     - name: Check out source code
@@ -37,5 +42,5 @@ jobs:
           ${{ runner.os }}-build-
           ${{ runner.os }}-
 
-    - name: Run all tests
+    - name: Build TryCP server and test hApp and run tests
       run: nix-shell --pure --run "./run-test.sh"
