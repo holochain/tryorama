@@ -40,9 +40,6 @@ jobs:
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
         restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
-    # - name: Setup tmate session
-    #   uses: mxschmitt/action-tmate@v3
-
     - name: Cache test zome build
       uses: actions/cache@v3
       env:
@@ -56,6 +53,6 @@ jobs:
       id: build-and-test
       run: nix-shell --pure --run "./run-test.sh"
 
-    # - name: Setup tmate session if build and test run failed
-    #   if: steps.build-and-test.outcome == 'failure'
-    #   uses: mxschmitt/action-tmate@v3
+    - name: Setup tmate session if build and test run failed
+      if: steps.build-and-test.outcome == 'failure'
+      uses: mxschmitt/action-tmate@v3
