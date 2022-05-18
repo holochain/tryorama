@@ -7,10 +7,7 @@ import {
   IPlayer,
   IScenario,
 } from "../types";
-import { makeLogger } from "../logger";
 import { addAllAgentsToAllConductors } from "../common";
-
-const logger = makeLogger("Scenario");
 
 /**
  * A player tied to a {@link Conductor}.
@@ -188,12 +185,6 @@ export const runScenario = async (
   const scenario = new Scenario();
   try {
     await testScenario(scenario);
-  } catch (error) {
-    if (typeof error === "object") {
-      logger.log("error", "%o", error);
-    } else {
-      logger.error(error);
-    }
   } finally {
     if (cleanUp) {
       await scenario.cleanUp();

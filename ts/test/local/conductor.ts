@@ -159,11 +159,8 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
   const conductor1 = await createConductor();
   const conductor2 = await createConductor();
-  const [aliceHapps] = await conductor1.installAgentsHapps({
-    agentsDnas: [dnas],
-  });
-  const [bobHapps] = await conductor2.installAgentsHapps({
-    agentsDnas: [dnas],
+  const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps({
+    agentsDnas: [dnas, dnas],
   });
   await conductor1.attachAppInterface();
   await conductor1.connectAppInterface();

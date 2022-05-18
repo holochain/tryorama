@@ -24,12 +24,13 @@ test("Local Scenario - runScenario - Catch error when calling non-existent zome"
       { path: FIXTURE_DNA_URL.pathname },
     ]);
 
-    await alice.cells[0].callZome<EntryHash>({
-      zome_name: "crude",
-      fn_name: "create",
-    });
+    await t.rejects(
+      alice.cells[0].callZome<EntryHash>({
+        zome_name: "NOZOME",
+        fn_name: "create",
+      })
+    );
   });
-  t.pass();
 });
 
 test("Local Scenario - runScenario - Catch error when attaching a protected port", async (t) => {
@@ -38,9 +39,8 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
       { path: FIXTURE_DNA_URL.pathname },
     ]);
 
-    await alice.conductor.attachAppInterface({ port: 300 });
+    await t.rejects(alice.conductor.attachAppInterface({ port: 300 }));
   });
-  t.pass();
 });
 
 test("Local Scenario - runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
@@ -49,9 +49,8 @@ test("Local Scenario - runScenario - Catch error when calling a zome of an undef
       { path: FIXTURE_DNA_URL.pathname },
     ]);
 
-    await alice.cells[2].callZome({ zome_name: "", fn_name: "" });
+    t.throws(() => alice.cells[2].callZome({ zome_name: "", fn_name: "" }));
   });
-  t.pass();
 });
 
 test("Local Scenario - runScenario - Catch error that occurs in a signal handler", async (t) => {
@@ -77,9 +76,8 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
       payload: signalAlice,
     });
 
-    await signalReceivedAlice;
+    await t.rejects(signalReceivedAlice);
   });
-  t.pass();
 });
 
 test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
@@ -105,15 +103,12 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
 });
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
+  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+
   const scenario = new Scenario();
   t.ok(scenario.uid);
 
-  const alice = await scenario.addPlayerWithHapp([
-    { path: FIXTURE_DNA_URL.pathname },
-  ]);
-  const bob = await scenario.addPlayerWithHapp([
-    { path: FIXTURE_DNA_URL.pathname },
-  ]);
+  const [alice, bob] = await scenario.addPlayersWithHapps([dnas, dnas]);
 
   await scenario.shareAllAgents();
 

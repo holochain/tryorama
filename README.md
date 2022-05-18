@@ -27,43 +27,51 @@ With a few lines of code you can start testing your Holochain application. This
 example uses [tape](https://github.com/substack/tape) as test runner and
 assertion library. You can choose any other library you want.
 
-```typescript
+```ts
 import test from "tape";
 import { Scenario, pause, runScenario } from "../../../lib";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-import { EntryHash } from "@holochain/client";
+import { DnaSource, EntryHash } from "@holochain/client";
 
 test("Create 2 players and create and read an entry", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    // Construct proper paths for your DNAs
-    // This assumes DNA files created by the `hc dna pack` command
+    // Construct proper paths for your DNAs.
+    // This assumes DNA files created by the `hc dna pack` command.
     const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
 
-    // Add 2 players to the Scenario and specify only one DNA for each, being the
-    // test DNA. The returned players can be destructured.
+    // Set up the array of DNAs to be installed, which only consists of the
+    // test DNA referenced by path.
+    const dnas: DnaSource[] = [{ path: testDnaPath }];
+
+    // Add 2 players with the test DNA to the Scenario. The returned players
+    // can be destructured.
     const [alice, bob] = await scenario.addPlayersWithHapps([
       [{ path: testDnaPath }],
       [{ path: testDnaPath }],
     ]);
 
-    // Content to be passed to the zome function that create an entry
+    // Shortcut peer discovery through gossip and register all agents in every
+    // conductor of the scenario.
+    await scenario.shareAllAgents();
+
+    // Content to be passed to the zome function that create an entry,
     const content = "Hello Tryorama";
 
     // The cells of the installed hApp are returned in the same order as the DNAs
     // that were passed into the player creation.
-    const createEntryHash = await alice.cells[0].callZome<EntryHash>({
+    const createEntryHash: EntryHash = await alice.cells[0].callZome({
       zome_name: "crud",
       fn_name: "create",
       payload: content,
     });
 
     // Wait for the created entry to be propagated to the other node.
-    await pause(500);
+    await pause(100);
 
     // Using the same cell and zome as before, the second player reads the
     // created entry.
-    const readContent = await bob.cells[0].callZome<typeof content>({
+    const readContent: typeof content = await bob.cells[0].callZome({
       zome_name: "crud",
       fn_name: "read",
       payload: createEntryHash,
@@ -75,34 +83,32 @@ test("Create 2 players and create and read an entry", async (t) => {
 
 Written out without the wrapper function, the same example looks like this:
 
-```typescript
+```ts
 import test from "tape";
 import { Scenario, pause } from "@holochain/tryorama";
 import { dirname } from "path";
 import { fileURLToPath } from "url";
-import { EntryHash } from "@holochain/client";
+import { DnaSource, EntryHash } from "@holochain/client";
 
 test("Create 2 players and create and read an entry", async (t) => {
   const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
+  const dnas: DnaSource[] = [{ path: testDnaPath }];
 
-  // Create a Scenario that uses conductors on the localhost
   const scenario = new Scenario();
+  const [alice, bob] = await scenario.addPlayersWithHapps([dnas, dnas]);
 
-  const [alice, bob] = await scenario.addPlayersWithHapps([
-    [{ path: testDnaPath }],
-    [{ path: testDnaPath }],
-  ]);
+  await scenario.shareAllAgents();
 
   const content = "Hello Tryorama";
-  const createEntryHash = await alice.cells[0].callZome<EntryHash>({
+  const createEntryHash: EntryHash = await alice.cells[0].callZome({
     zome_name: "crud",
     fn_name: "create",
     payload: content,
   });
 
-  await pause(500);
+  await pause(100);
 
-  const readContent = await bob.cells[0].callZome<typeof content>({
+  const readContent: typeof content = await bob.cells[0].callZome({
     zome_name: "crud",
     fn_name: "read",
     payload: createEntryHash,
@@ -114,15 +120,16 @@ test("Create 2 players and create and read an entry", async (t) => {
 });
 ```
 
-> The wrapper takes care of creating a scenario, logging any error that occurs
-while running the test and shutting down or deleting all conductors involved in
-the test scenario.
+> The wrapper takes care of creating a scenario and shutting down or deleting
+all conductors involved in the test scenario.
 
-When opting for writing the test without the wrapper, errors need to be handled
-too. Uncaught errors will cause the conductor process and therefore the test to
-hang. While developing the test, you can treat errors like this:
+When opting for writing the test without the wrapper, it might be necessary to
+handles errors while developing a test, depending on the test runner. With a
+test runner like "tape", uncaught errors will cause the conductor process and
+therefore the test to hang. If you're facing this issue, you can treat errors
+like this:
 
-```typescript
+```ts
 const scenario = new LocalScenario();
 try {
   /* operations on the scenario */
@@ -149,6 +156,51 @@ One level underneath the Scenario is the
 creation, startup and shutdown, it comes with complete functionality of Admin
 and App API that the JavaScript client offers.
 
+### Conductor example
+
+Here is the above example that just uses a `Conductor` without a `Scenario`:
+
+```ts
+  const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
+  const dnas: DnaSource[] = [{ path: testDnaPath }];
+
+  const conductor1 = await createConductor();
+  const conductor2 = await createConductor();
+  const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps({
+    agentsDnas: [dnas, dnas],
+  });
+
+  // Attach a web socket for the App API to the conductor.
+  await conductor1.attachAppInterface();
+  // Connect an App API client to the newly attached port.
+  await conductor1.connectAppInterface();
+
+  await conductor2.attachAppInterface();
+  await conductor2.connectAppInterface();
+
+  await addAllAgentsToAllConductors([conductor1, conductor2]);
+
+  const entryContent = "test-content";
+  const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
+    zome_name: "crud",
+    fn_name: "create",
+    payload: entryContent,
+  });
+
+  await pause(100);
+
+  const readEntryResponse: typeof entryContent =
+    await bobHapps.cells[0].callZome({
+      zome_name: "crud",
+      fn_name: "read",
+      payload: createEntryHash,
+    });
+
+  await conductor1.shutDown();
+  await conductor2.shutDown();
+  await cleanAllConductors();
+```
+
 ## hApp Installation
 
 Conductors are equipped with a method for easy hApp installation,
@@ -169,7 +221,7 @@ await conductor.attachAppInterface();
 await conductor.connectAppInterface();
 
 const entryContent = "test-content";
-const createEntryHash = await aliceHapps.cells[0].callZome<EntryHash>({
+const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
   zome_name: "crud",
   fn_name: "create",
   payload: entryContent,
