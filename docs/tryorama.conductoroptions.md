@@ -15,6 +15,8 @@ export interface ConductorOptions
 
 |  Property | Type | Description |
 |  --- | --- | --- |
+|  [attachAppInterface?](./tryorama.conductoroptions.attachappinterface.md) | boolean | <i>(Optional)</i> |
+|  [signalHandler?](./tryorama.conductoroptions.signalhandler.md) | AppSignalCb | <i>(Optional)</i> |
 |  [startup?](./tryorama.conductoroptions.startup.md) | boolean | <i>(Optional)</i> Start up conductor after creation.<!-- -->default: true |
 |  [timeout?](./tryorama.conductoroptions.timeout.md) | number | <i>(Optional)</i> Timeout for requests to Admin and App API. |
 

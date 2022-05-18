@@ -36,5 +36,6 @@ export declare class Scenario implements IScenario
 |  [addPlayerWithHapp(agentHappOptions)](./tryorama.scenario.addplayerwithhapp.md) |  | Create and add a single player to the scenario, with a set of DNAs installed. |
 |  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.scenario.addplayerwithhappbundle.md) |  | Create and add a single player to the scenario, with a hApp bundle installed. |
 |  [cleanUp()](./tryorama.scenario.cleanup.md) |  | Shut down and delete all conductors in the scenario. |
+|  [shareAllAgents()](./tryorama.scenario.shareallagents.md) |  | Register all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
 |  [shutDown()](./tryorama.scenario.shutdown.md) |  | Shut down all conductors in the scenario. |
 

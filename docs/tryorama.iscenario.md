@@ -22,5 +22,6 @@ export interface IScenario
 |  [addPlayerWithHapp(agentHappOptions)](./tryorama.iscenario.addplayerwithhapp.md) |  |
 |  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.iscenario.addplayerwithhappbundle.md) |  |
 |  [cleanUp()](./tryorama.iscenario.cleanup.md) |  |
+|  [shareAllAgents(conductors)](./tryorama.iscenario.shareallagents.md) |  |
 |  [shutDown()](./tryorama.iscenario.shutdown.md) |  |
 
