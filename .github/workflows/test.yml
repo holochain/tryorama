@@ -34,12 +34,14 @@ jobs:
       env:
         cache-name: cache-trycp-server
       with:
-        path: crates/trycp_server/target
+        path: |
+          .cargo
+          crates/trycp_server/target
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
         restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
-    - name: Setup tmate session
-      uses: mxschmitt/action-tmate@v3
+    # - name: Setup tmate session
+    #   uses: mxschmitt/action-tmate@v3
 
     - name: Cache test zome build
       uses: actions/cache@v3
