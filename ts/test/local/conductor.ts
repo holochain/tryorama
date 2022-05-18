@@ -12,8 +12,6 @@ import { addAllAgentsToAllConductors } from "../../src/common";
 
 test("Local Conductor - Spawn a conductor and check for admin and app ws", async (t) => {
   const conductor = await createConductor();
-  await conductor.attachAppInterface();
-  await conductor.connectAppInterface();
   t.ok(conductor.adminWs());
   t.ok(conductor.appWs());
 
@@ -26,8 +24,6 @@ test("Local Conductor - Get app info", async (t) => {
   const [aliceHapps] = await conductor.installAgentsHapps({
     agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
   });
-  await conductor.attachAppInterface();
-  await conductor.connectAppInterface();
   const appInfo = await conductor.appWs().appInfo({
     installed_app_id: aliceHapps.happId,
   });
@@ -42,9 +38,6 @@ test("Local Conductor - Install and call a hApp bundle", async (t) => {
     path: FIXTURE_HAPP_URL.pathname,
   });
   t.ok(installedHappBundle.happId);
-
-  await conductor.attachAppInterface();
-  await conductor.connectAppInterface();
 
   const entryContent = "Bye bye, world";
   const createEntryResponse: EntryHash =
@@ -122,9 +115,6 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   });
   t.deepEqual(enabledAppResponse.app.status, { running: null });
 
-  await conductor.attachAppInterface();
-  await conductor.connectAppInterface();
-
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await conductor.appWs().callZome({
     cap_secret: null,
@@ -162,10 +152,6 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
   const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps({
     agentsDnas: [dnas, dnas],
   });
-  await conductor1.attachAppInterface();
-  await conductor1.connectAppInterface();
-  await conductor2.attachAppInterface();
-  await conductor2.connectAppInterface();
 
   await addAllAgentsToAllConductors([conductor1, conductor2]);
 
@@ -196,7 +182,6 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
 test("Local Conductor - Receive a signal", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
-  const conductor = await createConductor();
 
   let signalHandler: AppSignalCb | undefined;
   const signalReceived = new Promise<AppSignal>((resolve) => {
@@ -204,13 +189,11 @@ test("Local Conductor - Receive a signal", async (t) => {
       resolve(signal);
     };
   });
+  const conductor = await createConductor({ signalHandler });
 
   const [aliceHapps] = await conductor.installAgentsHapps({
     agentsDnas: [dnas],
   });
-
-  await conductor.attachAppInterface();
-  await conductor.connectAppInterface(signalHandler);
 
   const aliceSignal = { value: "signal" };
   aliceHapps.cells[0].callZome({

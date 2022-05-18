@@ -47,9 +47,10 @@ export class Scenario implements IScenario {
    * @returns The newly added conductor instance.
    */
   async addConductor(signalHandler?: AppSignalCb) {
-    const conductor = await createConductor({ timeout: this.timeout });
-    await conductor.attachAppInterface();
-    await conductor.connectAppInterface(signalHandler);
+    const conductor = await createConductor({
+      signalHandler,
+      timeout: this.timeout,
+    });
     this.conductors.push(conductor);
     return conductor;
   }

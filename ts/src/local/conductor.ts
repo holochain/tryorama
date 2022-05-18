@@ -33,6 +33,9 @@ export interface ConductorOptions {
    */
   startup?: boolean;
 
+  attachAppInterface?: boolean;
+  signalHandler?: AppSignalCb;
+
   /**
    * Timeout for requests to Admin and App API.
    */
@@ -51,6 +54,10 @@ export const createConductor = async (options?: ConductorOptions) => {
   const conductor = await Conductor.create(options?.timeout);
   if (options?.startup !== false) {
     await conductor.startUp();
+    if (options?.attachAppInterface !== false) {
+      await conductor.attachAppInterface();
+      await conductor.connectAppInterface(options?.signalHandler);
+    }
   }
   return conductor;
 };
