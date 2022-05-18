@@ -45,9 +45,11 @@ jobs:
       env:
         cache-name: cache-test-zomes
       with:
-        path: target
-        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.toml') }}
-        restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.toml') }}
+        path: |
+          .cargo
+          target
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+        restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
 
     - name: Build TryCP server and test hApp and run tests
       id: build-and-test
