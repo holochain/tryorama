@@ -39,6 +39,9 @@ jobs:
         key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
         restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
+    - name: Setup tmate session
+      uses: mxschmitt/action-tmate@v3
+
     - name: Cache test zome build
       id: cache-test-zomes
       uses: actions/cache@v3
