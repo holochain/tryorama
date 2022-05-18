@@ -30,7 +30,6 @@ jobs:
         name: holochain-ci
 
     - name: Cache TryCP server build
-      id: cache-trycp-server
       uses: actions/cache@v3
       env:
         cache-name: cache-trycp-server
@@ -40,10 +39,10 @@ jobs:
         restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
     - name: Setup tmate session
+      if: ${{ failure() }}
       uses: mxschmitt/action-tmate@v3
 
     - name: Cache test zome build
-      id: cache-test-zomes
       uses: actions/cache@v3
       env:
         cache-name: cache-test-zomes
@@ -53,4 +52,9 @@ jobs:
         restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.toml') }}
 
     - name: Build TryCP server and test hApp and run tests
+      id: build-and-test
       run: nix-shell --pure --run "./run-test.sh"
+
+    - name: Setup tmate session if build and test run failed
+      if: steps.build-and-test.outcome == 'failure'
+      uses: mxschmitt/action-tmate@v3
