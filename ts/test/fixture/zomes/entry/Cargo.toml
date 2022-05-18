@@ -1,12 +1,12 @@
 [package]
-edition = "2021"
 name = "crud"
-version = "0.1.0"
+edition = "2021"
+version = "0.0.1"
 
 [lib]
 crate-type = ["cdylib", "rlib"]
 name = "crud"
 
 [dependencies]
-hdk = "0.0.126"
+hdk = "0.0.132"
 serde = "1"
