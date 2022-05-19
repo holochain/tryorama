@@ -124,7 +124,7 @@ test("Create 2 players and create and read an entry", async (t) => {
 all conductors involved in the test scenario.
 
 When opting for writing the test without the wrapper, it might be necessary to
-handles errors while developing a test, depending on the test runner. With a
+handle errors while developing a test, depending on the test runner. With a
 test runner like "tape", uncaught errors will cause the conductor process and
 therefore the test to hang. If you're facing this issue, you can treat errors
 like this:
@@ -170,14 +170,6 @@ Here is the above example that just uses a `Conductor` without a `Scenario`:
     agentsDnas: [dnas, dnas],
   });
 
-  // Attach a web socket for the App API to the conductor.
-  await conductor1.attachAppInterface();
-  // Connect an App API client to the newly attached port.
-  await conductor1.connectAppInterface();
-
-  await conductor2.attachAppInterface();
-  await conductor2.connectAppInterface();
-
   await addAllAgentsToAllConductors([conductor1, conductor2]);
 
   const entryContent = "test-content";
@@ -201,6 +193,10 @@ Here is the above example that just uses a `Conductor` without a `Scenario`:
   await cleanAllConductors();
 ```
 
+> Note that you need to set a [UID](https://docs.rs/holochain_types/latest/holochain_types/app/struct.RegisterDnaPayload.html#structfield.uid)
+manually when registering DNAs. This is taken care of automatically when using
+a `Scenario`.
+
 ## hApp Installation
 
 Conductors are equipped with a method for easy hApp installation,
@@ -217,8 +213,6 @@ const conductor = await createLocalConductor();
 const [aliceHapps] = await conductor.installAgentsHapps({
   agentsDnas: [dnas],
 });
-await conductor.attachAppInterface();
-await conductor.connectAppInterface();
 
 const entryContent = "test-content";
 const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
