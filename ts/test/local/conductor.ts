@@ -1,14 +1,154 @@
 import test from "tape-promise/tape";
+import { readFileSync } from "fs";
 import {
   AppSignal,
   AppSignalCb,
   DnaSource,
   EntryHash,
 } from "@holochain/client";
-import { cleanAllConductors, createConductor } from "../../src/local";
+import {
+  cleanAllConductors,
+  createConductor,
+  NetworkType,
+} from "../../src/local";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 import { pause } from "../../src/util";
 import { addAllAgentsToAllConductors } from "../../src/common";
+import { URL } from "url";
+
+test("Local Conductor - Spawn a conductor with QUIC network", async (t) => {
+  const conductor = await createConductor({
+    networkType: NetworkType.Quic,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.ok(conductorConfig.includes("network_type: quic"));
+
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Spawn a conductor with mDNS network", async (t) => {
+  const conductor = await createConductor({
+    networkType: NetworkType.Mdns,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.ok(conductorConfig.includes("network_type: quic_mdns"));
+
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Spawn a conductor with a bootstrap service", async (t) => {
+  const bootstrapUrl = new URL("https://test.bootstrap.com");
+  const conductor = await createConductor({
+    bootstrapUrl,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.ok(conductorConfig.includes("network_type: quic_bootstrap"));
+  t.ok(conductorConfig.includes(`bootstrap_service: "${bootstrapUrl.href}"`));
+
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Spawn a conductor with a bind_to address", async (t) => {
+  const bindTo = new URL("https://0.0.0.0:100");
+  const conductor = await createConductor({
+    bindTo,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.ok(conductorConfig.includes("network_type: quic"));
+  t.ok(conductorConfig.includes(`bind_to: "${bindTo.href}"`));
+
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Spawn a conductor with an overridden host address", async (t) => {
+  const hostOverride = new URL("https://1.2.3.4");
+  const conductor = await createConductor({
+    hostOverride,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.ok(conductorConfig.includes("network_type: quic"));
+  t.ok(conductorConfig.includes(`override_host: "${hostOverride.href}"`));
+
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Spawn a conductor with an overridden port", async (t) => {
+  const portOverride = 10000;
+  const conductor = await createConductor({
+    portOverride,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.ok(conductorConfig.includes("network_type: quic"));
+  t.ok(conductorConfig.includes(`override_port: ${portOverride}`));
+
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Spawn a conductor with all available config arguments", async (t) => {
+  const bootstrapUrl = new URL("https://test.bootstrap.com");
+  const bindTo = new URL("https://0.0.0.0:100");
+  const hostOverride = new URL("https://1.2.3.4");
+  const portOverride = 10000;
+  const conductor = await createConductor({
+    bootstrapUrl,
+    bindTo,
+    hostOverride,
+    portOverride,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.ok(conductorConfig.includes("network_type: quic"));
+  t.ok(conductorConfig.includes(`bootstrap_service: "${bootstrapUrl.href}"`));
+  t.ok(conductorConfig.includes(`bind_to: "${bindTo.href}"`));
+  t.ok(conductorConfig.includes(`override_host: "${hostOverride.href}"`));
+  t.ok(conductorConfig.includes(`override_port: ${portOverride}`));
+
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Spawn a conductor with a proxy service", async (t) => {
+  const proxy = new URL("https://0.0.0.0:100");
+  const conductor = await createConductor({
+    proxy,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.ok(conductorConfig.includes("network_type: quic_bootstrap"));
+  t.ok(conductorConfig.includes("- type: proxy"));
+  t.ok(conductorConfig.includes(`proxy_url: "${proxy.href}"`));
+
+  await cleanAllConductors();
+});
 
 test("Local Conductor - Spawn a conductor and check for admin and app ws", async (t) => {
   const conductor = await createConductor();

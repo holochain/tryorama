@@ -1,4 +1,5 @@
 import assert from "assert";
+import pick from "lodash/pick";
 import getPort, { portNumbers } from "get-port";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
 import { makeLogger } from "../logger";
@@ -23,24 +24,95 @@ const HOST_URL = new URL("ws://127.0.0.1");
 const DEFAULT_TIMEOUT = 15000;
 
 /**
+ * The network type the conductor should use to communicate with peers.
+ *
+ * @public
+ */
+export enum NetworkType {
+  Quic = "quic",
+  Mdns = "mdns",
+}
+
+/**
  * @public
  */
 export interface ConductorOptions {
   /**
    * Start up conductor after creation.
    *
-   * default: true
+   * @defaultValue true
    */
   startup?: boolean;
 
+  /**
+   * Attach an app interface to the conductor and connect an app websocket
+   * to it.
+   *
+   * @defaultValue true
+   */
   attachAppInterface?: boolean;
+
+  /**
+   * Register a signal handler on the app websocket.
+   */
   signalHandler?: AppSignalCb;
 
   /**
-   * Timeout for requests to Admin and App API.
+   * The network type the conductor should use
+   *
+   * @defaultValue quic
+   */
+  networkType?: NetworkType;
+
+  /**
+   * A bootstrap service URL for peers to discover each other
+   */
+  bootstrapUrl?: URL;
+
+  /**
+   * Network interface and port to bind to
+   *
+   * @defaultValue "kitsune-quic://0.0.0.0:0"
+   */
+  bindTo?: URL;
+
+  /**
+   * Run through an external proxy
+   */
+  proxy?: URL;
+
+  /**
+   * If you have port-forwarding set up or wish to apply a vanity domain name,
+   * you may need to override the local IP.
+   *
+   * @defaultValue undefined = no override
+   */
+  hostOverride?: URL;
+
+  /**
+   * If you have port-forwarding set up, you may need to override the local
+   * port.
+   *
+   * @defaultValue undefined = no override
+   */
+  portOverride?: number;
+
+  /**
+   * Timeout for requests to Admin and App API
    */
   timeout?: number;
 }
+
+type CreateConductorOptions = Pick<
+  ConductorOptions,
+  | "bindTo"
+  | "bootstrapUrl"
+  | "hostOverride"
+  | "networkType"
+  | "portOverride"
+  | "proxy"
+  | "timeout"
+>;
 
 /**
  * The function to create a conductor. It starts a sandbox conductor via the
@@ -51,7 +123,16 @@ export interface ConductorOptions {
  * @public
  */
 export const createConductor = async (options?: ConductorOptions) => {
-  const conductor = await Conductor.create(options?.timeout);
+  const createConductorOptions: CreateConductorOptions = pick(options, [
+    "bindTo",
+    "bootstrapUrl",
+    "hostOverride",
+    "networkType",
+    "portOverride",
+    "proxy",
+    "timeout",
+  ]);
+  const conductor = await Conductor.create(createConductorOptions);
   if (options?.startup !== false) {
     await conductor.startUp();
     if (options?.attachAppInterface !== false) {
@@ -87,19 +168,38 @@ export class Conductor implements IConductor {
   }
 
   /**
-   * Factory method to create a local conductor.
+   * Factory to create a conductor.
    *
-   * @param timeout - Timeout for requests to Admin and App API.
-   * @returns A configured instance of local conductor, not yet running.
+   * @returns A configured instance of a conductor, not yet running.
    */
-  static async create(timeout?: number) {
-    const conductor = new Conductor(timeout);
-    const createConductorProcess = spawn("hc", [
-      "sandbox",
-      "create",
-      "network",
-      "mdns",
-    ]);
+  static async create(options?: CreateConductorOptions) {
+    const networkType = options?.networkType ?? NetworkType.Quic;
+    if (options?.bootstrapUrl && networkType !== NetworkType.Quic) {
+      throw new Error(
+        "error creating a conductor: bootstrap service can only be set for quic network"
+      );
+    }
+
+    const conductor = new Conductor(options?.timeout);
+    const args = ["sandbox", "create", "network"];
+    if (options?.bootstrapUrl) {
+      args.push("--bootstrap", options.bootstrapUrl.href);
+    }
+    args.push(networkType);
+    if (options?.bindTo) {
+      args.push("--bind-to", options.bindTo.href);
+    }
+    if (options?.hostOverride) {
+      args.push("--override-host", options.hostOverride.href);
+    }
+    if (options?.portOverride) {
+      args.push("--override-port", options.portOverride.toString());
+    }
+    if (options?.proxy) {
+      args.push("-p", options.proxy.href);
+    }
+    const createConductorProcess = spawn("hc", args);
+
     const createConductorPromise = new Promise<Conductor>((resolve, reject) => {
       createConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`creating conductor config\n${data.toString()}`);
@@ -111,7 +211,7 @@ export class Conductor implements IConductor {
       createConductorProcess.stdout.on("end", () => {
         resolve(conductor);
       });
-      createConductorProcess.on("error", (err) => {
+      createConductorProcess.stderr.on("data", (err) => {
         logger.error(`error when creating conductor config: ${err}\n`);
         reject(err);
       });
@@ -249,9 +349,20 @@ export class Conductor implements IConductor {
   }
 
   /**
+   * Get the path of the directory that contains all files and folders of the
+   * conductor.
+   *
+   * @returns The conductor's temporary directory
+   */
+  getTmpDirectory() {
+    assert(this.conductorDir);
+    return this.conductorDir;
+  }
+
+  /**
    * Get all Admin API methods.
    *
-   * @returns The Admin API web socket.
+   * @returns The Admin API web socket
    */
   adminWs() {
     assert(this._adminWs, "admin ws has not been connected");
@@ -261,7 +372,7 @@ export class Conductor implements IConductor {
   /**
    * Get all App API methods.
    *
-   * @returns The App API web socket.
+   * @returns The App API web socket
    */
   appWs() {
     assert(this._appWs, "app ws has not been connected");
@@ -273,7 +384,7 @@ export class Conductor implements IConductor {
    *
    * @param options - An array of DNAs for each agent, resulting in a
    * 2-dimensional array, and a UID for the DNAs (optional).
-   * @returns An array with each agent's hApp.
+   * @returns An array with each agent's hApp
    */
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
@@ -338,7 +449,7 @@ export class Conductor implements IConductor {
    *
    * @param appBundleSource - The bundle or path to the bundle.
    * @param options - {@link HappBundleOptions} for the hApp bundle (optional).
-   * @returns A hApp for the agent.
+   * @returns A hApp for the agent
    */
   async installHappBundle(
     appBundleSource: AppBundleSource,
