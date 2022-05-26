@@ -14,7 +14,7 @@ addConductor(signalHandler?: AppSignalCb): Promise<IConductor>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signalHandler | AppSignalCb |  |
+|  signalHandler | AppSignalCb | <i>(Optional)</i> |
 
 <b>Returns:</b>
 

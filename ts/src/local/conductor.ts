@@ -103,7 +103,12 @@ export interface ConductorOptions {
   timeout?: number;
 }
 
-type CreateConductorOptions = Pick<
+/**
+ * Options for using the conductor factory.
+ *
+ * @public
+ */
+export type CreateConductorOptions = Pick<
   ConductorOptions,
   | "bindTo"
   | "bootstrapUrl"
@@ -352,7 +357,7 @@ export class Conductor implements IConductor {
    * Get the path of the directory that contains all files and folders of the
    * conductor.
    *
-   * @returns The conductor's temporary directory
+   * @returns The conductor's temporary directory.
    */
   getTmpDirectory() {
     assert(this.conductorDir);
@@ -362,7 +367,7 @@ export class Conductor implements IConductor {
   /**
    * Get all Admin API methods.
    *
-   * @returns The Admin API web socket
+   * @returns The Admin API web socket.
    */
   adminWs() {
     assert(this._adminWs, "admin ws has not been connected");
@@ -372,7 +377,7 @@ export class Conductor implements IConductor {
   /**
    * Get all App API methods.
    *
-   * @returns The App API web socket
+   * @returns The App API web socket.
    */
   appWs() {
     assert(this._appWs, "app ws has not been connected");
@@ -384,7 +389,7 @@ export class Conductor implements IConductor {
    *
    * @param options - An array of DNAs for each agent, resulting in a
    * 2-dimensional array, and a UID for the DNAs (optional).
-   * @returns An array with each agent's hApp
+   * @returns An array with each agent's hApp.
    */
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
@@ -449,7 +454,7 @@ export class Conductor implements IConductor {
    *
    * @param appBundleSource - The bundle or path to the bundle.
    * @param options - {@link HappBundleOptions} for the hApp bundle (optional).
-   * @returns A hApp for the agent
+   * @returns A hApp for the agent.
    */
   async installHappBundle(
     appBundleSource: AppBundleSource,

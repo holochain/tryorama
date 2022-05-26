@@ -15,7 +15,7 @@ setSignalHandler(port: number, signalHandler?: AppSignalCb): void;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  port | number |  |
-|  signalHandler | AppSignalCb |  |
+|  signalHandler | AppSignalCb | <i>(Optional)</i> |
 
 <b>Returns:</b>
 

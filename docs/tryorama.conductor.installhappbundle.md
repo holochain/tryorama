@@ -17,7 +17,7 @@ installHappBundle(appBundleSource: AppBundleSource, options?: HappBundleOptions)
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
-|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) | [HappBundleOptions](./tryorama.happbundleoptions.md) for the hApp bundle (optional). |
+|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) | <i>(Optional)</i> [HappBundleOptions](./tryorama.happbundleoptions.md) for the hApp bundle (optional). |
 
 <b>Returns:</b>
 

@@ -4,6 +4,8 @@
 
 ## ConductorOptions.attachAppInterface property
 
+Attach an app interface to the conductor and connect an app websocket to it.
+
 <b>Signature:</b>
 
 ```typescript

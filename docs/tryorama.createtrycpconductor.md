@@ -9,5 +9,5 @@ The function to create a TryCP Conductor (aka "Player").
 <b>Signature:</b>
 
 ```typescript
-createTryCpConductor: (serverUrl: URL, options?: TryCpConductorOptions | undefined) => Promise<TryCpConductor>
+createTryCpConductor: (serverUrl: URL, options?: TryCpConductorOptions) => Promise<TryCpConductor>
 ```

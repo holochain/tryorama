@@ -17,7 +17,7 @@ static create(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  serverUrl | URL | The URL of the TryCP server. |
-|  timeout | number |  |
+|  timeout | number | <i>(Optional)</i> |
 
 <b>Returns:</b>
 

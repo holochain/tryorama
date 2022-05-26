@@ -4,6 +4,8 @@
 
 ## ConductorOptions.signalHandler property
 
+Register a signal handler on the app websocket.
+
 <b>Signature:</b>
 
 ```typescript

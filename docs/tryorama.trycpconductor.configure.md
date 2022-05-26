@@ -16,7 +16,7 @@ configure(partialConfig?: string): Promise<null>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  partialConfig | string | The configuration to add to the default configuration. |
+|  partialConfig | string | <i>(Optional)</i> The configuration to add to the default configuration. |
 
 <b>Returns:</b>
 

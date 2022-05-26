@@ -21,7 +21,8 @@ export declare class Conductor implements IConductor
 |  [appWs()](./tryorama.conductor.appws.md) |  | Get all App API methods. |
 |  [attachAppInterface(request)](./tryorama.conductor.attachappinterface.md) |  | Attach a web socket to the App API. |
 |  [connectAppInterface(signalHandler)](./tryorama.conductor.connectappinterface.md) |  | Connect a web socket to the App API. |
-|  [create(timeout)](./tryorama.conductor.create.md) | <code>static</code> | Factory method to create a local conductor. |
+|  [create(options)](./tryorama.conductor.create.md) | <code>static</code> | Factory to create a conductor. |
+|  [getTmpDirectory()](./tryorama.conductor.gettmpdirectory.md) |  | Get the path of the directory that contains all files and folders of the conductor. |
 |  [installAgentsHapps(options)](./tryorama.conductor.installagentshapps.md) |  | Install a set of DNAs for multiple agents into the conductor. |
 |  [installHappBundle(appBundleSource, options)](./tryorama.conductor.installhappbundle.md) |  | Install a hApp bundle into the conductor. |
 |  [shutDown()](./tryorama.conductor.shutdown.md) |  | Close Admin and App API connections and kill the conductor process. |

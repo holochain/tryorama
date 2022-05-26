@@ -18,7 +18,7 @@ startUp(options?: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; } | Log level of the conductor. Defaults to "info". |
+|  options | { logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; } | <i>(Optional)</i> Log level of the conductor. Defaults to "info". |
 
 <b>Returns:</b>
 

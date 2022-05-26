@@ -18,5 +18,5 @@ constructor(options?: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { timeout?: number; } | Timeout for requests to Admin and App API calls. |
+|  options | { timeout?: number; } | <i>(Optional)</i> Timeout for requests to Admin and App API calls. |
 

@@ -4,7 +4,7 @@
 
 ## ConductorOptions.timeout property
 
-Timeout for requests to Admin and App API.
+Timeout for requests to Admin and App API
 
 <b>Signature:</b>
 

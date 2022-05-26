@@ -16,7 +16,7 @@ static start(port?: number): Promise<TryCpServer>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  port | number | The network port the server should listen on. |
+|  port | number | <i>(Optional)</i> The network port the server should listen on. |
 
 <b>Returns:</b>
 

@@ -16,7 +16,7 @@ attachAppInterface(request?: AttachAppInterfaceRequest): Promise<void>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  request | AttachAppInterfaceRequest | Specify a port for the web socket (optional). |
+|  request | AttachAppInterfaceRequest | <i>(Optional)</i> Specify a port for the web socket (optional). |
 
 <b>Returns:</b>
 

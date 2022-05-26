@@ -4,23 +4,23 @@
 
 ## Conductor.create() method
 
-Factory method to create a local conductor.
+Factory to create a conductor.
 
 <b>Signature:</b>
 
 ```typescript
-static create(timeout?: number): Promise<Conductor>;
+static create(options?: CreateConductorOptions): Promise<Conductor>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  timeout | number | Timeout for requests to Admin and App API. |
+|  options | [CreateConductorOptions](./tryorama.createconductoroptions.md) | <i>(Optional)</i> |
 
 <b>Returns:</b>
 
 Promise&lt;[Conductor](./tryorama.conductor.md)<!-- -->&gt;
 
-A configured instance of local conductor, not yet running.
+A configured instance of a conductor, not yet running.
 

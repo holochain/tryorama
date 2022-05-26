@@ -22,7 +22,7 @@ installHappBundle(appBundleSource: AppBundleSource, options?: {
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
-|  options | { agentPubKey?: AgentPubKey; installedAppId?: string; uid?: string; membraneProofs?: Record&lt;string, MembraneProof&gt;; } | [HappBundleOptions](./tryorama.happbundleoptions.md) for the hApp bundle (optional). |
+|  options | { agentPubKey?: AgentPubKey; installedAppId?: string; uid?: string; membraneProofs?: Record&lt;string, MembraneProof&gt;; } | <i>(Optional)</i> [HappBundleOptions](./tryorama.happbundleoptions.md) for the hApp bundle (optional). |
 
 <b>Returns:</b>
 

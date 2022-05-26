@@ -16,7 +16,7 @@ addConductor(signalHandler?: AppSignalCb): Promise<Conductor>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signalHandler | AppSignalCb | A callback function to handle signals. |
+|  signalHandler | AppSignalCb | <i>(Optional)</i> A callback function to handle signals. |
 
 <b>Returns:</b>
 

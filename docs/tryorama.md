@@ -23,6 +23,12 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [TryCpScenario](./tryorama.trycpscenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a TryCp conductor. |
 |  [TryCpServer](./tryorama.trycpserver.md) | A factory class to start and stop local instances of the TryCP server. |
 
+## Enumerations
+
+|  Enumeration | Description |
+|  --- | --- |
+|  [NetworkType](./tryorama.networktype.md) | The network type the conductor should use to communicate with peers. |
+
 ## Interfaces
 
 |  Interface | Description |
@@ -96,6 +102,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [CallZomeFn](./tryorama.callzomefn.md) | The function for calling a zome from a specific cell. |
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |
 |  [ConductorId](./tryorama.conductorid.md) |  |
+|  [CreateConductorOptions](./tryorama.createconductoroptions.md) | Options for using the conductor factory. |
 |  [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) | All possible calls to an app interface. |
 |  [TryCpApiResponse](./tryorama.trycpapiresponse.md) | Possible responses from the Admin and App APIs. |
 |  [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | Log level for a TryCP conductor. |

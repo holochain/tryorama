@@ -17,5 +17,5 @@ constructor(tryCpClient: TryCpClient, id?: ConductorId);
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) |  |
-|  id | [ConductorId](./tryorama.conductorid.md) |  |
+|  id | [ConductorId](./tryorama.conductorid.md) | <i>(Optional)</i> |
 
