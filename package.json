@@ -1,8 +1,14 @@
 {
   "name": "@holochain/tryorama",
-  "description": "E2E test framework for Holochain apps",
+  "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
   "version": "0.5.0",
   "author": "Holochain Foundation",
+  "keywords": [
+    "holochain",
+    "conductor",
+    "test",
+    "e2e"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/holochain/tryorama"
@@ -10,13 +16,14 @@
   "license": "CAL-1.0",
   "type": "module",
   "engines": {
-    "node": "^12.20.0 || ^14.13.1 || >=16.0.0"
+    "node": "^14.13.1 || >=16.0.0"
   },
   "workspaces": [
     "crates/trycp_server/test"
   ],
   "exports": {
-    ".": "./lib/*.js"
+    ".": "./lib/index.js",
+    "./trycp": "./lib/trycp/*.js"
   },
   "typings": "./lib/index.d.ts",
   "files": [
@@ -28,14 +35,14 @@
     "prepare": "npm run lint",
     "prepublishOnly": "npm test && npm run build",
     "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
-    "test": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/index.ts",
+    "test": "node --loader ts-node/esm ts/test/index.ts",
     "test:local": "npm run test:local:conductor && npm run test:local:scenario",
-    "test:local:conductor": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/local/conductor.ts",
-    "test:local:scenario": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/local/scenario.ts",
+    "test:local:conductor": "node --loader ts-node/esm ts/test/local/conductor.ts",
+    "test:local:scenario": "node --loader ts-node/esm ts/test/local/scenario.ts",
     "test:trycp": "npm run test:trycp:server && npm run test:trycp:conductor && npm run test:trycp:scenario",
-    "test:trycp:server": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/server.ts",
-    "test:trycp:conductor": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/conductor.ts",
-    "test:trycp:scenario": "node --experimental-specifier-resolution=node --loader ts-node/esm ts/test/trycp/scenario.ts"
+    "test:trycp:server": "node --loader ts-node/esm ts/test/trycp/server.ts",
+    "test:trycp:conductor": "node --loader ts-node/esm ts/test/trycp/conductor.ts",
+    "test:trycp:scenario": "node --loader ts-node/esm ts/test/trycp/scenario.ts"
   },
   "dependencies": {
     "@holochain/client": "^0.3.2",
