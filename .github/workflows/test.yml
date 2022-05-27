@@ -7,34 +7,54 @@ on:
     branches: [ master, develop ]
 
 jobs:
-  build:
-
-    runs-on: ubuntu-latest
-
+  tests:
     strategy:
       matrix:
-        node-version: [16.x]
+        platform:
+          - ubuntu-latest
+          - macos-latest
+    runs-on: ${{ matrix.platform }}
 
     steps:
-    - name: Fetch source code
+    - name: Check out source code
       uses: actions/checkout@v2
-    - name: Use Nix
+
+    - name: Install nix
       uses: cachix/install-nix-action@v16
       with:
         nix_path: nixpkgs=channel:nixos-21.11
-    - name: Use Node.js ${{ matrix.node-version }}
-      uses: actions/setup-node@v1
-      with:
-        node-version: ${{ matrix.node-version }}
-    - name: Configure Nix substituters
-      run: |
-        set -xe
-        mkdir -p ~/.config/nix/
-        cp ./.github/nix.conf ~/.config/nix/
-    - uses: cachix/cachix-action@v10
+
+    - name: Set up cachix
+      uses: cachix/cachix-action@v10
       with:
         name: holochain-ci
-    - name: Prepare Nix environment
-      run: nix-shell --command "echo Completed"
-    - name: Run all tests
-      run: nix-shell --command "ci_scripts/run-test.sh"
+
+    - name: Cache TryCP server build
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-trycp-server
+      with:
+        path: |
+          .cargo
+          crates/trycp_server/target
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+        restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+
+    - name: Cache test zome build
+      uses: actions/cache@v3
+      env:
+        cache-name: cache-test-zomes
+      with:
+        path: |
+          .cargo
+          target
+        key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+        restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+
+    - name: Build TryCP server and test hApp and run tests
+      id: build-and-test
+      run: nix-shell --pure --run "./run-test.sh"
+
+    - name: Setup tmate session if build and test run failed
+      if: steps.build-and-test.outcome == 'failure'
+      uses: mxschmitt/action-tmate@v3
