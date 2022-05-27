@@ -4,7 +4,7 @@ import {
   InstalledAppInfo,
   InstalledCell,
 } from "@holochain/client";
-import { AgentHapp, CellZomeCallRequest, IConductor } from "./types";
+import { AgentHapp, CellZomeCallRequest, IConductor } from "./types.js";
 
 export const addAllAgentsToAllConductors = async (conductors: IConductor[]) => {
   await Promise.all(

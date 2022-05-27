@@ -1,9 +1,3 @@
-import assert from "assert";
-import fs from "fs";
-import { v4 as uuidv4 } from "uuid";
-import getPort, { portNumbers } from "get-port";
-import { AgentHapp, IConductor } from "../../types";
-import { TryCpConductorLogLevel, TryCpClient } from "..";
 import {
   AddAgentInfoRequest,
   AgentPubKey,
@@ -29,16 +23,22 @@ import {
   StartAppRequest,
   UninstallAppRequest,
 } from "@holochain/client";
+import { FullStateDump } from "@holochain/client/lib/api/state-dump";
+import assert from "assert";
+import fs from "fs";
+import getPort, { portNumbers } from "get-port";
+import { URL } from "url";
+import { v4 as uuidv4 } from "uuid";
+import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
+import { enableAndGetAgentHapp } from "../../common.js";
+import { makeLogger } from "../../logger.js";
+import { AgentHapp, IConductor } from "../../types.js";
 import {
-  TRYCP_SUCCESS_RESPONSE,
   RequestAdminInterfaceData,
   RequestCallAppInterfaceMessage,
-} from "../types";
-import { deserializeZomeResponsePayload } from "../util";
-import { makeLogger } from "../../logger";
-import { URL } from "url";
-import { enableAndGetAgentHapp } from "../../common";
-import { FullStateDump } from "@holochain/client/lib/api/state-dump";
+  TRYCP_SUCCESS_RESPONSE,
+} from "../types.js";
+import { deserializeZomeResponsePayload } from "../util.js";
 
 const logger = makeLogger("TryCP conductor");
 

@@ -4,10 +4,10 @@ import {
   DnaSource,
   EntryHash,
 } from "@holochain/client";
-import test from "tape-promise/tape";
-import { Scenario, runScenario } from "../../src/local/scenario";
-import { pause } from "../../src/util";
-import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
+import test from "tape-promise/tape.js";
+import { runScenario, Scenario } from "../../src/local/scenario.js";
+import { pause } from "../../src/util.js";
+import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
   await runScenario(async (scenario: Scenario) => {

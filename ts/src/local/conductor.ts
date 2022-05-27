@@ -1,8 +1,7 @@
 import assert from "assert";
-import pick from "lodash/pick";
+import pick from "lodash/pick.js";
 import getPort, { portNumbers } from "get-port";
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { makeLogger } from "../logger";
 import { v4 as uuidv4 } from "uuid";
 import {
   AdminWebsocket,
@@ -14,9 +13,11 @@ import {
   InstallAppBundleRequest,
   InstallAppDnaPayload,
 } from "@holochain/client";
-import { AgentHapp, IConductor, HappBundleOptions } from "../types";
 import { URL } from "url";
-import { enableAndGetAgentHapp } from "../common";
+
+import { makeLogger } from "../logger.js";
+import { AgentHapp, IConductor, HappBundleOptions } from "../types.js";
+import { enableAndGetAgentHapp } from "../common.js";
 
 const logger = makeLogger("Local Conductor");
 

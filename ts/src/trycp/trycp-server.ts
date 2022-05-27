@@ -1,5 +1,5 @@
 import { ChildProcessWithoutNullStreams, spawn } from "child_process";
-import { makeLogger } from "../logger";
+import { makeLogger } from "../logger.js";
 
 const logger = makeLogger("TryCP server");
 const serverError = new RegExp(

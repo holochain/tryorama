@@ -34,7 +34,7 @@ import {
   UninstallAppResponse,
 } from "@holochain/client";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
-import { ConductorId } from "./conductor";
+import { ConductorId } from "./conductor/index.js";
 
 /**
  * @internal

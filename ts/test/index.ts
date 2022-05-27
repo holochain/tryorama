@@ -1,2 +1,2 @@
-import "./local";
-import "./trycp";
+import "./local/index.js";
+import "./trycp/index.js";

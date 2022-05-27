@@ -1,21 +1,21 @@
-import test from "tape-promise/tape";
-import { Buffer } from "buffer";
-import {
-  TRYCP_SERVER_PORT,
-  TryCpServer,
-  TRYCP_SERVER_HOST,
-} from "../../src/trycp/trycp-server";
-import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
 import { AppSignal, DnaSource, EntryHash } from "@holochain/client";
+import { Buffer } from "buffer";
+import test from "tape-promise/tape.js";
+import { URL } from "url";
+import { addAllAgentsToAllConductors } from "../../src/common.js";
 import {
   cleanAllTryCpConductors,
   createTryCpConductor,
   TryCpConductorOptions,
-} from "../../src/trycp/conductor";
-import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
-import { pause } from "../../src/util";
-import { URL } from "url";
-import { addAllAgentsToAllConductors } from "../../src/common";
+} from "../../src/trycp/conductor/index.js";
+import {
+  TryCpServer,
+  TRYCP_SERVER_HOST,
+  TRYCP_SERVER_PORT,
+} from "../../src/trycp/trycp-server.js";
+import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
+import { pause } from "../../src/util.js";
+import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const LOCAL_TEST_PARTIAL_CONFIG = `signing_service_uri: ~

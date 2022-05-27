@@ -1,7 +1,11 @@
 import { AppSignal } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import assert from "assert";
-import { TryCpApiResponse, _TryCpResponseWrapper, _TryCpSignal } from "./types";
+import {
+  TryCpApiResponse,
+  _TryCpResponseWrapper,
+  _TryCpSignal,
+} from "./types.js";
 
 /**
  * Deserialize the binary response from TryCP
