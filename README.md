@@ -1,19 +1,16 @@
 # Tryorama
 
-An end-to-end/scenario testing framework for Holochain applications, written in
-TypeScript.
-
-[![Project](https://img.shields.io/badge/Project-Holochain-blue.svg?style=flat-square)](http://holochain.org/)
-[![Forum](https://img.shields.io/badge/Forum-forum%2eholochain%2enet-blue.svg?style=flat-square)](https://forum.holochain.org)
-[![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
-![Test](https://github.com/holochain/holochain-client-js/actions/workflows/test.yml/badge.svg?branch=main)
-
 Tryorama provides a convenient way to run an arbitrary amount of Holochain
 conductors on your local machine, as well as on network nodes that are running
 the TryCP service. In combination with the test runner and assertion library of
 your choice, you can test the behavior of multiple Holochain nodes in a
 network. Included functions to clean up used resources make sure that all state
 is deleted between tests so that they are independent of one another.
+
+[![Project](https://img.shields.io/badge/Project-Holochain-blue.svg?style=flat-square)](http://holochain.org/)
+[![Forum](https://img.shields.io/badge/Forum-forum%2eholochain%2enet-blue.svg?style=flat-square)](https://forum.holochain.org)
+[![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
+![Test](https://github.com/holochain/holochain-client-js/actions/workflows/test.yml/badge.svg?branch=main)
 
 ```sh
 npm install @holochain/tryorama

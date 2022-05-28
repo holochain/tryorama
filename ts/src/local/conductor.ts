@@ -1,7 +1,7 @@
 import assert from "assert";
 import pick from "lodash/pick.js";
 import getPort, { portNumbers } from "get-port";
-import { ChildProcessWithoutNullStreams, spawn } from "child_process";
+import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { v4 as uuidv4 } from "uuid";
 import {
   AdminWebsocket,
@@ -308,6 +308,7 @@ export class Conductor implements IConductor {
         this.conductorProcess = undefined;
         resolve(code);
       });
+      assert(this.conductorProcess.pid);
       process.kill(-this.conductorProcess.pid);
     });
     return conductorShutDown;

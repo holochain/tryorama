@@ -4,7 +4,7 @@
 
 ## runScenario variable
 
-A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down after running. Any error that occurs during the test is logged.
+A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running.
 
 <b>Signature:</b>
 
