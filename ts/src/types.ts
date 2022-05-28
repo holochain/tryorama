@@ -77,7 +77,7 @@ export interface HappBundleOptions {
 
 /**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and
- * {@link TryCpConductor} implement this interface.
+ * {@link ./trycp#TryCpConductor} implement this interface.
  *
  * @public
  */
@@ -117,7 +117,7 @@ export type AgentHappOptions =
 
 /**
  * Base interface of a Tryorama test scenario. Both {@link Scenario} and
- * {@link TryCpScenario} implement this interface.
+ * {@link @holochain/tryorama/trycp#TryCpScenario} implement this interface.
  *
  * @public
  */
