@@ -16,9 +16,8 @@ jobs:
         with:
           node-version: "16.x"
           registry-url: "https://registry.npmjs.org"
-      - run: |
-          npm ci --ignore-scripts
-          npm config set //registry.npmjs.org/:_authToken ${NPM_TOKEN}
-          npm publish --access public --ignore-scripts
+      - run: echo ${{ secrets.NPM_TOKEN }}
+      - run: npm ci --ignore-scripts
+      - run: npm publish --access public --ignore-scripts
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
