@@ -1,3 +1,8 @@
+[![Project](https://img.shields.io/badge/Project-Holochain-blue.svg?style=flat-square)](http://holochain.org/)
+[![Forum](https://img.shields.io/badge/Forum-forum%2eholochain%2enet-blue.svg?style=flat-square)](https://forum.holochain.org)
+[![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
+![Test](https://github.com/holochain/holochain-client-js/actions/workflows/test.yml/badge.svg?branch=main)
+
 # Tryorama
 
 Tryorama provides a convenient way to run an arbitrary amount of Holochain
@@ -6,11 +11,6 @@ the TryCP service. In combination with the test runner and assertion library of
 your choice, you can test the behavior of multiple Holochain nodes in a
 network. Included functions to clean up used resources make sure that all state
 is deleted between tests so that they are independent of one another.
-
-[![Project](https://img.shields.io/badge/Project-Holochain-blue.svg?style=flat-square)](http://holochain.org/)
-[![Forum](https://img.shields.io/badge/Forum-forum%2eholochain%2enet-blue.svg?style=flat-square)](https://forum.holochain.org)
-[![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
-![Test](https://github.com/holochain/holochain-client-js/actions/workflows/test.yml/badge.svg?branch=main)
 
 ```sh
 npm install @holochain/tryorama
@@ -22,14 +22,14 @@ npm install @holochain/tryorama
 
 With a few lines of code you can start testing your Holochain application. This
 example uses [tape](https://github.com/substack/tape) as test runner and
-assertion library. You can choose any other library you want.
+assertion library. You can choose any other runner and library.
 
 ```ts
-import test from "tape";
-import { Scenario, pause, runScenario } from "../../../lib";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { DnaSource, EntryHash } from "@holochain/client";
+import { DnaSource, HeaderHash } from "@holochain/client";
+import { pause, runScenario, Scenario } from "@holochain/tryorama";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import test from "tape-promise/tape.js";
 
 test("Create 2 players and create and read an entry", async (t) => {
   await runScenario(async (scenario: Scenario) => {
@@ -43,10 +43,7 @@ test("Create 2 players and create and read an entry", async (t) => {
 
     // Add 2 players with the test DNA to the Scenario. The returned players
     // can be destructured.
-    const [alice, bob] = await scenario.addPlayersWithHapps([
-      [{ path: testDnaPath }],
-      [{ path: testDnaPath }],
-    ]);
+    const [alice, bob] = await scenario.addPlayersWithHapps([dnas, dnas]);
 
     // Shortcut peer discovery through gossip and register all agents in every
     // conductor of the scenario.
@@ -57,7 +54,7 @@ test("Create 2 players and create and read an entry", async (t) => {
 
     // The cells of the installed hApp are returned in the same order as the DNAs
     // that were passed into the player creation.
-    const createEntryHash: EntryHash = await alice.cells[0].callZome({
+    const createEntryHash: HeaderHash = await alice.cells[0].callZome({
       zome_name: "crud",
       fn_name: "create",
       payload: content,
@@ -81,16 +78,17 @@ test("Create 2 players and create and read an entry", async (t) => {
 Written out without the wrapper function, the same example looks like this:
 
 ```ts
-import test from "tape";
-import { Scenario, pause } from "@holochain/tryorama";
-import { dirname } from "path";
-import { fileURLToPath } from "url";
-import { DnaSource, EntryHash } from "@holochain/client";
+import { DnaSource, HeaderHash } from "@holochain/client";
+import { pause, Scenario } from "@holochain/tryorama";
+import { dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import test from "tape-promise/tape.js";
 
 test("Create 2 players and create and read an entry", async (t) => {
   const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
   const dnas: DnaSource[] = [{ path: testDnaPath }];
 
+  // Create an empty scenario.
   const scenario = new Scenario();
   const [alice, bob] = await scenario.addPlayersWithHapps([dnas, dnas]);
 
@@ -129,7 +127,7 @@ like this:
 ```ts
 const scenario = new LocalScenario();
 try {
-  /* operations on the scenario */
+  /* operations with the scenario */
 } catch (error) {
   console.error("an error occurred during the test", error);
 } finally (
