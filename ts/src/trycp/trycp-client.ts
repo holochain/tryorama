@@ -1,7 +1,7 @@
 import { AppSignalCb } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import cloneDeep from "lodash/cloneDeep.js";
-import { URL } from "url";
+import { URL } from "node:url";
 import { WebSocket } from "ws";
 import { makeLogger } from "../logger.js";
 import {

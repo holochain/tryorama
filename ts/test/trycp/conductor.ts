@@ -1,7 +1,7 @@
 import { AppSignal, DnaSource, EntryHash } from "@holochain/client";
-import { Buffer } from "buffer";
+import { Buffer } from "node:buffer";
 import test from "tape-promise/tape.js";
-import { URL } from "url";
+import { URL } from "node:url";
 import { addAllAgentsToAllConductors } from "../../src/common.js";
 import {
   cleanAllTryCpConductors,

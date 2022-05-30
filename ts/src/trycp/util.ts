@@ -1,6 +1,6 @@
 import { AppSignal } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
-import assert from "assert";
+import assert from "node:assert";
 import {
   TryCpApiResponse,
   _TryCpResponseWrapper,

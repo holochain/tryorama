@@ -1,4 +1,4 @@
-import assert from "assert";
+import assert from "node:assert";
 import pick from "lodash/pick.js";
 import getPort, { portNumbers } from "get-port";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
@@ -13,7 +13,7 @@ import {
   InstallAppBundleRequest,
   InstallAppDnaPayload,
 } from "@holochain/client";
-import { URL } from "url";
+import { URL } from "node:url";
 
 import { makeLogger } from "../logger.js";
 import { AgentHapp, IConductor, HappBundleOptions } from "../types.js";

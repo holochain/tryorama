@@ -24,10 +24,10 @@ import {
   UninstallAppRequest,
 } from "@holochain/client";
 import { FullStateDump } from "@holochain/client/lib/api/state-dump";
-import assert from "assert";
-import fs from "fs";
+import assert from "node:assert";
+import fs from "node:fs";
 import getPort, { portNumbers } from "get-port";
-import { URL } from "url";
+import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import { enableAndGetAgentHapp } from "../../common.js";

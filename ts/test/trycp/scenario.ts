@@ -5,7 +5,7 @@ import {
   EntryHash,
 } from "@holochain/client";
 import test from "tape-promise/tape.js";
-import { URL } from "url";
+import { URL } from "node:url";
 import { TryCpScenario } from "../../src/trycp/conductor/scenario.js";
 import {
   TRYCP_SERVER_HOST,

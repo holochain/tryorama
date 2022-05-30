@@ -1,5 +1,5 @@
-import { dirname } from "path";
-import { fileURLToPath, pathToFileURL } from "url";
+import { dirname } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 
 const dnaPath = dirname(fileURLToPath(import.meta.url)) + "/entry.dna";
 export const FIXTURE_DNA_URL = pathToFileURL(dnaPath);

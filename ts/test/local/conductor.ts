@@ -4,9 +4,9 @@ import {
   DnaSource,
   EntryHash,
 } from "@holochain/client/lib.es/index.js";
-import { readFileSync } from "fs";
+import { readFileSync } from "node:fs";
 import test from "tape-promise/tape.js";
-import { URL } from "url";
+import { URL } from "node:url";
 import { addAllAgentsToAllConductors } from "../../src/common.js";
 import {
   cleanAllConductors,
