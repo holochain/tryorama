@@ -3,7 +3,7 @@ name: Publish package to npmjs
 on:
   push: {}
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   publish:
@@ -17,6 +17,6 @@ jobs:
           registry-url: "https://registry.npmjs.org"
       - run: echo $NODE_AUTH_TOKEN
       - run: npm ci
-      - run: npm publish --dry-run
+      - run: npm publish --dry-run --access public
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
