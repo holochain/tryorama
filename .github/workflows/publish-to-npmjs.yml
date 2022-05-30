@@ -16,7 +16,7 @@ jobs:
         with:
           node-version: "16.x"
           registry-url: "https://registry.npmjs.org"
-      - run: echo ${{ secrets.NPM_TOKEN }}
+      - run: echo ${{ secrets }}
       - run: npm ci --ignore-scripts
       - run: npm publish --access public --ignore-scripts
         env:
