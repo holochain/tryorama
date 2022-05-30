@@ -4,15 +4,15 @@ import {
   DnaSource,
   EntryHash,
 } from "@holochain/client";
-import test from "tape-promise/tape";
-import { URL } from "url";
-import { TryCpScenario } from "../../src/trycp/conductor/scenario";
+import test from "tape-promise/tape.js";
+import { URL } from "node:url";
+import { TryCpScenario } from "../../src/trycp/conductor/scenario.js";
 import {
   TRYCP_SERVER_HOST,
   TRYCP_SERVER_PORT,
-} from "../../src/trycp/trycp-server";
-import { pause } from "../../src/util";
-import { FIXTURE_DNA_URL } from "../fixture";
+} from "../../src/trycp/trycp-server.js";
+import { pause } from "../../src/util.js";
+import { FIXTURE_DNA_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 

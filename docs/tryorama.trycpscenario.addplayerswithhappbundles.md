@@ -17,8 +17,8 @@ addPlayersWithHappBundles(playersHappBundles: Array<{
     }>): Promise<{
         happId: string;
         agentPubKey: Uint8Array;
-        cells: import("../../types").CallableCell[];
-        namedCells: Map<string, import("../../types").CallableCell>;
+        cells: import("../../types.js").CallableCell[];
+        namedCells: Map<string, import("../../types.js").CallableCell>;
         conductor: TryCpConductor;
     }[]>;
 ```
@@ -31,6 +31,6 @@ addPlayersWithHappBundles(playersHappBundles: Array<{
 
 <b>Returns:</b>
 
-Promise&lt;{ happId: string; agentPubKey: Uint8Array; cells: import("../../types").[CallableCell](./tryorama.callablecell.md)<!-- -->\[\]; namedCells: Map&lt;string, import("../../types").[CallableCell](./tryorama.callablecell.md)<!-- -->&gt;; conductor: [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->; }\[\]&gt;
+Promise&lt;{ happId: string; agentPubKey: Uint8Array; cells: import("../../types.js").[CallableCell](./tryorama.callablecell.md)<!-- -->\[\]; namedCells: Map&lt;string, import("../../types.js").[CallableCell](./tryorama.callablecell.md)<!-- -->&gt;; conductor: [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->; }\[\]&gt;
 
 

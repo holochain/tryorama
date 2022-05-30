@@ -1,19 +1,19 @@
-import test from "tape-promise/tape";
-import { Buffer } from "buffer";
-import {
-  TRYCP_SERVER_HOST,
-  TRYCP_SERVER_PORT,
-  TryCpServer,
-} from "../../src/trycp/trycp-server";
-import { TryCpClient } from "../../src/trycp/trycp-client";
-import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types";
-import { FIXTURE_DNA_URL } from "../fixture";
+import { Buffer } from "node:buffer";
+import test from "tape-promise/tape.js";
+import { URL } from "node:url";
 import {
   cleanAllTryCpConductors,
   createTryCpConductor,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
-} from "../../src";
-import { URL } from "url";
+} from "../../src/trycp/index.js";
+import { TryCpClient } from "../../src/trycp/trycp-client.js";
+import {
+  TryCpServer,
+  TRYCP_SERVER_HOST,
+  TRYCP_SERVER_PORT,
+} from "../../src/trycp/trycp-server.js";
+import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
+import { FIXTURE_DNA_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const createTryCpClient = () => TryCpClient.create(SERVER_URL);

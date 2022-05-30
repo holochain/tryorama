@@ -1,19 +1,19 @@
-import { v4 as uuidv4 } from "uuid";
 import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
-import { TryCpServer } from "../trycp-server";
-import {
-  cleanAllTryCpConductors,
-  createTryCpConductor,
-  TryCpConductor,
-} from "./conductor";
 import { URL } from "url";
-import { addAllAgentsToAllConductors as shareAllAgents } from "../../common";
+import { v4 as uuidv4 } from "uuid";
+import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
 import {
   AgentHappOptions,
   HappBundleOptions,
   IPlayer,
   IScenario,
-} from "../../types";
+} from "../../types.js";
+import { TryCpServer } from "../trycp-server.js";
+import {
+  cleanAllTryCpConductors,
+  createTryCpConductor,
+  TryCpConductor,
+} from "./conductor.js";
 
 const partialConfig = `signing_service_uri: ~
 encryption_service_uri: ~

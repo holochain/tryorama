@@ -1,23 +1,23 @@
-import msgpack from "@msgpack/msgpack";
-import cloneDeep from "lodash/cloneDeep";
-import { makeLogger } from "../logger";
-import { WebSocket } from "ws";
-import {
-  TryCpResponseErrorValue,
-  _TryCpSuccessResponseSeralized,
-  _TryCpCall,
-  TryCpRequest,
-  TRYCP_SUCCESS_RESPONSE,
-  TryCpSuccessResponse,
-  TryCpApiResponse,
-} from "./types";
-import {
-  deserializeTryCpResponse,
-  deserializeApiResponse,
-  deserializeTryCpSignal,
-} from "./util";
-import { URL } from "url";
 import { AppSignalCb } from "@holochain/client";
+import msgpack from "@msgpack/msgpack";
+import cloneDeep from "lodash/cloneDeep.js";
+import { URL } from "node:url";
+import { WebSocket } from "ws";
+import { makeLogger } from "../logger.js";
+import {
+  TryCpApiResponse,
+  TryCpRequest,
+  TryCpResponseErrorValue,
+  TryCpSuccessResponse,
+  TRYCP_SUCCESS_RESPONSE,
+  _TryCpCall,
+  _TryCpSuccessResponseSeralized,
+} from "./types.js";
+import {
+  deserializeApiResponse,
+  deserializeTryCpResponse,
+  deserializeTryCpSignal,
+} from "./util.js";
 
 const logger = makeLogger("TryCP client");
 let requestId = 0;

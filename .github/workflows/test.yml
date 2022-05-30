@@ -1,13 +1,13 @@
-name: CI
+name: Run tests
 
 on:
   push:
-    branches: [ master, develop ]
+    branches: [ develop, main ]
   pull_request:
-    branches: [ master, develop ]
+    branches: [ develop, main ]
 
 jobs:
-  tests:
+  test:
     strategy:
       matrix:
         platform:

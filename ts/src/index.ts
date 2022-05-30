@@ -10,7 +10,7 @@
  *
  * @packageDocumentation
  */
-export * from "./local";
-export * from "./trycp";
-export * from "./types";
-export * from "./util";
+export * from "./local/index.js";
+export * from "./trycp/index.js";
+export * from "./types.js";
+export * from "./util.js";

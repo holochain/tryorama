@@ -1,13 +1,13 @@
 import { v4 as uuidv4 } from "uuid";
 import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
-import { cleanAllConductors, createConductor, Conductor } from "./conductor";
+import { cleanAllConductors, createConductor, Conductor } from "./conductor.js";
 import {
   AgentHappOptions,
   HappBundleOptions,
   IPlayer,
   IScenario,
-} from "../types";
-import { addAllAgentsToAllConductors } from "../common";
+} from "../types.js";
+import { addAllAgentsToAllConductors } from "../common.js";
 
 /**
  * A player tied to a {@link Conductor}.
@@ -171,17 +171,16 @@ export class Scenario implements IScenario {
 
 /**
  * A wrapper function to create and run a scenario. A scenario is created
- * and all involved conductors are shut down after running. Any error that
- * occurs during the test is logged.
+ * and all involved conductors are shut down and cleaned up after running.
  *
  * @param testScenario - The test to be run.
- * @param cleanUp - Whether to delete conductors after running.
+ * @param cleanUp - Whether to delete conductors after running. @defaultValue true
  *
  * @public
  */
 export const runScenario = async (
   testScenario: (scenario: Scenario) => Promise<void>,
-  cleanUp = false
+  cleanUp = true
 ) => {
   const scenario = new Scenario();
   try {

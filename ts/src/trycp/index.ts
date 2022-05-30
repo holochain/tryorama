@@ -1,4 +1,4 @@
-export { TryCpServer } from "./trycp-server";
-export { TryCpClient } from "./trycp-client";
-export * from "./types";
-export * from "./conductor";
+export { TryCpServer } from "./trycp-server.js";
+export { TryCpClient } from "./trycp-client.js";
+export * from "./types.js";
+export * from "./conductor/index.js";
