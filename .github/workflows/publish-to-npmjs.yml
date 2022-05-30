@@ -1,6 +1,8 @@
 name: Publish package to npmjs
 
 on:
+  push:
+    branches: [test]
   release:
     types: [published]
 
@@ -14,8 +16,8 @@ jobs:
         with:
           node-version: "16.x"
           registry-url: "https://registry.npmjs.org"
-      - run: echo $NODE_AUTH_TOKEN
       - run: npm ci
-      - run: npm publish --access public
+      # - run: npm publish --access public
+      - run: npm whoami
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
