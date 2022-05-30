@@ -1,8 +1,6 @@
 name: Publish package to npmjs
 
 on:
-  push:
-    branches: [test]
   release:
     types: [published]
 
@@ -16,7 +14,6 @@ jobs:
         with:
           node-version: "16.x"
           registry-url: "https://registry.npmjs.org"
-      - run: echo ${{ secrets }}
       - run: npm ci --ignore-scripts
       - run: npm publish --access public --ignore-scripts
         env:
