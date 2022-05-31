@@ -1,34 +1,16 @@
 {
   "compilerOptions": {
-    "baseUrl": ".",
-    "rootDir": "src",
-    "outDir": "lib",
-    "module": "commonjs",
-    "target": "ES2018",
+    "module": "ESNext",
+    "target": "ESNext",
+    "moduleResolution": "Node",
     "sourceMap": true,
-    "lib": [
-      "DOM",
-      "esnext.array",
-      "es2018"
-    ],
-    "composite": true,
-    "esModuleInterop": true,
+    "declaration": true,
     "forceConsistentCasingInFileNames": true,
-    "noImplicitReturns": false,
-    "noImplicitThis": true,
-    "noImplicitAny": false,
-    "strictNullChecks": true,
-    "suppressImplicitAnyIndexErrors": true,
-    "noUnusedLocals": false,
+    "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "declaration": true
+    "strict": true
   },
-
-  "files": [],
-
-  "references": [
-    {
-      "path": "./src"
-    }
+  "include": [
+    "ts/**/*"
   ]
 }

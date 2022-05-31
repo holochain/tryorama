@@ -1,59 +1,80 @@
 {
   "name": "@holochain/tryorama",
+  "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
+  "version": "0.5.1",
+  "author": "Holochain Foundation",
+  "keywords": [
+    "holochain",
+    "conductor",
+    "test",
+    "e2e",
+    "trycp"
+  ],
   "repository": {
     "type": "git",
     "url": "https://github.com/holochain/tryorama"
   },
-  "version": "0.4.10",
-  "description": "test framework for holochain hApps",
-  "main": "lib/index.js",
-  "types": "lib/index.d.ts",
+  "license": "CAL-1.0",
+  "type": "module",
+  "engines": {
+    "node": "^14.13.1 || >=16.0.0"
+  },
+  "workspaces": [
+    "crates/trycp_server/test"
+  ],
+  "exports": {
+    ".": "./lib/index.js"
+  },
+  "types": "./lib/index.d.ts",
   "files": [
     "lib/"
   ],
-  "directories": {
-    "test": "test"
-  },
   "scripts": {
-    "build": "tsc -b",
-    "dev": "rm -rf ./lib ; tsc -d -w",
-    "doc": "typedoc",
-    "prepare": "npm run build",
-    "prepublishOnly": "npm test",
-    "test": "ts-node test",
-    "test:unit": "ts-node test/unit",
-    "test:e2e": "ts-node test/e2e"
+    "build": "rimraf ./lib && tsc -p tsconfig.build.json && npm run build:docs",
+    "build:docs": "api-extractor run --local && api-documenter markdown -i docs/temp -o docs",
+    "prepare": "npm run lint",
+    "prepublishOnly": "npm run build",
+    "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
+    "test": "node --loader ts-node/esm ts/test/index.ts",
+    "test:local": "npm run test:local:conductor && npm run test:local:scenario",
+    "test:local:conductor": "node --loader ts-node/esm ts/test/local/conductor.ts",
+    "test:local:scenario": "node --loader ts-node/esm ts/test/local/scenario.ts",
+    "test:trycp": "npm run test:trycp:server && npm run test:trycp:conductor && npm run test:trycp:scenario",
+    "test:trycp:server": "node --loader ts-node/esm ts/test/trycp/server.ts",
+    "test:trycp:conductor": "node --loader ts-node/esm ts/test/trycp/conductor.ts",
+    "test:trycp:scenario": "node --loader ts-node/esm ts/test/trycp/scenario.ts"
   },
-  "author": "",
-  "license": "Apache-2.0",
   "dependencies": {
     "@holochain/client": "^0.3.2",
-    "@holochain/hachiko": "^0.5.2",
-    "@iarna/toml": "^2.2.5",
-    "@msgpack/msgpack": "^2.1.0",
-    "async-mutex": "^0.1.4",
-    "base-64": "^0.1.0",
-    "colors": "^1.4.0",
-    "fp-ts": "^2.8.5",
-    "get-port": "^5.1.1",
-    "io-ts": "^2.2.12",
-    "io-ts-reporters": "^1.2.2",
-    "lodash": "^4.17.20",
-    "memoizee": "^0.4.14",
-    "ramda": "^0.26.1",
+    "get-port": "^6.1.2",
+    "lodash": "^4.17.21",
     "uuid": "^8.3.2",
-    "winston": "^3.3.3",
-    "ws": "^7.0.0",
-    "yaml": "^1.10.0"
+    "winston": "^3.7.2",
+    "ws": "^8.7.0"
   },
   "devDependencies": {
-    "@types/lodash": "^4.14.165",
-    "@types/node": "^12.19.3",
+    "@microsoft/api-documenter": "^7.17.16",
+    "@microsoft/api-extractor": "^7.24.2",
+    "@msgpack/msgpack": "^2.7.2",
+    "@types/lodash": "^4.14.182",
+    "@types/node": "^16.11.36",
     "@types/ramda": "^0.26.44",
+    "@types/tape": "^4.13.2",
+    "@types/tape-promise": "^4.0.1",
+    "@types/uuid": "^8.3.4",
+    "@types/ws": "^8.5.3",
+    "@typescript-eslint/eslint-plugin": "^5.26.0",
+    "@typescript-eslint/parser": "^5.26.0",
+    "eslint": "^8.16.0",
+    "eslint-config-prettier": "^8.5.0",
+    "eslint-plugin-prettier": "^4.0.0",
+    "eslint-plugin-tsdoc": "^0.2.16",
+    "prettier": "^2.6.2",
+    "rimraf": "^3.0.2",
     "sinon": "^7.5.0",
-    "tape": "^5.0.1",
+    "tape": "^5.5.3",
     "tape-promise": "^4.0.0",
-    "ts-node": "^10.4.0",
-    "typescript": "^4.5.4"
+    "ts-node": "^10.8.0",
+    "typescript": "^4.7.2"
   }
 }

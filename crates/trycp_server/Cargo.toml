@@ -8,7 +8,7 @@ homepage = "https://github.com/holochain/tryorama"
 documentation = "https://github.com/holochain/tryorma/crates/trycp_server"
 repository = "https://github.com/holochain/tryorma"
 authors = [ "Holochain Core Dev Team <devcore@holochain.org>" ]
-edition = "2018"
+edition = "2021"
 
 [dependencies]
 futures = "0.3.14"

@@ -1,6 +1,0 @@
-require('./test-api')
-require('./test-middleware')
-require('./test-orchestrator')
-require('./test-tape-mock')
-require('./test-tape-real')
-require('./test-util')
