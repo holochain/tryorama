@@ -19,6 +19,16 @@ export interface Player extends IPlayer {
 }
 
 /**
+ * Options when creating a scenario.
+ *
+ * @public
+ */
+export interface ScenarioOptions {
+  // Timeout for requests to Admin and App API calls.
+  timeout?: number;
+}
+
+/**
  * An abstraction of a test scenario to write tests against Holochain hApps,
  * running on a local conductor.
  *
@@ -34,7 +44,7 @@ export class Scenario implements IScenario {
    *
    * @param options - Timeout for requests to Admin and App API calls.
    */
-  constructor(options?: { timeout?: number }) {
+  constructor(options?: ScenarioOptions) {
     this.timeout = options?.timeout;
     this.uid = uuidv4();
     this.conductors = [];
@@ -180,9 +190,10 @@ export class Scenario implements IScenario {
  */
 export const runScenario = async (
   testScenario: (scenario: Scenario) => Promise<void>,
-  cleanUp = true
+  cleanUp = true,
+  options?: ScenarioOptions
 ) => {
-  const scenario = new Scenario();
+  const scenario = new Scenario(options);
   try {
     await testScenario(scenario);
   } finally {

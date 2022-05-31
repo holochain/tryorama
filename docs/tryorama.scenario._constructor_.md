@@ -9,14 +9,12 @@ Scenario constructor.
 <b>Signature:</b>
 
 ```typescript
-constructor(options?: {
-        timeout?: number;
-    });
+constructor(options?: ScenarioOptions);
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { timeout?: number; } | <i>(Optional)</i> Timeout for requests to Admin and App API calls. |
+|  options | [ScenarioOptions](./tryorama.scenariooptions.md) | <i>(Optional)</i> Timeout for requests to Admin and App API calls. |
 
