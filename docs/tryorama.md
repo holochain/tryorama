@@ -76,6 +76,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [RequestSaveDna](./tryorama.requestsavedna.md) | Request to save a DNA to the server's file system. |
 |  [RequestShutdown](./tryorama.requestshutdown.md) | Request shutdown of a conductor. |
 |  [RequestStartup](./tryorama.requeststartup.md) | Request startup of a conductor. |
+|  [ScenarioOptions](./tryorama.scenariooptions.md) | Options when creating a scenario. |
 |  [TryCpConductorOptions](./tryorama.trycpconductoroptions.md) |  |
 |  [TryCpPlayer](./tryorama.trycpplayer.md) | A player tied to a [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->. |
 
