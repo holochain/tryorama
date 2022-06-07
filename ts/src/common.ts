@@ -11,6 +11,14 @@ import {
   IConductor,
 } from "./types.js";
 
+/**
+ * Add all agents of all conductors to each other. Shortcuts peer discovery
+ * through a bootstrap server or gossiping.
+ *
+ * @param conductors - Conductors to mutually exchange all agents with.
+ *
+ * @public
+ */
 export const addAllAgentsToAllConductors = async (conductors: IConductor[]) => {
   await Promise.all(
     conductors.map(async (playerToShareAbout, playerToShareAboutIdx) => {
@@ -86,6 +94,15 @@ const getCallableCell = (
   },
 });
 
+/**
+ * Get a shorthand function to call a Cell's Zome.
+ *
+ * @param cell - The Cell to call the Zome on.
+ * @param zomeName - The name of the Zome to call.
+ * @returns A function to call the specified Zome.
+ *
+ * @public
+ */
 export const getZomeCaller =
   (cell: CallableCell, zomeName: string) =>
   <T>(fnName: string, payload: unknown): Promise<T> =>
