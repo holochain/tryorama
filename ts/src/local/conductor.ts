@@ -391,7 +391,7 @@ export class Conductor implements IConductor {
    *
    * @param options - An array of DNAs for each agent, resulting in a
    * 2-dimensional array, and a UID for the DNAs (optional).
-   * @returns An array with each agent's hApp.
+   * @returns An array with each agent's hApps.
    */
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];

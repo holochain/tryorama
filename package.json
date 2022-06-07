@@ -1,7 +1,7 @@
 {
   "name": "@holochain/tryorama",
   "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
-  "version": "0.5.2",
+  "version": "0.5.3",
   "author": "Holochain Foundation",
   "keywords": [
     "holochain",
@@ -17,7 +17,7 @@
   "license": "CAL-1.0",
   "type": "module",
   "engines": {
-    "node": "^14.13.1 || >=16.0.0"
+    "node": "^14.13.1 || >=16.0.0 || >=18.0.0"
   },
   "workspaces": [
     "crates/trycp_server/test"
@@ -27,7 +27,7 @@
   },
   "types": "./lib/index.d.ts",
   "files": [
-    "lib/"
+    "lib"
   ],
   "scripts": {
     "build": "rimraf ./lib && tsc -p tsconfig.build.json && npm run build:docs",
@@ -57,7 +57,6 @@
     "@microsoft/api-extractor": "^7.24.2",
     "@msgpack/msgpack": "^2.7.2",
     "@types/lodash": "^4.14.182",
-    "@types/node": "^16.11.36",
     "@types/ramda": "^0.26.44",
     "@types/tape": "^4.13.2",
     "@types/tape-promise": "^4.0.1",

@@ -4,7 +4,12 @@ import {
   InstalledAppInfo,
   InstalledCell,
 } from "@holochain/client";
-import { AgentHapp, CellZomeCallRequest, IConductor } from "./types.js";
+import {
+  AgentHapp,
+  CallableCell,
+  CellZomeCallRequest,
+  IConductor,
+} from "./types.js";
 
 export const addAllAgentsToAllConductors = async (conductors: IConductor[]) => {
   await Promise.all(
@@ -80,3 +85,12 @@ const getCallableCell = (
     return callZomeResponse;
   },
 });
+
+export const getZomeCaller =
+  (cell: CallableCell, zomeName: string) =>
+  <T>(fnName: string, payload: unknown): Promise<T> =>
+    cell.callZome<T>({
+      zome_name: zomeName,
+      fn_name: fnName,
+      payload,
+    });
