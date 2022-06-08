@@ -219,6 +219,48 @@ const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
 await conductor.shutDown();
 ```
 
+### Convenience function for Zome calls
+
+When testing a Zome, there are usually a lot of calls to the cell with this
+particular Zome. Specifying the Cell and the Zome name for every call is
+repetitive. It is therefore convenient to use a handle to a particular
+combination of Cell and Zome.
+
+Instead of
+
+```typescript
+const [aliceHapps] = await conductor.installAgentsHapps({
+  agentsDnas: [dnas],
+});
+const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
+  zome_name: "crud",
+  fn_name: "create",
+  payload: entryContent,
+});
+const readEntryHash: string = await aliceHapps.cells[0].callZome({
+  zome_name: "crud",
+  fn_name: "read",
+  payload: createEntryHash,
+});
+```
+
+the shorthand access to the Zome can be called
+
+```typescript
+const [aliceHapps] = await conductor.installAgentsHapps({
+  agentsDnas: [dnas],
+});
+const aliceCrudZomeCall = getZomeCaller(aliceHapps.cells[0], "crud");
+const entryHeaderHash: HeaderHash = await crudZomeCall(
+  "create",
+  "test-entry"
+);
+const readEntryHash: string = await crudZomeCall(
+  "read",
+  entryHeaderHash
+);
+```
+
 ## Signals
 
 `Scenario.addPlayer` as well as `Conductor.installAgentsHapps` allow for an

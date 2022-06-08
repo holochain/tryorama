@@ -25,5 +25,5 @@ installAgentsHapps(options: {
 
 Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt;
 
-An array with each agent's hApp.
+An array with each agent's hApps.
 

@@ -9,6 +9,26 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## [0.5.4]
+
+### Added
+- Export function to add all agents to all conductors.
+
+## [0.5.3]
+
+### Added
+- Convenience function getter to call zome of a given cell.
+
+## [0.5.2]
+
+### Added
+- Conductor options to runScenario fn.
+
+## [0.5.1]
+
+### Added
+- Missing library files.
+
 ## [0.5.0]
 - Re-write Tryorama
 
@@ -19,8 +39,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Middleware
 - Conductor configuration
 - Implicit usage of `tape` as test harness
-### Changed
-### Fixed
 
 ## [0.4.10]
 ### Fixed

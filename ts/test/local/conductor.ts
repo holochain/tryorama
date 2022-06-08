@@ -7,7 +7,10 @@ import {
 import { readFileSync } from "node:fs";
 import test from "tape-promise/tape.js";
 import { URL } from "node:url";
-import { addAllAgentsToAllConductors } from "../../src/common.js";
+import {
+  addAllAgentsToAllConductors,
+  getZomeCaller,
+} from "../../src/common.js";
 import {
   cleanAllConductors,
   createConductor,
@@ -15,6 +18,7 @@ import {
 } from "../../src/index.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
+import { HeaderHash } from "@holochain/client";
 
 test("Local Conductor - Spawn a conductor with QUIC network", async (t) => {
   const conductor = await createConductor({
@@ -194,6 +198,26 @@ test("Local Conductor - Install and call a hApp bundle", async (t) => {
       payload: createEntryResponse,
     });
   t.equal(readEntryResponse, entryContent);
+
+  await conductor.shutDown();
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Get a convenience function for zome calls", async (t) => {
+  const conductor = await createConductor();
+  const [aliceHapps] = await conductor.installAgentsHapps({
+    agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
+  });
+  const crudZomeCall = getZomeCaller(aliceHapps.cells[0], "crud");
+  t.equal(typeof crudZomeCall, "function", "getZomeCaller returns a function");
+
+  const entryHeaderHash: HeaderHash = await crudZomeCall(
+    "create",
+    "test-entry"
+  );
+  const entryHeaderHashB64 = Buffer.from(entryHeaderHash).toString("base64");
+  t.equal(entryHeaderHash.length, 39, "HeaderHash is 39 bytes long");
+  t.ok(entryHeaderHashB64.startsWith("hCkk"), "HeaderHash starts with hCkk");
 
   await conductor.shutDown();
   await cleanAllConductors();
