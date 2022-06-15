@@ -75,6 +75,10 @@ test("Create 2 players and create and read an entry", async (t) => {
 });
 ```
 
+> Have a look at the [tests](./ts/test/local/scenario.ts) for many more examples.
+
+### Example without wrapper
+
 Written out without the wrapper function, the same example looks like this:
 
 ```ts
@@ -118,11 +122,13 @@ test("Create 2 players and create and read an entry", async (t) => {
 > The wrapper takes care of creating a scenario and shutting down or deleting
 all conductors involved in the test scenario.
 
-When opting for writing the test without the wrapper, it might be necessary to
-handle errors while developing a test, depending on the test runner. With a
-test runner like "tape", uncaught errors will cause the conductor process and
-therefore the test to hang. If you're facing this issue, you can treat errors
-like this:
+### Error handling with test runners like `tape`
+
+When writing the test, it might be necessary to handle errors while developing,
+depending on the test runner. With a test runner like "tape", uncaught errors
+will cause the conductor process and therefore the test to hang or output
+`[object Object]`` as the only error message. If you're facing this issue, you
+can treat errors like this:
 
 ```ts
 const scenario = new LocalScenario();
@@ -131,11 +137,9 @@ try {
 } catch (error) {
   console.error("an error occurred during the test", error);
 } finally (
-  await secnario.cleanUp()
+  await scenario.cleanUp()
 }
 ```
-
-Have a look at the [tests](./ts/test/local/scenario.ts) for many more examples.
 
 ## Concepts
 
