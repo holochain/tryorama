@@ -13,6 +13,7 @@ import {
   DumpFullStateRequest,
   DumpStateRequest,
   EnableAppRequest,
+  FullStateDump,
   InstallAppBundleRequest,
   InstallAppDnaPayload,
   InstallAppRequest,
@@ -23,16 +24,15 @@ import {
   StartAppRequest,
   UninstallAppRequest,
 } from "@holochain/client";
-import { FullStateDump } from "@holochain/client/lib/api/state-dump";
+import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
 import fs from "node:fs";
-import getPort, { portNumbers } from "get-port";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
-import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import { enableAndGetAgentHapp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
 import { AgentHapp, IConductor } from "../../types.js";
+import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceData,
   RequestCallAppInterfaceMessage,

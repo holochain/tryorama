@@ -1,8 +1,3 @@
-import assert from "node:assert";
-import pick from "lodash/pick.js";
-import getPort, { portNumbers } from "get-port";
-import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
-import { v4 as uuidv4 } from "uuid";
 import {
   AdminWebsocket,
   AppBundleSource,
@@ -13,11 +8,16 @@ import {
   InstallAppBundleRequest,
   InstallAppDnaPayload,
 } from "@holochain/client";
+import getPort, { portNumbers } from "get-port";
+import pick from "lodash/pick.js";
+import assert from "node:assert";
+import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { URL } from "node:url";
+import { v4 as uuidv4 } from "uuid";
 
-import { makeLogger } from "../logger.js";
-import { AgentHapp, IConductor, HappBundleOptions } from "../types.js";
 import { enableAndGetAgentHapp } from "../common.js";
+import { makeLogger } from "../logger.js";
+import { AgentHapp, HappBundleOptions, IConductor } from "../types.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -247,7 +247,7 @@ export class Conductor implements IConductor {
         // the process doesn't kill the conductor
       }
     );
-    const startPromise = new Promise<void>((resolve, reject) => {
+    const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`starting conductor\n${data}`);
 
@@ -271,8 +271,7 @@ export class Conductor implements IConductor {
       });
 
       runConductorProcess.stderr.once("data", (data: Buffer) => {
-        logger.error(`error when starting conductor: ${data.toString()}`);
-        reject(data);
+        logger.error(`starting conductor: ${data.toString()}`);
       });
     });
     await startPromise;

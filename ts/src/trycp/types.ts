@@ -15,6 +15,7 @@ import {
   DumpStateResponse,
   EnableAppRequest,
   EnableAppResponse,
+  FullStateDump,
   HoloHash,
   InstallAppBundleRequest,
   InstallAppBundleResponse,
@@ -33,7 +34,6 @@ import {
   UninstallAppRequest,
   UninstallAppResponse,
 } from "@holochain/client";
-import { FullStateDump } from "@holochain/client/lib/api/state-dump";
 import { ConductorId } from "./conductor/index.js";
 
 /**
