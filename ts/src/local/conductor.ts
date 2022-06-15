@@ -247,7 +247,7 @@ export class Conductor implements IConductor {
         // the process doesn't kill the conductor
       }
     );
-    const startPromise = new Promise<void>((resolve, reject) => {
+    const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`starting conductor\n${data}`);
 
@@ -271,8 +271,7 @@ export class Conductor implements IConductor {
       });
 
       runConductorProcess.stderr.once("data", (data: Buffer) => {
-        logger.error(`error when starting conductor: ${data.toString()}`);
-        reject(data);
+        logger.error(`starting conductor: ${data.toString()}`);
       });
     });
     await startPromise;
