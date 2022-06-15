@@ -1,12 +1,13 @@
+import { HeaderHash } from "@holochain/client";
 import {
   AppSignal,
   AppSignalCb,
   DnaSource,
   EntryHash,
-} from "@holochain/client/lib.es/index.js";
+} from "@holochain/client";
 import { readFileSync } from "node:fs";
-import test from "tape-promise/tape.js";
 import { URL } from "node:url";
+import test from "tape-promise/tape.js";
 import {
   addAllAgentsToAllConductors,
   getZomeCaller,
@@ -18,7 +19,6 @@ import {
 } from "../../src/index.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
-import { HeaderHash } from "@holochain/client";
 
 test("Local Conductor - Spawn a conductor with QUIC network", async (t) => {
   const conductor = await createConductor({
