@@ -105,7 +105,7 @@ const getCallableCell = (
  */
 export const getZomeCaller =
   (cell: CallableCell, zomeName: string) =>
-  <T>(fnName: string, payload: unknown): Promise<T> =>
+  <T>(fnName: string, payload?: unknown): Promise<T> =>
     cell.callZome<T>({
       zome_name: zomeName,
       fn_name: fnName,

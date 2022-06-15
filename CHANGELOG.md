@@ -11,6 +11,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [0.5.4]
 
+### Changed
+- Fix error handling during conductor startup (only log error instead of crashing) [issue \#119](https://github.com/holochain/tryorama/issues/119)
+- Update Holochain client (ESM only)
+
+## [0.5.4]
+
 ### Added
 - Export function to add all agents to all conductors.
 
