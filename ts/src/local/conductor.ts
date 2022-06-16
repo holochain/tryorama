@@ -270,8 +270,8 @@ export class Conductor implements IConductor {
         }
       });
 
-      runConductorProcess.stderr.once("data", (data: Buffer) => {
-        logger.error(`starting conductor: ${data.toString()}`);
+      runConductorProcess.stderr.on("data", (data: Buffer) => {
+        logger.info(data.toString());
       });
     });
     await startPromise;
