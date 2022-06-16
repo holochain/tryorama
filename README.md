@@ -127,15 +127,15 @@ all conductors involved in the test scenario.
 When writing the test, it might be necessary to handle errors while developing,
 depending on the test runner. With a test runner like "tape", uncaught errors
 will cause the conductor process and therefore the test to hang or output
-`[object Object]`` as the only error message. If you're facing this issue, you
-can treat errors like this:
+`[object Object]` as the only error message. In this case errors can be handled
+like this:
 
 ```ts
 const scenario = new LocalScenario();
 try {
-  /* operations with the scenario */
+  /* scenario operations */
 } catch (error) {
-  console.error("an error occurred during the test", error);
+  console.error("error occurred during test", error);
 } finally (
   await scenario.cleanUp()
 }

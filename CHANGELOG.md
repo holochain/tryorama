@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## [0.5.6]
+
+### Fixed
+- Local conductor: subscribe to all messages to stderr. [PR \#125](https://github.com/holochain/tryorama/pull/125)
+- Local conductor: log as info instead of as error. [PR \#125](https://github.com/holochain/tryorama/pull/125)
+
 ## [0.5.5]
 
 ### Changed
