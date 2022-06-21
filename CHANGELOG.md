@@ -9,6 +9,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## [0.5.7]
+
+### Added
+- Common: optional timeout for zome calls [PR \#130](https://github.com/holochain/tryorama/pull/130)
+
+### Fixed
+- Local conductor: log conductor startup only once and at correct moment [PR \#130](https://github.com/holochain/tryorama/pull/130)
+
 ## [0.5.6]
 
 ### Fixed
