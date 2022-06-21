@@ -81,23 +81,26 @@ const getCallableCell = (
   agentPubKey: AgentPubKey
 ) => ({
   ...cell,
-  callZome: async <T>(request: CellZomeCallRequest) => {
-    const callZomeResponse = await conductor.appWs().callZome({
-      ...request,
-      cap_secret: request.cap_secret ?? null,
-      cell_id: cell.cell_id,
-      provenance: request.provenance || agentPubKey,
-      payload: request.payload ?? null,
-    });
+  callZome: async <T>(request: CellZomeCallRequest, timeout?: number) => {
+    const callZomeResponse = await conductor.appWs().callZome(
+      {
+        ...request,
+        cap_secret: request.cap_secret ?? null,
+        cell_id: cell.cell_id,
+        provenance: request.provenance || agentPubKey,
+        payload: request.payload ?? null,
+      },
+      timeout
+    );
     assertZomeResponse<T>(callZomeResponse);
     return callZomeResponse;
   },
 });
 
 /**
- * Get a shorthand function to call a Cell's Zome.
+ * Get a shorthand function to call a cell's zome.
  *
- * @param cell - The Cell to call the Zome on.
+ * @param cell - The cell to call the zome on.
  * @param zomeName - The name of the Zome to call.
  * @returns A function to call the specified Zome.
  *
@@ -105,9 +108,12 @@ const getCallableCell = (
  */
 export const getZomeCaller =
   (cell: CallableCell, zomeName: string) =>
-  <T>(fnName: string, payload?: unknown): Promise<T> =>
-    cell.callZome<T>({
-      zome_name: zomeName,
-      fn_name: fnName,
-      payload,
-    });
+  <T>(fnName: string, payload?: unknown, timeout?: number): Promise<T> =>
+    cell.callZome<T>(
+      {
+        zome_name: zomeName,
+        fn_name: fnName,
+        payload,
+      },
+      timeout
+    );

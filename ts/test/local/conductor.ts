@@ -1,10 +1,11 @@
-import { HeaderHash } from "@holochain/client";
 import {
   AppSignal,
   AppSignalCb,
   DnaSource,
   EntryHash,
+  HeaderHash,
 } from "@holochain/client";
+import assert from "node:assert";
 import { readFileSync } from "node:fs";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
@@ -248,6 +249,20 @@ test("Local Conductor - Install hApp bundle and access cells with role ids", asy
     path: FIXTURE_HAPP_URL.pathname,
   });
   t.ok(aliceHapp.namedCells.get("test"));
+
+  await conductor.shutDown();
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Zome call can time out before completion", async (t) => {
+  const conductor = await createConductor();
+  const aliceHapp = await conductor.installHappBundle({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  const cell = aliceHapp.namedCells.get("test");
+  assert(cell);
+
+  await t.rejects(cell.callZome({ fn_name: "create", zome_name: "crud" }, 1));
 
   await conductor.shutDown();
   await cleanAllConductors();

@@ -9,7 +9,7 @@ The function for calling a zome from a specific cell.
 <b>Signature:</b>
 
 ```typescript
-export declare type CallZomeFn = <T>(request: CellZomeCallRequest) => Promise<T>;
+export declare type CallZomeFn = <T>(request: CellZomeCallRequest, timeout?: number) => Promise<T>;
 ```
 <b>References:</b> [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)
 
