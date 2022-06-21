@@ -141,6 +141,17 @@ try {
 }
 ```
 
+### Logging
+
+The log level can be set with the environment variable `TRYORAMA_LOG_LEVEL`.
+Log levels used in Tryorama are `debug`, `verbose` and `info`. The default
+level is `info`. To set the log level for a test run, prepend the test command
+with:
+
+```bash
+TRYORAMA_LOG_LEVEL=debug node test.js
+```
+
 ## Concepts
 
 [Scenarios](./docs/tryorama.scenario.md) provide high-level functions to
