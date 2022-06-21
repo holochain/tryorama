@@ -4,10 +4,10 @@
 
 ## getZomeCaller variable
 
-Get a shorthand function to call a Cell's Zome.
+Get a shorthand function to call a cell's zome.
 
 <b>Signature:</b>
 
 ```typescript
-getZomeCaller: (cell: CallableCell, zomeName: string) => <T>(fnName: string, payload?: unknown) => Promise<T>
+getZomeCaller: (cell: CallableCell, zomeName: string) => <T>(fnName: string, payload?: unknown, timeout?: number) => Promise<T>
 ```

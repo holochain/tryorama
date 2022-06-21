@@ -31,7 +31,10 @@ export type CellZomeCallRequest = Omit<
  *
  * @public
  */
-export type CallZomeFn = <T>(request: CellZomeCallRequest) => Promise<T>;
+export type CallZomeFn = <T>(
+  request: CellZomeCallRequest,
+  timeout?: number
+) => Promise<T>;
 
 /**
  * Extends an installed cell by a function to call a zome.
