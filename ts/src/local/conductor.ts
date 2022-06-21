@@ -249,14 +249,12 @@ export class Conductor implements IConductor {
     );
     const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
-        logger.debug(`starting conductor\n${data}`);
-
         const numberMatches = data
           .toString()
           .match(/Running conductor on admin port (\d+)/);
         if (numberMatches) {
           this.adminApiUrl.port = numberMatches[1];
-          logger.debug(`admin port ${this.adminApiUrl.port}\n`);
+          logger.debug(`starting conductor\n${data}`);
         }
 
         if (
