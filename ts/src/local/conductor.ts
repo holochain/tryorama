@@ -255,9 +255,7 @@ export class Conductor implements IConductor {
         if (numberMatches) {
           this.adminApiUrl.port = numberMatches[1];
           logger.debug(`starting conductor\n${data}`);
-        }
-
-        if (
+        } else if (
           data
             .toString()
             .includes("Connected successfully to a running holochain")
@@ -265,6 +263,8 @@ export class Conductor implements IConductor {
           // this is the last output of the startup process
           this.conductorProcess = runConductorProcess;
           resolve();
+        } else {
+          logger.debug(data);
         }
       });
 
