@@ -249,20 +249,22 @@ export class Conductor implements IConductor {
     );
     const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
-        const numberMatches = data
+        const adminPortMatches = data
           .toString()
           .match(/Running conductor on admin port (\d+)/);
-        if (numberMatches) {
-          this.adminApiUrl.port = numberMatches[1];
-          logger.debug(`starting conductor\n${data}`);
-        } else if (
-          data
-            .toString()
-            .includes("Connected successfully to a running holochain")
-        ) {
-          // this is the last output of the startup process
-          this.conductorProcess = runConductorProcess;
-          resolve();
+        const isConductorStarted = data
+          .toString()
+          .includes("Connected successfully to a running holochain");
+        if (adminPortMatches || isConductorStarted) {
+          if (adminPortMatches) {
+            this.adminApiUrl.port = adminPortMatches[1];
+            logger.debug(`starting conductor\n${data}`);
+          }
+          if (isConductorStarted) {
+            // this is the last output of the startup process
+            this.conductorProcess = runConductorProcess;
+            resolve();
+          }
         } else {
           logger.debug(data);
         }

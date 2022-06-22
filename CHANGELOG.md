@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## [0.5.8]
+
+### Fixed
+- Local conductor: bring back stdout debug logs [PR \#132](https://github.com/holochain/tryorama/pull/132)
+
 ## [0.5.7]
 
 ### Added
