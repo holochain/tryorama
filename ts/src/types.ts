@@ -129,7 +129,7 @@ export interface IConductor {
  */
 export type AgentHappOptions =
   | DnaSource[]
-  | { dnas: DnaSource[]; signalHandler?: AppSignalCb; properties: DnaProperties };
+  | { dnas: DnaSource[]; signalHandler?: AppSignalCb; properties?: DnaProperties };
 
 /**
  * Base interface of a Tryorama test scenario. Both {@link Scenario} and
