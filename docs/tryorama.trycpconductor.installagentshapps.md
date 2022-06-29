@@ -13,6 +13,7 @@ installAgentsHapps(options: {
         agentsDnas: DnaSource[][];
         signalHandler?: AppSignalCb;
         uid?: string;
+        properties?: DnaProperties;
     }): Promise<AgentHapp[]>;
 ```
 
@@ -20,7 +21,7 @@ installAgentsHapps(options: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { agentsDnas: DnaSource\[\]\[\]; signalHandler?: AppSignalCb; uid?: string; } | An array of DNAs for each agent, resulting in a 2-dimensional array, and a UID for the DNAs (optional). |
+|  options | { agentsDnas: DnaSource\[\]\[\]; signalHandler?: AppSignalCb; uid?: string; properties?: DnaProperties; } | An array of DNAs for each agent, resulting in a 2-dimensional array, and a UID for the DNAs (optional). |
 
 <b>Returns:</b>
 
