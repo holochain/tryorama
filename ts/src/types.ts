@@ -7,10 +7,22 @@ import {
   CallZomeRequest,
   CapSecret,
   DnaSource,
+  DnaBundle,
+  HoloHash,
   InstalledCell,
   MembraneProof,
   RoleId,
+  RegisterDnaRequest,
 } from "@holochain/client";
+
+export type RegisterDnaReqOpts = Omit<
+RegisterDnaRequest,
+"hash" | "path" | "bundle"
+> & {
+  hash?: HoloHash
+  path?: string,
+  bundle?: DnaBundle,
+}
 
 /**
  * The zome request options adapted to a specific cell.

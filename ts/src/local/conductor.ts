@@ -5,8 +5,10 @@ import {
   AppWebsocket,
   AttachAppInterfaceRequest,
   DnaSource,
+  DnaProperties,
   InstallAppBundleRequest,
   InstallAppDnaPayload,
+  RegisterDnaRequest
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -17,7 +19,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { enableAndGetAgentHapp } from "../common.js";
 import { makeLogger } from "../logger.js";
-import { AgentHapp, HappBundleOptions, IConductor } from "../types.js";
+import { AgentHapp, HappBundleOptions, IConductor, RegisterDnaReqOpts } from "../types.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -395,6 +397,7 @@ export class Conductor implements IConductor {
   async installAgentsHapps(options: {
     agentsDnas: DnaSource[][];
     uid?: string;
+    properties?: DnaProperties;
   }) {
     const agentsHapps: AgentHapp[] = [];
 
@@ -404,34 +407,27 @@ export class Conductor implements IConductor {
       const appId = `app-${uuidv4()}`;
 
       for (const dna of agent) {
+        let role_id: string;
+
+        const registerDnaReqOpts: RegisterDnaReqOpts = {
+          uid: options.uid,
+          properties: options.properties
+        };
+
         if ("path" in dna) {
-          const dnaHash = await this.adminWs().registerDna({
-            path: dna.path,
-            uid: options.uid,
-          });
-          dnas.push({
-            hash: dnaHash,
-            role_id: `${dna.path}-${uuidv4()}`,
-          });
+          registerDnaReqOpts["path"] = dna.path;
+          role_id = `${dna.path}-${uuidv4()}`;
         } else if ("hash" in dna) {
-          const dnaHash = await this.adminWs().registerDna({
-            hash: dna.hash,
-            uid: options.uid,
-          });
-          dnas.push({
-            hash: dnaHash,
-            role_id: `dna-${uuidv4()}`,
-          });
+          registerDnaReqOpts["hash"] = dna.hash;
+          role_id = `dna-${uuidv4()}`;
         } else {
-          const dnaHash = await this.adminWs().registerDna({
-            bundle: dna.bundle,
-            uid: options.uid,
-          });
-          dnas.push({
-            hash: dnaHash,
-            role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
-          });
+          registerDnaReqOpts["bundle"] = dna.bundle;
+          role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
         }
+
+        const dnaHash = await this.adminWs().registerDna(registerDnaReqOpts as RegisterDnaRequest);
+
+        dnas.push({ hash: dnaHash, role_id });
       }
 
       const installedAppInfo = await this.adminWs().installApp({
