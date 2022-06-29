@@ -83,6 +83,7 @@ export class Scenario implements IScenario {
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
+      properties: agentHappOptions.properties,
     });
     return { conductor, ...agentHapp };
   }

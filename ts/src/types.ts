@@ -6,6 +6,7 @@ import {
   AppWebsocket,
   CallZomeRequest,
   CapSecret,
+  DnaProperties,
   DnaSource,
   DnaBundle,
   HoloHash,
@@ -16,13 +17,13 @@ import {
 } from "@holochain/client";
 
 export type RegisterDnaReqOpts = Omit<
-RegisterDnaRequest,
-"hash" | "path" | "bundle"
+  RegisterDnaRequest,
+  "hash" | "path" | "bundle"
 > & {
-  hash?: HoloHash
-  path?: string,
-  bundle?: DnaBundle,
-}
+  hash?: HoloHash;
+  path?: string;
+  bundle?: DnaBundle;
+};
 
 /**
  * The zome request options adapted to a specific cell.
@@ -128,7 +129,7 @@ export interface IConductor {
  */
 export type AgentHappOptions =
   | DnaSource[]
-  | { dnas: DnaSource[]; signalHandler?: AppSignalCb };
+  | { dnas: DnaSource[]; signalHandler?: AppSignalCb; properties: DnaProperties };
 
 /**
  * Base interface of a Tryorama test scenario. Both {@link Scenario} and

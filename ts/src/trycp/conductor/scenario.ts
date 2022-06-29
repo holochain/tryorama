@@ -100,6 +100,7 @@ export class TryCpScenario implements IScenario {
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
+      properties: agentHappOptions.properties,
       signalHandler,
     });
     return { conductor, ...agentHapp };

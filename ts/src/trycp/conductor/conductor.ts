@@ -9,6 +9,7 @@ import {
   CreateCloneCellRequest,
   DisableAppRequest,
   DnaHash,
+  DnaProperties,
   DnaSource,
   DumpFullStateRequest,
   DumpStateRequest,
@@ -31,7 +32,7 @@ import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { enableAndGetAgentHapp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
-import { AgentHapp, IConductor } from "../../types.js";
+import { AgentHapp, IConductor, RegisterDnaReqOpts } from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceData,
@@ -643,6 +644,7 @@ export class TryCpConductor implements IConductor {
     agentsDnas: DnaSource[][];
     signalHandler?: AppSignalCb;
     uid?: string;
+    properties?: DnaProperties;
   }) {
     const agentsHapps: AgentHapp[] = [];
 
@@ -657,6 +659,13 @@ export class TryCpConductor implements IConductor {
       );
 
       for (const dna of agentDnas) {
+        let role_id: string;
+
+        const registerDnaReqOpts: RegisterDnaReqOpts = {
+          uid: options.uid,
+          properties: options.properties,
+        };
+
         if ("path" in dna) {
           const dnaContent = await new Promise<Buffer>((resolve, reject) => {
             fs.readFile(dna.path, null, (err, data) => {
@@ -667,33 +676,21 @@ export class TryCpConductor implements IConductor {
             });
           });
           const relativePath = await this.saveDna(dnaContent);
-          const dnaHash = await this.adminWs().registerDna({
-            path: relativePath,
-            uid: options.uid,
-          });
-          dnas.push({
-            hash: dnaHash,
-            role_id: `${dna.path}-${uuidv4()}`,
-          });
+          registerDnaReqOpts["path"] = relativePath;
+          role_id = `${dna.path}-${uuidv4()}`;
         } else if ("hash" in dna) {
-          const dnaHash = await this.adminWs().registerDna({
-            hash: dna.hash,
-            uid: options.uid,
-          });
-          dnas.push({
-            hash: dnaHash,
-            role_id: `dna-${uuidv4()}`,
-          });
+          registerDnaReqOpts["hash"] = dna.hash;
+          role_id = `dna-${uuidv4()}`;
         } else {
-          const dnaHash = await this.adminWs().registerDna({
-            bundle: dna.bundle,
-            uid: options.uid,
-          });
-          dnas.push({
-            hash: dnaHash,
-            role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
-          });
+          registerDnaReqOpts["bundle"] = dna.bundle;
+          role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
         }
+
+        const dnaHash = await this.adminWs().registerDna(
+          registerDnaReqOpts as RegisterDnaRequest
+        );
+
+        dnas.push({ hash: dnaHash, role_id });
       }
 
       const installedAppInfo = await this.adminWs().installApp({

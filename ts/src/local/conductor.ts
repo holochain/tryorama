@@ -8,7 +8,7 @@ import {
   DnaProperties,
   InstallAppBundleRequest,
   InstallAppDnaPayload,
-  RegisterDnaRequest
+  RegisterDnaRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -19,7 +19,12 @@ import { v4 as uuidv4 } from "uuid";
 
 import { enableAndGetAgentHapp } from "../common.js";
 import { makeLogger } from "../logger.js";
-import { AgentHapp, HappBundleOptions, IConductor, RegisterDnaReqOpts } from "../types.js";
+import {
+  AgentHapp,
+  HappBundleOptions,
+  IConductor,
+  RegisterDnaReqOpts,
+} from "../types.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -411,7 +416,7 @@ export class Conductor implements IConductor {
 
         const registerDnaReqOpts: RegisterDnaReqOpts = {
           uid: options.uid,
-          properties: options.properties
+          properties: options.properties,
         };
 
         if ("path" in dna) {
@@ -425,7 +430,9 @@ export class Conductor implements IConductor {
           role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
         }
 
-        const dnaHash = await this.adminWs().registerDna(registerDnaReqOpts as RegisterDnaRequest);
+        const dnaHash = await this.adminWs().registerDna(
+          registerDnaReqOpts as RegisterDnaRequest
+        );
 
         dnas.push({ hash: dnaHash, role_id });
       }
