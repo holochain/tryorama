@@ -101,11 +101,10 @@ export interface TryCpConductorOptions {
  * @public
  */
 export const createTryCpConductor = async (
-  serverUrl: URL,
+  tryCpClient: TryCpClient,
   options?: TryCpConductorOptions
 ) => {
-  const client = await TryCpClient.create(serverUrl, options?.timeout);
-  const conductor = new TryCpConductor(client, options?.id);
+  const conductor = new TryCpConductor(tryCpClient, options?.id);
   if (options?.startup !== false) {
     // configure and startup conductor by default
     await conductor.configure(options?.partialConfig);
@@ -121,8 +120,8 @@ export const createTryCpConductor = async (
  */
 export class TryCpConductor implements IConductor {
   private readonly id: string;
-  private readonly tryCpClient: TryCpClient;
   private appInterfacePort: undefined | number;
+  readonly tryCpClient: TryCpClient;
 
   constructor(tryCpClient: TryCpClient, id?: ConductorId) {
     this.tryCpClient = tryCpClient;
@@ -756,15 +755,13 @@ export class TryCpConductor implements IConductor {
 /**
  * Run the `reset` command on the TryCP server to delete all conductor data.
  *
- * @param serverUrl - The TryCP server to connect to.
+ * @param tryCpClient - The TryCP client whose conductors should be reset.
  * @returns An empty success response.
  *
  * @public
  */
-export const cleanAllTryCpConductors = async (serverUrl: URL) => {
-  const client = await TryCpClient.create(serverUrl);
-  const response = await client.call({ type: "reset" });
+export const cleanAllTryCpConductors = async (tryCpClient: TryCpClient) => {
+  const response = await tryCpClient.call({ type: "reset" });
   assert(response === TRYCP_SUCCESS_RESPONSE);
-  await client.close();
   return response;
 };

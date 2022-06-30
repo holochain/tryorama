@@ -1,4 +1,4 @@
-import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
+import { AppBundleSource, AppSignalCb } from "@holochain/client";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
@@ -8,21 +8,8 @@ import {
   IPlayer,
   IScenario,
 } from "../../types.js";
-import { TryCpServer } from "../trycp-server.js";
-import {
-  cleanAllTryCpConductors,
-  createTryCpConductor,
-  TryCpConductor,
-} from "./conductor.js";
-
-const partialConfig = `signing_service_uri: ~
-encryption_service_uri: ~
-decryption_service_uri: ~
-dpki: ~
-network:
-  transport_pool:
-    - type: quic
-  network_type: quic_mdns`;
+import { TryCpClient } from "../trycp-client.js";
+import { TryCpConductor } from "./conductor.js";
 
 /**
  * A player tied to a {@link TryCpConductor}.
@@ -41,43 +28,17 @@ export interface TryCpPlayer extends IPlayer {
  */
 export class TryCpScenario implements IScenario {
   uid: string;
-  conductors: TryCpConductor[];
-  private serverUrl: URL;
-  private server: TryCpServer | undefined;
+  clients: TryCpClient[];
 
-  private constructor(serverUrl: URL) {
+  constructor() {
     this.uid = uuidv4();
-    this.conductors = [];
-    this.serverUrl = serverUrl;
-    this.server = undefined;
+    this.clients = [];
   }
 
-  /**
-   * Factory method to create a new scenario.
-   *
-   * @param serverUrl - The URL of the TryCp server to connect to.
-   * @returns A new scenario instance.
-   */
-  static async create(serverUrl: URL) {
-    const scenario = new TryCpScenario(serverUrl);
-    scenario.server = await TryCpServer.start();
-    return scenario;
-  }
-
-  /**
-   * Create and add a conductor to the scenario.
-   *
-   * @param signalHandler - A callback function to handle signals.
-   * @returns The newly added conductor instance.
-   */
-  async addConductor(signalHandler?: AppSignalCb) {
-    const conductor = await createTryCpConductor(this.serverUrl, {
-      partialConfig,
-    });
-    await conductor.adminWs().attachAppInterface();
-    await conductor.connectAppInterface(signalHandler);
-    this.conductors.push(conductor);
-    return conductor;
+  async addClient(serverUrl: URL, timeout?: number) {
+    const client = await TryCpClient.create(serverUrl, timeout);
+    this.clients.push(client);
+    return client;
   }
 
   /**
@@ -88,15 +49,16 @@ export class TryCpScenario implements IScenario {
    * @returns A local player instance.
    */
   async addPlayerWithHapp(
+    tryCpClient: TryCpClient,
     agentHappOptions: AgentHappOptions
   ): Promise<TryCpPlayer> {
     const signalHandler = Array.isArray(agentHappOptions)
       ? undefined
       : agentHappOptions.signalHandler;
-    const agentsDnas: DnaSource[][] = Array.isArray(agentHappOptions)
+    const agentsDnas = Array.isArray(agentHappOptions)
       ? [agentHappOptions]
       : [agentHappOptions.dnas];
-    const conductor = await this.addConductor(signalHandler);
+    const conductor = await tryCpClient.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
@@ -113,10 +75,13 @@ export class TryCpScenario implements IScenario {
    * @returns An array with the added players.
    */
   async addPlayersWithHapps(
+    tryCpClient: TryCpClient,
     agentHappOptions: AgentHappOptions[]
   ): Promise<TryCpPlayer[]> {
     const players = await Promise.all(
-      agentHappOptions.map((options) => this.addPlayerWithHapp(options))
+      agentHappOptions.map((options) =>
+        this.addPlayerWithHapp(tryCpClient, options)
+      )
     );
     return players;
   }
@@ -131,10 +96,11 @@ export class TryCpScenario implements IScenario {
    * @returns A local player instance.
    */
   async addPlayerWithHappBundle(
+    tryCpClient: TryCpClient,
     appBundleSource: AppBundleSource,
     options?: HappBundleOptions & { signalHandler?: AppSignalCb }
   ) {
-    const conductor = await this.addConductor(options?.signalHandler);
+    const conductor = await tryCpClient.addConductor(options?.signalHandler);
     options = options
       ? Object.assign(options, { uid: options.uid ?? this.uid })
       : { uid: this.uid };
@@ -142,7 +108,7 @@ export class TryCpScenario implements IScenario {
       appBundleSource,
       options
     );
-    this.conductors.push(conductor);
+    // this.conductors.push(conductor);
     return { conductor, ...agentHapp };
   }
 
@@ -155,6 +121,7 @@ export class TryCpScenario implements IScenario {
    * @returns
    */
   async addPlayersWithHappBundles(
+    tryCpClient: TryCpClient,
     playersHappBundles: Array<{
       appBundleSource: AppBundleSource;
       options?: HappBundleOptions & { signalHandler?: AppSignalCb };
@@ -163,6 +130,7 @@ export class TryCpScenario implements IScenario {
     const players = await Promise.all(
       playersHappBundles.map(async (playerHappBundle) =>
         this.addPlayerWithHappBundle(
+          tryCpClient,
           playerHappBundle.appBundleSource,
           playerHappBundle.options
         )
@@ -178,29 +146,28 @@ export class TryCpScenario implements IScenario {
    * @public
    */
   async shareAllAgents() {
-    return shareAllAgents(this.conductors);
-  }
-
-  /**
-   * Shut down all conductors in the scenario.
-   */
-  async shutDown() {
-    await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
-    await Promise.all(
-      this.conductors.map((conductor) => conductor.disconnectClient())
+    return shareAllAgents(
+      this.clients.map((client) => client.conductors).flat()
     );
   }
 
   /**
-   * Shut down and delete all conductors in the scenario, and stop the TryCP
-   * server.
+   * Shut down all conductors of all clients in the scenario.
+   */
+  async shutDown() {
+    await Promise.all(
+      this.clients.map((client) => client.shutDownConductors())
+    );
+  }
+
+  /**
+   * Shut down and delete all conductors in the scenario and close all client
+   * connections.
    *
    * @public
    */
   async cleanUp() {
-    await this.shutDown();
-    await cleanAllTryCpConductors(this.serverUrl);
-    this.conductors = [];
-    await this.server?.stop();
+    await Promise.all(this.clients.map((client) => client.cleanUp()));
+    this.clients = [];
   }
 }
