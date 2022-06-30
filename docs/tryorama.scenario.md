@@ -9,9 +9,8 @@ An abstraction of a test scenario to write tests against Holochain hApps, runnin
 <b>Signature:</b>
 
 ```typescript
-export declare class Scenario implements IScenario 
+export declare class Scenario 
 ```
-<b>Implements:</b> [IScenario](./tryorama.iscenario.md)
 
 ## Constructors
 

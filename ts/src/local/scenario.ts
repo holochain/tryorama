@@ -1,12 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
 import { cleanAllConductors, createConductor, Conductor } from "./conductor.js";
-import {
-  AgentHappOptions,
-  HappBundleOptions,
-  IPlayer,
-  IScenario,
-} from "../types.js";
+import { AgentHappOptions, HappBundleOptions, IPlayer } from "../types.js";
 import { addAllAgentsToAllConductors } from "../common.js";
 
 /**
@@ -34,7 +29,7 @@ export interface ScenarioOptions {
  *
  * @public
  */
-export class Scenario implements IScenario {
+export class Scenario {
   private timeout: number | undefined;
   uid: string;
   conductors: Conductor[];

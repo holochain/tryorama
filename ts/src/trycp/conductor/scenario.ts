@@ -2,12 +2,7 @@ import { AppBundleSource, AppSignalCb } from "@holochain/client";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
-import {
-  AgentHappOptions,
-  HappBundleOptions,
-  IPlayer,
-  IScenario,
-} from "../../types.js";
+import { AgentHappOptions, HappBundleOptions, IPlayer } from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
 
@@ -21,12 +16,17 @@ export interface TryCpPlayer extends IPlayer {
 }
 
 /**
- * An abstraction of a test scenario to write tests against Holochain hApps,
- * running on a TryCp conductor.
+ * A test scenario abstraction with convenience functions to manage TryCP
+ * clients and players (agent + conductor).
+ *
+ * Clients in turn help manage conductors on TryCP servers. Clients can be
+ * added to a scenario to keep track of all server connections. When finishing
+ * a test scenario, all conductors of all clients can be easily cleaned up and
+ * the client connections closed.
  *
  * @public
  */
-export class TryCpScenario implements IScenario {
+export class TryCpScenario {
   uid: string;
   clients: TryCpClient[];
 
@@ -35,6 +35,13 @@ export class TryCpScenario implements IScenario {
     this.clients = [];
   }
 
+  /**
+   * Create a TryCP client connection and add it to the scenario.
+   *
+   * @param serverUrl - The TryCP server URL.
+   * @param timeout - An optional timeout for the web socket connection.
+   * @returns The created TryCP client.
+   */
   async addClient(serverUrl: URL, timeout?: number) {
     const client = await TryCpClient.create(serverUrl, timeout);
     this.clients.push(client);
@@ -45,8 +52,10 @@ export class TryCpScenario implements IScenario {
    * Create and add a single player to the scenario, with a set of DNAs
    * installed.
    *
+   * @param tryCpClient - The client connection to the TryCP server on which to
+   * create the player.
    * @param agentHappOptions - {@link AgentHappOptions}.
-   * @returns A local player instance.
+   * @returns The created player instance.
    */
   async addPlayerWithHapp(
     tryCpClient: TryCpClient,
@@ -71,8 +80,10 @@ export class TryCpScenario implements IScenario {
    * Create and add multiple players to the scenario, with a set of DNAs
    * installed for each player.
    *
+   * @param tryCpClient - The client connection to the TryCP server on which to
+   * create the player.
    * @param agentHappOptions - {@link AgentHappOptions} for each player.
-   * @returns An array with the added players.
+   * @returns An array of the added players.
    */
   async addPlayersWithHapps(
     tryCpClient: TryCpClient,
@@ -90,10 +101,12 @@ export class TryCpScenario implements IScenario {
    * Create and add a single player to the scenario, with a hApp bundle
    * installed.
    *
+   * @param tryCpClient - The client connection to the TryCP server on which to
+   * create the player.
    * @param appBundleSource - The bundle or path to the bundle.
    * @param options - {@link HappBundleOptions} plus a signal handler
    * (optional).
-   * @returns A local player instance.
+   * @returns The created player instance.
    */
   async addPlayerWithHappBundle(
     tryCpClient: TryCpClient,
@@ -108,7 +121,6 @@ export class TryCpScenario implements IScenario {
       appBundleSource,
       options
     );
-    // this.conductors.push(conductor);
     return { conductor, ...agentHapp };
   }
 
@@ -116,9 +128,11 @@ export class TryCpScenario implements IScenario {
    * Create and add multiple players to the scenario, with a hApp bundle
    * installed for each player.
    *
+   * @param tryCpClient - The client connection to the TryCP server on which to
+   * create the player.
    * @param playersHappBundles - An array with a hApp bundle for each player,
    * and a signal handler (optional).
-   * @returns
+   * @returns An array of the added players.
    */
   async addPlayersWithHappBundles(
     tryCpClient: TryCpClient,
@@ -142,8 +156,6 @@ export class TryCpScenario implements IScenario {
   /**
    * Register all agents of all passed in conductors to each other. This skips
    * peer discovery through gossip and thus accelerates test runs.
-   *
-   * @public
    */
   async shareAllAgents() {
     return shareAllAgents(
@@ -161,10 +173,8 @@ export class TryCpScenario implements IScenario {
   }
 
   /**
-   * Shut down and delete all conductors in the scenario and close all client
-   * connections.
-   *
-   * @public
+   * Shut down and delete all conductors and close all client connections in
+   * the scenario.
    */
   async cleanUp() {
     await Promise.all(this.clients.map((client) => client.cleanUp()));

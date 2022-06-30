@@ -6,19 +6,31 @@
 
 A factory class to create client connections to a running TryCP server.
 
+With a client, conductors on the server can ba configured, started and stopped. All valid Admin and App API commands can be sent to the server too.
+
 <b>Signature:</b>
 
 ```typescript
 export declare class TryCpClient 
 ```
 
+## Properties
+
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [conductors](./tryorama.trycpclient.conductors.md) |  | [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->\[\] |  |
+
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
+|  [addConductor(signalHandler)](./tryorama.trycpclient.addconductor.md) |  | Create and add a conductor to the client. |
 |  [call(request)](./tryorama.trycpclient.call.md) |  | Send a call to the TryCP server. |
+|  [cleanAllConductors()](./tryorama.trycpclient.cleanallconductors.md) |  | Run the <code>reset</code> command on the TryCP server to delete all conductor data. |
+|  [cleanUp()](./tryorama.trycpclient.cleanup.md) |  | Shut down all registered conductors and delete them, and close the client connection. |
 |  [close()](./tryorama.trycpclient.close.md) |  | Closes the client connection. |
 |  [create(serverUrl, timeout)](./tryorama.trycpclient.create.md) | <code>static</code> | Create a client connection to a running TryCP server. |
 |  [ping(data)](./tryorama.trycpclient.ping.md) |  | Send a ping with data. |
 |  [setSignalHandler(port, signalHandler)](./tryorama.trycpclient.setsignalhandler.md) |  |  |
+|  [shutDownConductors()](./tryorama.trycpclient.shutdownconductors.md) |  | Shut down all conductors on the connected TryCP server and disconnect their app interfaces. |
 

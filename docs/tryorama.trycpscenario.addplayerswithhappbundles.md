@@ -9,7 +9,7 @@ Create and add multiple players to the scenario, with a hApp bundle installed fo
 <b>Signature:</b>
 
 ```typescript
-addPlayersWithHappBundles(playersHappBundles: Array<{
+addPlayersWithHappBundles(tryCpClient: TryCpClient, playersHappBundles: Array<{
         appBundleSource: AppBundleSource;
         options?: HappBundleOptions & {
             signalHandler?: AppSignalCb;
@@ -27,10 +27,12 @@ addPlayersWithHappBundles(playersHappBundles: Array<{
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
+|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
 |  playersHappBundles | Array&lt;{ appBundleSource: AppBundleSource; options?: [HappBundleOptions](./tryorama.happbundleoptions.md) &amp; { signalHandler?: AppSignalCb; }; }&gt; | An array with a hApp bundle for each player, and a signal handler (optional). |
 
 <b>Returns:</b>
 
 Promise&lt;{ happId: string; agentPubKey: Uint8Array; cells: import("../../types.js").[CallableCell](./tryorama.callablecell.md)<!-- -->\[\]; namedCells: Map&lt;string, import("../../types.js").[CallableCell](./tryorama.callablecell.md)<!-- -->&gt;; conductor: [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->; }\[\]&gt;
 
+An array of the added players.
 

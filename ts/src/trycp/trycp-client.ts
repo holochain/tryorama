@@ -1,13 +1,11 @@
 import { AppSignalCb } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import cloneDeep from "lodash/cloneDeep.js";
+import assert from "node:assert";
 import { URL } from "node:url";
 import { WebSocket } from "ws";
 import { makeLogger } from "../logger.js";
-import {
-  cleanAllTryCpConductors,
-  TryCpConductor,
-} from "./conductor/conductor.js";
+import { createTryCpConductor, TryCpConductor } from "./conductor/conductor.js";
 import {
   TryCpApiResponse,
   TryCpRequest,
@@ -38,6 +36,9 @@ network:
 /**
  * A factory class to create client connections to a running TryCP server.
  *
+ * With a client, conductors on the server can ba configured, started and
+ * stopped. All valid Admin and App API commands can be sent to the server too.
+ *
  * @public
  */
 export class TryCpClient {
@@ -63,7 +64,7 @@ export class TryCpClient {
    * Create a client connection to a running TryCP server.
    *
    * @param serverUrl - The URL of the TryCP server.
-   * @returns A client connection.
+   * @returns The created client connection.
    */
   static async create(serverUrl: URL, timeout?: number) {
     const tryCpClient = new TryCpClient(serverUrl, timeout);
@@ -238,22 +239,39 @@ export class TryCpClient {
    * @returns The newly added conductor instance.
    */
   async addConductor(signalHandler?: AppSignalCb) {
-    const conductor = new TryCpConductor(this);
-    await conductor.configure(partialConfig);
-    await conductor.startUp();
+    const conductor = await createTryCpConductor(this, { partialConfig });
     await conductor.adminWs().attachAppInterface();
     await conductor.connectAppInterface(signalHandler);
     this.conductors.push(conductor);
     return conductor;
   }
 
+  /**
+   * Shut down all conductors on the connected TryCP server and disconnect
+   * their app interfaces.
+   */
   async shutDownConductors() {
     await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
   }
 
+  /**
+   * Run the `reset` command on the TryCP server to delete all conductor data.
+   *
+   * @returns An empty success response.
+   */
+  async cleanAllConductors() {
+    const response = await this.call({ type: "reset" });
+    assert(response === TRYCP_SUCCESS_RESPONSE);
+    return response;
+  }
+
+  /**
+   * Shut down all registered conductors and delete them, and close the client
+   * connection.
+   */
   async cleanUp() {
     await this.shutDownConductors();
-    await cleanAllTryCpConductors(this);
+    await this.cleanAllConductors();
     await this.close();
   }
 

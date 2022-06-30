@@ -1,7 +1,6 @@
 import {
   AdminWebsocket,
   AgentPubKey,
-  AppBundleSource,
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
@@ -117,28 +116,3 @@ export interface IConductor {
 export type AgentHappOptions =
   | DnaSource[]
   | { dnas: DnaSource[]; signalHandler?: AppSignalCb };
-
-/**
- * Base interface of a Tryorama test scenario. Both {@link Scenario} and
- * {@link TryCpScenario} implement this interface.
- *
- * @public
- */
-export interface IScenario {
-  addConductor(signalHandler?: AppSignalCb): Promise<IConductor>;
-  addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<IPlayer>;
-  addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<IPlayer[]>;
-  addPlayerWithHappBundle(
-    appBundleSource: AppBundleSource,
-    options?: HappBundleOptions & { signalHandler?: AppSignalCb }
-  ): Promise<IPlayer>;
-  addPlayersWithHappBundles(
-    playersHappBundles: Array<{
-      appBundleSource: AppBundleSource;
-      options?: HappBundleOptions & { signalHandler?: AppSignalCb };
-    }>
-  ): Promise<IPlayer[]>;
-  shareAllAgents(conductors: IConductor[]): Promise<void>;
-  shutDown(): Promise<void>;
-  cleanUp(): Promise<void>;
-}

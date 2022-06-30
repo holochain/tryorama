@@ -93,10 +93,12 @@ export interface TryCpConductorOptions {
 }
 
 /**
- * The function to create a TryCP Conductor (aka "Player").
+ * The function to create a TryCP Conductor. By default configures and starts
+ * it.
  *
- * @param serverUrl - The URL of the TryCP server to connect to.
- * @returns A configured Conductor instance.
+ * @param tryCpClient - The client connection to the TryCP server on which to
+ * create the conductor.
+ * @returns A conductor instance.
  *
  * @public
  */
@@ -125,6 +127,7 @@ export class TryCpConductor implements IConductor {
 
   constructor(tryCpClient: TryCpClient, id?: ConductorId) {
     this.tryCpClient = tryCpClient;
+    tryCpClient.conductors.push(this);
     this.id = id || `conductor-${uuidv4()}`;
   }
 
@@ -751,17 +754,3 @@ export class TryCpConductor implements IConductor {
     return agentHapp;
   }
 }
-
-/**
- * Run the `reset` command on the TryCP server to delete all conductor data.
- *
- * @param tryCpClient - The TryCP client whose conductors should be reset.
- * @returns An empty success response.
- *
- * @public
- */
-export const cleanAllTryCpConductors = async (tryCpClient: TryCpClient) => {
-  const response = await tryCpClient.call({ type: "reset" });
-  assert(response === TRYCP_SUCCESS_RESPONSE);
-  return response;
-};

@@ -9,18 +9,19 @@ Create and add a single player to the scenario, with a set of DNAs installed.
 <b>Signature:</b>
 
 ```typescript
-addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<TryCpPlayer>;
+addPlayerWithHapp(tryCpClient: TryCpClient, agentHappOptions: AgentHappOptions): Promise<TryCpPlayer>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
+|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
 |  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md) | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->. |
 
 <b>Returns:</b>
 
 Promise&lt;[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->&gt;
 
-A local player instance.
+The created player instance.
 

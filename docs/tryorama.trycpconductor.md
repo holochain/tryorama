@@ -19,6 +19,12 @@ export declare class TryCpConductor implements IConductor
 |  --- | --- | --- |
 |  [(constructor)(tryCpClient, id)](./tryorama.trycpconductor._constructor_.md) |  | Constructs a new instance of the <code>TryCpConductor</code> class |
 
+## Properties
+
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [tryCpClient](./tryorama.trycpconductor.trycpclient.md) |  | [TryCpClient](./tryorama.trycpclient.md) |  |
+
 ## Methods
 
 |  Method | Modifiers | Description |

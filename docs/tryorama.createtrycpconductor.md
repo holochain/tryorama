@@ -4,10 +4,10 @@
 
 ## createTryCpConductor variable
 
-The function to create a TryCP Conductor (aka "Player").
+The function to create a TryCP Conductor. By default configures and starts it.
 
 <b>Signature:</b>
 
 ```typescript
-createTryCpConductor: (serverUrl: URL, options?: TryCpConductorOptions) => Promise<TryCpConductor>
+createTryCpConductor: (tryCpClient: TryCpClient, options?: TryCpConductorOptions) => Promise<TryCpConductor>
 ```

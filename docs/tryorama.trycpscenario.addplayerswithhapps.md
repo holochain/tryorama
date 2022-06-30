@@ -9,18 +9,19 @@ Create and add multiple players to the scenario, with a set of DNAs installed fo
 <b>Signature:</b>
 
 ```typescript
-addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<TryCpPlayer[]>;
+addPlayersWithHapps(tryCpClient: TryCpClient, agentHappOptions: AgentHappOptions[]): Promise<TryCpPlayer[]>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
+|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
 |  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->\[\] | [AgentHappOptions](./tryorama.agenthappoptions.md) for each player. |
 
 <b>Returns:</b>
 
 Promise&lt;[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->\[\]&gt;
 
-An array with the added players.
+An array of the added players.
 
