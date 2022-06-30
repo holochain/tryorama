@@ -71,7 +71,6 @@ export class TryCpScenario {
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
-      signalHandler,
     });
     return { conductor, ...agentHapp };
   }

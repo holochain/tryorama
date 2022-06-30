@@ -4,7 +4,6 @@ import {
   AppSignalCb,
   AppWebsocket,
   AttachAppInterfaceRequest,
-  DnaSource,
   InstallAppBundleRequest,
   InstallAppDnaPayload,
 } from "@holochain/client";
@@ -17,7 +16,12 @@ import { v4 as uuidv4 } from "uuid";
 
 import { enableAndGetAgentHapp } from "../common.js";
 import { makeLogger } from "../logger.js";
-import { AgentHapp, HappBundleOptions, IConductor } from "../types.js";
+import {
+  AgentHapp,
+  HappBundleOptions,
+  IConductor,
+  InstallAgentsHappsOptions,
+} from "../types.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -392,24 +396,25 @@ export class Conductor implements IConductor {
    * 2-dimensional array, and a UID for the DNAs (optional).
    * @returns An array with each agent's hApps.
    */
-  async installAgentsHapps(options: {
-    agentsDnas: DnaSource[][];
-    uid?: string;
-  }) {
+  async installAgentsHapps(options: InstallAgentsHappsOptions) {
     const agentsHapps: AgentHapp[] = [];
 
-    for (const agent of options.agentsDnas) {
-      const dnas: InstallAppDnaPayload[] = [];
-      const agentPubKey = await this.adminWs().generateAgentPubKey();
+    for (const agentDnas of options.agentsDnas) {
+      const dnasToInstall: InstallAppDnaPayload[] = [];
+      const agentPubKey =
+        "agentPubKey" in agentDnas
+          ? agentDnas.agentPubKey
+          : await this.adminWs().generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
 
-      for (const dna of agent) {
+      const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
+      for (const dna of dnas) {
         if ("path" in dna) {
           const dnaHash = await this.adminWs().registerDna({
             path: dna.path,
             uid: options.uid,
           });
-          dnas.push({
+          dnasToInstall.push({
             hash: dnaHash,
             role_id: `${dna.path}-${uuidv4()}`,
           });
@@ -418,7 +423,7 @@ export class Conductor implements IConductor {
             hash: dna.hash,
             uid: options.uid,
           });
-          dnas.push({
+          dnasToInstall.push({
             hash: dnaHash,
             role_id: `dna-${uuidv4()}`,
           });
@@ -427,7 +432,7 @@ export class Conductor implements IConductor {
             bundle: dna.bundle,
             uid: options.uid,
           });
-          dnas.push({
+          dnasToInstall.push({
             hash: dnaHash,
             role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
           });
@@ -437,7 +442,7 @@ export class Conductor implements IConductor {
       const installedAppInfo = await this.adminWs().installApp({
         installed_app_id: appId,
         agent_key: agentPubKey,
-        dnas,
+        dnas: dnasToInstall,
       });
       const agentHapp = await enableAndGetAgentHapp(
         this,

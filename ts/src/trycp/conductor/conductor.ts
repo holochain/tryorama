@@ -31,7 +31,11 @@ import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { enableAndGetAgentHapp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
-import { AgentHapp, IConductor } from "../../types.js";
+import {
+  AgentHapp,
+  IConductor,
+  InstallAgentsHappsOptions,
+} from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceData,
@@ -127,7 +131,6 @@ export class TryCpConductor implements IConductor {
 
   constructor(tryCpClient: TryCpClient, id?: ConductorId) {
     this.tryCpClient = tryCpClient;
-    tryCpClient.conductors.push(this);
     this.id = id || `conductor-${uuidv4()}`;
   }
 
@@ -166,7 +169,7 @@ export class TryCpConductor implements IConductor {
   }
 
   /**
-   * Disconnect App interface and shut down the conductor.
+   * Disconnect app interface and shut down the conductor.
    *
    * @returns An empty success response.
    *
@@ -637,20 +640,18 @@ export class TryCpConductor implements IConductor {
   /**
    * Install a set of DNAs for multiple agents into the conductor.
    *
-   * @param options - An array of DNAs for each agent, resulting in a
-   * 2-dimensional array, and a UID for the DNAs (optional).
+   * @param options - {@link InstallAgentsHappsOptions}
    * @returns An array with each agent's hApp.
    */
-  async installAgentsHapps(options: {
-    agentsDnas: DnaSource[][];
-    signalHandler?: AppSignalCb;
-    uid?: string;
-  }) {
+  async installAgentsHapps(options: InstallAgentsHappsOptions) {
     const agentsHapps: AgentHapp[] = [];
 
     for (const agentDnas of options.agentsDnas) {
-      const dnas: InstallAppDnaPayload[] = [];
-      const agentPubKey = await this.adminWs().generateAgentPubKey();
+      const dnasToInstall: InstallAppDnaPayload[] = [];
+      const agentPubKey =
+        "agentPubKey" in agentDnas
+          ? agentDnas.agentPubKey
+          : await this.adminWs().generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
       logger.debug(
         `installing app with id ${appId} for agent ${Buffer.from(
@@ -658,7 +659,8 @@ export class TryCpConductor implements IConductor {
         ).toString("base64")}`
       );
 
-      for (const dna of agentDnas) {
+      const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
+      for (const dna of dnas) {
         if ("path" in dna) {
           const dnaContent = await new Promise<Buffer>((resolve, reject) => {
             fs.readFile(dna.path, null, (err, data) => {
@@ -673,7 +675,7 @@ export class TryCpConductor implements IConductor {
             path: relativePath,
             uid: options.uid,
           });
-          dnas.push({
+          dnasToInstall.push({
             hash: dnaHash,
             role_id: `${dna.path}-${uuidv4()}`,
           });
@@ -682,7 +684,7 @@ export class TryCpConductor implements IConductor {
             hash: dna.hash,
             uid: options.uid,
           });
-          dnas.push({
+          dnasToInstall.push({
             hash: dnaHash,
             role_id: `dna-${uuidv4()}`,
           });
@@ -691,7 +693,7 @@ export class TryCpConductor implements IConductor {
             bundle: dna.bundle,
             uid: options.uid,
           });
-          dnas.push({
+          dnasToInstall.push({
             hash: dnaHash,
             role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
           });
@@ -701,7 +703,7 @@ export class TryCpConductor implements IConductor {
       const installedAppInfo = await this.adminWs().installApp({
         installed_app_id: appId,
         agent_key: agentPubKey,
-        dnas,
+        dnas: dnasToInstall,
       });
 
       const agentHapp = await enableAndGetAgentHapp(

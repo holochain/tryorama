@@ -78,6 +78,24 @@ export interface HappBundleOptions {
 }
 
 /**
+ * @public
+ */
+export interface InstallAgentsHappsOptions {
+  /**
+   * An array of DNAs for each agent (2-dimensional array) or an array of DNAs
+   * and an agent pub key.
+   */
+  agentsDnas:
+    | DnaSource[][]
+    | Array<{ dnas: DnaSource[]; agentPubKey: AgentPubKey }>;
+
+  /**
+   * A unique ID for the DNAs (optional).
+   */
+  uid?: string;
+}
+
+/**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and
  * {@link TryCpConductor} implement this interface.
  *
