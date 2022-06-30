@@ -38,7 +38,7 @@ export class TryCpScenario {
   /**
    * Create a TryCP client connection and add it to the scenario.
    *
-   * @param serverUrl - The TryCP server URL.
+   * @param serverUrl - The TryCP server URL to connect to.
    * @param timeout - An optional timeout for the web socket connection.
    * @returns The created TryCP client.
    */
@@ -46,6 +46,23 @@ export class TryCpScenario {
     const client = await TryCpClient.create(serverUrl, timeout);
     this.clients.push(client);
     return client;
+  }
+
+  /**
+   * Create client connections for all passed in URLs and add them to the
+   * scenario.
+   *
+   * @param serverUrls - The TryCP server URLs to connect to.
+   * @param timeout - An optional timeout for the web socket connection.
+   * @returns The created TryCP clients.
+   */
+  async addClients(serverUrls: URL[], timeout?: number) {
+    const clients: TryCpClient[] = [];
+    for (const serverUrl of serverUrls) {
+      const client = await this.addClient(serverUrl, timeout);
+      clients.push(client);
+    }
+    return clients;
   }
 
   /**

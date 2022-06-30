@@ -54,7 +54,7 @@ test("TryCP Scenario - install a hApp to 1 conductor with 1 agent", async (t) =>
 
 test("TryCP Scenario - install a hApp to 2 conductors with 1 agent each", async (t) => {
   const serverPort1 = TRYCP_SERVER_PORT;
-  const serverPort2 = 10001;
+  const serverPort2 = TRYCP_SERVER_PORT + 1;
   const serverUrl1 = new URL(`ws://${TRYCP_SERVER_HOST}:${serverPort1}`);
   const serverUrl2 = new URL(`ws://${TRYCP_SERVER_HOST}:${serverPort2}`);
   const tryCpServer1 = await TryCpServer.start(serverPort1);
@@ -263,4 +263,33 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
 
   await scenario.cleanUp();
   await tryCpServer.stop();
+});
+
+test("TryCP Scenario - connect to multiple clients by passing a list of URLs", async (t) => {
+  const NUMBER_OF_SERVERS = 2;
+  const tryCpServers: TryCpServer[] = [];
+  const serverUrls: URL[] = [];
+
+  for (let i = 0; i < NUMBER_OF_SERVERS; i++) {
+    const serverPort = TRYCP_SERVER_PORT + i;
+    const serverUrl = new URL(`ws://${TRYCP_SERVER_HOST}:${serverPort}`);
+    const tryCpServer = await TryCpServer.start(serverPort);
+    tryCpServers.push(tryCpServer);
+    serverUrls.push(serverUrl);
+  }
+
+  const scenario = new TryCpScenario();
+  await scenario.addClients(serverUrls);
+  t.ok(
+    scenario.clients.length === NUMBER_OF_SERVERS,
+    "scenario has expected number of clients"
+  );
+  for (const [index, client] of scenario.clients.entries()) {
+    const PING_MESSAGE = "pingpong";
+    const pong = (await client.ping(PING_MESSAGE)).toString();
+    t.equal(pong, PING_MESSAGE, `client ${index + 1} is running`);
+  }
+
+  await scenario.cleanUp();
+  await Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));
 });
