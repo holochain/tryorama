@@ -1,10 +1,56 @@
-import { AppBundleSource, AppSignalCb } from "@holochain/client";
+import {
+  AgentPubKey,
+  AppBundleSource,
+  AppSignalCb,
+  DnaSource,
+} from "@holochain/client";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
-import { AgentHappOptions, HappBundleOptions, IPlayer } from "../../types.js";
+import {
+  AgentHapp,
+  AgentHappOptions,
+  HappBundleOptions,
+  IPlayer,
+} from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
+
+/**
+ * @public
+ */
+export interface ClientsPlayersOptions {
+  /**
+   * A timeout for the web socket connection (optional).
+   */
+  clientTimeout?: number;
+
+  /**
+   * An array of DNAs that will be installed for each agent (optional).
+   */
+  dnas?: DnaSource[];
+
+  /**
+   * A list of previously generated agent pub keys (optional).
+   */
+  agentPubKeys?: AgentPubKey[];
+
+  /**
+   * Number of conductors per client. Default to 1.
+   */
+  numberOfConductorsPerClient?: number;
+
+  /**
+   * Number of agents per conductor. Defaults to 1. Requires `dnas` to be
+   * specified.
+   */
+  numberOfAgentsPerConductor?: number;
+
+  /**
+   * A signal handler to be registered in conductors.
+   */
+  signalHandler?: AppSignalCb;
+}
 
 /**
  * A player tied to a {@link TryCpConductor}.
@@ -36,7 +82,7 @@ export class TryCpScenario {
   }
 
   /**
-   * Create a TryCP client connection and add it to the scenario.
+   * Creates a TryCP client connection and add it to the scenario.
    *
    * @param serverUrl - The TryCP server URL to connect to.
    * @param timeout - An optional timeout for the web socket connection.
@@ -49,24 +95,75 @@ export class TryCpScenario {
   }
 
   /**
-   * Create client connections for all passed in URLs and add them to the
+   * Creates client connections for all passed in URLs and, depending on the
+   * options, creates multiple players with DNAs. Adds all clients to the
    * scenario.
    *
    * @param serverUrls - The TryCP server URLs to connect to.
-   * @param timeout - An optional timeout for the web socket connection.
-   * @returns The created TryCP clients.
+   * @param options - {@link ClientsPlayersOptions}
+   * @returns The created TryCP clients and all conductors per client and all
+   * agents' hApps per conductor.
    */
-  async addClients(serverUrls: URL[], timeout?: number) {
-    const clients: TryCpClient[] = [];
+  async addClientsPlayers(serverUrls: URL[], options?: ClientsPlayersOptions) {
+    const clientsPlayers: Array<{
+      client: TryCpClient;
+      players: TryCpPlayer[];
+    }> = [];
+
+    // create client connections for specified URLs
     for (const serverUrl of serverUrls) {
-      const client = await this.addClient(serverUrl, timeout);
-      clients.push(client);
+      const client = await this.addClient(serverUrl, options?.clientTimeout);
+      const players: TryCpPlayer[] = [];
+      const numberOfConductorsPerClient =
+        options?.numberOfConductorsPerClient ?? 1;
+
+      // create conductors for each client
+      for (let i = 0; i < numberOfConductorsPerClient; i++) {
+        const conductor = await client.addConductor(options?.signalHandler);
+        const numberOfAgentsPerConductor =
+          options?.numberOfAgentsPerConductor ?? 1;
+
+        if (options?.numberOfAgentsPerConductor) {
+          // install agents hApps for each conductor
+          if (options.dnas === undefined) {
+            throw new Error("no DNAs specified to be installed for agents");
+          }
+
+          // TS fails to infer that options.dnas cannot be `undefined` here
+          const dnas = options.dnas;
+
+          let agentsDnas:
+            | DnaSource[][]
+            | Array<{ dnas: DnaSource[]; agentPubKey: AgentPubKey }>;
+          if (options.agentPubKeys) {
+            if (options.agentPubKeys.length !== options.dnas.length) {
+              throw new Error(
+                "number of agent pub keys doesn't match number of DNAs"
+              );
+            }
+            agentsDnas = options.agentPubKeys.map((agentPubKey) => ({
+              agentPubKey,
+              dnas,
+            }));
+          } else {
+            agentsDnas = [...Array(numberOfAgentsPerConductor)].map(() => dnas);
+          }
+
+          const installedAgentsHapps = await conductor.installAgentsHapps({
+            agentsDnas,
+          });
+          installedAgentsHapps.forEach((agentHapps) =>
+            players.push({ conductor, ...agentHapps })
+          );
+        }
+      }
+      clientsPlayers.push({ client, players });
     }
-    return clients;
+    return clientsPlayers;
   }
 
   /**
-   * Create and add a single player to the scenario, with a set of DNAs
+   * Creates and adds a single player to the scenario, with a set of DNAs
    * installed.
    *
    * @param tryCpClient - The client connection to the TryCP server on which to
@@ -93,7 +190,7 @@ export class TryCpScenario {
   }
 
   /**
-   * Create and add multiple players to the scenario, with a set of DNAs
+   * Creates and adds multiple players to the scenario, with a set of DNAs
    * installed for each player.
    *
    * @param tryCpClient - The client connection to the TryCP server on which to
@@ -114,7 +211,7 @@ export class TryCpScenario {
   }
 
   /**
-   * Create and add a single player to the scenario, with a hApp bundle
+   * Creates and adds a single player to the scenario, with a hApp bundle
    * installed.
    *
    * @param tryCpClient - The client connection to the TryCP server on which to
@@ -141,7 +238,7 @@ export class TryCpScenario {
   }
 
   /**
-   * Create and add multiple players to the scenario, with a hApp bundle
+   * Creates and adds multiple players to the scenario, with a hApp bundle
    * installed for each player.
    *
    * @param tryCpClient - The client connection to the TryCP server on which to
@@ -170,7 +267,7 @@ export class TryCpScenario {
   }
 
   /**
-   * Register all agents of all passed in conductors to each other. This skips
+   * Registers all agents of all passed in conductors to each other. This skips
    * peer discovery through gossip and thus accelerates test runs.
    */
   async shareAllAgents() {

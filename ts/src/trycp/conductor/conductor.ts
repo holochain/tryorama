@@ -125,7 +125,7 @@ export const createTryCpConductor = async (
  * @public
  */
 export class TryCpConductor implements IConductor {
-  private readonly id: string;
+  readonly id: string;
   private appInterfacePort: undefined | number;
   readonly tryCpClient: TryCpClient;
 

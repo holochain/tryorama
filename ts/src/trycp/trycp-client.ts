@@ -5,7 +5,10 @@ import assert from "node:assert";
 import { URL } from "node:url";
 import { WebSocket } from "ws";
 import { makeLogger } from "../logger.js";
-import { createTryCpConductor, TryCpConductor } from "./conductor/conductor.js";
+import {
+  createTryCpConductor as createConductor,
+  TryCpConductor,
+} from "./conductor/conductor.js";
 import {
   TryCpApiResponse,
   TryCpRequest,
@@ -239,7 +242,7 @@ export class TryCpClient {
    * @returns The newly added conductor instance.
    */
   async addConductor(signalHandler?: AppSignalCb) {
-    const conductor = await createTryCpConductor(this, { partialConfig });
+    const conductor = await createConductor(this, { partialConfig });
     await conductor.adminWs().attachAppInterface();
     await conductor.connectAppInterface(signalHandler);
     this.conductors.push(conductor);
@@ -270,7 +273,6 @@ export class TryCpClient {
    * connection.
    */
   async cleanUp() {
-    await this.shutDownConductors();
     await this.cleanAllConductors();
     await this.close();
   }
