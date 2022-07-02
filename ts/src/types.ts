@@ -3,13 +3,30 @@ import {
   AgentPubKey,
   AppSignalCb,
   AppWebsocket,
+  AppBundleSource,
   CallZomeRequest,
   CapSecret,
+  DnaProperties,
   DnaSource,
+  DnaBundle,
+  HoloHash,
   InstalledCell,
   MembraneProof,
   RoleId,
+  RegisterDnaRequest,
 } from "@holochain/client";
+
+/**
+ * @internal
+ */
+export type _RegisterDnaReqOpts = Omit<
+  RegisterDnaRequest,
+  "hash" | "path" | "bundle"
+> & {
+  hash?: HoloHash;
+  path?: string;
+  bundle?: DnaBundle;
+};
 
 /**
  * The zome request options adapted to a specific cell.
@@ -87,7 +104,12 @@ export interface InstallAgentsHappsOptions {
    */
   agentsDnas:
     | DnaSource[][]
-    | Array<{ dnas: DnaSource[]; agentPubKey: AgentPubKey }>;
+    | Array<{
+        dnas: DnaSource[];
+        agentPubKey: AgentPubKey;
+      }>;
+  signalHandler?: AppSignalCb;
+  properties?: DnaProperties;
 
   /**
    * A unique ID for the DNAs (optional).
@@ -121,6 +143,7 @@ export interface IConductor {
   installAgentsHapps: (options: {
     agentsDnas: DnaSource[][];
     uid?: string;
+    properties?: DnaProperties;
     signalHandler?: AppSignalCb;
   }) => Promise<AgentHapp[]>;
 }
@@ -133,4 +156,33 @@ export interface IConductor {
  */
 export type AgentHappOptions =
   | DnaSource[]
-  | { dnas: DnaSource[]; signalHandler?: AppSignalCb };
+  | {
+      dnas: DnaSource[];
+      signalHandler?: AppSignalCb;
+      properties?: DnaProperties;
+    };
+
+/**
+ * Base interface of a Tryorama test scenario. Both {@link Scenario} and
+ * {@link TryCpScenario} implement this interface.
+ *
+ * @public
+ */
+export interface IScenario {
+  addConductor(signalHandler?: AppSignalCb): Promise<IConductor>;
+  addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<IPlayer>;
+  addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<IPlayer[]>;
+  addPlayerWithHappBundle(
+    appBundleSource: AppBundleSource,
+    options?: HappBundleOptions & { signalHandler?: AppSignalCb }
+  ): Promise<IPlayer>;
+  addPlayersWithHappBundles(
+    playersHappBundles: Array<{
+      appBundleSource: AppBundleSource;
+      options?: HappBundleOptions & { signalHandler?: AppSignalCb };
+    }>
+  ): Promise<IPlayer[]>;
+  shareAllAgents(conductors: IConductor[]): Promise<void>;
+  shutDown(): Promise<void>;
+  cleanUp(): Promise<void>;
+}

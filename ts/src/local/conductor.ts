@@ -4,8 +4,11 @@ import {
   AppSignalCb,
   AppWebsocket,
   AttachAppInterfaceRequest,
+  DnaSource,
+  DnaProperties,
   InstallAppBundleRequest,
   InstallAppDnaPayload,
+  RegisterDnaRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -21,6 +24,7 @@ import {
   HappBundleOptions,
   IConductor,
   InstallAgentsHappsOptions,
+  _RegisterDnaReqOpts,
 } from "../types.js";
 
 const logger = makeLogger("Local Conductor");
@@ -410,6 +414,10 @@ export class Conductor implements IConductor {
       const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
         if ("path" in dna) {
+          const registerDnaReqOpts: _RegisterDnaReqOpts = {
+            uid: options.uid,
+            properties: options.properties,
+          };
           const dnaHash = await this.adminWs().registerDna({
             path: dna.path,
             uid: options.uid,

@@ -9,6 +9,7 @@ import {
   CreateCloneCellRequest,
   DisableAppRequest,
   DnaHash,
+  DnaProperties,
   DnaSource,
   DumpFullStateRequest,
   DumpStateRequest,
@@ -34,6 +35,7 @@ import { makeLogger } from "../../logger.js";
 import {
   AgentHapp,
   IConductor,
+  _RegisterDnaReqOpts,
   InstallAgentsHappsOptions,
 } from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
@@ -661,6 +663,13 @@ export class TryCpConductor implements IConductor {
 
       const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
+        let role_id: string;
+
+        const registerDnaReqOpts: _RegisterDnaReqOpts = {
+          uid: options.uid,
+          properties: options.properties,
+        };
+
         if ("path" in dna) {
           const dnaContent = await new Promise<Buffer>((resolve, reject) => {
             fs.readFile(dna.path, null, (err, data) => {
@@ -698,6 +707,10 @@ export class TryCpConductor implements IConductor {
             role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
           });
         }
+
+        const dnaHash = await this.adminWs().registerDna(
+          registerDnaReqOpts as RegisterDnaRequest
+        );
       }
 
       const installedAppInfo = await this.adminWs().installApp({

@@ -178,13 +178,18 @@ export class TryCpScenario {
     const signalHandler = Array.isArray(agentHappOptions)
       ? undefined
       : agentHappOptions.signalHandler;
-    const agentsDnas = Array.isArray(agentHappOptions)
+    const properties = Array.isArray(agentHappOptions)
+      ? undefined
+      : agentHappOptions.properties;
+    const agentsDnas: DnaSource[][] = Array.isArray(agentHappOptions)
       ? [agentHappOptions]
       : [agentHappOptions.dnas];
     const conductor = await tryCpClient.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
+      properties,
+      signalHandler,
     });
     return { conductor, ...agentHapp };
   }
