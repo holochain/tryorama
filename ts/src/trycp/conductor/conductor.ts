@@ -18,7 +18,6 @@ import {
   InstallAppDnaPayload,
   InstallAppRequest,
   ListAppsRequest,
-  MembraneProof,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
   StartAppRequest,
@@ -33,8 +32,10 @@ import { enableAndGetAgentHapp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
 import {
   AgentHapp,
+  HappBundleOptions,
   IConductor,
-  InstallAgentsHappsOptions,
+  AgentsHappsOptions,
+  _RegisterDnaReqOpts,
 } from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
@@ -89,11 +90,6 @@ export interface TryCpConductorOptions {
    * default: "info"
    */
   logLevel?: TryCpConductorLogLevel;
-
-  /**
-   * Timeout for requests to Admin and App API.
-   */
-  timeout?: number;
 }
 
 /**
@@ -640,10 +636,10 @@ export class TryCpConductor implements IConductor {
   /**
    * Install a set of DNAs for multiple agents into the conductor.
    *
-   * @param options - {@link InstallAgentsHappsOptions}
+   * @param options - {@link AgentsHappsOptions}
    * @returns An array with each agent's hApp.
    */
-  async installAgentsHapps(options: InstallAgentsHappsOptions) {
+  async installAgentsHapps(options: AgentsHappsOptions) {
     const agentsHapps: AgentHapp[] = [];
 
     for (const agentDnas of options.agentsDnas) {
@@ -661,6 +657,13 @@ export class TryCpConductor implements IConductor {
 
       const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
+        let role_id: string;
+
+        const registerDnaReqOpts: _RegisterDnaReqOpts = {
+          uid: options.uid,
+          properties: options.properties,
+        };
+
         if ("path" in dna) {
           const dnaContent = await new Promise<Buffer>((resolve, reject) => {
             fs.readFile(dna.path, null, (err, data) => {
@@ -671,33 +674,21 @@ export class TryCpConductor implements IConductor {
             });
           });
           const relativePath = await this.saveDna(dnaContent);
-          const dnaHash = await this.adminWs().registerDna({
-            path: relativePath,
-            uid: options.uid,
-          });
-          dnasToInstall.push({
-            hash: dnaHash,
-            role_id: `${dna.path}-${uuidv4()}`,
-          });
+          registerDnaReqOpts["path"] = relativePath;
+          role_id = `${dna.path}-${uuidv4()}`;
         } else if ("hash" in dna) {
-          const dnaHash = await this.adminWs().registerDna({
-            hash: dna.hash,
-            uid: options.uid,
-          });
-          dnasToInstall.push({
-            hash: dnaHash,
-            role_id: `dna-${uuidv4()}`,
-          });
+          registerDnaReqOpts["hash"] = dna.hash;
+          role_id = `dna-${uuidv4()}`;
         } else {
-          const dnaHash = await this.adminWs().registerDna({
-            bundle: dna.bundle,
-            uid: options.uid,
-          });
-          dnasToInstall.push({
-            hash: dnaHash,
-            role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
-          });
+          registerDnaReqOpts["bundle"] = dna.bundle;
+          role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
         }
+
+        const dnaHash = await this.adminWs().registerDna(
+          registerDnaReqOpts as RegisterDnaRequest
+        );
+
+        dnasToInstall.push({ hash: dnaHash, role_id });
       }
 
       const installedAppInfo = await this.adminWs().installApp({
@@ -726,12 +717,7 @@ export class TryCpConductor implements IConductor {
    */
   async installHappBundle(
     appBundleSource: AppBundleSource,
-    options?: {
-      agentPubKey?: AgentPubKey;
-      installedAppId?: string;
-      uid?: string;
-      membraneProofs?: Record<string, MembraneProof>;
-    }
+    options?: HappBundleOptions
   ) {
     const agentPubKey =
       options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());

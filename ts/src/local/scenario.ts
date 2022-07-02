@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from "uuid";
 import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
 import { cleanAllConductors, createConductor, Conductor } from "./conductor.js";
-import { AgentHappOptions, HappBundleOptions, IPlayer } from "../types.js";
+import { PlayerHappOptions, HappBundleOptions, IPlayer } from "../types.js";
 import { addAllAgentsToAllConductors } from "../common.js";
 
 /**
@@ -64,20 +64,26 @@ export class Scenario {
    * Create and add a single player to the scenario, with a set of DNAs
    * installed.
    *
-   * @param agentHappOptions - {@link AgentHappOptions}.
+   * @param playerHappOptions - {@link PlayerHappOptions}.
    * @returns A local player instance.
    */
-  async addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<Player> {
-    const signalHandler = Array.isArray(agentHappOptions)
+  async addPlayerWithHapp(
+    playerHappOptions: PlayerHappOptions
+  ): Promise<Player> {
+    const signalHandler = Array.isArray(playerHappOptions)
       ? undefined
-      : agentHappOptions.signalHandler;
-    const agentsDnas: DnaSource[][] = Array.isArray(agentHappOptions)
-      ? [agentHappOptions]
-      : [agentHappOptions.dnas];
+      : playerHappOptions.signalHandler;
+    const properties = Array.isArray(playerHappOptions)
+      ? undefined
+      : playerHappOptions.properties;
+    const agentsDnas: DnaSource[][] = Array.isArray(playerHappOptions)
+      ? [playerHappOptions]
+      : [playerHappOptions.dnas];
     const conductor = await this.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
+      properties,
     });
     return { conductor, ...agentHapp };
   }
@@ -86,11 +92,11 @@ export class Scenario {
    * Create and add multiple players to the scenario, with a set of DNAs
    * installed for each player.
    *
-   * @param agentHappOptions - {@link AgentHappOptions} for each player.
+   * @param agentHappOptions - {@link PlayerHappOptions} for each player.
    * @returns An array with the added players.
    */
   async addPlayersWithHapps(
-    agentHappOptions: AgentHappOptions[]
+    agentHappOptions: PlayerHappOptions[]
   ): Promise<Player[]> {
     const players = await Promise.all(
       agentHappOptions.map((options) => this.addPlayerWithHapp(options))

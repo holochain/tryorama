@@ -5,11 +5,27 @@ import {
   AppWebsocket,
   CallZomeRequest,
   CapSecret,
+  DnaProperties,
   DnaSource,
+  DnaBundle,
+  HoloHash,
   InstalledCell,
   MembraneProof,
   RoleId,
+  RegisterDnaRequest,
 } from "@holochain/client";
+
+/**
+ * @internal
+ */
+export type _RegisterDnaReqOpts = Omit<
+  RegisterDnaRequest,
+  "hash" | "path" | "bundle"
+> & {
+  hash?: HoloHash;
+  path?: string;
+  bundle?: DnaBundle;
+};
 
 /**
  * The zome request options adapted to a specific cell.
@@ -80,7 +96,7 @@ export interface HappBundleOptions {
 /**
  * @public
  */
-export interface InstallAgentsHappsOptions {
+export interface AgentsHappsOptions {
   /**
    * An array of DNAs for each agent (2-dimensional array) or an array of DNAs
    * and an agent pub key.
@@ -93,7 +109,28 @@ export interface InstallAgentsHappsOptions {
    * A unique ID for the DNAs (optional).
    */
   uid?: string;
+
+  /**
+   * DNA properties (optional).
+   */
+  properties?: DnaProperties;
 }
+
+/**
+ * Player installation pptions used in scenarios.
+ *
+ * Specifies either only the DNAs that the hApp to be installed
+ * consists of, or the DNAs and a signal handler to be registered.
+ *
+ * @public
+ */
+export type PlayerHappOptions =
+  | DnaSource[]
+  | {
+      dnas: DnaSource[];
+      signalHandler?: AppSignalCb;
+      properties?: DnaProperties;
+    };
 
 /**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and
@@ -118,19 +155,5 @@ export interface IConductor {
   >;
   appWs: () => Pick<AppWebsocket, "callZome" | "appInfo">;
 
-  installAgentsHapps: (options: {
-    agentsDnas: DnaSource[][];
-    uid?: string;
-    signalHandler?: AppSignalCb;
-  }) => Promise<AgentHapp[]>;
+  installAgentsHapps: (options: AgentsHappsOptions) => Promise<AgentHapp[]>;
 }
-
-/**
- * A type that specifies either only the DNAs that the hApp to be installed
- * consists of, or the DNAs and a signal handler to be registered.
- *
- * @public
- */
-export type AgentHappOptions =
-  | DnaSource[]
-  | { dnas: DnaSource[]; signalHandler?: AppSignalCb };

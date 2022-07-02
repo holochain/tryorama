@@ -130,7 +130,7 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
 
 test("TryCP Conductor - receive a signal", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL);
+  const client = await TryCpClient.create(SERVER_URL, 30000);
   const conductor = await createTestConductor(client);
 
   const testSignal = { value: "signal" };

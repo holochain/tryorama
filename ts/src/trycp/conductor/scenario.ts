@@ -7,12 +7,7 @@ import {
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
-import {
-  AgentHapp,
-  AgentHappOptions,
-  HappBundleOptions,
-  IPlayer,
-} from "../../types.js";
+import { PlayerHappOptions, HappBundleOptions, IPlayer } from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
 
@@ -168,23 +163,27 @@ export class TryCpScenario {
    *
    * @param tryCpClient - The client connection to the TryCP server on which to
    * create the player.
-   * @param agentHappOptions - {@link AgentHappOptions}.
+   * @param playerHappOptions - {@link PlayerHappOptions}.
    * @returns The created player instance.
    */
   async addPlayerWithHapp(
     tryCpClient: TryCpClient,
-    agentHappOptions: AgentHappOptions
+    playerHappOptions: PlayerHappOptions
   ): Promise<TryCpPlayer> {
-    const signalHandler = Array.isArray(agentHappOptions)
+    const signalHandler = Array.isArray(playerHappOptions)
       ? undefined
-      : agentHappOptions.signalHandler;
-    const agentsDnas = Array.isArray(agentHappOptions)
-      ? [agentHappOptions]
-      : [agentHappOptions.dnas];
+      : playerHappOptions.signalHandler;
+    const properties = Array.isArray(playerHappOptions)
+      ? undefined
+      : playerHappOptions.properties;
+    const agentsDnas: DnaSource[][] = Array.isArray(playerHappOptions)
+      ? [playerHappOptions]
+      : [playerHappOptions.dnas];
     const conductor = await tryCpClient.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
+      properties,
     });
     return { conductor, ...agentHapp };
   }
@@ -195,12 +194,12 @@ export class TryCpScenario {
    *
    * @param tryCpClient - The client connection to the TryCP server on which to
    * create the player.
-   * @param agentHappOptions - {@link AgentHappOptions} for each player.
+   * @param agentHappOptions - {@link PlayerHappOptions} for each player.
    * @returns An array of the added players.
    */
   async addPlayersWithHapps(
     tryCpClient: TryCpClient,
-    agentHappOptions: AgentHappOptions[]
+    agentHappOptions: PlayerHappOptions[]
   ): Promise<TryCpPlayer[]> {
     const players = await Promise.all(
       agentHappOptions.map((options) =>

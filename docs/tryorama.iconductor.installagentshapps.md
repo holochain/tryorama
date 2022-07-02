@@ -10,6 +10,7 @@
 installAgentsHapps: (options: {
         agentsDnas: DnaSource[][];
         uid?: string;
+        properties?: DnaProperties;
         signalHandler?: AppSignalCb;
     }) => Promise<AgentHapp[]>;
 ```
