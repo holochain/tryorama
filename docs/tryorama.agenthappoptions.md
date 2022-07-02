@@ -12,5 +12,6 @@ A type that specifies either only the DNAs that the hApp to be installed consist
 export declare type AgentHappOptions = DnaSource[] | {
     dnas: DnaSource[];
     signalHandler?: AppSignalCb;
+    properties?: DnaProperties;
 };
 ```

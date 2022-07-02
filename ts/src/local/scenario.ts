@@ -76,6 +76,9 @@ export class Scenario implements IScenario {
     const signalHandler = Array.isArray(agentHappOptions)
       ? undefined
       : agentHappOptions.signalHandler;
+    const properties = Array.isArray(agentHappOptions)
+      ? undefined
+      : agentHappOptions.properties;
     const agentsDnas: DnaSource[][] = Array.isArray(agentHappOptions)
       ? [agentHappOptions]
       : [agentHappOptions.dnas];
@@ -83,6 +86,7 @@ export class Scenario implements IScenario {
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
+      properties,
     });
     return { conductor, ...agentHapp };
   }
