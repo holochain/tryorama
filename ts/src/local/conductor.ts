@@ -414,13 +414,10 @@ export class Conductor implements IConductor {
       const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
         if ("path" in dna) {
-          const registerDnaReqOpts: _RegisterDnaReqOpts = {
-            uid: options.uid,
-            properties: options.properties,
-          };
           const dnaHash = await this.adminWs().registerDna({
             path: dna.path,
             uid: options.uid,
+            properties: options.properties,
           });
           dnasToInstall.push({
             hash: dnaHash,
@@ -430,6 +427,7 @@ export class Conductor implements IConductor {
           const dnaHash = await this.adminWs().registerDna({
             hash: dna.hash,
             uid: options.uid,
+            properties: options.properties,
           });
           dnasToInstall.push({
             hash: dnaHash,
@@ -439,6 +437,7 @@ export class Conductor implements IConductor {
           const dnaHash = await this.adminWs().registerDna({
             bundle: dna.bundle,
             uid: options.uid,
+            properties: options.properties,
           });
           dnasToInstall.push({
             hash: dnaHash,

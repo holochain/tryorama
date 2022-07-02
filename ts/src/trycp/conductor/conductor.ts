@@ -663,13 +663,6 @@ export class TryCpConductor implements IConductor {
 
       const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
-        let role_id: string;
-
-        const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          uid: options.uid,
-          properties: options.properties,
-        };
-
         if ("path" in dna) {
           const dnaContent = await new Promise<Buffer>((resolve, reject) => {
             fs.readFile(dna.path, null, (err, data) => {
@@ -683,6 +676,7 @@ export class TryCpConductor implements IConductor {
           const dnaHash = await this.adminWs().registerDna({
             path: relativePath,
             uid: options.uid,
+            properties: options.properties,
           });
           dnasToInstall.push({
             hash: dnaHash,
@@ -692,6 +686,7 @@ export class TryCpConductor implements IConductor {
           const dnaHash = await this.adminWs().registerDna({
             hash: dna.hash,
             uid: options.uid,
+            properties: options.properties,
           });
           dnasToInstall.push({
             hash: dnaHash,
@@ -701,16 +696,13 @@ export class TryCpConductor implements IConductor {
           const dnaHash = await this.adminWs().registerDna({
             bundle: dna.bundle,
             uid: options.uid,
+            properties: options.properties,
           });
           dnasToInstall.push({
             hash: dnaHash,
             role_id: `${dna.bundle.manifest.name}-${uuidv4()}`,
           });
         }
-
-        const dnaHash = await this.adminWs().registerDna(
-          registerDnaReqOpts as RegisterDnaRequest
-        );
       }
 
       const installedAppInfo = await this.adminWs().installApp({
