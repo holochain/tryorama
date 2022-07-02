@@ -111,7 +111,7 @@ test("TryCP Conductor - Receive a signal", async (t) => {
     };
   });
 
-  const conductor = await createTestTryCpConductor();
+  const conductor = await createTestTryCpConductor({ timeout: 30000 });
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const installedAppBundle = await conductor.adminWs().installAppBundle({
     agent_key: agentPubKey,

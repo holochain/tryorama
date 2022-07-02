@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## [0.5.9]
+
+### Added
+- Common: expose the optional properties field from `RegisterDnaRequest` when installing DNAs through `addPlayerWithHapp` [PR \#135](https://github.com/holochain/tryorama/pull/135)
+
 ## [0.5.8]
 
 ### Fixed

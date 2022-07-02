@@ -368,7 +368,7 @@ test("Local Conductor - Receive a signal", async (t) => {
       resolve(signal);
     };
   });
-  const conductor = await createConductor({ signalHandler });
+  const conductor = await createConductor({ signalHandler, timeout: 30000 });
 
   const [aliceHapps] = await conductor.installAgentsHapps({
     agentsDnas: [dnas],
