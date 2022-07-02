@@ -23,7 +23,7 @@ import {
   AgentHapp,
   HappBundleOptions,
   IConductor,
-  RegisterDnaReqOpts,
+  _RegisterDnaReqOpts,
 } from "../types.js";
 
 const logger = makeLogger("Local Conductor");
@@ -414,7 +414,7 @@ export class Conductor implements IConductor {
       for (const dna of agent) {
         let role_id: string;
 
-        const registerDnaReqOpts: RegisterDnaReqOpts = {
+        const registerDnaReqOpts: _RegisterDnaReqOpts = {
           uid: options.uid,
           properties: options.properties,
         };

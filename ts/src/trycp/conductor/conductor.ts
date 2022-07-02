@@ -32,7 +32,7 @@ import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { enableAndGetAgentHapp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
-import { AgentHapp, IConductor, RegisterDnaReqOpts } from "../../types.js";
+import { AgentHapp, IConductor, _RegisterDnaReqOpts } from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceData,
@@ -661,7 +661,7 @@ export class TryCpConductor implements IConductor {
       for (const dna of agentDnas) {
         let role_id: string;
 
-        const registerDnaReqOpts: RegisterDnaReqOpts = {
+        const registerDnaReqOpts: _RegisterDnaReqOpts = {
           uid: options.uid,
           properties: options.properties,
         };

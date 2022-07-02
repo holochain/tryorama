@@ -16,7 +16,10 @@ import {
   RegisterDnaRequest,
 } from "@holochain/client";
 
-export type RegisterDnaReqOpts = Omit<
+/**
+ * @internal
+ */
+export type _RegisterDnaReqOpts = Omit<
   RegisterDnaRequest,
   "hash" | "path" | "bundle"
 > & {
