@@ -7,7 +7,12 @@ import {
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
-import { PlayerHappOptions, HappBundleOptions, IPlayer } from "../../types.js";
+import {
+  PlayerHappOptions,
+  HappBundleOptions,
+  IPlayer,
+  Dnas,
+} from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
 
@@ -23,7 +28,7 @@ export interface ClientsPlayersOptions {
   /**
    * An array of DNAs that will be installed for each agent (optional).
    */
-  dnas?: DnaSource[];
+  dnas?: Dnas[];
 
   /**
    * A list of previously generated agent pub keys (optional).
@@ -128,8 +133,8 @@ export class TryCpScenario {
           const dnas = options.dnas;
 
           let agentsDnas:
-            | DnaSource[][]
-            | Array<{ dnas: DnaSource[]; agentPubKey: AgentPubKey }>;
+            | Dnas[][]
+            | Array<{ dnas: Dnas[]; agentPubKey: AgentPubKey }>;
           if (options.agentPubKeys) {
             if (options.agentPubKeys.length !== options.dnas.length) {
               throw new Error(
@@ -176,7 +181,7 @@ export class TryCpScenario {
     const properties = Array.isArray(playerHappOptions)
       ? undefined
       : playerHappOptions.properties;
-    const agentsDnas: DnaSource[][] = Array.isArray(playerHappOptions)
+    const agentsDnas: Dnas[][] = Array.isArray(playerHappOptions)
       ? [playerHappOptions]
       : [playerHappOptions.dnas];
     const conductor = await tryCpClient.addConductor(signalHandler);

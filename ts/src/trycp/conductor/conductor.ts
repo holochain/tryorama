@@ -664,9 +664,10 @@ export class TryCpConductor implements IConductor {
           properties: options.properties,
         };
 
-        if ("path" in dna) {
+        if ("path" in dna.source) {
+          const path = dna.source.path;
           const dnaContent = await new Promise<Buffer>((resolve, reject) => {
-            fs.readFile(dna.path, null, (err, data) => {
+            fs.readFile(path, null, (err, data) => {
               if (err) {
                 reject(err);
               }
@@ -675,20 +676,24 @@ export class TryCpConductor implements IConductor {
           });
           const relativePath = await this.saveDna(dnaContent);
           registerDnaReqOpts["path"] = relativePath;
-          role_id = `${dna.path}-${uuidv4()}`;
-        } else if ("hash" in dna) {
-          registerDnaReqOpts["hash"] = dna.hash;
+          role_id = `${dna.source.path}-${uuidv4()}`;
+        } else if ("hash" in dna.source) {
+          registerDnaReqOpts["hash"] = dna.source.hash;
           role_id = `dna-${uuidv4()}`;
         } else {
-          registerDnaReqOpts["bundle"] = dna.bundle;
-          role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
+          registerDnaReqOpts["bundle"] = dna.source.bundle;
+          role_id = `${dna.source.bundle.manifest.name}-${uuidv4()}`;
         }
 
         const dnaHash = await this.adminWs().registerDna(
           registerDnaReqOpts as RegisterDnaRequest
         );
 
-        dnasToInstall.push({ hash: dnaHash, role_id });
+        dnasToInstall.push({
+          hash: dnaHash,
+          role_id,
+          membrane_proof: dna.membraneProof,
+        });
       }
 
       const installedAppInfo = await this.adminWs().installApp({

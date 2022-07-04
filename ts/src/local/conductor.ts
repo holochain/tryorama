@@ -418,22 +418,26 @@ export class Conductor implements IConductor {
           properties: options.properties,
         };
 
-        if ("path" in dna) {
-          registerDnaReqOpts["path"] = dna.path;
-          role_id = `${dna.path}-${uuidv4()}`;
-        } else if ("hash" in dna) {
-          registerDnaReqOpts["hash"] = dna.hash;
+        if ("path" in dna.source) {
+          registerDnaReqOpts["path"] = dna.source.path;
+          role_id = `${dna.source.path}-${uuidv4()}`;
+        } else if ("hash" in dna.source) {
+          registerDnaReqOpts["hash"] = dna.source.hash;
           role_id = `dna-${uuidv4()}`;
         } else {
-          registerDnaReqOpts["bundle"] = dna.bundle;
-          role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
+          registerDnaReqOpts["bundle"] = dna.source.bundle;
+          role_id = `${dna.source.bundle.manifest.name}-${uuidv4()}`;
         }
 
         const dnaHash = await this.adminWs().registerDna(
           registerDnaReqOpts as RegisterDnaRequest
         );
 
-        dnasToInstall.push({ hash: dnaHash, role_id });
+        dnasToInstall.push({
+          hash: dnaHash,
+          role_id,
+          membrane_proof: dna.membraneProof,
+        });
       }
 
       const installedAppInfo = await this.adminWs().installApp({
