@@ -4,7 +4,7 @@
 
 ## TryCpScenario.addClient() method
 
-Create a TryCP client connection and add it to the scenario.
+Creates a TryCP client connection and add it to the scenario.
 
 <b>Signature:</b>
 
@@ -16,7 +16,7 @@ addClient(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  serverUrl | URL | The TryCP server URL. |
+|  serverUrl | URL | The TryCP server URL to connect to. |
 |  timeout | number | <i>(Optional)</i> An optional timeout for the web socket connection. |
 
 <b>Returns:</b>

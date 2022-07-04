@@ -9,14 +9,14 @@ Create and add multiple players to the scenario, with a set of DNAs installed fo
 <b>Signature:</b>
 
 ```typescript
-addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<Player[]>;
+addPlayersWithHapps(agentHappOptions: PlayerHappOptions[]): Promise<Player[]>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->\[\] | [AgentHappOptions](./tryorama.agenthappoptions.md) for each player. |
+|  agentHappOptions | [PlayerHappOptions](./tryorama.playerhappoptions.md)<!-- -->\[\] | [PlayerHappOptions](./tryorama.playerhappoptions.md) for each player. |
 
 <b>Returns:</b>
 

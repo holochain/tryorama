@@ -1,7 +1,12 @@
 import { v4 as uuidv4 } from "uuid";
-import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
+import { AppBundleSource, AppSignalCb } from "@holochain/client";
 import { cleanAllConductors, createConductor, Conductor } from "./conductor.js";
-import { PlayerHappOptions, HappBundleOptions, IPlayer } from "../types.js";
+import {
+  PlayerHappOptions,
+  HappBundleOptions,
+  IPlayer,
+  Dnas,
+} from "../types.js";
 import { addAllAgentsToAllConductors } from "../common.js";
 
 /**
@@ -76,7 +81,7 @@ export class Scenario {
     const properties = Array.isArray(playerHappOptions)
       ? undefined
       : playerHappOptions.properties;
-    const agentsDnas: DnaSource[][] = Array.isArray(playerHappOptions)
+    const agentsDnas: Dnas[][] = Array.isArray(playerHappOptions)
       ? [playerHappOptions]
       : [playerHappOptions.dnas];
     const conductor = await this.addConductor(signalHandler);

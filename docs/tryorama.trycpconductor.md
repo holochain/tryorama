@@ -23,6 +23,7 @@ export declare class TryCpConductor implements IConductor
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
+|  [id](./tryorama.trycpconductor.id.md) |  | string |  |
 |  [tryCpClient](./tryorama.trycpconductor.trycpclient.md) |  | [TryCpClient](./tryorama.trycpclient.md) |  |
 
 ## Methods
@@ -39,6 +40,6 @@ export declare class TryCpConductor implements IConductor
 |  [installAgentsHapps(options)](./tryorama.trycpconductor.installagentshapps.md) |  | Install a set of DNAs for multiple agents into the conductor. |
 |  [installHappBundle(appBundleSource, options)](./tryorama.trycpconductor.installhappbundle.md) |  | Install a hApp bundle into the conductor. |
 |  [saveDna(dnaContent)](./tryorama.trycpconductor.savedna.md) |  | Upload a DNA file from the local file system to the server. |
-|  [shutDown()](./tryorama.trycpconductor.shutdown.md) |  | Disconnect App interface and shut down the conductor. |
+|  [shutDown()](./tryorama.trycpconductor.shutdown.md) |  | Disconnect app interface and shut down the conductor. |
 |  [startUp(options)](./tryorama.trycpconductor.startup.md) |  | Start a configured conductor. |
 

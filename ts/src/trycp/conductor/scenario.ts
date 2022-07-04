@@ -1,9 +1,4 @@
-import {
-  AgentPubKey,
-  AppBundleSource,
-  AppSignalCb,
-  DnaSource,
-} from "@holochain/client";
+import { AgentPubKey, AppBundleSource, AppSignalCb } from "@holochain/client";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";

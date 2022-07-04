@@ -1,4 +1,4 @@
-import { AppSignal, DnaSource, EntryHash } from "@holochain/client";
+import { AppSignal, EntryHash } from "@holochain/client";
 import { Buffer } from "node:buffer";
 import test from "tape-promise/tape.js";
 import { URL } from "node:url";
@@ -13,6 +13,7 @@ import {
   TRYCP_SERVER_PORT,
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
+import { Dnas } from "../../src/types.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 import { TryCpClient } from "../../src/index.js";
@@ -67,7 +68,9 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
   t.ok(agentPubKey, "agent pub key generated");
 
   const [alice] = await conductor.installAgentsHapps({
-    agentsDnas: [{ dnas: [{ path: FIXTURE_DNA_URL.pathname }], agentPubKey }],
+    agentsDnas: [
+      { dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }], agentPubKey },
+    ],
   });
   t.deepEqual(
     alice.agentPubKey,
@@ -270,7 +273,7 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
   const localTryCpServer = await TryCpServer.start();
   const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
-  const dnas = [{ path: FIXTURE_DNA_URL.pathname }];
+  const dnas = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
   const [alice_happs] = await conductor.installAgentsHapps({
     agentsDnas: [dnas],
   });
@@ -421,7 +424,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   const localTryCpServer = await TryCpServer.start();
   const client = await TryCpClient.create(SERVER_URL);
 
-  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const dnas: Dnas[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   const conductor1 = await createTestConductor(client);
   const [alice] = await conductor1.installAgentsHapps({ agentsDnas: [dnas] });
