@@ -14,7 +14,6 @@ Specifies either only the DNAs that the hApp to be installed consists of, or the
 export declare type PlayerHappOptions = Dnas[] | {
     dnas: Dnas[];
     signalHandler?: AppSignalCb;
-    properties?: DnaProperties;
 };
 ```
 <b>References:</b> [Dnas](./tryorama.dnas.md)

@@ -281,7 +281,7 @@ test("TryCP Server - App API - get app info", async (t) => {
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
   const [alice] = await conductor.installAgentsHapps({
-    agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
+    agentsDnas: [[{ source: { path: FIXTURE_DNA_URL.pathname } }]],
   });
   await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface();
