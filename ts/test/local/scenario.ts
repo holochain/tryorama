@@ -1,9 +1,5 @@
-import {
-  AppSignal,
-  AppSignalCb,
-  DnaSource,
-  EntryHash,
-} from "@holochain/client";
+import { AppSignal, AppSignalCb, EntryHash } from "@holochain/client";
+import { Dnas } from "../../src/types.js";
 import test from "tape-promise/tape.js";
 import { runScenario, Scenario } from "../../src/local/scenario.js";
 import { pause } from "../../src/util.js";
@@ -21,7 +17,7 @@ test("Local Scenario - runScenario - Install hApp bundle and access cells throug
 test("Local Scenario - runScenario - Catch error when calling non-existent zome", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+      { source: { path: FIXTURE_DNA_URL.pathname } },
     ]);
 
     await t.rejects(
@@ -36,7 +32,7 @@ test("Local Scenario - runScenario - Catch error when calling non-existent zome"
 test("Local Scenario - runScenario - Catch error when attaching a protected port", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+      { source: { path: FIXTURE_DNA_URL.pathname } },
     ]);
 
     await t.rejects(alice.conductor.attachAppInterface({ port: 300 }));
@@ -46,7 +42,7 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
 test("Local Scenario - runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+      { source: { path: FIXTURE_DNA_URL.pathname } },
     ]);
 
     t.throws(() => alice.cells[2].callZome({ zome_name: "", fn_name: "" }));
@@ -64,7 +60,7 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
 
     const [alice] = await scenario.addPlayersWithHapps([
       {
-        dnas: [{ path: FIXTURE_DNA_URL.pathname }],
+        dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
         signalHandler: signalHandlerAlice,
       },
     ]);
@@ -79,6 +75,25 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
     await t.rejects(signalReceivedAlice);
   });
 });
+
+// test("Local Scenario - Install hApp with unique DNA props", async (t) => {
+//   const scenario = new Scenario();
+
+//   const [alice] = await scenario.addPlayersWithHapps([
+//     {
+//       dnas: [{
+//         source: { path: FIXTURE_DNA_URL.pathname },
+//         properties: {
+
+//         }
+//       }],
+//       signalHandler: signalHandlerAlice,
+//     },
+//   ]);
+
+//   t.ok(alice.namedCells.get("test"));
+//   await scenario.cleanUp();
+// });
 
 test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
   const scenario = new Scenario();
@@ -103,7 +118,7 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
 });
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
-  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const dnas: Dnas[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   const scenario = new Scenario();
   t.ok(scenario.uid);
@@ -134,8 +149,8 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
   const scenario = new Scenario();
   const [alice, bob] = await scenario.addPlayersWithHapps([
-    [{ path: FIXTURE_DNA_URL.pathname }],
-    [{ path: FIXTURE_DNA_URL.pathname }],
+    [{ source: { path: FIXTURE_DNA_URL.pathname } }],
+    [{ source: { path: FIXTURE_DNA_URL.pathname } }],
   ]);
 
   await scenario.shareAllAgents();
@@ -173,7 +188,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
-  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const dnas: Dnas[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   let signalHandlerAlice: AppSignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
