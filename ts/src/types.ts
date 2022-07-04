@@ -96,6 +96,7 @@ export interface HappBundleOptions {
 export type Dnas = {
   source: DnaSource;
   membraneProof?: MembraneProof;
+  properties?: DnaProperties;
 };
 
 /**
@@ -117,11 +118,6 @@ export interface AgentsHappsOptions {
    * A unique ID for the DNAs (optional).
    */
   uid?: string;
-
-  /**
-   * DNA properties (optional).
-   */
-  properties?: DnaProperties;
 }
 
 /**
@@ -137,7 +133,6 @@ export type PlayerHappOptions =
   | {
       dnas: Dnas[];
       signalHandler?: AppSignalCb;
-      properties?: DnaProperties;
     };
 
 /**

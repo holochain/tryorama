@@ -661,7 +661,7 @@ export class TryCpConductor implements IConductor {
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
           uid: options.uid,
-          properties: options.properties,
+          properties: dna.properties,
         };
 
         if ("path" in dna.source) {

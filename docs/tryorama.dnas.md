@@ -10,5 +10,6 @@
 export declare type Dnas = {
     source: DnaSource;
     membraneProof?: MembraneProof;
+    properties?: DnaProperties;
 };
 ```
