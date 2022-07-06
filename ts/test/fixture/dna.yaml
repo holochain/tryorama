@@ -1,8 +1,9 @@
 ---
 manifest_version: "1"
 name: crud-dna
-uid: 9a28aac8-337c-11eb-adc1-0Z02acw20115
-properties: ~
-zomes:
-  - name: crud
-    bundled: "../../../target/wasm32-unknown-unknown/release/crud.wasm"
+integrity:
+  uid: 9a28aac8-337c-11eb-adc1-0Z02acw20115
+  properties: ~
+  zomes:
+    - name: crud
+      bundled: "../../../target/wasm32-unknown-unknown/release/crud.wasm"

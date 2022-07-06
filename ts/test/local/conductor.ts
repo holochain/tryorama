@@ -1,9 +1,9 @@
 import {
+  ActionHash,
   AppSignal,
   AppSignalCb,
   DnaSource,
   EntryHash,
-  HeaderHash,
 } from "@holochain/client";
 import assert from "node:assert";
 import { readFileSync } from "node:fs";
@@ -212,13 +212,13 @@ test("Local Conductor - Get a convenience function for zome calls", async (t) =>
   const crudZomeCall = getZomeCaller(aliceHapps.cells[0], "crud");
   t.equal(typeof crudZomeCall, "function", "getZomeCaller returns a function");
 
-  const entryHeaderHash: HeaderHash = await crudZomeCall(
+  const entryHeaderHash: ActionHash = await crudZomeCall(
     "create",
     "test-entry"
   );
   const entryHeaderHashB64 = Buffer.from(entryHeaderHash).toString("base64");
-  t.equal(entryHeaderHash.length, 39, "HeaderHash is 39 bytes long");
-  t.ok(entryHeaderHashB64.startsWith("hCkk"), "HeaderHash starts with hCkk");
+  t.equal(entryHeaderHash.length, 39, "ActionHash is 39 bytes long");
+  t.ok(entryHeaderHashB64.startsWith("hCkk"), "ActionHash starts with hCkk");
 
   await conductor.shutDown();
   await cleanAllConductors();
