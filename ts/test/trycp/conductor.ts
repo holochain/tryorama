@@ -35,7 +35,7 @@ const createTestTryCpConductor = (options?: TryCpConductorOptions) =>
 
 test("TryCP Conductor - Stop and restart a conductor", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const conductor = await createTestTryCpConductor();
+  const conductor = await createTestTryCpConductor({ timeout: 30000 });
 
   const agentPubKeyResponse = await conductor.adminWs().generateAgentPubKey();
   t.ok(agentPubKeyResponse);
