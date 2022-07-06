@@ -25,7 +25,7 @@ example uses [tape](https://github.com/substack/tape) as test runner and
 assertion library. You can choose any other runner and library.
 
 ```ts
-import { DnaSource, HeaderHash } from "@holochain/client";
+import { ActionHash, DnaSource } from "@holochain/client";
 import { pause, runScenario, Scenario } from "@holochain/tryorama";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,7 +54,7 @@ test("Create 2 players and create and read an entry", async (t) => {
 
     // The cells of the installed hApp are returned in the same order as the DNAs
     // that were passed into the player creation.
-    const createEntryHash: HeaderHash = await alice.cells[0].callZome({
+    const createEntryHash: ActionHash = await alice.cells[0].callZome({
       zome_name: "crud",
       fn_name: "create",
       payload: content,
@@ -82,7 +82,7 @@ test("Create 2 players and create and read an entry", async (t) => {
 Written out without the wrapper function, the same example looks like this:
 
 ```ts
-import { DnaSource, HeaderHash } from "@holochain/client";
+import { ActionHash, DnaSource } from "@holochain/client";
 import { pause, Scenario } from "@holochain/tryorama";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -266,7 +266,7 @@ const [aliceHapps] = await conductor.installAgentsHapps({
   agentsDnas: [dnas],
 });
 const aliceCrudZomeCall = getZomeCaller(aliceHapps.cells[0], "crud");
-const entryHeaderHash: HeaderHash = await crudZomeCall(
+const entryHeaderHash: ActionHash = await crudZomeCall(
   "create",
   "test-entry"
 );

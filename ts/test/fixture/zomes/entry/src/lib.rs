@@ -1,39 +1,47 @@
 use hdk::prelude::*;
 
-entry_defs![Content::entry_def()];
-
-#[hdk_entry(id = "Content")]
+#[hdk_entry_helper]
 pub struct Content(String);
 
-#[derive(Serialize, Deserialize, SerializedBytes, Debug, Clone)]
+#[hdk_entry_helper]
 pub struct UpdateInput {
-    pub hash: HeaderHash,
+    pub hash: ActionHash,
     pub content: String,
 }
 
+#[hdk_entry_defs]
+#[unit_enum(EntryTypesUnit)]
+pub enum EntryTypes {
+    Content(Content),
+}
+
 #[hdk_extern]
-pub fn create(input: Content) -> ExternResult<HeaderHash> {
-    let header_hash = create_entry(input).unwrap();
+pub fn create(input: Content) -> ExternResult<ActionHash> {
+    let header_hash = create_entry(EntryTypes::Content(input)).unwrap();
     Ok(header_hash)
 }
 
 #[hdk_extern]
-pub fn read(hash: HeaderHash) -> ExternResult<Option<Content>> {
-    let entry: Option<Content> = match get(hash, GetOptions::default())? {
-        Some(element) => Some(element.entry().to_app_option::<Content>()?.unwrap()),
-        None => None
+pub fn read(hash: ActionHash) -> ExternResult<Option<Content>> {
+    let entry = match get(hash, GetOptions::default())? {
+        Some(record) => record
+            .entry()
+            .to_app_option::<Content>()
+            .map_err(|err| wasm_error!(WasmErrorInner::Guest(err.to_string())))?,
+        None => None,
     };
     Ok(entry)
 }
 
 #[hdk_extern]
-pub fn update(input: UpdateInput) -> ExternResult<HeaderHash> {
-    let updated_hash = update_entry(input.hash, Content(input.content)).unwrap();
+pub fn update(input: UpdateInput) -> ExternResult<ActionHash> {
+    let updated_hash =
+        update_entry(input.hash, EntryTypes::Content(Content(input.content))).unwrap();
     Ok(updated_hash)
 }
 
 #[hdk_extern]
-pub fn delete(hash: HeaderHash) -> ExternResult<HeaderHash> {
+pub fn delete(hash: ActionHash) -> ExternResult<ActionHash> {
     let deleted_hash = delete_entry(hash).unwrap();
     Ok(deleted_hash)
 }
