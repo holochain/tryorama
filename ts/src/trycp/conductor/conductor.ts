@@ -645,7 +645,9 @@ export class TryCpConductor implements IConductor {
 
     for (const agentDnas of agentsDnas) {
       const dnasToInstall: InstallAppDnaPayload[] = [];
-      const appId = `app-${uuidv4()}`;
+      const appId =
+        ("installedAppId" in options && options.installedAppId) ||
+        `app-${uuidv4()}`;
       const agentPubKey =
         ("agentPubKey" in agentDnas && agentDnas.agentPubKey) ||
         (await this.adminWs().generateAgentPubKey());
@@ -657,7 +659,7 @@ export class TryCpConductor implements IConductor {
 
       const dnas = "dnas" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
-        let role_id: string;
+        let roleId: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
           uid: ("uid" in options && options.uid) || undefined,
@@ -677,13 +679,13 @@ export class TryCpConductor implements IConductor {
           });
           const relativePath = await this.saveDna(dnaContent);
           registerDnaReqOpts.path = relativePath;
-          role_id = `${path}-${uuidv4()}`;
+          roleId = `${path}-${uuidv4()}`;
         } else if ("hash" in dnaSource) {
           registerDnaReqOpts.hash = dnaSource.hash;
-          role_id = `dna-${uuidv4()}`;
+          roleId = `dna-${uuidv4()}`;
         } else {
           registerDnaReqOpts.bundle = dnaSource.bundle;
-          role_id = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
+          roleId = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
         }
 
         const dnaHash = await this.adminWs().registerDna(
@@ -694,7 +696,7 @@ export class TryCpConductor implements IConductor {
           "membraneProof" in dna ? dna.membraneProof : undefined;
         dnasToInstall.push({
           hash: dnaHash,
-          role_id,
+          role_id: ("roleId" in dna && dna.roleId) || roleId,
           membrane_proof,
         });
       }

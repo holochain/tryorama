@@ -241,6 +241,28 @@ test("Local Conductor - Install multiple agents and DNAs and get access to agent
   await cleanAllConductors();
 });
 
+test("Local Conductor - Install a DNA with custom role id", async (t) => {
+  const conductor = await createConductor();
+  const expectedRoleId = "test-role-id";
+  const [aliceHapps] = await conductor.installAgentsHapps({
+    agentsDnas: [
+      {
+        dnas: [
+          {
+            source: { path: FIXTURE_DNA_URL.pathname },
+            roleId: expectedRoleId,
+          },
+        ],
+      },
+    ],
+  });
+  const actualRoleId = aliceHapps.cells[0].role_id;
+  t.equal(actualRoleId, expectedRoleId, "dna role id matches");
+
+  await conductor.shutDown();
+  await cleanAllConductors();
+});
+
 test("Local Conductor - Install hApp bundle and access cells with role ids", async (t) => {
   const conductor = await createConductor();
   const aliceHapp = await conductor.installHappBundle({

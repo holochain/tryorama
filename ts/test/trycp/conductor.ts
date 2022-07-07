@@ -3,7 +3,7 @@ import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import { addAllAgentsToAllConductors } from "../../src/common.js";
-import { TryCpClient } from "../../src/index.js";
+import { Dna, TryCpClient } from "../../src/index.js";
 import {
   createTryCpConductor,
   TryCpConductorOptions,
@@ -467,6 +467,29 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
     readEntryResponse,
     entryContent,
     "read entry content matches created entry content"
+  );
+
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - pass a custom application id to happ installation", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const client = await TryCpClient.create(SERVER_URL);
+
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+
+  const conductor1 = await createTestConductor(client);
+  const expectedInstalledAppId = "test-app-id";
+  const [alice] = await conductor1.installAgentsHapps({
+    agentsDnas: [{ dnas }],
+    installedAppId: expectedInstalledAppId,
+  });
+  const actualInstalledAppId = alice.happId;
+  t.equal(
+    actualInstalledAppId,
+    expectedInstalledAppId,
+    "installed app id matches"
   );
 
   await client.cleanUp();

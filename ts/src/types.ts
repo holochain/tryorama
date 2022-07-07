@@ -13,6 +13,7 @@ import {
   MembraneProof,
   RoleId,
   RegisterDnaRequest,
+  InstalledAppId,
 } from "@holochain/client";
 
 /**
@@ -102,6 +103,7 @@ export interface Dna {
   source: DnaSource;
   membraneProof?: MembraneProof;
   properties?: DnaProperties;
+  roleId?: string;
 }
 
 /**
@@ -129,6 +131,11 @@ export type AgentsHappsOptions =
        * A unique ID for the DNAs (optional).
        */
       uid?: string;
+
+      /**
+       * A unique ID for the hApp (optional).
+       */
+      installedAppId?: InstalledAppId;
     };
 
 /**

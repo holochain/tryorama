@@ -4,9 +4,9 @@ import {
   DnaSource,
   EntryHash,
 } from "@holochain/client";
-import { Dna } from "../../src/types.js";
 import test from "tape-promise/tape.js";
 import { runScenario, Scenario } from "../../src/local/scenario.js";
+import { Dna } from "../../src/types.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 
@@ -21,8 +21,8 @@ test("Local Scenario - runScenario - Install hApp bundle and access cells throug
 
 test("Local Scenario - runScenario - Catch error when calling non-existent zome", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+    const [alice] = await scenario.addPlayersWithHapps([
+      [{ path: FIXTURE_DNA_URL.pathname }],
     ]);
 
     await t.rejects(
@@ -36,8 +36,8 @@ test("Local Scenario - runScenario - Catch error when calling non-existent zome"
 
 test("Local Scenario - runScenario - Catch error when attaching a protected port", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+    const [alice] = await scenario.addPlayersWithHapps([
+      [{ path: FIXTURE_DNA_URL.pathname }],
     ]);
 
     await t.rejects(alice.conductor.attachAppInterface({ port: 300 }));
@@ -46,8 +46,8 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
 
 test("Local Scenario - runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+    const [alice] = await scenario.addPlayersWithHapps([
+      [{ path: FIXTURE_DNA_URL.pathname }],
     ]);
 
     t.throws(() => alice.cells[2].callZome({ zome_name: "", fn_name: "" }));
