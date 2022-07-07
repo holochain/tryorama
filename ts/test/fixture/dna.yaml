@@ -5,5 +5,9 @@ integrity:
   uid: 9a28aac8-337c-11eb-adc1-0Z02acw20115
   properties: ~
   zomes:
-    - name: crud
-      bundled: "../../../target/wasm32-unknown-unknown/release/crud.wasm"
+    - name: integrity
+      bundled: "../../../target/wasm32-unknown-unknown/release/integrity.wasm"
+coordinator:
+  zomes:
+    - name: coordinator
+      bundled: "../../../target/wasm32-unknown-unknown/release/coordinator.wasm"
