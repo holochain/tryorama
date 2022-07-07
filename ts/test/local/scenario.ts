@@ -76,25 +76,6 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
   });
 });
 
-// test("Local Scenario - Install hApp with unique DNA props", async (t) => {
-//   const scenario = new Scenario();
-
-//   const [alice] = await scenario.addPlayersWithHapps([
-//     {
-//       dnas: [{
-//         source: { path: FIXTURE_DNA_URL.pathname },
-//         properties: {
-
-//         }
-//       }],
-//       signalHandler: signalHandlerAlice,
-//     },
-//   ]);
-
-//   t.ok(alice.namedCells.get("test"));
-//   await scenario.cleanUp();
-// });
-
 test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
   const scenario = new Scenario();
 
