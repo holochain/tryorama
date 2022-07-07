@@ -1,8 +1,9 @@
-import { AppSignal, EntryHash } from "@holochain/client";
+import { AppSignal, DnaSource, EntryHash } from "@holochain/client";
 import { Buffer } from "node:buffer";
-import test from "tape-promise/tape.js";
 import { URL } from "node:url";
+import test from "tape-promise/tape.js";
 import { addAllAgentsToAllConductors } from "../../src/common.js";
+import { TryCpClient } from "../../src/index.js";
 import {
   createTryCpConductor,
   TryCpConductorOptions,
@@ -13,10 +14,8 @@ import {
   TRYCP_SERVER_PORT,
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
-import { Dna } from "../../src/types.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
-import { TryCpClient } from "../../src/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const LOCAL_TEST_PARTIAL_CONFIG = `signing_service_uri: ~
@@ -273,10 +272,8 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
   const localTryCpServer = await TryCpServer.start();
   const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
-  const dnas = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
-  const [alice_happs] = await conductor.installAgentsHapps({
-    agentsDnas: [dnas],
-  });
+  const dnas = [{ path: FIXTURE_DNA_URL.pathname }];
+  const [alice_happs] = await conductor.installAgentsHapps([dnas]);
 
   await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface();
@@ -424,15 +421,15 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   const localTryCpServer = await TryCpServer.start();
   const client = await TryCpClient.create(SERVER_URL);
 
-  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   const conductor1 = await createTestConductor(client);
-  const [alice] = await conductor1.installAgentsHapps({ agentsDnas: [dnas] });
+  const [alice] = await conductor1.installAgentsHapps([dnas]);
   await conductor1.adminWs().attachAppInterface();
   await conductor1.connectAppInterface();
 
   const conductor2 = await createTestConductor(client);
-  const [bob] = await conductor2.installAgentsHapps({ agentsDnas: [dnas] });
+  const [bob] = await conductor2.installAgentsHapps([dnas]);
   await conductor2.adminWs().attachAppInterface();
   await conductor2.connectAppInterface();
 

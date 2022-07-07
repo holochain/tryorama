@@ -641,31 +641,32 @@ export class TryCpConductor implements IConductor {
    */
   async installAgentsHapps(options: AgentsHappsOptions) {
     const agentsHapps: AgentHapp[] = [];
+    const agentsDnas = Array.isArray(options) ? options : options.agentsDnas;
 
-    for (const agentDnas of options.agentsDnas) {
+    for (const agentDnas of agentsDnas) {
       const dnasToInstall: InstallAppDnaPayload[] = [];
-      const agentPubKey =
-        "agentPubKey" in agentDnas
-          ? agentDnas.agentPubKey
-          : await this.adminWs().generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
+      const agentPubKey =
+        ("agentPubKey" in agentDnas && agentDnas.agentPubKey) ||
+        (await this.adminWs().generateAgentPubKey());
       logger.debug(
         `installing app with id ${appId} for agent ${Buffer.from(
           agentPubKey
         ).toString("base64")}`
       );
 
-      const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
+      const dnas = "dnas" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
         let role_id: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          uid: options.uid,
-          properties: dna.properties,
+          uid: ("uid" in options && options.uid) || undefined,
+          properties: ("properties" in dna && dna.properties) || undefined,
         };
 
-        if ("path" in dna.source) {
-          const path = dna.source.path;
+        const dnaSource = "source" in dna ? dna.source : dna;
+        if ("path" in dnaSource) {
+          const path = dnaSource.path;
           const dnaContent = await new Promise<Buffer>((resolve, reject) => {
             fs.readFile(path, null, (err, data) => {
               if (err) {
@@ -675,24 +676,26 @@ export class TryCpConductor implements IConductor {
             });
           });
           const relativePath = await this.saveDna(dnaContent);
-          registerDnaReqOpts["path"] = relativePath;
-          role_id = `${dna.source.path}-${uuidv4()}`;
-        } else if ("hash" in dna.source) {
-          registerDnaReqOpts["hash"] = dna.source.hash;
+          registerDnaReqOpts.path = relativePath;
+          role_id = `${path}-${uuidv4()}`;
+        } else if ("hash" in dnaSource) {
+          registerDnaReqOpts.hash = dnaSource.hash;
           role_id = `dna-${uuidv4()}`;
         } else {
-          registerDnaReqOpts["bundle"] = dna.source.bundle;
-          role_id = `${dna.source.bundle.manifest.name}-${uuidv4()}`;
+          registerDnaReqOpts.bundle = dnaSource.bundle;
+          role_id = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
         }
 
         const dnaHash = await this.adminWs().registerDna(
           registerDnaReqOpts as RegisterDnaRequest
         );
 
+        const membrane_proof =
+          "membraneProof" in dna ? dna.membraneProof : undefined;
         dnasToInstall.push({
           hash: dnaHash,
           role_id,
-          membrane_proof: dna.membraneProof,
+          membrane_proof,
         });
       }
 

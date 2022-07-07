@@ -2,14 +2,21 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [Dna](./tryorama.dna.md)
 
-## Dna type
+## Dna interface
+
+DNA source and additional options.
 
 <b>Signature:</b>
 
 ```typescript
-export declare type Dna = {
-    source: DnaSource;
-    membraneProof?: MembraneProof;
-    properties?: DnaProperties;
-};
+export interface Dna 
 ```
+
+## Properties
+
+|  Property | Type | Description |
+|  --- | --- | --- |
+|  [membraneProof?](./tryorama.dna.membraneproof.md) | MembraneProof | <i>(Optional)</i> |
+|  [properties?](./tryorama.dna.properties.md) | DnaProperties | <i>(Optional)</i> |
+|  [source](./tryorama.dna.source.md) | DnaSource |  |
+

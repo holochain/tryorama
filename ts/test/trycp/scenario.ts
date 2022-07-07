@@ -100,7 +100,7 @@ test("TryCP Scenario - list everything", async (t) => {
   const client = await scenario.addClient(SERVER_URL);
 
   const alice = await scenario.addPlayerWithHapp(client, [
-    { source: { path: FIXTURE_DNA_URL.pathname } },
+    { path: FIXTURE_DNA_URL.pathname },
   ]);
 
   const listedApps = await alice.conductor.adminWs().listApps({});
@@ -183,8 +183,8 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   const client = await scenario.addClient(SERVER_URL);
 
   const [alice, bob] = await scenario.addPlayersWithHapps(client, [
-    [{ source: { path: FIXTURE_DNA_URL.pathname } }],
-    [{ source: { path: FIXTURE_DNA_URL.pathname } }],
+    [{ path: FIXTURE_DNA_URL.pathname }],
+    [{ path: FIXTURE_DNA_URL.pathname }],
   ]);
   await scenario.shareAllAgents();
 
@@ -215,8 +215,8 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   const client = await scenario.addClient(SERVER_URL);
 
   const [alice, bob] = await scenario.addPlayersWithHapps(client, [
-    [{ source: { path: FIXTURE_DNA_URL.pathname } }],
-    [{ source: { path: FIXTURE_DNA_URL.pathname } }],
+    [{ path: FIXTURE_DNA_URL.pathname }],
+    [{ path: FIXTURE_DNA_URL.pathname }],
   ]);
   await scenario.shareAllAgents();
 

@@ -1,6 +1,7 @@
 import {
   AppSignal,
   AppSignalCb,
+  DnaSource,
   EntryHash,
   HeaderHash,
 } from "@holochain/client";
@@ -17,7 +18,6 @@ import {
   createConductor,
   NetworkType,
 } from "../../src/index.js";
-import { Dna } from "../../src/types.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 
@@ -166,9 +166,9 @@ test("Local Conductor - Spawn a conductor and check for admin and app ws", async
 
 test("Local Conductor - Get app info", async (t) => {
   const conductor = await createConductor();
-  const [aliceHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [[{ source: { path: FIXTURE_DNA_URL.pathname } }]],
-  });
+  const [aliceHapps] = await conductor.installAgentsHapps([
+    [{ path: FIXTURE_DNA_URL.pathname }],
+  ]);
   const appInfo = await conductor.appWs().appInfo({
     installed_app_id: aliceHapps.happId,
   });
@@ -206,9 +206,9 @@ test("Local Conductor - Install and call a hApp bundle", async (t) => {
 
 test("Local Conductor - Get a convenience function for zome calls", async (t) => {
   const conductor = await createConductor();
-  const [aliceHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [[{ source: { path: FIXTURE_DNA_URL.pathname } }]],
-  });
+  const [aliceHapps] = await conductor.installAgentsHapps([
+    [{ path: FIXTURE_DNA_URL.pathname }],
+  ]);
   const crudZomeCall = getZomeCaller(aliceHapps.cells[0], "crud");
   t.equal(typeof crudZomeCall, "function", "getZomeCaller returns a function");
 
@@ -226,18 +226,10 @@ test("Local Conductor - Get a convenience function for zome calls", async (t) =>
 
 test("Local Conductor - Install multiple agents and DNAs and get access to agents and cells", async (t) => {
   const conductor = await createConductor();
-  const [aliceHapps, bobHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [
-      [
-        { source: { path: FIXTURE_DNA_URL.pathname } },
-        { source: { path: FIXTURE_DNA_URL.pathname } },
-      ],
-      [
-        { source: { path: FIXTURE_DNA_URL.pathname } },
-        { source: { path: FIXTURE_DNA_URL.pathname } },
-      ],
-    ],
-  });
+  const [aliceHapps, bobHapps] = await conductor.installAgentsHapps([
+    [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
+    [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
+  ]);
   aliceHapps.cells.forEach((cell) =>
     t.deepEqual(cell.cell_id[1], aliceHapps.agentPubKey)
   );
@@ -330,13 +322,14 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
 });
 
 test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
-  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   const conductor1 = await createConductor();
   const conductor2 = await createConductor();
-  const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps({
-    agentsDnas: [dnas, dnas],
-  });
+  const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps([
+    dnas,
+    dnas,
+  ]);
 
   await addAllAgentsToAllConductors([conductor1, conductor2]);
 
@@ -366,7 +359,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 });
 
 test("Local Conductor - Receive a signal", async (t) => {
-  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   let signalHandler: AppSignalCb | undefined;
   const signalReceived = new Promise<AppSignal>((resolve) => {
@@ -376,9 +369,7 @@ test("Local Conductor - Receive a signal", async (t) => {
   });
   const conductor = await createConductor({ signalHandler, timeout: 30000 });
 
-  const [aliceHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [dnas],
-  });
+  const [aliceHapps] = await conductor.installAgentsHapps([dnas]);
 
   const aliceSignal = { value: "signal" };
   aliceHapps.cells[0].callZome({

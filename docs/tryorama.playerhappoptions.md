@@ -4,14 +4,14 @@
 
 ## PlayerHappOptions type
 
-Player installation pptions used in scenarios.
+Player installation options used in scenarios.
 
-Specifies either only the DNAs that the hApp to be installed consists of, or the DNAs and a signal handler to be registered.
+Specifies either only the DNA sources that the hApp to be installed consists of, or the DNAs and a signal handler to be registered.
 
 <b>Signature:</b>
 
 ```typescript
-export declare type PlayerHappOptions = Dna[] | {
+export declare type PlayerHappOptions = DnaSource[] | {
     dnas: Dna[];
     signalHandler?: AppSignalCb;
 };

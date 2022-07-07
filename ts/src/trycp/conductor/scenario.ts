@@ -3,10 +3,11 @@ import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
 import {
-  PlayerHappOptions,
+  AgentDnas,
+  Dna,
   HappBundleOptions,
   IPlayer,
-  Dna,
+  PlayerHappOptions,
 } from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
@@ -127,9 +128,7 @@ export class TryCpScenario {
           // TS fails to infer that options.dnas cannot be `undefined` here
           const dnas = options.dnas;
 
-          let agentsDnas:
-            | Dna[][]
-            | Array<{ dnas: Dna[]; agentPubKey: AgentPubKey }>;
+          let agentsDnas: AgentDnas[];
           if (options.agentPubKeys) {
             if (options.agentPubKeys.length !== options.dnas.length) {
               throw new Error(
@@ -141,7 +140,9 @@ export class TryCpScenario {
               dnas,
             }));
           } else {
-            agentsDnas = [...Array(numberOfAgentsPerConductor)].map(() => dnas);
+            agentsDnas = [...Array(numberOfAgentsPerConductor)].map(() => ({
+              dnas,
+            }));
           }
 
           const installedAgentsHapps = await conductor.installAgentsHapps({
@@ -173,9 +174,13 @@ export class TryCpScenario {
     const signalHandler = Array.isArray(playerHappOptions)
       ? undefined
       : playerHappOptions.signalHandler;
-    const agentsDnas: Dna[][] = Array.isArray(playerHappOptions)
-      ? [playerHappOptions]
-      : [playerHappOptions.dnas];
+    const agentsDnas: AgentDnas[] = [
+      {
+        dnas: Array.isArray(playerHappOptions)
+          ? playerHappOptions.map((dnaSource) => ({ source: dnaSource }))
+          : playerHappOptions.dnas,
+      },
+    ];
     const conductor = await tryCpClient.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,

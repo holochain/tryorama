@@ -2,19 +2,17 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [AgentsHappsOptions](./tryorama.agentshappsoptions.md)
 
-## AgentsHappsOptions interface
+## AgentsHappsOptions type
 
+An array of DNA sources for each agent (2-dimensional array) or an array of DNAs and an optional agent pub key. Optionally a UID to be used for DNA installation.
 
 <b>Signature:</b>
 
 ```typescript
-export interface AgentsHappsOptions 
+export declare type AgentsHappsOptions = DnaSource[][] | {
+    agentsDnas: AgentDnas[];
+    uid?: string;
+};
 ```
-
-## Properties
-
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [agentsDnas](./tryorama.agentshappsoptions.agentsdnas.md) | [Dna](./tryorama.dna.md)<!-- -->\[\]\[\] \| Array&lt;{ dnas: [Dna](./tryorama.dna.md)<!-- -->\[\]; agentPubKey: AgentPubKey; }&gt; | An array of DNAs for each agent (2-dimensional array) or an array of DNAs and an agent pub key. |
-|  [uid?](./tryorama.agentshappsoptions.uid.md) | string | <i>(Optional)</i> A unique ID for the DNAs (optional). |
+<b>References:</b> [AgentDnas](./tryorama.agentdnas.md)
 
