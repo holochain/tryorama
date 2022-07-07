@@ -1,7 +1,8 @@
 [workspace]
 members = [
   "crates/trycp_server",
-  "ts/test/fixture/zomes/entry"
+  "ts/test/fixture/zomes/coordinator",
+  "ts/test/fixture/zomes/integrity"
 ]
 
 [profile.dev]

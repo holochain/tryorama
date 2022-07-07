@@ -6,7 +6,10 @@ cargo build --release --target-dir target
 cd ../..
 
 # build test hApp
-cd ts/test/fixture/zomes/entry
+# cd ts/test/fixture/zomes/integrity
+# cargo build --release --target wasm32-unknown-unknown
+# cd ../coordinator
+cd ts/test/fixture/zomes/coordinator
 cargo build --release --target wasm32-unknown-unknown
 cd ../../ # into fixtures
 hc dna pack . -o entry.dna
