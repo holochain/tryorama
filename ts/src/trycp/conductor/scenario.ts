@@ -1,13 +1,14 @@
-import {
-  AgentPubKey,
-  AppBundleSource,
-  AppSignalCb,
-  DnaSource,
-} from "@holochain/client";
+import { AgentPubKey, AppBundleSource, AppSignalCb } from "@holochain/client";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
-import { PlayerHappOptions, HappBundleOptions, IPlayer } from "../../types.js";
+import {
+  AgentDnas,
+  Dna,
+  HappBundleOptions,
+  IPlayer,
+  PlayerHappOptions,
+} from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
 
@@ -23,7 +24,7 @@ export interface ClientsPlayersOptions {
   /**
    * An array of DNAs that will be installed for each agent (optional).
    */
-  dnas?: DnaSource[];
+  dnas?: Dna[];
 
   /**
    * A list of previously generated agent pub keys (optional).
@@ -127,9 +128,7 @@ export class TryCpScenario {
           // TS fails to infer that options.dnas cannot be `undefined` here
           const dnas = options.dnas;
 
-          let agentsDnas:
-            | DnaSource[][]
-            | Array<{ dnas: DnaSource[]; agentPubKey: AgentPubKey }>;
+          let agentsDnas: AgentDnas[];
           if (options.agentPubKeys) {
             if (options.agentPubKeys.length !== options.dnas.length) {
               throw new Error(
@@ -141,7 +140,9 @@ export class TryCpScenario {
               dnas,
             }));
           } else {
-            agentsDnas = [...Array(numberOfAgentsPerConductor)].map(() => dnas);
+            agentsDnas = [...Array(numberOfAgentsPerConductor)].map(() => ({
+              dnas,
+            }));
           }
 
           const installedAgentsHapps = await conductor.installAgentsHapps({
@@ -173,17 +174,17 @@ export class TryCpScenario {
     const signalHandler = Array.isArray(playerHappOptions)
       ? undefined
       : playerHappOptions.signalHandler;
-    const properties = Array.isArray(playerHappOptions)
-      ? undefined
-      : playerHappOptions.properties;
-    const agentsDnas: DnaSource[][] = Array.isArray(playerHappOptions)
-      ? [playerHappOptions]
-      : [playerHappOptions.dnas];
+    const agentsDnas: AgentDnas[] = [
+      {
+        dnas: Array.isArray(playerHappOptions)
+          ? playerHappOptions.map((dnaSource) => ({ source: dnaSource }))
+          : playerHappOptions.dnas,
+      },
+    ];
     const conductor = await tryCpClient.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
-      properties,
     });
     return { conductor, ...agentHapp };
   }

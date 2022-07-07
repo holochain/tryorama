@@ -1,8 +1,13 @@
+import { AppBundleSource, AppSignalCb } from "@holochain/client";
 import { v4 as uuidv4 } from "uuid";
-import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
-import { cleanAllConductors, createConductor, Conductor } from "./conductor.js";
-import { PlayerHappOptions, HappBundleOptions, IPlayer } from "../types.js";
 import { addAllAgentsToAllConductors } from "../common.js";
+import {
+  AgentDnas,
+  HappBundleOptions,
+  IPlayer,
+  PlayerHappOptions,
+} from "../types.js";
+import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
 
 /**
  * A player tied to a {@link Conductor}.
@@ -73,17 +78,17 @@ export class Scenario {
     const signalHandler = Array.isArray(playerHappOptions)
       ? undefined
       : playerHappOptions.signalHandler;
-    const properties = Array.isArray(playerHappOptions)
-      ? undefined
-      : playerHappOptions.properties;
-    const agentsDnas: DnaSource[][] = Array.isArray(playerHappOptions)
-      ? [playerHappOptions]
-      : [playerHappOptions.dnas];
+    const agentsDnas: AgentDnas[] = [
+      {
+        dnas: Array.isArray(playerHappOptions)
+          ? playerHappOptions.map((dnaSource) => ({ source: dnaSource }))
+          : playerHappOptions.dnas,
+      },
+    ];
     const conductor = await this.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
-      properties,
     });
     return { conductor, ...agentHapp };
   }

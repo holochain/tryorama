@@ -1,11 +1,7 @@
-import {
-  AppSignal,
-  AppSignalCb,
-  DnaSource,
-  EntryHash,
-} from "@holochain/client";
+import { AppSignal, AppSignalCb, EntryHash } from "@holochain/client";
 import test from "tape-promise/tape.js";
 import { URL } from "node:url";
+import { Dna } from "../../src/types.js";
 import { TryCpScenario } from "../../src/trycp/conductor/scenario.js";
 import {
   TryCpServer,
@@ -39,7 +35,7 @@ test("TryCP Scenario - install a hApp to 1 conductor with 1 agent", async (t) =>
   t.ok(client, "client set up");
 
   const alice = await scenario.addPlayerWithHapp(client, {
-    dnas: [{ path: FIXTURE_DNA_URL.pathname }],
+    dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
   });
   t.ok(alice.conductor, "player alice is associated with a conductor");
   t.equal(
@@ -67,7 +63,7 @@ test("TryCP Scenario - install a hApp to 2 conductors with 1 agent each", async 
   t.ok(client2, "client 2 set up");
 
   const alice = await scenario.addPlayerWithHapp(client1, {
-    dnas: [{ path: FIXTURE_DNA_URL.pathname }],
+    dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
   });
   t.equal(
     alice.conductor.tryCpClient,
@@ -80,7 +76,7 @@ test("TryCP Scenario - install a hApp to 2 conductors with 1 agent each", async 
   );
 
   const bob = await scenario.addPlayerWithHapp(client2, {
-    dnas: [{ path: FIXTURE_DNA_URL.pathname }],
+    dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
   });
   t.equal(
     bob.conductor.tryCpClient,
@@ -146,7 +142,7 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
       resolve(signal);
     };
   });
-  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
   const [alice, bob] = await scenario.addPlayersWithHapps(client, [
     { dnas, signalHandler: signalHandlerAlice },
     { dnas, signalHandler: signalHandlerBob },
@@ -351,7 +347,7 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
   const clientsPlayers = await scenario.addClientsPlayers(serverUrls, {
     numberOfConductorsPerClient,
     numberOfAgentsPerConductor,
-    dnas: [{ path: FIXTURE_DNA_URL.pathname }],
+    dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
   });
 
   for (const [i, clientPlayers] of clientsPlayers.entries()) {

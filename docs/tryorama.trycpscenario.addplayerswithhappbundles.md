@@ -4,7 +4,7 @@
 
 ## TryCpScenario.addPlayersWithHappBundles() method
 
-Create and add multiple players to the scenario, with a hApp bundle installed for each player.
+Creates and adds multiple players to the scenario, with a hApp bundle installed for each player.
 
 <b>Signature:</b>
 

@@ -4,6 +4,7 @@ import {
   DnaSource,
   EntryHash,
 } from "@holochain/client";
+import { Dna } from "../../src/types.js";
 import test from "tape-promise/tape.js";
 import { runScenario, Scenario } from "../../src/local/scenario.js";
 import { pause } from "../../src/util.js";
@@ -64,7 +65,7 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
 
     const [alice] = await scenario.addPlayersWithHapps([
       {
-        dnas: [{ path: FIXTURE_DNA_URL.pathname }],
+        dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
         signalHandler: signalHandlerAlice,
       },
     ]);
@@ -173,7 +174,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
-  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   let signalHandlerAlice: AppSignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {

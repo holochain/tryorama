@@ -4,7 +4,7 @@
 
 ## TryCpScenario.addPlayerWithHappBundle() method
 
-Create and add a single player to the scenario, with a hApp bundle installed.
+Creates and adds a single player to the scenario, with a hApp bundle installed.
 
 <b>Signature:</b>
 

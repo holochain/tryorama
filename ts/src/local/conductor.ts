@@ -400,40 +400,47 @@ export class Conductor implements IConductor {
    */
   async installAgentsHapps(options: AgentsHappsOptions) {
     const agentsHapps: AgentHapp[] = [];
+    const agentsDnas = Array.isArray(options) ? options : options.agentsDnas;
 
-    for (const agentDnas of options.agentsDnas) {
+    for (const agentDnas of agentsDnas) {
       const dnasToInstall: InstallAppDnaPayload[] = [];
-      const agentPubKey =
-        "agentPubKey" in agentDnas
-          ? agentDnas.agentPubKey
-          : await this.adminWs().generateAgentPubKey();
       const appId = `app-${uuidv4()}`;
+      const agentPubKey =
+        ("agentPubKey" in agentDnas && agentDnas.agentPubKey) ||
+        (await this.adminWs().generateAgentPubKey());
 
-      const dnas = "agentPubKey" in agentDnas ? agentDnas.dnas : agentDnas;
+      const dnas = "dnas" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
         let role_id: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          uid: options.uid,
-          properties: options.properties,
+          uid: ("uid" in options && options.uid) || undefined,
+          properties: ("properties" in dna && dna.properties) || undefined,
         };
 
-        if ("path" in dna) {
-          registerDnaReqOpts["path"] = dna.path;
-          role_id = `${dna.path}-${uuidv4()}`;
-        } else if ("hash" in dna) {
-          registerDnaReqOpts["hash"] = dna.hash;
+        const dnaSource = "source" in dna ? dna.source : dna;
+        if ("path" in dnaSource) {
+          registerDnaReqOpts.path = dnaSource.path;
+          role_id = `${dnaSource.path}-${uuidv4()}`;
+        } else if ("hash" in dnaSource) {
+          registerDnaReqOpts.hash = dnaSource.hash;
           role_id = `dna-${uuidv4()}`;
         } else {
-          registerDnaReqOpts["bundle"] = dna.bundle;
-          role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
+          registerDnaReqOpts.bundle = dnaSource.bundle;
+          role_id = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
         }
 
         const dnaHash = await this.adminWs().registerDna(
           registerDnaReqOpts as RegisterDnaRequest
         );
 
-        dnasToInstall.push({ hash: dnaHash, role_id });
+        const membrane_proof =
+          "membraneProof" in dna ? dna.membraneProof : undefined;
+        dnasToInstall.push({
+          hash: dnaHash,
+          role_id,
+          membrane_proof,
+        });
       }
 
       const installedAppInfo = await this.adminWs().installApp({

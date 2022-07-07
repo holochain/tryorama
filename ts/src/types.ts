@@ -94,32 +94,47 @@ export interface HappBundleOptions {
 }
 
 /**
+ * DNA source and additional options.
+ *
  * @public
  */
-export interface AgentsHappsOptions {
-  /**
-   * An array of DNAs for each agent (2-dimensional array) or an array of DNAs
-   * and an agent pub key.
-   */
-  agentsDnas:
-    | DnaSource[][]
-    | Array<{ dnas: DnaSource[]; agentPubKey: AgentPubKey }>;
-
-  /**
-   * A unique ID for the DNAs (optional).
-   */
-  uid?: string;
-
-  /**
-   * DNA properties (optional).
-   */
+export interface Dna {
+  source: DnaSource;
+  membraneProof?: MembraneProof;
   properties?: DnaProperties;
 }
 
 /**
- * Player installation pptions used in scenarios.
+ * DNAs per agent. Optionally an agent pub key.
  *
- * Specifies either only the DNAs that the hApp to be installed
+ * @public
+ */
+export interface AgentDnas {
+  dnas: Dna[];
+  agentPubKey?: AgentPubKey;
+}
+
+/**
+ * An array of DNA sources for each agent (2-dimensional array) or an array of DNAs
+ * and an optional agent pub key. Optionally a UID to be used for DNA installation.
+ *
+ * @public
+ */
+export type AgentsHappsOptions =
+  | DnaSource[][]
+  | {
+      agentsDnas: AgentDnas[];
+
+      /**
+       * A unique ID for the DNAs (optional).
+       */
+      uid?: string;
+    };
+
+/**
+ * Player installation options used in scenarios.
+ *
+ * Specifies either only the DNA sources that the hApp to be installed
  * consists of, or the DNAs and a signal handler to be registered.
  *
  * @public
@@ -127,9 +142,8 @@ export interface AgentsHappsOptions {
 export type PlayerHappOptions =
   | DnaSource[]
   | {
-      dnas: DnaSource[];
+      dnas: Dna[];
       signalHandler?: AppSignalCb;
-      properties?: DnaProperties;
     };
 
 /**
