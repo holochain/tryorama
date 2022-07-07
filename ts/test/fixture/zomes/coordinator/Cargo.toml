@@ -9,5 +9,5 @@ name = "coordinator"
 
 [dependencies]
 hdk = "0.0.140"
-integrity = { path = "../integrity" }
+integrity = {path = "../integrity"}
 serde = "1"
