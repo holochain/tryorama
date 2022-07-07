@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## [0.6.1]
+
+- Fixture: split zome into integrity and coordinator zomes [PR \#144]()
+
 ## [0.6.0]
 
 ### Changed
