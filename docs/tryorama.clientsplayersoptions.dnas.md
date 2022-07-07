@@ -9,5 +9,5 @@ An array of DNAs that will be installed for each agent (optional).
 <b>Signature:</b>
 
 ```typescript
-dnas?: Dnas[];
+dnas?: Dna[];
 ```

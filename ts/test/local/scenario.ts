@@ -1,5 +1,5 @@
 import { AppSignal, AppSignalCb, EntryHash } from "@holochain/client";
-import { Dnas } from "../../src/types.js";
+import { Dna } from "../../src/types.js";
 import test from "tape-promise/tape.js";
 import { runScenario, Scenario } from "../../src/local/scenario.js";
 import { pause } from "../../src/util.js";
@@ -118,7 +118,7 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
 });
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
-  const dnas: Dnas[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   const scenario = new Scenario();
   t.ok(scenario.uid);
@@ -188,7 +188,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
-  const dnas: Dnas[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   let signalHandlerAlice: AppSignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {

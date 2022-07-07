@@ -9,8 +9,8 @@ An array of DNAs for each agent (2-dimensional array) or an array of DNAs and an
 <b>Signature:</b>
 
 ```typescript
-agentsDnas: Dnas[][] | Array<{
-        dnas: Dnas[];
+agentsDnas: Dna[][] | Array<{
+        dnas: Dna[];
         agentPubKey: AgentPubKey;
     }>;
 ```

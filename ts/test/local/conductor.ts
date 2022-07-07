@@ -17,7 +17,7 @@ import {
   createConductor,
   NetworkType,
 } from "../../src/index.js";
-import { Dnas } from "../../src/types.js";
+import { Dna } from "../../src/types.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 
@@ -330,7 +330,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
 });
 
 test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
-  const dnas: Dnas[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   const conductor1 = await createConductor();
   const conductor2 = await createConductor();
@@ -366,7 +366,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 });
 
 test("Local Conductor - Receive a signal", async (t) => {
-  const dnas: Dnas[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   let signalHandler: AppSignalCb | undefined;
   const signalReceived = new Promise<AppSignal>((resolve) => {

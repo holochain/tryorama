@@ -13,7 +13,7 @@ import {
   TRYCP_SERVER_PORT,
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
-import { Dnas } from "../../src/types.js";
+import { Dna } from "../../src/types.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 import { TryCpClient } from "../../src/index.js";
@@ -424,7 +424,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   const localTryCpServer = await TryCpServer.start();
   const client = await TryCpClient.create(SERVER_URL);
 
-  const dnas: Dnas[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   const conductor1 = await createTestConductor(client);
   const [alice] = await conductor1.installAgentsHapps({ agentsDnas: [dnas] });

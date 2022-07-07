@@ -5,7 +5,7 @@ import {
   PlayerHappOptions,
   HappBundleOptions,
   IPlayer,
-  Dnas,
+  Dna,
 } from "../types.js";
 import { addAllAgentsToAllConductors } from "../common.js";
 
@@ -78,7 +78,7 @@ export class Scenario {
     const signalHandler = Array.isArray(playerHappOptions)
       ? undefined
       : playerHappOptions.signalHandler;
-    const agentsDnas: Dnas[][] = Array.isArray(playerHappOptions)
+    const agentsDnas: Dna[][] = Array.isArray(playerHappOptions)
       ? [playerHappOptions]
       : [playerHappOptions.dnas];
     const conductor = await this.addConductor(signalHandler);

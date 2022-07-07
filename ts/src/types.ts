@@ -93,7 +93,7 @@ export interface HappBundleOptions {
   membraneProofs?: Record<string, MembraneProof>;
 }
 
-export type Dnas = {
+export type Dna = {
   source: DnaSource;
   membraneProof?: MembraneProof;
   properties?: DnaProperties;
@@ -108,9 +108,9 @@ export interface AgentsHappsOptions {
    * and an agent pub key.
    */
   agentsDnas:
-    | Dnas[][]
+    | Dna[][]
     | Array<{
-        dnas: Dnas[];
+        dnas: Dna[];
         agentPubKey: AgentPubKey;
       }>;
 
@@ -129,9 +129,9 @@ export interface AgentsHappsOptions {
  * @public
  */
 export type PlayerHappOptions =
-  | Dnas[]
+  | Dna[]
   | {
-      dnas: Dnas[];
+      dnas: Dna[];
       signalHandler?: AppSignalCb;
     };
 

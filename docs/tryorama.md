@@ -105,7 +105,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |
 |  [ConductorId](./tryorama.conductorid.md) |  |
 |  [CreateConductorOptions](./tryorama.createconductoroptions.md) | Options for using the conductor factory. |
-|  [Dnas](./tryorama.dnas.md) |  |
+|  [Dna](./tryorama.dna.md) |  |
 |  [PlayerHappOptions](./tryorama.playerhappoptions.md) | Player installation pptions used in scenarios.<!-- -->Specifies either only the DNAs that the hApp to be installed consists of, or the DNAs and a signal handler to be registered. |
 |  [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) | All possible calls to an app interface. |
 |  [TryCpApiResponse](./tryorama.trycpapiresponse.md) | Possible responses from the Admin and App APIs. |

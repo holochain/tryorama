@@ -11,10 +11,10 @@ Specifies either only the DNAs that the hApp to be installed consists of, or the
 <b>Signature:</b>
 
 ```typescript
-export declare type PlayerHappOptions = Dnas[] | {
-    dnas: Dnas[];
+export declare type PlayerHappOptions = Dna[] | {
+    dnas: Dna[];
     signalHandler?: AppSignalCb;
 };
 ```
-<b>References:</b> [Dnas](./tryorama.dnas.md)
+<b>References:</b> [Dna](./tryorama.dna.md)
 

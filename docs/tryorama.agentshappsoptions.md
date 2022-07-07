@@ -15,6 +15,6 @@ export interface AgentsHappsOptions
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [agentsDnas](./tryorama.agentshappsoptions.agentsdnas.md) | [Dnas](./tryorama.dnas.md)<!-- -->\[\]\[\] \| Array&lt;{ dnas: [Dnas](./tryorama.dnas.md)<!-- -->\[\]; agentPubKey: AgentPubKey; }&gt; | An array of DNAs for each agent (2-dimensional array) or an array of DNAs and an agent pub key. |
+|  [agentsDnas](./tryorama.agentshappsoptions.agentsdnas.md) | [Dna](./tryorama.dna.md)<!-- -->\[\]\[\] \| Array&lt;{ dnas: [Dna](./tryorama.dna.md)<!-- -->\[\]; agentPubKey: AgentPubKey; }&gt; | An array of DNAs for each agent (2-dimensional array) or an array of DNAs and an agent pub key. |
 |  [uid?](./tryorama.agentshappsoptions.uid.md) | string | <i>(Optional)</i> A unique ID for the DNAs (optional). |
 
