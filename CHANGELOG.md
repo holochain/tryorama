@@ -11,7 +11,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## [0.6.1]
 
-- Fixture: split zome into integrity and coordinator zomes [PR \#144]()
+### Changed
+- Fixture: split zome into integrity and coordinator zomes [PR \#143](https://github.com/holochain/tryorama/pull/143)
 
 ## [0.6.0]
 
