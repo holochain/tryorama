@@ -278,15 +278,15 @@ const readEntryHash: string = await aliceCallCoordinatorZome(
 
 ## Signals
 
-`Scenario.addPlayer` as well as `Conductor.installAgentsHapps` allow for an
-optional signal handler to be specified. Signal handlers are registered with
+`Scenario.addPlayerWithHapp` as well as `Conductor.installAgentsHapps` allow for a
+signal handler to be specified. Signal handlers are registered with
 the conductor and act as a callback when a signal is received.
 
 ```typescript
-const scenario = new LocalScenario();
+const scenario = new Scenario();
 const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
-const dnas: DnaSource[] = [{ path: testDnaPath }];
-d
+const dnas: Dna[] = [{ source: { path: testDnaPath } }];
+
 let signalHandler: AppSignalCb | undefined;
 const signalReceived = new Promise<AppSignal>((resolve) => {
   signalHandler = (signal) => {
@@ -294,7 +294,7 @@ const signalReceived = new Promise<AppSignal>((resolve) => {
   };
 });
 
-const alice = await scenario.addPlayerWithHapp(dna, signalHandler);
+const alice = await scenario.addPlayerWithHapp({ dnas, signalHandler });
 
 const signal = { value: "hello alice" };
 alice.cells[0].callZome({
