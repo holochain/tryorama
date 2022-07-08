@@ -1,9 +1,14 @@
 import { AppSignalCb } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import cloneDeep from "lodash/cloneDeep.js";
+import assert from "node:assert";
 import { URL } from "node:url";
 import { WebSocket } from "ws";
 import { makeLogger } from "../logger.js";
+import {
+  createTryCpConductor as createConductor,
+  TryCpConductor,
+} from "./conductor/conductor.js";
 import {
   TryCpApiResponse,
   TryCpRequest,
@@ -22,8 +27,20 @@ import {
 const logger = makeLogger("TryCP client");
 let requestId = 0;
 
+const partialConfig = `signing_service_uri: ~
+encryption_service_uri: ~
+decryption_service_uri: ~
+dpki: ~
+network:
+  transport_pool:
+    - type: quic
+  network_type: quic_mdns`;
+
 /**
  * A factory class to create client connections to a running TryCP server.
+ *
+ * With a client, conductors on the server can ba configured, started and
+ * stopped. All valid Admin and App API commands can be sent to the server too.
  *
  * @public
  */
@@ -37,21 +54,20 @@ export class TryCpClient {
   };
   private signalHandlers: Record<number, AppSignalCb | undefined>;
 
+  conductors: TryCpConductor[];
+
   private constructor(serverUrl: URL, timeout = 15000) {
     this.ws = new WebSocket(serverUrl, { timeout });
     this.requestPromises = {};
     this.signalHandlers = {};
-  }
-
-  setSignalHandler(port: number, signalHandler?: AppSignalCb) {
-    this.signalHandlers[port] = signalHandler;
+    this.conductors = [];
   }
 
   /**
    * Create a client connection to a running TryCP server.
    *
    * @param serverUrl - The URL of the TryCP server.
-   * @returns A client connection.
+   * @returns The created client connection.
    */
   static async create(serverUrl: URL, timeout?: number) {
     const tryCpClient = new TryCpClient(serverUrl, timeout);
@@ -134,27 +150,8 @@ export class TryCpClient {
     return connectPromise;
   }
 
-  private processSuccessResponse(response: _TryCpSuccessResponseSeralized) {
-    if (response === TRYCP_SUCCESS_RESPONSE || typeof response === "string") {
-      logger.debug(`response ${JSON.stringify(response, null, 4)}\n`);
-      return response;
-    }
-
-    const deserializedApiResponse = deserializeApiResponse(response);
-
-    // when the request fails, the response's type is "error"
-    if (deserializedApiResponse.type === "error") {
-      const errorMessage = `error response from Admin API\n${JSON.stringify(
-        deserializedApiResponse.data,
-        null,
-        4
-      )}`;
-      throw new Error(errorMessage);
-    }
-
-    logger.debug(this.getFormattedResponseLog(deserializedApiResponse));
-
-    return deserializedApiResponse;
+  setSignalHandler(port: number, signalHandler?: AppSignalCb) {
+    this.signalHandlers[port] = signalHandler;
   }
 
   /**
@@ -236,6 +233,71 @@ export class TryCpClient {
 
     requestId++;
     return callPromise;
+  }
+
+  /**
+   * Create and add a conductor to the client.
+   *
+   * @param signalHandler - A callback function to handle signals.
+   * @returns The newly added conductor instance.
+   */
+  async addConductor(signalHandler?: AppSignalCb) {
+    const conductor = await createConductor(this, { partialConfig });
+    await conductor.adminWs().attachAppInterface();
+    await conductor.connectAppInterface(signalHandler);
+    this.conductors.push(conductor);
+    return conductor;
+  }
+
+  /**
+   * Shut down all conductors on the connected TryCP server and disconnect
+   * their app interfaces.
+   */
+  async shutDownConductors() {
+    await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
+  }
+
+  /**
+   * Run the `reset` command on the TryCP server to delete all conductor data.
+   *
+   * @returns An empty success response.
+   */
+  async cleanAllConductors() {
+    const response = await this.call({ type: "reset" });
+    assert(response === TRYCP_SUCCESS_RESPONSE);
+    return response;
+  }
+
+  /**
+   * Shut down all registered conductors and delete them, and close the client
+   * connection.
+   */
+  async cleanUp() {
+    await this.cleanAllConductors();
+    await this.close();
+  }
+
+  private processSuccessResponse(response: _TryCpSuccessResponseSeralized) {
+    if (response === TRYCP_SUCCESS_RESPONSE || typeof response === "string") {
+      logger.debug(`response ${JSON.stringify(response, null, 4)}\n`);
+      return response;
+    }
+
+    const deserializedApiResponse = deserializeApiResponse(response);
+
+    // when the request fails, the response's type is "error"
+    if (deserializedApiResponse.type === "error") {
+      const errorMessage = `error response from Admin API\n${JSON.stringify(
+        deserializedApiResponse.data,
+        null,
+        4
+      )}`;
+      throw new Error(errorMessage);
+    }
+
+    logger.debug(this.getFormattedResponseLog(deserializedApiResponse));
+
+    return deserializedApiResponse;
   }
 
   private getFormattedResponseLog(response: TryCpApiResponse) {

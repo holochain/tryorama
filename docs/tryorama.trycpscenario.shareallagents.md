@@ -4,7 +4,7 @@
 
 ## TryCpScenario.shareAllAgents() method
 
-Register all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs.
+Registers all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs.
 
 <b>Signature:</b>
 

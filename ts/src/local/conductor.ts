@@ -4,8 +4,6 @@ import {
   AppSignalCb,
   AppWebsocket,
   AttachAppInterfaceRequest,
-  DnaSource,
-  DnaProperties,
   InstallAppBundleRequest,
   InstallAppDnaPayload,
   RegisterDnaRequest,
@@ -21,6 +19,7 @@ import { enableAndGetAgentHapp } from "../common.js";
 import { makeLogger } from "../logger.js";
 import {
   AgentHapp,
+  AgentsHappsOptions,
   HappBundleOptions,
   IConductor,
   _RegisterDnaReqOpts,
@@ -399,48 +398,57 @@ export class Conductor implements IConductor {
    * 2-dimensional array, and a UID for the DNAs (optional).
    * @returns An array with each agent's hApps.
    */
-  async installAgentsHapps(options: {
-    agentsDnas: DnaSource[][];
-    uid?: string;
-    properties?: DnaProperties;
-  }) {
+  async installAgentsHapps(options: AgentsHappsOptions) {
     const agentsHapps: AgentHapp[] = [];
+    const agentsDnas = Array.isArray(options) ? options : options.agentsDnas;
 
-    for (const agent of options.agentsDnas) {
-      const dnas: InstallAppDnaPayload[] = [];
-      const agentPubKey = await this.adminWs().generateAgentPubKey();
-      const appId = `app-${uuidv4()}`;
+    for (const agentDnas of agentsDnas) {
+      const dnasToInstall: InstallAppDnaPayload[] = [];
+      const appId =
+        ("installedAppId" in options && options.installedAppId) ||
+        `app-${uuidv4()}`;
+      const agentPubKey =
+        ("agentPubKey" in agentDnas && agentDnas.agentPubKey) ||
+        (await this.adminWs().generateAgentPubKey());
 
-      for (const dna of agent) {
-        let role_id: string;
+      const dnas = "dnas" in agentDnas ? agentDnas.dnas : agentDnas;
+      for (const dna of dnas) {
+        let roleId: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          uid: options.uid,
-          properties: options.properties,
+          uid: ("uid" in options && options.uid) || undefined,
+          properties: ("properties" in dna && dna.properties) || undefined,
         };
 
-        if ("path" in dna) {
-          registerDnaReqOpts["path"] = dna.path;
-          role_id = `${dna.path}-${uuidv4()}`;
-        } else if ("hash" in dna) {
-          registerDnaReqOpts["hash"] = dna.hash;
-          role_id = `dna-${uuidv4()}`;
+        const dnaSource = "source" in dna ? dna.source : dna;
+        if ("path" in dnaSource) {
+          registerDnaReqOpts.path = dnaSource.path;
+          roleId = `${dnaSource.path}-${uuidv4()}`;
+        } else if ("hash" in dnaSource) {
+          registerDnaReqOpts.hash = dnaSource.hash;
+          roleId = `dna-${uuidv4()}`;
         } else {
-          registerDnaReqOpts["bundle"] = dna.bundle;
-          role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
+          registerDnaReqOpts.bundle = dnaSource.bundle;
+          roleId = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
         }
 
         const dnaHash = await this.adminWs().registerDna(
           registerDnaReqOpts as RegisterDnaRequest
         );
 
-        dnas.push({ hash: dnaHash, role_id });
+        const membrane_proof =
+          "membraneProof" in dna ? dna.membraneProof : undefined;
+        dnasToInstall.push({
+          hash: dnaHash,
+          role_id: ("roleId" in dna && dna.roleId) || roleId,
+          membrane_proof,
+        });
       }
 
       const installedAppInfo = await this.adminWs().installApp({
         installed_app_id: appId,
         agent_key: agentPubKey,
-        dnas,
+        dnas: dnasToInstall,
       });
       const agentHapp = await enableAndGetAgentHapp(
         this,

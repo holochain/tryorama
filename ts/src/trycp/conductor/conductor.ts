@@ -9,7 +9,6 @@ import {
   CreateCloneCellRequest,
   DisableAppRequest,
   DnaHash,
-  DnaProperties,
   DnaSource,
   DumpFullStateRequest,
   DumpStateRequest,
@@ -19,7 +18,6 @@ import {
   InstallAppDnaPayload,
   InstallAppRequest,
   ListAppsRequest,
-  MembraneProof,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
   StartAppRequest,
@@ -32,7 +30,13 @@ import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { enableAndGetAgentHapp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
-import { AgentHapp, IConductor, _RegisterDnaReqOpts } from "../../types.js";
+import {
+  AgentHapp,
+  HappBundleOptions,
+  IConductor,
+  AgentsHappsOptions,
+  _RegisterDnaReqOpts,
+} from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceData,
@@ -86,27 +90,23 @@ export interface TryCpConductorOptions {
    * default: "info"
    */
   logLevel?: TryCpConductorLogLevel;
-
-  /**
-   * Timeout for requests to Admin and App API.
-   */
-  timeout?: number;
 }
 
 /**
- * The function to create a TryCP Conductor (aka "Player").
+ * The function to create a TryCP Conductor. By default configures and starts
+ * it.
  *
- * @param serverUrl - The URL of the TryCP server to connect to.
- * @returns A configured Conductor instance.
+ * @param tryCpClient - The client connection to the TryCP server on which to
+ * create the conductor.
+ * @returns A conductor instance.
  *
  * @public
  */
 export const createTryCpConductor = async (
-  serverUrl: URL,
+  tryCpClient: TryCpClient,
   options?: TryCpConductorOptions
 ) => {
-  const client = await TryCpClient.create(serverUrl, options?.timeout);
-  const conductor = new TryCpConductor(client, options?.id);
+  const conductor = new TryCpConductor(tryCpClient, options?.id);
   if (options?.startup !== false) {
     // configure and startup conductor by default
     await conductor.configure(options?.partialConfig);
@@ -121,9 +121,9 @@ export const createTryCpConductor = async (
  * @public
  */
 export class TryCpConductor implements IConductor {
-  private readonly id: string;
-  private readonly tryCpClient: TryCpClient;
+  readonly id: string;
   private appInterfacePort: undefined | number;
+  readonly tryCpClient: TryCpClient;
 
   constructor(tryCpClient: TryCpClient, id?: ConductorId) {
     this.tryCpClient = tryCpClient;
@@ -165,7 +165,7 @@ export class TryCpConductor implements IConductor {
   }
 
   /**
-   * Disconnect App interface and shut down the conductor.
+   * Disconnect app interface and shut down the conductor.
    *
    * @returns An empty success response.
    *
@@ -636,39 +636,41 @@ export class TryCpConductor implements IConductor {
   /**
    * Install a set of DNAs for multiple agents into the conductor.
    *
-   * @param options - An array of DNAs for each agent, resulting in a
-   * 2-dimensional array, and a UID for the DNAs (optional).
+   * @param options - {@link AgentsHappsOptions}
    * @returns An array with each agent's hApp.
    */
-  async installAgentsHapps(options: {
-    agentsDnas: DnaSource[][];
-    signalHandler?: AppSignalCb;
-    uid?: string;
-    properties?: DnaProperties;
-  }) {
+  async installAgentsHapps(options: AgentsHappsOptions) {
     const agentsHapps: AgentHapp[] = [];
+    const agentsDnas = Array.isArray(options) ? options : options.agentsDnas;
 
-    for (const agentDnas of options.agentsDnas) {
-      const dnas: InstallAppDnaPayload[] = [];
-      const agentPubKey = await this.adminWs().generateAgentPubKey();
-      const appId = `app-${uuidv4()}`;
+    for (const agentDnas of agentsDnas) {
+      const dnasToInstall: InstallAppDnaPayload[] = [];
+      const appId =
+        ("installedAppId" in options && options.installedAppId) ||
+        `app-${uuidv4()}`;
+      const agentPubKey =
+        ("agentPubKey" in agentDnas && agentDnas.agentPubKey) ||
+        (await this.adminWs().generateAgentPubKey());
       logger.debug(
         `installing app with id ${appId} for agent ${Buffer.from(
           agentPubKey
         ).toString("base64")}`
       );
 
-      for (const dna of agentDnas) {
-        let role_id: string;
+      const dnas = "dnas" in agentDnas ? agentDnas.dnas : agentDnas;
+      for (const dna of dnas) {
+        let roleId: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          uid: options.uid,
-          properties: options.properties,
+          uid: ("uid" in options && options.uid) || undefined,
+          properties: ("properties" in dna && dna.properties) || undefined,
         };
 
-        if ("path" in dna) {
+        const dnaSource = "source" in dna ? dna.source : dna;
+        if ("path" in dnaSource) {
+          const path = dnaSource.path;
           const dnaContent = await new Promise<Buffer>((resolve, reject) => {
-            fs.readFile(dna.path, null, (err, data) => {
+            fs.readFile(path, null, (err, data) => {
               if (err) {
                 reject(err);
               }
@@ -676,27 +678,33 @@ export class TryCpConductor implements IConductor {
             });
           });
           const relativePath = await this.saveDna(dnaContent);
-          registerDnaReqOpts["path"] = relativePath;
-          role_id = `${dna.path}-${uuidv4()}`;
-        } else if ("hash" in dna) {
-          registerDnaReqOpts["hash"] = dna.hash;
-          role_id = `dna-${uuidv4()}`;
+          registerDnaReqOpts.path = relativePath;
+          roleId = `${path}-${uuidv4()}`;
+        } else if ("hash" in dnaSource) {
+          registerDnaReqOpts.hash = dnaSource.hash;
+          roleId = `dna-${uuidv4()}`;
         } else {
-          registerDnaReqOpts["bundle"] = dna.bundle;
-          role_id = `${dna.bundle.manifest.name}-${uuidv4()}`;
+          registerDnaReqOpts.bundle = dnaSource.bundle;
+          roleId = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
         }
 
         const dnaHash = await this.adminWs().registerDna(
           registerDnaReqOpts as RegisterDnaRequest
         );
 
-        dnas.push({ hash: dnaHash, role_id });
+        const membrane_proof =
+          "membraneProof" in dna ? dna.membraneProof : undefined;
+        dnasToInstall.push({
+          hash: dnaHash,
+          role_id: ("roleId" in dna && dna.roleId) || roleId,
+          membrane_proof,
+        });
       }
 
       const installedAppInfo = await this.adminWs().installApp({
         installed_app_id: appId,
         agent_key: agentPubKey,
-        dnas,
+        dnas: dnasToInstall,
       });
 
       const agentHapp = await enableAndGetAgentHapp(
@@ -719,12 +727,7 @@ export class TryCpConductor implements IConductor {
    */
   async installHappBundle(
     appBundleSource: AppBundleSource,
-    options?: {
-      agentPubKey?: AgentPubKey;
-      installedAppId?: string;
-      uid?: string;
-      membraneProofs?: Record<string, MembraneProof>;
-    }
+    options?: HappBundleOptions
   ) {
     const agentPubKey =
       options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
@@ -749,19 +752,3 @@ export class TryCpConductor implements IConductor {
     return agentHapp;
   }
 }
-
-/**
- * Run the `reset` command on the TryCP server to delete all conductor data.
- *
- * @param serverUrl - The TryCP server to connect to.
- * @returns An empty success response.
- *
- * @public
- */
-export const cleanAllTryCpConductors = async (serverUrl: URL) => {
-  const client = await TryCpClient.create(serverUrl);
-  const response = await client.call({ type: "reset" });
-  assert(response === TRYCP_SUCCESS_RESPONSE);
-  await client.close();
-  return response;
-};

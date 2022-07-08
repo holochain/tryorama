@@ -207,6 +207,15 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "6245d59a3e82a7fc217c5828a6692dbc6dfb63a0c8c90495621f7b9d79704a0e"
 
 [[package]]
+name = "coordinator"
+version = "0.1.0"
+dependencies = [
+ "hdk",
+ "integrity",
+ "serde",
+]
+
+[[package]]
 name = "core-foundation"
 version = "0.9.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -343,14 +352,6 @@ checksum = "7d82ee10ce34d7bc12c2122495e7593a9c41347ecdd64185af4ecf72cb1a7f83"
 dependencies = [
  "cfg-if 1.0.0",
  "once_cell",
-]
-
-[[package]]
-name = "crud"
-version = "0.1.0"
-dependencies = [
- "hdk",
- "serde",
 ]
 
 [[package]]
@@ -1004,6 +1005,14 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "bee0328b1209d157ef001c94dd85b4f8f64139adb0eac2659f4b08382b2f474d"
 dependencies = [
  "cfg-if 1.0.0",
+]
+
+[[package]]
+name = "integrity"
+version = "0.1.0"
+dependencies = [
+ "holochain_deterministic_integrity",
+ "serde",
 ]
 
 [[package]]

@@ -1,7 +1,7 @@
 {
   "name": "@holochain/tryorama",
   "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
-  "version": "0.6.0",
+  "version": "0.6.2",
   "author": "Holochain Foundation",
   "keywords": [
     "holochain",
@@ -39,8 +39,8 @@
     "test:local": "npm run test:local:conductor && npm run test:local:scenario",
     "test:local:conductor": "node --loader ts-node/esm ts/test/local/conductor.ts",
     "test:local:scenario": "node --loader ts-node/esm ts/test/local/scenario.ts",
-    "test:trycp": "npm run test:trycp:server && npm run test:trycp:conductor && npm run test:trycp:scenario",
-    "test:trycp:server": "node --loader ts-node/esm ts/test/trycp/server.ts",
+    "test:trycp": "npm run test:trycp:client && npm run test:trycp:conductor && npm run test:trycp:scenario",
+    "test:trycp:client": "node --loader ts-node/esm ts/test/trycp/client.ts",
     "test:trycp:conductor": "node --loader ts-node/esm ts/test/trycp/conductor.ts",
     "test:trycp:scenario": "node --loader ts-node/esm ts/test/trycp/scenario.ts"
   },

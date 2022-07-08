@@ -4,23 +4,24 @@
 
 ## TryCpScenario.addPlayersWithHapps() method
 
-Create and add multiple players to the scenario, with a set of DNAs installed for each player.
+Creates and adds multiple players to the scenario, with a set of DNAs installed for each player.
 
 <b>Signature:</b>
 
 ```typescript
-addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<TryCpPlayer[]>;
+addPlayersWithHapps(tryCpClient: TryCpClient, agentHappOptions: PlayerHappOptions[]): Promise<TryCpPlayer[]>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->\[\] | [AgentHappOptions](./tryorama.agenthappoptions.md) for each player. |
+|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
+|  agentHappOptions | [PlayerHappOptions](./tryorama.playerhappoptions.md)<!-- -->\[\] | [PlayerHappOptions](./tryorama.playerhappoptions.md) for each player. |
 
 <b>Returns:</b>
 
 Promise&lt;[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->\[\]&gt;
 
-An array with the added players.
+An array of the added players.
 

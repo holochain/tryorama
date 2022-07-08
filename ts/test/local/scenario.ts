@@ -6,6 +6,7 @@ import {
 } from "@holochain/client";
 import test from "tape-promise/tape.js";
 import { runScenario, Scenario } from "../../src/local/scenario.js";
+import { Dna } from "../../src/types.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 
@@ -20,8 +21,8 @@ test("Local Scenario - runScenario - Install hApp bundle and access cells throug
 
 test("Local Scenario - runScenario - Catch error when calling non-existent zome", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+    const [alice] = await scenario.addPlayersWithHapps([
+      [{ path: FIXTURE_DNA_URL.pathname }],
     ]);
 
     await t.rejects(
@@ -35,8 +36,8 @@ test("Local Scenario - runScenario - Catch error when calling non-existent zome"
 
 test("Local Scenario - runScenario - Catch error when attaching a protected port", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+    const [alice] = await scenario.addPlayersWithHapps([
+      [{ path: FIXTURE_DNA_URL.pathname }],
     ]);
 
     await t.rejects(alice.conductor.attachAppInterface({ port: 300 }));
@@ -45,8 +46,8 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
 
 test("Local Scenario - runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const alice = await scenario.addPlayerWithHapp([
-      { path: FIXTURE_DNA_URL.pathname },
+    const [alice] = await scenario.addPlayersWithHapps([
+      [{ path: FIXTURE_DNA_URL.pathname }],
     ]);
 
     t.throws(() => alice.cells[2].callZome({ zome_name: "", fn_name: "" }));
@@ -64,14 +65,14 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
 
     const [alice] = await scenario.addPlayersWithHapps([
       {
-        dnas: [{ path: FIXTURE_DNA_URL.pathname }],
+        dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
         signalHandler: signalHandlerAlice,
       },
     ]);
 
     const signalAlice = { value: "hello alice" };
     alice.cells[0].callZome({
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "signal_loopback",
       payload: signalAlice,
     });
@@ -114,7 +115,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     payload: content,
   });
@@ -122,7 +123,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   await pause(100);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "read",
     payload: createEntryHash,
   });
@@ -142,7 +143,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     payload: content,
   });
@@ -150,7 +151,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   await pause(100);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "read",
     payload: createEntryHash,
   });
@@ -162,7 +163,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   await bob.conductor.startUp();
   await bob.conductor.connectAppInterface();
   const readContentAfterRestart = await bob.cells[0].callZome<typeof content>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "read",
     payload: createEntryHash,
   });
@@ -173,7 +174,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
-  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   let signalHandlerAlice: AppSignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
@@ -196,13 +197,13 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "signal_loopback",
     payload: signalAlice,
   });
   const signalBob = { value: "hello bob" };
   bob.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "signal_loopback",
     payload: signalBob,
   });

@@ -4,12 +4,12 @@
 
 ## TryCpScenario.addPlayerWithHappBundle() method
 
-Create and add a single player to the scenario, with a hApp bundle installed.
+Creates and adds a single player to the scenario, with a hApp bundle installed.
 
 <b>Signature:</b>
 
 ```typescript
-addPlayerWithHappBundle(appBundleSource: AppBundleSource, options?: HappBundleOptions & {
+addPlayerWithHappBundle(tryCpClient: TryCpClient, appBundleSource: AppBundleSource, options?: HappBundleOptions & {
         signalHandler?: AppSignalCb;
     }): Promise<{
         happId: string;
@@ -24,6 +24,7 @@ addPlayerWithHappBundle(appBundleSource: AppBundleSource, options?: HappBundleOp
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
+|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
 |  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
 |  options | [HappBundleOptions](./tryorama.happbundleoptions.md) &amp; { signalHandler?: AppSignalCb; } | <i>(Optional)</i> [HappBundleOptions](./tryorama.happbundleoptions.md) plus a signal handler (optional). |
 
@@ -31,5 +32,5 @@ addPlayerWithHappBundle(appBundleSource: AppBundleSource, options?: HappBundleOp
 
 Promise&lt;{ happId: string; agentPubKey: Uint8Array; cells: import("../../types.js").[CallableCell](./tryorama.callablecell.md)<!-- -->\[\]; namedCells: Map&lt;string, import("../../types.js").[CallableCell](./tryorama.callablecell.md)<!-- -->&gt;; conductor: [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->; }&gt;
 
-A local player instance.
+The created player instance.
 

@@ -1,19 +1,5 @@
 use hdk::prelude::*;
-
-#[hdk_entry_helper]
-pub struct Content(String);
-
-#[hdk_entry_helper]
-pub struct UpdateInput {
-    pub hash: ActionHash,
-    pub content: String,
-}
-
-#[hdk_entry_defs]
-#[unit_enum(EntryTypesUnit)]
-pub enum EntryTypes {
-    Content(Content),
-}
+use integrity::{Content, EntryTypes, UpdateInput};
 
 #[hdk_extern]
 pub fn create(input: Content) -> ExternResult<ActionHash> {
