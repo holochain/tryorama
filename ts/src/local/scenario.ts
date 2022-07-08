@@ -1,13 +1,13 @@
+import { AppBundleSource, AppSignalCb } from "@holochain/client";
 import { v4 as uuidv4 } from "uuid";
-import { AppBundleSource, AppSignalCb, DnaSource } from "@holochain/client";
-import { cleanAllConductors, createConductor, Conductor } from "./conductor.js";
+import { addAllAgentsToAllConductors } from "../common.js";
 import {
-  AgentHappOptions,
+  AgentDnas,
   HappBundleOptions,
   IPlayer,
-  IScenario,
+  PlayerHappOptions,
 } from "../types.js";
-import { addAllAgentsToAllConductors } from "../common.js";
+import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
 
 /**
  * A player tied to a {@link Conductor}.
@@ -34,7 +34,7 @@ export interface ScenarioOptions {
  *
  * @public
  */
-export class Scenario implements IScenario {
+export class Scenario {
   private timeout: number | undefined;
   uid: string;
   conductors: Conductor[];
@@ -69,24 +69,26 @@ export class Scenario implements IScenario {
    * Create and add a single player to the scenario, with a set of DNAs
    * installed.
    *
-   * @param agentHappOptions - {@link AgentHappOptions}.
+   * @param playerHappOptions - {@link PlayerHappOptions}.
    * @returns A local player instance.
    */
-  async addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<Player> {
-    const signalHandler = Array.isArray(agentHappOptions)
+  async addPlayerWithHapp(
+    playerHappOptions: PlayerHappOptions
+  ): Promise<Player> {
+    const signalHandler = Array.isArray(playerHappOptions)
       ? undefined
-      : agentHappOptions.signalHandler;
-    const properties = Array.isArray(agentHappOptions)
-      ? undefined
-      : agentHappOptions.properties;
-    const agentsDnas: DnaSource[][] = Array.isArray(agentHappOptions)
-      ? [agentHappOptions]
-      : [agentHappOptions.dnas];
+      : playerHappOptions.signalHandler;
+    const agentsDnas: AgentDnas[] = [
+      {
+        dnas: Array.isArray(playerHappOptions)
+          ? playerHappOptions.map((dnaSource) => ({ source: dnaSource }))
+          : playerHappOptions.dnas,
+      },
+    ];
     const conductor = await this.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
       uid: this.uid,
-      properties,
     });
     return { conductor, ...agentHapp };
   }
@@ -95,11 +97,11 @@ export class Scenario implements IScenario {
    * Create and add multiple players to the scenario, with a set of DNAs
    * installed for each player.
    *
-   * @param agentHappOptions - {@link AgentHappOptions} for each player.
+   * @param agentHappOptions - {@link PlayerHappOptions} for each player.
    * @returns An array with the added players.
    */
   async addPlayersWithHapps(
-    agentHappOptions: AgentHappOptions[]
+    agentHappOptions: PlayerHappOptions[]
   ): Promise<Player[]> {
     const players = await Promise.all(
       agentHappOptions.map((options) => this.addPlayerWithHapp(options))

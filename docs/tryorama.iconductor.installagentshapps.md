@@ -7,10 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-installAgentsHapps: (options: {
-        agentsDnas: DnaSource[][];
-        uid?: string;
-        properties?: DnaProperties;
-        signalHandler?: AppSignalCb;
-    }) => Promise<AgentHapp[]>;
+installAgentsHapps: (options: AgentsHappsOptions) => Promise<AgentHapp[]>;
 ```

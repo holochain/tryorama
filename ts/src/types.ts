@@ -1,7 +1,6 @@
 import {
   AdminWebsocket,
   AgentPubKey,
-  AppBundleSource,
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
@@ -14,6 +13,7 @@ import {
   MembraneProof,
   RoleId,
   RegisterDnaRequest,
+  InstalledAppId,
 } from "@holochain/client";
 
 /**
@@ -95,6 +95,65 @@ export interface HappBundleOptions {
 }
 
 /**
+ * DNA source and additional options.
+ *
+ * @public
+ */
+export interface Dna {
+  source: DnaSource;
+  membraneProof?: MembraneProof;
+  properties?: DnaProperties;
+  roleId?: string;
+}
+
+/**
+ * DNAs per agent. Optionally an agent pub key.
+ *
+ * @public
+ */
+export interface AgentDnas {
+  dnas: Dna[];
+  agentPubKey?: AgentPubKey;
+}
+
+/**
+ * An array of DNA sources for each agent (2-dimensional array) or an array of DNAs
+ * and an optional agent pub key. Optionally a UID to be used for DNA installation.
+ *
+ * @public
+ */
+export type AgentsHappsOptions =
+  | DnaSource[][]
+  | {
+      agentsDnas: AgentDnas[];
+
+      /**
+       * A unique ID for the DNAs (optional).
+       */
+      uid?: string;
+
+      /**
+       * A unique ID for the hApp (optional).
+       */
+      installedAppId?: InstalledAppId;
+    };
+
+/**
+ * Player installation options used in scenarios.
+ *
+ * Specifies either only the DNA sources that the hApp to be installed
+ * consists of, or the DNAs and a signal handler to be registered.
+ *
+ * @public
+ */
+export type PlayerHappOptions =
+  | DnaSource[]
+  | {
+      dnas: Dna[];
+      signalHandler?: AppSignalCb;
+    };
+
+/**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and
  * {@link TryCpConductor} implement this interface.
  *
@@ -117,49 +176,5 @@ export interface IConductor {
   >;
   appWs: () => Pick<AppWebsocket, "callZome" | "appInfo">;
 
-  installAgentsHapps: (options: {
-    agentsDnas: DnaSource[][];
-    uid?: string;
-    properties?: DnaProperties;
-    signalHandler?: AppSignalCb;
-  }) => Promise<AgentHapp[]>;
-}
-
-/**
- * A type that specifies either only the DNAs that the hApp to be installed
- * consists of, or the DNAs and a signal handler to be registered.
- *
- * @public
- */
-export type AgentHappOptions =
-  | DnaSource[]
-  | {
-      dnas: DnaSource[];
-      signalHandler?: AppSignalCb;
-      properties?: DnaProperties;
-    };
-
-/**
- * Base interface of a Tryorama test scenario. Both {@link Scenario} and
- * {@link TryCpScenario} implement this interface.
- *
- * @public
- */
-export interface IScenario {
-  addConductor(signalHandler?: AppSignalCb): Promise<IConductor>;
-  addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<IPlayer>;
-  addPlayersWithHapps(agentHappOptions: AgentHappOptions[]): Promise<IPlayer[]>;
-  addPlayerWithHappBundle(
-    appBundleSource: AppBundleSource,
-    options?: HappBundleOptions & { signalHandler?: AppSignalCb }
-  ): Promise<IPlayer>;
-  addPlayersWithHappBundles(
-    playersHappBundles: Array<{
-      appBundleSource: AppBundleSource;
-      options?: HappBundleOptions & { signalHandler?: AppSignalCb };
-    }>
-  ): Promise<IPlayer[]>;
-  shareAllAgents(conductors: IConductor[]): Promise<void>;
-  shutDown(): Promise<void>;
-  cleanUp(): Promise<void>;
+  installAgentsHapps: (options: AgentsHappsOptions) => Promise<AgentHapp[]>;
 }

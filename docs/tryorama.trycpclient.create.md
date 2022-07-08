@@ -23,5 +23,5 @@ static create(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
 
 Promise&lt;[TryCpClient](./tryorama.trycpclient.md)<!-- -->&gt;
 
-A client connection.
+The created client connection.
 

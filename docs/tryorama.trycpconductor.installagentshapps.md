@@ -9,19 +9,14 @@ Install a set of DNAs for multiple agents into the conductor.
 <b>Signature:</b>
 
 ```typescript
-installAgentsHapps(options: {
-        agentsDnas: DnaSource[][];
-        signalHandler?: AppSignalCb;
-        uid?: string;
-        properties?: DnaProperties;
-    }): Promise<AgentHapp[]>;
+installAgentsHapps(options: AgentsHappsOptions): Promise<AgentHapp[]>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { agentsDnas: DnaSource\[\]\[\]; signalHandler?: AppSignalCb; uid?: string; properties?: DnaProperties; } | An array of DNAs for each agent, resulting in a 2-dimensional array, and a UID for the DNAs (optional). |
+|  options | [AgentsHappsOptions](./tryorama.agentshappsoptions.md) | [AgentsHappsOptions](./tryorama.agentshappsoptions.md) |
 
 <b>Returns:</b>
 

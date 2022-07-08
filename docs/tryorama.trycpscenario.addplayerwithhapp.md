@@ -4,23 +4,24 @@
 
 ## TryCpScenario.addPlayerWithHapp() method
 
-Create and add a single player to the scenario, with a set of DNAs installed.
+Creates and adds a single player to the scenario, with a set of DNAs installed.
 
 <b>Signature:</b>
 
 ```typescript
-addPlayerWithHapp(agentHappOptions: AgentHappOptions): Promise<TryCpPlayer>;
+addPlayerWithHapp(tryCpClient: TryCpClient, playerHappOptions: PlayerHappOptions): Promise<TryCpPlayer>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  agentHappOptions | [AgentHappOptions](./tryorama.agenthappoptions.md) | [AgentHappOptions](./tryorama.agenthappoptions.md)<!-- -->. |
+|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
+|  playerHappOptions | [PlayerHappOptions](./tryorama.playerhappoptions.md) | [PlayerHappOptions](./tryorama.playerhappoptions.md)<!-- -->. |
 
 <b>Returns:</b>
 
 Promise&lt;[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->&gt;
 
-A local player instance.
+The created player instance.
 

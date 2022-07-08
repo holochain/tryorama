@@ -4,7 +4,7 @@
 
 ## TryCpScenario.shutDown() method
 
-Shut down all conductors in the scenario.
+Shut down all conductors of all clients in the scenario.
 
 <b>Signature:</b>
 

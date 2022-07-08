@@ -9,12 +9,7 @@ Install a hApp bundle into the conductor.
 <b>Signature:</b>
 
 ```typescript
-installHappBundle(appBundleSource: AppBundleSource, options?: {
-        agentPubKey?: AgentPubKey;
-        installedAppId?: string;
-        uid?: string;
-        membraneProofs?: Record<string, MembraneProof>;
-    }): Promise<AgentHapp>;
+installHappBundle(appBundleSource: AppBundleSource, options?: HappBundleOptions): Promise<AgentHapp>;
 ```
 
 ## Parameters
@@ -22,7 +17,7 @@ installHappBundle(appBundleSource: AppBundleSource, options?: {
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
-|  options | { agentPubKey?: AgentPubKey; installedAppId?: string; uid?: string; membraneProofs?: Record&lt;string, MembraneProof&gt;; } | <i>(Optional)</i> [HappBundleOptions](./tryorama.happbundleoptions.md) for the hApp bundle (optional). |
+|  options | [HappBundleOptions](./tryorama.happbundleoptions.md) | <i>(Optional)</i> [HappBundleOptions](./tryorama.happbundleoptions.md) for the hApp bundle (optional). |
 
 <b>Returns:</b>
 

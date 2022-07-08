@@ -57,9 +57,7 @@ export class TryCpServer {
           logger.error(data);
           return;
         }
-        const regexServerStarted = new RegExp(
-          `Listening on ${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`
-        );
+        const regexServerStarted = new RegExp("Listening on");
         if (regexServerStarted.test(data)) {
           logger.verbose(data);
           resolve(tryCpServer);

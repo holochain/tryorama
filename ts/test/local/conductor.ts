@@ -166,9 +166,9 @@ test("Local Conductor - Spawn a conductor and check for admin and app ws", async
 
 test("Local Conductor - Get app info", async (t) => {
   const conductor = await createConductor();
-  const [aliceHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
-  });
+  const [aliceHapps] = await conductor.installAgentsHapps([
+    [{ path: FIXTURE_DNA_URL.pathname }],
+  ]);
   const appInfo = await conductor.appWs().appInfo({
     installed_app_id: aliceHapps.happId,
   });
@@ -207,7 +207,7 @@ test("Local Conductor - Install and call a hApp bundle", async (t) => {
 test("Local Conductor - Get a convenience function for zome calls", async (t) => {
   const conductor = await createConductor();
   const [aliceHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [[{ path: FIXTURE_DNA_URL.pathname }]],
+    agentsDnas: [{ dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }] }],
   });
   const coordinatorZomeCall = getZomeCaller(aliceHapps.cells[0], "coordinator");
   t.equal(
@@ -230,18 +230,38 @@ test("Local Conductor - Get a convenience function for zome calls", async (t) =>
 
 test("Local Conductor - Install multiple agents and DNAs and get access to agents and cells", async (t) => {
   const conductor = await createConductor();
-  const [aliceHapps, bobHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [
-      [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
-      [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
-    ],
-  });
+  const [aliceHapps, bobHapps] = await conductor.installAgentsHapps([
+    [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
+    [{ path: FIXTURE_DNA_URL.pathname }, { path: FIXTURE_DNA_URL.pathname }],
+  ]);
   aliceHapps.cells.forEach((cell) =>
     t.deepEqual(cell.cell_id[1], aliceHapps.agentPubKey)
   );
   bobHapps.cells.forEach((cell) =>
     t.deepEqual(cell.cell_id[1], bobHapps.agentPubKey)
   );
+
+  await conductor.shutDown();
+  await cleanAllConductors();
+});
+
+test("Local Conductor - Install a DNA with custom role id", async (t) => {
+  const conductor = await createConductor();
+  const expectedRoleId = "test-role-id";
+  const [aliceHapps] = await conductor.installAgentsHapps({
+    agentsDnas: [
+      {
+        dnas: [
+          {
+            source: { path: FIXTURE_DNA_URL.pathname },
+            roleId: expectedRoleId,
+          },
+        ],
+      },
+    ],
+  });
+  const actualRoleId = aliceHapps.cells[0].role_id;
+  t.equal(actualRoleId, expectedRoleId, "dna role id matches");
 
   await conductor.shutDown();
   await cleanAllConductors();
@@ -334,9 +354,10 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
   const conductor1 = await createConductor();
   const conductor2 = await createConductor();
-  const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps({
-    agentsDnas: [dnas, dnas],
-  });
+  const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps([
+    dnas,
+    dnas,
+  ]);
 
   await addAllAgentsToAllConductors([conductor1, conductor2]);
 
@@ -376,9 +397,7 @@ test("Local Conductor - Receive a signal", async (t) => {
   });
   const conductor = await createConductor({ signalHandler, timeout: 30000 });
 
-  const [aliceHapps] = await conductor.installAgentsHapps({
-    agentsDnas: [dnas],
-  });
+  const [aliceHapps] = await conductor.installAgentsHapps([dnas]);
 
   const aliceSignal = { value: "signal" };
   aliceHapps.cells[0].callZome({

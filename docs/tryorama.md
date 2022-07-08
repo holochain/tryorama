@@ -18,9 +18,9 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  --- | --- |
 |  [Conductor](./tryorama.conductor.md) | A class to manage a conductor running on localhost. |
 |  [Scenario](./tryorama.scenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a local conductor. |
-|  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server. |
+|  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server.<!-- -->With a client, conductors on the server can ba configured, started and stopped. All valid Admin and App API commands can be sent to the server too. |
 |  [TryCpConductor](./tryorama.trycpconductor.md) | A class to manage a conductor running on a TryCP server. |
-|  [TryCpScenario](./tryorama.trycpscenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a TryCp conductor. |
+|  [TryCpScenario](./tryorama.trycpscenario.md) | A test scenario abstraction with convenience functions to manage TryCP clients and players (agent + conductor).<!-- -->Clients in turn help manage conductors on TryCP servers. Clients can be added to a scenario to keep track of all server connections. When finishing a test scenario, all conductors of all clients can be easily cleaned up and the client connections closed. |
 |  [TryCpServer](./tryorama.trycpserver.md) | A factory class to start and stop local instances of the TryCP server. |
 
 ## Enumerations
@@ -51,16 +51,18 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AdminApiResponseDnasListed](./tryorama.adminapiresponsednaslisted.md) |  |
 |  [AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md) |  |
 |  [AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md) |  |
+|  [AgentDnas](./tryorama.agentdnas.md) | DNAs per agent. Optionally an agent pub key. |
 |  [AgentHapp](./tryorama.agenthapp.md) | Provides direct access to cells of a hApp and the agent key. |
 |  [ApiErrorResponse](./tryorama.apierrorresponse.md) | Error response from the Admin or App API. |
 |  [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md) |  |
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
 |  [CallableCell](./tryorama.callablecell.md) | Extends an installed cell by a function to call a zome. |
+|  [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |  |
 |  [ConductorOptions](./tryorama.conductoroptions.md) |  |
+|  [Dna](./tryorama.dna.md) | DNA source and additional options. |
 |  [HappBundleOptions](./tryorama.happbundleoptions.md) | Optional arguments when installing a hApp bundle. |
 |  [IConductor](./tryorama.iconductor.md) | Base interface of a Tryorama conductor. Both [Conductor](./tryorama.conductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface. |
 |  [IPlayer](./tryorama.iplayer.md) | Combines an agent hApp with the conductor they belong to. |
-|  [IScenario](./tryorama.iscenario.md) | Base interface of a Tryorama test scenario. Both [Scenario](./tryorama.scenario.md) and [TryCpScenario](./tryorama.trycpscenario.md) implement this interface. |
 |  [Player](./tryorama.player.md) | A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->. |
 |  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) | All possible calls to an admin interface. |
 |  [RequestAppInfo](./tryorama.requestappinfo.md) | Request app info from a conductor. |
@@ -86,9 +88,8 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  --- | --- |
 |  [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md) | Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping. |
 |  [cleanAllConductors](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
-|  [cleanAllTryCpConductors](./tryorama.cleanalltrycpconductors.md) | Run the <code>reset</code> command on the TryCP server to delete all conductor data. |
 |  [createConductor](./tryorama.createconductor.md) | The function to create a conductor. It starts a sandbox conductor via the Holochain CLI. |
-|  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor (aka "Player"). |
+|  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor. By default configures and starts it. |
 |  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) | The default partial config for a TryCP conductor. |
 |  [getZomeCaller](./tryorama.getzomecaller.md) | Get a shorthand function to call a cell's zome. |
 |  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |
@@ -100,12 +101,13 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  Type Alias | Description |
 |  --- | --- |
 |  [AdminApiResponse](./tryorama.adminapiresponse.md) | All possible responses from the Admin API. |
-|  [AgentHappOptions](./tryorama.agenthappoptions.md) | A type that specifies either only the DNAs that the hApp to be installed consists of, or the DNAs and a signal handler to be registered. |
+|  [AgentsHappsOptions](./tryorama.agentshappsoptions.md) | An array of DNA sources for each agent (2-dimensional array) or an array of DNAs and an optional agent pub key. Optionally a UID to be used for DNA installation. |
 |  [AppApiResponse](./tryorama.appapiresponse.md) | Possible responses from the App API. |
 |  [CallZomeFn](./tryorama.callzomefn.md) | The function for calling a zome from a specific cell. |
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |
 |  [ConductorId](./tryorama.conductorid.md) |  |
 |  [CreateConductorOptions](./tryorama.createconductoroptions.md) | Options for using the conductor factory. |
+|  [PlayerHappOptions](./tryorama.playerhappoptions.md) | Player installation options used in scenarios.<!-- -->Specifies either only the DNA sources that the hApp to be installed consists of, or the DNAs and a signal handler to be registered. |
 |  [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) | All possible calls to an app interface. |
 |  [TryCpApiResponse](./tryorama.trycpapiresponse.md) | Possible responses from the Admin and App APIs. |
 |  [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | Log level for a TryCP conductor. |

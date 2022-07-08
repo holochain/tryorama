@@ -4,33 +4,40 @@
 
 ## TryCpScenario class
 
-An abstraction of a test scenario to write tests against Holochain hApps, running on a TryCp conductor.
+A test scenario abstraction with convenience functions to manage TryCP clients and players (agent + conductor).
+
+Clients in turn help manage conductors on TryCP servers. Clients can be added to a scenario to keep track of all server connections. When finishing a test scenario, all conductors of all clients can be easily cleaned up and the client connections closed.
 
 <b>Signature:</b>
 
 ```typescript
-export declare class TryCpScenario implements IScenario 
+export declare class TryCpScenario 
 ```
-<b>Implements:</b> [IScenario](./tryorama.iscenario.md)
+
+## Constructors
+
+|  Constructor | Modifiers | Description |
+|  --- | --- | --- |
+|  [(constructor)()](./tryorama.trycpscenario._constructor_.md) |  | Constructs a new instance of the <code>TryCpScenario</code> class |
 
 ## Properties
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [conductors](./tryorama.trycpscenario.conductors.md) |  | [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->\[\] |  |
+|  [clients](./tryorama.trycpscenario.clients.md) |  | [TryCpClient](./tryorama.trycpclient.md)<!-- -->\[\] |  |
 |  [uid](./tryorama.trycpscenario.uid.md) |  | string |  |
 
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [addConductor(signalHandler)](./tryorama.trycpscenario.addconductor.md) |  | Create and add a conductor to the scenario. |
-|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.trycpscenario.addplayerswithhappbundles.md) |  | Create and add multiple players to the scenario, with a hApp bundle installed for each player. |
-|  [addPlayersWithHapps(agentHappOptions)](./tryorama.trycpscenario.addplayerswithhapps.md) |  | Create and add multiple players to the scenario, with a set of DNAs installed for each player. |
-|  [addPlayerWithHapp(agentHappOptions)](./tryorama.trycpscenario.addplayerwithhapp.md) |  | Create and add a single player to the scenario, with a set of DNAs installed. |
-|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.trycpscenario.addplayerwithhappbundle.md) |  | Create and add a single player to the scenario, with a hApp bundle installed. |
-|  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  | Shut down and delete all conductors in the scenario, and stop the TryCP server. |
-|  [create(serverUrl)](./tryorama.trycpscenario.create.md) | <code>static</code> | Factory method to create a new scenario. |
-|  [shareAllAgents()](./tryorama.trycpscenario.shareallagents.md) |  | Register all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
-|  [shutDown()](./tryorama.trycpscenario.shutdown.md) |  | Shut down all conductors in the scenario. |
+|  [addClient(serverUrl, timeout)](./tryorama.trycpscenario.addclient.md) |  | Creates a TryCP client connection and add it to the scenario. |
+|  [addClientsPlayers(serverUrls, options)](./tryorama.trycpscenario.addclientsplayers.md) |  | Creates client connections for all passed in URLs and, depending on the options, creates multiple players with DNAs. Adds all clients to the scenario. |
+|  [addPlayersWithHappBundles(tryCpClient, playersHappBundles)](./tryorama.trycpscenario.addplayerswithhappbundles.md) |  | Creates and adds multiple players to the scenario, with a hApp bundle installed for each player. |
+|  [addPlayersWithHapps(tryCpClient, agentHappOptions)](./tryorama.trycpscenario.addplayerswithhapps.md) |  | Creates and adds multiple players to the scenario, with a set of DNAs installed for each player. |
+|  [addPlayerWithHapp(tryCpClient, playerHappOptions)](./tryorama.trycpscenario.addplayerwithhapp.md) |  | Creates and adds a single player to the scenario, with a set of DNAs installed. |
+|  [addPlayerWithHappBundle(tryCpClient, appBundleSource, options)](./tryorama.trycpscenario.addplayerwithhappbundle.md) |  | Creates and adds a single player to the scenario, with a hApp bundle installed. |
+|  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  | Shut down and delete all conductors and close all client connections in the scenario. |
+|  [shareAllAgents()](./tryorama.trycpscenario.shareallagents.md) |  | Registers all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
+|  [shutDown()](./tryorama.trycpscenario.shutdown.md) |  | Shut down all conductors of all clients in the scenario. |
 

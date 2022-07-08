@@ -18,7 +18,7 @@ export interface IConductor
 |  --- | --- | --- |
 |  [adminWs](./tryorama.iconductor.adminws.md) | () =&gt; Omit&lt;AdminWebsocket, "\_requester" \| "client" \| "activateApp" \| "deactivateApp" \| "defaultTimeout" \| "listActiveApps"&gt; |  |
 |  [appWs](./tryorama.iconductor.appws.md) | () =&gt; Pick&lt;AppWebsocket, "callZome" \| "appInfo"&gt; |  |
-|  [installAgentsHapps](./tryorama.iconductor.installagentshapps.md) | (options: { agentsDnas: DnaSource\[\]\[\]; uid?: string; properties?: DnaProperties; signalHandler?: AppSignalCb; }) =&gt; Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt; |  |
+|  [installAgentsHapps](./tryorama.iconductor.installagentshapps.md) | (options: [AgentsHappsOptions](./tryorama.agentshappsoptions.md)<!-- -->) =&gt; Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt; |  |
 |  [shutDown](./tryorama.iconductor.shutdown.md) | () =&gt; Promise&lt;number \| null&gt; |  |
 |  [startUp](./tryorama.iconductor.startup.md) | () =&gt; Promise&lt;void \| null&gt; |  |
 
