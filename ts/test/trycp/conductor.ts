@@ -38,7 +38,7 @@ const createTestConductor = (
 
 test("TryCP Conductor - stop and restart a conductor", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL);
+  const client = await TryCpClient.create(SERVER_URL, 60000);
   const conductor = await createTestConductor(client);
 
   const agentPubKeyResponse = await conductor.adminWs().generateAgentPubKey();
@@ -109,14 +109,14 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   const entryContent = "Bye bye, world";
   const createEntryResponse: EntryHash =
     await installedHappBundle.cells[0].callZome({
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "create",
       payload: entryContent,
     });
   t.ok(createEntryResponse, "entry created successfully");
   const readEntryResponse: typeof entryContent =
     await installedHappBundle.cells[0].callZome({
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       payload: createEntryResponse,
     });
@@ -159,7 +159,7 @@ test("TryCP Conductor - receive a signal", async (t) => {
   conductor.appWs().callZome({
     cap_secret: null,
     cell_id: installedAppBundle.cell_data[0].cell_id,
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "signal_loopback",
     provenance: agentPubKey,
     payload: testSignal,
@@ -228,7 +228,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   const createEntryHash = await conductor.appWs().callZome<EntryHash>({
     cap_secret: null,
     cell_id,
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     provenance: agentPubKey,
     payload: entryContent,
@@ -245,7 +245,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
     .callZome<typeof entryContent>({
       cap_secret: null,
       cell_id,
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       provenance: agentPubKey,
       payload: createEntryHash,
@@ -279,7 +279,7 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
   await conductor.connectAppInterface();
 
   const actual = await alice_happs.cells[0].callZome<null>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "read",
     provenance: alice_happs.agentPubKey,
     payload: Buffer.from("hCkk", "base64"),
@@ -385,7 +385,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   const createEntryHash = await conductor.appWs().callZome<EntryHash>({
     cap_secret: null,
     cell_id: cellId1,
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     provenance: agent1PubKey,
     payload: entryContent,
@@ -402,7 +402,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     .callZome<typeof entryContent>({
       cap_secret: null,
       cell_id: cellId2,
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       provenance: agent2PubKey,
       payload: createEntryHash,
@@ -439,7 +439,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   const createEntryHash = await conductor1.appWs().callZome<EntryHash>({
     cap_secret: null,
     cell_id: alice.cells[0].cell_id,
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     provenance: alice.agentPubKey,
     payload: entryContent,
@@ -458,7 +458,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
     .callZome<typeof entryContent>({
       cap_secret: null,
       cell_id: bob.cells[0].cell_id,
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       provenance: bob.agentPubKey,
       payload: createEntryHash,

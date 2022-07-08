@@ -25,7 +25,7 @@ example uses [tape](https://github.com/substack/tape) as test runner and
 assertion library. You can choose any other runner and library.
 
 ```ts
-import { DnaSource, HeaderHash } from "@holochain/client";
+import { ActionHash, DnaSource } from "@holochain/client";
 import { pause, runScenario, Scenario } from "@holochain/tryorama";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -54,8 +54,8 @@ test("Create 2 players and create and read an entry", async (t) => {
 
     // The cells of the installed hApp are returned in the same order as the DNAs
     // that were passed into the player creation.
-    const createEntryHash: HeaderHash = await alice.cells[0].callZome({
-      zome_name: "crud",
+    const createEntryHash: ActionHash = await alice.cells[0].callZome({
+      zome_name: "coordinator",
       fn_name: "create",
       payload: content,
     });
@@ -66,7 +66,7 @@ test("Create 2 players and create and read an entry", async (t) => {
     // Using the same cell and zome as before, the second player reads the
     // created entry.
     const readContent: typeof content = await bob.cells[0].callZome({
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       payload: createEntryHash,
     });
@@ -82,7 +82,7 @@ test("Create 2 players and create and read an entry", async (t) => {
 Written out without the wrapper function, the same example looks like this:
 
 ```ts
-import { DnaSource, HeaderHash } from "@holochain/client";
+import { ActionHash, DnaSource } from "@holochain/client";
 import { pause, Scenario } from "@holochain/tryorama";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
@@ -100,7 +100,7 @@ test("Create 2 players and create and read an entry", async (t) => {
 
   const content = "Hello Tryorama";
   const createEntryHash: EntryHash = await alice.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     payload: content,
   });
@@ -108,7 +108,7 @@ test("Create 2 players and create and read an entry", async (t) => {
   await pause(100);
 
   const readContent: typeof content = await bob.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "read",
     payload: createEntryHash,
   });
@@ -184,7 +184,7 @@ Here is the above example that just uses a `Conductor` without a `Scenario`:
 
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     payload: entryContent,
   });
@@ -193,7 +193,7 @@ Here is the above example that just uses a `Conductor` without a `Scenario`:
 
   const readEntryResponse: typeof entryContent =
     await bobHapps.cells[0].callZome({
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       payload: createEntryHash,
     });
@@ -226,7 +226,7 @@ const [aliceHapps] = await conductor.installAgentsHapps({
 
 const entryContent = "test-content";
 const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
-  zome_name: "crud",
+  zome_name: "coordinator",
   fn_name: "create",
   payload: entryContent,
 });
@@ -248,12 +248,12 @@ const [aliceHapps] = await conductor.installAgentsHapps({
   agentsDnas: [dnas],
 });
 const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
-  zome_name: "crud",
+  zome_name: "coordinator",
   fn_name: "create",
   payload: entryContent,
 });
 const readEntryHash: string = await aliceHapps.cells[0].callZome({
-  zome_name: "crud",
+  zome_name: "coordinator",
   fn_name: "read",
   payload: createEntryHash,
 });
@@ -265,12 +265,12 @@ the shorthand access to the Zome can be called
 const [aliceHapps] = await conductor.installAgentsHapps({
   agentsDnas: [dnas],
 });
-const aliceCrudZomeCall = getZomeCaller(aliceHapps.cells[0], "crud");
-const entryHeaderHash: HeaderHash = await crudZomeCall(
+const aliceCallCoordinatorZome = getZomeCaller(aliceHapps.cells[0], "coordinator");
+const entryHeaderHash: ActionHash = await aliceCallCoordinatorZome(
   "create",
   "test-entry"
 );
-const readEntryHash: string = await crudZomeCall(
+const readEntryHash: string = await aliceCallCoordinatorZome(
   "read",
   entryHeaderHash
 );
@@ -298,7 +298,7 @@ const alice = await scenario.addPlayerWithHapp(dna, signalHandler);
 
 const signal = { value: "hello alice" };
 alice.cells[0].callZome({
-  zome_name: "crud",
+  zome_name: "coordinator",
   fn_name: "signal_loopback",
   payload: signal,
 });

@@ -150,13 +150,13 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "signal_loopback",
     payload: signalAlice,
   });
   const signalBob = { value: "hello bob" };
   bob.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "signal_loopback",
     payload: signalBob,
   });
@@ -190,7 +190,7 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     payload: content,
   });
@@ -198,7 +198,7 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   await pause(100);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "read",
     payload: createEntryHash,
   });
@@ -222,13 +222,13 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     payload: content,
   });
   await pause(100);
   const readContent = await bob.cells[0].callZome<typeof content>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "read",
     payload: createEntryHash,
   });
@@ -247,7 +247,7 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   await bob.conductor.startUp({});
   await bob.conductor.connectAppInterface();
   const readContentAfterRestart = await bob.cells[0].callZome<typeof content>({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "read",
     payload: createEntryHash,
   });

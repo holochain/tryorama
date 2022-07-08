@@ -1,9 +1,9 @@
 import {
+  ActionHash,
   AppSignal,
   AppSignalCb,
   DnaSource,
   EntryHash,
-  HeaderHash,
 } from "@holochain/client";
 import assert from "node:assert";
 import { readFileSync } from "node:fs";
@@ -187,14 +187,14 @@ test("Local Conductor - Install and call a hApp bundle", async (t) => {
   const entryContent = "Bye bye, world";
   const createEntryResponse: EntryHash =
     await installedHappBundle.cells[0].callZome({
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "create",
       payload: entryContent,
     });
   t.ok(createEntryResponse);
   const readEntryResponse: typeof entryContent =
     await installedHappBundle.cells[0].callZome({
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       payload: createEntryResponse,
     });
@@ -206,19 +206,23 @@ test("Local Conductor - Install and call a hApp bundle", async (t) => {
 
 test("Local Conductor - Get a convenience function for zome calls", async (t) => {
   const conductor = await createConductor();
-  const [aliceHapps] = await conductor.installAgentsHapps([
-    [{ path: FIXTURE_DNA_URL.pathname }],
-  ]);
-  const crudZomeCall = getZomeCaller(aliceHapps.cells[0], "crud");
-  t.equal(typeof crudZomeCall, "function", "getZomeCaller returns a function");
+  const [aliceHapps] = await conductor.installAgentsHapps({
+    agentsDnas: [{ dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }] }],
+  });
+  const coordinatorZomeCall = getZomeCaller(aliceHapps.cells[0], "coordinator");
+  t.equal(
+    typeof coordinatorZomeCall,
+    "function",
+    "getZomeCaller returns a function"
+  );
 
-  const entryHeaderHash: HeaderHash = await crudZomeCall(
+  const entryHeaderHash: ActionHash = await coordinatorZomeCall(
     "create",
     "test-entry"
   );
   const entryHeaderHashB64 = Buffer.from(entryHeaderHash).toString("base64");
-  t.equal(entryHeaderHash.length, 39, "HeaderHash is 39 bytes long");
-  t.ok(entryHeaderHashB64.startsWith("hCkk"), "HeaderHash starts with hCkk");
+  t.equal(entryHeaderHash.length, 39, "ActionHash is 39 bytes long");
+  t.ok(entryHeaderHashB64.startsWith("hCkk"), "ActionHash starts with hCkk");
 
   await conductor.shutDown();
   await cleanAllConductors();
@@ -282,7 +286,9 @@ test("Local Conductor - Zome call can time out before completion", async (t) => 
   const cell = aliceHapp.namedCells.get("test");
   assert(cell);
 
-  await t.rejects(cell.callZome({ fn_name: "create", zome_name: "crud" }, 1));
+  await t.rejects(
+    cell.callZome({ fn_name: "create", zome_name: "coordinator" }, 1)
+  );
 
   await conductor.shutDown();
   await cleanAllConductors();
@@ -318,7 +324,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   const createEntryHash: EntryHash = await conductor.appWs().callZome({
     cap_secret: null,
     cell_id,
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     provenance: agentPubKey,
     payload: entryContent,
@@ -332,7 +338,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
     .callZome({
       cap_secret: null,
       cell_id,
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       provenance: agentPubKey,
       payload: createEntryHash,
@@ -357,7 +363,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "create",
     payload: entryContent,
   });
@@ -369,7 +375,7 @@ test("Local Conductor - Create and read an entry using the entry zome, 2 conduct
 
   const readEntryResponse: typeof entryContent =
     await bobHapps.cells[0].callZome({
-      zome_name: "crud",
+      zome_name: "coordinator",
       fn_name: "read",
       payload: createEntryHash,
     });
@@ -395,7 +401,7 @@ test("Local Conductor - Receive a signal", async (t) => {
 
   const aliceSignal = { value: "signal" };
   aliceHapps.cells[0].callZome({
-    zome_name: "crud",
+    zome_name: "coordinator",
     fn_name: "signal_loopback",
     payload: aliceSignal,
   });
