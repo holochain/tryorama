@@ -9,6 +9,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## [0.6.2]
+
+### Added
+- feat(common): add app and role id options to hApp installation 
+- feat(common): add mem-proofs to installAgentsHapps (#139)
+- feat(trycp): add multiple clients by array of URLs
+- feat(trycp): add multiple clients/players
+
+### Fixed
+- fix(trycp): allow for multiple hosts in scenario (#136)
+
 ## [0.6.1]
 
 ### Changed

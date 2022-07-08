@@ -12,6 +12,7 @@ An array of DNA sources for each agent (2-dimensional array) or an array of DNAs
 export declare type AgentsHappsOptions = DnaSource[][] | {
     agentsDnas: AgentDnas[];
     uid?: string;
+    installedAppId?: InstalledAppId;
 };
 ```
 <b>References:</b> [AgentDnas](./tryorama.agentdnas.md)
