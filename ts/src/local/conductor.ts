@@ -29,6 +29,7 @@ const logger = makeLogger("Local Conductor");
 
 const HOST_URL = new URL("ws://127.0.0.1");
 const DEFAULT_TIMEOUT = 15000;
+const LAIR_PASSWORD = "lair-password";
 
 /**
  * The network type the conductor should use to communicate with peers.
@@ -188,12 +189,11 @@ export class Conductor implements IConductor {
     const networkType = options?.networkType ?? NetworkType.Quic;
     if (options?.bootstrapUrl && networkType !== NetworkType.Quic) {
       throw new Error(
-        "error creating a conductor: bootstrap service can only be set for quic network"
+        "error creating conductor: bootstrap service can only be set for quic network"
       );
     }
 
-    const conductor = new Conductor(options?.timeout);
-    const args = ["sandbox", "create", "network"];
+    const args = ["sandbox", "--piped", "create", "network"];
     if (options?.bootstrapUrl) {
       args.push("--bootstrap", options.bootstrapUrl.href);
     }
@@ -210,8 +210,11 @@ export class Conductor implements IConductor {
     if (options?.proxy) {
       args.push("-p", options.proxy.href);
     }
+    const lairPasswordProcess = spawn("echo", [LAIR_PASSWORD]);
     const createConductorProcess = spawn("hc", args);
+    lairPasswordProcess.stdout.pipe(createConductorProcess.stdin);
 
+    const conductor = new Conductor(options?.timeout);
     const createConductorPromise = new Promise<Conductor>((resolve, reject) => {
       createConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`creating conductor config\n${data.toString()}`);
@@ -245,14 +248,17 @@ export class Conductor implements IConductor {
       return;
     }
 
+    const lairPasswordProcess = spawn("echo", [LAIR_PASSWORD]);
     const runConductorProcess = spawn(
       "hc",
-      ["sandbox", "run", "-e", this.conductorDir],
+      ["sandbox", "--piped", "run", "-e", this.conductorDir],
       {
         detached: true, // create a process group; without this option, killing
         // the process doesn't kill the conductor
       }
     );
+    lairPasswordProcess.stdout.pipe(runConductorProcess.stdin);
+
     const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
         const adminPortMatches = data
