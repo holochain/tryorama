@@ -8,5 +8,5 @@ crate-type = ["cdylib", "rlib"]
 name = "integrity"
 
 [dependencies]
-holochain_deterministic_integrity = "0.0.12"
+hdi = "0.0.19"
 serde = "1"

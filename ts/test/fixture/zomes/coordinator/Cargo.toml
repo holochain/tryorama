@@ -8,6 +8,6 @@ crate-type = ["cdylib", "rlib"]
 name = "coordinator"
 
 [dependencies]
-hdk = "0.0.140"
+hdk = "0.0.147"
 integrity = {path = "../integrity"}
 serde = "1"
