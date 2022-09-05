@@ -210,9 +210,9 @@ export class Conductor implements IConductor {
     if (options?.proxy) {
       args.push("-p", options.proxy.href);
     }
-    const lairPasswordProcess = spawn("echo", [LAIR_PASSWORD]);
     const createConductorProcess = spawn("hc", args);
-    lairPasswordProcess.stdout.pipe(createConductorProcess.stdin);
+    createConductorProcess.stdin.write(LAIR_PASSWORD);
+    createConductorProcess.stdin.end();
 
     const conductor = new Conductor(options?.timeout);
     const createConductorPromise = new Promise<Conductor>((resolve, reject) => {
@@ -248,7 +248,6 @@ export class Conductor implements IConductor {
       return;
     }
 
-    const lairPasswordProcess = spawn("echo", [LAIR_PASSWORD]);
     const runConductorProcess = spawn(
       "hc",
       ["sandbox", "--piped", "run", "-e", this.conductorDir],
@@ -257,7 +256,8 @@ export class Conductor implements IConductor {
         // the process doesn't kill the conductor
       }
     );
-    lairPasswordProcess.stdout.pipe(runConductorProcess.stdin);
+    runConductorProcess.stdin.write(LAIR_PASSWORD);
+    runConductorProcess.stdin.end();
 
     const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
