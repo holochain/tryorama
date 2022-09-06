@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2022-09-06 [0.7.0]
+
+### Changed
+- **BREAKING CHANGE**: Upgrade to Holochain v0.0.157 and thereby to Lair v0.2.0. **CAUTION**: No backward compatibility to previous versions of Lair. Use Tryorama < v0.7.0 for Lair < v0.2.0.
+
 ## [0.6.2]
 
 ### Added
