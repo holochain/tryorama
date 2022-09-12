@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2022-09-12 [0.8.0]
+
+### Changed
+- Replace occurrences of `uid` by `network_seed`, in alignment with the renaming in Holochain.
+
 ## 2022-09-06 [0.7.0]
 
 ### Changed
