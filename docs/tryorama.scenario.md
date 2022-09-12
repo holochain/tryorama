@@ -23,7 +23,7 @@ export declare class Scenario
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [conductors](./tryorama.scenario.conductors.md) |  | [Conductor](./tryorama.conductor.md)<!-- -->\[\] |  |
-|  [uid](./tryorama.scenario.uid.md) |  | string |  |
+|  [networkSeed](./tryorama.scenario.networkseed.md) |  | string |  |
 
 ## Methods
 

@@ -36,7 +36,7 @@ export interface ScenarioOptions {
  */
 export class Scenario {
   private timeout: number | undefined;
-  uid: string;
+  networkSeed: string;
   conductors: Conductor[];
 
   /**
@@ -46,7 +46,7 @@ export class Scenario {
    */
   constructor(options?: ScenarioOptions) {
     this.timeout = options?.timeout;
-    this.uid = uuidv4();
+    this.networkSeed = uuidv4();
     this.conductors = [];
   }
 
@@ -88,7 +88,7 @@ export class Scenario {
     const conductor = await this.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
-      uid: this.uid,
+      networkSeed: this.networkSeed,
     });
     return { conductor, ...agentHapp };
   }
@@ -124,8 +124,10 @@ export class Scenario {
   ): Promise<Player> {
     const conductor = await this.addConductor(options?.signalHandler);
     options = options
-      ? Object.assign(options, { uid: options.uid ?? this.uid })
-      : { uid: this.uid };
+      ? Object.assign(options, {
+          networkSeed: options.networkSeed ?? this.networkSeed,
+        })
+      : { networkSeed: this.networkSeed };
     const agentHapp = await conductor.installHappBundle(
       appBundleSource,
       options

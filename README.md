@@ -203,7 +203,7 @@ Here is the above example that just uses a `Conductor` without a `Scenario`:
   await cleanAllConductors();
 ```
 
-> Note that you need to set a [UID](https://docs.rs/holochain_types/latest/holochain_types/app/struct.RegisterDnaPayload.html#structfield.uid)
+> Note that you need to set a [network seed](https://docs.rs/holochain_types/latest/holochain_types/app/struct.RegisterDnaPayload.html#structfield.network_seed)
 manually when registering DNAs. This is taken care of automatically when using
 a `Scenario`.
 

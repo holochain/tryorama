@@ -401,7 +401,7 @@ export class Conductor implements IConductor {
    * Install a set of DNAs for multiple agents into the conductor.
    *
    * @param options - An array of DNAs for each agent, resulting in a
-   * 2-dimensional array, and a UID for the DNAs (optional).
+   * 2-dimensional array, and a network seed for the DNAs (optional).
    * @returns An array with each agent's hApps.
    */
   async installAgentsHapps(options: AgentsHappsOptions) {
@@ -422,7 +422,8 @@ export class Conductor implements IConductor {
         let roleId: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          uid: ("uid" in options && options.uid) || undefined,
+          networkSeed:
+            ("networkSeed" in options && options.networkSeed) || undefined,
           properties: ("properties" in dna && dna.properties) || undefined,
         };
 
@@ -485,7 +486,7 @@ export class Conductor implements IConductor {
       {
         agent_key: agentPubKey,
         membrane_proofs: options?.membraneProofs ?? {},
-        uid: options?.uid,
+        network_seed: options?.networkSeed,
         installed_app_id: options?.installedAppId ?? `app-${uuidv4()}`,
       }
     );
