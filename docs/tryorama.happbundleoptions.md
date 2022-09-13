@@ -19,5 +19,5 @@ export interface HappBundleOptions
 |  [agentPubKey?](./tryorama.happbundleoptions.agentpubkey.md) | AgentPubKey | <i>(Optional)</i> |
 |  [installedAppId?](./tryorama.happbundleoptions.installedappid.md) | string | <i>(Optional)</i> |
 |  [membraneProofs?](./tryorama.happbundleoptions.membraneproofs.md) | Record&lt;string, MembraneProof&gt; | <i>(Optional)</i> |
-|  [uid?](./tryorama.happbundleoptions.uid.md) | string | <i>(Optional)</i> |
+|  [networkSeed?](./tryorama.happbundleoptions.networkseed.md) | string | <i>(Optional)</i> |
 

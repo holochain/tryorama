@@ -16,7 +16,7 @@ installAgentsHapps(options: AgentsHappsOptions): Promise<AgentHapp[]>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | [AgentsHappsOptions](./tryorama.agentshappsoptions.md) | An array of DNAs for each agent, resulting in a 2-dimensional array, and a UID for the DNAs (optional). |
+|  options | [AgentsHappsOptions](./tryorama.agentshappsoptions.md) | An array of DNAs for each agent, resulting in a 2-dimensional array, and a network seed for the DNAs (optional). |
 
 <b>Returns:</b>
 

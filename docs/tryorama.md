@@ -101,7 +101,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  Type Alias | Description |
 |  --- | --- |
 |  [AdminApiResponse](./tryorama.adminapiresponse.md) | All possible responses from the Admin API. |
-|  [AgentsHappsOptions](./tryorama.agentshappsoptions.md) | An array of DNA sources for each agent (2-dimensional array) or an array of DNAs and an optional agent pub key. Optionally a UID to be used for DNA installation. |
+|  [AgentsHappsOptions](./tryorama.agentshappsoptions.md) | An array of DNA sources for each agent (2-dimensional array) or an array of DNAs and an optional agent pub key. Optionally a network seed to be used for DNA installation. |
 |  [AppApiResponse](./tryorama.appapiresponse.md) | Possible responses from the App API. |
 |  [CallZomeFn](./tryorama.callzomefn.md) | The function for calling a zome from a specific cell. |
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |

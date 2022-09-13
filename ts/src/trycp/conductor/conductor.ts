@@ -662,7 +662,8 @@ export class TryCpConductor implements IConductor {
         let roleId: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          uid: ("uid" in options && options.uid) || undefined,
+          network_seed:
+            ("networkSeed" in options && options.networkSeed) || undefined,
           properties: ("properties" in dna && dna.properties) || undefined,
         };
 
@@ -736,7 +737,7 @@ export class TryCpConductor implements IConductor {
       {
         agent_key: agentPubKey,
         membrane_proofs: options?.membraneProofs ?? {},
-        uid: options?.uid,
+        network_seed: options?.networkSeed,
         installed_app_id: options?.installedAppId ?? `app-${uuidv4()}`,
       }
     );

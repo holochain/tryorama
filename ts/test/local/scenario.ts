@@ -107,7 +107,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
 
   const scenario = new Scenario();
-  t.ok(scenario.uid);
+  t.ok(scenario.networkSeed);
 
   const [alice, bob] = await scenario.addPlayersWithHapps([dnas, dnas]);
 
