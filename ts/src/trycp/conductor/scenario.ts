@@ -69,11 +69,11 @@ export interface TryCpPlayer extends IPlayer {
  * @public
  */
 export class TryCpScenario {
-  uid: string;
+  network_seed: string;
   clients: TryCpClient[];
 
   constructor() {
-    this.uid = uuidv4();
+    this.network_seed = uuidv4();
     this.clients = [];
   }
 
@@ -184,7 +184,7 @@ export class TryCpScenario {
     const conductor = await tryCpClient.addConductor(signalHandler);
     const [agentHapp] = await conductor.installAgentsHapps({
       agentsDnas,
-      uid: this.uid,
+      networkSeed: this.network_seed,
     });
     return { conductor, ...agentHapp };
   }
@@ -228,8 +228,10 @@ export class TryCpScenario {
   ) {
     const conductor = await tryCpClient.addConductor(options?.signalHandler);
     options = options
-      ? Object.assign(options, { uid: options.uid ?? this.uid })
-      : { uid: this.uid };
+      ? Object.assign(options, {
+          networkSeed: options.networkSeed ?? this.network_seed,
+        })
+      : { networkSeed: this.network_seed };
     const agentHapp = await conductor.installHappBundle(
       appBundleSource,
       options

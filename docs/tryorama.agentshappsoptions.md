@@ -4,14 +4,14 @@
 
 ## AgentsHappsOptions type
 
-An array of DNA sources for each agent (2-dimensional array) or an array of DNAs and an optional agent pub key. Optionally a UID to be used for DNA installation.
+An array of DNA sources for each agent (2-dimensional array) or an array of DNAs and an optional agent pub key. Optionally a network seed to be used for DNA installation.
 
 <b>Signature:</b>
 
 ```typescript
 export declare type AgentsHappsOptions = DnaSource[][] | {
     agentsDnas: AgentDnas[];
-    uid?: string;
+    networkSeed?: string;
     installedAppId?: InstalledAppId;
 };
 ```

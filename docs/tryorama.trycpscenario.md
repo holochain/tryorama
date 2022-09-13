@@ -25,7 +25,7 @@ export declare class TryCpScenario
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [clients](./tryorama.trycpscenario.clients.md) |  | [TryCpClient](./tryorama.trycpclient.md)<!-- -->\[\] |  |
-|  [uid](./tryorama.trycpscenario.uid.md) |  | string |  |
+|  [network\_seed](./tryorama.trycpscenario.network_seed.md) |  | string |  |
 
 ## Methods
 
