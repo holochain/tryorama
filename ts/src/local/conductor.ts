@@ -422,7 +422,7 @@ export class Conductor implements IConductor {
         let roleId: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          networkSeed:
+          network_seed:
             ("networkSeed" in options && options.networkSeed) || undefined,
           properties: ("properties" in dna && dna.properties) || undefined,
         };
