@@ -1,4 +1,5 @@
-import { AppSignal, DnaSource, EntryHash } from "@holochain/client";
+import { ActionHash, AppSignal, DnaSource, EntryHash } from "@holochain/client";
+import { CloneId } from "@holochain/client";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
@@ -411,6 +412,103 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     readEntryResponse,
     entryContent,
     "read entry content matches created entry content"
+  );
+
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - clone cell management", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const conductor = await createTestConductor(client);
+
+  const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
+  const dnaHash = await conductor.adminWs().registerDna({ path: relativePath });
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+  const appId = "entry-app";
+  const roleId = "entry-dna";
+  const installedAppInfo = await conductor.adminWs().installApp({
+    installed_app_id: appId,
+    agent_key: agentPubKey,
+    dnas: [{ hash: dnaHash, role_id: roleId }],
+  });
+  const { cell_id: cellId } = installedAppInfo.cell_data[0];
+  await conductor.adminWs().enableApp({ installed_app_id: appId });
+  await conductor.adminWs().attachAppInterface();
+  await conductor.connectAppInterface();
+
+  const cloneCell = await conductor.appWs().createCloneCell({
+    app_id: appId,
+    role_id: roleId,
+    modifiers: { network_seed: "test-seed" },
+  });
+  t.deepEqual(
+    cloneCell.role_id,
+    new CloneId(roleId, 0).toString(),
+    "clone id is 'role_id.0'"
+  );
+  t.deepEqual(
+    cloneCell.cell_id[1],
+    cellId[1],
+    "agent pub key in clone cell and base cell match"
+  );
+  const testContent = "test-content";
+  const entryActionHash: ActionHash = await conductor.appWs().callZome({
+    cell_id: cloneCell.cell_id,
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: testContent,
+    cap_secret: null,
+    provenance: agentPubKey,
+  });
+
+  await conductor
+    .appWs()
+    .archiveCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await t.rejects(
+    conductor.appWs().callZome({
+      cell_id: cloneCell.cell_id,
+      zome_name: "coordinator",
+      fn_name: "read",
+      payload: entryActionHash,
+      cap_secret: null,
+      provenance: agentPubKey,
+    }),
+    "archived clone cell cannot be called"
+  );
+
+  const restoredCloneCell = await conductor
+    .adminWs()
+    .restoreCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_id });
+  t.deepEqual(
+    restoredCloneCell,
+    cloneCell,
+    "restored clone cell matches created clone cell"
+  );
+  const readEntryResponse: typeof testContent = await conductor
+    .appWs()
+    .callZome({
+      cell_id: cloneCell.cell_id,
+      zome_name: "coordinator",
+      fn_name: "read",
+      payload: entryActionHash,
+      cap_secret: null,
+      provenance: agentPubKey,
+    });
+  t.equal(readEntryResponse, testContent, "restored clone cell can be called");
+
+  await conductor
+    .appWs()
+    .archiveCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await conductor
+    .adminWs()
+    .deleteArchivedCloneCells({ app_id: appId, role_id: roleId });
+  await t.rejects(
+    conductor
+      .adminWs()
+      .restoreCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_id }),
+    "deleted clone cell cannot be restored"
   );
 
   await client.cleanUp();

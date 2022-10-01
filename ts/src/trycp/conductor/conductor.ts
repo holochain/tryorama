@@ -4,9 +4,11 @@ import {
   AppBundleSource,
   AppInfoRequest,
   AppSignalCb,
+  ArchiveCloneCellRequest,
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CreateCloneCellRequest,
+  DeleteArchivedCloneCellsRequest,
   DisableAppRequest,
   DnaHash,
   DnaSource,
@@ -20,6 +22,7 @@ import {
   ListAppsRequest,
   RegisterDnaRequest,
   RequestAgentInfoRequest,
+  RestoreCloneCellRequest,
   StartAppRequest,
   UninstallAppRequest,
 } from "@holochain/client";
@@ -405,21 +408,6 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
-     * Clone an existing cell.
-     *
-     * @param request - {@link CreateCloneCellRequest}.
-     * @returns The {@link CellId} of the cloned cell.
-     */
-    const createCloneCell = async (request: CreateCloneCellRequest) => {
-      const response = await this.callAdminApi({
-        type: "create_clone_cell",
-        data: request,
-      });
-      assert(response.type === "clone_cell_created");
-      return response.data;
-    };
-
-    /**
      * List all installed hApps.
      *
      * @param request - Filter by hApp status (optional).
@@ -519,6 +507,40 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Restore an archived clone cell.
+     *
+     * @param request - The clone id or cell id of the clone cell to be
+     * restored.
+     * @returns The restored clone cell's clone id and cell id.
+     */
+    const restoreCloneCell = async (request: RestoreCloneCellRequest) => {
+      const response = await this.callAdminApi({
+        type: "restore_clone_cell",
+        data: request,
+      });
+      assert(response.type === "clone_cell_restored");
+      return response.data;
+    };
+
+    /**
+     * Delete archived clone cells.
+     *
+     * @param request - The app id and role id for which archived clone cells
+     * are to be deleted.
+     * @returns An empty success response.
+     */
+    const deleteArchivedCloneCells = async (
+      request: DeleteArchivedCloneCellsRequest
+    ) => {
+      const response = await this.callAdminApi({
+        type: "delete_archived_clone_cells",
+        data: request,
+      });
+      assert(response.type === "archived_clone_cells_deleted");
+      return response.data;
+    };
+
+    /**
      * Request a dump of the cell's state.
      *
      * @param request - The cell id for which state should be dumped.
@@ -553,7 +575,7 @@ export class TryCpConductor implements IConductor {
     return {
       addAgentInfo,
       attachAppInterface,
-      createCloneCell,
+      deleteArchivedCloneCells,
       disableApp,
       dumpFullState,
       dumpState,
@@ -567,6 +589,7 @@ export class TryCpConductor implements IConductor {
       listDnas,
       registerDna,
       requestAgentInfo,
+      restoreCloneCell,
       startApp,
       uninstallApp,
     };
@@ -584,7 +607,6 @@ export class TryCpConductor implements IConductor {
     });
     assert(response !== TRYCP_SUCCESS_RESPONSE);
     assert(typeof response !== "string");
-    assert("data" in response);
     return response;
   }
 
@@ -622,6 +644,7 @@ export class TryCpConductor implements IConductor {
         type: "zome_call",
         data: request,
       });
+      assert("data" in response);
       assert(response.data);
       assert("BYTES_PER_ELEMENT" in response.data);
       const deserializedPayload = deserializeZomeResponsePayload<T>(
@@ -630,7 +653,37 @@ export class TryCpConductor implements IConductor {
       return deserializedPayload;
     };
 
-    return { appInfo, callZome };
+    /**
+     * Create a clone cell of an existing DNA.
+     *
+     * @param request - Clone cell params.
+     * @returns The clone id and cell id of the created clone cell.
+     */
+    const createCloneCell = async (request: CreateCloneCellRequest) => {
+      const response = await this.callAppApi({
+        type: "create_clone_cell",
+        data: request,
+      });
+      assert(response.type === "clone_cell_created");
+      return response.data;
+    };
+
+    /**
+     * Archive an existing clone cell.
+     *
+     * @param request - The hApp id to query.
+     * @returns An empty success response.
+     */
+    const archiveCloneCell = async (request: ArchiveCloneCellRequest) => {
+      const response = await this.callAppApi({
+        type: "archive_clone_cell",
+        data: request,
+      });
+      assert(response.type === "clone_cell_archived");
+      return response.data;
+    };
+
+    return { appInfo, callZome, createCloneCell, archiveCloneCell };
   }
 
   /**
@@ -662,9 +715,11 @@ export class TryCpConductor implements IConductor {
         let roleId: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          network_seed:
-            ("networkSeed" in options && options.networkSeed) || undefined,
-          properties: ("properties" in dna && dna.properties) || undefined,
+          modifiers: {
+            network_seed:
+              ("networkSeed" in options && options.networkSeed) || undefined,
+            properties: ("properties" in dna && dna.properties) || undefined,
+          },
         };
 
         const dnaSource = "source" in dna ? dna.source : dna;

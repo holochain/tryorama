@@ -174,7 +174,10 @@ export interface IConductor {
     | "defaultTimeout"
     | "listActiveApps"
   >;
-  appWs: () => Pick<AppWebsocket, "callZome" | "appInfo">;
+  appWs: () => Pick<
+    AppWebsocket,
+    "callZome" | "appInfo" | "createCloneCell" | "archiveCloneCell"
+  >;
 
   installAgentsHapps: (options: AgentsHappsOptions) => Promise<AgentHapp[]>;
 }

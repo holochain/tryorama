@@ -1,13 +1,11 @@
 let
   holonixPath = (import ./nix/sources.nix).holonix;
   holonix = import (holonixPath) {
-    holochainVersionId = "v0_0_160";
+    holochainVersionId = "v0_0_165";
   };
   nixpkgs = holonix.pkgs;
 in
 nixpkgs.mkShell {
   inputsFrom = [ holonix.main ];
-  packages = with nixpkgs; [
-    nodejs-16_x
-  ];
+  packages = with nixpkgs; [ nodejs ];
 }
