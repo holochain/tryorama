@@ -2,12 +2,16 @@ import {
   AddAgentInfoRequest,
   AgentInfoSigned,
   AppInfoResponse,
+  ArchiveCloneCellRequest,
+  ArchiveCloneCellResponse,
   AttachAppInterfaceRequest,
   AttachAppInterfaceResponse,
   CallZomeRequest,
   CellId,
   CreateCloneCellRequest,
   CreateCloneCellResponse,
+  DeleteArchivedCloneCellsRequest,
+  DeleteArchivedCloneCellsResponse,
   DisableAppRequest,
   DisableAppResponse,
   DumpFullStateRequest,
@@ -29,6 +33,8 @@ import {
   RegisterDnaRequest,
   RequestAgentInfoRequest,
   RequestAgentInfoResponse,
+  RestoreCloneCellRequest,
+  RestoreCloneCellResponse,
   StartAppRequest,
   StartAppResponse,
   UninstallAppRequest,
@@ -175,7 +181,11 @@ export interface RequestCallAppInterface {
  *
  * @public
  */
-export type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo;
+export type RequestCallAppInterfaceMessage =
+  | RequestCallZome
+  | RequestAppInfo
+  | RequestCreateCloneCell
+  | RequestArchiveCloneCell;
 
 /**
  * Request to call a zome on a conductor's app interface.
@@ -195,6 +205,46 @@ export interface RequestCallZome {
 export interface RequestAppInfo {
   type: "app_info";
   data: { installed_app_id: string };
+}
+
+/**
+ * Create a clone cell.
+ *
+ * @public
+ */
+export interface RequestCreateCloneCell {
+  type: "create_clone_cell";
+  data: CreateCloneCellRequest;
+}
+
+/**
+ * Create a clone cell.
+ *
+ * @public
+ */
+export interface RequestArchiveCloneCell {
+  type: "archive_clone_cell";
+  data: ArchiveCloneCellRequest;
+}
+
+/**
+ * Restore an archived clone cell.
+ *
+ * @public
+ */
+export interface RequestRestoreCloneCell {
+  type: "restore_clone_cell";
+  data: RestoreCloneCellRequest;
+}
+
+/**
+ * Delete archived clone cells.
+ *
+ * @public
+ */
+export interface RequestDeleteArchivedCloneCells {
+  type: "delete_archived_clone_cells";
+  data: DeleteArchivedCloneCellsRequest;
 }
 
 /**
@@ -228,7 +278,7 @@ export interface RequestAdminInterfaceData {
     | "add_agent_info"
     | "attach_app_interface"
     | "connect_app_interface"
-    | "create_clone_cell"
+    | "delete_archived_clone_cells"
     | "disable_app"
     | "dump_full_state"
     | "dump_state"
@@ -242,12 +292,13 @@ export interface RequestAdminInterfaceData {
     | "list_dnas"
     | "register_dna"
     | "request_agent_info"
+    | "restore_clone_cell"
     | "start_app"
     | "uninstall_app";
   data?:
     | AddAgentInfoRequest
     | AttachAppInterfaceRequest
-    | CreateCloneCellRequest
+    | DeleteArchivedCloneCellsRequest
     | DisableAppRequest
     | DumpFullStateRequest
     | DumpStateRequest
@@ -257,6 +308,7 @@ export interface RequestAdminInterfaceData {
     | ListAppsRequest
     | RegisterDnaRequest
     | RequestAgentInfoRequest
+    | RestoreCloneCellRequest
     | StartAppRequest
     | UninstallAppRequest;
 }
@@ -384,8 +436,9 @@ export type AdminApiResponse =
   | AdminApiResponseAppStarted
   | AdminApiResponseAppUninstalled
   | AdminApiResponseAppsListed
+  | AdminApiResponseArchivedCloneCellsDeleted
   | AdminApiResponseCellIdsListed
-  | AdminApiResponseCloneCellCreated
+  | AdminApiResponseCloneCellRestored
   | AdminApiResponseDnasListed
   | AdminApiResponseDnaRegistered
   | AdminApiResponseStateDumped
@@ -514,14 +567,6 @@ export interface AdminApiResponseDnasListed {
 /**
  * @public
  */
-export interface AdminApiResponseCloneCellCreated {
-  type: "clone_cell_created";
-  data: CreateCloneCellResponse;
-}
-
-/**
- * @public
- */
 export interface AdminApiResponseAppInterfaceAttached {
   type: "app_interface_attached";
   data: AttachAppInterfaceResponse;
@@ -543,11 +588,31 @@ export interface AdminApiResponseAgentInfoRequested {
 }
 
 /**
+ * @public
+ */
+export interface AdminApiResponseCloneCellRestored {
+  type: "clone_cell_restored";
+  data: RestoreCloneCellResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseArchivedCloneCellsDeleted {
+  type: "archived_clone_cells_deleted";
+  data: DeleteArchivedCloneCellsResponse;
+}
+
+/**
  * Possible responses from the App API.
  *
  * @public
  */
-export type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall;
+export type AppApiResponse =
+  | AppApiResponseAppInfo
+  | AppApiResponseZomeCall
+  | AppApiResponseCreateCloneCell
+  | AppApiResponseArchiveCloneCell;
 
 /**
  * @public
@@ -563,4 +628,20 @@ export interface AppApiResponseAppInfo {
 export interface AppApiResponseZomeCall {
   type: "zome_call";
   data: Uint8Array;
+}
+
+/**
+ * @public
+ */
+export interface AppApiResponseCreateCloneCell {
+  type: "clone_cell_created";
+  data: CreateCloneCellResponse;
+}
+
+/**
+ * @public
+ */
+export interface AppApiResponseArchiveCloneCell {
+  type: "clone_cell_archived";
+  data: ArchiveCloneCellResponse;
 }

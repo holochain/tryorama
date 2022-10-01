@@ -9,7 +9,5 @@ roles:
       deferred: false
     dna:
       bundled: ./entry.dna
-      properties: ~
-      network_seed: ~
       version: ~
       clone_limit: 0

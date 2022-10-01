@@ -9,6 +9,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2022-09-30 [0.9.0]
+
+### Added
+- TryCP: Calls for clone cell management
+- Tests of clone cell management for local and TryCP conductors
+### Removed
+- TryCP: Deprecated Admin API request to create clone cells
+### Changed
+- **BREAKING CHANGE**: Upgrade to Holochain JS client v0.9.2 with clone cell features
+- Upgrade to Holochain v0.0.165
+
 ## 2022-09-12 [0.8.0]
 
 ### Changed
