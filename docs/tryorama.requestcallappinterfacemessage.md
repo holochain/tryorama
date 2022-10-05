@@ -9,7 +9,7 @@ All possible calls to an app interface.
 <b>Signature:</b>
 
 ```typescript
-export declare type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo;
+export declare type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo | RequestCreateCloneCell | RequestArchiveCloneCell;
 ```
-<b>References:</b> [RequestCallZome](./tryorama.requestcallzome.md)<!-- -->, [RequestAppInfo](./tryorama.requestappinfo.md)
+<b>References:</b> [RequestCallZome](./tryorama.requestcallzome.md)<!-- -->, [RequestAppInfo](./tryorama.requestappinfo.md)<!-- -->, [RequestCreateCloneCell](./tryorama.requestcreateclonecell.md)<!-- -->, [RequestArchiveCloneCell](./tryorama.requestarchiveclonecell.md)
 

@@ -12,11 +12,13 @@ Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/
 appWs(): {
         appInfo: (request: AppInfoRequest) => Promise<import("@holochain/client").InstalledAppInfo>;
         callZome: <T>(request: CallZomeRequest) => Promise<T>;
+        createCloneCell: (request: CreateCloneCellRequest) => Promise<import("@holochain/client").InstalledCell>;
+        archiveCloneCell: (request: ArchiveCloneCellRequest) => Promise<void>;
     };
 ```
 <b>Returns:</b>
 
-{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest) =&gt; Promise&lt;T&gt;; }
+{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").InstalledCell&gt;; archiveCloneCell: (request: ArchiveCloneCellRequest) =&gt; Promise&lt;void&gt;; }
 
 The App API web socket.
 

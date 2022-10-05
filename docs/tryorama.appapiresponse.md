@@ -9,7 +9,7 @@ Possible responses from the App API.
 <b>Signature:</b>
 
 ```typescript
-export declare type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall;
+export declare type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall | AppApiResponseCreateCloneCell | AppApiResponseArchiveCloneCell;
 ```
-<b>References:</b> [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md)<!-- -->, [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md)
+<b>References:</b> [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md)<!-- -->, [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md)<!-- -->, [AppApiResponseCreateCloneCell](./tryorama.appapiresponsecreateclonecell.md)<!-- -->, [AppApiResponseArchiveCloneCell](./tryorama.appapiresponsearchiveclonecell.md)
 
