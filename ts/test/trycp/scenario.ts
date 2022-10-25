@@ -328,7 +328,7 @@ test("TryCP Scenario - create multiple conductors for multiple clients", async (
   await Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));
 });
 
-test("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
+test.only("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
   const numberOfServers = 2;
   const numberOfConductorsPerClient = 2;
   const numberOfAgentsPerConductor = 3;
@@ -358,6 +358,29 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
     );
   }
 
+  await scenario.shareAllAgents();
+
+  // Testing is agents that are installed on two different tryCP servers are able to communicate with eachother
+  const alice = clientsPlayers[0].players[0];
+  const bob = clientsPlayers[1].players[0];
+
+  const content = "Before shutdown";
+  const createEntryHash = await alice.cells[0].callZome<EntryHash>({
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: content,
+  });
+  await pause(100);
+  const readContent = await bob.cells[0].callZome<typeof content>({
+    zome_name: "coordinator",
+    fn_name: "read",
+    payload: createEntryHash,
+  });
+  t.equal(
+    readContent,
+    content,
+    "entry content read successfully before shutdown"
+  );
   await scenario.cleanUp();
   await Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));
 });
