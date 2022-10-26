@@ -17,6 +17,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { enableAndGetAgentHapp } from "../common.js";
 import { makeLogger } from "../logger.js";
+import { TryCpServer } from "../trycp/trycp-server.js";
 import {
   AgentHapp,
   AgentsHappsOptions,
@@ -522,3 +523,11 @@ export const cleanAllConductors = async () => {
   });
   return cleanPromise;
 };
+
+/**
+ * Shortcut function to stop all TryCP servers.
+ *
+ * @public
+ */
+export const stopAllTryCpServers = async (tryCpServers: TryCpServer[]) =>
+  Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));
