@@ -24,7 +24,7 @@ export declare class TryCpClient
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [addConductor(signalHandler)](./tryorama.trycpclient.addconductor.md) |  | Create and add a conductor to the client. |
+|  [addConductor(signalHandler, config)](./tryorama.trycpclient.addconductor.md) |  | Create and add a conductor to the client. |
 |  [call(request)](./tryorama.trycpclient.call.md) |  | Send a call to the TryCP server. |
 |  [cleanAllConductors()](./tryorama.trycpclient.cleanallconductors.md) |  | Run the <code>reset</code> command on the TryCP server to delete all conductor data. |
 |  [cleanUp()](./tryorama.trycpclient.cleanup.md) |  | Shut down all registered conductors and delete them, and close the client connection. |
