@@ -32,9 +32,15 @@ encryption_service_uri: ~
 decryption_service_uri: ~
 dpki: ~
 network:
+  bootstrap_service: "https://devnet-bootstrap.holo.host"
+  network_type: "quic_bootstrap" 
   transport_pool:
-    - type: quic
-  network_type: quic_mdns`;
+    - proxy_config:
+        proxy_url: "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/137.184.142.208/p/5788/--"
+        type: "remote_proxy_client"
+      type: proxy
+      sub_transport:
+        type: quic`;
 
 /**
  * A factory class to create client connections to a running TryCP server.
@@ -241,8 +247,10 @@ export class TryCpClient {
    * @param signalHandler - A callback function to handle signals.
    * @returns The newly added conductor instance.
    */
-  async addConductor(signalHandler?: AppSignalCb) {
-    const conductor = await createConductor(this, { partialConfig });
+  async addConductor(signalHandler?: AppSignalCb, config?: string) {
+    const conductor = await createConductor(this, {
+      partialConfig: config ? config : partialConfig,
+    });
     await conductor.adminWs().attachAppInterface();
     await conductor.connectAppInterface(signalHandler);
     this.conductors.push(conductor);

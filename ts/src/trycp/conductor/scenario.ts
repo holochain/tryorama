@@ -43,6 +43,11 @@ export interface ClientsPlayersOptions {
   numberOfAgentsPerConductor?: number;
 
   /**
+   * Configuration for the conductor (optional).
+   */
+  partialConfig?: string;
+
+  /**
    * A signal handler to be registered in conductors.
    */
   signalHandler?: AppSignalCb;
@@ -115,7 +120,10 @@ export class TryCpScenario {
 
       // create conductors for each client
       for (let i = 0; i < numberOfConductorsPerClient; i++) {
-        const conductor = await client.addConductor(options?.signalHandler);
+        const conductor = await client.addConductor(
+          options?.signalHandler,
+          options?.partialConfig
+        );
         const numberOfAgentsPerConductor =
           options?.numberOfAgentsPerConductor ?? 1;
 
