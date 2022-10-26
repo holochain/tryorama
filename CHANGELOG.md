@@ -5,9 +5,16 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+### Added
 ### Removed
 ### Changed
 ### Fixed
+
+## 2022-10-26 [0.9.1]
+
+### Added
+- TryCP: Add partialConfig parameter to ClientsPlayersOptions.
+- TryCP: Add shortcut function `stopAllTryCpServers` to shutdown multiple TryCP servers.
 
 ## 2022-09-30 [0.9.0]
 
