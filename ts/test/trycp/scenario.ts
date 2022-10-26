@@ -10,6 +10,7 @@ import {
 } from "../../src/trycp/trycp-server.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_DNA_URL } from "../fixture/index.js";
+import { stopAllTryCpServers } from "../../src/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 
@@ -288,7 +289,7 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
   }
 
   await scenario.cleanUp();
-  await Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));
+  await stopAllTryCpServers(tryCpServers);
 });
 
 test("TryCP Scenario - create multiple conductors for multiple clients", async (t) => {
@@ -325,10 +326,10 @@ test("TryCP Scenario - create multiple conductors for multiple clients", async (
   }
 
   await scenario.cleanUp();
-  await Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));
+  await stopAllTryCpServers(tryCpServers);
 });
 
-test.only("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
+test("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
   const numberOfServers = 2;
   const numberOfConductorsPerClient = 2;
   const numberOfAgentsPerConductor = 3;
@@ -360,11 +361,11 @@ test.only("TryCP Scenario - create multiple agents for multiple conductors for m
 
   await scenario.shareAllAgents();
 
-  // Testing is agents that are installed on two different tryCP servers are able to communicate with eachother
+  // Testing if agents that are installed on two different tryCP servers are able to communicate with each other
   const alice = clientsPlayers[0].players[0];
   const bob = clientsPlayers[1].players[0];
 
-  const content = "Before shutdown";
+  const content = "test-content";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
     zome_name: "coordinator",
     fn_name: "create",
@@ -379,8 +380,8 @@ test.only("TryCP Scenario - create multiple agents for multiple conductors for m
   t.equal(
     readContent,
     content,
-    "entry content read successfully before shutdown"
+    "entry content read successfully across trycp servers"
   );
   await scenario.cleanUp();
-  await Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));
+  await stopAllTryCpServers(tryCpServers);
 });
