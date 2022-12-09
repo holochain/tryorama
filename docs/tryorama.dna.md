@@ -18,6 +18,6 @@ export interface Dna
 |  --- | --- | --- |
 |  [membraneProof?](./tryorama.dna.membraneproof.md) | MembraneProof | <i>(Optional)</i> |
 |  [properties?](./tryorama.dna.properties.md) | DnaProperties | <i>(Optional)</i> |
-|  [roleId?](./tryorama.dna.roleid.md) | string | <i>(Optional)</i> |
+|  [roleName?](./tryorama.dna.roleid.md) | string | <i>(Optional)</i> |
 |  [source](./tryorama.dna.source.md) | DnaSource |  |
 

@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-namedCells: Map<RoleId, CallableCell>;
+namedCells: Map<RoleName, CallableCell>;
 ```

@@ -19,5 +19,5 @@ export interface AgentHapp
 |  [agentPubKey](./tryorama.agenthapp.agentpubkey.md) | Uint8Array |  |
 |  [cells](./tryorama.agenthapp.cells.md) | [CallableCell](./tryorama.callablecell.md)<!-- -->\[\] |  |
 |  [happId](./tryorama.agenthapp.happid.md) | string |  |
-|  [namedCells](./tryorama.agenthapp.namedcells.md) | Map&lt;RoleId, [CallableCell](./tryorama.callablecell.md)<!-- -->&gt; |  |
+|  [namedCells](./tryorama.agenthapp.namedcells.md) | Map&lt;RoleName, [CallableCell](./tryorama.callablecell.md)<!-- -->&gt; |  |
 

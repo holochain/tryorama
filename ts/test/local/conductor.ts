@@ -248,21 +248,21 @@ test("Local Conductor - Install multiple agents and DNAs and get access to agent
 
 test("Local Conductor - Install a DNA with custom role id", async (t) => {
   const conductor = await createConductor();
-  const expectedRoleId = "test-role-id";
+  const expectedRoleName = "test-role-id";
   const [aliceHapps] = await conductor.installAgentsHapps({
     agentsDnas: [
       {
         dnas: [
           {
             source: { path: FIXTURE_DNA_URL.pathname },
-            roleId: expectedRoleId,
+            roleName: expectedRoleName,
           },
         ],
       },
     ],
   });
-  const actualRoleId = aliceHapps.cells[0].role_id;
-  t.equal(actualRoleId, expectedRoleId, "dna role id matches");
+  const actualRoleName = aliceHapps.cells[0].role_name;
+  t.equal(actualRoleName, expectedRoleName, "dna role name matches");
 
   await conductor.shutDown();
   await cleanAllConductors();
@@ -310,7 +310,7 @@ test("Local Conductor - Create and read an entry using the entry zome", async (t
   const installedAppInfo = await conductor.adminWs().installApp({
     installed_app_id: appId,
     agent_key: agentPubKey,
-    dnas: [{ hash: dnaHash, role_id: "entry-dna" }],
+    dnas: [{ hash: dnaHash, role_name: "entry-dna" }],
   });
   const { cell_id } = installedAppInfo.cell_data[0];
   t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
@@ -357,11 +357,11 @@ test("Local Conductor - clone cell management", async (t) => {
   const dnaHash = await conductor.adminWs().registerDna({
     path: FIXTURE_DNA_URL.pathname,
   });
-  const roleId = "entry-dna";
+  const roleName = "entry-dna";
   const installedAppInfo = await conductor.adminWs().installApp({
     installed_app_id: appId,
     agent_key: agentPubKey,
-    dnas: [{ hash: dnaHash, role_id: roleId }],
+    dnas: [{ hash: dnaHash, role_name: roleName }],
   });
   const { cell_id: cellId } = installedAppInfo.cell_data[0];
   await conductor.adminWs().enableApp({
@@ -370,13 +370,13 @@ test("Local Conductor - clone cell management", async (t) => {
 
   const cloneCell = await conductor.appWs().createCloneCell({
     app_id: appId,
-    role_id: roleId,
+    role_name: roleName,
     modifiers: { network_seed: "test-seed" },
   });
   t.deepEqual(
-    cloneCell.role_id,
-    new CloneId(roleId, 0).toString(),
-    "clone id is 'role_id.0'"
+    cloneCell.role_name,
+    new CloneId(roleName, 0).toString(),
+    "clone id is 'role_name.0'"
   );
   t.deepEqual(
     cloneCell.cell_id[1],
@@ -410,7 +410,7 @@ test("Local Conductor - clone cell management", async (t) => {
 
   const restoredCloneCell = await conductor
     .adminWs()
-    .restoreCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_id });
+    .restoreCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_name });
   t.deepEqual(
     restoredCloneCell,
     cloneCell,
@@ -436,11 +436,11 @@ test("Local Conductor - clone cell management", async (t) => {
     .archiveCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
   await conductor
     .adminWs()
-    .deleteArchivedCloneCells({ app_id: appId, role_id: roleId });
+    .deleteArchivedCloneCells({ app_id: appId, role_name: roleName });
   await t.rejects(
     conductor
       .adminWs()
-      .restoreCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_id }),
+      .restoreCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_name }),
     "deleted clone cell cannot be restored"
   );
 

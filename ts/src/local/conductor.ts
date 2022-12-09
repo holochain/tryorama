@@ -420,7 +420,7 @@ export class Conductor implements IConductor {
 
       const dnas = "dnas" in agentDnas ? agentDnas.dnas : agentDnas;
       for (const dna of dnas) {
-        let roleId: string;
+        let roleName: string;
 
         const registerDnaReqOpts: _RegisterDnaReqOpts = {
           modifiers: {
@@ -433,13 +433,13 @@ export class Conductor implements IConductor {
         const dnaSource = "source" in dna ? dna.source : dna;
         if ("path" in dnaSource) {
           registerDnaReqOpts.path = dnaSource.path;
-          roleId = `${dnaSource.path}-${uuidv4()}`;
+          roleName = `${dnaSource.path}-${uuidv4()}`;
         } else if ("hash" in dnaSource) {
           registerDnaReqOpts.hash = dnaSource.hash;
-          roleId = `dna-${uuidv4()}`;
+          roleName = `dna-${uuidv4()}`;
         } else {
           registerDnaReqOpts.bundle = dnaSource.bundle;
-          roleId = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
+          roleName = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
         }
 
         const dnaHash = await this.adminWs().registerDna(
@@ -450,7 +450,7 @@ export class Conductor implements IConductor {
           "membraneProof" in dna ? dna.membraneProof : undefined;
         dnasToInstall.push({
           hash: dnaHash,
-          role_id: ("roleId" in dna && dna.roleId) || roleId,
+          role_name: ("roleName" in dna && dna.roleName) || roleName,
           membrane_proof,
         });
       }
