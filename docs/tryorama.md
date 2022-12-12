@@ -49,9 +49,11 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AdminApiResponseCellIdsListed](./tryorama.adminapiresponsecellidslisted.md) |  |
 |  [AdminApiResponseCloneCellRestored](./tryorama.adminapiresponseclonecellrestored.md) |  |
 |  [AdminApiResponseDnaRegistered](./tryorama.adminapiresponsednaregistered.md) |  |
+|  [AdminApiResponseDnasDefinitionReturned](./tryorama.adminapiresponsednasdefinitionreturned.md) |  |
 |  [AdminApiResponseDnasListed](./tryorama.adminapiresponsednaslisted.md) |  |
 |  [AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md) |  |
 |  [AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md) |  |
+|  [AdminApiResponseZomeCallCapabilityGranted](./tryorama.adminapiresponsezomecallcapabilitygranted.md) |  |
 |  [AgentDnas](./tryorama.agentdnas.md) | DNAs per agent. Optionally an agent pub key. |
 |  [AgentHapp](./tryorama.agenthapp.md) | Provides direct access to cells of a hApp and the agent key. |
 |  [ApiErrorResponse](./tryorama.apierrorresponse.md) | Error response from the Admin or App API. |

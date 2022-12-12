@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-type: "add_agent_info" | "attach_app_interface" | "connect_app_interface" | "delete_archived_clone_cells" | "disable_app" | "dump_full_state" | "dump_state" | "enable_app" | "generate_agent_pub_key" | "install_app" | "install_app_bundle" | "list_apps" | "list_app_interfaces" | "list_cell_ids" | "list_dnas" | "register_dna" | "request_agent_info" | "restore_clone_cell" | "start_app" | "uninstall_app";
+type: "add_agent_info" | "attach_app_interface" | "connect_app_interface" | "delete_archived_clone_cells" | "disable_app" | "dump_full_state" | "dump_state" | "enable_app" | "generate_agent_pub_key" | "get_dna_definition" | "grant_zome_call_capability" | "install_app" | "install_app_bundle" | "list_apps" | "list_app_interfaces" | "list_cell_ids" | "list_dnas" | "register_dna" | "request_agent_info" | "restore_clone_cell" | "start_app" | "uninstall_app";
 ```

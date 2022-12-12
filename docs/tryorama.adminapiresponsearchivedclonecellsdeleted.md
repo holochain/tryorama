@@ -15,6 +15,5 @@ export interface AdminApiResponseArchivedCloneCellsDeleted
 
 |  Property | Type | Description |
 |  --- | --- | --- |
-|  [data](./tryorama.adminapiresponsearchivedclonecellsdeleted.data.md) | DeleteArchivedCloneCellsResponse |  |
 |  [type](./tryorama.adminapiresponsearchivedclonecellsdeleted.type.md) | "archived\_clone\_cells\_deleted" |  |
 

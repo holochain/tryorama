@@ -10,7 +10,7 @@ Get all [Admin API methods](https://github.com/holochain/holochain-client-js/blo
 
 ```typescript
 adminWs(): {
-        addAgentInfo: (request: AddAgentInfoRequest) => Promise<import("../types.js").AdminApiResponseAgentInfoAdded>;
+        addAgentInfo: (request: AddAgentInfoRequest) => Promise<void>;
         attachAppInterface: (request?: AttachAppInterfaceRequest) => Promise<{
             port: number;
         }>;
@@ -20,6 +20,8 @@ adminWs(): {
         dumpState: (request: DumpStateRequest) => Promise<[FullStateDump, string]>;
         enableApp: (request: EnableAppRequest) => Promise<import("@holochain/client").EnableAppResponse>;
         generateAgentPubKey: () => Promise<AgentPubKey>;
+        getDnaDefinition: (dnaHash: GetDnaDefinitionRequest) => Promise<DnaDefinition>;
+        grantZomeCallCapability: (request: GrantZomeCallCapabilityRequest) => Promise<void>;
         installApp: (data: InstallAppRequest) => Promise<import("@holochain/client").InstalledAppInfo>;
         installAppBundle: (data: InstallAppBundleRequest) => Promise<import("@holochain/client").InstalledAppInfo>;
         listAppInterfaces: () => Promise<import("@holochain/client").ListAppInterfacesResponse>;
@@ -35,7 +37,7 @@ adminWs(): {
 ```
 <b>Returns:</b>
 
-{ addAgentInfo: (request: AddAgentInfoRequest) =&gt; Promise&lt;import("../types.js").[AdminApiResponseAgentInfoAdded](./tryorama.adminapiresponseagentinfoadded.md)<!-- -->&gt;; attachAppInterface: (request?: AttachAppInterfaceRequest) =&gt; Promise&lt;{ port: number; }&gt;; deleteArchivedCloneCells: (request: DeleteArchivedCloneCellsRequest) =&gt; Promise&lt;void&gt;; disableApp: (request: DisableAppRequest) =&gt; Promise&lt;null&gt;; dumpFullState: (request: DumpFullStateRequest) =&gt; Promise&lt;FullStateDump&gt;; dumpState: (request: DumpStateRequest) =&gt; Promise&lt;\[FullStateDump, string\]&gt;; enableApp: (request: EnableAppRequest) =&gt; Promise&lt;import("@holochain/client").EnableAppResponse&gt;; generateAgentPubKey: () =&gt; Promise&lt;AgentPubKey&gt;; installApp: (data: InstallAppRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; installAppBundle: (data: InstallAppBundleRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; listAppInterfaces: () =&gt; Promise&lt;import("@holochain/client").ListAppInterfacesResponse&gt;; listApps: (request: ListAppsRequest) =&gt; Promise&lt;import("@holochain/client").ListAppsResponse&gt;; listCellIds: () =&gt; Promise&lt;import("@holochain/client").ListCellIdsResponse&gt;; listDnas: () =&gt; Promise&lt;import("@holochain/client").ListDnasResponse&gt;; registerDna: (request: RegisterDnaRequest &amp; DnaSource) =&gt; Promise&lt;DnaHash&gt;; requestAgentInfo: (req: RequestAgentInfoRequest) =&gt; Promise&lt;import("@holochain/client").RequestAgentInfoResponse&gt;; restoreCloneCell: (request: RestoreCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").InstalledCell&gt;; startApp: (request: StartAppRequest) =&gt; Promise&lt;boolean&gt;; uninstallApp: (request: UninstallAppRequest) =&gt; Promise&lt;null&gt;; }
+{ addAgentInfo: (request: AddAgentInfoRequest) =&gt; Promise&lt;void&gt;; attachAppInterface: (request?: AttachAppInterfaceRequest) =&gt; Promise&lt;{ port: number; }&gt;; deleteArchivedCloneCells: (request: DeleteArchivedCloneCellsRequest) =&gt; Promise&lt;void&gt;; disableApp: (request: DisableAppRequest) =&gt; Promise&lt;null&gt;; dumpFullState: (request: DumpFullStateRequest) =&gt; Promise&lt;FullStateDump&gt;; dumpState: (request: DumpStateRequest) =&gt; Promise&lt;\[FullStateDump, string\]&gt;; enableApp: (request: EnableAppRequest) =&gt; Promise&lt;import("@holochain/client").EnableAppResponse&gt;; generateAgentPubKey: () =&gt; Promise&lt;AgentPubKey&gt;; getDnaDefinition: (dnaHash: GetDnaDefinitionRequest) =&gt; Promise&lt;DnaDefinition&gt;; grantZomeCallCapability: (request: GrantZomeCallCapabilityRequest) =&gt; Promise&lt;void&gt;; installApp: (data: InstallAppRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; installAppBundle: (data: InstallAppBundleRequest) =&gt; Promise&lt;import("@holochain/client").InstalledAppInfo&gt;; listAppInterfaces: () =&gt; Promise&lt;import("@holochain/client").ListAppInterfacesResponse&gt;; listApps: (request: ListAppsRequest) =&gt; Promise&lt;import("@holochain/client").ListAppsResponse&gt;; listCellIds: () =&gt; Promise&lt;import("@holochain/client").ListCellIdsResponse&gt;; listDnas: () =&gt; Promise&lt;import("@holochain/client").ListDnasResponse&gt;; registerDna: (request: RegisterDnaRequest &amp; DnaSource) =&gt; Promise&lt;DnaHash&gt;; requestAgentInfo: (req: RequestAgentInfoRequest) =&gt; Promise&lt;import("@holochain/client").RequestAgentInfoResponse&gt;; restoreCloneCell: (request: RestoreCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").InstalledCell&gt;; startApp: (request: StartAppRequest) =&gt; Promise&lt;boolean&gt;; uninstallApp: (request: UninstallAppRequest) =&gt; Promise&lt;null&gt;; }
 
 The Admin API web socket.
 

@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-data?: AddAgentInfoRequest | AttachAppInterfaceRequest | DeleteArchivedCloneCellsRequest | DisableAppRequest | DumpFullStateRequest | DumpStateRequest | EnableAppRequest | InstallAppRequest | InstallAppBundleRequest | ListAppsRequest | RegisterDnaRequest | RequestAgentInfoRequest | RestoreCloneCellRequest | StartAppRequest | UninstallAppRequest;
+data?: AddAgentInfoRequest | AttachAppInterfaceRequest | DeleteArchivedCloneCellsRequest | DisableAppRequest | DumpFullStateRequest | DumpStateRequest | EnableAppRequest | GetDnaDefinitionRequest | GrantZomeCallCapabilityRequest | InstallAppRequest | InstallAppBundleRequest | ListAppsRequest | RegisterDnaRequest | RequestAgentInfoRequest | RestoreCloneCellRequest | StartAppRequest | UninstallAppRequest;
 ```
