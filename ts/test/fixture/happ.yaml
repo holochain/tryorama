@@ -3,7 +3,7 @@ manifest_version: "1"
 name: entry-happ
 description: ""
 roles:
-  - id: test
+  - name: test
     provisioning:
       strategy: create
       deferred: false
