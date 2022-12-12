@@ -5,14 +5,18 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+### Removed
+### Changed
+### Fixed
+
+## 2022-12-12 [0.9.2]
+
+### Added
 - Admin API calls "get_dna_definition" & "grant_zome_call_capability" to TryCP conductor.
 
-### Removed
 ### Changed
 - Upgrade Holochain client to v0.10.3
 - Upgrade test zome to Holochain v0.0.175
-
-### Fixed
 
 ## 2022-10-26 [0.9.1]
 
