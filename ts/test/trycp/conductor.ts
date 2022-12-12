@@ -131,6 +131,45 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   await localTryCpServer.stop();
 });
 
+test("TryCP Conductor - get a DNA definition", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const conductor = await createTestConductor(client);
+  const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
+  const dnaHash = await conductor.adminWs().registerDna({ path: relativePath });
+
+  const dnaDefinition = await conductor.adminWs().getDnaDefinition(dnaHash);
+  t.equal(dnaDefinition.name, "crud-dna", "dna name matches name in manifest");
+
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - grant a zome call capability", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const conductor = await createTestConductor(client);
+  const installedHappBundle = await conductor.installHappBundle({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+
+  const response = await conductor.adminWs().grantZomeCallCapability({
+    cell_id: installedHappBundle.cells[0].cell_id,
+    cap_grant: {
+      tag: "",
+      access: {
+        Assigned: { secret: new Uint8Array(64), assignees: [agentPubKey] },
+      },
+      functions: [["crud", "create"]],
+    },
+  });
+  t.equal(response, undefined);
+
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
 test("TryCP Conductor - receive a signal", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const client = await TryCpClient.create(SERVER_URL, 30000);

@@ -11,15 +11,17 @@ import {
   CreateCloneCellRequest,
   CreateCloneCellResponse,
   DeleteArchivedCloneCellsRequest,
-  DeleteArchivedCloneCellsResponse,
   DisableAppRequest,
   DisableAppResponse,
+  DnaDefinition,
   DumpFullStateRequest,
   DumpStateRequest,
   DumpStateResponse,
   EnableAppRequest,
   EnableAppResponse,
   FullStateDump,
+  GetDnaDefinitionRequest,
+  GrantZomeCallCapabilityRequest,
   HoloHash,
   InstallAppBundleRequest,
   InstallAppBundleResponse,
@@ -284,6 +286,8 @@ export interface RequestAdminInterfaceData {
     | "dump_state"
     | "enable_app"
     | "generate_agent_pub_key"
+    | "get_dna_definition"
+    | "grant_zome_call_capability"
     | "install_app"
     | "install_app_bundle"
     | "list_apps"
@@ -303,6 +307,8 @@ export interface RequestAdminInterfaceData {
     | DumpFullStateRequest
     | DumpStateRequest
     | EnableAppRequest
+    | GetDnaDefinitionRequest
+    | GrantZomeCallCapabilityRequest
     | InstallAppRequest
     | InstallAppBundleRequest
     | ListAppsRequest
@@ -439,10 +445,12 @@ export type AdminApiResponse =
   | AdminApiResponseArchivedCloneCellsDeleted
   | AdminApiResponseCellIdsListed
   | AdminApiResponseCloneCellRestored
+  | AdminApiResponseDnasDefinitionReturned
   | AdminApiResponseDnasListed
   | AdminApiResponseDnaRegistered
+  | AdminApiResponseFullStateDumped
   | AdminApiResponseStateDumped
-  | AdminApiResponseFullStateDumped;
+  | AdminApiResponseZomeCallCapabilityGranted;
 
 /**
  * @public
@@ -463,6 +471,14 @@ export interface AdminApiResponseDnaRegistered {
 /**
  * @public
  */
+export interface AdminApiResponseFullStateDumped {
+  type: "full_state_dumped";
+  data: FullStateDump;
+}
+
+/**
+ * @public
+ */
 export interface AdminApiResponseStateDumped {
   type: "state_dumped";
   data: DumpStateResponse;
@@ -471,9 +487,8 @@ export interface AdminApiResponseStateDumped {
 /**
  * @public
  */
-export interface AdminApiResponseFullStateDumped {
-  type: "full_state_dumped";
-  data: FullStateDump;
+export interface AdminApiResponseZomeCallCapabilityGranted {
+  type: "zome_call_capability_granted";
 }
 
 /**
@@ -559,6 +574,14 @@ export interface AdminApiResponseCellIdsListed {
 /**
  * @public
  */
+export interface AdminApiResponseDnasDefinitionReturned {
+  type: "dna_definition_returned";
+  data: DnaDefinition;
+}
+
+/**
+ * @public
+ */
 export interface AdminApiResponseDnasListed {
   type: "dnas_listed";
   data: ListDnasResponse;
@@ -600,7 +623,6 @@ export interface AdminApiResponseCloneCellRestored {
  */
 export interface AdminApiResponseArchivedCloneCellsDeleted {
   type: "archived_clone_cells_deleted";
-  data: DeleteArchivedCloneCellsResponse;
 }
 
 /**

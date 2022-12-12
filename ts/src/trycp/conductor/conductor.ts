@@ -10,12 +10,15 @@ import {
   CreateCloneCellRequest,
   DeleteArchivedCloneCellsRequest,
   DisableAppRequest,
+  DnaDefinition,
   DnaHash,
   DnaSource,
   DumpFullStateRequest,
   DumpStateRequest,
   EnableAppRequest,
   FullStateDump,
+  GetDnaDefinitionRequest,
+  GrantZomeCallCapabilityRequest,
   InstallAppBundleRequest,
   InstallAppDnaPayload,
   InstallAppRequest,
@@ -305,6 +308,39 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Get a DNA definition.
+     *
+     * @param dnaHash - Hash of DNA to query.
+     * @returns The {@link DnaDefinition}.
+     */
+    const getDnaDefinition = async (
+      dnaHash: GetDnaDefinitionRequest
+    ): Promise<DnaDefinition> => {
+      const response = await this.callAdminApi({
+        type: "get_dna_definition",
+        data: dnaHash,
+      });
+      assert(response.type === "dna_definition_returned");
+      return response.data;
+    };
+
+    /**
+     * Grant a capability for a zome call.
+     *
+     * @param request - Public key to grant and cell, zome and functions for
+     * which to grant the capability.
+     */
+    const grantZomeCallCapability = async (
+      request: GrantZomeCallCapabilityRequest
+    ) => {
+      const response = await this.callAdminApi({
+        type: "grant_zome_call_capability",
+        data: request,
+      });
+      assert(response.type === "zome_call_capability_granted");
+    };
+
+    /**
      * Generate a new agent pub key.
      *
      * @returns The generated {@link AgentPubKey}.
@@ -495,7 +531,6 @@ export class TryCpConductor implements IConductor {
      * Add agents to a conductor.
      *
      * @param request - The agents to add to the conductor.
-     * @returns A confirmation without any data.
      */
     const addAgentInfo = async (request: AddAgentInfoRequest) => {
       const response = await this.callAdminApi({
@@ -503,7 +538,6 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "agent_info_added");
-      return response;
     };
 
     /**
@@ -527,7 +561,6 @@ export class TryCpConductor implements IConductor {
      *
      * @param request - The app id and role id for which archived clone cells
      * are to be deleted.
-     * @returns An empty success response.
      */
     const deleteArchivedCloneCells = async (
       request: DeleteArchivedCloneCellsRequest
@@ -537,7 +570,6 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "archived_clone_cells_deleted");
-      return response.data;
     };
 
     /**
@@ -581,6 +613,8 @@ export class TryCpConductor implements IConductor {
       dumpState,
       enableApp,
       generateAgentPubKey,
+      getDnaDefinition,
+      grantZomeCallCapability,
       installApp,
       installAppBundle,
       listAppInterfaces,
