@@ -11,7 +11,7 @@ import {
   HoloHash,
   InstalledCell,
   MembraneProof,
-  RoleId,
+  RoleName,
   RegisterDnaRequest,
   InstalledAppId,
 } from "@holochain/client";
@@ -70,7 +70,7 @@ export interface AgentHapp {
   happId: string;
   agentPubKey: Uint8Array;
   cells: CallableCell[];
-  namedCells: Map<RoleId, CallableCell>;
+  namedCells: Map<RoleName, CallableCell>;
 }
 
 /**
@@ -103,7 +103,7 @@ export interface Dna {
   source: DnaSource;
   membraneProof?: MembraneProof;
   properties?: DnaProperties;
-  roleId?: string;
+  roleName?: string;
 }
 
 /**

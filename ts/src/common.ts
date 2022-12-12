@@ -60,7 +60,7 @@ export const enableAndGetAgentHapp = async (
   const namedCells = new Map(
     installedAppInfo.cell_data.map((cell) => {
       const callableCell = getCallableCell(conductor, cell, agentPubKey);
-      return [cell.role_id, callableCell];
+      return [cell.role_name, callableCell];
     })
   );
   const cells = installedAppInfo.cell_data.map((cell) =>
