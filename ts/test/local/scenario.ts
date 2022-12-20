@@ -1,10 +1,12 @@
 import {
+  AppBundleSource,
   AppSignal,
   AppSignalCb,
   DnaSource,
   EntryHash,
 } from "@holochain/client";
 import test from "tape-promise/tape.js";
+import assert from "node:assert/strict";
 import { runScenario, Scenario } from "../../src/local/scenario.js";
 import { Dna } from "../../src/types.js";
 import { pause } from "../../src/util.js";
@@ -12,7 +14,7 @@ import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const alice = await scenario.addPlayerWithHappBundle({
+    const alice = await scenario.addPlayerWithApp({
       path: FIXTURE_HAPP_URL.pathname,
     });
     t.ok(alice.namedCells.get("test"));
@@ -21,9 +23,9 @@ test("Local Scenario - runScenario - Install hApp bundle and access cells throug
 
 test("Local Scenario - runScenario - Catch error when calling non-existent zome", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const [alice] = await scenario.addPlayersWithHapps([
-      [{ path: FIXTURE_DNA_URL.pathname }],
-    ]);
+    const alice = await scenario.addPlayerWithApp({
+      path: FIXTURE_HAPP_URL.pathname,
+    });
 
     await t.rejects(
       alice.cells[0].callZome<EntryHash>({
@@ -36,9 +38,9 @@ test("Local Scenario - runScenario - Catch error when calling non-existent zome"
 
 test("Local Scenario - runScenario - Catch error when attaching a protected port", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const [alice] = await scenario.addPlayersWithHapps([
-      [{ path: FIXTURE_DNA_URL.pathname }],
-    ]);
+    const alice = await scenario.addPlayerWithApp({
+      path: FIXTURE_HAPP_URL.pathname,
+    });
 
     await t.rejects(alice.conductor.attachAppInterface({ port: 300 }));
   });
@@ -46,9 +48,9 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
 
 test("Local Scenario - runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    const [alice] = await scenario.addPlayersWithHapps([
-      [{ path: FIXTURE_DNA_URL.pathname }],
-    ]);
+    const alice = await scenario.addPlayerWithApp({
+      path: FIXTURE_HAPP_URL.pathname,
+    });
 
     t.throws(() => alice.cells[2].callZome({ zome_name: "", fn_name: "" }));
   });
@@ -63,12 +65,11 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
       };
     });
 
-    const [alice] = await scenario.addPlayersWithHapps([
-      {
-        dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
-        signalHandler: signalHandlerAlice,
-      },
-    ]);
+    const alice = await scenario.addPlayerWithApp({
+      path: FIXTURE_HAPP_URL.pathname,
+    });
+    assert(signalHandlerAlice);
+    alice.conductor.appWs().on("signal", signalHandlerAlice);
 
     const signalAlice = { value: "hello alice" };
     alice.cells[0].callZome({
@@ -84,7 +85,7 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
 test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
   const scenario = new Scenario();
 
-  const alice = await scenario.addPlayerWithHappBundle({
+  const alice = await scenario.addPlayerWithApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
   t.ok(alice.namedCells.get("test"));
@@ -93,7 +94,7 @@ test("Local Scenario - Install hApp bundle and access cells through role ids", a
 
 test("Local Scenario - Add players with hApp bundles", async (t) => {
   const scenario = new Scenario();
-  const [alice, bob] = await scenario.addPlayersWithHappBundles([
+  const [alice, bob] = await scenario.addPlayersWithApps([
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
   ]);
@@ -104,12 +105,14 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
 });
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
-  const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
-
   const scenario = new Scenario();
   t.ok(scenario.networkSeed);
 
-  const [alice, bob] = await scenario.addPlayersWithHapps([dnas, dnas]);
+  const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const [alice, bob] = await scenario.addPlayersWithApps([
+    { appBundleSource },
+    { appBundleSource },
+  ]);
 
   await scenario.shareAllAgents();
 
@@ -134,9 +137,10 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
 test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
   const scenario = new Scenario();
-  const [alice, bob] = await scenario.addPlayersWithHapps([
-    [{ path: FIXTURE_DNA_URL.pathname }],
-    [{ path: FIXTURE_DNA_URL.pathname }],
+  const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const [alice, bob] = await scenario.addPlayersWithApps([
+    { appBundleSource },
+    { appBundleSource },
   ]);
 
   await scenario.shareAllAgents();
@@ -174,7 +178,6 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
-  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
 
   let signalHandlerAlice: AppSignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
@@ -190,10 +193,15 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     };
   });
 
-  const [alice, bob] = await scenario.addPlayersWithHapps([
-    { dnas, signalHandler: signalHandlerAlice },
-    { dnas, signalHandler: signalHandlerBob },
+  const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const [alice, bob] = await scenario.addPlayersWithApps([
+    { appBundleSource },
+    { appBundleSource },
   ]);
+  assert(signalHandlerAlice);
+  alice.conductor.appWs().on("signal", signalHandlerAlice);
+  assert(signalHandlerBob);
+  alice.conductor.appWs().on("signal", signalHandlerBob);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({

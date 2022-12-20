@@ -1,19 +1,20 @@
 import {
   AdminWebsocket,
   AgentPubKey,
+  AppBundleSource,
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
   CapSecret,
+  Cell,
+  DnaBundle,
   DnaProperties,
   DnaSource,
-  DnaBundle,
   HoloHash,
-  InstalledCell,
-  MembraneProof,
-  RoleName,
-  RegisterDnaRequest,
   InstalledAppId,
+  MembraneProof,
+  RegisterDnaRequest,
+  RoleName,
 } from "@holochain/client";
 
 /**
@@ -57,17 +58,17 @@ export type CallZomeFn = <T>(
  *
  * @public
  */
-export interface CallableCell extends InstalledCell {
+export interface CallableCell extends Cell {
   callZome: CallZomeFn;
 }
 
 /**
- * Provides direct access to cells of a hApp and the agent key.
+ * Provides direct access to cells of an app and the agent key.
  *
  * @public
  */
-export interface AgentHapp {
-  happId: string;
+export interface AgentApp {
+  appId: string;
   agentPubKey: Uint8Array;
   cells: CallableCell[];
   namedCells: Map<RoleName, CallableCell>;
@@ -78,21 +79,50 @@ export interface AgentHapp {
  *
  * @public
  */
-export interface IPlayer extends AgentHapp {
+export interface IPlayer extends AgentApp {
   conductor: IConductor;
 }
 
 /**
- * Optional arguments when installing a hApp bundle.
+ * Optional arguments when installing a hApp.
  *
  * @public
  */
-export interface HappBundleOptions {
+export interface AppOptions {
   agentPubKey?: AgentPubKey;
+  /**
+   * App ID to override the app manifest's app name.
+   */
   installedAppId?: string;
+  /**
+   * A network seed to override the hApps' network seed.
+   */
   networkSeed?: string;
+  /**
+   * Proofs of membership for the hApp.
+   */
   membraneProofs?: Record<string, MembraneProof>;
 }
+
+/**
+ * An app and an optional agent pub key for each agent. Optionally a network
+ * seed to be used for DNA installation.
+ *
+ * @public
+ */
+export type AgentsAppsOptions = {
+  agentsApps: Array<{ app: AppBundleSource } & AppOptions>;
+
+  /**
+   * A unique ID for the DNAs (optional).
+   */
+  networkSeed?: string;
+
+  /**
+   * A unique ID for the hApp (optional).
+   */
+  installedAppId?: InstalledAppId;
+};
 
 /**
  * DNA source and additional options.
@@ -105,53 +135,6 @@ export interface Dna {
   properties?: DnaProperties;
   roleName?: string;
 }
-
-/**
- * DNAs per agent. Optionally an agent pub key.
- *
- * @public
- */
-export interface AgentDnas {
-  dnas: Dna[];
-  agentPubKey?: AgentPubKey;
-}
-
-/**
- * An array of DNA sources for each agent (2-dimensional array) or an array of DNAs
- * and an optional agent pub key. Optionally a network seed to be used for DNA installation.
- *
- * @public
- */
-export type AgentsHappsOptions =
-  | DnaSource[][]
-  | {
-      agentsDnas: AgentDnas[];
-
-      /**
-       * A unique ID for the DNAs (optional).
-       */
-      networkSeed?: string;
-
-      /**
-       * A unique ID for the hApp (optional).
-       */
-      installedAppId?: InstalledAppId;
-    };
-
-/**
- * Player installation options used in scenarios.
- *
- * Specifies either only the DNA sources that the hApp to be installed
- * consists of, or the DNAs and a signal handler to be registered.
- *
- * @public
- */
-export type PlayerHappOptions =
-  | DnaSource[]
-  | {
-      dnas: Dna[];
-      signalHandler?: AppSignalCb;
-    };
 
 /**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and
@@ -167,17 +150,20 @@ export interface IConductor {
 
   adminWs: () => Omit<
     AdminWebsocket,
-    | "_requester"
-    | "client"
-    | "activateApp"
-    | "deactivateApp"
-    | "defaultTimeout"
-    | "listActiveApps"
+    "_requester" | "client" | "defaultTimeout"
   >;
   appWs: () => Pick<
     AppWebsocket,
-    "callZome" | "appInfo" | "createCloneCell" | "archiveCloneCell"
+    | "callZome"
+    | "appInfo"
+    | "createCloneCell"
+    | "enableCloneCell"
+    | "disableCloneCell"
   >;
 
-  installAgentsHapps: (options: AgentsHappsOptions) => Promise<AgentHapp[]>;
+  installApp: (
+    appBundleSource: AppBundleSource,
+    options?: AppOptions
+  ) => Promise<AgentApp>;
+  installAgentsApps: (options: AgentsAppsOptions) => Promise<AgentApp[]>;
 }

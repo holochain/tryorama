@@ -1,11 +1,12 @@
 import {
   AgentPubKey,
+  AppInfo,
   CallZomeResponse,
-  InstalledAppInfo,
-  InstalledCell,
+  Cell,
+  RoleName,
 } from "@holochain/client";
 import {
-  AgentHapp,
+  AgentApp,
   CallableCell,
   CellZomeCallRequest,
   IConductor,
@@ -24,7 +25,7 @@ export const addAllAgentsToAllConductors = async (conductors: IConductor[]) => {
     conductors.map(async (playerToShareAbout, playerToShareAboutIdx) => {
       const agentInfosToShareAbout = await playerToShareAbout
         .adminWs()
-        .requestAgentInfo({
+        .agentInfo({
           cell_id: null,
         });
       await Promise.all(
@@ -49,7 +50,7 @@ function assertZomeResponse<T>(
 export const enableAndGetAgentHapp = async (
   conductor: IConductor,
   agentPubKey: AgentPubKey,
-  installedAppInfo: InstalledAppInfo
+  installedAppInfo: AppInfo
 ) => {
   const enableAppResponse = await conductor.adminWs().enableApp({
     installed_app_id: installedAppInfo.installed_app_id,
@@ -57,27 +58,43 @@ export const enableAndGetAgentHapp = async (
   if (enableAppResponse.errors.length) {
     throw new Error(`failed to enable app: ${enableAppResponse.errors}`);
   }
-  const namedCells = new Map(
-    installedAppInfo.cell_data.map((cell) => {
-      const callableCell = getCallableCell(conductor, cell, agentPubKey);
-      return [cell.role_name, callableCell];
-    })
-  );
-  const cells = installedAppInfo.cell_data.map((cell) =>
-    getCallableCell(conductor, cell, agentPubKey)
-  );
-  const agentHapp: AgentHapp = {
-    happId: installedAppInfo.installed_app_id,
+  const cells: CallableCell[] = [];
+  const namedCells = new Map<RoleName, CallableCell>();
+  Object.keys(installedAppInfo.cell_info).forEach((role_name) => {
+    installedAppInfo.cell_info[role_name].forEach((cellInfo) => {
+      if ("Provisioned" in cellInfo) {
+        const callableCell = getCallableCell(
+          conductor,
+          cellInfo.Provisioned,
+          agentPubKey
+        );
+        cells.push(callableCell);
+        namedCells.set(role_name, callableCell);
+      } else if ("Cloned" in cellInfo && cellInfo.Cloned.clone_id) {
+        const callableCell = getCallableCell(
+          conductor,
+          cellInfo.Cloned,
+          agentPubKey
+        );
+        namedCells.set(cellInfo.Cloned.clone_id, callableCell);
+        cells.push(callableCell);
+      } else {
+        throw new Error("Stem cells are not implemented");
+      }
+    });
+  });
+  const agentApp: AgentApp = {
+    appId: installedAppInfo.installed_app_id,
     agentPubKey,
     cells,
     namedCells,
   };
-  return agentHapp;
+  return agentApp;
 };
 
 const getCallableCell = (
   conductor: IConductor,
-  cell: InstalledCell,
+  cell: Cell,
   agentPubKey: AgentPubKey
 ) => ({
   ...cell,
