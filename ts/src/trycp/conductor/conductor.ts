@@ -32,7 +32,7 @@ import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
-import { enableAndGetAgentHapp } from "../../common.js";
+import { enableAndGetAgentApp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
 import {
   AgentApp,
@@ -733,7 +733,7 @@ export class TryCpConductor implements IConductor {
           };
     const installedAppInfo = await this.adminWs().installApp(installAppRequest);
 
-    const agentHapp: AgentApp = await enableAndGetAgentHapp(
+    const agentHapp: AgentApp = await enableAndGetAgentApp(
       this,
       agent_key,
       installedAppInfo
@@ -782,7 +782,7 @@ export class TryCpConductor implements IConductor {
         installAppRequest
       );
 
-      const agentApp = await enableAndGetAgentHapp(
+      const agentApp = await enableAndGetAgentApp(
         this,
         agent_key,
         installedAppInfo

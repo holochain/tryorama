@@ -13,7 +13,7 @@ import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 
-import { enableAndGetAgentHapp } from "../common.js";
+import { enableAndGetAgentApp } from "../common.js";
 import { makeLogger } from "../logger.js";
 import { TryCpServer } from "../trycp/trycp-server.js";
 import {
@@ -419,7 +419,7 @@ export class Conductor implements IConductor {
         agent_key
       )}`
     );
-    const agentApp: AgentApp = await enableAndGetAgentHapp(
+    const agentApp: AgentApp = await enableAndGetAgentApp(
       this,
       agent_key,
       installedAppInfo

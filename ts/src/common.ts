@@ -47,7 +47,7 @@ function assertZomeResponse<T>(
   return;
 }
 
-export const enableAndGetAgentHapp = async (
+export const enableAndGetAgentApp = async (
   conductor: IConductor,
   agentPubKey: AgentPubKey,
   installedAppInfo: AppInfo
