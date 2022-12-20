@@ -1,10 +1,10 @@
 import {
   ActionHash,
+  AppBundleSource,
   AppSignal,
   AppSignalCb,
-  authorizeNewSigningKeyPair,
   CloneId,
-  DnaSource,
+  createSigningCredentials,
   EntryHash,
 } from "@holochain/client";
 import assert from "node:assert";
@@ -21,7 +21,9 @@ import {
   NetworkType,
 } from "../../src/index.js";
 import { pause } from "../../src/util.js";
-import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
+import { FIXTURE_HAPP_URL } from "../fixture/index.js";
+
+const ROLE_NAME = "test";
 
 test("Local Conductor - spawn a conductor with QUIC network", async (t) => {
   const conductor = await createConductor({
@@ -186,47 +188,37 @@ test("Local Conductor - install and call an app", async (t) => {
   });
   t.ok(app.appId);
 
-  try {
-    await authorizeNewSigningKeyPair(
-      conductor.adminWs(),
-      app.cells[0].cell_id,
-      [
-        ["coordinator", "create"],
-        ["coordinator", "read"],
-      ]
-    );
+  await createSigningCredentials(conductor.adminWs(), app.cells[0].cell_id, [
+    ["coordinator", "create"],
+    ["coordinator", "read"],
+  ]);
 
-    const entryContent = "Bye bye, world";
-    const createEntryResponse: EntryHash = await app.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "create",
-      payload: entryContent,
-    });
-    t.ok(createEntryResponse);
-    const readEntryResponse: typeof entryContent = await app.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "read",
-      payload: createEntryResponse,
-    });
-    t.equal(readEntryResponse, entryContent);
-  } catch (error) {
-    console.error("error", error);
-  }
+  const entryContent = "Bye bye, world";
+  const createEntryResponse: EntryHash = await app.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: entryContent,
+  });
+  t.ok(createEntryResponse);
+  const readEntryResponse: typeof entryContent = await app.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "read",
+    payload: createEntryResponse,
+  });
+  t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
   await cleanAllConductors();
 });
 
-test("Local Conductor - Get a convenience function for zome calls", async (t) => {
+test("Local Conductor - get a convenience function for zome calls", async (t) => {
   const conductor = await createConductor();
   const [alice] = await conductor.installAgentsApps({
     agentsApps: [{ app: { path: FIXTURE_HAPP_URL.pathname } }],
   });
-  await authorizeNewSigningKeyPair(
-    conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
+  await createSigningCredentials(conductor.adminWs(), alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
   const coordinatorZomeCall = getZomeCaller(alice.cells[0], "coordinator");
   t.equal(
     typeof coordinatorZomeCall,
@@ -246,7 +238,7 @@ test("Local Conductor - Get a convenience function for zome calls", async (t) =>
   await cleanAllConductors();
 });
 
-test("Local Conductor - Install multiple agents and apps and get access to agents and cells", async (t) => {
+test("Local Conductor - install multiple agents and apps and get access to agents and cells", async (t) => {
   const conductor = await createConductor();
   const [alice, bob] = await conductor.installAgentsApps({
     agentsApps: [
@@ -263,256 +255,262 @@ test("Local Conductor - Install multiple agents and apps and get access to agent
   await cleanAllConductors();
 });
 
-test("Local Conductor - Install a DNA with custom role id", async (t) => {
+test("Local Conductor - get a named cell by role name", async (t) => {
   const conductor = await createConductor();
   const alice = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
-  t.ok(alice.namedCells.get("test"), "dna role name matches");
+  t.ok(alice.namedCells.get(ROLE_NAME), "dna role name matches");
 
   await conductor.shutDown();
   await cleanAllConductors();
 });
 
-test("Local Conductor - Install hApp bundle and access cells with role ids", async (t) => {
+test("Local Conductor - zome call can time out before completion", async (t) => {
   const conductor = await createConductor();
-  const aliceHapp = await conductor.installApp({
+  const alice = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
-  t.ok(aliceHapp.namedCells.get("test"));
+  const cell = alice.namedCells.get(ROLE_NAME);
+  assert(cell);
+  const zome_name = "coordinator";
+  const fn_name = "create";
+  await createSigningCredentials(conductor.adminWs(), cell.cell_id, [
+    [zome_name, fn_name],
+  ]);
+
+  await t.rejects(cell.callZome({ zome_name, fn_name }, 1));
 
   await conductor.shutDown();
   await cleanAllConductors();
 });
 
-// test("Local Conductor - Zome call can time out before completion", async (t) => {
-//   const conductor = await createConductor();
-//   const aliceHapp = await conductor.installApp({
-//     path: FIXTURE_HAPP_URL.pathname,
-//   });
-//   const cell = aliceHapp.namedCells.get("test");
-//   assert(cell);
+test("Local Conductor - create and read an entry using the entry zome", async (t) => {
+  const conductor = await createConductor();
 
-//   await t.rejects(
-//     cell.callZome({ fn_name: "create", zome_name: "coordinator" }, 1)
-//   );
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+  const agentPubKeyB64 = Buffer.from(agentPubKey).toString("base64");
+  t.equal(agentPubKey.length, 39);
+  t.ok(agentPubKeyB64.startsWith("hCAk"));
 
-//   await conductor.shutDown();
-//   await cleanAllConductors();
-// });
+  const installed_app_id = "entry-app";
+  const alice = await conductor.installApp(
+    { path: FIXTURE_HAPP_URL.pathname },
+    {
+      installedAppId: installed_app_id,
+      agentPubKey,
+    }
+  );
+  const { cell_id } = alice.cells[0];
+  t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
+  t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
 
-// test.only("Local Conductor - Create and read an entry using the entry zome", async (t) => {
-//   const conductor = await createConductor();
+  await createSigningCredentials(conductor.adminWs(), alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+    ["coordinator", "read"],
+  ]);
 
-//   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-//   const agentPubKeyB64 = Buffer.from(agentPubKey).toString("base64");
-//   t.equal(agentPubKey.length, 39);
-//   t.ok(agentPubKeyB64.startsWith("hCAk"));
+  const entryContent = "test-content";
+  const createEntryHash: EntryHash = await conductor.appWs().callZome({
+    cap_secret: null,
+    cell_id,
+    zome_name: "coordinator",
+    fn_name: "create",
+    provenance: agentPubKey,
+    payload: entryContent,
+  });
+  const createdEntryHashB64 = Buffer.from(createEntryHash).toString("base64");
+  t.equal(createEntryHash.length, 39);
+  t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-//   const appId = "entry-app";
-//   const dnaHash = await conductor.adminWs().registerDna({
-//     path: FIXTURE_DNA_URL.pathname,
-//   });
-//   const installedAppInfo = await conductor.adminWs().installApp({
-//     installed_app_id: appId,
-//     agent_key: agentPubKey,
-//     dnas: [{ hash: dnaHash, role_name: "entry-dna" }],
-//   });
-//   const { cell_id } = installedAppInfo.cell_data[0];
-//   t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
-//   t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
+  const readEntryResponse: typeof entryContent = await conductor
+    .appWs()
+    .callZome({
+      cap_secret: null,
+      cell_id,
+      zome_name: "coordinator",
+      fn_name: "read",
+      provenance: agentPubKey,
+      payload: createEntryHash,
+    });
+  t.equal(readEntryResponse, entryContent);
 
-//   const enabledAppResponse = await conductor.adminWs().enableApp({
-//     installed_app_id: appId,
-//   });
-//   t.deepEqual(enabledAppResponse.app.status, { running: null });
+  await conductor.shutDown();
+  await cleanAllConductors();
+});
 
-//   const entryContent = "test-content";
-//   const createEntryHash: EntryHash = await conductor.appWs().callZome({
-//     cap_secret: null,
-//     cell_id,
-//     zome_name: "coordinator",
-//     fn_name: "create",
-//     provenance: agentPubKey,
-//     payload: entryContent,
-//   });
-//   const createdEntryHashB64 = Buffer.from(createEntryHash).toString("base64");
-//   t.equal(createEntryHash.length, 39);
-//   t.ok(createdEntryHashB64.startsWith("hCkk"));
+test("Local Conductor - clone cell management", async (t) => {
+  const conductor = await createConductor();
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+  const appId = "entry-app";
+  const alice = await conductor.installApp(
+    { path: FIXTURE_HAPP_URL.pathname },
+    {
+      installedAppId: appId,
+      agentPubKey,
+    }
+  );
 
-//   const readEntryResponse: typeof entryContent = await conductor
-//     .appWs()
-//     .callZome({
-//       cap_secret: null,
-//       cell_id,
-//       zome_name: "coordinator",
-//       fn_name: "read",
-//       provenance: agentPubKey,
-//       payload: createEntryHash,
-//     });
-//   t.equal(readEntryResponse, entryContent);
+  await createSigningCredentials(conductor.adminWs(), alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+    ["coordinator", "read"],
+  ]);
 
-//   await conductor.shutDown();
-//   await cleanAllConductors();
-// });
+  const cloneCell = await conductor.appWs().createCloneCell({
+    app_id: appId,
+    role_name: ROLE_NAME,
+    modifiers: { network_seed: "test-seed" },
+  });
+  t.deepEqual(
+    cloneCell.role_name,
+    new CloneId(ROLE_NAME, 0).toString(),
+    "clone id is 'role_name.0'"
+  );
+  t.deepEqual(
+    cloneCell.cell_id[1],
+    alice.cells[0].cell_id[1],
+    "agent pub key in clone cell and base cell match"
+  );
 
-// test("Local Conductor - clone cell management", async (t) => {
-//   const conductor = await createConductor();
-//   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-//   const appId = "entry-app";
-//   const dnaHash = await conductor.adminWs().registerDna({
-//     path: FIXTURE_DNA_URL.pathname,
-//   });
-//   const roleName = "entry-dna";
-//   const installedAppInfo = await conductor.adminWs().installApp({
-//     installed_app_id: appId,
-//     agent_key: agentPubKey,
-//     dnas: [{ hash: dnaHash, role_name: roleName }],
-//   });
-//   const { cell_id: cellId } = installedAppInfo.cell_data[0];
-//   await conductor.adminWs().enableApp({
-//     installed_app_id: appId,
-//   });
+  await createSigningCredentials(conductor.adminWs(), cloneCell.cell_id, [
+    ["coordinator", "create"],
+    ["coordinator", "read"],
+  ]);
 
-//   const cloneCell = await conductor.appWs().createCloneCell({
-//     app_id: appId,
-//     role_name: roleName,
-//     modifiers: { network_seed: "test-seed" },
-//   });
-//   t.deepEqual(
-//     cloneCell.role_name,
-//     new CloneId(roleName, 0).toString(),
-//     "clone id is 'role_name.0'"
-//   );
-//   t.deepEqual(
-//     cloneCell.cell_id[1],
-//     cellId[1],
-//     "agent pub key in clone cell and base cell match"
-//   );
-//   const testContent = "test-content";
-//   const entryActionHash: ActionHash = await conductor.appWs().callZome({
-//     cell_id: cloneCell.cell_id,
-//     zome_name: "coordinator",
-//     fn_name: "create",
-//     payload: testContent,
-//     cap_secret: null,
-//     provenance: agentPubKey,
-//   });
+  const testContent = "test-content";
+  const entryActionHash: ActionHash = await conductor.appWs().callZome({
+    cell_id: cloneCell.cell_id,
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: testContent,
+    cap_secret: null,
+    provenance: agentPubKey,
+  });
 
-//   await conductor
-//     .appWs()
-//     .archiveCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
-//   await t.rejects(
-//     conductor.appWs().callZome({
-//       cell_id: cloneCell.cell_id,
-//       zome_name: "coordinator",
-//       fn_name: "read",
-//       payload: entryActionHash,
-//       cap_secret: null,
-//       provenance: agentPubKey,
-//     }),
-//     "archived clone cell cannot be called"
-//   );
+  await conductor
+    .appWs()
+    .disableCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await t.rejects(
+    conductor.appWs().callZome({
+      cell_id: cloneCell.cell_id,
+      zome_name: "coordinator",
+      fn_name: "read",
+      payload: entryActionHash,
+      cap_secret: null,
+      provenance: agentPubKey,
+    }),
+    "disabled clone cell cannot be called"
+  );
 
-//   const restoredCloneCell = await conductor
-//     .adminWs()
-//     .restoreCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_name });
-//   t.deepEqual(
-//     restoredCloneCell,
-//     cloneCell,
-//     "restored clone cell matches created clone cell"
-//   );
-//   // const readEntryResponse: typeof testContent = await conductor
-//   //   .appWs()
-//   //   .callZome(
-//   //     {
-//   //       cell_id: cloneCell.cell_id,
-//   //       zome_name: "coordinator",
-//   //       fn_name: "read",
-//   //       payload: entryActionHash,
-//   //       cap_secret: null,
-//   //       provenance: agentPubKey,
-//   //     },
-//   //     40000
-//   //   );
-//   // t.equal(readEntryResponse, testContent, "restored clone cell can be called");
+  const enabledCloneCell = await conductor
+    .appWs()
+    .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_name });
+  t.deepEqual(
+    enabledCloneCell,
+    cloneCell,
+    "enabled clone cell matches created clone cell"
+  );
+  // TODO this currently fails because of a bug in Holochain
+  // comment back in once fixed
+  //
+  // const readEntryResponse: typeof testContent = await conductor
+  //   .appWs()
+  //   .callZome(
+  //     {
+  //       cell_id: cloneCell.cell_id,
+  //       zome_name: "coordinator",
+  //       fn_name: "read",
+  //       payload: entryActionHash,
+  //       cap_secret: null,
+  //       provenance: agentPubKey,
+  //     },
+  //     40000
+  //   );
+  // t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
-//   await conductor
-//     .appWs()
-//     .archiveCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
-//   await conductor
-//     .adminWs()
-//     .deleteArchivedCloneCells({ app_id: appId, role_name: roleName });
-//   await t.rejects(
-//     conductor
-//       .adminWs()
-//       .restoreCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_name }),
-//     "deleted clone cell cannot be restored"
-//   );
+  await conductor
+    .appWs()
+    .disableCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await conductor
+    .adminWs()
+    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await t.rejects(
+    conductor
+      .appWs()
+      .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_name }),
+    "deleted clone cell cannot be enabled"
+  );
 
-//   await conductor.shutDown();
-//   await cleanAllConductors();
-// });
+  await conductor.shutDown();
+  await cleanAllConductors();
+});
 
-// test("Local Conductor - Create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
-//   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+test("Local Conductor - create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+  const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
 
-//   const conductor1 = await createConductor();
-//   const conductor2 = await createConductor();
-//   const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps([
-//     dnas,
-//     dnas,
-//   ]);
+  const conductor1 = await createConductor();
+  const conductor2 = await createConductor();
+  const alice = await conductor1.installApp(app);
+  const bob = await conductor2.installApp(app);
 
-//   await addAllAgentsToAllConductors([conductor1, conductor2]);
+  await addAllAgentsToAllConductors([conductor1, conductor2]);
 
-//   const entryContent = "test-content";
-//   const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
-//     zome_name: "coordinator",
-//     fn_name: "create",
-//     payload: entryContent,
-//   });
-//   const createdEntryHashB64 = Buffer.from(createEntryHash).toString("base64");
-//   t.equal(createEntryHash.length, 39);
-//   t.ok(createdEntryHashB64.startsWith("hCkk"));
+  await createSigningCredentials(conductor1.adminWs(), alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await createSigningCredentials(conductor2.adminWs(), bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
-//   await pause(100);
+  const entryContent = "test-content";
+  const createEntryHash: EntryHash = await alice.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: entryContent,
+  });
+  const createdEntryHashB64 = Buffer.from(createEntryHash).toString("base64");
+  t.equal(createEntryHash.length, 39);
+  t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-//   const readEntryResponse: typeof entryContent =
-//     await bobHapps.cells[0].callZome({
-//       zome_name: "coordinator",
-//       fn_name: "read",
-//       payload: createEntryHash,
-//     });
-//   t.equal(readEntryResponse, entryContent);
+  await pause(1000);
 
-//   await conductor1.shutDown();
-//   await conductor2.shutDown();
-//   await cleanAllConductors();
-// });
+  const readEntryResponse: typeof entryContent = await bob.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "read",
+    payload: createEntryHash,
+  });
+  t.equal(readEntryResponse, entryContent);
 
-// test("Local Conductor - Receive a signal", async (t) => {
-//   const dnas: DnaSource[] = [{ path: FIXTURE_DNA_URL.pathname }];
+  await conductor1.shutDown();
+  await conductor2.shutDown();
+  await cleanAllConductors();
+});
 
-//   let signalHandler: AppSignalCb | undefined;
-//   const signalReceived = new Promise<AppSignal>((resolve) => {
-//     signalHandler = (signal) => {
-//       resolve(signal);
-//     };
-//   });
-//   const conductor = await createConductor({ signalHandler, timeout: 30000 });
+test("Local Conductor - Receive a signal", async (t) => {
+  let signalHandler: AppSignalCb | undefined;
+  const signalReceived = new Promise<AppSignal>((resolve) => {
+    signalHandler = (signal) => {
+      resolve(signal);
+    };
+  });
+  const conductor = await createConductor();
 
-//   const [aliceHapps] = await conductor.installAgentsHapps([dnas]);
+  const alice = await conductor.installApp({ path: FIXTURE_HAPP_URL.pathname });
+  await createSigningCredentials(conductor.adminWs(), alice.cells[0].cell_id, [
+    ["coordinator", "signal_loopback"],
+  ]);
 
-//   const aliceSignal = { value: "signal" };
-//   aliceHapps.cells[0].callZome({
-//     zome_name: "coordinator",
-//     fn_name: "signal_loopback",
-//     payload: aliceSignal,
-//   });
-//   const actualSignal = await signalReceived;
-//   t.deepEqual(actualSignal.data.payload, aliceSignal);
+  assert(signalHandler);
+  conductor.appWs().on("signal", signalHandler);
+  const aliceSignal = { value: "signal" };
+  alice.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "signal_loopback",
+    payload: aliceSignal,
+  });
+  const actualSignal = await signalReceived;
+  t.deepEqual(actualSignal.data.payload, aliceSignal);
 
-//   await conductor.shutDown();
-//   await cleanAllConductors();
-// });
+  await conductor.shutDown();
+  await cleanAllConductors();
+});
