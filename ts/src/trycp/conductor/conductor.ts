@@ -1,51 +1,48 @@
 import {
   AddAgentInfoRequest,
+  AgentInfoRequest,
   AgentPubKey,
   AppBundleSource,
   AppInfoRequest,
   AppSignalCb,
-  ArchiveCloneCellRequest,
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CreateCloneCellRequest,
-  DeleteArchivedCloneCellsRequest,
+  DeleteCloneCellRequest,
   DisableAppRequest,
+  DisableCloneCellRequest,
   DnaDefinition,
   DnaHash,
   DnaSource,
   DumpFullStateRequest,
   DumpStateRequest,
   EnableAppRequest,
+  EnableCloneCellRequest,
+  encodeHashToBase64,
   FullStateDump,
   GetDnaDefinitionRequest,
   GrantZomeCallCapabilityRequest,
-  InstallAppBundleRequest,
-  InstallAppDnaPayload,
   InstallAppRequest,
   ListAppsRequest,
   RegisterDnaRequest,
-  RequestAgentInfoRequest,
-  RestoreCloneCellRequest,
   StartAppRequest,
   UninstallAppRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
-import fs from "node:fs";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { enableAndGetAgentHapp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
 import {
-  AgentHapp,
-  HappBundleOptions,
+  AgentApp,
+  AgentsAppsOptions,
+  AppOptions,
   IConductor,
-  AgentsHappsOptions,
-  _RegisterDnaReqOpts,
 } from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
-  RequestAdminInterfaceData,
+  RequestAdminInterfaceMessage,
   RequestCallAppInterfaceMessage,
   TRYCP_SUCCESS_RESPONSE,
 } from "../types.js";
@@ -234,7 +231,6 @@ export class TryCpConductor implements IConductor {
   /**
    * Connect a web socket to the App API.
    *
-   * @param signalHandler - A callback function to handle signals.
    * @returns An empty success response.
    */
   async connectAppInterface(signalHandler?: AppSignalCb) {
@@ -271,7 +267,7 @@ export class TryCpConductor implements IConductor {
    *
    * @internal
    */
-  private async callAdminApi(message: RequestAdminInterfaceData) {
+  private async callAdminApi(message: RequestAdminInterfaceMessage) {
     const response = await this.tryCpClient.call({
       type: "call_admin_interface",
       id: this.id,
@@ -354,9 +350,9 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
-     * Install a hApp consisting of a set of DNAs.
+     * Install an app.
      *
-     * @param data - {@link InstallAppRequest}.
+     * @param data - {@link InstallAppBundleRequest}.
      * @returns {@link @holochain/client#InstalledAppInfo}.
      */
     const installApp = async (data: InstallAppRequest) => {
@@ -365,21 +361,6 @@ export class TryCpConductor implements IConductor {
         data,
       });
       assert(response.type === "app_installed");
-      return response.data;
-    };
-
-    /**
-     * Install a bundled hApp.
-     *
-     * @param data - {@link InstallAppBundleRequest}.
-     * @returns {@link @holochain/client#InstalledAppInfo}.
-     */
-    const installAppBundle = async (data: InstallAppBundleRequest) => {
-      const response = await this.callAdminApi({
-        type: "install_app_bundle",
-        data,
-      });
-      assert(response.type === "app_bundle_installed");
       return response.data;
     };
 
@@ -516,14 +497,14 @@ export class TryCpConductor implements IConductor {
      * @param req - The cell id to get agent infos of (optional).
      * @returns The agent infos.
      */
-    const requestAgentInfo = async (req: RequestAgentInfoRequest) => {
+    const agentInfo = async (req: AgentInfoRequest) => {
       const response = await this.callAdminApi({
-        type: "request_agent_info",
+        type: "agent_info",
         data: {
           cell_id: req.cell_id || null,
         },
       });
-      assert(response.type === "agent_info_requested");
+      assert(response.type === "agent_info");
       return response.data;
     };
 
@@ -541,35 +522,16 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
-     * Restore an archived clone cell.
+     * Delete a disabled clone cell.
      *
-     * @param request - The clone id or cell id of the clone cell to be
-     * restored.
-     * @returns The restored clone cell's clone id and cell id.
+     * @param request - The app id and clone cell id to delete.
      */
-    const restoreCloneCell = async (request: RestoreCloneCellRequest) => {
+    const deleteCloneCell = async (request: DeleteCloneCellRequest) => {
       const response = await this.callAdminApi({
-        type: "restore_clone_cell",
+        type: "delete_clone_cell",
         data: request,
       });
-      assert(response.type === "clone_cell_restored");
-      return response.data;
-    };
-
-    /**
-     * Delete archived clone cells.
-     *
-     * @param request - The app id and role id for which archived clone cells
-     * are to be deleted.
-     */
-    const deleteArchivedCloneCells = async (
-      request: DeleteArchivedCloneCellsRequest
-    ) => {
-      const response = await this.callAdminApi({
-        type: "delete_archived_clone_cells",
-        data: request,
-      });
-      assert(response.type === "archived_clone_cells_deleted");
+      assert(response.type === "clone_cell_deleted");
     };
 
     /**
@@ -606,8 +568,9 @@ export class TryCpConductor implements IConductor {
 
     return {
       addAgentInfo,
+      agentInfo,
       attachAppInterface,
-      deleteArchivedCloneCells,
+      deleteCloneCell,
       disableApp,
       dumpFullState,
       dumpState,
@@ -616,14 +579,11 @@ export class TryCpConductor implements IConductor {
       getDnaDefinition,
       grantZomeCallCapability,
       installApp,
-      installAppBundle,
       listAppInterfaces,
       listApps,
       listCellIds,
       listDnas,
       registerDna,
-      requestAgentInfo,
-      restoreCloneCell,
       startApp,
       uninstallApp,
     };
@@ -703,142 +663,132 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Enable a disabled clone cell.
+     *
+     * @param request - The clone id or cell id of the clone cell to be
+     * enabled.
+     * @returns The enabled clone cell's clone id and cell id.
+     */
+    const enableCloneCell = async (request: EnableCloneCellRequest) => {
+      const response = await this.callAppApi({
+        type: "enable_clone_cell",
+        data: request,
+      });
+      assert(response.type === "clone_cell_enabled");
+      return response.data;
+    };
+
+    /**
      * Archive an existing clone cell.
      *
      * @param request - The hApp id to query.
      * @returns An empty success response.
      */
-    const archiveCloneCell = async (request: ArchiveCloneCellRequest) => {
+    const disableCloneCell = async (request: DisableCloneCellRequest) => {
       const response = await this.callAppApi({
-        type: "archive_clone_cell",
+        type: "disable_clone_cell",
         data: request,
       });
-      assert(response.type === "clone_cell_archived");
+      assert(response.type === "clone_cell_disabled");
       return response.data;
     };
 
-    return { appInfo, callZome, createCloneCell, archiveCloneCell };
-  }
-
-  /**
-   * Install a set of DNAs for multiple agents into the conductor.
-   *
-   * @param options - {@link AgentsHappsOptions}
-   * @returns An array with each agent's hApp.
-   */
-  async installAgentsHapps(options: AgentsHappsOptions) {
-    const agentsHapps: AgentHapp[] = [];
-    const agentsDnas = Array.isArray(options) ? options : options.agentsDnas;
-
-    for (const agentDnas of agentsDnas) {
-      const dnasToInstall: InstallAppDnaPayload[] = [];
-      const appId =
-        ("installedAppId" in options && options.installedAppId) ||
-        `app-${uuidv4()}`;
-      const agentPubKey =
-        ("agentPubKey" in agentDnas && agentDnas.agentPubKey) ||
-        (await this.adminWs().generateAgentPubKey());
-      logger.debug(
-        `installing app with id ${appId} for agent ${Buffer.from(
-          agentPubKey
-        ).toString("base64")}`
-      );
-
-      const dnas = "dnas" in agentDnas ? agentDnas.dnas : agentDnas;
-      for (const dna of dnas) {
-        let roleName: string;
-
-        const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          modifiers: {
-            network_seed:
-              ("networkSeed" in options && options.networkSeed) || undefined,
-            properties: ("properties" in dna && dna.properties) || undefined,
-          },
-        };
-
-        const dnaSource = "source" in dna ? dna.source : dna;
-        if ("path" in dnaSource) {
-          const path = dnaSource.path;
-          const dnaContent = await new Promise<Buffer>((resolve, reject) => {
-            fs.readFile(path, null, (err, data) => {
-              if (err) {
-                reject(err);
-              }
-              resolve(data);
-            });
-          });
-          const relativePath = await this.saveDna(dnaContent);
-          registerDnaReqOpts.path = relativePath;
-          roleName = `${path}-${uuidv4()}`;
-        } else if ("hash" in dnaSource) {
-          registerDnaReqOpts.hash = dnaSource.hash;
-          roleName = `dna-${uuidv4()}`;
-        } else {
-          registerDnaReqOpts.bundle = dnaSource.bundle;
-          roleName = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
-        }
-
-        const dnaHash = await this.adminWs().registerDna(
-          registerDnaReqOpts as RegisterDnaRequest
-        );
-
-        const membrane_proof =
-          "membraneProof" in dna ? dna.membraneProof : undefined;
-        dnasToInstall.push({
-          hash: dnaHash,
-          role_name: ("roleName" in dna && dna.roleName) || roleName,
-          membrane_proof,
-        });
-      }
-
-      const installedAppInfo = await this.adminWs().installApp({
-        installed_app_id: appId,
-        agent_key: agentPubKey,
-        dnas: dnasToInstall,
-      });
-
-      const agentHapp = await enableAndGetAgentHapp(
-        this,
-        agentPubKey,
-        installedAppInfo
-      );
-      agentsHapps.push(agentHapp);
-    }
-
-    return agentsHapps;
+    return {
+      appInfo,
+      callZome,
+      createCloneCell,
+      enableCloneCell,
+      disableCloneCell,
+    };
   }
 
   /**
    * Install a hApp bundle into the conductor.
    *
    * @param appBundleSource - The bundle or path to the bundle.
-   * @param options - {@link HappBundleOptions} for the hApp bundle (optional).
+   * @param options - {@link AppOptions} for the hApp bundle (optional).
    * @returns A hApp for the agent.
    */
-  async installHappBundle(
-    appBundleSource: AppBundleSource,
-    options?: HappBundleOptions
-  ) {
-    const agentPubKey =
+  async installApp(appBundleSource: AppBundleSource, options?: AppOptions) {
+    const agent_key =
       options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
-    const appBundleOptions: InstallAppBundleRequest = Object.assign(
-      appBundleSource,
-      {
-        agent_key: agentPubKey,
-        membrane_proofs: options?.membraneProofs ?? {},
-        network_seed: options?.networkSeed,
-        installed_app_id: options?.installedAppId ?? `app-${uuidv4()}`,
-      }
-    );
-    const installedAppInfo = await this.adminWs().installAppBundle(
-      appBundleOptions
-    );
+    const membrane_proofs = options?.membraneProofs ?? {};
+    const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
+    const network_seed = options?.networkSeed;
+    const installAppRequest: InstallAppRequest =
+      "bundle" in appBundleSource
+        ? {
+            bundle: appBundleSource.bundle,
+            agent_key,
+            membrane_proofs,
+            installed_app_id,
+            network_seed,
+          }
+        : {
+            path: appBundleSource.path,
+            agent_key,
+            membrane_proofs,
+            installed_app_id,
+            network_seed,
+          };
+    const installedAppInfo = await this.adminWs().installApp(installAppRequest);
 
-    const agentHapp = await enableAndGetAgentHapp(
+    const agentHapp: AgentApp = await enableAndGetAgentHapp(
       this,
-      agentPubKey,
+      agent_key,
       installedAppInfo
     );
     return agentHapp;
+  }
+
+  /**
+   * Install a hApp bundle into the conductor.
+   *
+   * @param options - Apps to install for each agent, with agent pub keys etc.
+   * (optional).
+   * @returns A hApp for the agent.
+   */
+  async installAgentsApps(options: AgentsAppsOptions) {
+    const agentsApps: AgentApp[] = [];
+    for (const appForAgent of options.agentsApps) {
+      const agent_key =
+        appForAgent.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
+      const membrane_proofs = appForAgent.membraneProofs ?? {};
+      const installed_app_id = options.installedAppId ?? `app-${uuidv4()}`;
+      const network_seed = options.networkSeed;
+      const installAppRequest: InstallAppRequest =
+        "bundle" in appForAgent.app
+          ? {
+              bundle: appForAgent.app.bundle,
+              agent_key,
+              membrane_proofs,
+              installed_app_id,
+              network_seed,
+            }
+          : {
+              path: appForAgent.app.path,
+              agent_key,
+              membrane_proofs,
+              installed_app_id,
+              network_seed,
+            };
+
+      logger.debug(
+        `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
+          agent_key
+        )}`
+      );
+      const installedAppInfo = await this.adminWs().installApp(
+        installAppRequest
+      );
+
+      const agentApp = await enableAndGetAgentHapp(
+        this,
+        agent_key,
+        installedAppInfo
+      );
+      agentsApps.push(agentApp);
+    }
+    return agentsApps;
   }
 }

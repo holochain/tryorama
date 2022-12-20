@@ -288,7 +288,7 @@ test("TryCP Server - App API - get app info", async (t) => {
 
   const appInfo = await conductor
     .appWs()
-    .appInfo({ installed_app_id: alice.happId });
+    .appInfo({ installed_app_id: alice.appId });
   t.deepEqual(appInfo.status, { running: null });
 
   await conductor.disconnectAppInterface();

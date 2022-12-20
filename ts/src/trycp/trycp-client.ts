@@ -244,7 +244,7 @@ export class TryCpClient {
   /**
    * Create and add a conductor to the client.
    *
-   * @param signalHandler - A callback function to handle signals.
+   * @param config - Conductor configuration (optional).
    * @returns The newly added conductor instance.
    */
   async addConductor(signalHandler?: AppSignalCb, config?: string) {

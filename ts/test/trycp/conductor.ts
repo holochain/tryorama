@@ -102,7 +102,7 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   const installedHappBundle = await conductor.installHappBundle({
     path: FIXTURE_HAPP_URL.pathname,
   });
-  t.ok(installedHappBundle.happId, "installed hApp bundle has a hApp id");
+  t.ok(installedHappBundle.appId, "installed hApp bundle has a hApp id");
 
   await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface();
@@ -525,17 +525,17 @@ test("TryCP Conductor - clone cell management", async (t) => {
     cloneCell,
     "restored clone cell matches created clone cell"
   );
-  // const readEntryResponse: typeof testContent = await conductor
-  //   .appWs()
-  //   .callZome({
-  //     cell_id: cloneCell.cell_id,
-  //     zome_name: "coordinator",
-  //     fn_name: "read",
-  //     payload: entryActionHash,
-  //     cap_secret: null,
-  //     provenance: agentPubKey,
-  //   });
-  // t.equal(readEntryResponse, testContent, "restored clone cell can be called");
+  const readEntryResponse: typeof testContent = await conductor
+    .appWs()
+    .callZome({
+      cell_id: cloneCell.cell_id,
+      zome_name: "coordinator",
+      fn_name: "read",
+      payload: entryActionHash,
+      cap_secret: null,
+      provenance: agentPubKey,
+    });
+  t.equal(readEntryResponse, testContent, "restored clone cell can be called");
 
   await conductor
     .appWs()
@@ -623,7 +623,7 @@ test("TryCP Conductor - pass a custom application id to happ installation", asyn
     agentsDnas: [{ dnas }],
     installedAppId: expectedInstalledAppId,
   });
-  const actualInstalledAppId = alice.happId;
+  const actualInstalledAppId = alice.appId;
   t.equal(
     actualInstalledAppId,
     expectedInstalledAppId,
