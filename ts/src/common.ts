@@ -1,6 +1,7 @@
 import {
   AgentPubKey,
   AppInfo,
+  authorizeSigningCredentials,
   CallZomeResponse,
   Cell,
   CellType,
@@ -92,6 +93,8 @@ export const enableAndGetAgentApp = async (
     agentPubKey,
     cells,
     namedCells,
+    authorizeSigningCredentials: (cellId, functions) =>
+      authorizeSigningCredentials(conductor.adminWs(), cellId, functions),
   };
   return agentApp;
 };

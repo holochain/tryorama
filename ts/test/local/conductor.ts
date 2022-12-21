@@ -216,11 +216,10 @@ test("Local Conductor - get a convenience function for zome calls", async (t) =>
   const [alice] = await conductor.installAgentsApps({
     agentsApps: [{ app: { path: FIXTURE_HAPP_URL.pathname } }],
   });
-  await authorizeSigningCredentials(
-    conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+
   const coordinatorZomeCall = getZomeCaller(alice.cells[0], "coordinator");
   t.equal(
     typeof coordinatorZomeCall,
@@ -277,9 +276,7 @@ test("Local Conductor - zome call can time out before completion", async (t) => 
   assert(cell);
   const zome_name = "coordinator";
   const fn_name = "create";
-  await authorizeSigningCredentials(conductor.adminWs(), cell.cell_id, [
-    [zome_name, fn_name],
-  ]);
+  await alice.authorizeSigningCredentials(cell.cell_id, [[zome_name, fn_name]]);
 
   await t.rejects(cell.callZome({ zome_name, fn_name }, 1));
 
@@ -307,14 +304,10 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
   t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
 
-  await authorizeSigningCredentials(
-    conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [
-      ["coordinator", "create"],
-      ["coordinator", "read"],
-    ]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+    ["coordinator", "read"],
+  ]);
 
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await conductor.appWs().callZome({
@@ -357,14 +350,10 @@ test("Local Conductor - clone cell management", async (t) => {
     }
   );
 
-  await authorizeSigningCredentials(
-    conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [
-      ["coordinator", "create"],
-      ["coordinator", "read"],
-    ]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+    ["coordinator", "read"],
+  ]);
 
   const cloneCell = await conductor.appWs().createCloneCell({
     app_id: appId,
@@ -382,7 +371,7 @@ test("Local Conductor - clone cell management", async (t) => {
     "agent pub key in clone cell and base cell match"
   );
 
-  await authorizeSigningCredentials(conductor.adminWs(), cloneCell.cell_id, [
+  await alice.authorizeSigningCredentials(cloneCell.cell_id, [
     ["coordinator", "create"],
     ["coordinator", "read"],
   ]);
@@ -465,16 +454,12 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
 
   await addAllAgentsToAllConductors([conductor1, conductor2]);
 
-  await authorizeSigningCredentials(
-    conductor1.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
-  await authorizeSigningCredentials(
-    conductor2.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "read"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await alice.cells[0].callZome({
@@ -510,11 +495,9 @@ test("Local Conductor - Receive a signal", async (t) => {
   const conductor = await createConductor();
 
   const alice = await conductor.installApp({ path: FIXTURE_HAPP_URL.pathname });
-  await authorizeSigningCredentials(
-    conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "signal_loopback"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "signal_loopback"],
+  ]);
 
   assert(signalHandler);
   conductor.appWs().on("signal", signalHandler);

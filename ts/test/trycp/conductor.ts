@@ -90,7 +90,7 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
   await localTryCpServer.stop();
 });
 
-test("TryCP Conductor - install hApp bundle and access cells with role ids", async (t) => {
+test("TryCP Conductor - install hApp bundle and access cell by role name", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const client = await TryCpClient.create(SERVER_URL, 60000);
   const conductor = await createTestConductor(client);
@@ -115,14 +115,10 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface();
 
-  await authorizeSigningCredentials(
-    conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [
-      ["coordinator", "create"],
-      ["coordinator", "read"],
-    ]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+    ["coordinator", "read"],
+  ]);
 
   const entryContent = "Bye bye, world";
   const createEntryResponse: EntryHash = await alice.cells[0].callZome({
@@ -347,11 +343,9 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
   await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface();
 
-  await authorizeSigningCredentials(
-    conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "read"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const actual = await alice.cells[0].callZome<null>({
     zome_name: "coordinator",
@@ -632,16 +626,12 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
 
   await addAllAgentsToAllConductors([conductor1, conductor2]);
 
-  await authorizeSigningCredentials(
-    conductor1.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
-  await authorizeSigningCredentials(
-    conductor2.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "read"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const entryContent = "test-content";
   const createEntryHash = await conductor1.appWs().callZome<EntryHash>({

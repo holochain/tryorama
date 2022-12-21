@@ -1,9 +1,4 @@
-import {
-  AppSignal,
-  AppSignalCb,
-  authorizeSigningCredentials,
-  EntryHash,
-} from "@holochain/client";
+import { AppSignal, AppSignalCb, EntryHash } from "@holochain/client";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import { stopAllTryCpServers } from "../../src/index.js";
@@ -158,16 +153,12 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
     },
   ]);
 
-  await authorizeSigningCredentials(
-    alice.conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "signal_loopback"]]
-  );
-  await authorizeSigningCredentials(
-    bob.conductor.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "signal_loopback"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "signal_loopback"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "signal_loopback"],
+  ]);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({
@@ -209,16 +200,12 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   ]);
   await scenario.shareAllAgents();
 
-  await authorizeSigningCredentials(
-    alice.conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
-  await authorizeSigningCredentials(
-    bob.conductor.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "read"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -252,16 +239,12 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   ]);
   await scenario.shareAllAgents();
 
-  await authorizeSigningCredentials(
-    alice.conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
-  await authorizeSigningCredentials(
-    bob.conductor.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "read"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -407,16 +390,12 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
   const alice = clientsPlayers[0].players[0];
   const bob = clientsPlayers[1].players[0];
 
-  await authorizeSigningCredentials(
-    alice.conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
-  await authorizeSigningCredentials(
-    bob.conductor.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "read"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const content = "test-content";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({

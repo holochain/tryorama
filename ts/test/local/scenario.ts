@@ -87,7 +87,7 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
   });
 });
 
-test("Local Scenario - Install hApp bundle and access cells through role ids", async (t) => {
+test("Local Scenario - Install hApp bundle and access cell by role name", async (t) => {
   const scenario = new Scenario();
 
   const alice = await scenario.addPlayerWithApp({
@@ -121,16 +121,12 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
   await scenario.shareAllAgents();
 
-  await authorizeSigningCredentials(
-    alice.conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
-  await authorizeSigningCredentials(
-    bob.conductor.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "read"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -161,16 +157,12 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
   await scenario.shareAllAgents();
 
-  await authorizeSigningCredentials(
-    alice.conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "create"]]
-  );
-  await authorizeSigningCredentials(
-    bob.conductor.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "read"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -230,16 +222,12 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   assert(signalHandlerBob);
   bob.conductor.appWs().on("signal", signalHandlerBob);
 
-  await authorizeSigningCredentials(
-    alice.conductor.adminWs(),
-    alice.cells[0].cell_id,
-    [["coordinator", "signal_loopback"]]
-  );
-  await authorizeSigningCredentials(
-    bob.conductor.adminWs(),
-    bob.cells[0].cell_id,
-    [["coordinator", "signal_loopback"]]
-  );
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "signal_loopback"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "signal_loopback"],
+  ]);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({
