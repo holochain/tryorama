@@ -8,7 +8,6 @@ import {
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CallZomeRequestSigned,
-  CallZomeRequestUnsigned,
   CreateCloneCellRequest,
   DeleteCloneCellRequest,
   DisableAppRequest,
@@ -23,25 +22,18 @@ import {
   encodeHashToBase64,
   FullStateDump,
   GetDnaDefinitionRequest,
-  getNonceExpiration,
   getSigningCredentials,
-  generateSigningKeyPair,
   GrantZomeCallCapabilityRequest,
-  hashZomeCall,
   InstallAppRequest,
   ListAppsRequest,
-  randomNonce,
   RegisterDnaRequest,
+  signZomeCall,
   StartAppRequest,
   UninstallAppRequest,
-  randomCapSecret,
-  signZomeCall,
 } from "@holochain/client";
-import { encode } from "@msgpack/msgpack";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
 import { URL } from "node:url";
-import nacl from "tweetnacl";
 import { v4 as uuidv4 } from "uuid";
 import { enableAndGetAgentApp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
@@ -268,6 +260,24 @@ export class TryCpConductor implements IConductor {
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
+  }
+
+  /**
+   * Attach a signal handler.
+   *
+   * @param signalHandler - The signal handler to register.
+   */
+  on(signalHandler: AppSignalCb) {
+    assert(this.appInterfacePort, "no app interface attached to conductor");
+    this.tryCpClient.setSignalHandler(this.appInterfacePort, signalHandler);
+  }
+
+  /**
+   * Detach the registered signal handler.
+   */
+  off() {
+    assert(this.appInterfacePort, "no app interface attached to conductor");
+    this.tryCpClient.setSignalHandler(this.appInterfacePort, undefined);
   }
 
   /**
@@ -654,15 +664,10 @@ export class TryCpConductor implements IConductor {
         const signingCredentials = getSigningCredentials(request.cell_id);
         if (!signingCredentials) {
           throw new Error(
-            "cannot sign zome call: no signing credentials have been authorized"
+            `cannot sign zome call: no signing credentials have been authorized for cell ${request.cell_id}`
           );
         }
-        const signedZomeCall = await signZomeCall(
-          signingCredentials.capSecret,
-          signingCredentials.signingKey,
-          signingCredentials.keyPair,
-          request
-        );
+        const signedZomeCall = await signZomeCall(request);
         signedRequest = signedZomeCall;
       }
       const response = await this.callAppApi({
