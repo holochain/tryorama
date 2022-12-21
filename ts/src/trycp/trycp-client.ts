@@ -209,17 +209,6 @@ export class TryCpClient {
       request,
     };
 
-    // serialize payload if the request is a zome call
-    if (
-      serverCall.request.type === "call_app_interface" &&
-      "data" in serverCall.request.message &&
-      serverCall.request.message.type === "zome_call"
-    ) {
-      serverCall.request.message.data.payload = msgpack.encode(
-        serverCall.request.message.data.payload
-      );
-    }
-
     // serialize message if the request is an Admin or App API call
     if (
       serverCall.request.type === "call_admin_interface" ||
@@ -335,7 +324,7 @@ export class TryCpClient {
     if (
       debugLog.type === "call_app_interface" &&
       "data" in debugLog.message &&
-      debugLog.message.type === "zome_call"
+      debugLog.message.type === "call_zome"
     ) {
       debugLog.message.data = Object.assign(debugLog.message.data, {
         cell_id: [

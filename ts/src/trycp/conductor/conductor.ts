@@ -7,6 +7,8 @@ import {
   AppSignalCb,
   AttachAppInterfaceRequest,
   CallZomeRequest,
+  CallZomeRequestSigned,
+  CallZomeRequestUnsigned,
   CreateCloneCellRequest,
   DeleteCloneCellRequest,
   DisableAppRequest,
@@ -21,16 +23,25 @@ import {
   encodeHashToBase64,
   FullStateDump,
   GetDnaDefinitionRequest,
+  getNonceExpiration,
+  getSigningCredentials,
+  generateSigningKeyPair,
   GrantZomeCallCapabilityRequest,
+  hashZomeCall,
   InstallAppRequest,
   ListAppsRequest,
+  randomNonce,
   RegisterDnaRequest,
   StartAppRequest,
   UninstallAppRequest,
+  randomCapSecret,
+  signZomeCall,
 } from "@holochain/client";
+import { encode } from "@msgpack/msgpack";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
 import { URL } from "node:url";
+import nacl from "tweetnacl";
 import { v4 as uuidv4 } from "uuid";
 import { enableAndGetAgentApp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
@@ -633,10 +644,30 @@ export class TryCpConductor implements IConductor {
      * @param request - {@link CallZomeRequest}.
      * @returns The result of the zome call.
      */
-    const callZome = async <T>(request: CallZomeRequest) => {
+    const callZome = async <T>(
+      request: CallZomeRequest | CallZomeRequestSigned
+    ) => {
+      let signedRequest: CallZomeRequestSigned;
+      if ("signature" in request) {
+        signedRequest = request;
+      } else {
+        const signingCredentials = getSigningCredentials(request.cell_id);
+        if (!signingCredentials) {
+          throw new Error(
+            "cannot sign zome call: no signing credentials have been authorized"
+          );
+        }
+        const signedZomeCall = await signZomeCall(
+          signingCredentials.capSecret,
+          signingCredentials.signingKey,
+          signingCredentials.keyPair,
+          request
+        );
+        signedRequest = signedZomeCall;
+      }
       const response = await this.callAppApi({
-        type: "zome_call",
-        data: request,
+        type: "call_zome",
+        data: signedRequest,
       });
       assert("data" in response);
       assert(response.data);

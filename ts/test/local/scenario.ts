@@ -2,7 +2,7 @@ import {
   AppBundleSource,
   AppSignal,
   AppSignalCb,
-  createSigningCredentials,
+  authorizeSigningCredentials,
   EntryHash,
 } from "@holochain/client";
 import assert from "node:assert/strict";
@@ -70,7 +70,7 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
     assert(signalHandlerAlice);
     alice.conductor.appWs().on("signal", signalHandlerAlice);
 
-    await createSigningCredentials(
+    await authorizeSigningCredentials(
       alice.conductor.adminWs(),
       alice.cells[0].cell_id,
       [["coordinator", "signal_loopback"]]
@@ -121,12 +121,12 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
   await scenario.shareAllAgents();
 
-  await createSigningCredentials(
+  await authorizeSigningCredentials(
     alice.conductor.adminWs(),
     alice.cells[0].cell_id,
     [["coordinator", "create"]]
   );
-  await createSigningCredentials(
+  await authorizeSigningCredentials(
     bob.conductor.adminWs(),
     bob.cells[0].cell_id,
     [["coordinator", "read"]]
@@ -161,12 +161,12 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
   await scenario.shareAllAgents();
 
-  await createSigningCredentials(
+  await authorizeSigningCredentials(
     alice.conductor.adminWs(),
     alice.cells[0].cell_id,
     [["coordinator", "create"]]
   );
-  await createSigningCredentials(
+  await authorizeSigningCredentials(
     bob.conductor.adminWs(),
     bob.cells[0].cell_id,
     [["coordinator", "read"]]
@@ -230,12 +230,12 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   assert(signalHandlerBob);
   bob.conductor.appWs().on("signal", signalHandlerBob);
 
-  await createSigningCredentials(
+  await authorizeSigningCredentials(
     alice.conductor.adminWs(),
     alice.cells[0].cell_id,
     [["coordinator", "signal_loopback"]]
   );
-  await createSigningCredentials(
+  await authorizeSigningCredentials(
     bob.conductor.adminWs(),
     bob.cells[0].cell_id,
     [["coordinator", "signal_loopback"]]

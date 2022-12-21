@@ -6,7 +6,7 @@ import {
   AppInfoResponse,
   AttachAppInterfaceRequest,
   AttachAppInterfaceResponse,
-  CallZomeRequest,
+  CallZomeRequestSigned,
   CellId,
   CreateCloneCellRequest,
   CreateCloneCellResponse,
@@ -304,8 +304,8 @@ export type RequestCallAppInterfaceMessage =
  * @public
  */
 export interface RequestCallZome {
-  type: "zome_call";
-  data: CallZomeRequest;
+  type: "call_zome";
+  data: CallZomeRequestSigned;
 }
 
 /**

@@ -10,4 +10,4 @@ roles:
     dna:
       bundled: ./entry.dna
       version: ~
-      clone_limit: 0
+      clone_limit: 1

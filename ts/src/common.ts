@@ -3,6 +3,7 @@ import {
   AppInfo,
   CallZomeResponse,
   Cell,
+  CellType,
   RoleName,
 } from "@holochain/client";
 import {
@@ -62,22 +63,25 @@ export const enableAndGetAgentApp = async (
   const namedCells = new Map<RoleName, CallableCell>();
   Object.keys(installedAppInfo.cell_info).forEach((role_name) => {
     installedAppInfo.cell_info[role_name].forEach((cellInfo) => {
-      if ("Provisioned" in cellInfo) {
+      if (CellType.Provisioned in cellInfo) {
         const callableCell = getCallableCell(
           conductor,
-          cellInfo.Provisioned,
+          cellInfo[CellType.Provisioned],
           agentPubKey
         );
         cells.push(callableCell);
         namedCells.set(role_name, callableCell);
-      } else if ("Cloned" in cellInfo && cellInfo.Cloned.clone_id) {
+      } else if (
+        CellType.Cloned in cellInfo &&
+        cellInfo[CellType.Cloned].clone_id
+      ) {
         const callableCell = getCallableCell(
           conductor,
-          cellInfo.Cloned,
+          cellInfo[CellType.Cloned],
           agentPubKey
         );
-        namedCells.set(cellInfo.Cloned.clone_id, callableCell);
         cells.push(callableCell);
+        namedCells.set(cellInfo[CellType.Cloned].clone_id, callableCell);
       } else {
         throw new Error("Stem cells are not implemented");
       }
@@ -102,9 +106,9 @@ const getCallableCell = (
     const callZomeResponse = await conductor.appWs().callZome(
       {
         ...request,
-        cap_secret: request.cap_secret ?? null,
+        cap_secret: null,
         cell_id: cell.cell_id,
-        provenance: request.provenance || agentPubKey,
+        provenance: request.provenance ?? agentPubKey,
         payload: request.payload ?? null,
       },
       timeout

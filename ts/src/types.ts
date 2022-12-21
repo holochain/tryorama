@@ -1,11 +1,10 @@
-import {
+import type {
   AdminWebsocket,
   AgentPubKey,
   AppBundleSource,
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
-  CapSecret,
   Cell,
   DnaBundle,
   DnaProperties,
@@ -38,7 +37,6 @@ export type CellZomeCallRequest = Omit<
   CallZomeRequest,
   "cap_secret" | "cell_id" | "payload" | "provenance"
 > & {
-  cap_secret?: CapSecret;
   provenance?: AgentPubKey;
   payload?: unknown;
 };
@@ -150,7 +148,7 @@ export interface IConductor {
 
   adminWs: () => Omit<
     AdminWebsocket,
-    "_requester" | "client" | "defaultTimeout"
+    "client" | "defaultTimeout" | "_requester"
   >;
   appWs: () => Pick<
     AppWebsocket,
