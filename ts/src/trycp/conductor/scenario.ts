@@ -18,7 +18,7 @@ export interface ClientsPlayersOptions {
   /**
    * An app that will be installed for each agent (optional).
    */
-  apps: AppBundleSource[];
+  app?: AppBundleSource;
 
   /**
    * A list of previously generated agent pub keys (optional).
@@ -121,29 +121,25 @@ export class TryCpScenario {
         const numberOfAgentsPerConductor =
           options?.numberOfAgentsPerConductor ?? 1;
 
-        if (numberOfAgentsPerConductor) {
+        if (options?.numberOfAgentsPerConductor) {
           // install agents apps for each conductor
-          if (options?.apps === undefined) {
+          if (options?.app === undefined) {
             throw new Error("no apps specified to be installed for agents");
           }
 
+          // TS fails to infer that options.apps cannot be `undefined` here
+          const app = options.app;
+
           let agentsApps;
           if (options.agentPubKeys) {
-            if (options.agentPubKeys.length !== options.apps.length) {
-              throw new Error(
-                "number of agent pub keys doesn't match number of apps"
-              );
-            }
-            agentsApps = options.agentPubKeys.map((agentPubKey, index) => ({
+            agentsApps = options.agentPubKeys.map((agentPubKey) => ({
               agentPubKey,
-              app: options.apps[index],
+              app,
             }));
           } else {
-            agentsApps = [...Array(numberOfAgentsPerConductor)].map(
-              (_, index) => ({
-                app: options.apps[index],
-              })
-            );
+            agentsApps = [...Array(numberOfAgentsPerConductor)].map(() => ({
+              app,
+            }));
           }
 
           const installedAgentsHapps = await conductor.installAgentsApps({
@@ -173,7 +169,7 @@ export class TryCpScenario {
     appBundleSource: AppBundleSource,
     options?: AppOptions
   ) {
-    const conductor = await tryCpClient.addConductor();
+    const conductor = await tryCpClient.addConductor(options?.signalHandler);
     options = {
       ...options,
       networkSeed: options?.networkSeed ?? this.network_seed,

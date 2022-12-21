@@ -100,6 +100,10 @@ export interface AppOptions {
    * Proofs of membership for the hApp.
    */
   membraneProofs?: Record<string, MembraneProof>;
+  /**
+   * A signal handler for the conductor.
+   */
+  signalHandler?: AppSignalCb;
 }
 
 /**
