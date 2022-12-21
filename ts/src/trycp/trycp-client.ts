@@ -92,61 +92,56 @@ export class TryCpClient {
     });
 
     tryCpClient.ws.on("message", (encodedResponse: Buffer) => {
-      try {
-        const responseWrapper = deserializeTryCpResponse(encodedResponse);
+      const responseWrapper = deserializeTryCpResponse(encodedResponse);
 
-        if (responseWrapper.type === "signal") {
-          const signalHandler =
-            tryCpClient.signalHandlers[responseWrapper.port];
-          if (signalHandler) {
-            const signal = deserializeTryCpSignal(responseWrapper.data);
-            logger.debug(
-              `received signal @ port ${responseWrapper.port}: ${JSON.stringify(
-                signal,
-                null,
-                4
-              )}\n`
-            );
-            signalHandler(signal);
-          } else {
-            logger.info(
-              "received signal from TryCP server, but no signal handler registered"
-            );
-          }
-        } else if (responseWrapper.type === "response") {
-          const { responseResolve, responseReject } =
-            tryCpClient.requestPromises[responseWrapper.id];
-
-          // the server responds with an object
-          // it contains `0` as property for formally correct requests
-          // and `1` when the format was incorrect
-          if ("0" in responseWrapper.response) {
-            try {
-              const innerResponse = tryCpClient.processSuccessResponse(
-                responseWrapper.response[0]
-              );
-              responseResolve(innerResponse);
-            } catch (error) {
-              if (error instanceof Error) {
-                responseReject(error);
-              } else {
-                const errorMessage = JSON.stringify(error, null, 4);
-                responseReject(errorMessage);
-              }
-            }
-          } else if ("1" in responseWrapper.response) {
-            responseReject(responseWrapper.response[1]);
-          } else {
-            logger.error(
-              "unknown response type",
-              JSON.stringify(responseWrapper.response, null, 4)
-            );
-            throw new Error("Unknown response type");
-          }
-          delete tryCpClient.requestPromises[responseWrapper.id];
+      if (responseWrapper.type === "signal") {
+        const signalHandler = tryCpClient.signalHandlers[responseWrapper.port];
+        if (signalHandler) {
+          const signal = deserializeTryCpSignal(responseWrapper.data);
+          logger.debug(
+            `received signal @ port ${responseWrapper.port}: ${JSON.stringify(
+              signal,
+              null,
+              4
+            )}\n`
+          );
+          signalHandler(signal);
+        } else {
+          logger.info(
+            "received signal from TryCP server, but no signal handler registered"
+          );
         }
-      } catch (error) {
-        console.error("eeafdf", error);
+      } else if (responseWrapper.type === "response") {
+        const { responseResolve, responseReject } =
+          tryCpClient.requestPromises[responseWrapper.id];
+
+        // the server responds with an object
+        // it contains `0` as property for formally correct requests
+        // and `1` when the format was incorrect
+        if ("0" in responseWrapper.response) {
+          try {
+            const innerResponse = tryCpClient.processSuccessResponse(
+              responseWrapper.response[0]
+            );
+            responseResolve(innerResponse);
+          } catch (error) {
+            if (error instanceof Error) {
+              responseReject(error);
+            } else {
+              const errorMessage = JSON.stringify(error, null, 4);
+              responseReject(errorMessage);
+            }
+          }
+        } else if ("1" in responseWrapper.response) {
+          responseReject(responseWrapper.response[1]);
+        } else {
+          logger.error(
+            "unknown response type",
+            JSON.stringify(responseWrapper.response, null, 4)
+          );
+          throw new Error("Unknown response type");
+        }
+        delete tryCpClient.requestPromises[responseWrapper.id];
       }
     });
     tryCpClient.ws.on("error", (err) => {
