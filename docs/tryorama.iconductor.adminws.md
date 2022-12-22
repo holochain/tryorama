@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-adminWs: () => Omit<AdminWebsocket, "_requester" | "client" | "activateApp" | "deactivateApp" | "defaultTimeout" | "listActiveApps">;
+adminWs: () => Omit<AdminWebsocket, "client" | "defaultTimeout" | "_requester">;
 ```

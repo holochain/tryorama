@@ -4,12 +4,12 @@
 
 ## AppApiResponse type
 
-Possible responses from the App API.
+App API Responses.
 
 <b>Signature:</b>
 
 ```typescript
-export declare type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall | AppApiResponseCreateCloneCell | AppApiResponseArchiveCloneCell;
+export type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall | AppApiResponseCloneCellCreated | AppApiResponseCloneCellEnabled | AppApiResponseCloneCellDisabled;
 ```
-<b>References:</b> [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md)<!-- -->, [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md)<!-- -->, [AppApiResponseCreateCloneCell](./tryorama.appapiresponsecreateclonecell.md)<!-- -->, [AppApiResponseArchiveCloneCell](./tryorama.appapiresponsearchiveclonecell.md)
+<b>References:</b> [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md)<!-- -->, [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md)<!-- -->, [AppApiResponseCloneCellCreated](./tryorama.appapiresponseclonecellcreated.md)<!-- -->, [AppApiResponseCloneCellEnabled](./tryorama.appapiresponseclonecellenabled.md)<!-- -->, [AppApiResponseCloneCellDisabled](./tryorama.appapiresponseclonecelldisabled.md)
 

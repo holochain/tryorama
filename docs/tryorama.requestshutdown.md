@@ -14,9 +14,9 @@ export interface RequestShutdown
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [id](./tryorama.requestshutdown.id.md) | [ConductorId](./tryorama.conductorid.md) |  |
-|  [signal?](./tryorama.requestshutdown.signal.md) | "SIGTERM" \| "SIGKILL" \| "SIGINT" | <i>(Optional)</i> |
-|  [type](./tryorama.requestshutdown.type.md) | "shutdown" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [id](./tryorama.requestshutdown.id.md) |  | [ConductorId](./tryorama.conductorid.md) |  |
+|  [signal?](./tryorama.requestshutdown.signal.md) |  | "SIGTERM" \| "SIGKILL" \| "SIGINT" | <i>(Optional)</i> |
+|  [type](./tryorama.requestshutdown.type.md) |  | "shutdown" |  |
 

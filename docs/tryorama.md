@@ -18,9 +18,9 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  --- | --- |
 |  [Conductor](./tryorama.conductor.md) | A class to manage a conductor running on localhost. |
 |  [Scenario](./tryorama.scenario.md) | An abstraction of a test scenario to write tests against Holochain hApps, running on a local conductor. |
-|  [TryCpClient](./tryorama.trycpclient.md) | A factory class to create client connections to a running TryCP server.<!-- -->With a client, conductors on the server can ba configured, started and stopped. All valid Admin and App API commands can be sent to the server too. |
+|  [TryCpClient](./tryorama.trycpclient.md) | <p>A factory class to create client connections to a running TryCP server.</p><p>With a client, conductors on the server can ba configured, started and stopped. All valid Admin and App API commands can be sent to the server too.</p> |
 |  [TryCpConductor](./tryorama.trycpconductor.md) | A class to manage a conductor running on a TryCP server. |
-|  [TryCpScenario](./tryorama.trycpscenario.md) | A test scenario abstraction with convenience functions to manage TryCP clients and players (agent + conductor).<!-- -->Clients in turn help manage conductors on TryCP servers. Clients can be added to a scenario to keep track of all server connections. When finishing a test scenario, all conductors of all clients can be easily cleaned up and the client connections closed. |
+|  [TryCpScenario](./tryorama.trycpscenario.md) | <p>A test scenario abstraction with convenience functions to manage TryCP clients and players (agent + conductor).</p><p>Clients in turn help manage conductors on TryCP servers. Clients can be added to a scenario to keep track of all server connections. When finishing a test scenario, all conductors of all clients can be easily cleaned up and the client connections closed.</p> |
 |  [TryCpServer](./tryorama.trycpserver.md) | A factory class to start and stop local instances of the TryCP server. |
 
 ## Enumerations
@@ -33,10 +33,9 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 
 |  Interface | Description |
 |  --- | --- |
+|  [AdminApiResponseAgentInfo](./tryorama.adminapiresponseagentinfo.md) |  |
 |  [AdminApiResponseAgentInfoAdded](./tryorama.adminapiresponseagentinfoadded.md) |  |
-|  [AdminApiResponseAgentInfoRequested](./tryorama.adminapiresponseagentinforequested.md) |  |
 |  [AdminApiResponseAgentPubKeyGenerated](./tryorama.adminapiresponseagentpubkeygenerated.md) |  |
-|  [AdminApiResponseAppBundleInstalled](./tryorama.adminapiresponseappbundleinstalled.md) |  |
 |  [AdminApiResponseAppDisabled](./tryorama.adminapiresponseappdisabled.md) |  |
 |  [AdminApiResponseAppEnabled](./tryorama.adminapiresponseappenabled.md) |  |
 |  [AdminApiResponseAppInstalled](./tryorama.adminapiresponseappinstalled.md) |  |
@@ -45,45 +44,44 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AdminApiResponseAppsListed](./tryorama.adminapiresponseappslisted.md) |  |
 |  [AdminApiResponseAppStarted](./tryorama.adminapiresponseappstarted.md) |  |
 |  [AdminApiResponseAppUninstalled](./tryorama.adminapiresponseappuninstalled.md) |  |
-|  [AdminApiResponseArchivedCloneCellsDeleted](./tryorama.adminapiresponsearchivedclonecellsdeleted.md) |  |
 |  [AdminApiResponseCellIdsListed](./tryorama.adminapiresponsecellidslisted.md) |  |
-|  [AdminApiResponseCloneCellRestored](./tryorama.adminapiresponseclonecellrestored.md) |  |
+|  [AdminApiResponseCloneCellDeleted](./tryorama.adminapiresponseclonecelldeleted.md) |  |
 |  [AdminApiResponseDnaRegistered](./tryorama.adminapiresponsednaregistered.md) |  |
 |  [AdminApiResponseDnasDefinitionReturned](./tryorama.adminapiresponsednasdefinitionreturned.md) |  |
 |  [AdminApiResponseDnasListed](./tryorama.adminapiresponsednaslisted.md) |  |
 |  [AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md) |  |
 |  [AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md) |  |
 |  [AdminApiResponseZomeCallCapabilityGranted](./tryorama.adminapiresponsezomecallcapabilitygranted.md) |  |
-|  [AgentDnas](./tryorama.agentdnas.md) | DNAs per agent. Optionally an agent pub key. |
-|  [AgentHapp](./tryorama.agenthapp.md) | Provides direct access to cells of a hApp and the agent key. |
+|  [AgentApp](./tryorama.agentapp.md) | Provides direct access to cells of an app and the agent key. |
 |  [ApiErrorResponse](./tryorama.apierrorresponse.md) | Error response from the Admin or App API. |
 |  [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md) |  |
-|  [AppApiResponseArchiveCloneCell](./tryorama.appapiresponsearchiveclonecell.md) |  |
-|  [AppApiResponseCreateCloneCell](./tryorama.appapiresponsecreateclonecell.md) |  |
+|  [AppApiResponseCloneCellCreated](./tryorama.appapiresponseclonecellcreated.md) |  |
+|  [AppApiResponseCloneCellDisabled](./tryorama.appapiresponseclonecelldisabled.md) |  |
+|  [AppApiResponseCloneCellEnabled](./tryorama.appapiresponseclonecellenabled.md) |  |
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
+|  [AppOptions](./tryorama.appoptions.md) | Optional arguments when installing a hApp. |
 |  [CallableCell](./tryorama.callablecell.md) | Extends an installed cell by a function to call a zome. |
 |  [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |  |
 |  [ConductorOptions](./tryorama.conductoroptions.md) |  |
 |  [Dna](./tryorama.dna.md) | DNA source and additional options. |
-|  [HappBundleOptions](./tryorama.happbundleoptions.md) | Optional arguments when installing a hApp bundle. |
 |  [IConductor](./tryorama.iconductor.md) | Base interface of a Tryorama conductor. Both [Conductor](./tryorama.conductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface. |
 |  [IPlayer](./tryorama.iplayer.md) | Combines an agent hApp with the conductor they belong to. |
 |  [Player](./tryorama.player.md) | A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->. |
-|  [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) | All possible calls to an admin interface. |
+|  [RequestAdminInterfaceMessage](./tryorama.requestadmininterfacemessage.md) | All possible calls to the Admin API. |
 |  [RequestAppInfo](./tryorama.requestappinfo.md) | Request app info from a conductor. |
-|  [RequestArchiveCloneCell](./tryorama.requestarchiveclonecell.md) | Create a clone cell. |
-|  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) | Request a call to the admin interface of a conductor. |
-|  [RequestCallAppInterface](./tryorama.requestcallappinterface.md) | Request a call to a conductor's app interface. |
+|  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) | Request a call to the Admin API. |
+|  [RequestCallAppInterface](./tryorama.requestcallappinterface.md) | Request a call to the App API. |
 |  [RequestCallAppInterfaceEncoded](./tryorama.requestcallappinterfaceencoded.md) | Msgpack encoded request to call an app interface. |
 |  [RequestCallZome](./tryorama.requestcallzome.md) | Request to call a zome on a conductor's app interface. |
 |  [RequestConfigurePlayer](./tryorama.requestconfigureplayer.md) | Request to create configuration files and directories for a conductor. |
 |  [RequestConnectAppInterface](./tryorama.requestconnectappinterface.md) | Request to connect an app interface to a conductor. |
 |  [RequestCreateCloneCell](./tryorama.requestcreateclonecell.md) | Create a clone cell. |
-|  [RequestDeleteArchivedCloneCells](./tryorama.requestdeletearchivedclonecells.md) | Delete archived clone cells. |
+|  [RequestDeleteCloneCell](./tryorama.requestdeleteclonecell.md) | Delete a disabled clone cell. |
+|  [RequestDisableCloneCell](./tryorama.requestdisableclonecell.md) | Disable a clone cell. |
 |  [RequestDisconnectAppInterface](./tryorama.requestdisconnectappinterface.md) | Request to disconnect a connected app interface from a conductor. |
 |  [RequestDownloadDna](./tryorama.requestdownloaddna.md) | Request to download a DNA from a URL. |
+|  [RequestEnableCloneCell](./tryorama.requestenableclonecell.md) | Enable a disabled clone cell. |
 |  [RequestReset](./tryorama.requestreset.md) | Request deletion of \*\*all\*\* conductors. |
-|  [RequestRestoreCloneCell](./tryorama.requestrestoreclonecell.md) | Restore an archived clone cell. |
 |  [RequestSaveDna](./tryorama.requestsavedna.md) | Request to save a DNA to the server's file system. |
 |  [RequestShutdown](./tryorama.requestshutdown.md) | Request shutdown of a conductor. |
 |  [RequestStartup](./tryorama.requeststartup.md) | Request startup of a conductor. |
@@ -111,14 +109,13 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  Type Alias | Description |
 |  --- | --- |
 |  [AdminApiResponse](./tryorama.adminapiresponse.md) | All possible responses from the Admin API. |
-|  [AgentsHappsOptions](./tryorama.agentshappsoptions.md) | An array of DNA sources for each agent (2-dimensional array) or an array of DNAs and an optional agent pub key. Optionally a network seed to be used for DNA installation. |
-|  [AppApiResponse](./tryorama.appapiresponse.md) | Possible responses from the App API. |
+|  [AgentsAppsOptions](./tryorama.agentsappsoptions.md) | An app and an optional agent pub key for each agent. Optionally a network seed to be used for DNA installation. |
+|  [AppApiResponse](./tryorama.appapiresponse.md) | App API Responses. |
 |  [CallZomeFn](./tryorama.callzomefn.md) | The function for calling a zome from a specific cell. |
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |
 |  [ConductorId](./tryorama.conductorid.md) |  |
 |  [CreateConductorOptions](./tryorama.createconductoroptions.md) | Options for using the conductor factory. |
-|  [PlayerHappOptions](./tryorama.playerhappoptions.md) | Player installation options used in scenarios.<!-- -->Specifies either only the DNA sources that the hApp to be installed consists of, or the DNAs and a signal handler to be registered. |
-|  [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) | All possible calls to an app interface. |
+|  [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) | All possible calls to the App API. |
 |  [TryCpApiResponse](./tryorama.trycpapiresponse.md) | Possible responses from the Admin and App APIs. |
 |  [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | Log level for a TryCP conductor. |
 |  [TryCpRequest](./tryorama.trycprequest.md) | Contains all possible request types. |

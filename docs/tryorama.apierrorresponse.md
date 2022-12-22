@@ -14,8 +14,8 @@ export interface ApiErrorResponse
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [data](./tryorama.apierrorresponse.data.md) | { type: string; data: string; } |  |
-|  [type](./tryorama.apierrorresponse.type.md) | "error" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [data](./tryorama.apierrorresponse.data.md) |  | { type: string; data: string; } |  |
+|  [type](./tryorama.apierrorresponse.type.md) |  | "error" |  |
 

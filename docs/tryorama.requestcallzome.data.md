@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-data: CallZomeRequest;
+data: CallZomeRequestSigned;
 ```

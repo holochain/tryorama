@@ -9,13 +9,13 @@ Combines an agent hApp with the conductor they belong to.
 <b>Signature:</b>
 
 ```typescript
-export interface IPlayer extends AgentHapp 
+export interface IPlayer extends AgentApp 
 ```
-<b>Extends:</b> [AgentHapp](./tryorama.agenthapp.md)
+<b>Extends:</b> [AgentApp](./tryorama.agentapp.md)
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [conductor](./tryorama.iplayer.conductor.md) | [IConductor](./tryorama.iconductor.md) |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [conductor](./tryorama.iplayer.conductor.md) |  | [IConductor](./tryorama.iconductor.md) |  |
 

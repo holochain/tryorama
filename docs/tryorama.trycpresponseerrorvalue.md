@@ -9,5 +9,5 @@ Error response values.
 <b>Signature:</b>
 
 ```typescript
-export declare type TryCpResponseErrorValue = string | Error;
+export type TryCpResponseErrorValue = string | Error;
 ```

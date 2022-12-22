@@ -20,11 +20,11 @@ export declare class Conductor implements IConductor
 |  [adminWs()](./tryorama.conductor.adminws.md) |  | Get all Admin API methods. |
 |  [appWs()](./tryorama.conductor.appws.md) |  | Get all App API methods. |
 |  [attachAppInterface(request)](./tryorama.conductor.attachappinterface.md) |  | Attach a web socket to the App API. |
-|  [connectAppInterface(signalHandler)](./tryorama.conductor.connectappinterface.md) |  | Connect a web socket to the App API. |
+|  [connectAppInterface()](./tryorama.conductor.connectappinterface.md) |  | Connect a web socket to the App API. |
 |  [create(options)](./tryorama.conductor.create.md) | <code>static</code> | Factory to create a conductor. |
 |  [getTmpDirectory()](./tryorama.conductor.gettmpdirectory.md) |  | Get the path of the directory that contains all files and folders of the conductor. |
-|  [installAgentsHapps(options)](./tryorama.conductor.installagentshapps.md) |  | Install a set of DNAs for multiple agents into the conductor. |
-|  [installHappBundle(appBundleSource, options)](./tryorama.conductor.installhappbundle.md) |  | Install a hApp bundle into the conductor. |
+|  [installAgentsApps(options)](./tryorama.conductor.installagentsapps.md) |  | Install an app for multiple agents into the conductor. |
+|  [installApp(appBundleSource, options)](./tryorama.conductor.installapp.md) |  | Install an application into the conductor. |
 |  [shutDown()](./tryorama.conductor.shutdown.md) |  | Close Admin and App API connections and kill the conductor process. |
 |  [startUp()](./tryorama.conductor.startup.md) |  | Start the conductor and establish a web socket connection to the Admin API. |
 

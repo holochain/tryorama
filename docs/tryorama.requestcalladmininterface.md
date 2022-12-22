@@ -4,7 +4,7 @@
 
 ## RequestCallAdminInterface interface
 
-Request a call to the admin interface of a conductor.
+Request a call to the Admin API.
 
 <b>Signature:</b>
 
@@ -14,9 +14,9 @@ export interface RequestCallAdminInterface
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [id](./tryorama.requestcalladmininterface.id.md) | [ConductorId](./tryorama.conductorid.md) |  |
-|  [message](./tryorama.requestcalladmininterface.message.md) | [RequestAdminInterfaceData](./tryorama.requestadmininterfacedata.md) |  |
-|  [type](./tryorama.requestcalladmininterface.type.md) | "call\_admin\_interface" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [id](./tryorama.requestcalladmininterface.id.md) |  | [ConductorId](./tryorama.conductorid.md) |  |
+|  [message](./tryorama.requestcalladmininterface.message.md) |  | [RequestAdminInterfaceMessage](./tryorama.requestadmininterfacemessage.md) |  |
+|  [type](./tryorama.requestcalladmininterface.type.md) |  | "call\_admin\_interface" |  |
 

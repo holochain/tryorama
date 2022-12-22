@@ -14,8 +14,8 @@ export interface RequestDownloadDna
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [type](./tryorama.requestdownloaddna.type.md) | "download\_dna" |  |
-|  [url](./tryorama.requestdownloaddna.url.md) | string |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [type](./tryorama.requestdownloaddna.type.md) |  | "download\_dna" |  |
+|  [url](./tryorama.requestdownloaddna.url.md) |  | string |  |
 

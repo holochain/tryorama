@@ -9,15 +9,8 @@ Connect a web socket to the App API.
 <b>Signature:</b>
 
 ```typescript
-connectAppInterface(signalHandler?: AppSignalCb): Promise<void>;
+connectAppInterface(): Promise<void>;
 ```
-
-## Parameters
-
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  signalHandler | AppSignalCb | <i>(Optional)</i> A callback function to handle signals. |
-
 <b>Returns:</b>
 
 Promise&lt;void&gt;

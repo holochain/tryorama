@@ -9,13 +9,13 @@ Extends an installed cell by a function to call a zome.
 <b>Signature:</b>
 
 ```typescript
-export interface CallableCell extends InstalledCell 
+export interface CallableCell extends Cell 
 ```
-<b>Extends:</b> InstalledCell
+<b>Extends:</b> Cell
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [callZome](./tryorama.callablecell.callzome.md) | [CallZomeFn](./tryorama.callzomefn.md) |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [callZome](./tryorama.callablecell.callzome.md) |  | [CallZomeFn](./tryorama.callzomefn.md) |  |
 

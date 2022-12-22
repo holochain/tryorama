@@ -9,5 +9,5 @@ Log level for a TryCP conductor.
 <b>Signature:</b>
 
 ```typescript
-export declare type TryCpConductorLogLevel = "error" | "warn" | "info" | "debug" | "trace";
+export type TryCpConductorLogLevel = "error" | "warn" | "info" | "debug" | "trace";
 ```

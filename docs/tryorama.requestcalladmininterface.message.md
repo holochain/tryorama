@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-message: RequestAdminInterfaceData;
+message: RequestAdminInterfaceMessage;
 ```

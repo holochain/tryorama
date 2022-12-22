@@ -9,7 +9,7 @@ Options for using the conductor factory.
 <b>Signature:</b>
 
 ```typescript
-export declare type CreateConductorOptions = Pick<ConductorOptions, "bindTo" | "bootstrapUrl" | "hostOverride" | "networkType" | "portOverride" | "proxy" | "timeout">;
+export type CreateConductorOptions = Pick<ConductorOptions, "bindTo" | "bootstrapUrl" | "hostOverride" | "networkType" | "portOverride" | "proxy" | "timeout">;
 ```
 <b>References:</b> [ConductorOptions](./tryorama.conductoroptions.md)
 

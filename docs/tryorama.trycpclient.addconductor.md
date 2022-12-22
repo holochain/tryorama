@@ -16,8 +16,8 @@ addConductor(signalHandler?: AppSignalCb, config?: string): Promise<TryCpConduct
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signalHandler | AppSignalCb | <i>(Optional)</i> A callback function to handle signals. |
-|  config | string | <i>(Optional)</i> |
+|  signalHandler | AppSignalCb | <i>(Optional)</i> |
+|  config | string | <i>(Optional)</i> Conductor configuration (optional). |
 
 <b>Returns:</b>
 

@@ -13,10 +13,10 @@ export interface TryCpConductorOptions
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [id?](./tryorama.trycpconductoroptions.id.md) | [ConductorId](./tryorama.conductorid.md) | <i>(Optional)</i> Identifier for the conductor (optional). |
-|  [logLevel?](./tryorama.trycpconductoroptions.loglevel.md) | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | <i>(Optional)</i> Log level of the conductor (optional).<!-- -->default: "info" |
-|  [partialConfig?](./tryorama.trycpconductoroptions.partialconfig.md) | string | <i>(Optional)</i> Configuration for the conductor (optional). |
-|  [startup?](./tryorama.trycpconductoroptions.startup.md) | boolean | <i>(Optional)</i> Start up conductor after creation.<!-- -->default: true |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [id?](./tryorama.trycpconductoroptions.id.md) |  | [ConductorId](./tryorama.conductorid.md) | <i>(Optional)</i> Identifier for the conductor (optional). |
+|  [logLevel?](./tryorama.trycpconductoroptions.loglevel.md) |  | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | <p><i>(Optional)</i> Log level of the conductor (optional).</p><p>default: "info"</p> |
+|  [partialConfig?](./tryorama.trycpconductoroptions.partialconfig.md) |  | string | <i>(Optional)</i> Configuration for the conductor (optional). |
+|  [startup?](./tryorama.trycpconductoroptions.startup.md) |  | boolean | <p><i>(Optional)</i> Start up conductor after creation.</p><p>default: true</p> |
 

@@ -9,7 +9,7 @@ Possible responses from the Admin and App APIs.
 <b>Signature:</b>
 
 ```typescript
-export declare type TryCpApiResponse = AdminApiResponse | AppApiResponse | ApiErrorResponse;
+export type TryCpApiResponse = AdminApiResponse | AppApiResponse | ApiErrorResponse;
 ```
 <b>References:</b> [AdminApiResponse](./tryorama.adminapiresponse.md)<!-- -->, [AppApiResponse](./tryorama.appapiresponse.md)<!-- -->, [ApiErrorResponse](./tryorama.apierrorresponse.md)
 

@@ -11,11 +11,11 @@ Msgpack encoded request to call an app interface.
 ```typescript
 export interface RequestCallAppInterfaceEncoded extends Omit<RequestCallAppInterface, "message"> 
 ```
-<b>Extends:</b> Omit&lt;[RequestCallAppInterface](./tryorama.requestcallappinterface.md)
+<b>Extends:</b> Omit&lt;[RequestCallAppInterface](./tryorama.requestcallappinterface.md)<!-- -->, "message"&gt;
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [message](./tryorama.requestcallappinterfaceencoded.message.md) | Uint8Array |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [message](./tryorama.requestcallappinterfaceencoded.message.md) |  | Uint8Array |  |
 

@@ -23,8 +23,8 @@ export declare class TryCpConductor implements IConductor
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [id](./tryorama.trycpconductor.id.md) |  | string |  |
-|  [tryCpClient](./tryorama.trycpconductor.trycpclient.md) |  | [TryCpClient](./tryorama.trycpclient.md) |  |
+|  [id](./tryorama.trycpconductor.id.md) | <code>readonly</code> | string |  |
+|  [tryCpClient](./tryorama.trycpconductor.trycpclient.md) | <code>readonly</code> | [TryCpClient](./tryorama.trycpclient.md) |  |
 
 ## Methods
 
@@ -37,8 +37,10 @@ export declare class TryCpConductor implements IConductor
 |  [disconnectAppInterface()](./tryorama.trycpconductor.disconnectappinterface.md) |  | Disconnect the web socket from the App API. |
 |  [disconnectClient()](./tryorama.trycpconductor.disconnectclient.md) |  | Disconnect the TryCP client from the TryCP server. |
 |  [downloadDna(url)](./tryorama.trycpconductor.downloaddna.md) |  | Download a DNA from a URL to the server's file system. |
-|  [installAgentsHapps(options)](./tryorama.trycpconductor.installagentshapps.md) |  | Install a set of DNAs for multiple agents into the conductor. |
-|  [installHappBundle(appBundleSource, options)](./tryorama.trycpconductor.installhappbundle.md) |  | Install a hApp bundle into the conductor. |
+|  [installAgentsApps(options)](./tryorama.trycpconductor.installagentsapps.md) |  | Install a hApp bundle into the conductor. |
+|  [installApp(appBundleSource, options)](./tryorama.trycpconductor.installapp.md) |  | Install a hApp bundle into the conductor. |
+|  [off()](./tryorama.trycpconductor.off.md) |  | Detach the registered signal handler. |
+|  [on(signalHandler)](./tryorama.trycpconductor.on.md) |  | Attach a signal handler. |
 |  [saveDna(dnaContent)](./tryorama.trycpconductor.savedna.md) |  | Upload a DNA file from the local file system to the server. |
 |  [shutDown()](./tryorama.trycpconductor.shutdown.md) |  | Disconnect app interface and shut down the conductor. |
 |  [startUp(options)](./tryorama.trycpconductor.startup.md) |  | Start a configured conductor. |

@@ -14,9 +14,9 @@ export interface RequestStartup
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [id](./tryorama.requeststartup.id.md) | [ConductorId](./tryorama.conductorid.md) |  |
-|  [log\_level?](./tryorama.requeststartup.log_level.md) | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | <i>(Optional)</i> |
-|  [type](./tryorama.requeststartup.type.md) | "startup" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [id](./tryorama.requeststartup.id.md) |  | [ConductorId](./tryorama.conductorid.md) |  |
+|  [log\_level?](./tryorama.requeststartup.log_level.md) |  | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | <i>(Optional)</i> |
+|  [type](./tryorama.requeststartup.type.md) |  | "startup" |  |
 

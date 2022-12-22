@@ -14,7 +14,7 @@ export interface ScenarioOptions
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [timeout?](./tryorama.scenariooptions.timeout.md) | number | <i>(Optional)</i> |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [timeout?](./tryorama.scenariooptions.timeout.md) |  | number | <i>(Optional)</i> |
 

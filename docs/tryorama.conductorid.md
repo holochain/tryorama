@@ -8,5 +8,5 @@
 <b>Signature:</b>
 
 ```typescript
-export declare type ConductorId = string;
+export type ConductorId = string;
 ```

@@ -32,11 +32,9 @@ export declare class TryCpScenario
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [addClient(serverUrl, timeout)](./tryorama.trycpscenario.addclient.md) |  | Creates a TryCP client connection and add it to the scenario. |
-|  [addClientsPlayers(serverUrls, options)](./tryorama.trycpscenario.addclientsplayers.md) |  | Creates client connections for all passed in URLs and, depending on the options, creates multiple players with DNAs. Adds all clients to the scenario. |
-|  [addPlayersWithHappBundles(tryCpClient, playersHappBundles)](./tryorama.trycpscenario.addplayerswithhappbundles.md) |  | Creates and adds multiple players to the scenario, with a hApp bundle installed for each player. |
-|  [addPlayersWithHapps(tryCpClient, agentHappOptions)](./tryorama.trycpscenario.addplayerswithhapps.md) |  | Creates and adds multiple players to the scenario, with a set of DNAs installed for each player. |
-|  [addPlayerWithHapp(tryCpClient, playerHappOptions)](./tryorama.trycpscenario.addplayerwithhapp.md) |  | Creates and adds a single player to the scenario, with a set of DNAs installed. |
-|  [addPlayerWithHappBundle(tryCpClient, appBundleSource, options)](./tryorama.trycpscenario.addplayerwithhappbundle.md) |  | Creates and adds a single player to the scenario, with a hApp bundle installed. |
+|  [addClientsPlayers(serverUrls, options)](./tryorama.trycpscenario.addclientsplayers.md) |  | Creates client connections for all passed in URLs and, depending on the options, creates multiple players with apps. Adds all clients to the scenario. |
+|  [addPlayersWithApps(tryCpClient, playersApps)](./tryorama.trycpscenario.addplayerswithapps.md) |  | Creates and adds multiple players with an installed app to the scenario. |
+|  [addPlayerWithApp(tryCpClient, appBundleSource, options)](./tryorama.trycpscenario.addplayerwithapp.md) |  | Creates and adds a single player with an installed app to the scenario, |
 |  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  | Shut down and delete all conductors and close all client connections in the scenario. |
 |  [shareAllAgents()](./tryorama.trycpscenario.shareallagents.md) |  | Registers all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
 |  [shutDown()](./tryorama.trycpscenario.shutdown.md) |  | Shut down all conductors of all clients in the scenario. |

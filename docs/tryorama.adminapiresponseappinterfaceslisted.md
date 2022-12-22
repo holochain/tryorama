@@ -13,8 +13,8 @@ export interface AdminApiResponseAppInterfacesListed
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [data](./tryorama.adminapiresponseappinterfaceslisted.data.md) | ListAppInterfacesResponse |  |
-|  [type](./tryorama.adminapiresponseappinterfaceslisted.type.md) | "app\_interfaces\_listed" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [data](./tryorama.adminapiresponseappinterfaceslisted.data.md) |  | ListAppInterfacesResponse |  |
+|  [type](./tryorama.adminapiresponseappinterfaceslisted.type.md) |  | "app\_interfaces\_listed" |  |
 

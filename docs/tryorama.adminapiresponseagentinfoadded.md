@@ -13,7 +13,7 @@ export interface AdminApiResponseAgentInfoAdded
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [type](./tryorama.adminapiresponseagentinfoadded.type.md) | "agent\_info\_added" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [type](./tryorama.adminapiresponseagentinfoadded.type.md) |  | "agent\_info\_added" |  |
 

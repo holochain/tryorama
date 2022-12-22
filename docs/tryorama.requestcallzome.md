@@ -14,8 +14,8 @@ export interface RequestCallZome
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [data](./tryorama.requestcallzome.data.md) | CallZomeRequest |  |
-|  [type](./tryorama.requestcallzome.type.md) | "zome\_call" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [data](./tryorama.requestcallzome.data.md) |  | CallZomeRequestSigned |  |
+|  [type](./tryorama.requestcallzome.type.md) |  | "call\_zome" |  |
 

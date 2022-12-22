@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-type: "zome_call";
+type: "call_zome";
 ```

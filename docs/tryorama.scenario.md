@@ -29,11 +29,9 @@ export declare class Scenario
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [addConductor(signalHandler)](./tryorama.scenario.addconductor.md) |  | Create and add a conductor to the scenario. |
-|  [addPlayersWithHappBundles(playersHappBundles)](./tryorama.scenario.addplayerswithhappbundles.md) |  | Create and add multiple players to the scenario, with a hApp bundle installed for each player. |
-|  [addPlayersWithHapps(agentHappOptions)](./tryorama.scenario.addplayerswithhapps.md) |  | Create and add multiple players to the scenario, with a set of DNAs installed for each player. |
-|  [addPlayerWithHapp(playerHappOptions)](./tryorama.scenario.addplayerwithhapp.md) |  | Create and add a single player to the scenario, with a set of DNAs installed. |
-|  [addPlayerWithHappBundle(appBundleSource, options)](./tryorama.scenario.addplayerwithhappbundle.md) |  | Create and add a single player to the scenario, with a hApp bundle installed. |
+|  [addConductor()](./tryorama.scenario.addconductor.md) |  | Create and add a conductor to the scenario. |
+|  [addPlayersWithApps(playersApps)](./tryorama.scenario.addplayerswithapps.md) |  | Create and add multiple players to the scenario, with an app installed for each player. |
+|  [addPlayerWithApp(appBundleSource, options)](./tryorama.scenario.addplayerwithapp.md) |  | Create and add a single player with an app installed to the scenario. |
 |  [cleanUp()](./tryorama.scenario.cleanup.md) |  | Shut down and delete all conductors in the scenario. |
 |  [shareAllAgents()](./tryorama.scenario.shareallagents.md) |  | Register all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
 |  [shutDown()](./tryorama.scenario.shutdown.md) |  | Shut down all conductors in the scenario. |

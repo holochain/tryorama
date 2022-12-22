@@ -13,8 +13,8 @@ export interface AdminApiResponseAppEnabled
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [data](./tryorama.adminapiresponseappenabled.data.md) | EnableAppResponse |  |
-|  [type](./tryorama.adminapiresponseappenabled.type.md) | "app\_enabled" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [data](./tryorama.adminapiresponseappenabled.data.md) |  | EnableAppResponse |  |
+|  [type](./tryorama.adminapiresponseappenabled.type.md) |  | "app\_enabled" |  |
 

@@ -14,8 +14,8 @@ export interface RequestConnectAppInterface
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [port](./tryorama.requestconnectappinterface.port.md) | number |  |
-|  [type](./tryorama.requestconnectappinterface.type.md) | "connect\_app\_interface" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [port](./tryorama.requestconnectappinterface.port.md) |  | number |  |
+|  [type](./tryorama.requestconnectappinterface.type.md) |  | "connect\_app\_interface" |  |
 

@@ -9,7 +9,7 @@ Possible values a for success response from the TryCP server.
 <b>Signature:</b>
 
 ```typescript
-export declare type TryCpSuccessResponse = typeof TRYCP_SUCCESS_RESPONSE | string | TryCpApiResponse;
+export type TryCpSuccessResponse = typeof TRYCP_SUCCESS_RESPONSE | string | TryCpApiResponse;
 ```
 <b>References:</b> [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md)<!-- -->, [TryCpApiResponse](./tryorama.trycpapiresponse.md)
 

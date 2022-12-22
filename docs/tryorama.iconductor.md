@@ -14,13 +14,14 @@ export interface IConductor
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [adminWs](./tryorama.iconductor.adminws.md) | () =&gt; Omit&lt;AdminWebsocket, "\_requester" \| "client" \| "activateApp" \| "deactivateApp" \| "defaultTimeout" \| "listActiveApps"&gt; |  |
-|  [appWs](./tryorama.iconductor.appws.md) | () =&gt; Pick&lt;AppWebsocket, "callZome" \| "appInfo" \| "createCloneCell" \| "archiveCloneCell"&gt; |  |
-|  [installAgentsHapps](./tryorama.iconductor.installagentshapps.md) | (options: [AgentsHappsOptions](./tryorama.agentshappsoptions.md)<!-- -->) =&gt; Promise&lt;[AgentHapp](./tryorama.agenthapp.md)<!-- -->\[\]&gt; |  |
-|  [shutDown](./tryorama.iconductor.shutdown.md) | () =&gt; Promise&lt;number \| null&gt; |  |
-|  [startUp](./tryorama.iconductor.startup.md) | () =&gt; Promise&lt;void \| null&gt; |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [adminWs](./tryorama.iconductor.adminws.md) |  | () =&gt; Omit&lt;AdminWebsocket, "client" \| "defaultTimeout" \| "\_requester"&gt; |  |
+|  [appWs](./tryorama.iconductor.appws.md) |  | () =&gt; Pick&lt;AppWebsocket, "callZome" \| "appInfo" \| "createCloneCell" \| "enableCloneCell" \| "disableCloneCell"&gt; |  |
+|  [installAgentsApps](./tryorama.iconductor.installagentsapps.md) |  | (options: [AgentsAppsOptions](./tryorama.agentsappsoptions.md)<!-- -->) =&gt; Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->\[\]&gt; |  |
+|  [installApp](./tryorama.iconductor.installapp.md) |  | (appBundleSource: AppBundleSource, options?: [AppOptions](./tryorama.appoptions.md)<!-- -->) =&gt; Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->&gt; |  |
+|  [shutDown](./tryorama.iconductor.shutdown.md) |  | () =&gt; Promise&lt;number \| null&gt; |  |
+|  [startUp](./tryorama.iconductor.startup.md) |  | () =&gt; Promise&lt;void \| null&gt; |  |
 
 ## Methods
 

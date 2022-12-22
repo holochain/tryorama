@@ -14,10 +14,10 @@ export interface Dna
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [membraneProof?](./tryorama.dna.membraneproof.md) | MembraneProof | <i>(Optional)</i> |
-|  [properties?](./tryorama.dna.properties.md) | DnaProperties | <i>(Optional)</i> |
-|  [roleName?](./tryorama.dna.rolename.md) | string | <i>(Optional)</i> |
-|  [source](./tryorama.dna.source.md) | DnaSource |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [membraneProof?](./tryorama.dna.membraneproof.md) |  | MembraneProof | <i>(Optional)</i> |
+|  [properties?](./tryorama.dna.properties.md) |  | DnaProperties | <i>(Optional)</i> |
+|  [roleName?](./tryorama.dna.rolename.md) |  | string | <i>(Optional)</i> |
+|  [source](./tryorama.dna.source.md) |  | DnaSource |  |
 

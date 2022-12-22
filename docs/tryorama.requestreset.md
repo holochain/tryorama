@@ -14,7 +14,7 @@ export interface RequestReset
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [type](./tryorama.requestreset.type.md) | "reset" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [type](./tryorama.requestreset.type.md) |  | "reset" |  |
 

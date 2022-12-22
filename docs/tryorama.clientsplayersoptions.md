@@ -13,13 +13,13 @@ export interface ClientsPlayersOptions
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [agentPubKeys?](./tryorama.clientsplayersoptions.agentpubkeys.md) | AgentPubKey\[\] | <i>(Optional)</i> A list of previously generated agent pub keys (optional). |
-|  [clientTimeout?](./tryorama.clientsplayersoptions.clienttimeout.md) | number | <i>(Optional)</i> A timeout for the web socket connection (optional). |
-|  [dnas?](./tryorama.clientsplayersoptions.dnas.md) | [Dna](./tryorama.dna.md)<!-- -->\[\] | <i>(Optional)</i> An array of DNAs that will be installed for each agent (optional). |
-|  [numberOfAgentsPerConductor?](./tryorama.clientsplayersoptions.numberofagentsperconductor.md) | number | <i>(Optional)</i> Number of agents per conductor. Defaults to 1. Requires <code>dnas</code> to be specified. |
-|  [numberOfConductorsPerClient?](./tryorama.clientsplayersoptions.numberofconductorsperclient.md) | number | <i>(Optional)</i> Number of conductors per client. Default to 1. |
-|  [partialConfig?](./tryorama.clientsplayersoptions.partialconfig.md) | string | <i>(Optional)</i> Configuration for the conductor (optional). |
-|  [signalHandler?](./tryorama.clientsplayersoptions.signalhandler.md) | AppSignalCb | <i>(Optional)</i> A signal handler to be registered in conductors. |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [agentPubKeys?](./tryorama.clientsplayersoptions.agentpubkeys.md) |  | AgentPubKey\[\] | <i>(Optional)</i> A list of previously generated agent pub keys (optional). |
+|  [app?](./tryorama.clientsplayersoptions.app.md) |  | AppBundleSource | <i>(Optional)</i> An app that will be installed for each agent (optional). |
+|  [clientTimeout?](./tryorama.clientsplayersoptions.clienttimeout.md) |  | number | <i>(Optional)</i> A timeout for the web socket connection (optional). |
+|  [numberOfAgentsPerConductor?](./tryorama.clientsplayersoptions.numberofagentsperconductor.md) |  | number | <i>(Optional)</i> Number of agents per conductor. Defaults to 1. Requires <code>dnas</code> to be specified. |
+|  [numberOfConductorsPerClient?](./tryorama.clientsplayersoptions.numberofconductorsperclient.md) |  | number | <i>(Optional)</i> Number of conductors per client. Default to 1. |
+|  [partialConfig?](./tryorama.clientsplayersoptions.partialconfig.md) |  | string | <i>(Optional)</i> Configuration for the conductor (optional). |
+|  [signalHandler?](./tryorama.clientsplayersoptions.signalhandler.md) |  | AppSignalCb | <i>(Optional)</i> A signal handler to be registered in conductors. |
 

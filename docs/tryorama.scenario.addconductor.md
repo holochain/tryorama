@@ -9,15 +9,8 @@ Create and add a conductor to the scenario.
 <b>Signature:</b>
 
 ```typescript
-addConductor(signalHandler?: AppSignalCb): Promise<Conductor>;
+addConductor(): Promise<Conductor>;
 ```
-
-## Parameters
-
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  signalHandler | AppSignalCb | <i>(Optional)</i> A callback function to handle signals. |
-
 <b>Returns:</b>
 
 Promise&lt;[Conductor](./tryorama.conductor.md)<!-- -->&gt;

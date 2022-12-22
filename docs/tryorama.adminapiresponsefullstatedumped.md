@@ -13,8 +13,8 @@ export interface AdminApiResponseFullStateDumped
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [data](./tryorama.adminapiresponsefullstatedumped.data.md) | FullStateDump |  |
-|  [type](./tryorama.adminapiresponsefullstatedumped.type.md) | "full\_state\_dumped" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [data](./tryorama.adminapiresponsefullstatedumped.data.md) |  | FullStateDump |  |
+|  [type](./tryorama.adminapiresponsefullstatedumped.type.md) |  | "full\_state\_dumped" |  |
 

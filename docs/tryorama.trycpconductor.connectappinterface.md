@@ -16,7 +16,7 @@ connectAppInterface(signalHandler?: AppSignalCb): Promise<null>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signalHandler | AppSignalCb | <i>(Optional)</i> A callback function to handle signals. |
+|  signalHandler | AppSignalCb | <i>(Optional)</i> |
 
 <b>Returns:</b>
 

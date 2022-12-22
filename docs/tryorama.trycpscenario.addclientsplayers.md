@@ -4,7 +4,7 @@
 
 ## TryCpScenario.addClientsPlayers() method
 
-Creates client connections for all passed in URLs and, depending on the options, creates multiple players with DNAs. Adds all clients to the scenario.
+Creates client connections for all passed in URLs and, depending on the options, creates multiple players with apps. Adds all clients to the scenario.
 
 <b>Signature:</b>
 

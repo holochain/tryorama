@@ -13,8 +13,8 @@ export interface AppApiResponseZomeCall
 
 ## Properties
 
-|  Property | Type | Description |
-|  --- | --- | --- |
-|  [data](./tryorama.appapiresponsezomecall.data.md) | Uint8Array |  |
-|  [type](./tryorama.appapiresponsezomecall.type.md) | "zome\_call" |  |
+|  Property | Modifiers | Type | Description |
+|  --- | --- | --- | --- |
+|  [data](./tryorama.appapiresponsezomecall.data.md) |  | Uint8Array |  |
+|  [type](./tryorama.appapiresponsezomecall.type.md) |  | "zome\_call" |  |
 
