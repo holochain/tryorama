@@ -7,9 +7,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+### Fixed
+
+## 2022-12-12 [0.10.0]
+
+### Changed
 - **BREAKING CHANGE**: Upgrade to Holochain 0.1.0-beta-rc.1
 - **BREAKING CHANGE**: Upgrade to Holochain client v0.11
-### Fixed
 
 ## 2022-12-12 [0.9.2]
 
