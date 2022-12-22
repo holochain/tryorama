@@ -2,13 +2,7 @@ import { AgentPubKey, AppBundleSource, AppSignalCb } from "@holochain/client";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
-import {
-  AgentDnas,
-  Dna,
-  HappBundleOptions,
-  IPlayer,
-  PlayerHappOptions,
-} from "../../types.js";
+import { AppOptions, IPlayer } from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
 
@@ -22,9 +16,9 @@ export interface ClientsPlayersOptions {
   clientTimeout?: number;
 
   /**
-   * An array of DNAs that will be installed for each agent (optional).
+   * An app that will be installed for each agent (optional).
    */
-  dnas?: Dna[];
+  app?: AppBundleSource;
 
   /**
    * A list of previously generated agent pub keys (optional).
@@ -97,7 +91,7 @@ export class TryCpScenario {
 
   /**
    * Creates client connections for all passed in URLs and, depending on the
-   * options, creates multiple players with DNAs. Adds all clients to the
+   * options, creates multiple players with apps. Adds all clients to the
    * scenario.
    *
    * @param serverUrls - The TryCP server URLs to connect to.
@@ -128,33 +122,28 @@ export class TryCpScenario {
           options?.numberOfAgentsPerConductor ?? 1;
 
         if (options?.numberOfAgentsPerConductor) {
-          // install agents hApps for each conductor
-          if (options.dnas === undefined) {
-            throw new Error("no DNAs specified to be installed for agents");
+          // install agents apps for each conductor
+          if (options?.app === undefined) {
+            throw new Error("no apps specified to be installed for agents");
           }
 
-          // TS fails to infer that options.dnas cannot be `undefined` here
-          const dnas = options.dnas;
+          // TS fails to infer that options.apps cannot be `undefined` here
+          const app = options.app;
 
-          let agentsDnas: AgentDnas[];
+          let agentsApps;
           if (options.agentPubKeys) {
-            if (options.agentPubKeys.length !== options.dnas.length) {
-              throw new Error(
-                "number of agent pub keys doesn't match number of DNAs"
-              );
-            }
-            agentsDnas = options.agentPubKeys.map((agentPubKey) => ({
+            agentsApps = options.agentPubKeys.map((agentPubKey) => ({
               agentPubKey,
-              dnas,
+              app,
             }));
           } else {
-            agentsDnas = [...Array(numberOfAgentsPerConductor)].map(() => ({
-              dnas,
+            agentsApps = [...Array(numberOfAgentsPerConductor)].map(() => ({
+              app,
             }));
           }
 
-          const installedAgentsHapps = await conductor.installAgentsHapps({
-            agentsDnas,
+          const installedAgentsHapps = await conductor.installAgentsApps({
+            agentsApps,
           });
           installedAgentsHapps.forEach((agentHapps) =>
             players.push({ conductor, ...agentHapps })
@@ -167,106 +156,47 @@ export class TryCpScenario {
   }
 
   /**
-   * Creates and adds a single player to the scenario, with a set of DNAs
-   * installed.
+   * Creates and adds a single player with an installed app to the scenario,
    *
    * @param tryCpClient - The client connection to the TryCP server on which to
    * create the player.
-   * @param playerHappOptions - {@link PlayerHappOptions}.
+   * @param appBundleSource - The bundle or path of the app.
+   * @param options - {@link AppOptions} like agent pub key etc.
    * @returns The created player instance.
    */
-  async addPlayerWithHapp(
-    tryCpClient: TryCpClient,
-    playerHappOptions: PlayerHappOptions
-  ): Promise<TryCpPlayer> {
-    const signalHandler = Array.isArray(playerHappOptions)
-      ? undefined
-      : playerHappOptions.signalHandler;
-    const agentsDnas: AgentDnas[] = [
-      {
-        dnas: Array.isArray(playerHappOptions)
-          ? playerHappOptions.map((dnaSource) => ({ source: dnaSource }))
-          : playerHappOptions.dnas,
-      },
-    ];
-    const conductor = await tryCpClient.addConductor(signalHandler);
-    const [agentHapp] = await conductor.installAgentsHapps({
-      agentsDnas,
-      networkSeed: this.network_seed,
-    });
-    return { conductor, ...agentHapp };
-  }
-
-  /**
-   * Creates and adds multiple players to the scenario, with a set of DNAs
-   * installed for each player.
-   *
-   * @param tryCpClient - The client connection to the TryCP server on which to
-   * create the player.
-   * @param agentHappOptions - {@link PlayerHappOptions} for each player.
-   * @returns An array of the added players.
-   */
-  async addPlayersWithHapps(
-    tryCpClient: TryCpClient,
-    agentHappOptions: PlayerHappOptions[]
-  ): Promise<TryCpPlayer[]> {
-    const players = await Promise.all(
-      agentHappOptions.map((options) =>
-        this.addPlayerWithHapp(tryCpClient, options)
-      )
-    );
-    return players;
-  }
-
-  /**
-   * Creates and adds a single player to the scenario, with a hApp bundle
-   * installed.
-   *
-   * @param tryCpClient - The client connection to the TryCP server on which to
-   * create the player.
-   * @param appBundleSource - The bundle or path to the bundle.
-   * @param options - {@link HappBundleOptions} plus a signal handler
-   * (optional).
-   * @returns The created player instance.
-   */
-  async addPlayerWithHappBundle(
+  async addPlayerWithApp(
     tryCpClient: TryCpClient,
     appBundleSource: AppBundleSource,
-    options?: HappBundleOptions & { signalHandler?: AppSignalCb }
+    options?: AppOptions
   ) {
     const conductor = await tryCpClient.addConductor(options?.signalHandler);
-    options = options
-      ? Object.assign(options, {
-          networkSeed: options.networkSeed ?? this.network_seed,
-        })
-      : { networkSeed: this.network_seed };
-    const agentHapp = await conductor.installHappBundle(
-      appBundleSource,
-      options
-    );
-    return { conductor, ...agentHapp };
+    options = {
+      ...options,
+      networkSeed: options?.networkSeed ?? this.network_seed,
+    };
+    const agentApp = await conductor.installApp(appBundleSource, options);
+    const player: TryCpPlayer = { conductor, ...agentApp };
+    return player;
   }
 
   /**
-   * Creates and adds multiple players to the scenario, with a hApp bundle
-   * installed for each player.
+   * Creates and adds multiple players with an installed app to the scenario.
    *
    * @param tryCpClient - The client connection to the TryCP server on which to
    * create the player.
-   * @param playersHappBundles - An array with a hApp bundle for each player,
-   * and a signal handler (optional).
+   * @param playersApps - An array with an app for each player.
    * @returns An array of the added players.
    */
-  async addPlayersWithHappBundles(
+  async addPlayersWithApps(
     tryCpClient: TryCpClient,
-    playersHappBundles: Array<{
+    playersApps: Array<{
       appBundleSource: AppBundleSource;
-      options?: HappBundleOptions & { signalHandler?: AppSignalCb };
+      options?: AppOptions;
     }>
   ) {
     const players = await Promise.all(
-      playersHappBundles.map(async (playerHappBundle) =>
-        this.addPlayerWithHappBundle(
+      playersApps.map(async (playerHappBundle) =>
+        this.addPlayerWithApp(
           tryCpClient,
           playerHappBundle.appBundleSource,
           playerHappBundle.options

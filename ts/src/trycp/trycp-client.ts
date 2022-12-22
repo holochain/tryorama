@@ -92,61 +92,56 @@ export class TryCpClient {
     });
 
     tryCpClient.ws.on("message", (encodedResponse: Buffer) => {
-      try {
-        const responseWrapper = deserializeTryCpResponse(encodedResponse);
+      const responseWrapper = deserializeTryCpResponse(encodedResponse);
 
-        if (responseWrapper.type === "signal") {
-          const signalHandler =
-            tryCpClient.signalHandlers[responseWrapper.port];
-          if (signalHandler) {
-            const signal = deserializeTryCpSignal(responseWrapper.data);
-            logger.debug(
-              `received signal @ port ${responseWrapper.port}: ${JSON.stringify(
-                signal,
-                null,
-                4
-              )}\n`
-            );
-            signalHandler(signal);
-          } else {
-            logger.info(
-              "received signal from TryCP server, but no signal handler registered"
-            );
-          }
-        } else if (responseWrapper.type === "response") {
-          const { responseResolve, responseReject } =
-            tryCpClient.requestPromises[responseWrapper.id];
-
-          // the server responds with an object
-          // it contains `0` as property for formally correct requests
-          // and `1` when the format was incorrect
-          if ("0" in responseWrapper.response) {
-            try {
-              const innerResponse = tryCpClient.processSuccessResponse(
-                responseWrapper.response[0]
-              );
-              responseResolve(innerResponse);
-            } catch (error) {
-              if (error instanceof Error) {
-                responseReject(error);
-              } else {
-                const errorMessage = JSON.stringify(error, null, 4);
-                responseReject(errorMessage);
-              }
-            }
-          } else if ("1" in responseWrapper.response) {
-            responseReject(responseWrapper.response[1]);
-          } else {
-            logger.error(
-              "unknown response type",
-              JSON.stringify(responseWrapper.response, null, 4)
-            );
-            throw new Error("Unknown response type");
-          }
-          delete tryCpClient.requestPromises[responseWrapper.id];
+      if (responseWrapper.type === "signal") {
+        const signalHandler = tryCpClient.signalHandlers[responseWrapper.port];
+        if (signalHandler) {
+          const signal = deserializeTryCpSignal(responseWrapper.data);
+          logger.debug(
+            `received signal @ port ${responseWrapper.port}: ${JSON.stringify(
+              signal,
+              null,
+              4
+            )}\n`
+          );
+          signalHandler(signal);
+        } else {
+          logger.info(
+            "received signal from TryCP server, but no signal handler registered"
+          );
         }
-      } catch (error) {
-        console.error("eeafdf", error);
+      } else if (responseWrapper.type === "response") {
+        const { responseResolve, responseReject } =
+          tryCpClient.requestPromises[responseWrapper.id];
+
+        // the server responds with an object
+        // it contains `0` as property for formally correct requests
+        // and `1` when the format was incorrect
+        if ("0" in responseWrapper.response) {
+          try {
+            const innerResponse = tryCpClient.processSuccessResponse(
+              responseWrapper.response[0]
+            );
+            responseResolve(innerResponse);
+          } catch (error) {
+            if (error instanceof Error) {
+              responseReject(error);
+            } else {
+              const errorMessage = JSON.stringify(error, null, 4);
+              responseReject(errorMessage);
+            }
+          }
+        } else if ("1" in responseWrapper.response) {
+          responseReject(responseWrapper.response[1]);
+        } else {
+          logger.error(
+            "unknown response type",
+            JSON.stringify(responseWrapper.response, null, 4)
+          );
+          throw new Error("Unknown response type");
+        }
+        delete tryCpClient.requestPromises[responseWrapper.id];
       }
     });
     tryCpClient.ws.on("error", (err) => {
@@ -214,17 +209,6 @@ export class TryCpClient {
       request,
     };
 
-    // serialize payload if the request is a zome call
-    if (
-      serverCall.request.type === "call_app_interface" &&
-      "data" in serverCall.request.message &&
-      serverCall.request.message.type === "zome_call"
-    ) {
-      serverCall.request.message.data.payload = msgpack.encode(
-        serverCall.request.message.data.payload
-      );
-    }
-
     // serialize message if the request is an Admin or App API call
     if (
       serverCall.request.type === "call_admin_interface" ||
@@ -244,7 +228,7 @@ export class TryCpClient {
   /**
    * Create and add a conductor to the client.
    *
-   * @param signalHandler - A callback function to handle signals.
+   * @param config - Conductor configuration (optional).
    * @returns The newly added conductor instance.
    */
   async addConductor(signalHandler?: AppSignalCb, config?: string) {
@@ -340,7 +324,7 @@ export class TryCpClient {
     if (
       debugLog.type === "call_app_interface" &&
       "data" in debugLog.message &&
-      debugLog.message.type === "zome_call"
+      debugLog.message.type === "call_zome"
     ) {
       debugLog.message.data = Object.assign(debugLog.message.data, {
         cell_id: [

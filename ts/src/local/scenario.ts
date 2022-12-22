@@ -1,12 +1,7 @@
-import { AppBundleSource, AppSignalCb } from "@holochain/client";
+import { AppBundleSource } from "@holochain/client";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors } from "../common.js";
-import {
-  AgentDnas,
-  HappBundleOptions,
-  IPlayer,
-  PlayerHappOptions,
-} from "../types.js";
+import { AppOptions, IPlayer } from "../types.js";
 import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
 
 /**
@@ -53,108 +48,50 @@ export class Scenario {
   /**
    * Create and add a conductor to the scenario.
    *
-   * @param signalHandler - A callback function to handle signals.
    * @returns The newly added conductor instance.
    */
-  async addConductor(signalHandler?: AppSignalCb) {
-    const conductor = await createConductor({
-      signalHandler,
-      timeout: this.timeout,
-    });
+  async addConductor() {
+    const conductor = await createConductor({ timeout: this.timeout });
     this.conductors.push(conductor);
     return conductor;
   }
 
   /**
-   * Create and add a single player to the scenario, with a set of DNAs
-   * installed.
-   *
-   * @param playerHappOptions - {@link PlayerHappOptions}.
-   * @returns A local player instance.
-   */
-  async addPlayerWithHapp(
-    playerHappOptions: PlayerHappOptions
-  ): Promise<Player> {
-    const signalHandler = Array.isArray(playerHappOptions)
-      ? undefined
-      : playerHappOptions.signalHandler;
-    const agentsDnas: AgentDnas[] = [
-      {
-        dnas: Array.isArray(playerHappOptions)
-          ? playerHappOptions.map((dnaSource) => ({ source: dnaSource }))
-          : playerHappOptions.dnas,
-      },
-    ];
-    const conductor = await this.addConductor(signalHandler);
-    const [agentHapp] = await conductor.installAgentsHapps({
-      agentsDnas,
-      networkSeed: this.networkSeed,
-    });
-    return { conductor, ...agentHapp };
-  }
-
-  /**
-   * Create and add multiple players to the scenario, with a set of DNAs
-   * installed for each player.
-   *
-   * @param agentHappOptions - {@link PlayerHappOptions} for each player.
-   * @returns An array with the added players.
-   */
-  async addPlayersWithHapps(
-    agentHappOptions: PlayerHappOptions[]
-  ): Promise<Player[]> {
-    const players = await Promise.all(
-      agentHappOptions.map((options) => this.addPlayerWithHapp(options))
-    );
-    return players;
-  }
-
-  /**
-   * Create and add a single player to the scenario, with a hApp bundle
-   * installed.
+   * Create and add a single player with an app installed to the scenario.
    *
    * @param appBundleSource - The bundle or path to the bundle.
-   * @param options - {@link HappBundleOptions} plus a signal handler
-   * (optional).
+   * @param options - {@link AppOptions}.
    * @returns A local player instance.
    */
-  async addPlayerWithHappBundle(
+  async addPlayerWithApp(
     appBundleSource: AppBundleSource,
-    options?: HappBundleOptions & { signalHandler?: AppSignalCb }
+    options?: AppOptions
   ): Promise<Player> {
-    const conductor = await this.addConductor(options?.signalHandler);
-    options = options
-      ? Object.assign(options, {
-          networkSeed: options.networkSeed ?? this.networkSeed,
-        })
-      : { networkSeed: this.networkSeed };
-    const agentHapp = await conductor.installHappBundle(
-      appBundleSource,
-      options
-    );
-    return { conductor, ...agentHapp };
+    const conductor = await this.addConductor();
+    options = {
+      ...options,
+      networkSeed: options?.networkSeed ?? this.networkSeed,
+    };
+    const agentApp = await conductor.installApp(appBundleSource, options);
+    return { conductor, ...agentApp };
   }
 
   /**
-   * Create and add multiple players to the scenario, with a hApp bundle
-   * installed for each player.
+   * Create and add multiple players to the scenario, with an app installed
+   * for each player.
    *
-   * @param playersHappBundles - An array with a hApp bundle for each player,
-   * and a signal handler (optional).
-   * @returns
+   * @param playersApps - An array with an app for each player.
+   * @returns All created players.
    */
-  async addPlayersWithHappBundles(
-    playersHappBundles: Array<{
+  async addPlayersWithApps(
+    playersApps: Array<{
       appBundleSource: AppBundleSource;
-      options?: HappBundleOptions & { signalHandler?: AppSignalCb };
+      options?: AppOptions;
     }>
   ) {
     const players = await Promise.all(
-      playersHappBundles.map((playerHappBundle) =>
-        this.addPlayerWithHappBundle(
-          playerHappBundle.appBundleSource,
-          playerHappBundle.options
-        )
+      playersApps.map((playerApp) =>
+        this.addPlayerWithApp(playerApp.appBundleSource, playerApp.options)
       )
     );
     return players;

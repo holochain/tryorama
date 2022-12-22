@@ -1,11 +1,14 @@
 import {
   AgentPubKey,
+  AppInfo,
+  authorizeSigningCredentials,
   CallZomeResponse,
-  InstalledAppInfo,
-  InstalledCell,
+  Cell,
+  CellType,
+  RoleName,
 } from "@holochain/client";
 import {
-  AgentHapp,
+  AgentApp,
   CallableCell,
   CellZomeCallRequest,
   IConductor,
@@ -24,7 +27,7 @@ export const addAllAgentsToAllConductors = async (conductors: IConductor[]) => {
     conductors.map(async (playerToShareAbout, playerToShareAboutIdx) => {
       const agentInfosToShareAbout = await playerToShareAbout
         .adminWs()
-        .requestAgentInfo({
+        .agentInfo({
           cell_id: null,
         });
       await Promise.all(
@@ -46,10 +49,10 @@ function assertZomeResponse<T>(
   return;
 }
 
-export const enableAndGetAgentHapp = async (
+export const enableAndGetAgentApp = async (
   conductor: IConductor,
   agentPubKey: AgentPubKey,
-  installedAppInfo: InstalledAppInfo
+  installedAppInfo: AppInfo
 ) => {
   const enableAppResponse = await conductor.adminWs().enableApp({
     installed_app_id: installedAppInfo.installed_app_id,
@@ -57,27 +60,48 @@ export const enableAndGetAgentHapp = async (
   if (enableAppResponse.errors.length) {
     throw new Error(`failed to enable app: ${enableAppResponse.errors}`);
   }
-  const namedCells = new Map(
-    installedAppInfo.cell_data.map((cell) => {
-      const callableCell = getCallableCell(conductor, cell, agentPubKey);
-      return [cell.role_name, callableCell];
-    })
-  );
-  const cells = installedAppInfo.cell_data.map((cell) =>
-    getCallableCell(conductor, cell, agentPubKey)
-  );
-  const agentHapp: AgentHapp = {
-    happId: installedAppInfo.installed_app_id,
+  const cells: CallableCell[] = [];
+  const namedCells = new Map<RoleName, CallableCell>();
+  Object.keys(installedAppInfo.cell_info).forEach((role_name) => {
+    installedAppInfo.cell_info[role_name].forEach((cellInfo) => {
+      if (CellType.Provisioned in cellInfo) {
+        const callableCell = getCallableCell(
+          conductor,
+          cellInfo[CellType.Provisioned],
+          agentPubKey
+        );
+        cells.push(callableCell);
+        namedCells.set(role_name, callableCell);
+      } else if (
+        CellType.Cloned in cellInfo &&
+        cellInfo[CellType.Cloned].clone_id
+      ) {
+        const callableCell = getCallableCell(
+          conductor,
+          cellInfo[CellType.Cloned],
+          agentPubKey
+        );
+        cells.push(callableCell);
+        namedCells.set(cellInfo[CellType.Cloned].clone_id, callableCell);
+      } else {
+        throw new Error("Stem cells are not implemented");
+      }
+    });
+  });
+  const agentApp: AgentApp = {
+    appId: installedAppInfo.installed_app_id,
     agentPubKey,
     cells,
     namedCells,
+    authorizeSigningCredentials: (cellId, functions) =>
+      authorizeSigningCredentials(conductor.adminWs(), cellId, functions),
   };
-  return agentHapp;
+  return agentApp;
 };
 
 const getCallableCell = (
   conductor: IConductor,
-  cell: InstalledCell,
+  cell: Cell,
   agentPubKey: AgentPubKey
 ) => ({
   ...cell,
@@ -85,9 +109,9 @@ const getCallableCell = (
     const callZomeResponse = await conductor.appWs().callZome(
       {
         ...request,
-        cap_secret: request.cap_secret ?? null,
+        cap_secret: null,
         cell_id: cell.cell_id,
-        provenance: request.provenance || agentPubKey,
+        provenance: request.provenance ?? agentPubKey,
         payload: request.payload ?? null,
       },
       timeout

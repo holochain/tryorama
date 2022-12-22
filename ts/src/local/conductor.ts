@@ -1,12 +1,10 @@
 import {
   AdminWebsocket,
   AppBundleSource,
-  AppSignalCb,
   AppWebsocket,
   AttachAppInterfaceRequest,
-  InstallAppBundleRequest,
-  InstallAppDnaPayload,
-  RegisterDnaRequest,
+  encodeHashToBase64,
+  InstallAppRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -15,15 +13,14 @@ import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 
-import { enableAndGetAgentHapp } from "../common.js";
+import { enableAndGetAgentApp } from "../common.js";
 import { makeLogger } from "../logger.js";
 import { TryCpServer } from "../trycp/trycp-server.js";
 import {
-  AgentHapp,
-  AgentsHappsOptions,
-  HappBundleOptions,
+  AgentApp,
+  AgentsAppsOptions,
+  AppOptions,
   IConductor,
-  _RegisterDnaReqOpts,
 } from "../types.js";
 
 const logger = makeLogger("Local Conductor");
@@ -60,11 +57,6 @@ export interface ConductorOptions {
    * @defaultValue true
    */
   attachAppInterface?: boolean;
-
-  /**
-   * Register a signal handler on the app websocket.
-   */
-  signalHandler?: AppSignalCb;
 
   /**
    * The network type the conductor should use
@@ -151,7 +143,7 @@ export const createConductor = async (options?: ConductorOptions) => {
     await conductor.startUp();
     if (options?.attachAppInterface !== false) {
       await conductor.attachAppInterface();
-      await conductor.connectAppInterface(options?.signalHandler);
+      await conductor.connectAppInterface();
     }
   }
   return conductor;
@@ -350,21 +342,15 @@ export class Conductor implements IConductor {
 
   /**
    * Connect a web socket to the App API.
-   *
-   * @param signalHandler - A callback function to handle signals.
    */
-  async connectAppInterface(signalHandler?: AppSignalCb) {
+  async connectAppInterface() {
     assert(
       this.appApiUrl.port,
       "error connecting app interface: app api port has not been defined"
     );
 
     logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
-    this._appWs = await AppWebsocket.connect(
-      this.appApiUrl.href,
-      this.timeout,
-      signalHandler
-    );
+    this._appWs = await AppWebsocket.connect(this.appApiUrl.href, this.timeout);
   }
 
   /**
@@ -399,110 +385,63 @@ export class Conductor implements IConductor {
   }
 
   /**
-   * Install a set of DNAs for multiple agents into the conductor.
+   * Install an application into the conductor.
    *
-   * @param options - An array of DNAs for each agent, resulting in a
-   * 2-dimensional array, and a network seed for the DNAs (optional).
-   * @returns An array with each agent's hApps.
+   * @param appBundleSource - The bundle or path to the bundle.
+   * @param options - {@link AppOptions} for the hApp bundle (optional).
+   * @returns An agent app with cells and conductor handle.
    */
-  async installAgentsHapps(options: AgentsHappsOptions) {
-    const agentsHapps: AgentHapp[] = [];
-    const agentsDnas = Array.isArray(options) ? options : options.agentsDnas;
-
-    for (const agentDnas of agentsDnas) {
-      const dnasToInstall: InstallAppDnaPayload[] = [];
-      const appId =
-        ("installedAppId" in options && options.installedAppId) ||
-        `app-${uuidv4()}`;
-      const agentPubKey =
-        ("agentPubKey" in agentDnas && agentDnas.agentPubKey) ||
-        (await this.adminWs().generateAgentPubKey());
-
-      const dnas = "dnas" in agentDnas ? agentDnas.dnas : agentDnas;
-      for (const dna of dnas) {
-        let roleName: string;
-
-        const registerDnaReqOpts: _RegisterDnaReqOpts = {
-          modifiers: {
-            network_seed:
-              ("networkSeed" in options && options.networkSeed) || undefined,
-            properties: ("properties" in dna && dna.properties) || undefined,
-          },
-        };
-
-        const dnaSource = "source" in dna ? dna.source : dna;
-        if ("path" in dnaSource) {
-          registerDnaReqOpts.path = dnaSource.path;
-          roleName = `${dnaSource.path}-${uuidv4()}`;
-        } else if ("hash" in dnaSource) {
-          registerDnaReqOpts.hash = dnaSource.hash;
-          roleName = `dna-${uuidv4()}`;
-        } else {
-          registerDnaReqOpts.bundle = dnaSource.bundle;
-          roleName = `${dnaSource.bundle.manifest.name}-${uuidv4()}`;
-        }
-
-        const dnaHash = await this.adminWs().registerDna(
-          registerDnaReqOpts as RegisterDnaRequest
-        );
-
-        const membrane_proof =
-          "membraneProof" in dna ? dna.membraneProof : undefined;
-        dnasToInstall.push({
-          hash: dnaHash,
-          role_name: ("roleName" in dna && dna.roleName) || roleName,
-          membrane_proof,
-        });
-      }
-
-      const installedAppInfo = await this.adminWs().installApp({
-        installed_app_id: appId,
-        agent_key: agentPubKey,
-        dnas: dnasToInstall,
-      });
-      const agentHapp = await enableAndGetAgentHapp(
-        this,
-        agentPubKey,
-        installedAppInfo
-      );
-      agentsHapps.push(agentHapp);
-    }
-
-    return agentsHapps;
+  async installApp(appBundleSource: AppBundleSource, options?: AppOptions) {
+    const agent_key =
+      options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
+    const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
+    const membrane_proofs = options?.membraneProofs ?? {};
+    const network_seed = options?.networkSeed;
+    const installAppRequest: InstallAppRequest =
+      "bundle" in appBundleSource
+        ? {
+            bundle: appBundleSource.bundle,
+            agent_key,
+            membrane_proofs,
+            installed_app_id,
+            network_seed,
+          }
+        : {
+            path: appBundleSource.path,
+            agent_key,
+            membrane_proofs,
+            installed_app_id,
+            network_seed,
+          };
+    const installedAppInfo = await this.adminWs().installApp(installAppRequest);
+    logger.debug(
+      `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
+        agent_key
+      )}`
+    );
+    const agentApp: AgentApp = await enableAndGetAgentApp(
+      this,
+      agent_key,
+      installedAppInfo
+    );
+    return agentApp;
   }
 
   /**
-   * Install a hApp bundle into the conductor.
-   *
-   * @param appBundleSource - The bundle or path to the bundle.
-   * @param options - {@link HappBundleOptions} for the hApp bundle (optional).
-   * @returns A hApp for the agent.
+   * Install an app for multiple agents into the conductor.
    */
-  async installHappBundle(
-    appBundleSource: AppBundleSource,
-    options?: HappBundleOptions
-  ) {
-    const agentPubKey =
-      options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
-    const appBundleOptions: InstallAppBundleRequest = Object.assign(
-      appBundleSource,
-      {
-        agent_key: agentPubKey,
-        membrane_proofs: options?.membraneProofs ?? {},
-        network_seed: options?.networkSeed,
-        installed_app_id: options?.installedAppId ?? `app-${uuidv4()}`,
-      }
-    );
-    const installedAppInfo = await this.adminWs().installAppBundle(
-      appBundleOptions
-    );
-
-    const agentHapp = await enableAndGetAgentHapp(
-      this,
-      agentPubKey,
-      installedAppInfo
-    );
-    return agentHapp;
+  async installAgentsApps(options: AgentsAppsOptions) {
+    const agentsApps: AgentApp[] = [];
+    for (const appsForAgent of options.agentsApps) {
+      const agentApp = await this.installApp(appsForAgent.app, {
+        agentPubKey: appsForAgent.agentPubKey,
+        membraneProofs: appsForAgent.membraneProofs,
+        installedAppId: options.installedAppId,
+        networkSeed: options.networkSeed,
+      });
+      agentsApps.push(agentApp);
+    }
+    return agentsApps;
   }
 }
 

@@ -1,7 +1,7 @@
 import { AppSignal, AppSignalCb, EntryHash } from "@holochain/client";
-import test from "tape-promise/tape.js";
 import { URL } from "node:url";
-import { Dna } from "../../src/types.js";
+import test from "tape-promise/tape.js";
+import { stopAllTryCpServers } from "../../src/index.js";
 import { TryCpScenario } from "../../src/trycp/conductor/scenario.js";
 import {
   TryCpServer,
@@ -9,8 +9,7 @@ import {
   TRYCP_SERVER_PORT,
 } from "../../src/trycp/trycp-server.js";
 import { pause } from "../../src/util.js";
-import { FIXTURE_DNA_URL } from "../fixture/index.js";
-import { stopAllTryCpServers } from "../../src/index.js";
+import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 
@@ -35,8 +34,8 @@ test("TryCP Scenario - install a hApp to 1 conductor with 1 agent", async (t) =>
   const client = await scenario.addClient(SERVER_URL);
   t.ok(client, "client set up");
 
-  const alice = await scenario.addPlayerWithHapp(client, {
-    dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
+  const alice = await scenario.addPlayerWithApp(client, {
+    path: FIXTURE_HAPP_URL.pathname,
   });
   t.ok(alice.conductor, "player alice is associated with a conductor");
   t.equal(
@@ -63,8 +62,8 @@ test("TryCP Scenario - install a hApp to 2 conductors with 1 agent each", async 
   t.ok(client1, "client 1 set up");
   t.ok(client2, "client 2 set up");
 
-  const alice = await scenario.addPlayerWithHapp(client1, {
-    dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
+  const alice = await scenario.addPlayerWithApp(client1, {
+    path: FIXTURE_HAPP_URL.pathname,
   });
   t.equal(
     alice.conductor.tryCpClient,
@@ -76,8 +75,8 @@ test("TryCP Scenario - install a hApp to 2 conductors with 1 agent each", async 
     "client 1 conductors includes alice's conductor"
   );
 
-  const bob = await scenario.addPlayerWithHapp(client2, {
-    dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
+  const bob = await scenario.addPlayerWithApp(client2, {
+    path: FIXTURE_HAPP_URL.pathname,
   });
   t.equal(
     bob.conductor.tryCpClient,
@@ -100,9 +99,9 @@ test("TryCP Scenario - list everything", async (t) => {
   const scenario = new TryCpScenario();
   const client = await scenario.addClient(SERVER_URL);
 
-  const alice = await scenario.addPlayerWithHapp(client, [
-    { path: FIXTURE_DNA_URL.pathname },
-  ]);
+  const alice = await scenario.addPlayerWithApp(client, {
+    path: FIXTURE_HAPP_URL.pathname,
+  });
 
   const listedApps = await alice.conductor.adminWs().listApps({});
   t.ok(listedApps.length === 1, "alice's conductor lists 1 installed app");
@@ -143,10 +142,22 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
       resolve(signal);
     };
   });
-  const dnas: Dna[] = [{ source: { path: FIXTURE_DNA_URL.pathname } }];
-  const [alice, bob] = await scenario.addPlayersWithHapps(client, [
-    { dnas, signalHandler: signalHandlerAlice },
-    { dnas, signalHandler: signalHandlerBob },
+  const [alice, bob] = await scenario.addPlayersWithApps(client, [
+    {
+      appBundleSource: { path: FIXTURE_HAPP_URL.pathname },
+      options: { signalHandler: signalHandlerAlice },
+    },
+    {
+      appBundleSource: { path: FIXTURE_HAPP_URL.pathname },
+      options: { signalHandler: signalHandlerBob },
+    },
+  ]);
+
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "signal_loopback"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "signal_loopback"],
   ]);
 
   const signalAlice = { value: "hello alice" };
@@ -183,11 +194,18 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   const scenario = new TryCpScenario();
   const client = await scenario.addClient(SERVER_URL);
 
-  const [alice, bob] = await scenario.addPlayersWithHapps(client, [
-    [{ path: FIXTURE_DNA_URL.pathname }],
-    [{ path: FIXTURE_DNA_URL.pathname }],
+  const [alice, bob] = await scenario.addPlayersWithApps(client, [
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
   ]);
   await scenario.shareAllAgents();
+
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -196,7 +214,7 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
     payload: content,
   });
 
-  await pause(100);
+  await pause(1000);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
@@ -215,11 +233,18 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   const scenario = new TryCpScenario();
   const client = await scenario.addClient(SERVER_URL);
 
-  const [alice, bob] = await scenario.addPlayersWithHapps(client, [
-    [{ path: FIXTURE_DNA_URL.pathname }],
-    [{ path: FIXTURE_DNA_URL.pathname }],
+  const [alice, bob] = await scenario.addPlayersWithApps(client, [
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
   ]);
   await scenario.shareAllAgents();
+
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -227,7 +252,7 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
     fn_name: "create",
     payload: content,
   });
-  await pause(100);
+  await pause(1000);
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
     fn_name: "read",
@@ -348,7 +373,7 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
   const clientsPlayers = await scenario.addClientsPlayers(serverUrls, {
     numberOfConductorsPerClient,
     numberOfAgentsPerConductor,
-    dnas: [{ source: { path: FIXTURE_DNA_URL.pathname } }],
+    app: { path: FIXTURE_HAPP_URL.pathname },
   });
 
   for (const [i, clientPlayers] of clientsPlayers.entries()) {
@@ -364,6 +389,13 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
   // Testing if agents that are installed on two different tryCP servers are able to communicate with each other
   const alice = clientsPlayers[0].players[0];
   const bob = clientsPlayers[1].players[0];
+
+  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+    ["coordinator", "create"],
+  ]);
+  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
+    ["coordinator", "read"],
+  ]);
 
   const content = "test-content";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({

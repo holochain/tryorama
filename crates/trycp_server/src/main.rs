@@ -329,7 +329,7 @@ type WsClientDuplex = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
 type WsReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
 
 #[derive(Debug, Deserialize, Serialize)]
-#[serde(tag = "type")]
+#[serde(rename_all = "snake_case", tag = "type")]
 enum HolochainMessage {
     Request {
         id: usize,
