@@ -2,7 +2,6 @@ import {
   AppBundleSource,
   AppSignal,
   AppSignalCb,
-  authorizeSigningCredentials,
   EntryHash,
 } from "@holochain/client";
 import assert from "node:assert/strict";
@@ -70,11 +69,9 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
     assert(signalHandlerAlice);
     alice.conductor.appWs().on("signal", signalHandlerAlice);
 
-    await authorizeSigningCredentials(
-      alice.conductor.adminWs(),
-      alice.cells[0].cell_id,
-      [["coordinator", "signal_loopback"]]
-    );
+    await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
+      ["coordinator", "signal_loopback"],
+    ]);
 
     const signalAlice = { value: "hello alice" };
     alice.cells[0].callZome({

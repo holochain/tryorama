@@ -2,7 +2,6 @@ import {
   ActionHash,
   AppBundleSource,
   AppSignal,
-  authorizeSigningCredentials,
   CellType,
   CloneId,
   EntryHash,
@@ -210,9 +209,9 @@ test("TryCP Conductor - receive a signal", async (t) => {
   assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
   const cell_id = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
 
-  await authorizeSigningCredentials(conductor.adminWs(), cell_id, [
-    ["coordinator", "signal_loopback"],
-  ]);
+  await conductor
+    .adminWs()
+    .authorizeSigningCredentials(cell_id, [["coordinator", "signal_loopback"]]);
 
   conductor.appWs().callZome({
     cap_secret: null,
@@ -284,7 +283,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
     "connected app interface responds with success"
   );
 
-  await authorizeSigningCredentials(conductor.adminWs(), cell_id, [
+  await conductor.adminWs().authorizeSigningCredentials(cell_id, [
     ["coordinator", "create"],
     ["coordinator", "read"],
   ]);
@@ -456,12 +455,12 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     "connect app interface responds with success"
   );
 
-  await authorizeSigningCredentials(conductor.adminWs(), cellId1, [
-    ["coordinator", "create"],
-  ]);
-  await authorizeSigningCredentials(conductor.adminWs(), cellId2, [
-    ["coordinator", "read"],
-  ]);
+  await conductor
+    .adminWs()
+    .authorizeSigningCredentials(cellId1, [["coordinator", "create"]]);
+  await conductor
+    .adminWs()
+    .authorizeSigningCredentials(cellId2, [["coordinator", "read"]]);
 
   const entryContent = "test-content";
   const createEntryHash = await conductor.appWs().callZome<EntryHash>({
@@ -534,11 +533,11 @@ test("TryCP Conductor - clone cell management", async (t) => {
     "agent pub key in clone cell and base cell match"
   );
 
-  await authorizeSigningCredentials(conductor.adminWs(), cell_id, [
+  await conductor.adminWs().authorizeSigningCredentials(cell_id, [
     ["coordinator", "create"],
     ["coordinator", "read"],
   ]);
-  await authorizeSigningCredentials(conductor.adminWs(), cloneCell.cell_id, [
+  await conductor.adminWs().authorizeSigningCredentials(cloneCell.cell_id, [
     ["coordinator", "create"],
     ["coordinator", "read"],
   ]);

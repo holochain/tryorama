@@ -8,6 +8,8 @@ import {
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CallZomeRequestSigned,
+  CapSecret,
+  CellId,
   CreateCloneCellRequest,
   DeleteCloneCellRequest,
   DisableAppRequest,
@@ -21,15 +23,20 @@ import {
   EnableCloneCellRequest,
   encodeHashToBase64,
   FullStateDump,
+  FunctionName,
+  generateSigningKeyPair,
   GetDnaDefinitionRequest,
   getSigningCredentials,
   GrantZomeCallCapabilityRequest,
   InstallAppRequest,
   ListAppsRequest,
+  randomCapSecret,
   RegisterDnaRequest,
+  setSigningCredentials,
   signZomeCall,
   StartAppRequest,
   UninstallAppRequest,
+  ZomeName,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
@@ -587,10 +594,56 @@ export class TryCpConductor implements IConductor {
       return response.data;
     };
 
+    /**
+     * Grant a capability for signing zome calls.
+     *
+     * @param cellId - The cell to grant the capability for.
+     * @param functions - The zome functions to grant the capability for.
+     * @param signingKey - The assignee of the capability.
+     * @returns The cap secret of the created capability.
+     */
+    const grantSigningKey = async (
+      cellId: CellId,
+      functions: Array<[ZomeName, FunctionName]>,
+      signingKey: AgentPubKey
+    ): Promise<CapSecret> => {
+      const capSecret = randomCapSecret();
+      await grantZomeCallCapability({
+        cell_id: cellId,
+        cap_grant: {
+          tag: "zome-call-signing-key",
+          functions,
+          access: {
+            Assigned: {
+              secret: capSecret,
+              assignees: [signingKey],
+            },
+          },
+        },
+      });
+      return capSecret;
+    };
+
+    /**
+     * Generate and authorize a new key pair for signing zome calls.
+     *
+     * @param cellId - The cell id to create the capability grant for.
+     * @param functions - Zomes and functions to authorize the signing key for.
+     */
+    const authorizeSigningCredentials = async (
+      cellId: CellId,
+      functions: [ZomeName, FunctionName][]
+    ) => {
+      const [keyPair, signingKey] = generateSigningKeyPair();
+      const capSecret = await grantSigningKey(cellId, functions, signingKey);
+      setSigningCredentials(cellId, { capSecret, keyPair, signingKey });
+    };
+
     return {
       addAgentInfo,
       agentInfo,
       attachAppInterface,
+      authorizeSigningCredentials,
       deleteCloneCell,
       disableApp,
       dumpFullState,
@@ -598,6 +651,7 @@ export class TryCpConductor implements IConductor {
       enableApp,
       generateAgentPubKey,
       getDnaDefinition,
+      grantSigningKey,
       grantZomeCallCapability,
       installApp,
       listAppInterfaces,

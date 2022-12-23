@@ -4,7 +4,6 @@ import {
   AppSignal,
   AppSignalCb,
   CloneId,
-  authorizeSigningCredentials,
   EntryHash,
 } from "@holochain/client";
 import assert from "node:assert";
@@ -188,7 +187,7 @@ test("Local Conductor - install and call an app", async (t) => {
   });
   t.ok(app.appId);
 
-  await authorizeSigningCredentials(conductor.adminWs(), app.cells[0].cell_id, [
+  await conductor.adminWs().authorizeSigningCredentials(app.cells[0].cell_id, [
     ["coordinator", "create"],
     ["coordinator", "read"],
   ]);
