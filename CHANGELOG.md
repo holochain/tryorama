@@ -5,9 +5,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- Support for wildcards in `GrantedFunctions`.
 ### Removed
 ### Changed
+- Automatically sign zome calls without manual authorization of signing credentials.
 ### Fixed
+
 
 ## 2022-12-12 [0.10.0]
 

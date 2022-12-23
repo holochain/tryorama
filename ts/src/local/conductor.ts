@@ -3,7 +3,10 @@ import {
   AppBundleSource,
   AppWebsocket,
   AttachAppInterfaceRequest,
+  CallZomeRequest,
+  CallZomeRequestSigned,
   encodeHashToBase64,
+  getSigningCredentials,
   InstallAppRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
@@ -351,6 +354,15 @@ export class Conductor implements IConductor {
 
     logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
     this._appWs = await AppWebsocket.connect(this.appApiUrl.href, this.timeout);
+    const callZome = this._appWs.callZome;
+    this._appWs.callZome = async (
+      req: CallZomeRequest | CallZomeRequestSigned
+    ) => {
+      if (!getSigningCredentials(req.cell_id)) {
+        await this.adminWs().authorizeSigningCredentials(req.cell_id);
+      }
+      return callZome(req);
+    };
   }
 
   /**

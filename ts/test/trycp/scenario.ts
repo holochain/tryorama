@@ -153,13 +153,6 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
     },
   ]);
 
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "signal_loopback"],
-  ]);
-  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
-    ["coordinator", "signal_loopback"],
-  ]);
-
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({
     zome_name: "coordinator",
@@ -200,13 +193,6 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   ]);
   await scenario.shareAllAgents();
 
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "create"],
-  ]);
-  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
-    ["coordinator", "read"],
-  ]);
-
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
     zome_name: "coordinator",
@@ -238,13 +224,6 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
   ]);
   await scenario.shareAllAgents();
-
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "create"],
-  ]);
-  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
-    ["coordinator", "read"],
-  ]);
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -389,13 +368,6 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
   // Testing if agents that are installed on two different tryCP servers are able to communicate with each other
   const alice = clientsPlayers[0].players[0];
   const bob = clientsPlayers[1].players[0];
-
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "create"],
-  ]);
-  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
-    ["coordinator", "read"],
-  ]);
 
   const content = "test-content";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
