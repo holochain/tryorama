@@ -6,17 +6,14 @@ import type {
   AppWebsocket,
   CallZomeRequest,
   Cell,
-  CellId,
   DnaBundle,
   DnaProperties,
   DnaSource,
-  FunctionName,
   HoloHash,
   InstalledAppId,
   MembraneProof,
   RegisterDnaRequest,
   RoleName,
-  ZomeName,
 } from "@holochain/client";
 
 /**
@@ -73,10 +70,6 @@ export interface AgentApp {
   agentPubKey: Uint8Array;
   cells: CallableCell[];
   namedCells: Map<RoleName, CallableCell>;
-  authorizeSigningCredentials: (
-    cellId: CellId,
-    functions: [ZomeName, FunctionName][]
-  ) => Promise<void>;
 }
 
 /**

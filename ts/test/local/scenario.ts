@@ -69,10 +69,6 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
     assert(signalHandlerAlice);
     alice.conductor.appWs().on("signal", signalHandlerAlice);
 
-    await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-      ["coordinator", "signal_loopback"],
-    ]);
-
     const signalAlice = { value: "hello alice" };
     alice.cells[0].callZome({
       zome_name: "coordinator",
@@ -118,13 +114,6 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
   await scenario.shareAllAgents();
 
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "create"],
-  ]);
-  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
-    ["coordinator", "read"],
-  ]);
-
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
     zome_name: "coordinator",
@@ -153,13 +142,6 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   ]);
 
   await scenario.shareAllAgents();
-
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "create"],
-  ]);
-  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
-    ["coordinator", "read"],
-  ]);
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -218,13 +200,6 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   alice.conductor.appWs().on("signal", signalHandlerAlice);
   assert(signalHandlerBob);
   bob.conductor.appWs().on("signal", signalHandlerBob);
-
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "signal_loopback"],
-  ]);
-  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
-    ["coordinator", "signal_loopback"],
-  ]);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({

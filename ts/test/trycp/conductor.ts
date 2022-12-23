@@ -5,6 +5,7 @@ import {
   CellType,
   CloneId,
   EntryHash,
+  GrantedFunctionsType,
 } from "@holochain/client";
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
@@ -114,11 +115,6 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface();
 
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "create"],
-    ["coordinator", "read"],
-  ]);
-
   const entryContent = "Bye bye, world";
   const createEntryResponse: EntryHash = await alice.cells[0].callZome({
     zome_name: "coordinator",
@@ -171,7 +167,7 @@ test("TryCP Conductor - grant a zome call capability", async (t) => {
       access: {
         Assigned: { secret: new Uint8Array(64), assignees: [agentPubKey] },
       },
-      functions: [["crud", "create"]],
+      functions: { [GrantedFunctionsType.Listed]: [["crud", "create"]] },
     },
   });
   t.equal(response, undefined);
@@ -208,10 +204,6 @@ test("TryCP Conductor - receive a signal", async (t) => {
 
   assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
   const cell_id = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
-
-  await conductor
-    .adminWs()
-    .authorizeSigningCredentials(cell_id, [["coordinator", "signal_loopback"]]);
 
   conductor.appWs().callZome({
     cap_secret: null,
@@ -283,11 +275,6 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
     "connected app interface responds with success"
   );
 
-  await conductor.adminWs().authorizeSigningCredentials(cell_id, [
-    ["coordinator", "create"],
-    ["coordinator", "read"],
-  ]);
-
   const entryContent = "test-content";
   const createEntryHash = await conductor.appWs().callZome<EntryHash>({
     cap_secret: null,
@@ -341,10 +328,6 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
 
   await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface();
-
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "read"],
-  ]);
 
   const actual = await alice.cells[0].callZome<null>({
     zome_name: "coordinator",
@@ -455,13 +438,6 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     "connect app interface responds with success"
   );
 
-  await conductor
-    .adminWs()
-    .authorizeSigningCredentials(cellId1, [["coordinator", "create"]]);
-  await conductor
-    .adminWs()
-    .authorizeSigningCredentials(cellId2, [["coordinator", "read"]]);
-
   const entryContent = "test-content";
   const createEntryHash = await conductor.appWs().callZome<EntryHash>({
     cap_secret: null,
@@ -532,15 +508,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
     cell_id[1],
     "agent pub key in clone cell and base cell match"
   );
-
-  await conductor.adminWs().authorizeSigningCredentials(cell_id, [
-    ["coordinator", "create"],
-    ["coordinator", "read"],
-  ]);
-  await conductor.adminWs().authorizeSigningCredentials(cloneCell.cell_id, [
-    ["coordinator", "create"],
-    ["coordinator", "read"],
-  ]);
 
   const testContent = "test-content";
   const entryActionHash: ActionHash = await conductor.appWs().callZome({
@@ -624,13 +591,6 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   await conductor2.connectAppInterface();
 
   await addAllAgentsToAllConductors([conductor1, conductor2]);
-
-  await alice.authorizeSigningCredentials(alice.cells[0].cell_id, [
-    ["coordinator", "create"],
-  ]);
-  await bob.authorizeSigningCredentials(bob.cells[0].cell_id, [
-    ["coordinator", "read"],
-  ]);
 
   const entryContent = "test-content";
   const createEntryHash = await conductor1.appWs().callZome<EntryHash>({

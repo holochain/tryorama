@@ -92,8 +92,6 @@ export const enableAndGetAgentApp = async (
     agentPubKey,
     cells,
     namedCells,
-    authorizeSigningCredentials: (cellId, functions) =>
-      conductor.adminWs().authorizeSigningCredentials(cellId, functions),
   };
   return agentApp;
 };
