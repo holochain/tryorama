@@ -5,14 +5,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
-- Support for wildcards in `GrantedFunctions`.
 ### Removed
 ### Changed
-- Automatically sign zome calls without manual authorization of signing credentials.
 ### Fixed
 
+## 2022-12-23 [0.10.1]
+### Added
+- Support for wildcards in `GrantedFunctions`.
+### Changed
+- Automatically sign zome calls without manual authorization of signing credentials.
 
-## 2022-12-12 [0.10.0]
+## 2022-12-22 [0.10.0]
 
 ### Changed
 - **BREAKING CHANGE**: Upgrade to Holochain 0.1.0-beta-rc.1
