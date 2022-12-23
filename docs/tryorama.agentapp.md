@@ -18,7 +18,6 @@ export interface AgentApp
 |  --- | --- | --- | --- |
 |  [agentPubKey](./tryorama.agentapp.agentpubkey.md) |  | Uint8Array |  |
 |  [appId](./tryorama.agentapp.appid.md) |  | string |  |
-|  [authorizeSigningCredentials](./tryorama.agentapp.authorizesigningcredentials.md) |  | (cellId: CellId, functions: \[ZomeName, FunctionName\]\[\]) =&gt; Promise&lt;void&gt; |  |
 |  [cells](./tryorama.agentapp.cells.md) |  | [CallableCell](./tryorama.callablecell.md)<!-- -->\[\] |  |
 |  [namedCells](./tryorama.agentapp.namedcells.md) |  | Map&lt;RoleName, [CallableCell](./tryorama.callablecell.md)<!-- -->&gt; |  |
 

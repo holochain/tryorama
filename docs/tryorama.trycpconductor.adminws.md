@@ -15,7 +15,7 @@ adminWs(): {
         attachAppInterface: (request?: AttachAppInterfaceRequest) => Promise<{
             port: number;
         }>;
-        authorizeSigningCredentials: (cellId: CellId, functions: [ZomeName, FunctionName][]) => Promise<void>;
+        authorizeSigningCredentials: (cellId: CellId, functions?: GrantedFunctions) => Promise<void>;
         deleteCloneCell: (request: DeleteCloneCellRequest) => Promise<void>;
         disableApp: (request: DisableAppRequest) => Promise<null>;
         dumpFullState: (request: DumpFullStateRequest) => Promise<FullStateDump>;
@@ -23,7 +23,7 @@ adminWs(): {
         enableApp: (request: EnableAppRequest) => Promise<import("@holochain/client").EnableAppResponse>;
         generateAgentPubKey: () => Promise<AgentPubKey>;
         getDnaDefinition: (dnaHash: GetDnaDefinitionRequest) => Promise<DnaDefinition>;
-        grantSigningKey: (cellId: CellId, functions: Array<[ZomeName, FunctionName]>, signingKey: AgentPubKey) => Promise<CapSecret>;
+        grantSigningKey: (cellId: CellId, functions: GrantedFunctions, signingKey: AgentPubKey) => Promise<CapSecret>;
         grantZomeCallCapability: (request: GrantZomeCallCapabilityRequest) => Promise<void>;
         installApp: (data: InstallAppRequest) => Promise<import("@holochain/client").AppInfo>;
         listAppInterfaces: () => Promise<import("@holochain/client").ListAppInterfacesResponse>;
@@ -37,7 +37,7 @@ adminWs(): {
 ```
 <b>Returns:</b>
 
-{ addAgentInfo: (request: AddAgentInfoRequest) =&gt; Promise&lt;void&gt;; agentInfo: (req: AgentInfoRequest) =&gt; Promise&lt;import("@holochain/client").AgentInfoResponse&gt;; attachAppInterface: (request?: AttachAppInterfaceRequest) =&gt; Promise&lt;{ port: number; }&gt;; authorizeSigningCredentials: (cellId: CellId, functions: \[ZomeName, FunctionName\]\[\]) =&gt; Promise&lt;void&gt;; deleteCloneCell: (request: DeleteCloneCellRequest) =&gt; Promise&lt;void&gt;; disableApp: (request: DisableAppRequest) =&gt; Promise&lt;null&gt;; dumpFullState: (request: DumpFullStateRequest) =&gt; Promise&lt;FullStateDump&gt;; dumpState: (request: DumpStateRequest) =&gt; Promise&lt;\[FullStateDump, string\]&gt;; enableApp: (request: EnableAppRequest) =&gt; Promise&lt;import("@holochain/client").EnableAppResponse&gt;; generateAgentPubKey: () =&gt; Promise&lt;AgentPubKey&gt;; getDnaDefinition: (dnaHash: GetDnaDefinitionRequest) =&gt; Promise&lt;DnaDefinition&gt;; grantSigningKey: (cellId: CellId, functions: Array&lt;\[ZomeName, FunctionName\]&gt;, signingKey: AgentPubKey) =&gt; Promise&lt;CapSecret&gt;; grantZomeCallCapability: (request: GrantZomeCallCapabilityRequest) =&gt; Promise&lt;void&gt;; installApp: (data: InstallAppRequest) =&gt; Promise&lt;import("@holochain/client").AppInfo&gt;; listAppInterfaces: () =&gt; Promise&lt;import("@holochain/client").ListAppInterfacesResponse&gt;; listApps: (request: ListAppsRequest) =&gt; Promise&lt;import("@holochain/client").ListAppsResponse&gt;; listCellIds: () =&gt; Promise&lt;import("@holochain/client").ListCellIdsResponse&gt;; listDnas: () =&gt; Promise&lt;import("@holochain/client").ListDnasResponse&gt;; registerDna: (request: RegisterDnaRequest &amp; DnaSource) =&gt; Promise&lt;DnaHash&gt;; startApp: (request: StartAppRequest) =&gt; Promise&lt;boolean&gt;; uninstallApp: (request: UninstallAppRequest) =&gt; Promise&lt;null&gt;; }
+{ addAgentInfo: (request: AddAgentInfoRequest) =&gt; Promise&lt;void&gt;; agentInfo: (req: AgentInfoRequest) =&gt; Promise&lt;import("@holochain/client").AgentInfoResponse&gt;; attachAppInterface: (request?: AttachAppInterfaceRequest) =&gt; Promise&lt;{ port: number; }&gt;; authorizeSigningCredentials: (cellId: CellId, functions?: GrantedFunctions) =&gt; Promise&lt;void&gt;; deleteCloneCell: (request: DeleteCloneCellRequest) =&gt; Promise&lt;void&gt;; disableApp: (request: DisableAppRequest) =&gt; Promise&lt;null&gt;; dumpFullState: (request: DumpFullStateRequest) =&gt; Promise&lt;FullStateDump&gt;; dumpState: (request: DumpStateRequest) =&gt; Promise&lt;\[FullStateDump, string\]&gt;; enableApp: (request: EnableAppRequest) =&gt; Promise&lt;import("@holochain/client").EnableAppResponse&gt;; generateAgentPubKey: () =&gt; Promise&lt;AgentPubKey&gt;; getDnaDefinition: (dnaHash: GetDnaDefinitionRequest) =&gt; Promise&lt;DnaDefinition&gt;; grantSigningKey: (cellId: CellId, functions: GrantedFunctions, signingKey: AgentPubKey) =&gt; Promise&lt;CapSecret&gt;; grantZomeCallCapability: (request: GrantZomeCallCapabilityRequest) =&gt; Promise&lt;void&gt;; installApp: (data: InstallAppRequest) =&gt; Promise&lt;import("@holochain/client").AppInfo&gt;; listAppInterfaces: () =&gt; Promise&lt;import("@holochain/client").ListAppInterfacesResponse&gt;; listApps: (request: ListAppsRequest) =&gt; Promise&lt;import("@holochain/client").ListAppsResponse&gt;; listCellIds: () =&gt; Promise&lt;import("@holochain/client").ListCellIdsResponse&gt;; listDnas: () =&gt; Promise&lt;import("@holochain/client").ListDnasResponse&gt;; registerDna: (request: RegisterDnaRequest &amp; DnaSource) =&gt; Promise&lt;DnaHash&gt;; startApp: (request: StartAppRequest) =&gt; Promise&lt;boolean&gt;; uninstallApp: (request: UninstallAppRequest) =&gt; Promise&lt;null&gt;; }
 
 The Admin API web socket.
 
