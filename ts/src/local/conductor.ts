@@ -1,5 +1,6 @@
 import {
   AdminWebsocket,
+  AppAgentWebsocket,
   AppBundleSource,
   AppWebsocket,
   AttachAppInterfaceRequest,
@@ -8,6 +9,7 @@ import {
   encodeHashToBase64,
   getSigningCredentials,
   InstallAppRequest,
+  InstalledAppId,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -164,6 +166,7 @@ export class Conductor implements IConductor {
   private appApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
+  private _appAgentWs: AppAgentWebsocket | undefined;
   private readonly timeout: number;
 
   private constructor(timeout?: number) {
@@ -173,6 +176,7 @@ export class Conductor implements IConductor {
     this.appApiUrl = new URL(HOST_URL.href);
     this._adminWs = undefined;
     this._appWs = undefined;
+    this._appAgentWs = undefined;
     this.timeout = timeout ?? DEFAULT_TIMEOUT;
   }
 
@@ -354,8 +358,31 @@ export class Conductor implements IConductor {
 
     logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
     this._appWs = await AppWebsocket.connect(this.appApiUrl.href, this.timeout);
-    const callZome = this._appWs.callZome;
-    this._appWs.callZome = async (
+    this.setUpImplicitZomeCallSigning();
+  }
+
+  /**
+   * Connect a web socket for a specific app to the App API.
+   */
+  async connectAppAgentInterface(appId: InstalledAppId) {
+    assert(
+      this.appApiUrl.port,
+      "error connecting app interface: app api port has not been defined"
+    );
+
+    logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
+    this._appAgentWs = await AppAgentWebsocket.connect(
+      this.appApiUrl.href,
+      appId,
+      this.timeout
+    );
+    this._appWs = this._appAgentWs.appWebsocket;
+    this.setUpImplicitZomeCallSigning();
+  }
+
+  private setUpImplicitZomeCallSigning() {
+    const callZome = this.appWs().callZome;
+    this.appWs().callZome = async (
       req: CallZomeRequest | CallZomeRequestSigned
     ) => {
       if (!getSigningCredentials(req.cell_id)) {
@@ -397,6 +424,16 @@ export class Conductor implements IConductor {
   }
 
   /**
+   * Get all App API methods of a specific app.
+   *
+   * @returns The app agent web socket.
+   */
+  appAgentWs() {
+    assert(this._appAgentWs, "app ws has not been connected");
+    return this._appAgentWs;
+  }
+
+  /**
    * Install an application into the conductor.
    *
    * @param appBundleSource - The bundle or path to the bundle.
@@ -425,12 +462,12 @@ export class Conductor implements IConductor {
             installed_app_id,
             network_seed,
           };
-    const installedAppInfo = await this.adminWs().installApp(installAppRequest);
     logger.debug(
       `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
         agent_key
       )}`
     );
+    const installedAppInfo = await this.adminWs().installApp(installAppRequest);
     const agentApp: AgentApp = await enableAndGetAgentApp(
       this,
       agent_key,

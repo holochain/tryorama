@@ -174,6 +174,31 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   await scenario.cleanUp();
 });
 
+// test("Local Scenario - app agent websocket", async (t) => {
+//   const scenario = new Scenario();
+//   const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+//   const alice = await scenario.addPlayerWithApp(appBundleSource);
+//   const aliceAppAgentWs = alice.conductor.appAgentWs();
+
+//   const content = "test-content";
+//   const createEntryHash = await aliceAppAgentWs.callZome({
+//     zome_name: "coordinator",
+//     fn_name: "create",
+//     payload: content,
+//   });
+
+//   await pause(1000);
+
+//   const readContent = await alice.cells[0].callZome<typeof content>({
+//     zome_name: "coordinator",
+//     fn_name: "read",
+//     payload: createEntryHash,
+//   });
+//   t.equal(readContent, content);
+
+//   await scenario.cleanUp();
+// });
+
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
 
@@ -218,8 +243,8 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     signalReceivedAlice,
     signalReceivedBob,
   ]);
-  t.deepEqual(actualSignalAlice.data.payload, signalAlice);
-  t.deepEqual(actualSignalBob.data.payload, signalBob);
+  t.deepEqual(actualSignalAlice.payload, signalAlice);
+  t.deepEqual(actualSignalBob.payload, signalBob);
 
   await scenario.cleanUp();
 });

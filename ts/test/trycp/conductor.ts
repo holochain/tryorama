@@ -215,7 +215,7 @@ test("TryCP Conductor - receive a signal", async (t) => {
   });
   const actualSignal = await signalReceived;
   t.deepEqual(
-    actualSignal.data.payload,
+    actualSignal.payload,
     testSignal,
     "received signal matches expected signal"
   );
