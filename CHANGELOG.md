@@ -5,7 +5,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- AppAgentWebsocket to local conductor. Available under `conductor.appAgentWs()`.
 ### Removed
+- Removed `type` and `data` from signals as per client update.
 ### Changed
 ### Fixed
 
