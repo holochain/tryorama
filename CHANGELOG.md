@@ -5,11 +5,15 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
-- AppAgentWebsocket to local conductor. Available under `conductor.appAgentWs()`.
 ### Removed
-- Removed `type` and `data` from signals as per client update.
 ### Changed
 ### Fixed
+
+## 2023-01-15 [0.10.2]
+### Added
+- AppAgentWebsocket to local conductor. Available under `conductor.appAgentWs()` after connecting with `conductor.connectAppAgentInterface(appId)` (default now for `Scenario.addPlayerWithApp()`).
+### Removed
+- Removed `type` and `data` from signals as per client update.
 
 ## 2022-12-23 [0.10.1]
 ### Added
