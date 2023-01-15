@@ -18,8 +18,10 @@ export declare class Conductor implements IConductor
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [adminWs()](./tryorama.conductor.adminws.md) |  | Get all Admin API methods. |
+|  [appAgentWs()](./tryorama.conductor.appagentws.md) |  | Get all App API methods of a specific app. |
 |  [appWs()](./tryorama.conductor.appws.md) |  | Get all App API methods. |
 |  [attachAppInterface(request)](./tryorama.conductor.attachappinterface.md) |  | Attach a web socket to the App API. |
+|  [connectAppAgentInterface(appId)](./tryorama.conductor.connectappagentinterface.md) |  | Connect a web socket for a specific app to the App API. |
 |  [connectAppInterface()](./tryorama.conductor.connectappinterface.md) |  | Connect a web socket to the App API. |
 |  [create(options)](./tryorama.conductor.create.md) | <code>static</code> | Factory to create a conductor. |
 |  [getTmpDirectory()](./tryorama.conductor.gettmpdirectory.md) |  | Get the path of the directory that contains all files and folders of the conductor. |

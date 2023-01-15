@@ -32,10 +32,10 @@ export const deserializeTryCpSignal = <T>(signal: Uint8Array): AppSignal => {
   assertIsSignal(deserializedSignal);
   deserializedSignal;
   const {
-    App: [cellId, payload],
+    App: [cell_id, payload],
   } = deserializedSignal;
   const decodedPayload = msgpack.decode(payload) as T;
-  return { type: "signal", data: { cellId, payload: decodedPayload } };
+  return { cell_id, payload: decodedPayload };
 };
 
 /**

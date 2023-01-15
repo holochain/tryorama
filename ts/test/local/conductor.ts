@@ -473,7 +473,7 @@ test("Local Conductor - Receive a signal", async (t) => {
     payload: aliceSignal,
   });
   const actualSignal = await signalReceived;
-  t.deepEqual(actualSignal.data.payload, aliceSignal);
+  t.deepEqual(actualSignal.payload, aliceSignal);
 
   await conductor.shutDown();
   await cleanAllConductors();

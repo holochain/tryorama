@@ -51,7 +51,10 @@ export class Scenario {
    * @returns The newly added conductor instance.
    */
   async addConductor() {
-    const conductor = await createConductor({ timeout: this.timeout });
+    const conductor = await createConductor({
+      timeout: this.timeout,
+      attachAppInterface: false,
+    });
     this.conductors.push(conductor);
     return conductor;
   }
@@ -73,6 +76,8 @@ export class Scenario {
       networkSeed: options?.networkSeed ?? this.networkSeed,
     };
     const agentApp = await conductor.installApp(appBundleSource, options);
+    await conductor.attachAppInterface();
+    await conductor.connectAppAgentInterface(agentApp.appId);
     return { conductor, ...agentApp };
   }
 
