@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2023-01-15 [0.10.3]
+### Changed
+- Update to JS client v0.11.12 that removes a node scheme import.
+
 ## 2023-01-15 [0.10.2]
 ### Added
 - AppAgentWebsocket to local conductor. Available under `conductor.appAgentWs()` after connecting with `conductor.connectAppAgentInterface(appId)` (default now for `Scenario.addPlayerWithApp()`).
