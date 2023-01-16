@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2023-01-15 [0.10.4]
+### Changed
+- Update to JS client v0.11.13 that fixes a problem with Nodejs v16.
+
 ## 2023-01-15 [0.10.3]
 ### Changed
 - Update to JS client v0.11.12 that removes a node scheme import.
