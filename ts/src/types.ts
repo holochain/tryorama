@@ -5,13 +5,14 @@ import type {
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
-  Cell,
+  ClonedCell,
   DnaBundle,
   DnaProperties,
   DnaSource,
   HoloHash,
   InstalledAppId,
   MembraneProof,
+  ProvisionedCell,
   RegisterDnaRequest,
   RoleName,
 } from "@holochain/client";
@@ -50,6 +51,13 @@ export type CallZomeFn = <T>(
   request: CellZomeCallRequest,
   timeout?: number
 ) => Promise<T>;
+
+type Cell = Pick<
+  ClonedCell | ProvisionedCell,
+  "name" | "cell_id" | "dna_modifiers"
+> &
+  Partial<ClonedCell> &
+  Partial<ProvisionedCell>;
 
 /**
  * Extends an installed cell by a function to call a zome.
