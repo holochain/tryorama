@@ -22,7 +22,6 @@ import {
   EnableAppResponse,
   EnableCloneCellRequest,
   EnableCloneCellResponse,
-  EncodedAppSignal,
   FullStateDump,
   GetDnaDefinitionRequest,
   GrantZomeCallCapabilityRequest,
@@ -264,13 +263,6 @@ export interface _TryCpResponseWrapperSignal {
   type: "signal";
   port: number;
   data: Uint8Array;
-}
-
-/**
- * @internal
- */
-export interface _TryCpSignal {
-  App: EncodedAppSignal;
 }
 
 /* ********************** App API ********************** */
