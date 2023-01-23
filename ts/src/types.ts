@@ -52,21 +52,17 @@ export type CallZomeFn = <T>(
   timeout?: number
 ) => Promise<T>;
 
-type Cell = Pick<
-  ClonedCell | ProvisionedCell,
-  "name" | "cell_id" | "dna_modifiers"
-> &
-  Partial<ClonedCell> &
-  Partial<ProvisionedCell>;
-
 /**
  * Extends an installed cell by a function to call a zome.
  *
  * @public
  */
-export interface CallableCell extends Cell {
-  callZome: CallZomeFn;
-}
+export type CallableCell = Pick<
+  ClonedCell | ProvisionedCell,
+  "name" | "cell_id" | "dna_modifiers"
+> &
+  Partial<ClonedCell> &
+  Partial<ProvisionedCell> & { callZome: CallZomeFn };
 
 /**
  * Provides direct access to cells of an app and the agent key.

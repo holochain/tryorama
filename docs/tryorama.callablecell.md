@@ -2,20 +2,16 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [CallableCell](./tryorama.callablecell.md)
 
-## CallableCell interface
+## CallableCell type
 
 Extends an installed cell by a function to call a zome.
 
 <b>Signature:</b>
 
 ```typescript
-export interface CallableCell extends Cell 
+export type CallableCell = Pick<ClonedCell | ProvisionedCell, "name" | "cell_id" | "dna_modifiers"> & Partial<ClonedCell> & Partial<ProvisionedCell> & {
+    callZome: CallZomeFn;
+};
 ```
-<b>Extends:</b> Cell
-
-## Properties
-
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [callZome](./tryorama.callablecell.callzome.md) |  | [CallZomeFn](./tryorama.callzomefn.md) |  |
+<b>References:</b> [CallZomeFn](./tryorama.callzomefn.md)
 

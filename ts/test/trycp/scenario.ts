@@ -231,7 +231,7 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
     fn_name: "create",
     payload: content,
   });
-  await pause(1000);
+  await pause(1500);
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
     fn_name: "read",

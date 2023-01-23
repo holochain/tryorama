@@ -7,7 +7,6 @@ import {
   AttachAppInterfaceRequest,
   AttachAppInterfaceResponse,
   CallZomeRequestSigned,
-  CellId,
   CreateCloneCellRequest,
   CreateCloneCellResponse,
   DeleteCloneCellRequest,
@@ -23,6 +22,7 @@ import {
   EnableAppResponse,
   EnableCloneCellRequest,
   EnableCloneCellResponse,
+  EncodedAppSignal,
   FullStateDump,
   GetDnaDefinitionRequest,
   GrantZomeCallCapabilityRequest,
@@ -270,7 +270,7 @@ export interface _TryCpResponseWrapperSignal {
  * @internal
  */
 export interface _TryCpSignal {
-  App: [CellId, Uint8Array];
+  App: EncodedAppSignal;
 }
 
 /* ********************** App API ********************** */
