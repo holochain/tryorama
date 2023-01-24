@@ -60,7 +60,6 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AppApiResponseCloneCellEnabled](./tryorama.appapiresponseclonecellenabled.md) |  |
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
 |  [AppOptions](./tryorama.appoptions.md) | Optional arguments when installing a hApp. |
-|  [CallableCell](./tryorama.callablecell.md) | Extends an installed cell by a function to call a zome. |
 |  [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |  |
 |  [ConductorOptions](./tryorama.conductoroptions.md) |  |
 |  [Dna](./tryorama.dna.md) | DNA source and additional options. |
@@ -111,6 +110,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AdminApiResponse](./tryorama.adminapiresponse.md) | All possible responses from the Admin API. |
 |  [AgentsAppsOptions](./tryorama.agentsappsoptions.md) | An app and an optional agent pub key for each agent. Optionally a network seed to be used for DNA installation. |
 |  [AppApiResponse](./tryorama.appapiresponse.md) | App API Responses. |
+|  [CallableCell](./tryorama.callablecell.md) | Extends an installed cell by a function to call a zome. |
 |  [CallZomeFn](./tryorama.callzomefn.md) | The function for calling a zome from a specific cell. |
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |
 |  [ConductorId](./tryorama.conductorid.md) |  |
