@@ -7,7 +7,6 @@ import {
   AttachAppInterfaceRequest,
   AttachAppInterfaceResponse,
   CallZomeRequestSigned,
-  CellId,
   CreateCloneCellRequest,
   CreateCloneCellResponse,
   DeleteCloneCellRequest,
@@ -264,13 +263,6 @@ export interface _TryCpResponseWrapperSignal {
   type: "signal";
   port: number;
   data: Uint8Array;
-}
-
-/**
- * @internal
- */
-export interface _TryCpSignal {
-  App: [CellId, Uint8Array];
 }
 
 /* ********************** App API ********************** */

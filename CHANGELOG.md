@@ -7,6 +7,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- Update to Holochain 0.1.0-beta-rc.4
+- Update to JS client v0.11.15
 ### Fixed
 
 ## 2023-01-15 [0.10.4]
