@@ -5,13 +5,14 @@ import type {
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
-  Cell,
+  ClonedCell,
   DnaBundle,
   DnaProperties,
   DnaSource,
   HoloHash,
   InstalledAppId,
   MembraneProof,
+  ProvisionedCell,
   RegisterDnaRequest,
   RoleName,
 } from "@holochain/client";
@@ -56,9 +57,12 @@ export type CallZomeFn = <T>(
  *
  * @public
  */
-export interface CallableCell extends Cell {
-  callZome: CallZomeFn;
-}
+export type CallableCell = Pick<
+  ClonedCell | ProvisionedCell,
+  "name" | "cell_id" | "dna_modifiers"
+> &
+  Partial<ClonedCell> &
+  Partial<ProvisionedCell> & { callZome: CallZomeFn };
 
 /**
  * Provides direct access to cells of an app and the agent key.

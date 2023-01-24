@@ -12,14 +12,14 @@ Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/
 appWs(): {
         appInfo: (request: AppInfoRequest) => Promise<import("@holochain/client").AppInfo>;
         callZome: <T>(request: CallZomeRequest | CallZomeRequestSigned) => Promise<T>;
-        createCloneCell: (request: CreateCloneCellRequest) => Promise<import("@holochain/client").InstalledCell>;
-        enableCloneCell: (request: EnableCloneCellRequest) => Promise<import("@holochain/client").InstalledCell>;
+        createCloneCell: (request: CreateCloneCellRequest) => Promise<import("@holochain/client").ClonedCell>;
+        enableCloneCell: (request: EnableCloneCellRequest) => Promise<import("@holochain/client").ClonedCell>;
         disableCloneCell: (request: DisableCloneCellRequest) => Promise<void>;
     };
 ```
 <b>Returns:</b>
 
-{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").AppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").InstalledCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").InstalledCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; }
+{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").AppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; }
 
 The App API web socket.
 

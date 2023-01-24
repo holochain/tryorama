@@ -2,8 +2,9 @@ import {
   AgentPubKey,
   AppInfo,
   CallZomeResponse,
-  Cell,
   CellType,
+  ClonedCell,
+  ProvisionedCell,
   RoleName,
 } from "@holochain/client";
 import {
@@ -98,7 +99,7 @@ export const enableAndGetAgentApp = async (
 
 const getCallableCell = (
   conductor: IConductor,
-  cell: Cell,
+  cell: ClonedCell | ProvisionedCell,
   agentPubKey: AgentPubKey
 ) => ({
   ...cell,

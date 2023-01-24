@@ -341,7 +341,7 @@ test("Local Conductor - clone cell management", async (t) => {
     modifiers: { network_seed: "test-seed" },
   });
   t.deepEqual(
-    cloneCell.role_name,
+    cloneCell.clone_id,
     new CloneId(ROLE_NAME, 0).toString(),
     "clone id is 'role_name.0'"
   );
@@ -378,29 +378,26 @@ test("Local Conductor - clone cell management", async (t) => {
 
   const enabledCloneCell = await conductor
     .appWs()
-    .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_name });
+    .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.clone_id });
   t.deepEqual(
     enabledCloneCell,
     cloneCell,
     "enabled clone cell matches created clone cell"
   );
-  // TODO this currently fails because of a bug in Holochain
-  // comment back in once fixed
-  //
-  // const readEntryResponse: typeof testContent = await conductor
-  //   .appWs()
-  //   .callZome(
-  //     {
-  //       cell_id: cloneCell.cell_id,
-  //       zome_name: "coordinator",
-  //       fn_name: "read",
-  //       payload: entryActionHash,
-  //       cap_secret: null,
-  //       provenance: agentPubKey,
-  //     },
-  //     40000
-  //   );
-  // t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
+  const readEntryResponse: typeof testContent = await conductor
+    .appWs()
+    .callZome(
+      {
+        cell_id: cloneCell.cell_id,
+        zome_name: "coordinator",
+        fn_name: "read",
+        payload: entryActionHash,
+        cap_secret: null,
+        provenance: agentPubKey,
+      },
+      40000
+    );
+  t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
   await conductor
     .appWs()
@@ -411,7 +408,7 @@ test("Local Conductor - clone cell management", async (t) => {
   await t.rejects(
     conductor
       .appWs()
-      .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.role_name }),
+      .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.clone_id }),
     "deleted clone cell cannot be enabled"
   );
 
