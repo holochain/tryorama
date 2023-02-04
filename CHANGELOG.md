@@ -7,15 +7,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
-- Upgrade JS client to latest minor version (v0.12.0).
 ### Fixed
+
+## 2023-02-03: v0.11.1
+### Changed
+- Upgrade JS client to latest minor version (v0.12.0).
 
 ## 2023-01-27: v0.11.0
 Compatible with Holochain v0.1.0
 
 ### Changed
 - Upgrade JS client to v0.12.0
-
 
 ## 2023-01-23 [0.10.5]
 ### Changed
