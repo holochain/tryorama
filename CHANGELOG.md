@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- Upgrade JS client to latest minor version (v0.12.0).
 ### Fixed
 
 ## 2023-01-27: v0.11.0
