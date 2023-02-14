@@ -14,10 +14,8 @@ jobs:
   test:
     strategy:
       matrix:
-        platform:
-          - ubuntu-latest
-          # - macos-latest
-    runs-on: ${{ matrix.platform }}
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
 
     steps:
       - name: Check out source code
