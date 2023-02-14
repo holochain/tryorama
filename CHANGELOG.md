@@ -9,6 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2023-02-14: v0.11.2
+### Changed
+- Output Holochain traces at `info` log level by default. Before log level needed to be set to `debug` for traces to appear.
+- Switch to Nix flake for develop environment. Run `nix develop` from now on instead of `nix-shell`. Pass on `--extra-experimental-features nix-command --extra-experimental-features flakes` or enable these features for your user in [`~/.config/nix/nix.conf`](https://nixos.org/manual/nix/stable/command-ref/conf-file.html#conf-experimental-features).
+
 ## 2023-02-03: v0.11.1
 ### Changed
 - Upgrade JS client to latest minor version (v0.12.0).

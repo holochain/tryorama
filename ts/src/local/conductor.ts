@@ -278,7 +278,7 @@ export class Conductor implements IConductor {
             resolve();
           }
         } else {
-          logger.debug(data.toString());
+          logger.info(data.toString());
         }
       });
 
