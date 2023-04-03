@@ -101,7 +101,7 @@ async fn call(
         .fail();
     };
 
-    let message: HolochainMessage = rmp_serde::from_read_ref(&ws_data)
+    let message: HolochainMessage = rmp_serde::from_slice(&ws_data)
         .with_context(|| DeserializeResponse { response: ws_data })?;
 
     let response_data = if let HolochainMessage::Response { id: _, data } = message {

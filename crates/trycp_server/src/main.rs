@@ -250,7 +250,7 @@ async fn ws_message(
     let RequestWrapper {
         id: request_id,
         request,
-    } = rmp_serde::from_read_ref(&bytes).context(DeserializeRequestWrapper { bytes })?;
+    } = rmp_serde::from_slice(&bytes).context(DeserializeRequestWrapper { bytes })?;
 
     let response = match request {
         Request::SaveDna { id, content } => spawn_blocking(move || {

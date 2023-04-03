@@ -109,7 +109,7 @@ pub(crate) async fn listen(
             };
 
             let deserialized: HolochainMessage =
-                rmp_serde::from_read_ref(&bytes).context(DeserializeMessage { bytes })?;
+                rmp_serde::from_slice(&bytes).context(DeserializeMessage { bytes })?;
 
             match deserialized {
                 HolochainMessage::Response { id, data } => {
