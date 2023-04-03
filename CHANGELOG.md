@@ -7,6 +7,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- `runScenario` catches and outputs error occurring during the test run.
+
 ### Fixed
 
 ## 2023-02-14: v0.11.2

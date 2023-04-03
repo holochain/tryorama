@@ -9,6 +9,7 @@ import test from "tape-promise/tape.js";
 import { runScenario, Scenario } from "../../src/local/scenario.js";
 import { pause } from "../../src/util.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
+import { getZomeCaller } from "../../src/common.js";
 
 test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
   await runScenario(async (scenario: Scenario) => {
@@ -140,23 +141,17 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
     { appBundleSource },
     { appBundleSource },
   ]);
+  const aliceCaller = getZomeCaller(alice.cells[0], "coordinator");
+  const bobCaller = getZomeCaller(bob.cells[0], "coordinator");
 
   await scenario.shareAllAgents();
 
   const content = "Before shutdown";
-  const createEntryHash = await alice.cells[0].callZome<EntryHash>({
-    zome_name: "coordinator",
-    fn_name: "create",
-    payload: content,
-  });
+  const createEntryHash = await aliceCaller<EntryHash>("create", content);
 
   await pause(1000);
 
-  const readContent = await bob.cells[0].callZome<typeof content>({
-    zome_name: "coordinator",
-    fn_name: "read",
-    payload: createEntryHash,
-  });
+  const readContent = await bobCaller<typeof content>("read", createEntryHash);
   t.equal(readContent, content);
 
   await bob.conductor.shutDown();
@@ -164,40 +159,14 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
   await bob.conductor.startUp();
   await bob.conductor.connectAppInterface();
-  const readContentAfterRestart = await bob.cells[0].callZome<typeof content>({
-    zome_name: "coordinator",
-    fn_name: "read",
-    payload: createEntryHash,
-  });
+  const readContentAfterRestart = await bobCaller<typeof content>(
+    "read",
+    createEntryHash
+  );
   t.equal(readContentAfterRestart, content);
 
   await scenario.cleanUp();
 });
-
-// test("Local Scenario - app agent websocket", async (t) => {
-//   const scenario = new Scenario();
-//   const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
-//   const alice = await scenario.addPlayerWithApp(appBundleSource);
-//   const aliceAppAgentWs = alice.conductor.appAgentWs();
-
-//   const content = "test-content";
-//   const createEntryHash = await aliceAppAgentWs.callZome({
-//     zome_name: "coordinator",
-//     fn_name: "create",
-//     payload: content,
-//   });
-
-//   await pause(1000);
-
-//   const readContent = await alice.cells[0].callZome<typeof content>({
-//     zome_name: "coordinator",
-//     fn_name: "read",
-//     payload: createEntryHash,
-//   });
-//   t.equal(readContent, content);
-
-//   await scenario.cleanUp();
-// });
 
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();

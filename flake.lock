@@ -195,6 +195,7 @@
         ],
         "nix-filter": "nix-filter",
         "nixpkgs": "nixpkgs",
+        "pre-commit-hooks-nix": "pre-commit-hooks-nix",
         "rust-overlay": "rust-overlay_2",
         "scaffolding": [
           "holonix",
@@ -204,11 +205,11 @@
         "versions": "versions"
       },
       "locked": {
-        "lastModified": 1676373551,
-        "narHash": "sha256-oy3KKUK3slOYUfjAQzTaVw1oc2pIfUhCh81eFMazVhA=",
+        "lastModified": 1680545891,
+        "narHash": "sha256-Rh25fk+Q8rasNBB1NQs4YCJUNppL8xV/szP5RD1hX8g=",
         "owner": "holochain",
         "repo": "holochain",
-        "rev": "334eb59c58282090aacf6a1e7f56606d07c419e9",
+        "rev": "144e4875b4742373933f0668bbc7d671ff3d91b2",
         "type": "github"
       },
       "original": {
@@ -237,11 +238,11 @@
     "launcher": {
       "flake": false,
       "locked": {
-        "lastModified": 1675974122,
-        "narHash": "sha256-eSYSMR4fHnwgquWaFZM2DOl7LRTsDrOGZTYkDc8HE3Q=",
+        "lastModified": 1677270906,
+        "narHash": "sha256-/xT//6nqhjpKLMMv41JE0W3H5sE9jKMr8Dedr88D4N8=",
         "owner": "holochain",
         "repo": "launcher",
-        "rev": "3bcd14e81cda07e015071b070c2ef032aa1d1193",
+        "rev": "1ad188a43900c139e52df10a21e3722f41dfb967",
         "type": "github"
       },
       "original": {
@@ -268,11 +269,11 @@
     },
     "nixpkgs": {
       "locked": {
-        "lastModified": 1676202775,
-        "narHash": "sha256-gV/RnfVZkGLHn+5rmX2GSh5aquVHpWOJw1cnpEV03tQ=",
+        "lastModified": 1680398059,
+        "narHash": "sha256-qtbKRe+pWuf5nNINdiCgn6EwOIQZxj0Ig/wybBpFNkQ=",
         "owner": "NixOS",
         "repo": "nixpkgs",
-        "rev": "d917136f550a8c36efb1724390c7245105f79023",
+        "rev": "7c656856e9eb863c4d21c83e2601dd77f95f6941",
         "type": "github"
       },
       "original": {
@@ -296,6 +297,22 @@
         "owner": "NixOS",
         "ref": "nixos-unstable",
         "repo": "nixpkgs",
+        "type": "github"
+      }
+    },
+    "pre-commit-hooks-nix": {
+      "flake": false,
+      "locked": {
+        "lastModified": 1676513100,
+        "narHash": "sha256-MK39nQV86L2ag4TmcK5/+r1ULpzRLPbbfvWbPvIoYJE=",
+        "owner": "cachix",
+        "repo": "pre-commit-hooks.nix",
+        "rev": "5f0cba88ac4d6dd8cad5c6f6f1540b3d6a21a798",
+        "type": "github"
+      },
+      "original": {
+        "owner": "cachix",
+        "repo": "pre-commit-hooks.nix",
         "type": "github"
       }
     },
@@ -344,11 +361,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1676341851,
-        "narHash": "sha256-T8cmSiriXdpZfqlserNyJ1solTCR0DbD8A75epSDOVY=",
+        "lastModified": 1680488274,
+        "narHash": "sha256-0vYMrZDdokVmPQQXtFpnqA2wEgCCUXf5a3dDuDVshn0=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "956ddb5047f98ea08b792b22004b94a9971932c4",
+        "rev": "7ec2ff598a172c6e8584457167575b3a1a5d80d8",
         "type": "github"
       },
       "original": {
@@ -360,11 +377,11 @@
     "scaffolding": {
       "flake": false,
       "locked": {
-        "lastModified": 1676303621,
-        "narHash": "sha256-9r9/vd2VLjcEqRntxST59XetwyEDGMmbNqRnlCUYt9g=",
+        "lastModified": 1677514461,
+        "narHash": "sha256-xflYnH6whXRqXFAqY2MHVXTWWcesn9OzZuyNhdXjsgo=",
         "owner": "holochain",
         "repo": "scaffolding",
-        "rev": "320e02158a6600ca13cf07ee536616ebd311ea2b",
+        "rev": "c245d306110f3a5408f1dbe15d6a3725884ef3f4",
         "type": "github"
       },
       "original": {
@@ -382,10 +399,13 @@
         "scaffolding": "scaffolding"
       },
       "locked": {
-        "lastModified": 1676312130,
-        "narHash": "sha256-ZSwIT5Au2/492TXkloomneTS31pHICxEW92Ypduh/sw=",
-        "path": "./versions/0_1",
-        "type": "path"
+        "dir": "versions/0_1",
+        "lastModified": 1680545891,
+        "narHash": "sha256-Rh25fk+Q8rasNBB1NQs4YCJUNppL8xV/szP5RD1hX8g=",
+        "owner": "holochain",
+        "repo": "holochain",
+        "rev": "144e4875b4742373933f0668bbc7d671ff3d91b2",
+        "type": "github"
       },
       "original": {
         "dir": "versions/0_1",
