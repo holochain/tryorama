@@ -1,8 +1,7 @@
 {
-  description = "Nix shell for Holochain app development";
-
   inputs = {
     holonix.url = "github:holochain/holochain";
+    holonix.inputs.versions.url = "github:holochain/holochain?dir=versions/0_1";
     nixpkgs.follows = "holonix/nixpkgs";
   };
 
