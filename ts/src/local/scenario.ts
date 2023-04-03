@@ -146,6 +146,8 @@ export const runScenario = async (
   const scenario = new Scenario(options);
   try {
     await testScenario(scenario);
+  } catch (error) {
+    console.error("error occurred during test run:", error);
   } finally {
     if (cleanUp) {
       await scenario.cleanUp();

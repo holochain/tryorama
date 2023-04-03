@@ -24,26 +24,29 @@ With a few lines of code you can start testing your Holochain application. This
 example uses [tape](https://github.com/substack/tape) as test runner and
 assertion library. You can choose any other runner and library.
 
-```ts
+```typescript
 import { ActionHash, DnaSource } from "@holochain/client";
-import { pause, runScenario, Scenario } from "@holochain/tryorama";
+import {
+  Scenario,
+  getZomeCaller,
+  pause,
+  runScenario,
+} from "@holochain/tryorama";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "tape-promise/tape.js";
 
 test("Create 2 players and create and read an entry", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    // Construct proper paths for your DNAs.
-    // This assumes DNA files created by the `hc dna pack` command.
-    const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
+    // Construct proper paths for a hApp file created by the `hc app pack` command.
+    const testHappUrl = dirname(fileURLToPath(import.meta.url)) + "/test.happ";
 
-    // Set up the array of DNAs to be installed, which only consists of the
-    // test DNA referenced by path.
-    const dnas: DnaSource[] = [{ path: testDnaPath }];
-
-    // Add 2 players with the test DNA to the Scenario. The returned players
+    // Add 2 players with the test hApp to the Scenario. The returned players
     // can be destructured.
-    const [alice, bob] = await scenario.addPlayersWithHapps([dnas, dnas]);
+    const [alice, bob] = await scenario.addPlayersWithApps([
+      { appBundleSource: { path: testHappUrl } },
+      { appBundleSource: { path: testHappUrl } },
+    ]);
 
     // Shortcut peer discovery through gossip and register all agents in every
     // conductor of the scenario.
@@ -53,7 +56,7 @@ test("Create 2 players and create and read an entry", async (t) => {
     const content = "Hello Tryorama";
 
     // The cells of the installed hApp are returned in the same order as the DNAs
-    // that were passed into the player creation.
+    // in the app manifest.
     const createEntryHash: ActionHash = await alice.cells[0].callZome({
       zome_name: "coordinator",
       fn_name: "create",
@@ -77,11 +80,36 @@ test("Create 2 players and create and read an entry", async (t) => {
 
 > Have a look at the [tests](./ts/test/local/scenario.ts) for many more examples.
 
+### Curried function to get a zome caller
+
+During a test usually a specific zome of a specific agent is called repeatedly.
+You can avail of a curried function for making these calls.
+
+```typescript
+const alice = await scenario.addPlayerWithApp({ path: testHappUrl });
+
+// Get shortcut functions to call a specific zome of a specific agent
+const aliceCoordinatorCaller = getZomeCaller(alice.cells[0], "coordinator");
+
+const content = "Hello Tryorama";
+// Use the curried function to call alice's coordinator zome
+const createEntryHash: ActionHash = await aliceCoordinatorCaller(
+  "create",
+  content
+);
+
+// Use the caller for another of alice's zome functions
+const readContent: typeof content = await aliceCoordinatorCaller(
+  "read",
+  createEntryHash
+);
+```
+
 ### Example without wrapper
 
 Written out without the wrapper function, the same example looks like this:
 
-```ts
+```typescript
 import { ActionHash, DnaSource } from "@holochain/client";
 import { pause, Scenario } from "@holochain/tryorama";
 import { dirname } from "node:path";
@@ -170,7 +198,7 @@ and App API that the JavaScript client offers.
 
 Here is the above example that just uses a `Conductor` without a `Scenario`:
 
-```ts
+```typescript
   const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
   const dnas: DnaSource[] = [{ path: testDnaPath }];
 
@@ -232,48 +260,6 @@ const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
 });
 
 await conductor.shutDown();
-```
-
-### Convenience function for Zome calls
-
-When testing a Zome, there are usually a lot of calls to the cell with this
-particular Zome. Specifying the Cell and the Zome name for every call is
-repetitive. It is therefore convenient to use a handle to a particular
-combination of Cell and Zome.
-
-Instead of
-
-```typescript
-const [aliceHapps] = await conductor.installAgentsHapps({
-  agentsDnas: [dnas],
-});
-const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
-  zome_name: "coordinator",
-  fn_name: "create",
-  payload: entryContent,
-});
-const readEntryHash: string = await aliceHapps.cells[0].callZome({
-  zome_name: "coordinator",
-  fn_name: "read",
-  payload: createEntryHash,
-});
-```
-
-the shorthand access to the Zome can be called
-
-```typescript
-const [aliceHapps] = await conductor.installAgentsHapps({
-  agentsDnas: [dnas],
-});
-const aliceCallCoordinatorZome = getZomeCaller(aliceHapps.cells[0], "coordinator");
-const entryHeaderHash: ActionHash = await aliceCallCoordinatorZome(
-  "create",
-  "test-entry"
-);
-const readEntryHash: string = await aliceCallCoordinatorZome(
-  "read",
-  entryHeaderHash
-);
 ```
 
 ## Signals
