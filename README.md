@@ -150,25 +150,6 @@ test("Create 2 players and create and read an entry", async (t) => {
 > The wrapper takes care of creating a scenario and shutting down or deleting
 all conductors involved in the test scenario.
 
-### Error handling with test runners like `tape`
-
-When writing the test, it might be necessary to handle errors while developing,
-depending on the test runner. With a test runner like "tape", uncaught errors
-will cause the conductor process and therefore the test to hang or output
-`[object Object]` as the only error message. In this case errors can be handled
-like this:
-
-```ts
-const scenario = new LocalScenario();
-try {
-  /* scenario operations */
-} catch (error) {
-  console.error("error occurred during test", error);
-} finally (
-  await scenario.cleanUp()
-}
-```
-
 ### Logging
 
 The log level can be set with the environment variable `TRYORAMA_LOG_LEVEL`.
