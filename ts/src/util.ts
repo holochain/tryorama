@@ -21,7 +21,7 @@ export const pause = (milliseconds: number) => {
  * A utility function to compare players' integrated DhtOps
  *
  * @param players - Array of players
- * @param cell_id - Cell to compare DhtOp integration
+ * @param dnaHash - DNA to compare integrated DhtOps from
  * @returns A promise that is resolved after players' Integrated DhtOps match
  *
  * @public
@@ -58,8 +58,8 @@ export const isIntegratedDhtOpsEqual = async (
  * A utility function to wait until all players' integrated DhtOps are identical for a DNA
  *
  * @param players - Array of players
- * @param cell_id - Cell to compare DhtOp integration
- * @param interval - Interval to pause between comparisons (defaults to 50ms)
+ * @param dnaHash - DNA to compare integrated DhtOps from
+ * @param interval - Interval in milliseconds to pause between comparisons (defaults to 50 ms)
  * @param timeout - A timeout for the delay (optional)
  * @returns A promise that is resolved after all agents' DHT state match
  *
