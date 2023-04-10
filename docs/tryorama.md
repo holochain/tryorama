@@ -100,7 +100,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [getZomeCaller](./tryorama.getzomecaller.md) | Get a shorthand function to call a cell's zome. |
 |  [isIntegratedDhtOpsEqual](./tryorama.isintegrateddhtopsequal.md) | A utility function to compare players' integrated DhtOps |
 |  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |
-|  [pauseUntilDhtEqual](./tryorama.pauseuntildhtequal.md) | A utility function to wait until all players' integrated DhtOps are identical for a given Cell |
+|  [pauseUntilDhtEqual](./tryorama.pauseuntildhtequal.md) | A utility function to wait until all players' integrated DhtOps are identical for a DNA |
 |  [runScenario](./tryorama.runscenario.md) | A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running. |
 |  [stopAllTryCpServers](./tryorama.stopalltrycpservers.md) | Shortcut function to stop all TryCP servers. |
 |  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) | Empty success response. |

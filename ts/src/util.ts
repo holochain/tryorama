@@ -55,7 +55,7 @@ export const isIntegratedDhtOpsEqual = async (
 };
 
 /**
- * A utility function to wait until all players' integrated DhtOps are identical for a given Cell
+ * A utility function to wait until all players' integrated DhtOps are identical for a DNA
  *
  * @param players - Array of players
  * @param cell_id - Cell to compare DhtOp integration

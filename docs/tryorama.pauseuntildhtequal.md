@@ -4,7 +4,7 @@
 
 ## pauseUntilDhtEqual variable
 
-A utility function to wait until all players' integrated DhtOps are identical for a given Cell
+A utility function to wait until all players' integrated DhtOps are identical for a DNA
 
 <b>Signature:</b>
 
