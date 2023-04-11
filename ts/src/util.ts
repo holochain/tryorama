@@ -18,11 +18,11 @@ export const pause = (milliseconds: number) => {
 };
 
 /**
- * A utility function to compare players' integrated DhtOps
+ * A utility function to compare players' integrated DhtOps.
  *
- * @param players - Array of players
- * @param dnaHash - DNA to compare integrated DhtOps from
- * @returns A promise that is resolved after players' Integrated DhtOps match
+ * @param players - Array of players.
+ * @param dnaHash - DNA to compare integrated DhtOps from.
+ * @returns A promise that is resolved after players' Integrated DhtOps match.
  *
  * @public
  */
@@ -55,22 +55,22 @@ export const isIntegratedDhtOpsEqual = async (
 };
 
 /**
- * A utility function to wait until all players' integrated DhtOps are identical for a DNA
+ * A utility function to wait until all players' integrated DhtOps are identical for a DNA.
  *
- * @param players - Array of players
- * @param dnaHash - DNA to compare integrated DhtOps from
- * @param interval - Interval in milliseconds to pause between comparisons (defaults to 50 ms)
- * @param timeout - A timeout for the delay (optional)
- * @returns A promise that is resolved after all agents' DHT state match
+ * @param players - Array of players.
+ * @param dnaHash - DNA to compare integrated DhtOps from.
+ * @param interval - Interval in milliseconds to pause between comparisons (defaults to 50 ms).
+ * @param timeout - A timeout for the delay (optional).
+ * @returns A promise that is resolved after all agents' DHT states match.
  *
  * @public
  */
-export const pauseUntilDhtEqual = async (
+export const awaitDhtIntegration = async (
   players: Array<Player>,
   dnaHash: DnaHash,
   interval = 50,
   timeout?: number
-): Promise<void> => {
+) => {
   const startTime = performance.now();
   let completed = false;
 
@@ -79,7 +79,7 @@ export const pauseUntilDhtEqual = async (
     const currentTime = performance.now();
     if (timeout && Math.floor((currentTime - startTime) * 1000) >= timeout)
       throw Error(
-        `Timeout of ${timeout}ms has passed, but players integrated DhtOps are not syncronized`
+        `Timeout of ${timeout} ms has passed, but players integrated DhtOps are not syncronized`
       );
 
     // Check if Integrated DhtOps are syncronized

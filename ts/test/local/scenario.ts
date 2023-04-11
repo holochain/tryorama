@@ -7,7 +7,7 @@ import {
 import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
 import { runScenario, Scenario } from "../../src/local/scenario.js";
-import { pauseUntilDhtEqual } from "../../src/util.js";
+import { awaitDhtIntegration } from "../../src/util.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 import { getZomeCaller } from "../../src/common.js";
 
@@ -122,7 +122,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
     payload: content,
   });
 
-  await pauseUntilDhtEqual([alice, bob], alice.cells[0].cell_id[0]);
+  await awaitDhtIntegration([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
@@ -149,7 +149,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   const content = "Before shutdown";
   const createEntryHash = await aliceCaller<EntryHash>("create", content);
 
-  await pauseUntilDhtEqual([alice, bob], alice.cells[0].cell_id[0]);
+  await awaitDhtIntegration([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent = await bobCaller<typeof content>("read", createEntryHash);
   t.equal(readContent, content);
@@ -229,7 +229,7 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
 
   await scenario.shareAllAgents();
 
-  // Alice creates 100 entries
+  // Alice creates 10 entries
   let lastCreatedHash;
   let lastCreatedContent;
   for (let i = 0; i < 10; i++) {
@@ -241,7 +241,7 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
     });
   }
 
-  await pauseUntilDhtEqual([alice, bob], alice.cells[0].cell_id[0]);
+  await awaitDhtIntegration([alice, bob], alice.cells[0].cell_id[0]);
 
   // Bob gets the last created entry
   const readContent = await bob.cells[0].callZome<string>({
