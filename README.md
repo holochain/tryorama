@@ -63,8 +63,8 @@ test("Create 2 players and create and read an entry", async (t) => {
       payload: content,
     });
 
-    // Wait for the created entry to be propagated to the other node.
-    await pause(100);
+    // Wait for the created entry to be propagated to the other player.
+    await scenario.awaitDhtSync(alice.cells[0].cell_id);
 
     // Using the same cell and zome as before, the second player reads the
     // created entry.
