@@ -1,7 +1,7 @@
-import { Player } from "./local";
-import { FullStateDump, DnaHash, encodeHashToBase64 } from "@holochain/client";
+import { CellId, FullStateDump, encodeHashToBase64 } from "@holochain/client";
 import isEqual from "lodash/isEqual.js";
 import sortBy from "lodash/sortBy.js";
+import { IConductor } from "./types.js";
 
 /**
  * A utility function to wait the given amount of time.
@@ -18,32 +18,34 @@ export const pause = (milliseconds: number) => {
 };
 
 /**
- * A utility function to compare players' integrated DhtOps.
+ * A utility function to compare conductors' integrated DhtOps.
  *
- * @param players - Array of players.
- * @param dnaHash - DNA to compare integrated DhtOps from.
- * @returns A promise that is resolved after players' Integrated DhtOps match.
+ * @param conductors - Array of conductors.
+ * @param cellId - Cell id to compare integrated DhtOps from.
+ * @returns A promise that is resolved after conductors' Integrated DhtOps match.
  *
  * @public
  */
-export const isIntegratedDhtOpsEqual = async (
-  players: Array<Player>,
-  dnaHash: DnaHash
+export const areDhtsSynced = async (
+  conductors: Array<IConductor>,
+  cellId: CellId
 ) => {
-  // Dump all players' states
-  const playersStates: FullStateDump[] = await Promise.all(
-    players.map((player) =>
-      player.conductor.adminWs().dumpFullState({
-        cell_id: [dnaHash, player.agentPubKey],
+  // Dump all conductors' states
+  const conductorStates: FullStateDump[] = await Promise.all(
+    conductors.map((conductor) =>
+      conductor.adminWs().dumpFullState({
+        cell_id: cellId,
         dht_ops_cursor: undefined,
       })
     )
   );
 
-  // Compare players' integrated DhtOps
-  const playersDhtOpsIntegrated = playersStates.map((player) =>
-    sortBy(player.integration_dump.integrated, [
+  // Compare conductors' integrated DhtOps
+  const playersDhtOpsIntegrated = conductorStates.map((conductor) =>
+    sortBy(conductor.integration_dump.integrated, [
+      // the only property's key of each DhtOp is the DhtOp type
       (op) => Object.keys(op)[0],
+      // the DhtOp's signature
       (op) => encodeHashToBase64(Object.values(op)[0][0]),
     ])
   );
@@ -55,19 +57,19 @@ export const isIntegratedDhtOpsEqual = async (
 };
 
 /**
- * A utility function to wait until all players' integrated DhtOps are identical for a DNA.
+ * A utility function to wait until all conductors' integrated DhtOps are identical for a DNA.
  *
- * @param players - Array of players.
- * @param dnaHash - DNA to compare integrated DhtOps from.
+ * @param conductors - Array of conductors.
+ * @param cellId - Cell id to compare integrated DhtOps from.
  * @param interval - Interval in milliseconds to pause between comparisons (defaults to 50 ms).
  * @param timeout - A timeout for the delay (optional).
  * @returns A promise that is resolved after all agents' DHT states match.
  *
  * @public
  */
-export const awaitDhtIntegration = async (
-  players: Array<Player>,
-  dnaHash: DnaHash,
+export const awaitDhtSync = async (
+  conductors: Array<IConductor>,
+  cellId: CellId,
   interval = 50,
   timeout?: number
 ) => {
@@ -83,8 +85,10 @@ export const awaitDhtIntegration = async (
       );
 
     // Check if Integrated DhtOps are syncronized
-    completed = await isIntegratedDhtOpsEqual(players, dnaHash);
+    completed = await areDhtsSynced(conductors, cellId);
 
-    if (!completed) await pause(interval);
+    if (!completed) {
+      await pause(interval);
+    }
   }
 };

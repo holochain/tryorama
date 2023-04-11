@@ -34,8 +34,6 @@ export const deserializeTryCpSignal = <T>(signal: Uint8Array) => {
     return { cell_id, payload: decodedPayload, zome_name };
   } else {
     throw new Error("Receiving system signals is not implemented yet");
-    // const { [SignalType.System]: signal } = deserializedSignal;
-    // return signal;
   }
 };
 

@@ -1,8 +1,9 @@
-import { AppBundleSource } from "@holochain/client";
+import { AppBundleSource, CellId } from "@holochain/client";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors } from "../common.js";
 import { AppOptions, IPlayer } from "../types.js";
 import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
+import { awaitDhtSync } from "../util.js";
 
 /**
  * A player tied to a {@link Conductor}.
@@ -110,6 +111,17 @@ export class Scenario {
    */
   async shareAllAgents() {
     return addAllAgentsToAllConductors(this.conductors);
+  }
+
+  /**
+   * Await DhtOp integration of all players for a given cell.
+   *
+   * @param cellId - Cell id to await DHT sync for.
+   * @returns A promise that is resolved when the DHTs of all conductors are
+   * synced.
+   */
+  async awaitDhtSync(cellId: CellId) {
+    return awaitDhtSync(this.conductors, cellId);
   }
 
   /**
