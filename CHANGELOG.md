@@ -5,6 +5,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- Utility function to wait until all players' integrated DhtOps are identical for a DNA.
 ### Removed
 ### Changed
 - `runScenario` catches and outputs error occurring during the test run.
