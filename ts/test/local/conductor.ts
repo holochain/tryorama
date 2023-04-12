@@ -15,11 +15,11 @@ import {
   getZomeCaller,
 } from "../../src/common.js";
 import {
+  NetworkType,
   cleanAllConductors,
   createConductor,
-  NetworkType,
 } from "../../src/index.js";
-import { pause } from "../../src/util.js";
+import { awaitDhtSync } from "../../src/util.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const ROLE_NAME = "test";
@@ -436,7 +436,7 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  await pause(1000);
+  await awaitDhtSync([conductor1, conductor2], alice.cells[0].cell_id);
 
   const readEntryResponse: typeof entryContent = await bob.cells[0].callZome({
     zome_name: "coordinator",

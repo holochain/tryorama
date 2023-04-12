@@ -23,7 +23,7 @@ import {
   TRYCP_SERVER_PORT,
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
-import { pause } from "../../src/util.js";
+import { awaitDhtSync } from "../../src/util.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -607,7 +607,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
     "create entry hash starts with hCkk"
   );
 
-  await pause(2000);
+  await awaitDhtSync([conductor1, conductor2], alice.cells[0].cell_id);
 
   const readEntryResponse = await conductor2
     .appWs()

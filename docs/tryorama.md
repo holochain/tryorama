@@ -93,14 +93,14 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  Variable | Description |
 |  --- | --- |
 |  [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md) | Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping. |
+|  [areDhtsSynced](./tryorama.aredhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
+|  [awaitDhtSync](./tryorama.awaitdhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
 |  [cleanAllConductors](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
 |  [createConductor](./tryorama.createconductor.md) | The function to create a conductor. It starts a sandbox conductor via the Holochain CLI. |
 |  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor. By default configures and starts it. |
 |  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) | The default partial config for a TryCP conductor. |
 |  [getZomeCaller](./tryorama.getzomecaller.md) | Get a shorthand function to call a cell's zome. |
-|  [isIntegratedDhtOpsEqual](./tryorama.isintegrateddhtopsequal.md) | A utility function to compare players' integrated DhtOps |
 |  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |
-|  [pauseUntilDhtEqual](./tryorama.pauseuntildhtequal.md) | A utility function to wait until all players' integrated DhtOps are identical for a DNA |
 |  [runScenario](./tryorama.runscenario.md) | A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running. |
 |  [stopAllTryCpServers](./tryorama.stopalltrycpservers.md) | Shortcut function to stop all TryCP servers. |
 |  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) | Empty success response. |

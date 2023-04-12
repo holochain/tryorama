@@ -32,6 +32,7 @@ export declare class Scenario
 |  [addConductor()](./tryorama.scenario.addconductor.md) |  | Create and add a conductor to the scenario. |
 |  [addPlayersWithApps(playersApps)](./tryorama.scenario.addplayerswithapps.md) |  | Create and add multiple players to the scenario, with an app installed for each player. |
 |  [addPlayerWithApp(appBundleSource, options)](./tryorama.scenario.addplayerwithapp.md) |  | Create and add a single player with an app installed to the scenario. |
+|  [awaitDhtSync(cellId)](./tryorama.scenario.awaitdhtsync.md) |  | Await DhtOp integration of all players for a given cell. |
 |  [cleanUp()](./tryorama.scenario.cleanup.md) |  | Shut down and delete all conductors in the scenario. |
 |  [shareAllAgents()](./tryorama.scenario.shareallagents.md) |  | Register all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
 |  [shutDown()](./tryorama.scenario.shutdown.md) |  | Shut down all conductors in the scenario. |

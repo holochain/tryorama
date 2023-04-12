@@ -1,10 +1,16 @@
-import { AgentPubKey, AppBundleSource, AppSignalCb } from "@holochain/client";
+import {
+  AgentPubKey,
+  AppBundleSource,
+  AppSignalCb,
+  CellId,
+} from "@holochain/client";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
 import { AppOptions, IPlayer } from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
+import { awaitDhtSync } from "../../util.js";
 
 /**
  * @public
@@ -214,6 +220,20 @@ export class TryCpScenario {
     return shareAllAgents(
       this.clients.map((client) => client.conductors).flat()
     );
+  }
+
+  /**
+   * Await DhtOp integration of all players for a given cell.
+   *
+   * @param cellId - Cell id to await DHT sync for.
+   * @param interval - Interval to pause between comparisons (defaults to 50 ms).
+   * @param timeout - A timeout for the delay (optional).
+   * @returns A promise that is resolved when the DHTs of all conductors are
+   * synced.
+   */
+  async awaitDhtSync(cellId: CellId, interval?: number, timeout?: number) {
+    const conductors = this.clients.map((client) => client.conductors).flat();
+    return awaitDhtSync(conductors, cellId, interval, timeout);
   }
 
   /**
