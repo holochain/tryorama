@@ -117,11 +117,13 @@ export class Scenario {
    * Await DhtOp integration of all players for a given cell.
    *
    * @param cellId - Cell id to await DHT sync for.
+   * @param interval - Interval to pause between comparisons (defaults to 50 ms).
+   * @param timeout - A timeout for the delay (optional).
    * @returns A promise that is resolved when the DHTs of all conductors are
    * synced.
    */
-  async awaitDhtSync(cellId: CellId) {
-    return awaitDhtSync(this.conductors, cellId);
+  async awaitDhtSync(cellId: CellId, interval?: number, timeout?: number) {
+    return awaitDhtSync(this.conductors, cellId, interval, timeout);
   }
 
   /**
