@@ -36,9 +36,7 @@ jobs:
         env:
           cache-name: trycp-server
         with:
-          path: |
-            .cargo
-            crates/trycp_server/target
+          path: crates/trycp_server/target
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
       - name: Cache test zome build
@@ -47,7 +45,9 @@ jobs:
         env:
           cache-name: test-zomes
         with:
-          path: target
+          path: |
+            .cargo
+            target
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Build Nix packages
