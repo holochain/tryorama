@@ -50,10 +50,22 @@ jobs:
           path: target
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
 
-      - name: Build TryCP server and test hApp and run tests
-        id: build-and-test
-        run: nix develop -c "./run-test.sh"
+      - name: Build Nix packages
+        run: nix develop -c $SHELL -c "echo Nix packages built"
 
-      - name: Setup tmate session if build and test run failed
+      - name: Build TryCP server
+        run: nix develop -c $SHELL -c "./build-trycp.sh"
+
+      - name: Build test fixture
+        run: nix develop -c $SHELL -c "./build-fixture.sh"
+
+      - name: Install JS packages
+        run: nix develop -c $SHELL -c "npm ci"
+
+      - name: Run tests
+        run: nix develop -c $SHELL -c "npm t"
+
+      - name: Setup tmate session if build or test run failed
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 10
