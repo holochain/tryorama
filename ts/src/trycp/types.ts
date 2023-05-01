@@ -34,6 +34,8 @@ import {
   ListAppsResponse,
   ListCellIdsResponse,
   ListDnasResponse,
+  NetworkInfoRequest,
+  NetworkInfoResponse,
   RegisterDnaRequest,
   StartAppRequest,
   StartAppResponse,
@@ -294,7 +296,8 @@ export type RequestCallAppInterfaceMessage =
   | RequestAppInfo
   | RequestCreateCloneCell
   | RequestEnableCloneCell
-  | RequestDisableCloneCell;
+  | RequestDisableCloneCell
+  | RequestNetworkInfo;
 
 /**
  * Request to call a zome on a conductor's app interface.
@@ -347,6 +350,16 @@ export interface RequestEnableCloneCell {
 }
 
 /**
+ * Request network info.
+ *
+ * @public
+ */
+export interface RequestNetworkInfo {
+  type: "network_info";
+  data: NetworkInfoRequest;
+}
+
+/**
  * Msgpack encoded request to call an app interface.
  *
  * @public
@@ -366,7 +379,8 @@ export type AppApiResponse =
   | AppApiResponseZomeCall
   | AppApiResponseCloneCellCreated
   | AppApiResponseCloneCellEnabled
-  | AppApiResponseCloneCellDisabled;
+  | AppApiResponseCloneCellDisabled
+  | AppApiResponseNetworkInfo;
 
 /**
  * @public
@@ -406,6 +420,14 @@ export interface AppApiResponseCloneCellEnabled {
 export interface AppApiResponseCloneCellDisabled {
   type: "clone_cell_disabled";
   data: DisableCloneCellResponse;
+}
+
+/**
+ * @public
+ */
+export interface AppApiResponseNetworkInfo {
+  type: "network_info";
+  data: NetworkInfoResponse;
 }
 
 /* ********************** Admin API ********************** */

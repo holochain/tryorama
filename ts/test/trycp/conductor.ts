@@ -151,6 +151,77 @@ test("TryCP Conductor - get a DNA definition", async (t) => {
   await localTryCpServer.stop();
 });
 
+test("TryCP Conductor - dump network stats", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const client = await TryCpClient.create(SERVER_URL);
+  const conductor = await createTestConductor(client);
+
+  const networkStats = await conductor.adminWs().dumpNetworkStats();
+  t.ok(typeof networkStats === "string", "network stats is a string");
+  t.ok(JSON.parse(networkStats), "network stats is valid JSON");
+
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - request storage info", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const client = await TryCpClient.create(SERVER_URL);
+  const conductor = await createTestConductor(client);
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+  await conductor.adminWs().installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+    agent_key: agentPubKey,
+    membrane_proofs: {},
+  });
+
+  const storageInfo = await conductor.adminWs().storageInfo();
+  t.ok(storageInfo.blobs[0].dna.authored_data_size > 0);
+  t.ok(storageInfo.blobs[0].dna.authored_data_size_on_disk > 0);
+  t.ok(storageInfo.blobs[0].dna.dht_data_size > 0);
+  t.ok(storageInfo.blobs[0].dna.dht_data_size_on_disk > 0);
+  t.ok(storageInfo.blobs[0].dna.cache_data_size > 0);
+  t.ok(storageInfo.blobs[0].dna.cache_data_size_on_disk > 0);
+  t.deepEqual(storageInfo.blobs[0].dna.used_by, ["entry-happ"]);
+
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - request network info", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const client = await TryCpClient.create(SERVER_URL);
+  const conductor = await createTestConductor(client);
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+  const appInfo = await conductor.adminWs().installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+    agent_key: agentPubKey,
+    membrane_proofs: {},
+  });
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: appInfo.installed_app_id });
+  await conductor.adminWs().attachAppInterface();
+  await conductor.connectAppInterface();
+  assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
+  const dnaHash =
+    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id[0];
+
+  const networkInfo = await conductor
+    .appWs()
+    .networkInfo({ agent_pub_key: agentPubKey, dnas: [dnaHash] });
+  t.equal(networkInfo[0].arc_size, 1.0);
+  t.assert(networkInfo[0].bytes_since_last_time_queried > 0);
+  t.equal(networkInfo[0].completed_rounds_since_last_time_queried, 0);
+  t.equal(networkInfo[0].current_number_of_peers, 1);
+  t.equal(networkInfo[0].fetch_pool_info.num_ops_to_fetch, 0);
+  t.equal(networkInfo[0].fetch_pool_info.op_bytes_to_fetch, 0);
+  t.equal(networkInfo[0].total_network_peers, 1);
+
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
 test("TryCP Conductor - grant a zome call capability", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const client = await TryCpClient.create(SERVER_URL);

@@ -32,6 +32,7 @@ import {
   GrantZomeCallCapabilityRequest,
   InstallAppRequest,
   ListAppsRequest,
+  NetworkInfoRequest,
   randomCapSecret,
   RegisterDnaRequest,
   setSigningCredentials,
@@ -682,7 +683,7 @@ export class TryCpConductor implements IConductor {
       cellId: CellId,
       functions?: GrantedFunctions
     ) => {
-      const [keyPair, signingKey] = generateSigningKeyPair();
+      const [keyPair, signingKey] = await generateSigningKeyPair();
       const capSecret = await grantSigningKey(
         cellId,
         functions || { [GrantedFunctionsType.All]: null },
@@ -844,12 +845,28 @@ export class TryCpConductor implements IConductor {
       return response.data;
     };
 
+    /**
+     * Request network info.
+     *
+     * @param request - {@link NetworkInfoRequest}.
+     * @returns {@link NetworkInfoResponse}.
+     */
+    const networkInfo = async (request: NetworkInfoRequest) => {
+      const response = await this.callAppApi({
+        type: "network_info",
+        data: request,
+      });
+      assert(response.type === "network_info");
+      return response.data;
+    };
+
     return {
       appInfo,
       callZome,
       createCloneCell,
       enableCloneCell,
       disableCloneCell,
+      networkInfo,
     };
   }
 
