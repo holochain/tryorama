@@ -62,7 +62,7 @@ export class TryCpClient {
 
   conductors: TryCpConductor[];
 
-  private constructor(serverUrl: URL, timeout = 15000) {
+  private constructor(serverUrl: URL, timeout = 60000) {
     this.ws = new WebSocket(serverUrl, { timeout });
     this.requestPromises = {};
     this.signalHandlers = {};

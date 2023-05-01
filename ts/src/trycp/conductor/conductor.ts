@@ -18,6 +18,7 @@ import {
   DnaHash,
   DnaSource,
   DumpFullStateRequest,
+  DumpNetworkStatsRequest,
   DumpStateRequest,
   EnableAppRequest,
   EnableCloneCellRequest,
@@ -36,7 +37,9 @@ import {
   setSigningCredentials,
   signZomeCall,
   StartAppRequest,
+  StorageInfoRequest,
   UninstallAppRequest,
+  UpdateCoordinatorsRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
@@ -453,6 +456,21 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Update coordinator zomes of an installed DNA.
+     *
+     * @param request - {@link UninstallAppRequest}.
+     * @returns An empty success response.
+     */
+    const updateCoordinators = async (request: UpdateCoordinatorsRequest) => {
+      const response = await this.callAdminApi({
+        type: "update_coordinators",
+        data: request,
+      });
+      assert(response.type === "coordinators_updated");
+      return response.data;
+    };
+
+    /**
      * List all installed hApps.
      *
      * @param request - Filter by hApp status (optional).
@@ -595,6 +613,36 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Request a network stats dump of the conductor.
+     *
+     * @param request - {@link DumpNetworkStatsRequest}
+     * @returns {@link @holochain/client#DumpNetworkStatsResponse}.
+     */
+    const dumpNetworkStats = async (request: DumpNetworkStatsRequest) => {
+      const response = await this.callAdminApi({
+        type: "dump_network_stats",
+        data: request,
+      });
+      assert(response.type === "network_stats_dumped");
+      return response.data;
+    };
+
+    /**
+     * Request storage info from the conductor.
+     *
+     * @param request - {@link StorageInfoRequest}
+     * @returns {@link @holochain/client#StorageInfoResponse}.
+     */
+    const storageInfo = async (request: StorageInfoRequest) => {
+      const response = await this.callAdminApi({
+        type: "storage_info",
+        data: request,
+      });
+      assert(response.type === "storage_info");
+      return response.data;
+    };
+
+    /**
      * Grant a capability for signing zome calls.
      *
      * @param cellId - The cell to grant the capability for.
@@ -651,6 +699,7 @@ export class TryCpConductor implements IConductor {
       deleteCloneCell,
       disableApp,
       dumpFullState,
+      dumpNetworkStats,
       dumpState,
       enableApp,
       generateAgentPubKey,
@@ -664,7 +713,9 @@ export class TryCpConductor implements IConductor {
       listDnas,
       registerDna,
       startApp,
+      storageInfo,
       uninstallApp,
+      updateCoordinators,
     };
   }
 
