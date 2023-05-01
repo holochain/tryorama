@@ -48,7 +48,7 @@ const createTestConductor = (
 
 test("TryCP Conductor - stop and restart a conductor", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
 
   const agentPubKeyResponse = await conductor.adminWs().generateAgentPubKey();
@@ -92,7 +92,7 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
 
 test("TryCP Conductor - install hApp bundle and access cell by role name", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
   const aliceHapp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
@@ -105,7 +105,7 @@ test("TryCP Conductor - install hApp bundle and access cell by role name", async
 
 test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
   const alice = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
@@ -139,7 +139,7 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
 
 test("TryCP Conductor - get a DNA definition", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
   const dnaHash = await conductor.adminWs().registerDna({ path: relativePath });
@@ -153,7 +153,7 @@ test("TryCP Conductor - get a DNA definition", async (t) => {
 
 test("TryCP Conductor - grant a zome call capability", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
   const installedHappBundle = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
@@ -226,7 +226,7 @@ test("TryCP Conductor - receive a signal", async (t) => {
 
 test("TryCP Conductor - create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
@@ -321,7 +321,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
 
 test("TryCP Conductor - reading a non-existent entry returns null", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
   const app = { path: FIXTURE_HAPP_URL.pathname };
   const alice = await conductor.installApp(app);
@@ -343,7 +343,7 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
 
 test("TryCP Conductor - create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
@@ -476,7 +476,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
 
 test("TryCP Conductor - clone cell management", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
   const conductor = await createTestConductor(client);
 
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
@@ -575,7 +575,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
 
 test("TryCP Conductor - create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
 
   const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
 
@@ -631,7 +631,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
 
 test("TryCP Conductor - pass a custom application id to happ installation", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const client = await TryCpClient.create(SERVER_URL, 60000);
+  const client = await TryCpClient.create(SERVER_URL);
 
   const conductor = await createTestConductor(client);
   const expectedInstalledAppId = "test-app-id";
