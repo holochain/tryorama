@@ -17,7 +17,7 @@
   "license": "CAL-1.0",
   "type": "module",
   "engines": {
-    "node": "^14.13.1 || >=16.0.0 || >=18.0.0"
+    "node": ">=16.0.0 || >=18.0.0"
   },
   "workspaces": [
     "crates/trycp_server/test"
