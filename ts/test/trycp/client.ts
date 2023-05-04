@@ -7,9 +7,9 @@ import {
 } from "../../src/trycp/index.js";
 import { TryCpClient } from "../../src/trycp/trycp-client.js";
 import {
-  TryCpServer,
   TRYCP_SERVER_HOST,
   TRYCP_SERVER_PORT,
+  TryCpServer,
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";

@@ -63,6 +63,7 @@ import {
 import { deserializeZomeResponsePayload } from "../util.js";
 
 const logger = makeLogger("TryCP conductor");
+const HOLO_TEST_SIGNALING_SERVER = "wss://signal.holotest.net";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -73,7 +74,11 @@ export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
 dpki: ~
-network: ~`;
+network:
+  network_type: "quic_mdns" 
+  transport_pool:
+    - type: webrtc
+      signal_url: `;
 
 /**
  * @public
@@ -154,10 +159,14 @@ export class TryCpConductor implements IConductor {
    * @returns An empty success response.
    */
   async configure(partialConfig?: string) {
+    const defaultPartialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.concat(
+      this.tryCpClient.signalingServerUrl || HOLO_TEST_SIGNALING_SERVER
+    );
+    partialConfig = partialConfig || defaultPartialConfig;
     const response = await this.tryCpClient.call({
       type: "configure_player",
       id: this.id,
-      partial_config: partialConfig || DEFAULT_PARTIAL_PLAYER_CONFIG,
+      partial_config: partialConfig,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;

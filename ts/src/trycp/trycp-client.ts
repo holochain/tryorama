@@ -27,21 +27,6 @@ import {
 const logger = makeLogger("TryCP client");
 let requestId = 0;
 
-const partialConfig = `signing_service_uri: ~
-encryption_service_uri: ~
-decryption_service_uri: ~
-dpki: ~
-network:
-  bootstrap_service: "https://devnet-bootstrap.holo.host"
-  network_type: "quic_bootstrap" 
-  transport_pool:
-    - proxy_config:
-        proxy_url: "kitsune-proxy://f3gH2VMkJ4qvZJOXx0ccL_Zo5n-s_CnBjSzAsEHHDCA/kitsune-quic/h/137.184.142.208/p/5788/--"
-        type: "remote_proxy_client"
-      type: proxy
-      sub_transport:
-        type: quic`;
-
 /**
  * A factory class to create client connections to a running TryCP server.
  *
@@ -60,6 +45,9 @@ export class TryCpClient {
   };
   private signalHandlers: Record<number, AppSignalCb | undefined>;
 
+  // can be set in the odd case that another signaling server than the Holo
+  // test server should be used
+  signalingServerUrl: string | undefined;
   conductors: TryCpConductor[];
 
   private constructor(serverUrl: URL, timeout = 60000) {
@@ -73,6 +61,7 @@ export class TryCpClient {
    * Create a client connection to a running TryCP server.
    *
    * @param serverUrl - The URL of the TryCP server.
+   * @param signalingServerUrl - The URL of the signaling server.
    * @returns The created client connection.
    */
   static async create(serverUrl: URL, timeout?: number) {
@@ -228,13 +217,11 @@ export class TryCpClient {
   /**
    * Create and add a conductor to the client.
    *
-   * @param config - Conductor configuration (optional).
+   * @param partialConfig - Conductor configuration (optional).
    * @returns The newly added conductor instance.
    */
-  async addConductor(signalHandler?: AppSignalCb, config?: string) {
-    const conductor = await createConductor(this, {
-      partialConfig: config ? config : partialConfig,
-    });
+  async addConductor(signalHandler?: AppSignalCb, partialConfig?: string) {
+    const conductor = await createConductor(this, { partialConfig });
     await conductor.adminWs().attachAppInterface();
     await conductor.connectAppInterface(signalHandler);
     this.conductors.push(conductor);
