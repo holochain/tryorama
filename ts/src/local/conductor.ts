@@ -20,7 +20,6 @@ import { v4 as uuidv4 } from "uuid";
 
 import { enableAndGetAgentApp } from "../common.js";
 import { makeLogger } from "../logger.js";
-import { TryCpServer } from "../trycp/trycp-server.js";
 import {
   AgentApp,
   AgentsAppsOptions,
@@ -40,8 +39,8 @@ const LAIR_PASSWORD = "lair-password";
  * @public
  */
 export enum NetworkType {
-  Quic = "quic",
-  Mdns = "mdns",
+  WebRtc = "webrtc",
+  Mem = "mem",
 }
 
 /**
@@ -76,34 +75,6 @@ export interface ConductorOptions {
   bootstrapUrl?: URL;
 
   /**
-   * Network interface and port to bind to
-   *
-   * @defaultValue "kitsune-quic://0.0.0.0:0"
-   */
-  bindTo?: URL;
-
-  /**
-   * Run through an external proxy
-   */
-  proxy?: URL;
-
-  /**
-   * If you have port-forwarding set up or wish to apply a vanity domain name,
-   * you may need to override the local IP.
-   *
-   * @defaultValue undefined = no override
-   */
-  hostOverride?: URL;
-
-  /**
-   * If you have port-forwarding set up, you may need to override the local
-   * port.
-   *
-   * @defaultValue undefined = no override
-   */
-  portOverride?: number;
-
-  /**
    * Timeout for requests to Admin and App API
    */
   timeout?: number;
@@ -116,13 +87,7 @@ export interface ConductorOptions {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  | "bindTo"
-  | "bootstrapUrl"
-  | "hostOverride"
-  | "networkType"
-  | "portOverride"
-  | "proxy"
-  | "timeout"
+  "bootstrapUrl" | "networkType" | "timeout"
 >;
 
 /**
@@ -133,17 +98,19 @@ export type CreateConductorOptions = Pick<
  *
  * @public
  */
-export const createConductor = async (options?: ConductorOptions) => {
+export const createConductor = async (
+  signalingServerUrl: string,
+  options?: ConductorOptions
+) => {
   const createConductorOptions: CreateConductorOptions = pick(options, [
-    "bindTo",
     "bootstrapUrl",
-    "hostOverride",
     "networkType",
-    "portOverride",
-    "proxy",
     "timeout",
   ]);
-  const conductor = await Conductor.create(createConductorOptions);
+  const conductor = await Conductor.create(
+    signalingServerUrl,
+    createConductorOptions
+  );
   if (options?.startup !== false) {
     await conductor.startUp();
     if (options?.attachAppInterface !== false) {
@@ -185,11 +152,14 @@ export class Conductor implements IConductor {
    *
    * @returns A configured instance of a conductor, not yet running.
    */
-  static async create(options?: CreateConductorOptions) {
-    const networkType = options?.networkType ?? NetworkType.Quic;
-    if (options?.bootstrapUrl && networkType !== NetworkType.Quic) {
+  static async create(
+    signalingServerUrl: string,
+    options?: CreateConductorOptions
+  ) {
+    const networkType = options?.networkType ?? NetworkType.WebRtc;
+    if (options?.bootstrapUrl && networkType !== NetworkType.WebRtc) {
       throw new Error(
-        "error creating conductor: bootstrap service can only be set for quic network"
+        "error creating conductor: bootstrap service can only be set for webrtc network"
       );
     }
 
@@ -198,17 +168,8 @@ export class Conductor implements IConductor {
       args.push("--bootstrap", options.bootstrapUrl.href);
     }
     args.push(networkType);
-    if (options?.bindTo) {
-      args.push("--bind-to", options.bindTo.href);
-    }
-    if (options?.hostOverride) {
-      args.push("--override-host", options.hostOverride.href);
-    }
-    if (options?.portOverride) {
-      args.push("--override-port", options.portOverride.toString());
-    }
-    if (options?.proxy) {
-      args.push("-p", options.proxy.href);
+    if (networkType === NetworkType.WebRtc) {
+      args.push(signalingServerUrl);
     }
     const createConductorProcess = spawn("hc", args);
     createConductorProcess.stdin.write(LAIR_PASSWORD);
@@ -511,11 +472,3 @@ export const cleanAllConductors = async () => {
   });
   return cleanPromise;
 };
-
-/**
- * Shortcut function to stop all TryCP servers.
- *
- * @public
- */
-export const stopAllTryCpServers = async (tryCpServers: TryCpServer[]) =>
-  Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));

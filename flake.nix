@@ -1,7 +1,8 @@
 {
   inputs = {
     holonix.url = "github:holochain/holochain";
-    holonix.inputs.versions.url = "github:holochain/holochain?dir=versions/0_1";
+    holonix.inputs.holochain.url = "github:holochain/holochain/holochain-0.2.0";
+    holonix.inputs.lair.url = "github:holochain/lair/lair_keystore-v0.2.4";
     nixpkgs.follows = "holonix/nixpkgs";
   };
 
