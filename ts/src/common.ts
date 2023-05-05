@@ -31,7 +31,8 @@ export const spawnSignalingServer = async () => {
         if (data.includes(SIGNALING_SERVER_STARTUP_STRING)) {
           const serverUrl = data
             .toString()
-            .split(SIGNALING_SERVER_STARTUP_STRING)[1];
+            .split(SIGNALING_SERVER_STARTUP_STRING)[1]
+            .split("\n")[0];
           logger.debug(`server url: ${serverUrl}`);
           resolve([serverProcess, serverUrl]);
         } else {

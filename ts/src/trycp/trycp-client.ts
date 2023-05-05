@@ -17,6 +17,7 @@ import {
   TRYCP_SUCCESS_RESPONSE,
   _TryCpCall,
   _TryCpSuccessResponseSeralized,
+  _TryCpResponseResult,
 } from "./types.js";
 import {
   deserializeApiResponse,
@@ -105,12 +106,12 @@ export class TryCpClient {
           tryCpClient.requestPromises[responseWrapper.id];
 
         // the server responds with an object
-        // it contains `0` as property for formally correct requests
-        // and `1` when the format was incorrect
-        if ("0" in responseWrapper.response) {
+        // it contains `Ok` as property for formally correct requests
+        // and `Err` when the format was incorrect
+        if (_TryCpResponseResult.Ok in responseWrapper.response) {
           try {
             const innerResponse = tryCpClient.processSuccessResponse(
-              responseWrapper.response[0]
+              responseWrapper.response[_TryCpResponseResult.Ok]
             );
             responseResolve(innerResponse);
           } catch (error) {
@@ -121,12 +122,12 @@ export class TryCpClient {
               responseReject(errorMessage);
             }
           }
-        } else if ("1" in responseWrapper.response) {
-          responseReject(responseWrapper.response[1]);
+        } else if (_TryCpResponseResult.Err in responseWrapper.response) {
+          responseReject(responseWrapper.response[_TryCpResponseResult.Err]);
         } else {
           logger.error(
             "unknown response type",
-            JSON.stringify(responseWrapper.response, null, 4)
+            JSON.stringify(responseWrapper, null, 4)
           );
           throw new Error("Unknown response type");
         }

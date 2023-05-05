@@ -46,7 +46,7 @@ export class TryCpServer {
       logger.error(`Error starting up local TryCP server - ${err}`)
     );
 
-    // the build output from cargo is written to stderr instead of stdout, even if no error has occurred - I don't know why
+    // the build output from cargo is written to stderr instead of stdout
     tryCpServer.serverProcess.stderr.on("data", (data) => {
       logger.debug(`build process - ${data}`);
     });
