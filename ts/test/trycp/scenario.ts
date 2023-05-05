@@ -10,7 +10,7 @@ import {
 } from "../../src/trycp/trycp-server.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 import { spawnSignalingServer } from "../../src/common.js";
-import { awaitDhtSync, pause } from "../../src/util.js";
+import { awaitDhtSync } from "../../src/util.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 
