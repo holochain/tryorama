@@ -16,6 +16,8 @@ import {
   DisableCloneCellResponse,
   DnaDefinition,
   DumpFullStateRequest,
+  DumpNetworkStatsRequest,
+  DumpNetworkStatsResponse,
   DumpStateRequest,
   DumpStateResponse,
   EnableAppRequest,
@@ -32,11 +34,17 @@ import {
   ListAppsResponse,
   ListCellIdsResponse,
   ListDnasResponse,
+  NetworkInfoRequest,
+  NetworkInfoResponse,
   RegisterDnaRequest,
   StartAppRequest,
   StartAppResponse,
+  StorageInfoRequest,
+  StorageInfoResponse,
   UninstallAppRequest,
   UninstallAppResponse,
+  UpdateCoordinatorsRequest,
+  UpdateCoordinatorsResponse,
 } from "@holochain/client";
 import { ConductorId } from "./conductor/index.js";
 
@@ -288,7 +296,8 @@ export type RequestCallAppInterfaceMessage =
   | RequestAppInfo
   | RequestCreateCloneCell
   | RequestEnableCloneCell
-  | RequestDisableCloneCell;
+  | RequestDisableCloneCell
+  | RequestNetworkInfo;
 
 /**
  * Request to call a zome on a conductor's app interface.
@@ -341,6 +350,16 @@ export interface RequestEnableCloneCell {
 }
 
 /**
+ * Request network info.
+ *
+ * @public
+ */
+export interface RequestNetworkInfo {
+  type: "network_info";
+  data: NetworkInfoRequest;
+}
+
+/**
  * Msgpack encoded request to call an app interface.
  *
  * @public
@@ -360,7 +379,8 @@ export type AppApiResponse =
   | AppApiResponseZomeCall
   | AppApiResponseCloneCellCreated
   | AppApiResponseCloneCellEnabled
-  | AppApiResponseCloneCellDisabled;
+  | AppApiResponseCloneCellDisabled
+  | AppApiResponseNetworkInfo;
 
 /**
  * @public
@@ -402,6 +422,14 @@ export interface AppApiResponseCloneCellDisabled {
   data: DisableCloneCellResponse;
 }
 
+/**
+ * @public
+ */
+export interface AppApiResponseNetworkInfo {
+  type: "network_info";
+  data: NetworkInfoResponse;
+}
+
 /* ********************** Admin API ********************** */
 
 /**
@@ -429,6 +457,7 @@ export interface RequestAdminInterfaceMessage {
     | "delete_clone_cell"
     | "disable_app"
     | "dump_full_state"
+    | "dump_network_stats"
     | "dump_state"
     | "enable_app"
     | "generate_agent_pub_key"
@@ -442,7 +471,9 @@ export interface RequestAdminInterfaceMessage {
     | "list_dnas"
     | "register_dna"
     | "start_app"
-    | "uninstall_app";
+    | "storage_info"
+    | "uninstall_app"
+    | "update_coordinators";
   data?:
     | AddAgentInfoRequest
     | AgentInfoRequest
@@ -450,6 +481,7 @@ export interface RequestAdminInterfaceMessage {
     | DeleteCloneCellRequest
     | DisableAppRequest
     | DumpFullStateRequest
+    | DumpNetworkStatsRequest
     | DumpStateRequest
     | EnableAppRequest
     | GetDnaDefinitionRequest
@@ -458,7 +490,9 @@ export interface RequestAdminInterfaceMessage {
     | ListAppsRequest
     | RegisterDnaRequest
     | StartAppRequest
-    | UninstallAppRequest;
+    | StorageInfoRequest
+    | UninstallAppRequest
+    | UpdateCoordinatorsRequest;
 }
 
 /**
@@ -478,13 +512,16 @@ export type AdminApiResponse =
   | AdminApiResponseAppStarted
   | AdminApiResponseAppUninstalled
   | AdminApiResponseAppsListed
-  | AdminApiResponseCloneCellDeleted
   | AdminApiResponseCellIdsListed
+  | AdminApiResponseCloneCellDeleted
+  | AdminApiResponseCoordinatorsUpdated
   | AdminApiResponseDnasDefinitionReturned
   | AdminApiResponseDnasListed
   | AdminApiResponseDnaRegistered
   | AdminApiResponseFullStateDumped
+  | AdminApiResponseNetworkStatsDumped
   | AdminApiResponseStateDumped
+  | AdminApiResponseStorageInfo
   | AdminApiResponseZomeCallCapabilityGranted;
 
 /**
@@ -519,6 +556,22 @@ export interface AdminApiResponseDnaRegistered {
 export interface AdminApiResponseFullStateDumped {
   type: "full_state_dumped";
   data: FullStateDump;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseNetworkStatsDumped {
+  type: "network_stats_dumped";
+  data: DumpNetworkStatsResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseStorageInfo {
+  type: "storage_info";
+  data: StorageInfoResponse;
 }
 
 /**
@@ -582,6 +635,14 @@ export interface AdminApiResponseAppStarted {
 export interface AdminApiResponseAppUninstalled {
   type: "app_uninstalled";
   data: UninstallAppResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseCoordinatorsUpdated {
+  type: "coordinators_updated";
+  data: UpdateCoordinatorsResponse;
 }
 
 /**

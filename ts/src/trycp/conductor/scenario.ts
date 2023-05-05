@@ -4,13 +4,17 @@ import {
   AppSignalCb,
   CellId,
 } from "@holochain/client";
+import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
-import { addAllAgentsToAllConductors as shareAllAgents } from "../../common.js";
+import {
+  addAllAgentsToAllConductors as shareAllAgents,
+  shutDownSignalingServer,
+} from "../../common.js";
 import { AppOptions, IPlayer } from "../../types.js";
+import { awaitDhtSync } from "../../util.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
-import { awaitDhtSync } from "../../util.js";
 
 /**
  * @public
@@ -75,6 +79,8 @@ export interface TryCpPlayer extends IPlayer {
  */
 export class TryCpScenario {
   network_seed: string;
+  signalingServerProcess: ChildProcessWithoutNullStreams | undefined;
+  signalingServerUrl: string | undefined;
   clients: TryCpClient[];
 
   constructor() {
@@ -91,6 +97,7 @@ export class TryCpScenario {
    */
   async addClient(serverUrl: URL, timeout?: number) {
     const client = await TryCpClient.create(serverUrl, timeout);
+    client.signalingServerUrl = this.signalingServerUrl;
     this.clients.push(client);
     return client;
   }
@@ -243,6 +250,9 @@ export class TryCpScenario {
     await Promise.all(
       this.clients.map((client) => client.shutDownConductors())
     );
+    if (this.signalingServerProcess) {
+      await shutDownSignalingServer(this.signalingServerProcess);
+    }
   }
 
   /**
@@ -251,6 +261,11 @@ export class TryCpScenario {
    */
   async cleanUp() {
     await Promise.all(this.clients.map((client) => client.cleanUp()));
+    if (this.signalingServerProcess) {
+      await shutDownSignalingServer(this.signalingServerProcess);
+    }
     this.clients = [];
+    this.signalingServerProcess = undefined;
+    this.signalingServerUrl = undefined;
   }
 }

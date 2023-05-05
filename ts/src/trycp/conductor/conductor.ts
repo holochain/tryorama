@@ -18,6 +18,7 @@ import {
   DnaHash,
   DnaSource,
   DumpFullStateRequest,
+  DumpNetworkStatsRequest,
   DumpStateRequest,
   EnableAppRequest,
   EnableCloneCellRequest,
@@ -31,12 +32,15 @@ import {
   GrantZomeCallCapabilityRequest,
   InstallAppRequest,
   ListAppsRequest,
+  NetworkInfoRequest,
   randomCapSecret,
   RegisterDnaRequest,
   setSigningCredentials,
   signZomeCall,
   StartAppRequest,
+  StorageInfoRequest,
   UninstallAppRequest,
+  UpdateCoordinatorsRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
@@ -59,6 +63,7 @@ import {
 import { deserializeZomeResponsePayload } from "../util.js";
 
 const logger = makeLogger("TryCP conductor");
+const HOLO_TEST_SIGNALING_SERVER = "wss://signal.holotest.net";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -69,7 +74,11 @@ export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
 dpki: ~
-network: ~`;
+network:
+  network_type: "quic_mdns" 
+  transport_pool:
+    - type: webrtc
+      signal_url: `;
 
 /**
  * @public
@@ -150,10 +159,14 @@ export class TryCpConductor implements IConductor {
    * @returns An empty success response.
    */
   async configure(partialConfig?: string) {
+    const defaultPartialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.concat(
+      this.tryCpClient.signalingServerUrl || HOLO_TEST_SIGNALING_SERVER
+    );
+    partialConfig = partialConfig || defaultPartialConfig;
     const response = await this.tryCpClient.call({
       type: "configure_player",
       id: this.id,
-      partial_config: partialConfig || DEFAULT_PARTIAL_PLAYER_CONFIG,
+      partial_config: partialConfig,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
@@ -453,6 +466,21 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Update coordinator zomes of an installed DNA.
+     *
+     * @param request - {@link UninstallAppRequest}.
+     * @returns An empty success response.
+     */
+    const updateCoordinators = async (request: UpdateCoordinatorsRequest) => {
+      const response = await this.callAdminApi({
+        type: "update_coordinators",
+        data: request,
+      });
+      assert(response.type === "coordinators_updated");
+      return response.data;
+    };
+
+    /**
      * List all installed hApps.
      *
      * @param request - Filter by hApp status (optional).
@@ -595,6 +623,36 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Request a network stats dump of the conductor.
+     *
+     * @param request - {@link DumpNetworkStatsRequest}
+     * @returns {@link @holochain/client#DumpNetworkStatsResponse}.
+     */
+    const dumpNetworkStats = async (request: DumpNetworkStatsRequest) => {
+      const response = await this.callAdminApi({
+        type: "dump_network_stats",
+        data: request,
+      });
+      assert(response.type === "network_stats_dumped");
+      return response.data;
+    };
+
+    /**
+     * Request storage info from the conductor.
+     *
+     * @param request - {@link StorageInfoRequest}
+     * @returns {@link @holochain/client#StorageInfoResponse}.
+     */
+    const storageInfo = async (request: StorageInfoRequest) => {
+      const response = await this.callAdminApi({
+        type: "storage_info",
+        data: request,
+      });
+      assert(response.type === "storage_info");
+      return response.data;
+    };
+
+    /**
      * Grant a capability for signing zome calls.
      *
      * @param cellId - The cell to grant the capability for.
@@ -634,7 +692,7 @@ export class TryCpConductor implements IConductor {
       cellId: CellId,
       functions?: GrantedFunctions
     ) => {
-      const [keyPair, signingKey] = generateSigningKeyPair();
+      const [keyPair, signingKey] = await generateSigningKeyPair();
       const capSecret = await grantSigningKey(
         cellId,
         functions || { [GrantedFunctionsType.All]: null },
@@ -651,6 +709,7 @@ export class TryCpConductor implements IConductor {
       deleteCloneCell,
       disableApp,
       dumpFullState,
+      dumpNetworkStats,
       dumpState,
       enableApp,
       generateAgentPubKey,
@@ -664,7 +723,9 @@ export class TryCpConductor implements IConductor {
       listDnas,
       registerDna,
       startApp,
+      storageInfo,
       uninstallApp,
+      updateCoordinators,
     };
   }
 
@@ -793,12 +854,28 @@ export class TryCpConductor implements IConductor {
       return response.data;
     };
 
+    /**
+     * Request network info.
+     *
+     * @param request - {@link NetworkInfoRequest}.
+     * @returns {@link NetworkInfoResponse}.
+     */
+    const networkInfo = async (request: NetworkInfoRequest) => {
+      const response = await this.callAppApi({
+        type: "network_info",
+        data: request,
+      });
+      assert(response.type === "network_info");
+      return response.data;
+    };
+
     return {
       appInfo,
       callZome,
       createCloneCell,
       enableCloneCell,
       disableCloneCell,
+      networkInfo,
     };
   }
 
