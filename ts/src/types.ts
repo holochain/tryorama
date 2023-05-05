@@ -165,6 +165,7 @@ export interface IConductor {
     | "createCloneCell"
     | "enableCloneCell"
     | "disableCloneCell"
+    | "networkInfo"
   >;
 
   installApp: (

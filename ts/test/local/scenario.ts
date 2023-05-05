@@ -6,10 +6,9 @@ import {
 } from "@holochain/client";
 import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
-import { runScenario, Scenario } from "../../src/local/scenario.js";
-import { pause } from "../../src/util.js";
-import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 import { getZomeCaller } from "../../src/common.js";
+import { Scenario, runScenario } from "../../src/local/scenario.js";
+import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
   await runScenario(async (scenario: Scenario) => {
@@ -122,7 +121,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
     payload: content,
   });
 
-  await pause(1000);
+  await scenario.awaitDhtSync(alice.cells[0].cell_id);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
@@ -149,7 +148,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   const content = "Before shutdown";
   const createEntryHash = await aliceCaller<EntryHash>("create", content);
 
-  await pause(1000);
+  await scenario.awaitDhtSync(alice.cells[0].cell_id);
 
   const readContent = await bobCaller<typeof content>("read", createEntryHash);
   t.equal(readContent, content);
@@ -214,6 +213,42 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   ]);
   t.deepEqual(actualSignalAlice.payload, signalAlice);
   t.deepEqual(actualSignalBob.payload, signalBob);
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the last, 2 conductors", async (t) => {
+  const scenario = new Scenario();
+
+  const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const [alice, bob] = await scenario.addPlayersWithApps([
+    { appBundleSource },
+    { appBundleSource },
+  ]);
+
+  await scenario.shareAllAgents();
+
+  // Alice creates 10 entries
+  let lastCreatedHash;
+  let lastCreatedContent;
+  for (let i = 0; i < 10; i++) {
+    lastCreatedContent = `Hi dare ${i}`;
+    lastCreatedHash = await alice.cells[0].callZome<EntryHash>({
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: lastCreatedContent,
+    });
+  }
+
+  await scenario.awaitDhtSync(alice.cells[0].cell_id);
+
+  // Bob gets the last created entry
+  const readContent = await bob.cells[0].callZome<string>({
+    zome_name: "coordinator",
+    fn_name: "read",
+    payload: lastCreatedHash,
+  });
+  t.equal(readContent, lastCreatedContent);
 
   await scenario.cleanUp();
 });

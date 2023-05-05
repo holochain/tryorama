@@ -93,6 +93,8 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  Variable | Description |
 |  --- | --- |
 |  [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md) | Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping. |
+|  [areDhtsSynced](./tryorama.aredhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
+|  [awaitDhtSync](./tryorama.awaitdhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
 |  [cleanAllConductors](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
 |  [createConductor](./tryorama.createconductor.md) | The function to create a conductor. It starts a sandbox conductor via the Holochain CLI. |
 |  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor. By default configures and starts it. |

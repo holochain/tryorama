@@ -7,12 +7,63 @@ import {
   ProvisionedCell,
   RoleName,
 } from "@holochain/client";
+import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import assert from "node:assert";
+import { makeLogger } from "./logger.js";
 import {
   AgentApp,
   CallableCell,
   CellZomeCallRequest,
   IConductor,
 } from "./types.js";
+
+const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL SRV - ADDR: ";
+
+/**
+ * Spawn a signalling server to enable connections between conductors.
+ */
+export const spawnSignalingServer = async () => {
+  const logger = makeLogger("Signalling server");
+  const serverProcess = spawn("hc", ["signal-srv"]);
+  const startUpComplete = new Promise<[ChildProcessWithoutNullStreams, string]>(
+    (resolve) => {
+      serverProcess.stdout.on("data", (data: Buffer) => {
+        if (data.includes(SIGNALING_SERVER_STARTUP_STRING)) {
+          const serverUrl = data
+            .toString()
+            .split(SIGNALING_SERVER_STARTUP_STRING)[1];
+          logger.debug(`server url: ${serverUrl}`);
+          resolve([serverProcess, serverUrl]);
+        } else {
+          logger.debug(data.toString());
+        }
+      });
+    }
+  );
+  return startUpComplete;
+};
+
+/**
+ * Shutdown signalling server process.
+ */
+export const shutDownSignalingServer = (
+  serverProcess: ChildProcessWithoutNullStreams
+) => {
+  if (serverProcess.pid === undefined) {
+    return null;
+  }
+  const serverShutdown = new Promise<number | null>((resolve) => {
+    serverProcess.on("exit", (code) => {
+      serverProcess?.removeAllListeners();
+      serverProcess?.stdout.removeAllListeners();
+      serverProcess?.stderr.removeAllListeners();
+      resolve(code);
+    });
+    assert(serverProcess.pid);
+    process.kill(serverProcess.pid);
+  });
+  return serverShutdown;
+};
 
 /**
  * Add all agents of all conductors to each other. Shortcuts peer discovery

@@ -15,6 +15,7 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest, macos-latest]
+      fail-fast: false
     runs-on: ${{ matrix.os }}
 
     steps:
@@ -22,7 +23,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install nix
-        uses: cachix/install-nix-action@v19
+        uses: cachix/install-nix-action@v20
 
       - name: Set up cachix
         uses: cachix/cachix-action@v12
@@ -31,27 +32,40 @@ jobs:
 
       - name: Cache TryCP server build
         uses: actions/cache@v3
+        if: always() # cache even if job fails
         env:
           cache-name: trycp-server
         with:
-          path: |
-            .cargo
-            crates/trycp_server/target
+          path: crates/trycp_server/target
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
-          restore-keys: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
       - name: Cache test zome build
         uses: actions/cache@v3
+        if: always() # cache even if job fails
         env:
           cache-name: test-zomes
         with:
-          path: target
+          path: |
+            .cargo
+            target
           key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
 
-      - name: Build TryCP server and test hApp and run tests
-        id: build-and-test
-        run: nix develop -c "./run-test.sh"
+      - name: Build Nix packages
+        run: nix develop -c $SHELL -c "echo Nix packages built"
 
-      - name: Setup tmate session if build and test run failed
+      - name: Build TryCP server
+        run: nix develop -c $SHELL -c "./build-trycp.sh"
+
+      - name: Build test fixture
+        run: nix develop -c $SHELL -c "./build-fixture.sh"
+
+      - name: Install JS packages
+        run: nix develop -c $SHELL -c "npm ci"
+
+      - name: Run tests
+        run: nix develop -c $SHELL -c "npm t"
+
+      - name: Setup tmate session if build or test run failed
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
+        timeout-minutes: 10
