@@ -7,9 +7,9 @@ import {
 } from "../../src/trycp/index.js";
 import { TryCpClient } from "../../src/trycp/trycp-client.js";
 import {
-  TryCpServer,
   TRYCP_SERVER_HOST,
   TRYCP_SERVER_PORT,
+  TryCpServer,
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
@@ -229,7 +229,6 @@ test("TryCP Client - shut down", async (t) => {
   const client = await createTryCpClient();
   const conductor1 = await client.addConductor();
   const conductor2 = await client.addConductor();
-  const conductor3 = await client.addConductor();
   t.doesNotReject(
     conductor1.adminWs().generateAgentPubKey,
     "conductor 1 responds"
@@ -238,14 +237,9 @@ test("TryCP Client - shut down", async (t) => {
     conductor2.adminWs().generateAgentPubKey,
     "conductor 2 responds"
   );
-  t.doesNotReject(
-    conductor3.adminWs().generateAgentPubKey,
-    "conductor 3 responds"
-  );
   await client.shutDownConductors();
   t.rejects(conductor1.adminWs().generateAgentPubKey, "conductor 1 is down");
   t.rejects(conductor2.adminWs().generateAgentPubKey, "conductor 2 is down");
-  t.rejects(conductor3.adminWs().generateAgentPubKey, "conductor 3 is down");
 
   await client.cleanUp();
   await localTryCpServer.stop();

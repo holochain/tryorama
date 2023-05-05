@@ -85,3 +85,11 @@ export class TryCpServer {
     return killPromise;
   }
 }
+
+/**
+ * Shortcut function to stop all TryCP servers.
+ *
+ * @public
+ */
+export const stopAllTryCpServers = async (tryCpServers: TryCpServer[]) =>
+  Promise.all(tryCpServers.map((tryCpServer) => tryCpServer.stop()));
