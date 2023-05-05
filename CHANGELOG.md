@@ -11,7 +11,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 - `runScenario` catches and outputs error occurring during the test run.
 - **BREAKING CHANGE**: Upgrade to Holochain v0.2.0 and compatible JS client.
-- **BREAKING CHANGE**: Update TryCP dependencies. Includes change in message protocol. Previously TryCP messages responded with `0` for success and `1` for error. This has changed in rmp_serde to return `Ok` for success and `Err` for error.
 
 ### Fixed
 
