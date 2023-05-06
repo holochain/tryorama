@@ -11,18 +11,18 @@ authors = [ "Holochain Core Dev Team <devcore@holochain.org>" ]
 edition = "2021"
 
 [dependencies]
-futures = "0.3.14"
-nix = "0.20.2"
+futures = "0.3"
+nix = "0.20"
 once_cell = "1.5.0"
-parking_lot = "0.10.0"
+parking_lot = "0.10"
 reqwest = { version = "0.11", default-features = false, features = ["blocking", "json", "rustls-tls-native-roots"] }
-rmp-serde = "0.14.3"
-serde = { version = "1.0.104", features = ["derive"] }
-serde_bytes = "0.11.0"
-slab = "0.4.0"
-snafu = "0.6.10"
-structopt = "0.2.18"
-structopt-derive = "0.2.18"
-tokio = { version = "1.24.2", features = ["macros", "rt-multi-thread", "process", "fs"]}
-tokio-tungstenite = "0.14.0"
-url = "2.1.0"
+rmp-serde = "1.1"
+serde = { version = "1", features = ["derive"] }
+serde_bytes = "0.11"
+slab = "0.4"
+snafu = "0.6"
+structopt = "0.2"
+structopt-derive = "0.2"
+tokio = { version = "1.24", features = ["macros", "rt-multi-thread", "process", "fs"]}
+tokio-tungstenite = "0.14"
+url = "2"
