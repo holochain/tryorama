@@ -176,7 +176,7 @@ export interface RequestDisconnectAppInterface {
 /* ********************** Response ********************** */
 
 /**
- * Responses are composed of an object with either `0` or `1` as a property for success or error.
+ * Responses are composed of an object with either `Ok` or `Err` as a property for success or error.
  *
  * @internal
  */
@@ -185,15 +185,23 @@ export type _TryCpResponse = _TryCpResponseSuccess | _TryCpResponseError;
 /**
  * @internal
  */
+export enum _TryCpResponseResult {
+  Ok = "Ok",
+  Err = "Err",
+}
+
+/**
+ * @internal
+ */
 export interface _TryCpResponseSuccess {
-  0: _TryCpSuccessResponseSeralized;
+  [_TryCpResponseResult.Ok]: _TryCpSuccessResponseSeralized;
 }
 
 /**
  * @internal
  */
 export interface _TryCpResponseError {
-  1: TryCpResponseErrorValue;
+  [_TryCpResponseResult.Err]: TryCpResponseErrorValue;
 }
 
 /**
