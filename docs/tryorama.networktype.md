@@ -16,6 +16,6 @@ export declare enum NetworkType
 
 |  Member | Value | Description |
 |  --- | --- | --- |
-|  Mdns | <code>&quot;mdns&quot;</code> |  |
-|  Quic | <code>&quot;quic&quot;</code> |  |
+|  Mem | <code>&quot;mem&quot;</code> |  |
+|  WebRtc | <code>&quot;webrtc&quot;</code> |  |
 

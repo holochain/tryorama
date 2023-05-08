@@ -19,12 +19,13 @@ export declare class TryCpClient
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [conductors](./tryorama.trycpclient.conductors.md) |  | [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->\[\] |  |
+|  [signalingServerUrl](./tryorama.trycpclient.signalingserverurl.md) |  | string \| undefined |  |
 
 ## Methods
 
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
-|  [addConductor(signalHandler, config)](./tryorama.trycpclient.addconductor.md) |  | Create and add a conductor to the client. |
+|  [addConductor(signalHandler, partialConfig)](./tryorama.trycpclient.addconductor.md) |  | Create and add a conductor to the client. |
 |  [call(request)](./tryorama.trycpclient.call.md) |  | Send a call to the TryCP server. |
 |  [cleanAllConductors()](./tryorama.trycpclient.cleanallconductors.md) |  | Run the <code>reset</code> command on the TryCP server to delete all conductor data. |
 |  [cleanUp()](./tryorama.trycpclient.cleanup.md) |  | Shut down all registered conductors and delete them, and close the client connection. |

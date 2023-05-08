@@ -17,7 +17,7 @@ export interface IConductor
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [adminWs](./tryorama.iconductor.adminws.md) |  | () =&gt; Omit&lt;AdminWebsocket, "client" \| "defaultTimeout" \| "\_requester"&gt; |  |
-|  [appWs](./tryorama.iconductor.appws.md) |  | () =&gt; Pick&lt;AppWebsocket, "callZome" \| "appInfo" \| "createCloneCell" \| "enableCloneCell" \| "disableCloneCell"&gt; |  |
+|  [appWs](./tryorama.iconductor.appws.md) |  | () =&gt; Pick&lt;AppWebsocket, "callZome" \| "appInfo" \| "createCloneCell" \| "enableCloneCell" \| "disableCloneCell" \| "networkInfo"&gt; |  |
 |  [installAgentsApps](./tryorama.iconductor.installagentsapps.md) |  | (options: [AgentsAppsOptions](./tryorama.agentsappsoptions.md)<!-- -->) =&gt; Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->\[\]&gt; |  |
 |  [installApp](./tryorama.iconductor.installapp.md) |  | (appBundleSource: AppBundleSource, options?: [AppOptions](./tryorama.appoptions.md)<!-- -->) =&gt; Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->&gt; |  |
 |  [shutDown](./tryorama.iconductor.shutdown.md) |  | () =&gt; Promise&lt;number \| null&gt; |  |

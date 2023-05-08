@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-appWs: () => Pick<AppWebsocket, "callZome" | "appInfo" | "createCloneCell" | "enableCloneCell" | "disableCloneCell">;
+appWs: () => Pick<AppWebsocket, "callZome" | "appInfo" | "createCloneCell" | "enableCloneCell" | "disableCloneCell" | "networkInfo">;
 ```

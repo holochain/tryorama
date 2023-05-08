@@ -16,12 +16,8 @@ export interface ConductorOptions
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [attachAppInterface?](./tryorama.conductoroptions.attachappinterface.md) |  | boolean | <i>(Optional)</i> Attach an app interface to the conductor and connect an app websocket to it. |
-|  [bindTo?](./tryorama.conductoroptions.bindto.md) |  | URL | <i>(Optional)</i> Network interface and port to bind to |
 |  [bootstrapUrl?](./tryorama.conductoroptions.bootstrapurl.md) |  | URL | <i>(Optional)</i> A bootstrap service URL for peers to discover each other |
-|  [hostOverride?](./tryorama.conductoroptions.hostoverride.md) |  | URL | <i>(Optional)</i> If you have port-forwarding set up or wish to apply a vanity domain name, you may need to override the local IP. |
 |  [networkType?](./tryorama.conductoroptions.networktype.md) |  | [NetworkType](./tryorama.networktype.md) | <i>(Optional)</i> The network type the conductor should use |
-|  [portOverride?](./tryorama.conductoroptions.portoverride.md) |  | number | <i>(Optional)</i> If you have port-forwarding set up, you may need to override the local port. |
-|  [proxy?](./tryorama.conductoroptions.proxy.md) |  | URL | <i>(Optional)</i> Run through an external proxy |
 |  [startup?](./tryorama.conductoroptions.startup.md) |  | boolean | <i>(Optional)</i> Start up conductor after creation. |
 |  [timeout?](./tryorama.conductoroptions.timeout.md) |  | number | <i>(Optional)</i> Timeout for requests to Admin and App API |
 

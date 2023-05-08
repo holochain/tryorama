@@ -5,14 +5,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+### Removed
+### Changed
+### Fixed
+
+## 2023-05-08: v0.13.0
+### Added
 - Utility function to wait until all players' integrated DhtOps are identical for a DNA.
 - **BREAKING CHANGE**: Local signal server for both local (required) and TryCP conductors (optional).
-### Removed
 ### Changed
 - `runScenario` catches and outputs error occurring during the test run.
 - **BREAKING CHANGE**: Upgrade to Holochain v0.2.0 and compatible JS client.
-
-### Fixed
 
 ## 2023-02-14: v0.11.2
 ### Changed

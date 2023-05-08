@@ -9,7 +9,7 @@ App API Responses.
 <b>Signature:</b>
 
 ```typescript
-export type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall | AppApiResponseCloneCellCreated | AppApiResponseCloneCellEnabled | AppApiResponseCloneCellDisabled;
+export type AppApiResponse = AppApiResponseAppInfo | AppApiResponseZomeCall | AppApiResponseCloneCellCreated | AppApiResponseCloneCellEnabled | AppApiResponseCloneCellDisabled | AppApiResponseNetworkInfo;
 ```
-<b>References:</b> [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md)<!-- -->, [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md)<!-- -->, [AppApiResponseCloneCellCreated](./tryorama.appapiresponseclonecellcreated.md)<!-- -->, [AppApiResponseCloneCellEnabled](./tryorama.appapiresponseclonecellenabled.md)<!-- -->, [AppApiResponseCloneCellDisabled](./tryorama.appapiresponseclonecelldisabled.md)
+<b>References:</b> [AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md)<!-- -->, [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md)<!-- -->, [AppApiResponseCloneCellCreated](./tryorama.appapiresponseclonecellcreated.md)<!-- -->, [AppApiResponseCloneCellEnabled](./tryorama.appapiresponseclonecellenabled.md)<!-- -->, [AppApiResponseCloneCellDisabled](./tryorama.appapiresponseclonecelldisabled.md)<!-- -->, [AppApiResponseNetworkInfo](./tryorama.appapiresponsenetworkinfo.md)
 

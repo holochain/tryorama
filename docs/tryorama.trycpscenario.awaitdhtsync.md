@@ -9,7 +9,7 @@ Await DhtOp integration of all players for a given cell.
 <b>Signature:</b>
 
 ```typescript
-awaitDhtSync(cellId: CellId): Promise<void>;
+awaitDhtSync(cellId: CellId, interval?: number, timeout?: number): Promise<void>;
 ```
 
 ## Parameters
@@ -17,6 +17,8 @@ awaitDhtSync(cellId: CellId): Promise<void>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  cellId | CellId | Cell id to await DHT sync for. |
+|  interval | number | <i>(Optional)</i> Interval to pause between comparisons (defaults to 50 ms). |
+|  timeout | number | <i>(Optional)</i> A timeout for the delay (optional). |
 
 <b>Returns:</b>
 

@@ -15,11 +15,12 @@ appWs(): {
         createCloneCell: (request: CreateCloneCellRequest) => Promise<import("@holochain/client").ClonedCell>;
         enableCloneCell: (request: EnableCloneCellRequest) => Promise<import("@holochain/client").ClonedCell>;
         disableCloneCell: (request: DisableCloneCellRequest) => Promise<void>;
+        networkInfo: (request: NetworkInfoRequest) => Promise<import("@holochain/client").NetworkInfoResponse>;
     };
 ```
 <b>Returns:</b>
 
-{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").AppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; }
+{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").AppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; networkInfo: (request: NetworkInfoRequest) =&gt; Promise&lt;import("@holochain/client").NetworkInfoResponse&gt;; }
 
 The App API web socket.
 

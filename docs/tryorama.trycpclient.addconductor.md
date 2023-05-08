@@ -9,7 +9,7 @@ Create and add a conductor to the client.
 <b>Signature:</b>
 
 ```typescript
-addConductor(signalHandler?: AppSignalCb, config?: string): Promise<TryCpConductor>;
+addConductor(signalHandler?: AppSignalCb, partialConfig?: string): Promise<TryCpConductor>;
 ```
 
 ## Parameters
@@ -17,7 +17,7 @@ addConductor(signalHandler?: AppSignalCb, config?: string): Promise<TryCpConduct
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  signalHandler | AppSignalCb | <i>(Optional)</i> |
-|  config | string | <i>(Optional)</i> Conductor configuration (optional). |
+|  partialConfig | string | <i>(Optional)</i> Conductor configuration (optional). |
 
 <b>Returns:</b>
 

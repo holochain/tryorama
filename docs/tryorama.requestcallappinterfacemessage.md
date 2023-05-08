@@ -9,7 +9,7 @@ All possible calls to the App API.
 <b>Signature:</b>
 
 ```typescript
-export type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo | RequestCreateCloneCell | RequestEnableCloneCell | RequestDisableCloneCell;
+export type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo | RequestCreateCloneCell | RequestEnableCloneCell | RequestDisableCloneCell | RequestNetworkInfo;
 ```
-<b>References:</b> [RequestCallZome](./tryorama.requestcallzome.md)<!-- -->, [RequestAppInfo](./tryorama.requestappinfo.md)<!-- -->, [RequestCreateCloneCell](./tryorama.requestcreateclonecell.md)<!-- -->, [RequestEnableCloneCell](./tryorama.requestenableclonecell.md)<!-- -->, [RequestDisableCloneCell](./tryorama.requestdisableclonecell.md)
+<b>References:</b> [RequestCallZome](./tryorama.requestcallzome.md)<!-- -->, [RequestAppInfo](./tryorama.requestappinfo.md)<!-- -->, [RequestCreateCloneCell](./tryorama.requestcreateclonecell.md)<!-- -->, [RequestEnableCloneCell](./tryorama.requestenableclonecell.md)<!-- -->, [RequestDisableCloneCell](./tryorama.requestdisableclonecell.md)<!-- -->, [RequestNetworkInfo](./tryorama.requestnetworkinfo.md)
 

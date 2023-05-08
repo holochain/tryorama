@@ -23,7 +23,7 @@ export declare class Conductor implements IConductor
 |  [attachAppInterface(request)](./tryorama.conductor.attachappinterface.md) |  | Attach a web socket to the App API. |
 |  [connectAppAgentInterface(appId)](./tryorama.conductor.connectappagentinterface.md) |  | Connect a web socket for a specific app to the App API. |
 |  [connectAppInterface()](./tryorama.conductor.connectappinterface.md) |  | Connect a web socket to the App API. |
-|  [create(options)](./tryorama.conductor.create.md) | <code>static</code> | Factory to create a conductor. |
+|  [create(signalingServerUrl, options)](./tryorama.conductor.create.md) | <code>static</code> | Factory to create a conductor. |
 |  [getTmpDirectory()](./tryorama.conductor.gettmpdirectory.md) |  | Get the path of the directory that contains all files and folders of the conductor. |
 |  [installAgentsApps(options)](./tryorama.conductor.installagentsapps.md) |  | Install an app for multiple agents into the conductor. |
 |  [installApp(appBundleSource, options)](./tryorama.conductor.installapp.md) |  | Install an application into the conductor. |

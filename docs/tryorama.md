@@ -46,11 +46,14 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AdminApiResponseAppUninstalled](./tryorama.adminapiresponseappuninstalled.md) |  |
 |  [AdminApiResponseCellIdsListed](./tryorama.adminapiresponsecellidslisted.md) |  |
 |  [AdminApiResponseCloneCellDeleted](./tryorama.adminapiresponseclonecelldeleted.md) |  |
+|  [AdminApiResponseCoordinatorsUpdated](./tryorama.adminapiresponsecoordinatorsupdated.md) |  |
 |  [AdminApiResponseDnaRegistered](./tryorama.adminapiresponsednaregistered.md) |  |
 |  [AdminApiResponseDnasDefinitionReturned](./tryorama.adminapiresponsednasdefinitionreturned.md) |  |
 |  [AdminApiResponseDnasListed](./tryorama.adminapiresponsednaslisted.md) |  |
 |  [AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md) |  |
+|  [AdminApiResponseNetworkStatsDumped](./tryorama.adminapiresponsenetworkstatsdumped.md) |  |
 |  [AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md) |  |
+|  [AdminApiResponseStorageInfo](./tryorama.adminapiresponsestorageinfo.md) |  |
 |  [AdminApiResponseZomeCallCapabilityGranted](./tryorama.adminapiresponsezomecallcapabilitygranted.md) |  |
 |  [AgentApp](./tryorama.agentapp.md) | Provides direct access to cells of an app and the agent key. |
 |  [ApiErrorResponse](./tryorama.apierrorresponse.md) | Error response from the Admin or App API. |
@@ -58,6 +61,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AppApiResponseCloneCellCreated](./tryorama.appapiresponseclonecellcreated.md) |  |
 |  [AppApiResponseCloneCellDisabled](./tryorama.appapiresponseclonecelldisabled.md) |  |
 |  [AppApiResponseCloneCellEnabled](./tryorama.appapiresponseclonecellenabled.md) |  |
+|  [AppApiResponseNetworkInfo](./tryorama.appapiresponsenetworkinfo.md) |  |
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
 |  [AppOptions](./tryorama.appoptions.md) | Optional arguments when installing a hApp. |
 |  [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |  |
@@ -80,6 +84,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [RequestDisconnectAppInterface](./tryorama.requestdisconnectappinterface.md) | Request to disconnect a connected app interface from a conductor. |
 |  [RequestDownloadDna](./tryorama.requestdownloaddna.md) | Request to download a DNA from a URL. |
 |  [RequestEnableCloneCell](./tryorama.requestenableclonecell.md) | Enable a disabled clone cell. |
+|  [RequestNetworkInfo](./tryorama.requestnetworkinfo.md) | Request network info. |
 |  [RequestReset](./tryorama.requestreset.md) | Request deletion of \*\*all\*\* conductors. |
 |  [RequestSaveDna](./tryorama.requestsavedna.md) | Request to save a DNA to the server's file system. |
 |  [RequestShutdown](./tryorama.requestshutdown.md) | Request shutdown of a conductor. |
@@ -102,7 +107,6 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [getZomeCaller](./tryorama.getzomecaller.md) | Get a shorthand function to call a cell's zome. |
 |  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |
 |  [runScenario](./tryorama.runscenario.md) | A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running. |
-|  [stopAllTryCpServers](./tryorama.stopalltrycpservers.md) | Shortcut function to stop all TryCP servers. |
 |  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) | Empty success response. |
 
 ## Type Aliases

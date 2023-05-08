@@ -9,5 +9,5 @@ The function to create a conductor. It starts a sandbox conductor via the Holoch
 <b>Signature:</b>
 
 ```typescript
-createConductor: (options?: ConductorOptions) => Promise<Conductor>
+createConductor: (signalingServerUrl: string, options?: ConductorOptions) => Promise<Conductor>
 ```
