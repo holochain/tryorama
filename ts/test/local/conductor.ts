@@ -11,10 +11,9 @@ import { readFileSync } from "node:fs";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import {
-  addAllAgentsToAllConductors,
   getZomeCaller,
-  stopLocalServices,
   runLocalServices,
+  stopLocalServices,
 } from "../../src/common.js";
 import {
   NetworkType,
