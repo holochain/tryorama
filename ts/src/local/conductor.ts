@@ -63,19 +63,19 @@ export interface ConductorOptions {
   attachAppInterface?: boolean;
 
   /**
-   * The network type the conductor should use
+   * The network type the conductor should use.
    *
    * @defaultValue quic
    */
   networkType?: NetworkType;
 
   /**
-   * A bootstrap service URL for peers to discover each other
+   * A bootstrap server URL for peers to discover each other.
    */
-  bootstrapUrl?: URL;
+  bootstrapServerUrl?: URL;
 
   /**
-   * Timeout for requests to Admin and App API
+   * Timeout for requests to Admin and App API.
    */
   timeout?: number;
 }
@@ -87,7 +87,7 @@ export interface ConductorOptions {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  "bootstrapUrl" | "networkType" | "timeout"
+  "bootstrapServerUrl" | "networkType" | "timeout"
 >;
 
 /**
@@ -99,11 +99,11 @@ export type CreateConductorOptions = Pick<
  * @public
  */
 export const createConductor = async (
-  signalingServerUrl: string,
+  signalingServerUrl: URL,
   options?: ConductorOptions
 ) => {
   const createConductorOptions: CreateConductorOptions = pick(options, [
-    "bootstrapUrl",
+    "bootstrapServerUrl",
     "networkType",
     "timeout",
   ]);
@@ -153,23 +153,23 @@ export class Conductor implements IConductor {
    * @returns A configured instance of a conductor, not yet running.
    */
   static async create(
-    signalingServerUrl: string,
+    signalingServerUrl: URL,
     options?: CreateConductorOptions
   ) {
     const networkType = options?.networkType ?? NetworkType.WebRtc;
-    if (options?.bootstrapUrl && networkType !== NetworkType.WebRtc) {
+    if (options?.bootstrapServerUrl && networkType !== NetworkType.WebRtc) {
       throw new Error(
         "error creating conductor: bootstrap service can only be set for webrtc network"
       );
     }
 
     const args = ["sandbox", "--piped", "create", "network"];
-    if (options?.bootstrapUrl) {
-      args.push("--bootstrap", options.bootstrapUrl.href);
+    if (options?.bootstrapServerUrl) {
+      args.push("--bootstrap", options.bootstrapServerUrl.href);
     }
     args.push(networkType);
     if (networkType === NetworkType.WebRtc) {
-      args.push(signalingServerUrl);
+      args.push(signalingServerUrl.href);
     }
     const createConductorProcess = spawn("hc", args);
     createConductorProcess.stdin.write(LAIR_PASSWORD);

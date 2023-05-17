@@ -2,8 +2,8 @@ import { AppBundleSource, CellId } from "@holochain/client";
 import { v4 as uuidv4 } from "uuid";
 import {
   addAllAgentsToAllConductors,
-  shutDownSignalingServer,
-  spawnSignalingServer,
+  stopLocalServices,
+  runLocalServices,
 } from "../common.js";
 import { AppOptions, IPlayer } from "../types.js";
 import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
@@ -39,8 +39,9 @@ export interface ScenarioOptions {
 export class Scenario {
   private timeout: number | undefined;
   networkSeed: string;
-  signalingServerProcess: ChildProcessWithoutNullStreams | undefined;
-  signalingServerUrl: string | undefined;
+  serviceProcess: ChildProcessWithoutNullStreams | undefined;
+  bootstrapServerUrl: URL | undefined;
+  signalingServerUrl: URL | undefined;
   conductors: Conductor[];
 
   /**
@@ -51,7 +52,8 @@ export class Scenario {
   constructor(options?: ScenarioOptions) {
     this.timeout = options?.timeout;
     this.networkSeed = uuidv4();
-    this.signalingServerProcess = undefined;
+    this.serviceProcess = undefined;
+    this.bootstrapServerUrl = undefined;
     this.signalingServerUrl = undefined;
     this.conductors = [];
   }
@@ -62,12 +64,13 @@ export class Scenario {
    * @returns The newly added conductor instance.
    */
   async addConductor() {
-    await this.ensureSignalingServer();
-    assert(this.signalingServerProcess);
+    await this.ensureLocalServices();
+    assert(this.serviceProcess);
     assert(this.signalingServerUrl);
     const conductor = await createConductor(this.signalingServerUrl, {
       timeout: this.timeout,
       attachAppInterface: false,
+      bootstrapServerUrl: this.bootstrapServerUrl,
     });
     this.conductors.push(conductor);
     return conductor;
@@ -84,7 +87,7 @@ export class Scenario {
     appBundleSource: AppBundleSource,
     options?: AppOptions
   ): Promise<Player> {
-    await this.ensureSignalingServer();
+    await this.ensureLocalServices();
     const conductor = await this.addConductor();
     options = {
       ...options,
@@ -109,7 +112,7 @@ export class Scenario {
       options?: AppOptions;
     }>
   ) {
-    await this.ensureSignalingServer();
+    await this.ensureLocalServices();
     const players = await Promise.all(
       playersApps.map((playerApp) =>
         this.addPlayerWithApp(playerApp.appBundleSource, playerApp.options)
@@ -146,8 +149,8 @@ export class Scenario {
    */
   async shutDown() {
     await Promise.all(this.conductors.map((conductor) => conductor.shutDown()));
-    if (this.signalingServerProcess) {
-      await shutDownSignalingServer(this.signalingServerProcess);
+    if (this.serviceProcess) {
+      await stopLocalServices(this.serviceProcess);
     }
   }
 
@@ -158,14 +161,18 @@ export class Scenario {
     await this.shutDown();
     await cleanAllConductors();
     this.conductors = [];
-    this.signalingServerProcess = undefined;
+    this.serviceProcess = undefined;
+    this.bootstrapServerUrl = undefined;
     this.signalingServerUrl = undefined;
   }
 
-  private async ensureSignalingServer() {
-    if (!this.signalingServerProcess) {
-      [this.signalingServerProcess, this.signalingServerUrl] =
-        await spawnSignalingServer();
+  private async ensureLocalServices() {
+    if (!this.serviceProcess) {
+      ({
+        servicesProcess: this.serviceProcess,
+        bootstrapServerUrl: this.bootstrapServerUrl,
+        signalingServerUrl: this.signalingServerUrl,
+      } = await runLocalServices());
     }
   }
 }
