@@ -9,14 +9,14 @@ Factory to create a conductor.
 <b>Signature:</b>
 
 ```typescript
-static create(signalingServerUrl: string, options?: CreateConductorOptions): Promise<Conductor>;
+static create(signalingServerUrl: URL, options?: CreateConductorOptions): Promise<Conductor>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  signalingServerUrl | string |  |
+|  signalingServerUrl | URL |  |
 |  options | [CreateConductorOptions](./tryorama.createconductoroptions.md) | <i>(Optional)</i> |
 
 <b>Returns:</b>

@@ -9,5 +9,5 @@ The default partial config for a TryCP conductor.
 <b>Signature:</b>
 
 ```typescript
-DEFAULT_PARTIAL_PLAYER_CONFIG = "signing_service_uri: ~\nencryption_service_uri: ~\ndecryption_service_uri: ~\ndpki: ~\nnetwork:\n  network_type: \"quic_mdns\" \n  transport_pool:\n    - type: webrtc\n      signal_url: "
+DEFAULT_PARTIAL_PLAYER_CONFIG: string
 ```

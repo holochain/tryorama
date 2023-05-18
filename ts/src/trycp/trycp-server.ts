@@ -6,7 +6,17 @@ const serverError = new RegExp(
   /(internal_error|Error serving client from address)/i
 );
 
+/**
+ * Default TryCP server host address.
+ *
+ * @public
+ */
 export const TRYCP_SERVER_HOST = "0.0.0.0";
+/**
+ * Default TryCP server port.
+ *
+ * @public
+ */
 export const TRYCP_SERVER_PORT = 9000;
 
 /**

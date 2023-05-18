@@ -4,7 +4,7 @@
 
 ## ConductorOptions.networkType property
 
-The network type the conductor should use
+The network type the conductor should use.
 
 <b>Signature:</b>
 

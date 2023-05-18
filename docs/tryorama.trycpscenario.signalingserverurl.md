@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-signalingServerUrl: string | undefined;
+signalingServerUrl: URL | undefined;
 ```

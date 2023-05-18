@@ -24,10 +24,11 @@ export declare class TryCpScenario
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
+|  [bootstrapServerUrl](./tryorama.trycpscenario.bootstrapserverurl.md) |  | URL \| undefined |  |
 |  [clients](./tryorama.trycpscenario.clients.md) |  | [TryCpClient](./tryorama.trycpclient.md)<!-- -->\[\] |  |
 |  [network\_seed](./tryorama.trycpscenario.network_seed.md) |  | string |  |
-|  [signalingServerProcess](./tryorama.trycpscenario.signalingserverprocess.md) |  | ChildProcessWithoutNullStreams \| undefined |  |
-|  [signalingServerUrl](./tryorama.trycpscenario.signalingserverurl.md) |  | string \| undefined |  |
+|  [servicesProcess](./tryorama.trycpscenario.servicesprocess.md) |  | ChildProcessWithoutNullStreams \| undefined |  |
+|  [signalingServerUrl](./tryorama.trycpscenario.signalingserverurl.md) |  | URL \| undefined |  |
 
 ## Methods
 

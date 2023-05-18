@@ -18,8 +18,9 @@ export declare class TryCpClient
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
+|  [bootstrapServerUrl](./tryorama.trycpclient.bootstrapserverurl.md) |  | URL \| undefined |  |
 |  [conductors](./tryorama.trycpclient.conductors.md) |  | [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->\[\] |  |
-|  [signalingServerUrl](./tryorama.trycpclient.signalingserverurl.md) |  | string \| undefined |  |
+|  [signalingServerUrl](./tryorama.trycpclient.signalingserverurl.md) |  | URL \| undefined |  |
 
 ## Methods
 
