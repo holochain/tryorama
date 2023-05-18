@@ -239,7 +239,7 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   await tryCpServer.stop();
 });
 
-test.only("TryCP Scenario - conductor maintains data after shutdown and restart", async (t) => {
+test("TryCP Scenario - conductor maintains data after shutdown and restart", async (t) => {
   const tryCpServer = await TryCpServer.start();
 
   const scenario = new TryCpScenario();
