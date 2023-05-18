@@ -170,7 +170,7 @@ export class TryCpConductor implements IConductor {
       ).replace(
         SIGNALING_SERVER_PLACEHOLDER,
         (this.tryCpClient.signalingServerUrl || HOLO_SIGNALING_SERVER).href
-    );
+      );
     }
     const response = await this.tryCpClient.call({
       type: "configure_player",
