@@ -63,7 +63,10 @@ import {
 import { deserializeZomeResponsePayload } from "../util.js";
 
 const logger = makeLogger("TryCP conductor");
-const HOLO_TEST_SIGNALING_SERVER = "wss://signal.holotest.net";
+const HOLO_SIGNALING_SERVER = new URL("wss://signal.holo.host");
+const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
+const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
+const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -75,10 +78,11 @@ encryption_service_uri: ~
 decryption_service_uri: ~
 dpki: ~
 network:
-  network_type: "quic_mdns" 
+  network_type: "quic_bootstrap"
+  bootstrap_service: ${BOOTSTRAP_SERVER_PLACEHOLDER}
   transport_pool:
     - type: webrtc
-      signal_url: `;
+      signal_url: ${SIGNALING_SERVER_PLACEHOLDER}`;
 
 /**
  * @public
@@ -159,10 +163,15 @@ export class TryCpConductor implements IConductor {
    * @returns An empty success response.
    */
   async configure(partialConfig?: string) {
-    const defaultPartialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.concat(
-      this.tryCpClient.signalingServerUrl || HOLO_TEST_SIGNALING_SERVER
+    if (!partialConfig) {
+      partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
+        BOOTSTRAP_SERVER_PLACEHOLDER,
+        (this.tryCpClient.bootstrapServerUrl || HOLO_BOOTSTRAP_SERVEr).href
+      ).replace(
+        SIGNALING_SERVER_PLACEHOLDER,
+        (this.tryCpClient.signalingServerUrl || HOLO_SIGNALING_SERVER).href
     );
-    partialConfig = partialConfig || defaultPartialConfig;
+    }
     const response = await this.tryCpClient.call({
       type: "configure_player",
       id: this.id,

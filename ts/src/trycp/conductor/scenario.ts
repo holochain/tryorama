@@ -9,7 +9,7 @@ import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import {
   addAllAgentsToAllConductors as shareAllAgents,
-  shutDownSignalingServer,
+  stopLocalServices,
 } from "../../common.js";
 import { AppOptions, IPlayer } from "../../types.js";
 import { awaitDhtSync } from "../../util.js";
@@ -41,8 +41,7 @@ export interface ClientsPlayersOptions {
   numberOfConductorsPerClient?: number;
 
   /**
-   * Number of agents per conductor. Defaults to 1. Requires `dnas` to be
-   * specified.
+   * Number of agents per conductor. Requires `app` to be specified.
    */
   numberOfAgentsPerConductor?: number;
 
@@ -79,8 +78,9 @@ export interface TryCpPlayer extends IPlayer {
  */
 export class TryCpScenario {
   network_seed: string;
-  signalingServerProcess: ChildProcessWithoutNullStreams | undefined;
-  signalingServerUrl: string | undefined;
+  servicesProcess: ChildProcessWithoutNullStreams | undefined;
+  bootstrapServerUrl: URL | undefined;
+  signalingServerUrl: URL | undefined;
   clients: TryCpClient[];
 
   constructor() {
@@ -97,6 +97,7 @@ export class TryCpScenario {
    */
   async addClient(serverUrl: URL, timeout?: number) {
     const client = await TryCpClient.create(serverUrl, timeout);
+    client.bootstrapServerUrl = this.bootstrapServerUrl;
     client.signalingServerUrl = this.signalingServerUrl;
     this.clients.push(client);
     return client;
@@ -131,13 +132,11 @@ export class TryCpScenario {
           options?.signalHandler,
           options?.partialConfig
         );
-        const numberOfAgentsPerConductor =
-          options?.numberOfAgentsPerConductor ?? 1;
 
         if (options?.numberOfAgentsPerConductor) {
           // install agents apps for each conductor
           if (options?.app === undefined) {
-            throw new Error("no apps specified to be installed for agents");
+            throw new Error("no app specified to be installed for agents");
           }
 
           // TS fails to infer that options.apps cannot be `undefined` here
@@ -150,9 +149,9 @@ export class TryCpScenario {
               app,
             }));
           } else {
-            agentsApps = [...Array(numberOfAgentsPerConductor)].map(() => ({
-              app,
-            }));
+            agentsApps = [...Array(options.numberOfAgentsPerConductor)].map(
+              () => ({ app })
+            );
           }
 
           const installedAgentsHapps = await conductor.installAgentsApps({
@@ -250,8 +249,8 @@ export class TryCpScenario {
     await Promise.all(
       this.clients.map((client) => client.shutDownConductors())
     );
-    if (this.signalingServerProcess) {
-      await shutDownSignalingServer(this.signalingServerProcess);
+    if (this.servicesProcess) {
+      await stopLocalServices(this.servicesProcess);
     }
   }
 
@@ -261,11 +260,12 @@ export class TryCpScenario {
    */
   async cleanUp() {
     await Promise.all(this.clients.map((client) => client.cleanUp()));
-    if (this.signalingServerProcess) {
-      await shutDownSignalingServer(this.signalingServerProcess);
+    if (this.servicesProcess) {
+      await stopLocalServices(this.servicesProcess);
     }
     this.clients = [];
-    this.signalingServerProcess = undefined;
+    this.servicesProcess = undefined;
+    this.bootstrapServerUrl = undefined;
     this.signalingServerUrl = undefined;
   }
 }
