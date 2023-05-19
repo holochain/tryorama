@@ -30,14 +30,14 @@ jobs:
         with:
           name: holochain-ci
 
-      - name: Cache TryCP server build
-        uses: actions/cache@v3
+      - name: Restore TryCP server build
+        uses: actions/cache/restore@v3
         with:
           path: crates/trycp_server/target
           key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
-      - name: Cache test zome build
-        uses: actions/cache@v3
+      - name: Restore test zome build
+        uses: actions/cache/restore@v3
         with:
           path: |
             .cargo
