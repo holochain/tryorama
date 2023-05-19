@@ -32,21 +32,17 @@ jobs:
 
       - name: Cache TryCP server build
         uses: actions/cache@v3
-        env:
-          cache-name: trycp-server
         with:
           path: crates/trycp_server/target
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+          key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
       - name: Cache test zome build
         uses: actions/cache@v3
-        env:
-          cache-name: test-zomes
         with:
           path: |
             .cargo
             target
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-build-test-zomes-${{ hashFiles('Cargo.lock') }}
 
       - name: Build Nix packages
         run: nix develop -c $SHELL -c "echo Nix packages built"
@@ -58,7 +54,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: crates/trycp_server/target
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+          key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
       - name: Build test fixture
         run: nix develop -c $SHELL -c "./build-fixture.sh"
@@ -69,7 +65,7 @@ jobs:
           path: |
             .cargo
             target
-          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-build-test-zomes-${{ hashFiles('Cargo.lock') }}
 
       - name: Install JS packages
         run: nix develop -c $SHELL -c "npm ci"
