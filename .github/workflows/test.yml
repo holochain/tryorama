@@ -32,7 +32,6 @@ jobs:
 
       - name: Cache TryCP server build
         uses: actions/cache@v3
-        if: always() # cache even if job fails
         env:
           cache-name: trycp-server
         with:
@@ -41,7 +40,6 @@ jobs:
 
       - name: Cache test zome build
         uses: actions/cache@v3
-        if: always() # cache even if job fails
         env:
           cache-name: test-zomes
         with:
@@ -56,8 +54,22 @@ jobs:
       - name: Build TryCP server
         run: nix develop -c $SHELL -c "./build-trycp.sh"
 
+      - name: Save TryCP build to cache
+        uses: actions/cache/save@v3
+        with:
+          path: crates/trycp_server/target
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+
       - name: Build test fixture
         run: nix develop -c $SHELL -c "./build-fixture.sh"
+
+      - name: Save test fixture build to cache
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            .cargo
+            target
+          key: ${{ runner.os }}-build-${{ env.cache-name }}-${{ hashFiles('Cargo.lock') }}
 
       - name: Install JS packages
         run: nix develop -c $SHELL -c "npm ci"
