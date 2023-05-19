@@ -25,7 +25,10 @@ const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL - ADDR: ";
  */
 export const runLocalServices = async () => {
   const logger = makeLogger("Local services");
-  const servicesProcess = spawn("hc", ["run-local-services"]);
+  const servicesProcess = spawn("hc", ["run-local-services"], {
+    detached: true, // create a process group; without this option, killing
+    // the process doesn't kill the local services
+  });
   const startUpComplete = new Promise<{
     servicesProcess: ChildProcessWithoutNullStreams;
     bootstrapServerUrl: URL;
