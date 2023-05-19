@@ -81,7 +81,7 @@ export const stopLocalServices = (
       resolve(code);
     });
     assert(localServicesProcess.pid);
-    process.kill(localServicesProcess.pid);
+    process.kill(-localServicesProcess.pid);
   });
   return serverShutdown;
 };
