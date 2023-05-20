@@ -163,7 +163,13 @@ export class Conductor implements IConductor {
       );
     }
 
-    const args = ["sandbox", "--piped", "create", "network"];
+    const args = [
+      "sandbox",
+      "--piped",
+      "create",
+      "--in-process-lair",
+      "network",
+    ];
     if (options?.bootstrapServerUrl) {
       args.push("--bootstrap", options.bootstrapServerUrl.href);
     }
@@ -211,11 +217,11 @@ export class Conductor implements IConductor {
 
     const runConductorProcess = spawn(
       "hc",
-      ["sandbox", "--piped", "run", "-e", this.conductorDir],
-      {
-        detached: true, // create a process group; without this option, killing
-        // the process doesn't kill the conductor
-      }
+      ["sandbox", "--piped", "run", "-e", this.conductorDir]
+      // {
+      //   detached: true, // create a process group; without this option, killing
+      //   // the process doesn't kill the conductor
+      // }
     );
     runConductorProcess.stdin.write(LAIR_PASSWORD);
     runConductorProcess.stdin.end();
@@ -280,8 +286,9 @@ export class Conductor implements IConductor {
         this.conductorProcess = undefined;
         resolve(code);
       });
+      // this.conductorProcess.kill();
       assert(this.conductorProcess.pid);
-      process.kill(-this.conductorProcess.pid);
+      process.kill(this.conductorProcess.pid);
     });
     return conductorShutDown;
   }
