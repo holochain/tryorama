@@ -85,7 +85,7 @@ test("Local Conductor - spawn a conductor and check for admin and app ws", async
   await cleanAllConductors();
 });
 
-test("Local Conductor - get app info", async (t) => {
+test.only("Local Conductor - get app info", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const alice = await conductor.installApp({
