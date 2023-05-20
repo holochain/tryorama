@@ -76,7 +76,7 @@ export const stopLocalServices = (
       localServicesProcess?.stderr.removeAllListeners();
       resolve(code);
     });
-    localServicesProcess.kill();
+    localServicesProcess.kill("SIGINT");
   });
   return serverShutdown;
 };
