@@ -286,9 +286,9 @@ export class Conductor implements IConductor {
         this.conductorProcess = undefined;
         resolve(code);
       });
-      // this.conductorProcess.kill();
-      assert(this.conductorProcess.pid);
-      process.kill(this.conductorProcess.pid);
+      this.conductorProcess.kill("SIGINT");
+      // assert(this.conductorProcess.pid);
+      // process.kill(this.conductorProcess.pid);
     });
     return conductorShutDown;
   }
