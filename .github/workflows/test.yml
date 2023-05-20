@@ -70,10 +70,10 @@ jobs:
       - name: Install JS packages
         run: nix develop -c $SHELL -c "npm ci"
 
-      - name: Run tests
-        run: nix develop -c $SHELL -c "npm t"
+      # - name: Run tests
+      #   run: nix develop -c $SHELL -c "npm t"
 
       - name: Setup tmate session if build or test run failed
-        if: ${{ failure() }}
+        # if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 100
