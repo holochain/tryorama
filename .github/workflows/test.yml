@@ -33,47 +33,47 @@ jobs:
       - name: Build Nix packages
         run: nix develop -c $SHELL -c "echo Nix packages built"
 
-      # - name: Restore TryCP server build
-      #   uses: actions/cache/restore@v3
-      #   with:
-      #     path: crates/trycp_server/target
-      #     key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+      - name: Restore TryCP server build
+        uses: actions/cache/restore@v3
+        with:
+          path: crates/trycp_server/target
+          key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
-      # - name: Build TryCP server
-      #   run: nix develop -c $SHELL -c "./build-trycp.sh"
+      - name: Build TryCP server
+        run: nix develop -c $SHELL -c "./build-trycp.sh"
 
-      # - name: Save TryCP build to cache
-      #   uses: actions/cache/save@v3
-      #   with:
-      #     path: crates/trycp_server/target
-      #     key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+      - name: Save TryCP build to cache
+        uses: actions/cache/save@v3
+        with:
+          path: crates/trycp_server/target
+          key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
-      # - name: Restore test zome build
-      #   uses: actions/cache/restore@v3
-      #   with:
-      #     path: |
-      #       .cargo
-      #       target
-      #     key: ${{ runner.os }}-build-test-zomes-${{ hashFiles('Cargo.lock') }}
+      - name: Restore test zome build
+        uses: actions/cache/restore@v3
+        with:
+          path: |
+            .cargo
+            target
+          key: ${{ runner.os }}-build-test-zomes-${{ hashFiles('Cargo.lock') }}
 
-      # - name: Build test zomes
-      #   run: nix develop -c $SHELL -c "./build-fixture.sh"
+      - name: Build test zomes
+        run: nix develop -c $SHELL -c "./build-fixture.sh"
 
-      # - name: Save test zome build to cache
-      #   uses: actions/cache/save@v3
-      #   with:
-      #     path: |
-      #       .cargo
-      #       target
-      #     key: ${{ runner.os }}-build-test-zomes-${{ hashFiles('Cargo.lock') }}
+      - name: Save test zome build to cache
+        uses: actions/cache/save@v3
+        with:
+          path: |
+            .cargo
+            target
+          key: ${{ runner.os }}-build-test-zomes-${{ hashFiles('Cargo.lock') }}
 
       - name: Install JS packages
         run: nix develop -c $SHELL -c "npm ci"
 
-      # - name: Run tests
-      #   run: nix develop -c $SHELL -c "npm t"
+      - name: Run tests
+        run: nix develop -c $SHELL -c "npm t"
 
       - name: Setup tmate session if build or test run failed
-        # if: ${{ failure() }}
+        if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
         timeout-minutes: 100
