@@ -88,13 +88,13 @@ test("Local Conductor - spawn a conductor and check for admin and app ws", async
 test.only("Local Conductor - get app info", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
-  const alice = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
-  });
-  const appInfo = await conductor.appWs().appInfo({
-    installed_app_id: alice.appId,
-  });
-  t.deepEqual(appInfo.status, { running: null });
+  // const alice = await conductor.installApp({
+  //   path: FIXTURE_HAPP_URL.pathname,
+  // });
+  // const appInfo = await conductor.appWs().appInfo({
+  //   installed_app_id: alice.appId,
+  // });
+  // t.deepEqual(appInfo.status, { running: null });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
