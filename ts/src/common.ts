@@ -48,6 +48,7 @@ export const runLocalServices = async () => {
             .split("\n")[0]
         );
         logger.verbose(`signaling server url: ${signalingServerUrl}`);
+        logger.info("promise resolved");
         resolve({ servicesProcess, bootstrapServerUrl, signalingServerUrl });
       } else {
         logger.debug(data.toString());
@@ -76,7 +77,7 @@ export const stopLocalServices = (
       localServicesProcess?.stderr.removeAllListeners();
       resolve(code);
     });
-    localServicesProcess.kill();
+    localServicesProcess.kill("SIGINT");
   });
   return serverShutdown;
 };
