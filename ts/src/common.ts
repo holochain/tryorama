@@ -32,31 +32,23 @@ export const runLocalServices = async () => {
   }>((resolve) => {
     let bootstrapServerUrl: URL;
     servicesProcess.stdout.on("data", (data: Buffer) => {
-      if (data.includes(BOOTSTRAP_SERVER_STARTUP_STRING)) {
+      const processData = data.toString();
+      logger.debug(processData);
+      if (processData.includes(BOOTSTRAP_SERVER_STARTUP_STRING)) {
         bootstrapServerUrl = new URL(
-          data
-            .toString()
-            .split(BOOTSTRAP_SERVER_STARTUP_STRING)[1]
-            .split("\n")[0]
+          processData.split(BOOTSTRAP_SERVER_STARTUP_STRING)[1].split("\n")[0]
         );
         logger.verbose(`bootstrap server url: ${bootstrapServerUrl}`);
-      } else if (data.includes(SIGNALING_SERVER_STARTUP_STRING)) {
+      }
+      if (processData.includes(SIGNALING_SERVER_STARTUP_STRING)) {
         const signalingServerUrl = new URL(
-          data
-            .toString()
-            .split(SIGNALING_SERVER_STARTUP_STRING)[1]
-            .split("\n")[0]
+          processData.split(SIGNALING_SERVER_STARTUP_STRING)[1].split("\n")[0]
         );
         logger.verbose(`signaling server url: ${signalingServerUrl}`);
-        logger.info("promise resolved");
         resolve({ servicesProcess, bootstrapServerUrl, signalingServerUrl });
-      } else {
-        logger.debug(data.toString());
       }
     });
-    servicesProcess.stderr.on("data", (data: Buffer) =>
-      logger.error(data.toString())
-    );
+    servicesProcess.stderr.on("data", (data) => logger.error(data.toString()));
   });
   return startUpComplete;
 };
@@ -77,7 +69,7 @@ export const stopLocalServices = (
       localServicesProcess?.stderr.removeAllListeners();
       resolve(code);
     });
-    localServicesProcess.kill("SIGINT");
+    localServicesProcess.kill();
   });
   return serverShutdown;
 };
