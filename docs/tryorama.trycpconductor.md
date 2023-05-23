@@ -23,8 +23,6 @@ export declare class TryCpConductor implements IConductor
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [\_appAgentWs](./tryorama.trycpconductor._appagentws.md) |  | [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md) \| undefined |  |
-|  [\_appWs](./tryorama.trycpconductor._appws.md) |  | [IAppWebsocket](./tryorama.iappwebsocket.md) \| undefined |  |
 |  [id](./tryorama.trycpconductor.id.md) | <code>readonly</code> | string |  |
 |  [tryCpClient](./tryorama.trycpconductor.trycpclient.md) | <code>readonly</code> | [TryCpClient](./tryorama.trycpclient.md) |  |
 
