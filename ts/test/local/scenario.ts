@@ -112,8 +112,6 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
     { appBundleSource },
   ]);
 
-  await scenario.shareAllAgents();
-
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
     zome_name: "coordinator",
@@ -142,8 +140,6 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   ]);
   const aliceCaller = getZomeCaller(alice.cells[0], "coordinator");
   const bobCaller = getZomeCaller(bob.cells[0], "coordinator");
-
-  await scenario.shareAllAgents();
 
   const content = "Before shutdown";
   const createEntryHash = await aliceCaller<EntryHash>("create", content);
@@ -225,8 +221,6 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
     { appBundleSource },
     { appBundleSource },
   ]);
-
-  await scenario.shareAllAgents();
 
   // Alice creates 10 entries
   let lastCreatedHash;

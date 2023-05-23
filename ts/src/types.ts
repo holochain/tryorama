@@ -1,6 +1,7 @@
 import type {
   AdminWebsocket,
   AgentPubKey,
+  AppAgentWebsocket,
   AppBundleSource,
   AppSignalCb,
   AppWebsocket,
@@ -141,6 +142,28 @@ export interface Dna {
   properties?: DnaProperties;
   roleName?: string;
 }
+
+/**
+ * AppWebsocket interface for local and TryCP conductors.
+ *
+ * @public
+ */
+export type IAppWebsocket = Pick<
+  AppWebsocket,
+  | "callZome"
+  | "appInfo"
+  | "createCloneCell"
+  | "enableCloneCell"
+  | "disableCloneCell"
+  | "networkInfo"
+>;
+
+/**
+ * AppAgentWebsocket interface for local and TryCP conductors.
+ *
+ * @public
+ */
+export type IAppAgentWebsocket = Pick<AppAgentWebsocket, "callZome">;
 
 /**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and

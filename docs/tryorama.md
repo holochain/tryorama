@@ -107,6 +107,8 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [getZomeCaller](./tryorama.getzomecaller.md) | Get a shorthand function to call a cell's zome. |
 |  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |
 |  [runScenario](./tryorama.runscenario.md) | A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running. |
+|  [TRYCP\_SERVER\_HOST](./tryorama.trycp_server_host.md) | Default TryCP server host address. |
+|  [TRYCP\_SERVER\_PORT](./tryorama.trycp_server_port.md) | Default TryCP server port. |
 |  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) | Empty success response. |
 
 ## Type Aliases
@@ -121,6 +123,8 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |
 |  [ConductorId](./tryorama.conductorid.md) |  |
 |  [CreateConductorOptions](./tryorama.createconductoroptions.md) | Options for using the conductor factory. |
+|  [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md) | AppAgentWebsocket interface for local and TryCP conductors. |
+|  [IAppWebsocket](./tryorama.iappwebsocket.md) | AppWebsocket interface for local and TryCP conductors. |
 |  [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) | All possible calls to the App API. |
 |  [TryCpApiResponse](./tryorama.trycpapiresponse.md) | Possible responses from the Admin and App APIs. |
 |  [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | Log level for a TryCP conductor. |

@@ -5,8 +5,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- **BREAKING CHANGE**: Command to start local signaling server has changed to spawn local bootstrap server too. Both local and TryCP conductors have been adapted accordingly.
 ### Removed
 ### Changed
+- Upgrade to compatibility with Holochain v0.2.1-beta-dev.0.
 ### Fixed
 
 ## 2023-05-08: v0.13.0

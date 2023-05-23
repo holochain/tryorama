@@ -46,9 +46,10 @@ export class TryCpClient {
   };
   private signalHandlers: Record<number, AppSignalCb | undefined>;
 
-  // can be set in the odd case that another signaling server than the Holo
-  // test server should be used
-  signalingServerUrl: string | undefined;
+  // can be set in local test cases
+  bootstrapServerUrl: URL | undefined;
+  // can be set in local test cases
+  signalingServerUrl: URL | undefined;
   conductors: TryCpConductor[];
 
   private constructor(serverUrl: URL, timeout = 60000) {
@@ -62,7 +63,6 @@ export class TryCpClient {
    * Create a client connection to a running TryCP server.
    *
    * @param serverUrl - The URL of the TryCP server.
-   * @param signalingServerUrl - The URL of the signaling server.
    * @returns The created client connection.
    */
   static async create(serverUrl: URL, timeout?: number) {

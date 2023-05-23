@@ -16,8 +16,8 @@ export interface ConductorOptions
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [attachAppInterface?](./tryorama.conductoroptions.attachappinterface.md) |  | boolean | <i>(Optional)</i> Attach an app interface to the conductor and connect an app websocket to it. |
-|  [bootstrapUrl?](./tryorama.conductoroptions.bootstrapurl.md) |  | URL | <i>(Optional)</i> A bootstrap service URL for peers to discover each other |
-|  [networkType?](./tryorama.conductoroptions.networktype.md) |  | [NetworkType](./tryorama.networktype.md) | <i>(Optional)</i> The network type the conductor should use |
+|  [bootstrapServerUrl?](./tryorama.conductoroptions.bootstrapserverurl.md) |  | URL | <i>(Optional)</i> A bootstrap server URL for peers to discover each other. |
+|  [networkType?](./tryorama.conductoroptions.networktype.md) |  | [NetworkType](./tryorama.networktype.md) | <i>(Optional)</i> The network type the conductor should use. |
 |  [startup?](./tryorama.conductoroptions.startup.md) |  | boolean | <i>(Optional)</i> Start up conductor after creation. |
-|  [timeout?](./tryorama.conductoroptions.timeout.md) |  | number | <i>(Optional)</i> Timeout for requests to Admin and App API |
+|  [timeout?](./tryorama.conductoroptions.timeout.md) |  | number | <i>(Optional)</i> Timeout for requests to Admin and App API. |
 

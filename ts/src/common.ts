@@ -8,7 +8,6 @@ import {
   RoleName,
 } from "@holochain/client";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
-import assert from "node:assert";
 import { makeLogger } from "./logger.js";
 import {
   AgentApp,
@@ -17,51 +16,60 @@ import {
   IConductor,
 } from "./types.js";
 
-const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL SRV - ADDR: ";
+const BOOTSTRAP_SERVER_STARTUP_STRING = "HC BOOTSTRAP - ADDR: ";
+const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL - ADDR: ";
 
 /**
  * Spawn a signalling server to enable connections between conductors.
  */
-export const spawnSignalingServer = async () => {
-  const logger = makeLogger("Signalling server");
-  const serverProcess = spawn("hc", ["signal-srv"]);
-  const startUpComplete = new Promise<[ChildProcessWithoutNullStreams, string]>(
-    (resolve) => {
-      serverProcess.stdout.on("data", (data: Buffer) => {
-        if (data.includes(SIGNALING_SERVER_STARTUP_STRING)) {
-          const serverUrl = data
-            .toString()
-            .split(SIGNALING_SERVER_STARTUP_STRING)[1]
-            .split("\n")[0];
-          logger.debug(`server url: ${serverUrl}`);
-          resolve([serverProcess, serverUrl]);
-        } else {
-          logger.debug(data.toString());
-        }
-      });
-    }
-  );
+export const runLocalServices = async () => {
+  const logger = makeLogger("Local services");
+  const servicesProcess = spawn("hc", ["run-local-services"]);
+  const startUpComplete = new Promise<{
+    servicesProcess: ChildProcessWithoutNullStreams;
+    bootstrapServerUrl: URL;
+    signalingServerUrl: URL;
+  }>((resolve) => {
+    let bootstrapServerUrl: URL;
+    servicesProcess.stdout.on("data", (data: Buffer) => {
+      const processData = data.toString();
+      logger.debug(processData);
+      if (processData.includes(BOOTSTRAP_SERVER_STARTUP_STRING)) {
+        bootstrapServerUrl = new URL(
+          processData.split(BOOTSTRAP_SERVER_STARTUP_STRING)[1].split("\n")[0]
+        );
+        logger.verbose(`bootstrap server url: ${bootstrapServerUrl}`);
+      }
+      if (processData.includes(SIGNALING_SERVER_STARTUP_STRING)) {
+        const signalingServerUrl = new URL(
+          processData.split(SIGNALING_SERVER_STARTUP_STRING)[1].split("\n")[0]
+        );
+        logger.verbose(`signaling server url: ${signalingServerUrl}`);
+        resolve({ servicesProcess, bootstrapServerUrl, signalingServerUrl });
+      }
+    });
+    servicesProcess.stderr.on("data", (data) => logger.error(data.toString()));
+  });
   return startUpComplete;
 };
 
 /**
  * Shutdown signalling server process.
  */
-export const shutDownSignalingServer = (
-  serverProcess: ChildProcessWithoutNullStreams
+export const stopLocalServices = (
+  localServicesProcess: ChildProcessWithoutNullStreams
 ) => {
-  if (serverProcess.pid === undefined) {
+  if (localServicesProcess.pid === undefined) {
     return null;
   }
   const serverShutdown = new Promise<number | null>((resolve) => {
-    serverProcess.on("exit", (code) => {
-      serverProcess?.removeAllListeners();
-      serverProcess?.stdout.removeAllListeners();
-      serverProcess?.stderr.removeAllListeners();
+    localServicesProcess.on("exit", (code) => {
+      localServicesProcess?.removeAllListeners();
+      localServicesProcess?.stdout.removeAllListeners();
+      localServicesProcess?.stderr.removeAllListeners();
       resolve(code);
     });
-    assert(serverProcess.pid);
-    process.kill(serverProcess.pid);
+    localServicesProcess.kill();
   });
   return serverShutdown;
 };

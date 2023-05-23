@@ -11,11 +11,7 @@ import assert from "node:assert";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
-import {
-  addAllAgentsToAllConductors,
-  shutDownSignalingServer,
-  spawnSignalingServer,
-} from "../../src/common.js";
+import { runLocalServices, stopLocalServices } from "../../src/common.js";
 import { TryCpClient } from "../../src/index.js";
 import { createTryCpConductor } from "../../src/trycp/conductor/index.js";
 import {
@@ -32,8 +28,7 @@ const ROLE_NAME = "test";
 
 test("TryCP Conductor - stop and restart a conductor", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -51,15 +46,14 @@ test("TryCP Conductor - stop and restart a conductor", async (t) => {
   const agentPubKeyResponse2 = await conductor.adminWs().generateAgentPubKey();
   t.ok(agentPubKeyResponse2, "agent pub key generated after restart");
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -77,15 +71,14 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
     "alice's agent pub key matches provided key"
   );
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - install hApp bundle and access cell by role name", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -94,15 +87,14 @@ test("TryCP Conductor - install hApp bundle and access cell by role name", async
   });
   t.ok(aliceHapp.namedCells.get(ROLE_NAME), "named cell can be accessed");
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -132,15 +124,14 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
     "read entry content matches created entry content"
   );
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - get a DNA definition", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -150,15 +141,14 @@ test("TryCP Conductor - get a DNA definition", async (t) => {
   const dnaDefinition = await conductor.adminWs().getDnaDefinition(dnaHash);
   t.equal(dnaDefinition.name, "crud-dna", "dna name matches name in manifest");
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - dump network stats", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -167,15 +157,14 @@ test("TryCP Conductor - dump network stats", async (t) => {
   t.ok(typeof networkStats === "string", "network stats is a string");
   t.ok(JSON.parse(networkStats), "network stats is valid JSON");
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - request storage info", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -195,15 +184,14 @@ test("TryCP Conductor - request storage info", async (t) => {
   t.ok(storageInfo.blobs[0].dna.cache_data_size_on_disk > 0);
   t.deepEqual(storageInfo.blobs[0].dna.used_by, ["entry-happ"]);
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - request network info", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -233,15 +221,14 @@ test("TryCP Conductor - request network info", async (t) => {
   t.equal(networkInfo[0].fetch_pool_info.op_bytes_to_fetch, 0);
   t.equal(networkInfo[0].total_network_peers, 1);
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - grant a zome call capability", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -262,15 +249,14 @@ test("TryCP Conductor - grant a zome call capability", async (t) => {
   });
   t.equal(response, undefined);
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - receive a signal", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -314,15 +300,14 @@ test("TryCP Conductor - receive a signal", async (t) => {
     "received signal matches expected signal"
   );
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - create and read an entry using the entry zome", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -413,15 +398,14 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
     "disconnect app interface responds with success"
   );
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - reading a non-existent entry returns null", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -439,15 +423,14 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
   });
   t.equal(actual, null, "read a non-existing entry returns null");
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - create and read an entry using the entry zome, 1 conductor, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -576,15 +559,14 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     "read entry content matches created entry content"
   );
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - clone cell management", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
@@ -679,16 +661,17 @@ test("TryCP Conductor - clone cell management", async (t) => {
     "deleted clone cell cannot be enabled"
   );
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
+    await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
+  client.bootstrapServerUrl = bootstrapServerUrl;
   client.signalingServerUrl = signalingServerUrl;
 
   const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
@@ -702,8 +685,6 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   const bob = await conductor2.installApp(app);
   await conductor2.adminWs().attachAppInterface();
   await conductor2.connectAppInterface();
-
-  await addAllAgentsToAllConductors([conductor1, conductor2]);
 
   const entryContent = "test-content";
   const createEntryHash = await conductor1.appWs().callZome<EntryHash>({
@@ -739,15 +720,14 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
     "read entry content matches created entry content"
   );
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });
 
 test("TryCP Conductor - pass a custom application id to happ installation", async (t) => {
   const localTryCpServer = await TryCpServer.start();
-  const [signalingServerProcess, signalingServerUrl] =
-    await spawnSignalingServer();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
 
@@ -764,7 +744,7 @@ test("TryCP Conductor - pass a custom application id to happ installation", asyn
     "installed app id matches"
   );
 
-  await shutDownSignalingServer(signalingServerProcess);
+  await stopLocalServices(servicesProcess);
   await client.cleanUp();
   await localTryCpServer.stop();
 });

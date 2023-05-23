@@ -1,6 +1,7 @@
 import { AppSignal, AppSignalCb, EntryHash } from "@holochain/client";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
+import { runLocalServices } from "../../src/common.js";
 import { TryCpScenario } from "../../src/trycp/conductor/scenario.js";
 import {
   TRYCP_SERVER_HOST,
@@ -8,9 +9,8 @@ import {
   TryCpServer,
   stopAllTryCpServers,
 } from "../../src/trycp/trycp-server.js";
-import { FIXTURE_HAPP_URL } from "../fixture/index.js";
-import { spawnSignalingServer } from "../../src/common.js";
 import { awaitDhtSync } from "../../src/util.js";
+import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 
@@ -18,8 +18,10 @@ test("TryCP Scenario - create a conductor", async (t) => {
   const tryCpServer = await TryCpServer.start();
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   const client = await scenario.addClient(SERVER_URL);
   t.ok(client, "client set up");
 
@@ -34,8 +36,10 @@ test("TryCP Scenario - install a hApp to 1 conductor with 1 agent", async (t) =>
   const tryCpServer = await TryCpServer.start();
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   const client = await scenario.addClient(SERVER_URL);
   t.ok(client, "client set up");
 
@@ -62,8 +66,10 @@ test("TryCP Scenario - install a hApp to 2 conductors with 1 agent each", async 
   const tryCpServer2 = await TryCpServer.start(serverPort2);
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   const client1 = await scenario.addClient(serverUrl1);
   const client2 = await scenario.addClient(serverUrl2);
   t.ok(client1, "client 1 set up");
@@ -104,8 +110,10 @@ test("TryCP Scenario - list everything", async (t) => {
   const tryCpServer = await TryCpServer.start();
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   const client = await scenario.addClient(SERVER_URL);
 
   const alice = await scenario.addPlayerWithApp(client, {
@@ -137,8 +145,10 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
   const tryCpServer = await TryCpServer.start();
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   const client = await scenario.addClient(SERVER_URL);
 
   let signalHandlerAlice: AppSignalCb | undefined;
@@ -196,15 +206,17 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   const tryCpServer = await TryCpServer.start();
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    bootstrapServerUrl: scenario.bootstrapServerUrl,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   const client = await scenario.addClient(SERVER_URL);
 
   const [alice, bob] = await scenario.addPlayersWithApps(client, [
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
   ]);
-  await scenario.shareAllAgents();
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -213,6 +225,7 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
     payload: content,
   });
 
+  await scenario.shareAllAgents();
   await scenario.awaitDhtSync(alice.cells[0].cell_id);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
@@ -230,8 +243,11 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   const tryCpServer = await TryCpServer.start();
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    bootstrapServerUrl: scenario.bootstrapServerUrl,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   const client = await scenario.addClient(SERVER_URL);
 
   const [alice, bob] = await scenario.addPlayersWithApps(client, [
@@ -295,8 +311,10 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
   }
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   await scenario.addClientsPlayers(serverUrls);
   t.ok(
     scenario.clients.length === numberOfServers,
@@ -328,8 +346,10 @@ test("TryCP Scenario - create multiple conductors for multiple clients", async (
   }
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   await scenario.addClientsPlayers(serverUrls, {
     numberOfConductorsPerClient,
   });
@@ -368,8 +388,11 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
   }
 
   const scenario = new TryCpScenario();
-  [scenario.signalingServerProcess, scenario.signalingServerUrl] =
-    await spawnSignalingServer();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    bootstrapServerUrl: scenario.bootstrapServerUrl,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
   const clientsPlayers = await scenario.addClientsPlayers(serverUrls, {
     numberOfConductorsPerClient,
     numberOfAgentsPerConductor,

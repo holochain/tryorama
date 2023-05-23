@@ -4,7 +4,7 @@
 
 ## ClientsPlayersOptions.numberOfAgentsPerConductor property
 
-Number of agents per conductor. Defaults to 1. Requires `dnas` to be specified.
+Number of agents per conductor. Requires `app` to be specified.
 
 <b>Signature:</b>
 

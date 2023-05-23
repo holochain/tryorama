@@ -22,10 +22,11 @@ export declare class Scenario
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
+|  [bootstrapServerUrl](./tryorama.scenario.bootstrapserverurl.md) |  | URL \| undefined |  |
 |  [conductors](./tryorama.scenario.conductors.md) |  | [Conductor](./tryorama.conductor.md)<!-- -->\[\] |  |
 |  [networkSeed](./tryorama.scenario.networkseed.md) |  | string |  |
-|  [signalingServerProcess](./tryorama.scenario.signalingserverprocess.md) |  | ChildProcessWithoutNullStreams \| undefined |  |
-|  [signalingServerUrl](./tryorama.scenario.signalingserverurl.md) |  | string \| undefined |  |
+|  [serviceProcess](./tryorama.scenario.serviceprocess.md) |  | ChildProcessWithoutNullStreams \| undefined |  |
+|  [signalingServerUrl](./tryorama.scenario.signalingserverurl.md) |  | URL \| undefined |  |
 
 ## Methods
 
