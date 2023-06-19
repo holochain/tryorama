@@ -108,12 +108,83 @@ export class TryCpScenario {
    * options, creates multiple players with apps. Adds all clients to the
    * scenario.
    *
+   * If no number of agents per conductor is specified, no agents or apps
+   * will be installed.
+   *
    * @param serverUrls - The TryCP server URLs to connect to.
    * @param options - {@link ClientsPlayersOptions}
    * @returns The created TryCP clients and all conductors per client and all
    * agents' hApps per conductor.
    */
   async addClientsPlayers(serverUrls: URL[], options?: ClientsPlayersOptions) {
+    const clientsPlayers: Array<{
+      client: TryCpClient;
+      players: TryCpPlayer[];
+    }> = [];
+
+    const clientsForServers = [];
+    // create client connections for specified URLs
+    for (const serverUrl of serverUrls) {
+      const clientForServer = this.addClient(
+        serverUrl,
+        options?.clientTimeout
+      ).then(async (client) => {
+        const players: TryCpPlayer[] = [];
+        const numberOfConductorsPerClient =
+          options?.numberOfConductorsPerClient ?? 1;
+
+        const conductorsForClients = [];
+        // create conductors for each client
+        for (let i = 0; i < numberOfConductorsPerClient; i++) {
+          const conductorsForClient = client
+            .addConductor(options?.signalHandler, options?.partialConfig)
+            .then(async (conductor) => {
+              if (options?.numberOfAgentsPerConductor) {
+                // install agents apps for each conductor
+                if (options?.app === undefined) {
+                  throw new Error(
+                    "no app specified to be installed for agents"
+                  );
+                }
+
+                // TS fails to infer that options.apps cannot be `undefined` here
+                const app = options.app;
+
+                let agentsApps;
+                if (options.agentPubKeys) {
+                  agentsApps = options.agentPubKeys.map((agentPubKey) => ({
+                    agentPubKey,
+                    app,
+                  }));
+                } else {
+                  agentsApps = [
+                    ...Array(options.numberOfAgentsPerConductor),
+                  ].map(() => ({ app }));
+                }
+
+                const installedAgentsHapps = await conductor.installAgentsApps({
+                  agentsApps,
+                });
+                installedAgentsHapps.forEach((agentHapps) =>
+                  players.push({ conductor, ...agentHapps })
+                );
+              }
+            });
+          conductorsForClients.push(conductorsForClient);
+        }
+        await Promise.all(conductorsForClients);
+        clientsPlayers.push({ client, players });
+      });
+      clientsForServers.push(clientForServer);
+    }
+    await Promise.all(clientsForServers);
+    return clientsPlayers;
+  }
+
+  async addClientsPlayersOld(
+    serverUrls: URL[],
+    options?: ClientsPlayersOptions
+  ) {
     const clientsPlayers: Array<{
       client: TryCpClient;
       players: TryCpPlayer[];
