@@ -303,6 +303,7 @@ export class Conductor implements IConductor {
    * Attach a web socket to the App API.
    *
    * @param request - Specify a port for the web socket (optional).
+   * @returns The app interface port.
    */
   async attachAppInterface(request?: AttachAppInterfaceRequest) {
     request = request ?? {
@@ -311,6 +312,7 @@ export class Conductor implements IConductor {
     logger.debug(`attaching App API to port ${request.port}\n`);
     const { port } = await this.adminWs().attachAppInterface(request);
     this.appApiUrl.port = port.toString();
+    return port;
   }
 
   /**
