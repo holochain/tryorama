@@ -16,7 +16,7 @@
       perSystem = { config, system, pkgs, ... }:
         {
           devShells.default = pkgs.mkShell {
-            inputsFrom = [ holonix.devShells.${system}.holonix ];
+            inputsFrom = [ holonix.devShells.${system}.holochainBinaries ];
             packages = with pkgs; [
               # add further packages from nixpkgs
               nodejs
