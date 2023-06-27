@@ -23,6 +23,7 @@ export declare class TryCpConductor implements IConductor
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
+|  [appInterfacePort](./tryorama.trycpconductor.appinterfaceport.md) |  | undefined \| number |  |
 |  [id](./tryorama.trycpconductor.id.md) | <code>readonly</code> | string |  |
 |  [tryCpClient](./tryorama.trycpconductor.trycpclient.md) | <code>readonly</code> | [TryCpClient](./tryorama.trycpclient.md) |  |
 
@@ -33,7 +34,7 @@ export declare class TryCpConductor implements IConductor
 |  [adminWs()](./tryorama.trycpconductor.adminws.md) |  | Get all [Admin API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_adminwebsocket.md) of the Holochain client. |
 |  [appWs()](./tryorama.trycpconductor.appws.md) |  | Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_appwebsocket.md) of the Holochain client. |
 |  [configure(partialConfig)](./tryorama.trycpconductor.configure.md) |  | Create conductor configuration. |
-|  [connectAppInterface(signalHandler)](./tryorama.trycpconductor.connectappinterface.md) |  | Connect a web socket to the App API. |
+|  [connectAppInterface(port, signalHandler)](./tryorama.trycpconductor.connectappinterface.md) |  | Connect a web socket to the App API. |
 |  [disconnectAppInterface()](./tryorama.trycpconductor.disconnectappinterface.md) |  | Disconnect the web socket from the App API. |
 |  [disconnectClient()](./tryorama.trycpconductor.disconnectclient.md) |  | Disconnect the TryCP client from the TryCP server. |
 |  [downloadDna(url)](./tryorama.trycpconductor.downloaddna.md) |  | Download a DNA from a URL to the server's file system. |

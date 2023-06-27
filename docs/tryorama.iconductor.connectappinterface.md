@@ -7,13 +7,14 @@
 <b>Signature:</b>
 
 ```typescript
-connectAppInterface(signalHandler?: AppSignalCb): void;
+connectAppInterface(port: number, signalHandler?: AppSignalCb): void;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
+|  port | number |  |
 |  signalHandler | AppSignalCb | <i>(Optional)</i> |
 
 <b>Returns:</b>

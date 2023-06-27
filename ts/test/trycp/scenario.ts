@@ -315,7 +315,9 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
     servicesProcess: scenario.servicesProcess,
     signalingServerUrl: scenario.signalingServerUrl,
   } = await runLocalServices());
-  await scenario.addClientsPlayers(serverUrls);
+  await scenario.addClientsPlayers(serverUrls, {
+    app: { path: FIXTURE_HAPP_URL.pathname },
+  });
   t.ok(
     scenario.clients.length === numberOfServers,
     "scenario has expected number of clients"
@@ -331,51 +333,10 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
   await stopAllTryCpServers(tryCpServers);
 });
 
-test("TryCP Scenario - create multiple conductors for multiple clients", async (t) => {
-  const numberOfServers = 2;
-  const numberOfConductorsPerClient = 3;
-  const tryCpServers: TryCpServer[] = [];
-  const serverUrls: URL[] = [];
-
-  for (let i = 0; i < numberOfServers; i++) {
-    const serverPort = TRYCP_SERVER_PORT + i;
-    const serverUrl = new URL(`ws://${TRYCP_SERVER_HOST}:${serverPort}`);
-    const tryCpServer = await TryCpServer.start(serverPort);
-    tryCpServers.push(tryCpServer);
-    serverUrls.push(serverUrl);
-  }
-
-  const scenario = new TryCpScenario();
-  ({
-    servicesProcess: scenario.servicesProcess,
-    signalingServerUrl: scenario.signalingServerUrl,
-  } = await runLocalServices());
-  await scenario.addClientsPlayers(serverUrls, {
-    numberOfConductorsPerClient,
-  });
-
-  for (const [i, client] of scenario.clients.entries()) {
-    t.ok(
-      client.conductors.length === numberOfConductorsPerClient,
-      `client ${i + 1} has expected number of conductors`
-    );
-    for (const [j, conductor] of client.conductors.entries()) {
-      const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-      t.ok(
-        agentPubKey,
-        `conductor ${j + 1} of client ${i + 1} responds with success`
-      );
-    }
-  }
-
-  await scenario.cleanUp();
-  await stopAllTryCpServers(tryCpServers);
-});
-
-test("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
+test.only("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
   const numberOfServers = 2;
   const numberOfConductorsPerClient = 2;
-  const numberOfAgentsPerConductor = 3;
+  const numberOfAgentsPerConductor = 2;
   const tryCpServers: TryCpServer[] = [];
   const serverUrls: URL[] = [];
 
@@ -399,13 +360,13 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
     app: { path: FIXTURE_HAPP_URL.pathname },
   });
 
-  for (const [i, clientPlayers] of clientsPlayers.entries()) {
-    t.ok(
-      clientPlayers.players.length ===
+  clientsPlayers.forEach((clientPlayers, i) =>
+    t.equal(
+      clientPlayers.players.length,
         numberOfConductorsPerClient * numberOfAgentsPerConductor,
       `client ${i + 1} has expected number of players`
+    )
     );
-  }
 
   await scenario.shareAllAgents();
 

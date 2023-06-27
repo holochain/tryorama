@@ -9,13 +9,14 @@ Connect a web socket to the App API.
 <b>Signature:</b>
 
 ```typescript
-connectAppInterface(signalHandler?: AppSignalCb): Promise<null>;
+connectAppInterface(port: number, signalHandler?: AppSignalCb): Promise<null>;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
+|  port | number |  |
 |  signalHandler | AppSignalCb | <i>(Optional)</i> |
 
 <b>Returns:</b>

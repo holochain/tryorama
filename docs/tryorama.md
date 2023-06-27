@@ -64,6 +64,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AppApiResponseNetworkInfo](./tryorama.appapiresponsenetworkinfo.md) |  |
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
 |  [AppOptions](./tryorama.appoptions.md) | Optional arguments when installing a hApp. |
+|  [ClientPlayers](./tryorama.clientplayers.md) | A TryCP client and its associated players. |
 |  [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |  |
 |  [ConductorOptions](./tryorama.conductoroptions.md) |  |
 |  [Dna](./tryorama.dna.md) | DNA source and additional options. |

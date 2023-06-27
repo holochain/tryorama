@@ -21,14 +21,14 @@ import { TryCpConductor } from "./conductor.js";
  */
 export interface ClientsPlayersOptions {
   /**
+   * An app that will be installed for each agent.
+   */
+  app: AppBundleSource;
+
+  /**
    * A timeout for the web socket connection (optional).
    */
   clientTimeout?: number;
-
-  /**
-   * An app that will be installed for each agent (optional).
-   */
-  app?: AppBundleSource;
 
   /**
    * A list of previously generated agent pub keys (optional).
@@ -36,12 +36,12 @@ export interface ClientsPlayersOptions {
   agentPubKeys?: AgentPubKey[];
 
   /**
-   * Number of conductors per client. Default to 1.
+   * Number of conductors per client. Defaults to 1.
    */
   numberOfConductorsPerClient?: number;
 
   /**
-   * Number of agents per conductor. Requires `app` to be specified.
+   * Number of agents per conductor. Defaults to 1.
    */
   numberOfAgentsPerConductor?: number;
 
@@ -63,6 +63,16 @@ export interface ClientsPlayersOptions {
  */
 export interface TryCpPlayer extends IPlayer {
   conductor: TryCpConductor;
+}
+
+/**
+ * A TryCP client and its associated players.
+ *
+ * @public
+ */
+export interface ClientPlayers {
+  client: TryCpClient;
+  players: TryCpPlayer[];
 }
 
 /**
@@ -108,133 +118,66 @@ export class TryCpScenario {
    * options, creates multiple players with apps. Adds all clients to the
    * scenario.
    *
-   * If no number of agents per conductor is specified, no agents or apps
-   * will be installed.
+   * If no number of agents per conductor is specified, it defaults to 1.
    *
    * @param serverUrls - The TryCP server URLs to connect to.
    * @param options - {@link ClientsPlayersOptions}
    * @returns The created TryCP clients and all conductors per client and all
    * agents' hApps per conductor.
    */
-  async addClientsPlayers(serverUrls: URL[], options?: ClientsPlayersOptions) {
-    const clientsPlayers: Array<{
-      client: TryCpClient;
-      players: TryCpPlayer[];
-    }> = [];
+  async addClientsPlayers(serverUrls: URL[], options: ClientsPlayersOptions) {
+    const clientsPlayers: ClientPlayers[] = [];
 
-    const clientsForServers = [];
+    const clientsCreated: Promise<void>[] = [];
     // create client connections for specified URLs
     for (const serverUrl of serverUrls) {
-      const clientForServer = this.addClient(
+      const clientCreated = this.addClient(
         serverUrl,
         options?.clientTimeout
       ).then(async (client) => {
-        const players: TryCpPlayer[] = [];
         const numberOfConductorsPerClient =
           options?.numberOfConductorsPerClient ?? 1;
-
-        const conductorsForClients = [];
+        const conductorsCreated: Promise<{
+          conductor: TryCpConductor;
+          players: TryCpPlayer[];
+        }>[] = [];
         // create conductors for each client
         for (let i = 0; i < numberOfConductorsPerClient; i++) {
-          const conductorsForClient = client
+          const conductorCreated = client
             .addConductor(options?.signalHandler, options?.partialConfig)
             .then(async (conductor) => {
-              if (options?.numberOfAgentsPerConductor) {
-                // install agents apps for each conductor
-                if (options?.app === undefined) {
-                  throw new Error(
-                    "no app specified to be installed for agents"
-                  );
-                }
-
-                // TS fails to infer that options.apps cannot be `undefined` here
-                const app = options.app;
-
-                let agentsApps;
-                if (options.agentPubKeys) {
-                  agentsApps = options.agentPubKeys.map((agentPubKey) => ({
-                    agentPubKey,
-                    app,
-                  }));
-                } else {
-                  agentsApps = [
-                    ...Array(options.numberOfAgentsPerConductor),
-                  ].map(() => ({ app }));
-                }
-
-                const installedAgentsHapps = await conductor.installAgentsApps({
-                  agentsApps,
-                });
-                installedAgentsHapps.forEach((agentHapps) =>
-                  players.push({ conductor, ...agentHapps })
+              const app = options.app;
+              let agentsApps;
+              if (options.agentPubKeys) {
+                agentsApps = options.agentPubKeys.map((agentPubKey) => ({
+                  agentPubKey,
+                  app,
+                }));
+              } else {
+                agentsApps = [...Array(options.numberOfAgentsPerConductor)].map(
+                  () => ({ app })
                 );
               }
+
+              const installedAgentsApps = await conductor.installAgentsApps({
+                agentsApps,
+              });
+              const players: TryCpPlayer[] = installedAgentsApps.map(
+                (agentApp) => ({ conductor, ...agentApp })
+              );
+              return { conductor, players };
             });
-          conductorsForClients.push(conductorsForClient);
+          conductorsCreated.push(conductorCreated);
         }
-        await Promise.all(conductorsForClients);
-        clientsPlayers.push({ client, players });
-      });
-      clientsForServers.push(clientForServer);
-    }
-    await Promise.all(clientsForServers);
-    return clientsPlayers;
-  }
-
-  async addClientsPlayersOld(
-    serverUrls: URL[],
-    options?: ClientsPlayersOptions
-  ) {
-    const clientsPlayers: Array<{
-      client: TryCpClient;
-      players: TryCpPlayer[];
-    }> = [];
-
-    // create client connections for specified URLs
-    for (const serverUrl of serverUrls) {
-      const client = await this.addClient(serverUrl, options?.clientTimeout);
-      const players: TryCpPlayer[] = [];
-      const numberOfConductorsPerClient =
-        options?.numberOfConductorsPerClient ?? 1;
-
-      // create conductors for each client
-      for (let i = 0; i < numberOfConductorsPerClient; i++) {
-        const conductor = await client.addConductor(
-          options?.signalHandler,
-          options?.partialConfig
+        const conductorsForClient = await Promise.all(conductorsCreated);
+        const playersForClient = conductorsForClient.flatMap(
+          (conductorForClient) => conductorForClient.players
         );
-
-        if (options?.numberOfAgentsPerConductor) {
-          // install agents apps for each conductor
-          if (options?.app === undefined) {
-            throw new Error("no app specified to be installed for agents");
-          }
-
-          // TS fails to infer that options.apps cannot be `undefined` here
-          const app = options.app;
-
-          let agentsApps;
-          if (options.agentPubKeys) {
-            agentsApps = options.agentPubKeys.map((agentPubKey) => ({
-              agentPubKey,
-              app,
-            }));
-          } else {
-            agentsApps = [...Array(options.numberOfAgentsPerConductor)].map(
-              () => ({ app })
-            );
-          }
-
-          const installedAgentsHapps = await conductor.installAgentsApps({
-            agentsApps,
-          });
-          installedAgentsHapps.forEach((agentHapps) =>
-            players.push({ conductor, ...agentHapps })
-          );
-        }
-      }
-      clientsPlayers.push({ client, players });
+        clientsPlayers.push({ client, players: playersForClient });
+      });
+      clientsCreated.push(clientCreated);
     }
+    await Promise.all(clientsCreated);
     return clientsPlayers;
   }
 

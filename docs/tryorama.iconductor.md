@@ -27,5 +27,5 @@ export interface IConductor
 
 |  Method | Description |
 |  --- | --- |
-|  [connectAppInterface(signalHandler)](./tryorama.iconductor.connectappinterface.md) |  |
+|  [connectAppInterface(port, signalHandler)](./tryorama.iconductor.connectappinterface.md) |  |
 
