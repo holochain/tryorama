@@ -4,8 +4,9 @@ import {
   addAllAgentsToAllConductors,
   stopLocalServices,
   runLocalServices,
+  enableAndGetAgentApp,
 } from "../common.js";
-import { AppOptions, IPlayer } from "../types.js";
+import { AgentApp, AppOptions, IPlayer } from "../types.js";
 import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
 import { awaitDhtSync } from "../util.js";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
@@ -93,9 +94,14 @@ export class Scenario {
       ...options,
       networkSeed: options?.networkSeed ?? this.networkSeed,
     };
-    const agentApp = await conductor.installApp(appBundleSource, options);
-    await conductor.attachAppInterface();
-    await conductor.connectAppAgentInterface(agentApp.appId);
+    const appInfo = await conductor.installApp(appBundleSource, options);
+    const port = await conductor.attachAppInterface();
+    await conductor.connectAppAgentInterface(port, appInfo.installed_app_id);
+    const agentApp: AgentApp = await enableAndGetAgentApp(
+      conductor,
+      port,
+      appInfo
+    );
     return { conductor, ...agentApp };
   }
 

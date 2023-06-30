@@ -26,7 +26,7 @@ test("TryCP Scenario - create a conductor", async (t) => {
   t.ok(client, "client set up");
 
   const conductor = await client.addConductor();
-  t.ok(conductor.adminWs() && conductor.appWs(), "conductor set up");
+  t.ok(conductor.adminWs(), "conductor set up");
 
   await scenario.cleanUp();
   await tryCpServer.stop();
@@ -121,21 +121,22 @@ test("TryCP Scenario - list everything", async (t) => {
   });
 
   const listedApps = await alice.conductor.adminWs().listApps({});
-  t.ok(listedApps.length === 1, "alice's conductor lists 1 installed app");
+  t.equal(listedApps.length, 1, "alice's conductor lists 1 installed app");
 
   const listedAppInterfaces = await alice.conductor
     .adminWs()
     .listAppInterfaces();
-  t.ok(
-    listedAppInterfaces.length === 1,
+  t.equal(
+    listedAppInterfaces.length,
+    1,
     "alice's conductor lists 1 app interface"
   );
 
   const listCellIds = await alice.conductor.adminWs().listCellIds();
-  t.ok(listCellIds.length === 1, "alice's conductor lists 1 cell id");
+  t.equal(listCellIds.length, 1, "alice's conductor lists 1 cell id");
 
   const listedDnas = await alice.conductor.adminWs().listDnas();
-  t.ok(listedDnas.length === 1, "alice's conductor lists 1 DNA");
+  t.equal(listedDnas.length, 1, "alice's conductor lists 1 DNA");
 
   await scenario.cleanUp();
   await tryCpServer.stop();
@@ -274,6 +275,8 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
     "entry content read successfully before shutdown"
   );
 
+  const [appInterfacePort] = await bob.conductor.adminWs().listAppInterfaces();
+  await bob.conductor.disconnectAppInterface(appInterfacePort);
   await bob.conductor.shutDown();
   await t.rejects(
     bob.conductor.adminWs().generateAgentPubKey,
@@ -281,7 +284,7 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   );
 
   await bob.conductor.startUp({});
-  await bob.conductor.connectAppInterface();
+  await bob.conductor.connectAppInterface(appInterfacePort);
   const readContentAfterRestart = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
     fn_name: "read",
@@ -333,7 +336,7 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
   await stopAllTryCpServers(tryCpServers);
 });
 
-test.only("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
+test("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
   const numberOfServers = 2;
   const numberOfConductorsPerClient = 2;
   const numberOfAgentsPerConductor = 2;
@@ -363,10 +366,10 @@ test.only("TryCP Scenario - create multiple agents for multiple conductors for m
   clientsPlayers.forEach((clientPlayers, i) =>
     t.equal(
       clientPlayers.players.length,
-        numberOfConductorsPerClient * numberOfAgentsPerConductor,
+      numberOfConductorsPerClient * numberOfAgentsPerConductor,
       `client ${i + 1} has expected number of players`
     )
-    );
+  );
 
   await scenario.shareAllAgents();
 

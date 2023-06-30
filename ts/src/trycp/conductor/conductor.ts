@@ -3,6 +3,7 @@ import {
   AgentInfoRequest,
   AgentPubKey,
   AppBundleSource,
+  AppInfo,
   AppInfoRequest,
   AppSignalCb,
   AttachAppInterfaceRequest,
@@ -46,14 +47,8 @@ import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
-import { enableAndGetAgentApp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
-import {
-  AgentApp,
-  AgentsAppsOptions,
-  AppOptions,
-  IConductor,
-} from "../../types.js";
+import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceMessage,
@@ -148,7 +143,6 @@ export const createTryCpConductor = async (
  */
 export class TryCpConductor implements IConductor {
   readonly id: string;
-  private appInterfacePort: undefined | number;
   readonly tryCpClient: TryCpClient;
 
   constructor(tryCpClient: TryCpClient, id?: ConductorId) {
@@ -200,17 +194,13 @@ export class TryCpConductor implements IConductor {
   }
 
   /**
-   * Disconnect app interface and shut down the conductor.
+   * Shut down the conductor.
    *
    * @returns An empty success response.
    *
    * @public
    */
   async shutDown() {
-    if (this.appInterfacePort) {
-      const response = await this.disconnectAppInterface();
-      assert(response === TRYCP_SUCCESS_RESPONSE);
-    }
     const response = await this.tryCpClient.call({
       type: "shutdown",
       id: this.id,
@@ -263,29 +253,28 @@ export class TryCpConductor implements IConductor {
   /**
    * Connect a web socket to the App API.
    *
+   * @param port - The port to attach the app interface to.
    * @returns An empty success response.
    */
-  async connectAppInterface(signalHandler?: AppSignalCb) {
-    assert(this.appInterfacePort, "no app interface attached to conductor");
+  async connectAppInterface(port: number) {
     const response = await this.tryCpClient.call({
       type: "connect_app_interface",
-      port: this.appInterfacePort,
+      port,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
-    this.tryCpClient.setSignalHandler(this.appInterfacePort, signalHandler);
     return response;
   }
 
   /**
-   * Disconnect the web socket from the App API.
+   * Disconnect a web socket from the App API.
    *
+   * @param port - The port of the app interface to disconnect.
    * @returns An empty success response.
    */
-  async disconnectAppInterface() {
-    assert(this.appInterfacePort, "no app interface attached");
+  async disconnectAppInterface(port: number) {
     const response = await this.tryCpClient.call({
       type: "disconnect_app_interface",
-      port: this.appInterfacePort,
+      port,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
@@ -295,18 +284,17 @@ export class TryCpConductor implements IConductor {
    * Attach a signal handler.
    *
    * @param signalHandler - The signal handler to register.
+   * @param port - The port of the app interface.
    */
-  on(signalHandler: AppSignalCb) {
-    assert(this.appInterfacePort, "no app interface attached to conductor");
-    this.tryCpClient.setSignalHandler(this.appInterfacePort, signalHandler);
+  on(port: number, signalHandler: AppSignalCb) {
+    this.tryCpClient.setSignalHandler(port, signalHandler);
   }
 
   /**
    * Detach the registered signal handler.
    */
-  off() {
-    assert(this.appInterfacePort, "no app interface attached to conductor");
-    this.tryCpClient.setSignalHandler(this.appInterfacePort, undefined);
+  off(port: number) {
+    this.tryCpClient.unsetSignalHandler(port);
   }
 
   /**
@@ -541,7 +529,6 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "app_interface_attached");
-      this.appInterfacePort = request.port;
       return { port: response.data.port };
     };
 
@@ -741,11 +728,13 @@ export class TryCpConductor implements IConductor {
   /**
    * Call to the conductor's App API.
    */
-  private async callAppApi(message: RequestCallAppInterfaceMessage) {
-    assert(this.appInterfacePort, "No App interface attached to conductor");
+  private async callAppApi(
+    port: number,
+    message: RequestCallAppInterfaceMessage
+  ) {
     const response = await this.tryCpClient.call({
       type: "call_app_interface",
-      port: this.appInterfacePort,
+      port,
       message,
     });
     assert(response !== TRYCP_SUCCESS_RESPONSE);
@@ -760,15 +749,16 @@ export class TryCpConductor implements IConductor {
    *
    * @returns The App API web socket.
    */
-  appWs() {
+  appWs(port: number) {
     /**
      * Request info of an installed hApp.
      *
+     * @param port - The app interface port.
      * @param request - The hApp id to query.
      * @returns The app info.
      */
     const appInfo = async (request: AppInfoRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "app_info",
         data: request,
       });
@@ -804,7 +794,7 @@ export class TryCpConductor implements IConductor {
         const signedZomeCall = await signZomeCall(request);
         signedRequest = signedZomeCall;
       }
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "call_zome",
         data: signedRequest,
       });
@@ -824,7 +814,7 @@ export class TryCpConductor implements IConductor {
      * @returns The clone id and cell id of the created clone cell.
      */
     const createCloneCell = async (request: CreateCloneCellRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "create_clone_cell",
         data: request,
       });
@@ -840,7 +830,7 @@ export class TryCpConductor implements IConductor {
      * @returns The enabled clone cell's clone id and cell id.
      */
     const enableCloneCell = async (request: EnableCloneCellRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "enable_clone_cell",
         data: request,
       });
@@ -855,7 +845,7 @@ export class TryCpConductor implements IConductor {
      * @returns An empty success response.
      */
     const disableCloneCell = async (request: DisableCloneCellRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "disable_clone_cell",
         data: request,
       });
@@ -870,7 +860,7 @@ export class TryCpConductor implements IConductor {
      * @returns {@link NetworkInfoResponse}.
      */
     const networkInfo = async (request: NetworkInfoRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "network_info",
         data: request,
       });
@@ -893,7 +883,7 @@ export class TryCpConductor implements IConductor {
    *
    * @param appBundleSource - The bundle or path to the bundle.
    * @param options - {@link AppOptions} for the hApp bundle (optional).
-   * @returns A hApp for the agent.
+   * @returns The installed app info.
    */
   async installApp(appBundleSource: AppBundleSource, options?: AppOptions) {
     const agent_key =
@@ -917,25 +907,17 @@ export class TryCpConductor implements IConductor {
             installed_app_id,
             network_seed,
           };
-    const installedAppInfo = await this.adminWs().installApp(installAppRequest);
-
-    const agentHapp: AgentApp = await enableAndGetAgentApp(
-      this,
-      agent_key,
-      installedAppInfo
-    );
-    return agentHapp;
+    return this.adminWs().installApp(installAppRequest);
   }
 
   /**
    * Install a hApp bundle into the conductor.
    *
    * @param options - Apps to install for each agent, with agent pub keys etc.
-   * (optional).
-   * @returns A hApp for the agent.
+   * @returns The installed app infos.
    */
   async installAgentsApps(options: AgentsAppsOptions) {
-    const agentsApps: AgentApp[] = [];
+    const appInfos: AppInfo[] = [];
     for (const appForAgent of options.agentsApps) {
       const agent_key =
         appForAgent.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
@@ -964,17 +946,9 @@ export class TryCpConductor implements IConductor {
           agent_key
         )}`
       );
-      const installedAppInfo = await this.adminWs().installApp(
-        installAppRequest
-      );
-
-      const agentApp = await enableAndGetAgentApp(
-        this,
-        agent_key,
-        installedAppInfo
-      );
-      agentsApps.push(agentApp);
+      const appInfo = await this.adminWs().installApp(installAppRequest);
+      appInfos.push(appInfo);
     }
-    return agentsApps;
+    return appInfos;
   }
 }

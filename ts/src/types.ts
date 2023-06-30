@@ -3,6 +3,7 @@ import type {
   AgentPubKey,
   AppAgentWebsocket,
   AppBundleSource,
+  AppInfo,
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
@@ -175,13 +176,15 @@ export interface IConductor {
   startUp: () => Promise<void | null>;
   shutDown: () => Promise<number | null>;
 
-  connectAppInterface(signalHandler?: AppSignalCb): void;
+  connectAppInterface(port: number, signalHandler?: AppSignalCb): void;
 
   adminWs: () => Omit<
     AdminWebsocket,
     "client" | "defaultTimeout" | "_requester"
   >;
-  appWs: () => Pick<
+  appWs: (
+    port: number
+  ) => Pick<
     AppWebsocket,
     | "callZome"
     | "appInfo"
@@ -194,6 +197,6 @@ export interface IConductor {
   installApp: (
     appBundleSource: AppBundleSource,
     options?: AppOptions
-  ) => Promise<AgentApp>;
-  installAgentsApps: (options: AgentsAppsOptions) => Promise<AgentApp[]>;
+  ) => Promise<AppInfo>;
+  installAgentsApps: (options: AgentsAppsOptions) => Promise<AppInfo[]>;
 }

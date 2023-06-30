@@ -8,6 +8,7 @@ import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import {
+  enableAndGetAgentApp,
   addAllAgentsToAllConductors as shareAllAgents,
   stopLocalServices,
 } from "../../common.js";
@@ -126,9 +127,7 @@ export class TryCpScenario {
    * agents' hApps per conductor.
    */
   async addClientsPlayers(serverUrls: URL[], options: ClientsPlayersOptions) {
-    const clientsPlayers: ClientPlayers[] = [];
-
-    const clientsCreated: Promise<void>[] = [];
+    const clientsCreated: Promise<ClientPlayers>[] = [];
     // create client connections for specified URLs
     for (const serverUrl of serverUrls) {
       const clientCreated = this.addClient(
@@ -144,27 +143,35 @@ export class TryCpScenario {
         // create conductors for each client
         for (let i = 0; i < numberOfConductorsPerClient; i++) {
           const conductorCreated = client
-            .addConductor(options?.signalHandler, options?.partialConfig)
+            .addConductor(options?.partialConfig)
             .then(async (conductor) => {
               const app = options.app;
-              let agentsApps;
+              let appOptions;
               if (options.agentPubKeys) {
-                agentsApps = options.agentPubKeys.map((agentPubKey) => ({
+                appOptions = options.agentPubKeys.map((agentPubKey) => ({
                   agentPubKey,
                   app,
                 }));
               } else {
-                agentsApps = [...Array(options.numberOfAgentsPerConductor)].map(
+                appOptions = [...Array(options.numberOfAgentsPerConductor)].map(
                   () => ({ app })
                 );
               }
 
-              const installedAgentsApps = await conductor.installAgentsApps({
-                agentsApps,
+              const appInfos = await conductor.installAgentsApps({
+                agentsApps: appOptions,
               });
-              const players: TryCpPlayer[] = installedAgentsApps.map(
-                (agentApp) => ({ conductor, ...agentApp })
+              const { port } = await conductor.adminWs().attachAppInterface();
+              await conductor.connectAppInterface(port);
+              const agentsApps = await Promise.all(
+                appInfos.map((appInfo) =>
+                  enableAndGetAgentApp(conductor, port, appInfo)
+                )
               );
+              const players: TryCpPlayer[] = agentsApps.map((agentApp) => ({
+                conductor,
+                ...agentApp,
+              }));
               return { conductor, players };
             });
           conductorsCreated.push(conductorCreated);
@@ -173,12 +180,11 @@ export class TryCpScenario {
         const playersForClient = conductorsForClient.flatMap(
           (conductorForClient) => conductorForClient.players
         );
-        clientsPlayers.push({ client, players: playersForClient });
+        return { client, players: playersForClient };
       });
       clientsCreated.push(clientCreated);
     }
-    await Promise.all(clientsCreated);
-    return clientsPlayers;
+    return Promise.all(clientsCreated);
   }
 
   /**
@@ -195,12 +201,18 @@ export class TryCpScenario {
     appBundleSource: AppBundleSource,
     options?: AppOptions
   ) {
-    const conductor = await tryCpClient.addConductor(options?.signalHandler);
+    const conductor = await tryCpClient.addConductor();
     options = {
       ...options,
       networkSeed: options?.networkSeed ?? this.network_seed,
     };
-    const agentApp = await conductor.installApp(appBundleSource, options);
+    const appInfo = await conductor.installApp(appBundleSource, options);
+    const { port } = await conductor.adminWs().attachAppInterface();
+    await conductor.connectAppInterface(port);
+    const agentApp = await enableAndGetAgentApp(conductor, port, appInfo);
+    if (options.signalHandler) {
+      conductor.on(port, options.signalHandler);
+    }
     const player: TryCpPlayer = { conductor, ...agentApp };
     return player;
   }

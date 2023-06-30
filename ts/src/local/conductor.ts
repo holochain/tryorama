@@ -2,6 +2,7 @@ import {
   AdminWebsocket,
   AppAgentWebsocket,
   AppBundleSource,
+  AppInfo,
   AppWebsocket,
   AttachAppInterfaceRequest,
   CallZomeRequest,
@@ -18,14 +19,8 @@ import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 
-import { enableAndGetAgentApp } from "../common.js";
 import { makeLogger } from "../logger.js";
-import {
-  AgentApp,
-  AgentsAppsOptions,
-  AppOptions,
-  IConductor,
-} from "../types.js";
+import { AgentsAppsOptions, AppOptions, IConductor } from "../types.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -114,8 +109,8 @@ export const createConductor = async (
   if (options?.startup !== false) {
     await conductor.startUp();
     if (options?.attachAppInterface !== false) {
-      await conductor.attachAppInterface();
-      await conductor.connectAppInterface();
+      const port = await conductor.attachAppInterface();
+      await conductor.connectAppInterface(port);
     }
   }
   return conductor;
@@ -130,7 +125,7 @@ export class Conductor implements IConductor {
   private conductorProcess: ChildProcessWithoutNullStreams | undefined;
   private conductorDir: string | undefined;
   private adminApiUrl: URL;
-  private appApiUrl: URL;
+  // private appApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
   private _appAgentWs: AppAgentWebsocket | undefined;
@@ -140,7 +135,7 @@ export class Conductor implements IConductor {
     this.conductorProcess = undefined;
     this.conductorDir = undefined;
     this.adminApiUrl = new URL(HOST_URL.href);
-    this.appApiUrl = new URL(HOST_URL.href);
+    // this.appApiUrl = new URL(HOST_URL.href);
     this._adminWs = undefined;
     this._appWs = undefined;
     this._appAgentWs = undefined;
@@ -311,36 +306,29 @@ export class Conductor implements IConductor {
     };
     logger.debug(`attaching App API to port ${request.port}\n`);
     const { port } = await this.adminWs().attachAppInterface(request);
-    this.appApiUrl.port = port.toString();
     return port;
   }
 
   /**
    * Connect a web socket to the App API.
    */
-  async connectAppInterface() {
-    assert(
-      this.appApiUrl.port,
-      "error connecting app interface: app api port has not been defined"
-    );
-
-    logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
-    this._appWs = await AppWebsocket.connect(this.appApiUrl.href, this.timeout);
+  async connectAppInterface(port: number) {
+    logger.debug(`connecting App API to port ${port}\n`);
+    const appApiUrl = new URL(HOST_URL.href);
+    appApiUrl.port = port.toString();
+    this._appWs = await AppWebsocket.connect(appApiUrl.href, this.timeout);
     this.setUpImplicitZomeCallSigning();
   }
 
   /**
    * Connect a web socket for a specific app to the App API.
    */
-  async connectAppAgentInterface(appId: InstalledAppId) {
-    assert(
-      this.appApiUrl.port,
-      "error connecting app interface: app api port has not been defined"
-    );
-
-    logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
+  async connectAppAgentInterface(port: number, appId: InstalledAppId) {
+    logger.debug(`connecting App API to port ${port}\n`);
+    const appApiUrl = new URL(HOST_URL.href);
+    appApiUrl.port = port.toString();
     this._appAgentWs = await AppAgentWebsocket.connect(
-      this.appApiUrl.href,
+      appApiUrl.href,
       appId,
       this.timeout
     );
@@ -435,20 +423,14 @@ export class Conductor implements IConductor {
         agent_key
       )}`
     );
-    const installedAppInfo = await this.adminWs().installApp(installAppRequest);
-    const agentApp: AgentApp = await enableAndGetAgentApp(
-      this,
-      agent_key,
-      installedAppInfo
-    );
-    return agentApp;
+    return this.adminWs().installApp(installAppRequest);
   }
 
   /**
    * Install an app for multiple agents into the conductor.
    */
   async installAgentsApps(options: AgentsAppsOptions) {
-    const agentsApps: AgentApp[] = [];
+    const appInfos: AppInfo[] = [];
     for (const appsForAgent of options.agentsApps) {
       const agentApp = await this.installApp(appsForAgent.app, {
         agentPubKey: appsForAgent.agentPubKey,
@@ -456,9 +438,9 @@ export class Conductor implements IConductor {
         installedAppId: options.installedAppId,
         networkSeed: options.networkSeed,
       });
-      agentsApps.push(agentApp);
+      appInfos.push(agentApp);
     }
-    return agentsApps;
+    return appInfos;
   }
 }
 
