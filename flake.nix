@@ -5,7 +5,7 @@
     versions.url = "github:holochain/holochain?dir=versions/0_2";
     holonix.url = "github:holochain/holochain";
     holonix.inputs.versions.follows = "versions";
-    holonix.inputs.holochain.url = "github:holochain/holochain/holochain-0.2.1-beta-dev.0";
+    holonix.inputs.holochain.url = "github:holochain/holochain/holochain-0.3.0-beta-dev.6";
   };
 
   outputs = inputs@{ holonix, ... }:
@@ -16,7 +16,7 @@
       perSystem = { config, system, pkgs, ... }:
         {
           devShells.default = pkgs.mkShell {
-            inputsFrom = [ holonix.devShells.${system}.holonix ];
+            inputsFrom = [ holonix.devShells.${system}.holochainBinaries ];
             packages = with pkgs; [
               # add further packages from nixpkgs
               nodejs
