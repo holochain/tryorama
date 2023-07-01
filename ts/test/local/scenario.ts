@@ -153,7 +153,8 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   t.throws(bob.conductor.adminWs);
 
   await bob.conductor.startUp();
-  await bob.conductor.connectAppInterface();
+  const [appInterfacePort] = await bob.conductor.adminWs().listAppInterfaces();
+  await bob.conductor.connectAppInterface(appInterfacePort);
   const readContentAfterRestart = await bobCaller<typeof content>(
     "read",
     createEntryHash

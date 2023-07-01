@@ -13,6 +13,7 @@ import {
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
+import { enableAndGetAgentApp } from "../../src/common.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const createTryCpClient = () => TryCpClient.create(SERVER_URL);
@@ -275,11 +276,12 @@ test("TryCP Server - App API - get app info", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
-  const alice = await conductor.installApp({
+  const aliceApp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
   const { port } = await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface(port);
+  const alice = await enableAndGetAgentApp(conductor, port, aliceApp);
 
   const appInfo = await conductor
     .appWs(port)

@@ -2,7 +2,6 @@ import {
   AdminWebsocket,
   AppAgentWebsocket,
   AppBundleSource,
-  AppInfo,
   AppWebsocket,
   AttachAppInterfaceRequest,
   CallZomeRequest,
@@ -430,17 +429,16 @@ export class Conductor implements IConductor {
    * Install an app for multiple agents into the conductor.
    */
   async installAgentsApps(options: AgentsAppsOptions) {
-    const appInfos: AppInfo[] = [];
-    for (const appsForAgent of options.agentsApps) {
-      const agentApp = await this.installApp(appsForAgent.app, {
-        agentPubKey: appsForAgent.agentPubKey,
-        membraneProofs: appsForAgent.membraneProofs,
-        installedAppId: options.installedAppId,
-        networkSeed: options.networkSeed,
-      });
-      appInfos.push(agentApp);
-    }
-    return appInfos;
+    return Promise.all(
+      options.agentsApps.map((appsForAgent) =>
+        this.installApp(appsForAgent.app, {
+          agentPubKey: appsForAgent.agentPubKey,
+          membraneProofs: appsForAgent.membraneProofs,
+          installedAppId: options.installedAppId,
+          networkSeed: options.networkSeed,
+        })
+      )
+    );
   }
 }
 
