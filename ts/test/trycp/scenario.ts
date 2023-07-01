@@ -338,8 +338,8 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
 
 test("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
   const numberOfServers = 2;
-  const numberOfConductorsPerClient = 2;
-  const numberOfAgentsPerConductor = 2;
+  const numberOfConductorsPerClient = 4;
+  const numberOfAgentsPerConductor = 10;
   const tryCpServers: TryCpServer[] = [];
   const serverUrls: URL[] = [];
 

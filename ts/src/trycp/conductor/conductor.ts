@@ -3,7 +3,6 @@ import {
   AgentInfoRequest,
   AgentPubKey,
   AppBundleSource,
-  AppInfo,
   AppInfoRequest,
   AppSignalCb,
   AttachAppInterfaceRequest,
@@ -917,38 +916,38 @@ export class TryCpConductor implements IConductor {
    * @returns The installed app infos.
    */
   async installAgentsApps(options: AgentsAppsOptions) {
-    const appInfos: AppInfo[] = [];
-    for (const appForAgent of options.agentsApps) {
-      const agent_key =
-        appForAgent.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
-      const membrane_proofs = appForAgent.membraneProofs ?? {};
-      const installed_app_id = options.installedAppId ?? `app-${uuidv4()}`;
-      const network_seed = options.networkSeed;
-      const installAppRequest: InstallAppRequest =
-        "bundle" in appForAgent.app
-          ? {
-              bundle: appForAgent.app.bundle,
-              agent_key,
-              membrane_proofs,
-              installed_app_id,
-              network_seed,
-            }
-          : {
-              path: appForAgent.app.path,
-              agent_key,
-              membrane_proofs,
-              installed_app_id,
-              network_seed,
-            };
+    return Promise.all(
+      options.agentsApps.map(async (appForAgent) => {
+        const agent_key =
+          appForAgent.agentPubKey ??
+          (await this.adminWs().generateAgentPubKey());
+        const membrane_proofs = appForAgent.membraneProofs ?? {};
+        const installed_app_id = options.installedAppId ?? `app-${uuidv4()}`;
+        const network_seed = options.networkSeed;
+        const installAppRequest: InstallAppRequest =
+          "bundle" in appForAgent.app
+            ? {
+                bundle: appForAgent.app.bundle,
+                agent_key,
+                membrane_proofs,
+                installed_app_id,
+                network_seed,
+              }
+            : {
+                path: appForAgent.app.path,
+                agent_key,
+                membrane_proofs,
+                installed_app_id,
+                network_seed,
+              };
 
-      logger.debug(
-        `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
-          agent_key
-        )}`
-      );
-      const appInfo = await this.adminWs().installApp(installAppRequest);
-      appInfos.push(appInfo);
-    }
-    return appInfos;
+        logger.debug(
+          `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
+            agent_key
+          )}`
+        );
+        return this.adminWs().installApp(installAppRequest);
+      })
+    );
   }
 }
