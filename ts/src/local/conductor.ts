@@ -209,14 +209,13 @@ export class Conductor implements IConductor {
       return;
     }
 
-    const runConductorProcess = spawn(
-      "hc",
-      ["sandbox", "--piped", "run", "-e", this.conductorDir]
-      // {
-      //   detached: true, // create a process group; without this option, killing
-      //   // the process doesn't kill the conductor
-      // }
-    );
+    const runConductorProcess = spawn("hc", [
+      "sandbox",
+      "--piped",
+      "run",
+      "-e",
+      this.conductorDir,
+    ]);
     runConductorProcess.stdin.write(LAIR_PASSWORD);
     runConductorProcess.stdin.end();
 

@@ -18,10 +18,11 @@ import {
 } from "../../src/common.js";
 import {
   NetworkType,
+  Player,
   cleanAllConductors,
   createConductor,
 } from "../../src/index.js";
-import { awaitDhtSync } from "../../src/util.js";
+import { dhtSync } from "../../src/util.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const ROLE_NAME = "test";
@@ -394,23 +395,26 @@ test("Local Conductor - 2 agent apps test", async (t) => {
   await conductor1.connectAppInterface(port1);
   const port2 = await conductor2.attachAppInterface();
   await conductor2.connectAppInterface(port2);
-  const alice = await enableAndGetAgentApp(conductor1, port1, aliceApp);
-  const bob = await enableAndGetAgentApp(conductor2, port2, bobApp);
+  const aliceAppAgent = await enableAndGetAgentApp(conductor1, port1, aliceApp);
+  const bobAppAgent = await enableAndGetAgentApp(conductor2, port2, bobApp);
+  const alice: Player = { conductor: conductor1, ...aliceAppAgent };
+  const bob: Player = { conductor: conductor2, ...bobAppAgent };
 
   const entryContent = "test-content";
-  const createEntryHash: EntryHash = await alice.cells[0].callZome({
+  const createEntryHash: EntryHash = await aliceAppAgent.cells[0].callZome({
     zome_name: "coordinator",
     fn_name: "create",
     payload: entryContent,
   });
 
-  await awaitDhtSync([conductor1, conductor2], alice.cells[0].cell_id);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-  const readEntryResponse: typeof entryContent = await bob.cells[0].callZome({
-    zome_name: "coordinator",
-    fn_name: "read",
-    payload: createEntryHash,
-  });
+  const readEntryResponse: typeof entryContent =
+    await bobAppAgent.cells[0].callZome({
+      zome_name: "coordinator",
+      fn_name: "read",
+      payload: createEntryHash,
+    });
   t.equal(readEntryResponse, entryContent);
 
   await conductor1.shutDown();
@@ -436,13 +440,13 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
   await conductor1.connectAppInterface(port1);
   const port2 = await conductor2.attachAppInterface();
   await conductor2.connectAppInterface(port2);
-  const alice = await enableAndGetAgentApp(conductor1, port1, aliceApp);
-  const bob = await enableAndGetAgentApp(conductor2, port2, bobApp);
-
-  // await addAllAgentsToAllConductors([conductor1, conductor2]);
+  const aliceAppAgent = await enableAndGetAgentApp(conductor1, port1, aliceApp);
+  const bobAppAgent = await enableAndGetAgentApp(conductor2, port2, bobApp);
+  const alice: Player = { conductor: conductor1, ...aliceAppAgent };
+  const bob: Player = { conductor: conductor2, ...bobAppAgent };
 
   const entryContent = "test-content";
-  const createEntryHash: EntryHash = await alice.cells[0].callZome({
+  const createEntryHash: EntryHash = await aliceAppAgent.cells[0].callZome({
     zome_name: "coordinator",
     fn_name: "create",
     payload: entryContent,
@@ -451,13 +455,14 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  await awaitDhtSync([conductor1, conductor2], alice.cells[0].cell_id);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-  const readEntryResponse: typeof entryContent = await bob.cells[0].callZome({
-    zome_name: "coordinator",
-    fn_name: "read",
-    payload: createEntryHash,
-  });
+  const readEntryResponse: typeof entryContent =
+    await bobAppAgent.cells[0].callZome({
+      zome_name: "coordinator",
+      fn_name: "read",
+      payload: createEntryHash,
+    });
   t.equal(readEntryResponse, entryContent);
 
   await conductor1.shutDown();

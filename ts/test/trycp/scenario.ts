@@ -9,7 +9,7 @@ import {
   TryCpServer,
   stopAllTryCpServers,
 } from "../../src/trycp/trycp-server.js";
-import { awaitDhtSync } from "../../src/util.js";
+import { dhtSync } from "../../src/util.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
@@ -227,7 +227,7 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   });
 
   await scenario.shareAllAgents();
-  await scenario.awaitDhtSync(alice.cells[0].cell_id);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
@@ -263,7 +263,7 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
     fn_name: "create",
     payload: content,
   });
-  await scenario.awaitDhtSync(alice.cells[0].cell_id);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
     fn_name: "read",
@@ -383,7 +383,7 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
     fn_name: "create",
     payload: content,
   });
-  await awaitDhtSync([alice.conductor, bob.conductor], alice.cells[0].cell_id);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
     fn_name: "read",

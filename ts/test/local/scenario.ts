@@ -9,6 +9,7 @@ import test from "tape-promise/tape.js";
 import { getZomeCaller } from "../../src/common.js";
 import { Scenario, runScenario } from "../../src/local/scenario.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
+import { dhtSync } from "../../src/util.js";
 
 test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
   await runScenario(async (scenario: Scenario) => {
@@ -119,7 +120,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
     payload: content,
   });
 
-  await scenario.awaitDhtSync(alice.cells[0].cell_id);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
@@ -144,7 +145,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   const content = "Before shutdown";
   const createEntryHash = await aliceCaller<EntryHash>("create", content);
 
-  await scenario.awaitDhtSync(alice.cells[0].cell_id);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent = await bobCaller<typeof content>("read", createEntryHash);
   t.equal(readContent, content);
@@ -235,7 +236,7 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
     });
   }
 
-  await scenario.awaitDhtSync(alice.cells[0].cell_id);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   // Bob gets the last created entry
   const readContent = await bob.cells[0].callZome<string>({

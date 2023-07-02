@@ -1,7 +1,12 @@
-import { CellId, FullStateDump, encodeHashToBase64 } from "@holochain/client";
+import {
+  CellId,
+  DnaHash,
+  FullStateDump,
+  encodeHashToBase64,
+} from "@holochain/client";
 import isEqual from "lodash/isEqual.js";
 import sortBy from "lodash/sortBy.js";
-import { IConductor } from "./types.js";
+import { IPlayer } from "./types.js";
 
 /**
  * A utility function to wait the given amount of time.
@@ -26,18 +31,16 @@ export const pause = (milliseconds: number) => {
  *
  * @public
  */
-export const areDhtsSynced = async (
-  conductors: Array<IConductor>,
-  cellId: CellId
-) => {
+export const areDhtsSynced = async (players: IPlayer[], dnaHash: DnaHash) => {
   // Dump all conductors' states
   const conductorStates: FullStateDump[] = await Promise.all(
-    conductors.map((conductor) =>
-      conductor.adminWs().dumpFullState({
-        cell_id: cellId,
+    players.map((player) => {
+      const cell_id: CellId = [dnaHash, player.agentPubKey];
+      return player.conductor.adminWs().dumpFullState({
+        cell_id,
         dht_ops_cursor: undefined,
-      })
-    )
+      });
+    })
   );
 
   // Compare conductors' integrated DhtOps
@@ -60,17 +63,17 @@ export const areDhtsSynced = async (
  * A utility function to wait until all conductors' integrated DhtOps are
  * identical for a DNA.
  *
- * @param conductors - Array of conductors.
- * @param cellId - Cell id to compare integrated DhtOps from.
+ * @param players - Array of players.
+ * @param dnaHash - DNA hash to compare integrated DhtOps from.
  * @param interval - Interval to pause between comparisons (defaults to 50 ms).
  * @param timeout - A timeout for the delay (optional).
  * @returns A promise that is resolved after all agents' DHT states match.
  *
  * @public
  */
-export const awaitDhtSync = async (
-  conductors: Array<IConductor>,
-  cellId: CellId,
+export const dhtSync = async (
+  players: IPlayer[],
+  dnaHash: DnaHash,
   interval = 50,
   timeout?: number
 ) => {
@@ -86,7 +89,7 @@ export const awaitDhtSync = async (
       );
 
     // Check if Integrated DhtOps are syncronized
-    completed = await areDhtsSynced(conductors, cellId);
+    completed = await areDhtsSynced(players, dnaHash);
 
     if (!completed) {
       await pause(interval);

@@ -1,9 +1,4 @@
-import {
-  AgentPubKey,
-  AppBundleSource,
-  AppSignalCb,
-  CellId,
-} from "@holochain/client";
+import { AgentPubKey, AppBundleSource, AppSignalCb } from "@holochain/client";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
@@ -13,7 +8,6 @@ import {
   stopLocalServices,
 } from "../../common.js";
 import { AppOptions, IPlayer } from "../../types.js";
-import { awaitDhtSync } from "../../util.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
 
@@ -263,10 +257,10 @@ export class TryCpScenario {
    * @returns A promise that is resolved when the DHTs of all conductors are
    * synced.
    */
-  async awaitDhtSync(cellId: CellId, interval?: number, timeout?: number) {
-    const conductors = this.clients.map((client) => client.conductors).flat();
-    return awaitDhtSync(conductors, cellId, interval, timeout);
-  }
+  // async awaitDhtSync(players: TryCpPlayer[], dnaHash: DnaHash, interval?: number, timeout?: number) {
+  //   const conductors = this.clients.map((client) => client.conductors).flat();
+  //   return awaitDhtSync(conductors, cellId, interval, timeout);
+  // }
 
   /**
    * Shut down all conductors of all clients in the scenario.

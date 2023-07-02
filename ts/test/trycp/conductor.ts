@@ -16,8 +16,11 @@ import {
   runLocalServices,
   stopLocalServices,
 } from "../../src/common.js";
-import { TryCpClient, awaitDhtSync } from "../../src/index.js";
-import { createTryCpConductor } from "../../src/trycp/conductor/index.js";
+import { TryCpClient, dhtSync } from "../../src/index.js";
+import {
+  TryCpPlayer,
+  createTryCpConductor,
+} from "../../src/trycp/conductor/index.js";
 import {
   TRYCP_SERVER_HOST,
   TRYCP_SERVER_PORT,
@@ -696,9 +699,8 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
     .enableApp({ installed_app_id: aliceApp.installed_app_id });
   const { port: port1 } = await conductor1.adminWs().attachAppInterface();
   await conductor1.connectAppInterface(port1);
-  assert(CellType.Provisioned in aliceApp.cell_info[ROLE_NAME][0]);
-  const aliceCellId =
-    aliceApp.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
+  const aliceAppAgent = await enableAndGetAgentApp(conductor1, port1, aliceApp);
+  const alice: TryCpPlayer = { conductor: conductor1, ...aliceAppAgent };
 
   const conductor2 = await createTryCpConductor(client);
   const bobApp = await conductor2.installApp(app);
@@ -707,14 +709,13 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
     .enableApp({ installed_app_id: bobApp.installed_app_id });
   const { port: port2 } = await conductor2.adminWs().attachAppInterface();
   await conductor2.connectAppInterface(port2);
-  assert(CellType.Provisioned in bobApp.cell_info[ROLE_NAME][0]);
-  const bobCellId =
-    bobApp.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
+  const bobAppAgent = await enableAndGetAgentApp(conductor2, port2, bobApp);
+  const bob: TryCpPlayer = { conductor: conductor2, ...bobAppAgent };
 
   const entryContent = "test-content";
   const createEntryHash = await conductor1.appWs(port1).callZome<EntryHash>({
     cap_secret: null,
-    cell_id: aliceCellId,
+    cell_id: alice.cells[0].cell_id,
     zome_name: "coordinator",
     fn_name: "create",
     provenance: aliceApp.agent_pub_key,
@@ -727,13 +728,13 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
     "create entry hash starts with hCkk"
   );
 
-  await awaitDhtSync([conductor1, conductor2], aliceCellId);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   const readEntryResponse = await conductor2
     .appWs(port2)
     .callZome<typeof entryContent>({
       cap_secret: null,
-      cell_id: bobCellId,
+      cell_id: bob.cells[0].cell_id,
       zome_name: "coordinator",
       fn_name: "read",
       provenance: bobApp.agent_pub_key,

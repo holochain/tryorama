@@ -1,16 +1,15 @@
-import { AppBundleSource, CellId } from "@holochain/client";
+import { AppBundleSource } from "@holochain/client";
+import assert from "node:assert";
+import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { v4 as uuidv4 } from "uuid";
 import {
   addAllAgentsToAllConductors,
-  stopLocalServices,
-  runLocalServices,
   enableAndGetAgentApp,
+  runLocalServices,
+  stopLocalServices,
 } from "../common.js";
 import { AgentApp, AppOptions, IPlayer } from "../types.js";
-import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
-import { awaitDhtSync } from "../util.js";
-import { ChildProcessWithoutNullStreams } from "node:child_process";
-import assert from "node:assert";
+import { Conductor, cleanAllConductors, createConductor } from "./conductor.js";
 
 /**
  * A player tied to a {@link Conductor}.
@@ -140,15 +139,20 @@ export class Scenario {
   /**
    * Await DhtOp integration of all players for a given cell.
    *
-   * @param cellId - Cell id to await DHT sync for.
+   * @param dnaHash - DNA hash to await DHT sync for.
    * @param interval - Interval to pause between comparisons (defaults to 50 ms).
    * @param timeout - A timeout for the delay (optional).
    * @returns A promise that is resolved when the DHTs of all conductors are
    * synced.
    */
-  async awaitDhtSync(cellId: CellId, interval?: number, timeout?: number) {
-    return awaitDhtSync(this.conductors, cellId, interval, timeout);
-  }
+  // async awaitDhtSync(
+  //   players: Player[],
+  //   dnaHash: DnaHash,
+  //   interval?: number,
+  //   timeout?: number
+  // ) {
+  //   return awaitDhtSync(players, dnaHash, interval, timeout);
+  // }
 
   /**
    * Shut down all conductors in the scenario.
