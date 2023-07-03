@@ -7,7 +7,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- TryCP scenario: Optimize multi client/multi player installation.
+- **BREAKING CHANGE**: Next to a default App websocket, other websocket connections can be created and used for a player.
 ### Fixed
+- **BREAKING CHANGE**: Awaiting DHT sync of multiple players got a more universal API. Scenario methods were removed, so that in all cases the util function must be called.
 
 ## 2023-05-08: v0.14.0-rc.0
 ### Added

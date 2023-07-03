@@ -167,8 +167,6 @@ const getCallableCell = (
 ) => ({
   ...cell,
   callZome: async <T>(request: CellZomeCallRequest, timeout?: number) => {
-    // eslint-disable-next-line
-    // @ts-ignore
     const callZomeResponse = await conductor.appWs(port).callZome(
       {
         ...request,
