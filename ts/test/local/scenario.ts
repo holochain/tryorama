@@ -70,8 +70,8 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
       path: FIXTURE_HAPP_URL.pathname,
     });
     assert(signalHandlerAlice);
-    assert("on" in alice.appWs);
-    alice.appWs.on("signal", signalHandlerAlice);
+    assert("on" in alice.appAgentWs);
+    alice.appAgentWs.on("signal", signalHandlerAlice);
 
     const signalAlice = { value: "hello alice" };
     alice.cells[0].callZome({
@@ -158,14 +158,18 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
   await bob.conductor.startUp();
   const [appInterfacePort] = await bob.conductor.adminWs().listAppInterfaces();
-  bob.appWs = await bob.conductor.connectAppWs(appInterfacePort);
-  const readContentAfterRestart: typeof content = await bob.appWs.callZome({
-    cell_id: bob.cells[0].cell_id,
-    zome_name: TEST_ZOME_NAME,
-    fn_name: "read",
-    payload: createEntryHash,
-    provenance: bob.agentPubKey,
-  });
+  bob.appAgentWs = await bob.conductor.connectAppAgentWs(
+    appInterfacePort,
+    bob.appId
+  );
+  const readContentAfterRestart: typeof content = await bob.appAgentWs.callZome(
+    {
+      cell_id: bob.cells[0].cell_id,
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "read",
+      payload: createEntryHash,
+    }
+  );
   t.equal(readContentAfterRestart, content);
 
   await scenario.cleanUp();
@@ -194,11 +198,11 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     { appBundleSource },
   ]);
   assert(signalHandlerAlice);
-  assert("on" in alice.appWs);
-  alice.appWs.on("signal", signalHandlerAlice);
+  assert("on" in alice.appAgentWs);
+  alice.appAgentWs.on("signal", signalHandlerAlice);
   assert(signalHandlerBob);
-  assert("on" in bob.appWs);
-  bob.appWs.on("signal", signalHandlerBob);
+  assert("on" in bob.appAgentWs);
+  bob.appAgentWs.on("signal", signalHandlerBob);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({

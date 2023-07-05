@@ -95,13 +95,16 @@ export class Scenario {
     const appInfo = await conductor.installApp(appBundleSource, options);
     const adminWs = conductor.adminWs();
     const port = await conductor.attachAppInterface();
-    const appWs = await conductor.connectAppWs(port);
+    const appAgentWs = await conductor.connectAppAgentWs(
+      port,
+      appInfo.installed_app_id
+    );
     const agentApp: AgentApp = await enableAndGetAgentApp(
       adminWs,
-      appWs,
+      appAgentWs,
       appInfo
     );
-    return { conductor, appWs, ...agentApp };
+    return { conductor, appAgentWs, ...agentApp };
   }
 
   /**

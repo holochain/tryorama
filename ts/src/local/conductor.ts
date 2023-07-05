@@ -1,5 +1,6 @@
 import {
   AdminWebsocket,
+  AppAgentCallZomeRequest,
   AppAgentWebsocket,
   AppBundleSource,
   AppWebsocket,
@@ -18,12 +19,7 @@ import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 
 import { makeLogger } from "../logger.js";
-import {
-  AgentsAppsOptions,
-  AppOptions,
-  IAppWebsocket,
-  IConductor,
-} from "../types.js";
+import { AgentsAppsOptions, AppOptions, IConductor } from "../types.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -298,38 +294,18 @@ export class Conductor implements IConductor {
   }
 
   /**
-   * Connect a web socket to the App API.
+   * Connect a web socket to the App API,
+   *
+   * @param port - The websocket port to connect to.
+   * @returns An app websocket.
    */
-  // async connectAppInterface(port: number) {
-  //   logger.debug(`connecting App API to port ${port}\n`);
-  //   const appApiUrl = new URL(HOST_URL.href);
-  //   appApiUrl.port = port.toString();
-  //   this._appWs = await AppWebsocket.connect(appApiUrl.href, this.timeout);
-  //   this.setUpImplicitZomeCallSigning();
-  // }
-
-  // /**
-  //  * Connect a web socket for a specific app to the App API.
-  //  */
-  // async connectAppAgentInterface(port: number, appId: InstalledAppId) {
-  //   logger.debug(`connecting App API to port ${port}\n`);
-  //   const appApiUrl = new URL(HOST_URL.href);
-  //   appApiUrl.port = port.toString();
-  //   this._appAgentWs = await AppAgentWebsocket.connect(
-  //     appApiUrl.href,
-  //     appId,
-  //     this.timeout
-  //   );
-  //   this._appWs = this._appAgentWs.appWebsocket;
-  //   this.setUpImplicitZomeCallSigning(this._appAgentWs);
-  // }
-
   async connectAppWs(port: number) {
-    logger.debug(`connecting App API to port ${port}\n`);
+    logger.debug(`connecting App WebSocket to port ${port}\n`);
     const appApiUrl = new URL(this.adminApiUrl.href);
     appApiUrl.port = port.toString();
     const appWs = await AppWebsocket.connect(appApiUrl.href, this.timeout);
 
+    // set up automatic zome call signing
     const callZome = appWs.callZome;
     appWs.callZome = async (req: CallZomeRequest | CallZomeRequestSigned) => {
       if (!getSigningCredentials(req.cell_id)) {
@@ -343,55 +319,41 @@ export class Conductor implements IConductor {
 
   /**
    * Connect a web socket for a specific app and agent to the App API,
-   * that will be used by default when calling from `appAgentWs`.
    *
    * @param port - The websocket port to connect to.
    * @param appId - The app id to make requests to.
    * @returns An app agent websocket.
    */
-  async appAgentWs(port: number, appId: string) {
-    if (this._appAgentWs) {
-      throw new Error("app agent websocket already connected");
-    }
-    logger.debug(`connecting App API to port ${port}\n`);
+  async connectAppAgentWs(port: number, appId: string) {
+    logger.debug(`connecting App Agent WebSocket to port ${port}\n`);
     const appApiUrl = new URL(HOST_URL.href);
     appApiUrl.port = port.toString();
-    this._appAgentWs = await AppAgentWebsocket.connect(
+    const appAgentWs = await AppAgentWebsocket.connect(
       appApiUrl.href,
       appId,
       this.timeout
     );
 
-    // set up automatic zome call signing for app agent websocket
-    // const callZome = this.appAgentWs().callZome;
-    // console.log("hello");
-    // this.appAgentWs().callZome = async (req: AppAgentCallZomeRequest) => {
-    //   let cellId;
-    //   if ("role_name" in req) {
-    //     cellId = this.appAgentWs().getCellIdFromRoleName(
-    //       req.role_name,
-    //       await this.appAgentWs().appInfo()
-    //     );
-    //   } else {
-    //     cellId = req.cell_id;
-    //   }
-    //   if (!getSigningCredentials(cellId)) {
-    //     await this.adminWs().authorizeSigningCredentials(cellId);
-    //   }
-    //   return callZome(req);
-    // };
-
-    return this._appAgentWs;
-  }
-
-  private setUpImplicitZomeCallSigning(appWs: IAppWebsocket) {
-    const callZome = appWs.callZome;
-    appWs.callZome = async (req: CallZomeRequest | CallZomeRequestSigned) => {
-      if (!getSigningCredentials(req.cell_id)) {
-        await this.adminWs().authorizeSigningCredentials(req.cell_id);
+    // set up automatic zome call signing
+    const callZome = appAgentWs.callZome.bind(appAgentWs);
+    appAgentWs.callZome = async (req: AppAgentCallZomeRequest) => {
+      let cellId;
+      if ("role_name" in req) {
+        assert(appAgentWs.cachedAppInfo);
+        cellId = appAgentWs.getCellIdFromRoleName(
+          req.role_name,
+          appAgentWs.cachedAppInfo
+        );
+      } else {
+        cellId = req.cell_id;
+      }
+      if (!getSigningCredentials(cellId)) {
+        await this.adminWs().authorizeSigningCredentials(cellId);
       }
       return callZome(req);
     };
+
+    return appAgentWs;
   }
 
   /**

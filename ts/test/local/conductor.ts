@@ -86,7 +86,7 @@ test("Local Conductor - spawn a conductor and check for admin ws", async (t) => 
   await cleanAllConductors();
 });
 
-test("Local Conductor - get app info", async (t) => {
+test("Local Conductor - get app info with app ws", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -106,6 +106,27 @@ test("Local Conductor - get app info", async (t) => {
   await cleanAllConductors();
 });
 
+test("Local Conductor - get app info with app agent ws", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl);
+  const app = await conductor.installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: app.installed_app_id });
+  const port = await conductor.attachAppInterface();
+  const appAgentWs = await conductor.connectAppAgentWs(
+    port,
+    app.installed_app_id
+  );
+  const appInfo = await appAgentWs.appInfo();
+  t.deepEqual(appInfo.status, { running: null });
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
 test("Local Conductor - install and call an app", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
@@ -114,8 +135,8 @@ test("Local Conductor - install and call an app", async (t) => {
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  const appWs = await conductor.connectAppWs(port);
-  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
+  const appAgentWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appAgentWs, app);
   t.ok(app.installed_app_id);
 
   const entryContent = "Bye bye, world";
@@ -401,16 +422,30 @@ test("Local Conductor - 2 agent apps test", async (t) => {
   const adminWs2 = conductor2.adminWs();
   const port1 = await conductor1.attachAppInterface();
   const port2 = await conductor2.attachAppInterface();
-  const appWs1 = await conductor1.connectAppWs(port1);
-  const appWs2 = await conductor2.connectAppWs(port2);
-  const aliceAppAgent = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
-  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
+  const appAgentWs1 = await conductor1.connectAppAgentWs(
+    port1,
+    aliceApp.installed_app_id
+  );
+  const appAgentWs2 = await conductor2.connectAppAgentWs(
+    port2,
+    bobApp.installed_app_id
+  );
+  const aliceAppAgent = await enableAndGetAgentApp(
+    adminWs1,
+    appAgentWs1,
+    aliceApp
+  );
+  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
   const alice: Player = {
     conductor: conductor1,
-    appWs: appWs1,
+    appAgentWs: appAgentWs1,
     ...aliceAppAgent,
   };
-  const bob: Player = { conductor: conductor2, appWs: appWs2, ...bobAppAgent };
+  const bob: Player = {
+    conductor: conductor2,
+    appAgentWs: appAgentWs2,
+    ...bobAppAgent,
+  };
 
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await alice.cells[0].callZome({
@@ -445,11 +480,18 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
   const adminWs1 = conductor1.adminWs();
   const aliceApp = await conductor1.installApp(app);
   const port1 = await conductor1.attachAppInterface();
-  const appWs1 = await conductor1.connectAppWs(port1);
-  const aliceAppAgent = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
+  const appAgentWs1 = await conductor1.connectAppAgentWs(
+    port1,
+    aliceApp.installed_app_id
+  );
+  const aliceAppAgent = await enableAndGetAgentApp(
+    adminWs1,
+    appAgentWs1,
+    aliceApp
+  );
   const alice: Player = {
     conductor: conductor1,
-    appWs: appWs1,
+    appAgentWs: appAgentWs1,
     ...aliceAppAgent,
   };
 
@@ -459,9 +501,13 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
   const adminWs2 = conductor2.adminWs();
   const bobApp = await conductor2.installApp(app);
   const port2 = await conductor2.attachAppInterface();
-  const appWs2 = await conductor2.connectAppWs(port2);
-  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
-  const bob: Player = { conductor: conductor2, appWs: appWs2, ...bobAppAgent };
+  const appAgentWs2 = await conductor2.connectAppWs(port2);
+  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
+  const bob: Player = {
+    conductor: conductor2,
+    appAgentWs: appAgentWs2,
+    ...bobAppAgent,
+  };
 
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await alice.cells[0].callZome({

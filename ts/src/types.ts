@@ -75,7 +75,7 @@ export interface IConductor {
 
   adminWs: () => IAdminWebsocket;
   connectAppWs: (port: number) => Promise<IAppWebsocket>;
-  appAgentWs: (
+  connectAppAgentWs: (
     port: number,
     appId: InstalledAppId
   ) => Promise<IAppAgentWebsocket>;
@@ -141,7 +141,7 @@ export interface AgentApp {
  */
 export interface IPlayer extends AgentApp {
   conductor: IConductor;
-  appWs: IAppWebsocket | AppWebsocket;
+  appAgentWs: AppAgentWebsocket | IAppAgentWebsocket;
 }
 
 /**
