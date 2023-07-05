@@ -11,6 +11,8 @@ import { Scenario, runScenario } from "../../src/local/scenario.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 import { dhtSync } from "../../src/util.js";
 
+const TEST_ZOME_NAME = "coordinator";
+
 test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
@@ -68,11 +70,12 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
       path: FIXTURE_HAPP_URL.pathname,
     });
     assert(signalHandlerAlice);
-    alice.conductor.appWs().on("signal", signalHandlerAlice);
+    assert("on" in alice.appWs);
+    alice.appWs.on("signal", signalHandlerAlice);
 
     const signalAlice = { value: "hello alice" };
     alice.cells[0].callZome({
-      zome_name: "coordinator",
+      zome_name: TEST_ZOME_NAME,
       fn_name: "signal_loopback",
       payload: signalAlice,
     });
@@ -115,7 +118,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
   const content = "Hi dare";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
-    zome_name: "coordinator",
+    zome_name: TEST_ZOME_NAME,
     fn_name: "create",
     payload: content,
   });
@@ -123,7 +126,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
-    zome_name: "coordinator",
+    zome_name: TEST_ZOME_NAME,
     fn_name: "read",
     payload: createEntryHash,
   });
@@ -139,8 +142,8 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
     { appBundleSource },
     { appBundleSource },
   ]);
-  const aliceCaller = getZomeCaller(alice.cells[0], "coordinator");
-  const bobCaller = getZomeCaller(bob.cells[0], "coordinator");
+  const aliceCaller = getZomeCaller(alice.cells[0], TEST_ZOME_NAME);
+  const bobCaller = getZomeCaller(bob.cells[0], TEST_ZOME_NAME);
 
   const content = "Before shutdown";
   const createEntryHash = await aliceCaller<EntryHash>("create", content);
@@ -155,11 +158,14 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 
   await bob.conductor.startUp();
   const [appInterfacePort] = await bob.conductor.adminWs().listAppInterfaces();
-  await bob.conductor.connectAppInterface(appInterfacePort);
-  const readContentAfterRestart = await bobCaller<typeof content>(
-    "read",
-    createEntryHash
-  );
+  bob.appWs = await bob.conductor.connectAppWs(appInterfacePort);
+  const readContentAfterRestart: typeof content = await bob.appWs.callZome({
+    cell_id: bob.cells[0].cell_id,
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "read",
+    payload: createEntryHash,
+    provenance: bob.agentPubKey,
+  });
   t.equal(readContentAfterRestart, content);
 
   await scenario.cleanUp();
@@ -188,19 +194,21 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     { appBundleSource },
   ]);
   assert(signalHandlerAlice);
-  alice.conductor.appWs().on("signal", signalHandlerAlice);
+  assert("on" in alice.appWs);
+  alice.appWs.on("signal", signalHandlerAlice);
   assert(signalHandlerBob);
-  bob.conductor.appWs().on("signal", signalHandlerBob);
+  assert("on" in bob.appWs);
+  bob.appWs.on("signal", signalHandlerBob);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({
-    zome_name: "coordinator",
+    zome_name: TEST_ZOME_NAME,
     fn_name: "signal_loopback",
     payload: signalAlice,
   });
   const signalBob = { value: "hello bob" };
   bob.cells[0].callZome({
-    zome_name: "coordinator",
+    zome_name: TEST_ZOME_NAME,
     fn_name: "signal_loopback",
     payload: signalBob,
   });
@@ -230,7 +238,7 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
   for (let i = 0; i < 10; i++) {
     lastCreatedContent = `Hi dare ${i}`;
     lastCreatedHash = await alice.cells[0].callZome<EntryHash>({
-      zome_name: "coordinator",
+      zome_name: TEST_ZOME_NAME,
       fn_name: "create",
       payload: lastCreatedContent,
     });
@@ -240,7 +248,7 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
 
   // Bob gets the last created entry
   const readContent = await bob.cells[0].callZome<string>({
-    zome_name: "coordinator",
+    zome_name: TEST_ZOME_NAME,
     fn_name: "read",
     payload: lastCreatedHash,
   });

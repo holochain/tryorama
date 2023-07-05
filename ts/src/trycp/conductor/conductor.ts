@@ -31,6 +31,7 @@ import {
   GrantedFunctionsType,
   GrantZomeCallCapabilityRequest,
   InstallAppRequest,
+  InstalledAppId,
   ListAppsRequest,
   NetworkInfoRequest,
   randomCapSecret,
@@ -47,7 +48,12 @@ import assert from "node:assert";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { makeLogger } from "../../logger.js";
-import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
+import {
+  AgentsAppsOptions,
+  AppOptions,
+  IAppAgentWebsocket,
+  IConductor,
+} from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceMessage,
@@ -748,7 +754,7 @@ export class TryCpConductor implements IConductor {
    *
    * @returns The App API web socket.
    */
-  appWs(port: number) {
+  async connectAppWs(port: number) {
     /**
      * Request info of an installed hApp.
      *
@@ -875,6 +881,23 @@ export class TryCpConductor implements IConductor {
       disableCloneCell,
       networkInfo,
     };
+  }
+
+  async appAgentWs(port: number, appId: InstalledAppId) {
+    const appInfo = async () => {
+      const response = await this.callAppApi(port, {
+        type: "app_info",
+        data: { installed_app_id: appId },
+      });
+      assert(response.type === "app_info");
+      return response.data;
+    };
+
+    // eslint-disable-next-line
+    // @ts-ignore
+    return {
+      appInfo,
+    } as IAppAgentWebsocket;
   }
 
   /**

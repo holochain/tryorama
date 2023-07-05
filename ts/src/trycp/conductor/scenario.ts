@@ -155,15 +155,18 @@ export class TryCpScenario {
               const appInfos = await conductor.installAgentsApps({
                 agentsApps: appOptions,
               });
-              const { port } = await conductor.adminWs().attachAppInterface();
+              const adminWs = conductor.adminWs();
+              const { port } = await adminWs.attachAppInterface();
               await conductor.connectAppInterface(port);
+              const appWs = await conductor.connectAppWs(port);
               const agentsApps = await Promise.all(
                 appInfos.map((appInfo) =>
-                  enableAndGetAgentApp(conductor, port, appInfo)
+                  enableAndGetAgentApp(adminWs, appWs, appInfo)
                 )
               );
               const players: TryCpPlayer[] = agentsApps.map((agentApp) => ({
                 conductor,
+                appWs,
                 ...agentApp,
               }));
               return { conductor, players };
@@ -201,13 +204,15 @@ export class TryCpScenario {
       networkSeed: options?.networkSeed ?? this.network_seed,
     };
     const appInfo = await conductor.installApp(appBundleSource, options);
-    const { port } = await conductor.adminWs().attachAppInterface();
+    const adminWs = conductor.adminWs();
+    const { port } = await adminWs.attachAppInterface();
     await conductor.connectAppInterface(port);
-    const agentApp = await enableAndGetAgentApp(conductor, port, appInfo);
+    const appWs = await conductor.connectAppWs(port);
+    const agentApp = await enableAndGetAgentApp(adminWs, appWs, appInfo);
     if (options.signalHandler) {
       conductor.on(port, options.signalHandler);
     }
-    const player: TryCpPlayer = { conductor, ...agentApp };
+    const player: TryCpPlayer = { conductor, appWs, ...agentApp };
     return player;
   }
 

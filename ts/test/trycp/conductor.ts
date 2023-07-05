@@ -88,12 +88,14 @@ test("TryCP Conductor - install hApp bundle and access cell by role name", async
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
-  const { port } = await conductor.adminWs().attachAppInterface();
+  const adminWs = conductor.adminWs();
+  const { port } = await adminWs.attachAppInterface();
   await conductor.connectAppInterface(port);
+  const appWs = await conductor.connectAppWs(port);
   const aliceHapp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
-  const alice = await enableAndGetAgentApp(conductor, port, aliceHapp);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceHapp);
   t.ok(alice.namedCells.get(ROLE_NAME), "named cell can be accessed");
 
   await stopLocalServices(servicesProcess);
@@ -107,12 +109,14 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
-  const aliceApp = await conductor.installApp({
+  const adminWs = conductor.adminWs();
+  const { port } = await adminWs.attachAppInterface();
+  await conductor.connectAppInterface(port);
+  const appWs = await conductor.connectAppWs(port);
+  const aliceHapp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
-  const { port } = await conductor.adminWs().attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, aliceApp);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceHapp);
   t.ok(alice.appId, "installed hApp bundle has a hApp id");
 
   const entryContent = "Bye bye, world";
@@ -219,9 +223,11 @@ test("TryCP Conductor - request network info", async (t) => {
   const dnaHash =
     appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id[0];
 
-  const networkInfo = await conductor
-    .appWs(port)
-    .networkInfo({ agent_pub_key: agentPubKey, dnas: [dnaHash] });
+  const appWs = await conductor.connectAppWs(port);
+  const networkInfo = await appWs.networkInfo({
+    agent_pub_key: agentPubKey,
+    dnas: [dnaHash],
+  });
   t.equal(networkInfo[0].arc_size, 1.0);
   t.assert(networkInfo[0].bytes_since_last_time_queried > 0);
   t.equal(networkInfo[0].completed_rounds_since_last_time_queried, 0);
@@ -296,11 +302,12 @@ test("TryCP Conductor - receive a signal", async (t) => {
   await conductor
     .adminWs()
     .enableApp({ installed_app_id: appInfo.installed_app_id });
+  const appWs = await conductor.connectAppWs(port);
 
   assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
   const cell_id = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
 
-  conductor.appWs(port).callZome({
+  appWs.callZome({
     cap_secret: null,
     cell_id,
     zome_name: "coordinator",
@@ -372,9 +379,10 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
     TRYCP_SUCCESS_RESPONSE,
     "connected app interface responds with success"
   );
+  const appWs = await conductor.connectAppWs(port);
 
   const entryContent = "test-content";
-  const createEntryHash = await conductor.appWs(port).callZome<EntryHash>({
+  const createEntryHash = await appWs.callZome<EntryHash>({
     cap_secret: null,
     cell_id,
     zome_name: "coordinator",
@@ -389,16 +397,14 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
     "created entry hash starts with hCkk"
   );
 
-  const readEntryResponse = await conductor
-    .appWs(port)
-    .callZome<typeof entryContent>({
-      cap_secret: null,
-      cell_id,
-      zome_name: "coordinator",
-      fn_name: "read",
-      provenance: agentPubKey,
-      payload: createEntryHash,
-    });
+  const readEntryResponse = await appWs.callZome<typeof entryContent>({
+    cap_secret: null,
+    cell_id,
+    zome_name: "coordinator",
+    fn_name: "read",
+    provenance: agentPubKey,
+    payload: createEntryHash,
+  });
   t.equal(
     readEntryResponse,
     entryContent,
@@ -427,9 +433,11 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
   const conductor = await createTryCpConductor(client);
   const app = { path: FIXTURE_HAPP_URL.pathname };
   const aliceApp = await conductor.installApp(app);
-  const { port } = await conductor.adminWs().attachAppInterface();
+  const adminWs = conductor.adminWs();
+  const { port } = await adminWs.attachAppInterface();
   await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, aliceApp);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
 
   const actual = await alice.cells[0].callZome<null>({
     zome_name: "coordinator",
@@ -542,9 +550,10 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     TRYCP_SUCCESS_RESPONSE,
     "connect app interface responds with success"
   );
+  const appWs = await conductor.connectAppWs(port);
 
   const entryContent = "test-content";
-  const createEntryHash = await conductor.appWs(port).callZome<EntryHash>({
+  const createEntryHash = await appWs.callZome<EntryHash>({
     cap_secret: null,
     cell_id: cellId1,
     zome_name: "coordinator",
@@ -559,16 +568,14 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     "created entry hash starts with hCkk"
   );
 
-  const readEntryResponse = await conductor
-    .appWs(port)
-    .callZome<typeof entryContent>({
-      cap_secret: null,
-      cell_id: cellId2,
-      zome_name: "coordinator",
-      fn_name: "read",
-      provenance: agent2PubKey,
-      payload: createEntryHash,
-    });
+  const readEntryResponse = await appWs.callZome<typeof entryContent>({
+    cap_secret: null,
+    cell_id: cellId2,
+    zome_name: "coordinator",
+    fn_name: "read",
+    provenance: agent2PubKey,
+    payload: createEntryHash,
+  });
   t.equal(
     readEntryResponse,
     entryContent,
@@ -600,8 +607,9 @@ test("TryCP Conductor - clone cell management", async (t) => {
   await conductor.adminWs().enableApp({ installed_app_id: appId });
   const { port } = await conductor.adminWs().attachAppInterface();
   await conductor.connectAppInterface(port);
+  const appWs = await conductor.connectAppWs(port);
 
-  const cloneCell = await conductor.appWs(port).createCloneCell({
+  const cloneCell = await appWs.createCloneCell({
     app_id: appId,
     role_name: ROLE_NAME,
     modifiers: { network_seed: "test-seed" },
@@ -618,7 +626,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   );
 
   const testContent = "test-content";
-  const entryActionHash: ActionHash = await conductor.appWs(port).callZome({
+  const entryActionHash: ActionHash = await appWs.callZome({
     cell_id: cloneCell.cell_id,
     zome_name: "coordinator",
     fn_name: "create",
@@ -627,11 +635,12 @@ test("TryCP Conductor - clone cell management", async (t) => {
     provenance: agentPubKey,
   });
 
-  await conductor
-    .appWs(port)
-    .disableCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await appWs.disableCloneCell({
+    app_id: appId,
+    clone_cell_id: cloneCell.cell_id,
+  });
   await t.rejects(
-    conductor.appWs(port).callZome({
+    appWs.callZome({
       cell_id: cloneCell.cell_id,
       zome_name: "coordinator",
       fn_name: "read",
@@ -642,35 +651,35 @@ test("TryCP Conductor - clone cell management", async (t) => {
     "disabled clone cell cannot be called"
   );
 
-  const enabledCloneCell = await conductor
-    .appWs(port)
-    .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.clone_id });
+  const enabledCloneCell = await appWs.enableCloneCell({
+    app_id: appId,
+    clone_cell_id: cloneCell.clone_id,
+  });
   t.deepEqual(
     enabledCloneCell,
     cloneCell,
     "enabled clone cell matches created clone cell"
   );
 
-  const readEntryResponse: typeof testContent = await conductor
-    .appWs(port)
-    .callZome({
-      cell_id: cloneCell.cell_id,
-      zome_name: "coordinator",
-      fn_name: "read",
-      payload: entryActionHash,
-      cap_secret: null,
-      provenance: agentPubKey,
-    });
+  const readEntryResponse: typeof testContent = await appWs.callZome({
+    cell_id: cloneCell.cell_id,
+    zome_name: "coordinator",
+    fn_name: "read",
+    payload: entryActionHash,
+    cap_secret: null,
+    provenance: agentPubKey,
+  });
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
-  await conductor
-    .appWs(port)
-    .disableCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await appWs.disableCloneCell({
+    app_id: appId,
+    clone_cell_id: cloneCell.cell_id,
+  });
   await conductor
     .adminWs()
     .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
   await t.rejects(
-    conductor.appWs(port).enableCloneCell({
+    appWs.enableCloneCell({
       app_id: appId,
       clone_cell_id: cloneCell.clone_id,
     }),
@@ -694,27 +703,34 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
 
   const conductor1 = await createTryCpConductor(client);
   const aliceApp = await conductor1.installApp(app);
-  await conductor1
-    .adminWs()
-    .enableApp({ installed_app_id: aliceApp.installed_app_id });
+  const adminWs1 = conductor1.adminWs();
+  await adminWs1.enableApp({ installed_app_id: aliceApp.installed_app_id });
   const { port: port1 } = await conductor1.adminWs().attachAppInterface();
   await conductor1.connectAppInterface(port1);
-  const aliceAppAgent = await enableAndGetAgentApp(conductor1, port1, aliceApp);
-  const alice: TryCpPlayer = { conductor: conductor1, ...aliceAppAgent };
+  const appWs1 = await conductor1.connectAppWs(port1);
+  const aliceAppAgent = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
+  const alice: TryCpPlayer = {
+    conductor: conductor1,
+    appWs: appWs1,
+    ...aliceAppAgent,
+  };
 
   const conductor2 = await createTryCpConductor(client);
   const bobApp = await conductor2.installApp(app);
-  await conductor2
-    .adminWs()
-    .enableApp({ installed_app_id: bobApp.installed_app_id });
+  const adminWs2 = conductor2.adminWs();
+  await adminWs2.enableApp({ installed_app_id: bobApp.installed_app_id });
   const { port: port2 } = await conductor2.adminWs().attachAppInterface();
   await conductor2.connectAppInterface(port2);
-  const bobAppAgent = await enableAndGetAgentApp(conductor2, port2, bobApp);
-  const bob: TryCpPlayer = { conductor: conductor2, ...bobAppAgent };
+  const appWs2 = await conductor2.connectAppWs(port2);
+  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
+  const bob: TryCpPlayer = {
+    conductor: conductor2,
+    appWs: appWs2,
+    ...bobAppAgent,
+  };
 
   const entryContent = "test-content";
-  const createEntryHash = await conductor1.appWs(port1).callZome<EntryHash>({
-    cap_secret: null,
+  const createEntryHash = await appWs1.callZome<EntryHash>({
     cell_id: alice.cells[0].cell_id,
     zome_name: "coordinator",
     fn_name: "create",
@@ -730,16 +746,13 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
 
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-  const readEntryResponse = await conductor2
-    .appWs(port2)
-    .callZome<typeof entryContent>({
-      cap_secret: null,
-      cell_id: bob.cells[0].cell_id,
-      zome_name: "coordinator",
-      fn_name: "read",
-      provenance: bobApp.agent_pub_key,
-      payload: createEntryHash,
-    });
+  const readEntryResponse = await appWs2.callZome<typeof entryContent>({
+    cell_id: bob.cells[0].cell_id,
+    zome_name: "coordinator",
+    fn_name: "read",
+    provenance: bobApp.agent_pub_key,
+    payload: createEntryHash,
+  });
   t.equal(
     readEntryResponse,
     entryContent,
