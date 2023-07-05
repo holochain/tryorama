@@ -1,5 +1,4 @@
 import {
-  AgentPubKey,
   AppInfo,
   CallZomeResponse,
   CellType,
@@ -13,6 +12,9 @@ import {
   AgentApp,
   CallableCell,
   CellZomeCallRequest,
+  IAdminWebsocket,
+  IAppAgentWebsocket,
+  IAppWebsocket,
   IConductor,
 } from "./types.js";
 
@@ -110,11 +112,11 @@ function assertZomeResponse<T>(
 }
 
 export const enableAndGetAgentApp = async (
-  conductor: IConductor,
-  port: number,
+  adminWs: IAdminWebsocket,
+  appWs: IAppWebsocket | IAppAgentWebsocket,
   appInfo: AppInfo
 ) => {
-  const enableAppResponse = await conductor.adminWs().enableApp({
+  const enableAppResponse = await adminWs.enableApp({
     installed_app_id: appInfo.installed_app_id,
   });
   if (enableAppResponse.errors.length) {
@@ -126,10 +128,8 @@ export const enableAndGetAgentApp = async (
     appInfo.cell_info[role_name].forEach((cellInfo) => {
       if (CellType.Provisioned in cellInfo) {
         const callableCell = getCallableCell(
-          conductor,
-          port,
-          cellInfo[CellType.Provisioned],
-          appInfo.agent_pub_key
+          appWs,
+          cellInfo[CellType.Provisioned]
         );
         cells.push(callableCell);
         namedCells.set(role_name, callableCell);
@@ -137,12 +137,7 @@ export const enableAndGetAgentApp = async (
         CellType.Cloned in cellInfo &&
         cellInfo[CellType.Cloned].clone_id
       ) {
-        const callableCell = getCallableCell(
-          conductor,
-          port,
-          cellInfo[CellType.Cloned],
-          appInfo.agent_pub_key
-        );
+        const callableCell = getCallableCell(appWs, cellInfo[CellType.Cloned]);
         cells.push(callableCell);
         namedCells.set(cellInfo[CellType.Cloned].clone_id, callableCell);
       } else {
@@ -160,19 +155,16 @@ export const enableAndGetAgentApp = async (
 };
 
 const getCallableCell = (
-  conductor: IConductor,
-  port: number,
-  cell: ClonedCell | ProvisionedCell,
-  agentPubKey: AgentPubKey
+  appWs: IAppWebsocket | IAppAgentWebsocket,
+  cell: ClonedCell | ProvisionedCell
 ) => ({
   ...cell,
   callZome: async <T>(request: CellZomeCallRequest, timeout?: number) => {
-    const callZomeResponse = await conductor.appWs(port).callZome(
+    const callZomeResponse = await appWs.callZome(
       {
         ...request,
-        cap_secret: null,
         cell_id: cell.cell_id,
-        provenance: request.provenance ?? agentPubKey,
+        provenance: request.provenance ?? cell.cell_id[1],
         payload: request.payload ?? null,
       },
       timeout

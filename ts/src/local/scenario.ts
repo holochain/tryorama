@@ -69,7 +69,6 @@ export class Scenario {
     assert(this.signalingServerUrl);
     const conductor = await createConductor(this.signalingServerUrl, {
       timeout: this.timeout,
-      attachAppInterface: false,
       bootstrapServerUrl: this.bootstrapServerUrl,
     });
     this.conductors.push(conductor);
@@ -94,14 +93,15 @@ export class Scenario {
       networkSeed: options?.networkSeed ?? this.networkSeed,
     };
     const appInfo = await conductor.installApp(appBundleSource, options);
+    const adminWs = conductor.adminWs();
     const port = await conductor.attachAppInterface();
-    await conductor.connectAppAgentInterface(port, appInfo.installed_app_id);
+    const appWs = await conductor.connectAppWs(port);
     const agentApp: AgentApp = await enableAndGetAgentApp(
-      conductor,
-      port,
+      adminWs,
+      appWs,
       appInfo
     );
-    return { conductor, ...agentApp };
+    return { conductor, appWs, ...agentApp };
   }
 
   /**

@@ -76,11 +76,10 @@ test("Local Conductor - spawn a conductor with a bootstrap service", async (t) =
   await cleanAllConductors();
 });
 
-test("Local Conductor - spawn a conductor and check for admin and app ws", async (t) => {
+test("Local Conductor - spawn a conductor and check for admin ws", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   t.ok(conductor.adminWs());
-  t.ok(conductor.appWs());
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -96,7 +95,9 @@ test("Local Conductor - get app info", async (t) => {
   await conductor
     .adminWs()
     .enableApp({ installed_app_id: app.installed_app_id });
-  const appInfo = await conductor.appWs().appInfo({
+  const port = await conductor.attachAppInterface();
+  const appWs = await conductor.connectAppWs(port);
+  const appInfo = await appWs.appInfo({
     installed_app_id: app.installed_app_id,
   });
   t.deepEqual(appInfo.status, { running: null });
@@ -111,9 +112,10 @@ test("Local Conductor - install and call an app", async (t) => {
   const app = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
+  const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, app);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
   t.ok(app.installed_app_id);
 
   const entryContent = "Bye bye, world";
@@ -141,9 +143,10 @@ test("Local Conductor - get a convenience function for zome calls", async (t) =>
   const app = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
+  const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, app);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
 
   const coordinatorZomeCall = getZomeCaller(alice.cells[0], "coordinator");
   t.equal(
@@ -174,10 +177,11 @@ test("Local Conductor - install multiple agents and apps and get access to agent
       { app: { path: FIXTURE_HAPP_URL.pathname } },
     ],
   });
+  const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, aliceAoo);
-  const bob = await enableAndGetAgentApp(conductor, port, bobApp);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceAoo);
+  const bob = await enableAndGetAgentApp(adminWs, appWs, bobApp);
 
   alice.cells.forEach((cell) =>
     t.deepEqual(cell.cell_id[1], alice.agentPubKey)
@@ -195,9 +199,10 @@ test("Local Conductor - get a named cell by role name", async (t) => {
   const app = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
+  const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, app);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
   t.ok(alice.namedCells.get(ROLE_NAME), "dna role name matches");
 
   await conductor.shutDown();
@@ -211,9 +216,10 @@ test("Local Conductor - zome call can time out before completion", async (t) => 
   const app = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
+  const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, app);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
   const cell = alice.namedCells.get(ROLE_NAME);
   assert(cell);
   const zome_name = "coordinator";
@@ -243,15 +249,16 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
       agentPubKey,
     }
   );
+  const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, app);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
   const { cell_id } = alice.cells[0];
   t.ok(Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"));
   t.ok(Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"));
 
   const entryContent = "test-content";
-  const createEntryHash: EntryHash = await conductor.appWs().callZome({
+  const createEntryHash: EntryHash = await appWs.callZome({
     cap_secret: null,
     cell_id,
     zome_name: "coordinator",
@@ -263,16 +270,14 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
   t.equal(createEntryHash.length, 39);
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
-  const readEntryResponse: typeof entryContent = await conductor
-    .appWs()
-    .callZome({
-      cap_secret: null,
-      cell_id,
-      zome_name: "coordinator",
-      fn_name: "read",
-      provenance: agentPubKey,
-      payload: createEntryHash,
-    });
+  const readEntryResponse: typeof entryContent = await appWs.callZome({
+    cap_secret: null,
+    cell_id,
+    zome_name: "coordinator",
+    fn_name: "read",
+    provenance: agentPubKey,
+    payload: createEntryHash,
+  });
   t.equal(readEntryResponse, entryContent);
 
   await conductor.shutDown();
@@ -292,11 +297,12 @@ test("Local Conductor - clone cell management", async (t) => {
       agentPubKey,
     }
   );
+  const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, app);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
 
-  const cloneCell = await conductor.appWs().createCloneCell({
+  const cloneCell = await appWs.createCloneCell({
     app_id: appId,
     role_name: ROLE_NAME,
     modifiers: { network_seed: "test-seed" },
@@ -313,7 +319,7 @@ test("Local Conductor - clone cell management", async (t) => {
   );
 
   const testContent = "test-content";
-  const entryActionHash: ActionHash = await conductor.appWs().callZome({
+  const entryActionHash: ActionHash = await appWs.callZome({
     cell_id: cloneCell.cell_id,
     zome_name: "coordinator",
     fn_name: "create",
@@ -322,11 +328,12 @@ test("Local Conductor - clone cell management", async (t) => {
     provenance: agentPubKey,
   });
 
-  await conductor
-    .appWs()
-    .disableCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await appWs.disableCloneCell({
+    app_id: appId,
+    clone_cell_id: cloneCell.cell_id,
+  });
   await t.rejects(
-    conductor.appWs().callZome({
+    appWs.callZome({
       cell_id: cloneCell.cell_id,
       zome_name: "coordinator",
       fn_name: "read",
@@ -337,39 +344,37 @@ test("Local Conductor - clone cell management", async (t) => {
     "disabled clone cell cannot be called"
   );
 
-  const enabledCloneCell = await conductor
-    .appWs()
-    .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.clone_id });
+  const enabledCloneCell = await appWs.enableCloneCell({
+    app_id: appId,
+    clone_cell_id: cloneCell.clone_id,
+  });
   t.deepEqual(
     enabledCloneCell,
     cloneCell,
     "enabled clone cell matches created clone cell"
   );
-  const readEntryResponse: typeof testContent = await conductor
-    .appWs()
-    .callZome(
-      {
-        cell_id: cloneCell.cell_id,
-        zome_name: "coordinator",
-        fn_name: "read",
-        payload: entryActionHash,
-        cap_secret: null,
-        provenance: agentPubKey,
-      },
-      40000
-    );
+  const readEntryResponse: typeof testContent = await appWs.callZome(
+    {
+      cell_id: cloneCell.cell_id,
+      zome_name: "coordinator",
+      fn_name: "read",
+      payload: entryActionHash,
+      cap_secret: null,
+      provenance: agentPubKey,
+    },
+    40000
+  );
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
-  await conductor
-    .appWs()
-    .disableCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+  await appWs.disableCloneCell({
+    app_id: appId,
+    clone_cell_id: cloneCell.cell_id,
+  });
   await conductor
     .adminWs()
     .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
   await t.rejects(
-    conductor
-      .appWs()
-      .enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.clone_id }),
+    appWs.enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.clone_id }),
     "deleted clone cell cannot be enabled"
   );
 
@@ -389,19 +394,26 @@ test("Local Conductor - 2 agent apps test", async (t) => {
   const conductor2 = await createConductor(signalingServerUrl, {
     bootstrapServerUrl,
   });
+
   const aliceApp = await conductor1.installApp(app);
   const bobApp = await conductor2.installApp(app);
+  const adminWs1 = conductor1.adminWs();
+  const adminWs2 = conductor2.adminWs();
   const port1 = await conductor1.attachAppInterface();
-  await conductor1.connectAppInterface(port1);
   const port2 = await conductor2.attachAppInterface();
-  await conductor2.connectAppInterface(port2);
-  const aliceAppAgent = await enableAndGetAgentApp(conductor1, port1, aliceApp);
-  const bobAppAgent = await enableAndGetAgentApp(conductor2, port2, bobApp);
-  const alice: Player = { conductor: conductor1, ...aliceAppAgent };
-  const bob: Player = { conductor: conductor2, ...bobAppAgent };
+  const appWs1 = await conductor1.connectAppWs(port1);
+  const appWs2 = await conductor2.connectAppWs(port2);
+  const aliceAppAgent = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
+  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
+  const alice: Player = {
+    conductor: conductor1,
+    appWs: appWs1,
+    ...aliceAppAgent,
+  };
+  const bob: Player = { conductor: conductor2, appWs: appWs2, ...bobAppAgent };
 
   const entryContent = "test-content";
-  const createEntryHash: EntryHash = await aliceAppAgent.cells[0].callZome({
+  const createEntryHash: EntryHash = await alice.cells[0].callZome({
     zome_name: "coordinator",
     fn_name: "create",
     payload: entryContent,
@@ -409,12 +421,11 @@ test("Local Conductor - 2 agent apps test", async (t) => {
 
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-  const readEntryResponse: typeof entryContent =
-    await bobAppAgent.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "read",
-      payload: createEntryHash,
-    });
+  const readEntryResponse: typeof entryContent = await bob.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "read",
+    payload: createEntryHash,
+  });
   t.equal(readEntryResponse, entryContent);
 
   await conductor1.shutDown();
@@ -431,22 +442,29 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
   const conductor1 = await createConductor(signalingServerUrl, {
     bootstrapServerUrl: bootstrapServerUrl,
   });
+  const adminWs1 = conductor1.adminWs();
+  const aliceApp = await conductor1.installApp(app);
+  const port1 = await conductor1.attachAppInterface();
+  const appWs1 = await conductor1.connectAppWs(port1);
+  const aliceAppAgent = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
+  const alice: Player = {
+    conductor: conductor1,
+    appWs: appWs1,
+    ...aliceAppAgent,
+  };
+
   const conductor2 = await createConductor(signalingServerUrl, {
     bootstrapServerUrl,
   });
-  const aliceApp = await conductor1.installApp(app);
+  const adminWs2 = conductor2.adminWs();
   const bobApp = await conductor2.installApp(app);
-  const port1 = await conductor1.attachAppInterface();
-  await conductor1.connectAppInterface(port1);
   const port2 = await conductor2.attachAppInterface();
-  await conductor2.connectAppInterface(port2);
-  const aliceAppAgent = await enableAndGetAgentApp(conductor1, port1, aliceApp);
-  const bobAppAgent = await enableAndGetAgentApp(conductor2, port2, bobApp);
-  const alice: Player = { conductor: conductor1, ...aliceAppAgent };
-  const bob: Player = { conductor: conductor2, ...bobAppAgent };
+  const appWs2 = await conductor2.connectAppWs(port2);
+  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
+  const bob: Player = { conductor: conductor2, appWs: appWs2, ...bobAppAgent };
 
   const entryContent = "test-content";
-  const createEntryHash: EntryHash = await aliceAppAgent.cells[0].callZome({
+  const createEntryHash: EntryHash = await alice.cells[0].callZome({
     zome_name: "coordinator",
     fn_name: "create",
     payload: entryContent,
@@ -457,12 +475,11 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
 
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-  const readEntryResponse: typeof entryContent =
-    await bobAppAgent.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "read",
-      payload: createEntryHash,
-    });
+  const readEntryResponse: typeof entryContent = await bob.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "read",
+    payload: createEntryHash,
+  });
   t.equal(readEntryResponse, entryContent);
 
   await conductor1.shutDown();
@@ -484,12 +501,13 @@ test("Local Conductor - Receive a signal", async (t) => {
   const aliceApp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
+  const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const alice = await enableAndGetAgentApp(conductor, port, aliceApp);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
 
   assert(signalHandler);
-  conductor.appWs().on("signal", signalHandler);
+  appWs.on("signal", signalHandler);
   const aliceSignal = { value: "signal" };
   alice.cells[0].callZome({
     zome_name: "coordinator",

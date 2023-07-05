@@ -32,6 +32,62 @@ export type _RegisterDnaReqOpts = Omit<
 };
 
 /**
+ * AdminWebsocket interface for local and TryCP conductors.
+ *
+ * @public
+ */
+export type IAdminWebsocket = Omit<
+  AdminWebsocket,
+  "client" | "defaultTimeout" | "_requester"
+>;
+
+/**
+ * AppWebsocket interface for local and TryCP conductors.
+ *
+ * @public
+ */
+export type IAppWebsocket = Pick<
+  AppWebsocket,
+  | "callZome"
+  | "appInfo"
+  | "createCloneCell"
+  | "enableCloneCell"
+  | "disableCloneCell"
+  | "networkInfo"
+>;
+
+/**
+ * AppAgentWebsocket interface for local and TryCP conductors.
+ *
+ * @public
+ */
+export type IAppAgentWebsocket = Pick<AppAgentWebsocket, "callZome">;
+
+/**
+ * Base interface of a Tryorama conductor. Both {@link Conductor} and
+ * {@link TryCpConductor} implement this interface.
+ *
+ * @public
+ */
+export interface IConductor {
+  startUp: () => Promise<void | null>;
+  shutDown: () => Promise<number | null>;
+
+  adminWs: () => IAdminWebsocket;
+  connectAppWs: (port: number) => Promise<IAppWebsocket>;
+  appAgentWs: (
+    port: number,
+    appId: InstalledAppId
+  ) => Promise<IAppAgentWebsocket>;
+
+  installApp: (
+    appBundleSource: AppBundleSource,
+    options?: AppOptions
+  ) => Promise<AppInfo>;
+  installAgentsApps: (options: AgentsAppsOptions) => Promise<AppInfo[]>;
+}
+
+/**
  * The zome request options adapted to a specific cell.
  *
  * @public
@@ -85,6 +141,7 @@ export interface AgentApp {
  */
 export interface IPlayer extends AgentApp {
   conductor: IConductor;
+  appWs: IAppWebsocket | AppWebsocket;
 }
 
 /**
@@ -142,61 +199,4 @@ export interface Dna {
   membraneProof?: MembraneProof;
   properties?: DnaProperties;
   roleName?: string;
-}
-
-/**
- * AppWebsocket interface for local and TryCP conductors.
- *
- * @public
- */
-export type IAppWebsocket = Pick<
-  AppWebsocket,
-  | "callZome"
-  | "appInfo"
-  | "createCloneCell"
-  | "enableCloneCell"
-  | "disableCloneCell"
-  | "networkInfo"
->;
-
-/**
- * AppAgentWebsocket interface for local and TryCP conductors.
- *
- * @public
- */
-export type IAppAgentWebsocket = Pick<AppAgentWebsocket, "callZome">;
-
-/**
- * Base interface of a Tryorama conductor. Both {@link Conductor} and
- * {@link TryCpConductor} implement this interface.
- *
- * @public
- */
-export interface IConductor {
-  startUp: () => Promise<void | null>;
-  shutDown: () => Promise<number | null>;
-
-  connectAppInterface(port: number, signalHandler?: AppSignalCb): void;
-
-  adminWs: () => Omit<
-    AdminWebsocket,
-    "client" | "defaultTimeout" | "_requester"
-  >;
-  appWs: (
-    port: number
-  ) => Pick<
-    AppWebsocket,
-    | "callZome"
-    | "appInfo"
-    | "createCloneCell"
-    | "enableCloneCell"
-    | "disableCloneCell"
-    | "networkInfo"
-  >;
-
-  installApp: (
-    appBundleSource: AppBundleSource,
-    options?: AppOptions
-  ) => Promise<AppInfo>;
-  installAgentsApps: (options: AgentsAppsOptions) => Promise<AppInfo[]>;
 }
