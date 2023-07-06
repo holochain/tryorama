@@ -8,9 +8,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 - TryCP scenario: Optimize multi client/multi player installation.
-- **BREAKING CHANGE**: Next to a default App websocket, other websocket connections can be created and used for a player.
+- **BREAKING CHANGE**: To imitate a hApp client more closely in a test, App websockets are decoupled from conductors. This change plays out mainly on the conductor level, but a player contains the app agent websocket now too for registering signals. Previously there used to be a single app websocket per conductor for all of its agents. Now there is one app agent websocket connection per agent.
 ### Fixed
-- **BREAKING CHANGE**: Awaiting DHT sync of multiple players got a more universal API. Scenario methods were removed, so that in all cases the util function must be called.
+- **BREAKING CHANGE**: Awaiting DHT sync of multiple players received a more universal API. Scenario methods were removed, so that in all cases the util function must be called.
 
 ## 2023-05-08: v0.14.0-rc.0
 ### Added
