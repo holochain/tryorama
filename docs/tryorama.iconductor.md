@@ -16,16 +16,11 @@ export interface IConductor
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [adminWs](./tryorama.iconductor.adminws.md) |  | () =&gt; Omit&lt;AdminWebsocket, "client" \| "defaultTimeout" \| "\_requester"&gt; |  |
-|  [appWs](./tryorama.iconductor.appws.md) |  | () =&gt; Pick&lt;AppWebsocket, "callZome" \| "appInfo" \| "createCloneCell" \| "enableCloneCell" \| "disableCloneCell" \| "networkInfo"&gt; |  |
-|  [installAgentsApps](./tryorama.iconductor.installagentsapps.md) |  | (options: [AgentsAppsOptions](./tryorama.agentsappsoptions.md)<!-- -->) =&gt; Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->\[\]&gt; |  |
-|  [installApp](./tryorama.iconductor.installapp.md) |  | (appBundleSource: AppBundleSource, options?: [AppOptions](./tryorama.appoptions.md)<!-- -->) =&gt; Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->&gt; |  |
+|  [adminWs](./tryorama.iconductor.adminws.md) |  | () =&gt; [IAdminWebsocket](./tryorama.iadminwebsocket.md) |  |
+|  [connectAppAgentWs](./tryorama.iconductor.connectappagentws.md) |  | (port: number, appId: InstalledAppId) =&gt; Promise&lt;[IAppAgentWebsocket](./tryorama.iappagentwebsocket.md)<!-- -->&gt; |  |
+|  [connectAppWs](./tryorama.iconductor.connectappws.md) |  | (port: number) =&gt; Promise&lt;[IAppWebsocket](./tryorama.iappwebsocket.md)<!-- -->&gt; |  |
+|  [installAgentsApps](./tryorama.iconductor.installagentsapps.md) |  | (options: [AgentsAppsOptions](./tryorama.agentsappsoptions.md)<!-- -->) =&gt; Promise&lt;AppInfo\[\]&gt; |  |
+|  [installApp](./tryorama.iconductor.installapp.md) |  | (appBundleSource: AppBundleSource, options?: [AppOptions](./tryorama.appoptions.md)<!-- -->) =&gt; Promise&lt;AppInfo&gt; |  |
 |  [shutDown](./tryorama.iconductor.shutdown.md) |  | () =&gt; Promise&lt;number \| null&gt; |  |
 |  [startUp](./tryorama.iconductor.startup.md) |  | () =&gt; Promise&lt;void \| null&gt; |  |
-
-## Methods
-
-|  Method | Description |
-|  --- | --- |
-|  [connectAppInterface(port, signalHandler)](./tryorama.iconductor.connectappinterface.md) |  |
 

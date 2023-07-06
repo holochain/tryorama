@@ -140,24 +140,6 @@ export class Scenario {
   }
 
   /**
-   * Await DhtOp integration of all players for a given cell.
-   *
-   * @param dnaHash - DNA hash to await DHT sync for.
-   * @param interval - Interval to pause between comparisons (defaults to 50 ms).
-   * @param timeout - A timeout for the delay (optional).
-   * @returns A promise that is resolved when the DHTs of all conductors are
-   * synced.
-   */
-  // async awaitDhtSync(
-  //   players: Player[],
-  //   dnaHash: DnaHash,
-  //   interval?: number,
-  //   timeout?: number
-  // ) {
-  //   return awaitDhtSync(players, dnaHash, interval, timeout);
-  // }
-
-  /**
    * Shut down all conductors in the scenario.
    */
   async shutDown() {
@@ -209,6 +191,7 @@ export const runScenario = async (
     await testScenario(scenario);
   } catch (error) {
     console.error("error occurred during test run:", error);
+    throw error;
   } finally {
     if (cleanUp) {
       await scenario.cleanUp();

@@ -9,7 +9,7 @@ Install an app for multiple agents into the conductor.
 <b>Signature:</b>
 
 ```typescript
-installAgentsApps(options: AgentsAppsOptions): Promise<AgentApp[]>;
+installAgentsApps(options: AgentsAppsOptions): Promise<import("@holochain/client").AppInfo[]>;
 ```
 
 ## Parameters
@@ -20,5 +20,5 @@ installAgentsApps(options: AgentsAppsOptions): Promise<AgentApp[]>;
 
 <b>Returns:</b>
 
-Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->\[\]&gt;
+Promise&lt;import("@holochain/client").AppInfo\[\]&gt;
 

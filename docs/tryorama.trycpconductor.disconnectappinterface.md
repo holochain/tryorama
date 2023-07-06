@@ -4,13 +4,20 @@
 
 ## TryCpConductor.disconnectAppInterface() method
 
-Disconnect the web socket from the App API.
+Disconnect a web socket from the App API.
 
 <b>Signature:</b>
 
 ```typescript
-disconnectAppInterface(): Promise<null>;
+disconnectAppInterface(port: number): Promise<null>;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  port | number | The port of the app interface to disconnect. |
+
 <b>Returns:</b>
 
 Promise&lt;null&gt;

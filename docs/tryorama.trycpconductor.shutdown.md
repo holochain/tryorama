@@ -4,7 +4,7 @@
 
 ## TryCpConductor.shutDown() method
 
-Disconnect app interface and shut down the conductor.
+Shut down the conductor.
 
 <b>Signature:</b>
 

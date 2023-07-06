@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-installApp: (appBundleSource: AppBundleSource, options?: AppOptions) => Promise<AgentApp>;
+installApp: (appBundleSource: AppBundleSource, options?: AppOptions) => Promise<AppInfo>;
 ```

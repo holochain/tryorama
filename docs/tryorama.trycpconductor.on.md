@@ -9,13 +9,14 @@ Attach a signal handler.
 <b>Signature:</b>
 
 ```typescript
-on(signalHandler: AppSignalCb): void;
+on(port: number, signalHandler: AppSignalCb): void;
 ```
 
 ## Parameters
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
+|  port | number | The port of the app interface. |
 |  signalHandler | AppSignalCb | The signal handler to register. |
 
 <b>Returns:</b>
