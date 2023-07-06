@@ -158,17 +158,21 @@ export class TryCpScenario {
               const adminWs = conductor.adminWs();
               const { port } = await adminWs.attachAppInterface();
               await conductor.connectAppInterface(port);
-              const appWs = await conductor.connectAppWs(port);
-              const agentsApps = await Promise.all(
+              const players: TryCpPlayer[] = await Promise.all(
                 appInfos.map((appInfo) =>
-                  enableAndGetAgentApp(adminWs, appWs, appInfo)
+                  conductor
+                    .connectAppAgentWs(port, appInfo.installed_app_id)
+                    .then((appAgentWs) =>
+                      enableAndGetAgentApp(adminWs, appAgentWs, appInfo).then(
+                        (agentApp) => ({
+                          conductor,
+                          appAgentWs,
+                          ...agentApp,
+                        })
+                      )
+                    )
                 )
               );
-              const players: TryCpPlayer[] = agentsApps.map((agentApp) => ({
-                conductor,
-                appWs,
-                ...agentApp,
-              }));
               return { conductor, players };
             });
           conductorsCreated.push(conductorCreated);
@@ -207,12 +211,15 @@ export class TryCpScenario {
     const adminWs = conductor.adminWs();
     const { port } = await adminWs.attachAppInterface();
     await conductor.connectAppInterface(port);
-    const appWs = await conductor.connectAppWs(port);
-    const agentApp = await enableAndGetAgentApp(adminWs, appWs, appInfo);
+    const appAgentWs = await conductor.connectAppAgentWs(
+      port,
+      appInfo.installed_app_id
+    );
+    const agentApp = await enableAndGetAgentApp(adminWs, appAgentWs, appInfo);
     if (options.signalHandler) {
       conductor.on(port, options.signalHandler);
     }
-    const player: TryCpPlayer = { conductor, appWs, ...agentApp };
+    const player: TryCpPlayer = { conductor, appAgentWs, ...agentApp };
     return player;
   }
 

@@ -2,7 +2,9 @@ import {
   AddAgentInfoRequest,
   AgentInfoRequest,
   AgentPubKey,
+  AppAgentCallZomeRequest,
   AppBundleSource,
+  AppInfo,
   AppInfoRequest,
   AppSignalCb,
   AttachAppInterfaceRequest,
@@ -10,6 +12,7 @@ import {
   CallZomeRequestSigned,
   CapSecret,
   CellId,
+  CellType,
   CreateCloneCellRequest,
   DeleteCloneCellRequest,
   DisableAppRequest,
@@ -36,6 +39,7 @@ import {
   NetworkInfoRequest,
   randomCapSecret,
   RegisterDnaRequest,
+  RoleName,
   setSigningCredentials,
   signZomeCall,
   StartAppRequest,
@@ -48,12 +52,7 @@ import assert from "node:assert";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { makeLogger } from "../../logger.js";
-import {
-  AgentsAppsOptions,
-  AppOptions,
-  IAppAgentWebsocket,
-  IConductor,
-} from "../../types.js";
+import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceMessage,
@@ -67,6 +66,8 @@ const HOLO_SIGNALING_SERVER = new URL("wss://signal.holo.host");
 const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
 const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
 const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
+
+const CLONE_ID_DELIMITER = ".";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -883,21 +884,90 @@ export class TryCpConductor implements IConductor {
     };
   }
 
-  async appAgentWs(port: number, appId: InstalledAppId) {
-    const appInfo = async () => {
-      const response = await this.callAppApi(port, {
-        type: "app_info",
-        data: { installed_app_id: appId },
-      });
-      assert(response.type === "app_info");
-      return response.data;
+  private isCloneId(roleName: RoleName) {
+    return roleName.includes(CLONE_ID_DELIMITER);
+  }
+
+  private getBaseRoleNameFromCloneId(roleName: RoleName) {
+    if (!this.isCloneId(roleName)) {
+      throw new Error(
+        "invalid clone id: no clone id delimiter found in role name"
+      );
+    }
+    return roleName.split(CLONE_ID_DELIMITER)[0];
+  }
+
+  private getCellIdFromRoleName(roleName: RoleName, appInfo: AppInfo) {
+    if (this.isCloneId(roleName)) {
+      const baseRoleName = this.getBaseRoleNameFromCloneId(roleName);
+      if (!(baseRoleName in appInfo.cell_info)) {
+        throw new Error(`No cell found with role_name ${roleName}`);
+      }
+      const cloneCell = appInfo.cell_info[baseRoleName].find(
+        (c) => CellType.Cloned in c && c[CellType.Cloned].clone_id === roleName
+      );
+      if (!cloneCell || !(CellType.Cloned in cloneCell)) {
+        throw new Error(`No clone cell found with clone id ${roleName}`);
+      }
+      return cloneCell[CellType.Cloned].cell_id;
+    }
+    if (!(roleName in appInfo.cell_info)) {
+      throw new Error(`No cell found with role_name ${roleName}`);
+    }
+    const cell = appInfo.cell_info[roleName].find(
+      (c) => CellType.Provisioned in c
+    );
+    if (!cell || !(CellType.Provisioned in cell)) {
+      throw new Error(`No provisioned cell found with role_name ${roleName}`);
+    }
+    return cell[CellType.Provisioned].cell_id;
+  }
+
+  async connectAppAgentWs(port: number, appId: InstalledAppId) {
+    const appWs = await this.connectAppWs(port);
+    let cachedAppInfo = await appWs.appInfo({ installed_app_id: appId });
+
+    const appInfo = appWs.appInfo.bind(appWs);
+    appWs.appInfo = async () => {
+      const currentAppInfo = await appInfo({ installed_app_id: appId });
+      cachedAppInfo = currentAppInfo;
+      return currentAppInfo;
     };
 
-    // eslint-disable-next-line
-    // @ts-ignore
-    return {
-      appInfo,
-    } as IAppAgentWebsocket;
+    const callZome = appWs.callZome.bind(appWs);
+    appWs.callZome = async (request: AppAgentCallZomeRequest) => {
+      if ("role_name" in request && request.role_name) {
+        const cell_id = this.getCellIdFromRoleName(
+          request.role_name,
+          cachedAppInfo
+        );
+
+        const zomeCallPayload = {
+          ...request,
+          // ...omit(request, "role_name"),
+          provenance: cachedAppInfo.agent_pub_key,
+          cell_id,
+        };
+        // eslint-disable-next-line
+        // @ts-ignore
+        delete zomeCallPayload.role_name;
+        return callZome(zomeCallPayload);
+      } else if ("cell_id" in request && request.cell_id) {
+        request = {
+          ...request,
+          provenance:
+            "provenance" in request
+              ? request.provenance
+              : cachedAppInfo.agent_pub_key,
+        };
+        // eslint-disable-next-line
+        // @ts-ignore
+        return callZome(request);
+      }
+      throw new Error("callZome requires a role_name or cell_id arg");
+    };
+
+    return appWs;
   }
 
   /**

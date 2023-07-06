@@ -707,11 +707,18 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   await adminWs1.enableApp({ installed_app_id: aliceApp.installed_app_id });
   const { port: port1 } = await conductor1.adminWs().attachAppInterface();
   await conductor1.connectAppInterface(port1);
-  const appWs1 = await conductor1.connectAppWs(port1);
-  const aliceAppAgent = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
+  const appAgentWs1 = await conductor1.connectAppAgentWs(
+    port1,
+    aliceApp.installed_app_id
+  );
+  const aliceAppAgent = await enableAndGetAgentApp(
+    adminWs1,
+    appAgentWs1,
+    aliceApp
+  );
   const alice: TryCpPlayer = {
     conductor: conductor1,
-    appWs: appWs1,
+    appAgentWs: appAgentWs1,
     ...aliceAppAgent,
   };
 
@@ -721,16 +728,19 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   await adminWs2.enableApp({ installed_app_id: bobApp.installed_app_id });
   const { port: port2 } = await conductor2.adminWs().attachAppInterface();
   await conductor2.connectAppInterface(port2);
-  const appWs2 = await conductor2.connectAppWs(port2);
-  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
+  const appAgentWs2 = await conductor2.connectAppAgentWs(
+    port2,
+    bobApp.installed_app_id
+  );
+  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
   const bob: TryCpPlayer = {
     conductor: conductor2,
-    appWs: appWs2,
+    appAgentWs: appAgentWs2,
     ...bobAppAgent,
   };
 
   const entryContent = "test-content";
-  const createEntryHash = await appWs1.callZome<EntryHash>({
+  const createEntryHash = await appAgentWs1.callZome<EntryHash>({
     cell_id: alice.cells[0].cell_id,
     zome_name: "coordinator",
     fn_name: "create",
@@ -746,7 +756,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
 
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-  const readEntryResponse = await appWs2.callZome<typeof entryContent>({
+  const readEntryResponse = await appAgentWs2.callZome<typeof entryContent>({
     cell_id: bob.cells[0].cell_id,
     zome_name: "coordinator",
     fn_name: "read",
