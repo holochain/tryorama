@@ -475,7 +475,7 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
   const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
 
   const conductor1 = await createConductor(signalingServerUrl, {
-    bootstrapServerUrl: bootstrapServerUrl,
+    bootstrapServerUrl,
   });
   const adminWs1 = conductor1.adminWs();
   const aliceApp = await conductor1.installApp(app);

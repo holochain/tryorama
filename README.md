@@ -31,13 +31,8 @@ example uses [tape](https://github.com/substack/tape) as test runner and
 assertion library. You can choose any other runner and library.
 
 ```typescript
-import { ActionHash, DnaSource } from "@holochain/client";
-import {
-  Scenario,
-  getZomeCaller,
-  pause,
-  runScenario,
-} from "@holochain/tryorama";
+import { ActionHash } from "@holochain/client";
+import { Scenario, dhtSync, runScenario } from "@holochain/tryorama";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "tape-promise/tape.js";
@@ -70,7 +65,7 @@ test("Create 2 players and create and read an entry", async (t) => {
     });
 
     // Wait for the created entry to be propagated to the other player.
-    await scenario.awaitDhtSync(alice.cells[0].cell_id);
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
     // Using the same cell and zome as before, the second player reads the
     // created entry.
@@ -116,11 +111,12 @@ const readContent: typeof content = await aliceCoordinatorCaller(
 Written out without the wrapper function, the same example looks like this:
 
 ```typescript
-import { ActionHash, DnaSource } from "@holochain/client";
-import { pause, Scenario } from "@holochain/tryorama";
+import { DnaSource, EntryHash } from "@holochain/client";
+import { Scenario } from "@holochain/tryorama";
 import { dirname } from "node:path";
 import { fileURLToPath } from "node:url";
 import test from "tape-promise/tape.js";
+import { dhtSync } from "./src/util.js";
 
 test("Create 2 players and create and read an entry", async (t) => {
   const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
@@ -139,7 +135,7 @@ test("Create 2 players and create and read an entry", async (t) => {
     payload: content,
   });
 
-  await pause(100);
+  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent: typeof content = await bob.cells[0].callZome({
     zome_name: "coordinator",
@@ -181,73 +177,9 @@ One level underneath the Scenario is the
 creation, startup and shutdown, it comes with complete functionality of Admin
 and App API that the JavaScript client offers.
 
-### Conductor example
-
-Here is the above example that just uses a `Conductor` without a `Scenario`:
-
-```typescript
-  const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
-  const dnas: DnaSource[] = [{ path: testDnaPath }];
-
-  const conductor1 = await createConductor();
-  const conductor2 = await createConductor();
-  const [aliceHapps, bobHapps] = await conductor1.installAgentsHapps({
-    agentsDnas: [dnas, dnas],
-  });
-
-  await addAllAgentsToAllConductors([conductor1, conductor2]);
-
-  const entryContent = "test-content";
-  const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
-    zome_name: "coordinator",
-    fn_name: "create",
-    payload: entryContent,
-  });
-
-  await pause(100);
-
-  const readEntryResponse: typeof entryContent =
-    await bobHapps.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "read",
-      payload: createEntryHash,
-    });
-
-  await conductor1.shutDown();
-  await conductor2.shutDown();
-  await cleanAllConductors();
-```
-
-> Note that you need to set a [network seed](https://docs.rs/holochain_types/latest/holochain_types/app/struct.RegisterDnaPayload.html#structfield.network_seed)
-manually when registering DNAs. This is taken care of automatically when using
-a `Scenario`.
-
-## hApp Installation
-
-Conductors are equipped with a method for easy hApp installation,
-[installAgentsHapps](./docs/tryorama.conductor.installagentshapps.md). It has a
-almost identical signature to `Scenario.addPlayers` and takes an array of DNAs
-for each agent, resulting in a 2-dimensional array, e. g.
-`[[agent1dna1, agent1dna2], [agent2dna1], [agent3dna1, agent3dna2, agent3dna3]]`.
-
-```typescript
-const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
-const dnas: DnaSource[] = [{ path: testDnaPath }];
-
-const conductor = await createLocalConductor();
-const [aliceHapps] = await conductor.installAgentsHapps({
-  agentsDnas: [dnas],
-});
-
-const entryContent = "test-content";
-const createEntryHash: EntryHash = await aliceHapps.cells[0].callZome({
-  zome_name: "coordinator",
-  fn_name: "create",
-  payload: entryContent,
-});
-
-await conductor.shutDown();
-```
+> There are lots of examples for working with conductors
+in the [`local`](./ts/test/local/conductor.ts) and
+[`trycp`](/ts/test/trycp//conductor.ts) test folders.
 
 ## Signals
 
@@ -256,28 +188,31 @@ signal handler to be specified. Signal handlers are registered with
 the conductor and act as a callback when a signal is received.
 
 ```typescript
-const scenario = new Scenario();
-const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
-const dnas: Dna[] = [{ source: { path: testDnaPath } }];
+test("Receive a signal", async (t) => {
+  await runScenario(async (scenario) => {
+    const testHappUrl = dirname(fileURLToPath(import.meta.url)) + "/test.happ";
 
-let signalHandler: AppSignalCb | undefined;
-const signalReceived = new Promise<AppSignal>((resolve) => {
-  signalHandler = (signal) => {
-    resolve(signal);
-  };
+    let signalHandler: AppSignalCb | undefined;
+    const signalReceived = new Promise<AppSignal>((resolve) => {
+      signalHandler = (signal) => {
+        resolve(signal);
+      };
+    });
+
+    const alice = await scenario.addPlayerWithApp(
+      { path: testHappUrl },
+      { signalHandler }
+    );
+
+    const signal = { value: "hello alice" };
+    alice.cells[0].callZome({
+      zome_name: "coordinator",
+      fn_name: "signal_loopback",
+      payload: signal,
+    });
+
+    const actualSignalAlice = await signalReceived;
+    t.deepEqual(actualSignalAlice.payload, signal);
+  });
 });
-
-const alice = await scenario.addPlayerWithHapp({ dnas, signalHandler });
-
-const signal = { value: "hello alice" };
-alice.cells[0].callZome({
-  zome_name: "coordinator",
-  fn_name: "signal_loopback",
-  payload: signal,
-});
-
-const actualSignalAlice = await signalReceived;
-t.deepEqual(actualSignalAlice.data.payload, signal);
-
-await scenario.cleanUp();
 ```
