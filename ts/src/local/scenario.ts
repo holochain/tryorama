@@ -1,15 +1,15 @@
-import { AppBundleSource, CellId } from "@holochain/client";
+import { AppBundleSource } from "@holochain/client";
+import assert from "node:assert";
+import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { v4 as uuidv4 } from "uuid";
 import {
   addAllAgentsToAllConductors,
-  stopLocalServices,
+  enableAndGetAgentApp,
   runLocalServices,
+  stopLocalServices,
 } from "../common.js";
-import { AppOptions, IPlayer } from "../types.js";
-import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
-import { awaitDhtSync } from "../util.js";
-import { ChildProcessWithoutNullStreams } from "node:child_process";
-import assert from "node:assert";
+import { AgentApp, AppOptions, IPlayer } from "../types.js";
+import { Conductor, cleanAllConductors, createConductor } from "./conductor.js";
 
 /**
  * A player tied to a {@link Conductor}.
@@ -69,7 +69,6 @@ export class Scenario {
     assert(this.signalingServerUrl);
     const conductor = await createConductor(this.signalingServerUrl, {
       timeout: this.timeout,
-      attachAppInterface: false,
       bootstrapServerUrl: this.bootstrapServerUrl,
     });
     this.conductors.push(conductor);
@@ -93,10 +92,19 @@ export class Scenario {
       ...options,
       networkSeed: options?.networkSeed ?? this.networkSeed,
     };
-    const agentApp = await conductor.installApp(appBundleSource, options);
-    await conductor.attachAppInterface();
-    await conductor.connectAppAgentInterface(agentApp.appId);
-    return { conductor, ...agentApp };
+    const appInfo = await conductor.installApp(appBundleSource, options);
+    const adminWs = conductor.adminWs();
+    const port = await conductor.attachAppInterface();
+    const appAgentWs = await conductor.connectAppAgentWs(
+      port,
+      appInfo.installed_app_id
+    );
+    const agentApp: AgentApp = await enableAndGetAgentApp(
+      adminWs,
+      appAgentWs,
+      appInfo
+    );
+    return { conductor, appAgentWs, ...agentApp };
   }
 
   /**
@@ -129,19 +137,6 @@ export class Scenario {
    */
   async shareAllAgents() {
     return addAllAgentsToAllConductors(this.conductors);
-  }
-
-  /**
-   * Await DhtOp integration of all players for a given cell.
-   *
-   * @param cellId - Cell id to await DHT sync for.
-   * @param interval - Interval to pause between comparisons (defaults to 50 ms).
-   * @param timeout - A timeout for the delay (optional).
-   * @returns A promise that is resolved when the DHTs of all conductors are
-   * synced.
-   */
-  async awaitDhtSync(cellId: CellId, interval?: number, timeout?: number) {
-    return awaitDhtSync(this.conductors, cellId, interval, timeout);
   }
 
   /**
@@ -196,6 +191,7 @@ export const runScenario = async (
     await testScenario(scenario);
   } catch (error) {
     console.error("error occurred during test run:", error);
+    throw error;
   } finally {
     if (cleanUp) {
       await scenario.cleanUp();

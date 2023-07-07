@@ -6,8 +6,8 @@ members = [
 ]
 
 [workspace.dependencies]
-hdi = "0.3.1-beta-dev.0"
-hdk = "0.2.1-beta-dev.0"
+hdi = "0.4.0-beta-dev.5"
+hdk = "0.3.0-beta-dev.7"
 serde = "1"
 
 [profile.dev]

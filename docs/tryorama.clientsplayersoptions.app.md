@@ -4,10 +4,10 @@
 
 ## ClientsPlayersOptions.app property
 
-An app that will be installed for each agent (optional).
+An app that will be installed for each agent.
 
 <b>Signature:</b>
 
 ```typescript
-app?: AppBundleSource;
+app: AppBundleSource;
 ```

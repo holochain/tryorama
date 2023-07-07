@@ -13,6 +13,7 @@ import {
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
+import { enableAndGetAgentApp } from "../../src/common.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const createTryCpClient = () => TryCpClient.create(SERVER_URL);
@@ -253,16 +254,18 @@ test("TryCP Server - Admin API - connect app interface", async (t) => {
   const { port } = await conductor.adminWs().attachAppInterface();
   t.ok(typeof port === "number");
 
-  const connectAppInterfaceResponse = await conductor.connectAppInterface();
+  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
-  const appInfoResponse = await conductor
-    .appWs()
-    .appInfo({ installed_app_id: "" });
+  const appWs = await conductor.connectAppWs(port);
+  t.equal(typeof appWs.appInfo, "function");
+
+  const appInfoResponse = await appWs.appInfo({ installed_app_id: "" });
   t.equal(appInfoResponse, null);
 
-  const disconnectAppInterfaceResponse =
-    await conductor.disconnectAppInterface();
+  const disconnectAppInterfaceResponse = await conductor.disconnectAppInterface(
+    port
+  );
   t.equal(disconnectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
   await conductor.shutDown();
@@ -274,18 +277,19 @@ test("TryCP Server - App API - get app info", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
-  const alice = await conductor.installApp({
+  const aliceApp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
-  await conductor.adminWs().attachAppInterface();
-  await conductor.connectAppInterface();
+  const adminWs = conductor.adminWs();
+  const { port } = await adminWs.attachAppInterface();
+  await conductor.connectAppInterface(port);
+  const appWs = await conductor.connectAppWs(port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
 
-  const appInfo = await conductor
-    .appWs()
-    .appInfo({ installed_app_id: alice.appId });
+  const appInfo = await appWs.appInfo({ installed_app_id: alice.appId });
   t.deepEqual(appInfo.status, { running: null });
 
-  await conductor.disconnectAppInterface();
+  await conductor.disconnectAppInterface(port);
   await conductor.shutDown();
   await conductor.disconnectClient();
   await localTryCpServer.stop();

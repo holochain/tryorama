@@ -9,7 +9,7 @@ Install an application into the conductor.
 <b>Signature:</b>
 
 ```typescript
-installApp(appBundleSource: AppBundleSource, options?: AppOptions): Promise<AgentApp>;
+installApp(appBundleSource: AppBundleSource, options?: AppOptions): Promise<import("@holochain/client").AppInfo>;
 ```
 
 ## Parameters
@@ -21,7 +21,7 @@ installApp(appBundleSource: AppBundleSource, options?: AppOptions): Promise<Agen
 
 <b>Returns:</b>
 
-Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->&gt;
+Promise&lt;import("@holochain/client").AppInfo&gt;
 
 An agent app with cells and conductor handle.
 

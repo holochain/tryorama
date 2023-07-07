@@ -7,9 +7,10 @@
     "forceConsistentCasingInFileNames": true,
     "allowSyntheticDefaultImports": true,
     "skipLibCheck": true,
-    "strict": true
+    "strict": true,
+    "outDir": "lib"
   },
   "include": [
-    "ts/**/*"
+    "ts/src/**/*"
   ]
 }

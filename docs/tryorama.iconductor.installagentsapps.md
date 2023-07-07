@@ -7,5 +7,5 @@
 <b>Signature:</b>
 
 ```typescript
-installAgentsApps: (options: AgentsAppsOptions) => Promise<AgentApp[]>;
+installAgentsApps: (options: AgentsAppsOptions) => Promise<AppInfo[]>;
 ```

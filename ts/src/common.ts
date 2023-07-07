@@ -1,5 +1,4 @@
 import {
-  AgentPubKey,
   AppInfo,
   CallZomeResponse,
   CellType,
@@ -13,6 +12,9 @@ import {
   AgentApp,
   CallableCell,
   CellZomeCallRequest,
+  IAdminWebsocket,
+  IAppAgentWebsocket,
+  IAppWebsocket,
   IConductor,
 } from "./types.js";
 
@@ -110,25 +112,24 @@ function assertZomeResponse<T>(
 }
 
 export const enableAndGetAgentApp = async (
-  conductor: IConductor,
-  agentPubKey: AgentPubKey,
-  installedAppInfo: AppInfo
+  adminWs: IAdminWebsocket,
+  appWs: IAppWebsocket | IAppAgentWebsocket,
+  appInfo: AppInfo
 ) => {
-  const enableAppResponse = await conductor.adminWs().enableApp({
-    installed_app_id: installedAppInfo.installed_app_id,
+  const enableAppResponse = await adminWs.enableApp({
+    installed_app_id: appInfo.installed_app_id,
   });
   if (enableAppResponse.errors.length) {
     throw new Error(`failed to enable app: ${enableAppResponse.errors}`);
   }
   const cells: CallableCell[] = [];
   const namedCells = new Map<RoleName, CallableCell>();
-  Object.keys(installedAppInfo.cell_info).forEach((role_name) => {
-    installedAppInfo.cell_info[role_name].forEach((cellInfo) => {
+  Object.keys(appInfo.cell_info).forEach((role_name) => {
+    appInfo.cell_info[role_name].forEach((cellInfo) => {
       if (CellType.Provisioned in cellInfo) {
         const callableCell = getCallableCell(
-          conductor,
-          cellInfo[CellType.Provisioned],
-          agentPubKey
+          appWs,
+          cellInfo[CellType.Provisioned]
         );
         cells.push(callableCell);
         namedCells.set(role_name, callableCell);
@@ -136,11 +137,7 @@ export const enableAndGetAgentApp = async (
         CellType.Cloned in cellInfo &&
         cellInfo[CellType.Cloned].clone_id
       ) {
-        const callableCell = getCallableCell(
-          conductor,
-          cellInfo[CellType.Cloned],
-          agentPubKey
-        );
+        const callableCell = getCallableCell(appWs, cellInfo[CellType.Cloned]);
         cells.push(callableCell);
         namedCells.set(cellInfo[CellType.Cloned].clone_id, callableCell);
       } else {
@@ -149,8 +146,8 @@ export const enableAndGetAgentApp = async (
     });
   });
   const agentApp: AgentApp = {
-    appId: installedAppInfo.installed_app_id,
-    agentPubKey,
+    appId: appInfo.installed_app_id,
+    agentPubKey: appInfo.agent_pub_key,
     cells,
     namedCells,
   };
@@ -158,18 +155,16 @@ export const enableAndGetAgentApp = async (
 };
 
 const getCallableCell = (
-  conductor: IConductor,
-  cell: ClonedCell | ProvisionedCell,
-  agentPubKey: AgentPubKey
+  appWs: IAppWebsocket | IAppAgentWebsocket,
+  cell: ClonedCell | ProvisionedCell
 ) => ({
   ...cell,
   callZome: async <T>(request: CellZomeCallRequest, timeout?: number) => {
-    const callZomeResponse = await conductor.appWs().callZome(
+    const callZomeResponse = await appWs.callZome(
       {
         ...request,
-        cap_secret: null,
         cell_id: cell.cell_id,
-        provenance: request.provenance ?? agentPubKey,
+        provenance: request.provenance ?? cell.cell_id[1],
         payload: request.payload ?? null,
       },
       timeout

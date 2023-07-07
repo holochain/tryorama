@@ -4,7 +4,7 @@
 
 ## ClientsPlayersOptions.numberOfConductorsPerClient property
 
-Number of conductors per client. Default to 1.
+Number of conductors per client. Defaults to 1.
 
 <b>Signature:</b>
 

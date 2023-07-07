@@ -145,6 +145,10 @@ export class TryCpClient {
     this.signalHandlers[port] = signalHandler;
   }
 
+  unsetSignalHandler(port: number) {
+    delete this.signalHandlers[port];
+  }
+
   /**
    * Closes the client connection.
    *
@@ -221,10 +225,8 @@ export class TryCpClient {
    * @param partialConfig - Conductor configuration (optional).
    * @returns The newly added conductor instance.
    */
-  async addConductor(signalHandler?: AppSignalCb, partialConfig?: string) {
+  async addConductor(partialConfig?: string) {
     const conductor = await createConductor(this, { partialConfig });
-    await conductor.adminWs().attachAppInterface();
-    await conductor.connectAppInterface(signalHandler);
     this.conductors.push(conductor);
     return conductor;
   }
@@ -296,13 +298,9 @@ export class TryCpClient {
         { ...response },
         { data: hashB64 }
       );
-      debugLog = `response ${JSON.stringify(
-        deserializedResponseForLog,
-        null,
-        4
-      )}\n`;
+      debugLog = `response ${JSON.stringify(deserializedResponseForLog)}\n`;
     } else {
-      debugLog = `response ${JSON.stringify(response, null, 4)}\n`;
+      debugLog = `response ${JSON.stringify(response)}\n`;
     }
     return debugLog;
   }
@@ -328,6 +326,6 @@ export class TryCpClient {
       // Call "save_dna" submits a DNA as binary
       debugLog = Object.assign(debugLog, { content: undefined });
     }
-    return JSON.stringify(debugLog, null, 4);
+    return JSON.stringify(debugLog);
   }
 }

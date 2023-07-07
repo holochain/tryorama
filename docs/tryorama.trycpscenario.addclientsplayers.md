@@ -6,13 +6,12 @@
 
 Creates client connections for all passed in URLs and, depending on the options, creates multiple players with apps. Adds all clients to the scenario.
 
+If no number of agents per conductor is specified, it defaults to 1.
+
 <b>Signature:</b>
 
 ```typescript
-addClientsPlayers(serverUrls: URL[], options?: ClientsPlayersOptions): Promise<{
-        client: TryCpClient;
-        players: TryCpPlayer[];
-    }[]>;
+addClientsPlayers(serverUrls: URL[], options: ClientsPlayersOptions): Promise<ClientPlayers[]>;
 ```
 
 ## Parameters
@@ -20,11 +19,11 @@ addClientsPlayers(serverUrls: URL[], options?: ClientsPlayersOptions): Promise<{
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  serverUrls | URL\[\] | The TryCP server URLs to connect to. |
-|  options | [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) | <i>(Optional)</i> [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |
+|  options | [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) | [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |
 
 <b>Returns:</b>
 
-Promise&lt;{ client: [TryCpClient](./tryorama.trycpclient.md)<!-- -->; players: [TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->\[\]; }\[\]&gt;
+Promise&lt;[ClientPlayers](./tryorama.clientplayers.md)<!-- -->\[\]&gt;
 
 The created TryCP clients and all conductors per client and all agents' hApps per conductor.
 

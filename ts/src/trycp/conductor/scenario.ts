@@ -1,18 +1,13 @@
-import {
-  AgentPubKey,
-  AppBundleSource,
-  AppSignalCb,
-  CellId,
-} from "@holochain/client";
+import { AgentPubKey, AppBundleSource, AppSignalCb } from "@holochain/client";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
 import {
+  enableAndGetAgentApp,
   addAllAgentsToAllConductors as shareAllAgents,
   stopLocalServices,
 } from "../../common.js";
 import { AppOptions, IPlayer } from "../../types.js";
-import { awaitDhtSync } from "../../util.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
 
@@ -21,14 +16,14 @@ import { TryCpConductor } from "./conductor.js";
  */
 export interface ClientsPlayersOptions {
   /**
+   * An app that will be installed for each agent.
+   */
+  app: AppBundleSource;
+
+  /**
    * A timeout for the web socket connection (optional).
    */
   clientTimeout?: number;
-
-  /**
-   * An app that will be installed for each agent (optional).
-   */
-  app?: AppBundleSource;
 
   /**
    * A list of previously generated agent pub keys (optional).
@@ -36,12 +31,12 @@ export interface ClientsPlayersOptions {
   agentPubKeys?: AgentPubKey[];
 
   /**
-   * Number of conductors per client. Default to 1.
+   * Number of conductors per client. Defaults to 1.
    */
   numberOfConductorsPerClient?: number;
 
   /**
-   * Number of agents per conductor. Requires `app` to be specified.
+   * Number of agents per conductor. Defaults to 1.
    */
   numberOfAgentsPerConductor?: number;
 
@@ -63,6 +58,16 @@ export interface ClientsPlayersOptions {
  */
 export interface TryCpPlayer extends IPlayer {
   conductor: TryCpConductor;
+}
+
+/**
+ * A TryCP client and its associated players.
+ *
+ * @public
+ */
+export interface ClientPlayers {
+  client: TryCpClient;
+  players: TryCpPlayer[];
 }
 
 /**
@@ -108,63 +113,79 @@ export class TryCpScenario {
    * options, creates multiple players with apps. Adds all clients to the
    * scenario.
    *
+   * If no number of agents per conductor is specified, it defaults to 1.
+   *
    * @param serverUrls - The TryCP server URLs to connect to.
    * @param options - {@link ClientsPlayersOptions}
    * @returns The created TryCP clients and all conductors per client and all
    * agents' hApps per conductor.
    */
-  async addClientsPlayers(serverUrls: URL[], options?: ClientsPlayersOptions) {
-    const clientsPlayers: Array<{
-      client: TryCpClient;
-      players: TryCpPlayer[];
-    }> = [];
-
+  async addClientsPlayers(serverUrls: URL[], options: ClientsPlayersOptions) {
+    const clientsCreated: Promise<ClientPlayers>[] = [];
     // create client connections for specified URLs
     for (const serverUrl of serverUrls) {
-      const client = await this.addClient(serverUrl, options?.clientTimeout);
-      const players: TryCpPlayer[] = [];
-      const numberOfConductorsPerClient =
-        options?.numberOfConductorsPerClient ?? 1;
+      const clientCreated = this.addClient(
+        serverUrl,
+        options?.clientTimeout
+      ).then(async (client) => {
+        const numberOfConductorsPerClient =
+          options?.numberOfConductorsPerClient ?? 1;
+        const conductorsCreated: Promise<{
+          conductor: TryCpConductor;
+          players: TryCpPlayer[];
+        }>[] = [];
+        // create conductors for each client
+        for (let i = 0; i < numberOfConductorsPerClient; i++) {
+          const conductorCreated = client
+            .addConductor(options?.partialConfig)
+            .then(async (conductor) => {
+              const app = options.app;
+              let appOptions;
+              if (options.agentPubKeys) {
+                appOptions = options.agentPubKeys.map((agentPubKey) => ({
+                  agentPubKey,
+                  app,
+                }));
+              } else {
+                appOptions = [...Array(options.numberOfAgentsPerConductor)].map(
+                  () => ({ app })
+                );
+              }
 
-      // create conductors for each client
-      for (let i = 0; i < numberOfConductorsPerClient; i++) {
-        const conductor = await client.addConductor(
-          options?.signalHandler,
-          options?.partialConfig
-        );
-
-        if (options?.numberOfAgentsPerConductor) {
-          // install agents apps for each conductor
-          if (options?.app === undefined) {
-            throw new Error("no app specified to be installed for agents");
-          }
-
-          // TS fails to infer that options.apps cannot be `undefined` here
-          const app = options.app;
-
-          let agentsApps;
-          if (options.agentPubKeys) {
-            agentsApps = options.agentPubKeys.map((agentPubKey) => ({
-              agentPubKey,
-              app,
-            }));
-          } else {
-            agentsApps = [...Array(options.numberOfAgentsPerConductor)].map(
-              () => ({ app })
-            );
-          }
-
-          const installedAgentsHapps = await conductor.installAgentsApps({
-            agentsApps,
-          });
-          installedAgentsHapps.forEach((agentHapps) =>
-            players.push({ conductor, ...agentHapps })
-          );
+              const appInfos = await conductor.installAgentsApps({
+                agentsApps: appOptions,
+              });
+              const adminWs = conductor.adminWs();
+              const { port } = await adminWs.attachAppInterface();
+              await conductor.connectAppInterface(port);
+              const players: TryCpPlayer[] = await Promise.all(
+                appInfos.map((appInfo) =>
+                  conductor
+                    .connectAppAgentWs(port, appInfo.installed_app_id)
+                    .then((appAgentWs) =>
+                      enableAndGetAgentApp(adminWs, appAgentWs, appInfo).then(
+                        (agentApp) => ({
+                          conductor,
+                          appAgentWs,
+                          ...agentApp,
+                        })
+                      )
+                    )
+                )
+              );
+              return { conductor, players };
+            });
+          conductorsCreated.push(conductorCreated);
         }
-      }
-      clientsPlayers.push({ client, players });
+        const conductorsForClient = await Promise.all(conductorsCreated);
+        const playersForClient = conductorsForClient.flatMap(
+          (conductorForClient) => conductorForClient.players
+        );
+        return { client, players: playersForClient };
+      });
+      clientsCreated.push(clientCreated);
     }
-    return clientsPlayers;
+    return Promise.all(clientsCreated);
   }
 
   /**
@@ -181,13 +202,24 @@ export class TryCpScenario {
     appBundleSource: AppBundleSource,
     options?: AppOptions
   ) {
-    const conductor = await tryCpClient.addConductor(options?.signalHandler);
+    const conductor = await tryCpClient.addConductor();
     options = {
       ...options,
       networkSeed: options?.networkSeed ?? this.network_seed,
     };
-    const agentApp = await conductor.installApp(appBundleSource, options);
-    const player: TryCpPlayer = { conductor, ...agentApp };
+    const appInfo = await conductor.installApp(appBundleSource, options);
+    const adminWs = conductor.adminWs();
+    const { port } = await adminWs.attachAppInterface();
+    await conductor.connectAppInterface(port);
+    const appAgentWs = await conductor.connectAppAgentWs(
+      port,
+      appInfo.installed_app_id
+    );
+    const agentApp = await enableAndGetAgentApp(adminWs, appAgentWs, appInfo);
+    if (options.signalHandler) {
+      conductor.on(port, options.signalHandler);
+    }
+    const player: TryCpPlayer = { conductor, appAgentWs, ...agentApp };
     return player;
   }
 
@@ -226,20 +258,6 @@ export class TryCpScenario {
     return shareAllAgents(
       this.clients.map((client) => client.conductors).flat()
     );
-  }
-
-  /**
-   * Await DhtOp integration of all players for a given cell.
-   *
-   * @param cellId - Cell id to await DHT sync for.
-   * @param interval - Interval to pause between comparisons (defaults to 50 ms).
-   * @param timeout - A timeout for the delay (optional).
-   * @returns A promise that is resolved when the DHTs of all conductors are
-   * synced.
-   */
-  async awaitDhtSync(cellId: CellId, interval?: number, timeout?: number) {
-    const conductors = this.clients.map((client) => client.conductors).flat();
-    return awaitDhtSync(conductors, cellId, interval, timeout);
   }
 
   /**

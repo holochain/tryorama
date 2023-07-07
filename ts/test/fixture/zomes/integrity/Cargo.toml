@@ -10,3 +10,4 @@ name = "integrity"
 [dependencies]
 hdi = {workspace = true}
 serde = {workspace = true}
+getrandom = { version = "=0.2.7", features = ["custom"] }

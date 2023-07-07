@@ -35,10 +35,9 @@ export declare class TryCpScenario
 |  Method | Modifiers | Description |
 |  --- | --- | --- |
 |  [addClient(serverUrl, timeout)](./tryorama.trycpscenario.addclient.md) |  | Creates a TryCP client connection and add it to the scenario. |
-|  [addClientsPlayers(serverUrls, options)](./tryorama.trycpscenario.addclientsplayers.md) |  | Creates client connections for all passed in URLs and, depending on the options, creates multiple players with apps. Adds all clients to the scenario. |
+|  [addClientsPlayers(serverUrls, options)](./tryorama.trycpscenario.addclientsplayers.md) |  | <p>Creates client connections for all passed in URLs and, depending on the options, creates multiple players with apps. Adds all clients to the scenario.</p><p>If no number of agents per conductor is specified, it defaults to 1.</p> |
 |  [addPlayersWithApps(tryCpClient, playersApps)](./tryorama.trycpscenario.addplayerswithapps.md) |  | Creates and adds multiple players with an installed app to the scenario. |
 |  [addPlayerWithApp(tryCpClient, appBundleSource, options)](./tryorama.trycpscenario.addplayerwithapp.md) |  | Creates and adds a single player with an installed app to the scenario, |
-|  [awaitDhtSync(cellId, interval, timeout)](./tryorama.trycpscenario.awaitdhtsync.md) |  | Await DhtOp integration of all players for a given cell. |
 |  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  | Shut down and delete all conductors and close all client connections in the scenario. |
 |  [shareAllAgents()](./tryorama.trycpscenario.shareallagents.md) |  | Registers all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
 |  [shutDown()](./tryorama.trycpscenario.shutdown.md) |  | Shut down all conductors of all clients in the scenario. |

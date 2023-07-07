@@ -64,6 +64,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [AppApiResponseNetworkInfo](./tryorama.appapiresponsenetworkinfo.md) |  |
 |  [AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md) |  |
 |  [AppOptions](./tryorama.appoptions.md) | Optional arguments when installing a hApp. |
+|  [ClientPlayers](./tryorama.clientplayers.md) | A TryCP client and its associated players. |
 |  [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |  |
 |  [ConductorOptions](./tryorama.conductoroptions.md) |  |
 |  [Dna](./tryorama.dna.md) | DNA source and additional options. |
@@ -99,11 +100,11 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  --- | --- |
 |  [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md) | Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping. |
 |  [areDhtsSynced](./tryorama.aredhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
-|  [awaitDhtSync](./tryorama.awaitdhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
 |  [cleanAllConductors](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
 |  [createConductor](./tryorama.createconductor.md) | The function to create a conductor. It starts a sandbox conductor via the Holochain CLI. |
 |  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor. By default configures and starts it. |
 |  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) | The default partial config for a TryCP conductor. |
+|  [dhtSync](./tryorama.dhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
 |  [getZomeCaller](./tryorama.getzomecaller.md) | Get a shorthand function to call a cell's zome. |
 |  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |
 |  [runScenario](./tryorama.runscenario.md) | A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running. |
@@ -123,6 +124,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [CellZomeCallRequest](./tryorama.cellzomecallrequest.md) | The zome request options adapted to a specific cell. |
 |  [ConductorId](./tryorama.conductorid.md) |  |
 |  [CreateConductorOptions](./tryorama.createconductoroptions.md) | Options for using the conductor factory. |
+|  [IAdminWebsocket](./tryorama.iadminwebsocket.md) | AdminWebsocket interface for local and TryCP conductors. |
 |  [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md) | AppAgentWebsocket interface for local and TryCP conductors. |
 |  [IAppWebsocket](./tryorama.iappwebsocket.md) | AppWebsocket interface for local and TryCP conductors. |
 |  [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) | All possible calls to the App API. |

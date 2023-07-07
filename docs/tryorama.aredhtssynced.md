@@ -9,5 +9,5 @@ A utility function to compare conductors' integrated DhtOps.
 <b>Signature:</b>
 
 ```typescript
-areDhtsSynced: (conductors: Array<IConductor>, cellId: CellId) => Promise<boolean>
+areDhtsSynced: (players: IPlayer[], dnaHash: DnaHash) => Promise<boolean>
 ```

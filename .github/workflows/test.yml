@@ -4,7 +4,7 @@ on:
   pull_request:
   push:
     branches:
-      - "main"
+      - "main*"
 
 concurrency:
   group: ${{ github.ref_name }}
@@ -23,7 +23,7 @@ jobs:
         uses: actions/checkout@v3
 
       - name: Install nix
-        uses: cachix/install-nix-action@v20
+        uses: cachix/install-nix-action@v22
 
       - name: Set up cachix
         uses: cachix/cachix-action@v12

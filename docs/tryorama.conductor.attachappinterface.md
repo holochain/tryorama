@@ -9,7 +9,7 @@ Attach a web socket to the App API.
 <b>Signature:</b>
 
 ```typescript
-attachAppInterface(request?: AttachAppInterfaceRequest): Promise<void>;
+attachAppInterface(request?: AttachAppInterfaceRequest): Promise<number>;
 ```
 
 ## Parameters
@@ -20,5 +20,7 @@ attachAppInterface(request?: AttachAppInterfaceRequest): Promise<void>;
 
 <b>Returns:</b>
 
-Promise&lt;void&gt;
+Promise&lt;number&gt;
+
+The app interface port.
 

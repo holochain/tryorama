@@ -9,8 +9,15 @@ Detach the registered signal handler.
 <b>Signature:</b>
 
 ```typescript
-off(): void;
+off(port: number): void;
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  port | number |  |
+
 <b>Returns:</b>
 
 void

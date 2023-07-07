@@ -1,5 +1,6 @@
 import {
   AdminWebsocket,
+  AppAgentCallZomeRequest,
   AppAgentWebsocket,
   AppBundleSource,
   AppWebsocket,
@@ -9,7 +10,6 @@ import {
   encodeHashToBase64,
   getSigningCredentials,
   InstallAppRequest,
-  InstalledAppId,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -18,14 +18,8 @@ import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 
-import { enableAndGetAgentApp } from "../common.js";
 import { makeLogger } from "../logger.js";
-import {
-  AgentApp,
-  AgentsAppsOptions,
-  AppOptions,
-  IConductor,
-} from "../types.js";
+import { AgentsAppsOptions, AppOptions, IConductor } from "../types.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -53,14 +47,6 @@ export interface ConductorOptions {
    * @defaultValue true
    */
   startup?: boolean;
-
-  /**
-   * Attach an app interface to the conductor and connect an app websocket
-   * to it.
-   *
-   * @defaultValue true
-   */
-  attachAppInterface?: boolean;
 
   /**
    * The network type the conductor should use.
@@ -113,10 +99,6 @@ export const createConductor = async (
   );
   if (options?.startup !== false) {
     await conductor.startUp();
-    if (options?.attachAppInterface !== false) {
-      await conductor.attachAppInterface();
-      await conductor.connectAppInterface();
-    }
   }
   return conductor;
 };
@@ -130,7 +112,6 @@ export class Conductor implements IConductor {
   private conductorProcess: ChildProcessWithoutNullStreams | undefined;
   private conductorDir: string | undefined;
   private adminApiUrl: URL;
-  private appApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
   private _appAgentWs: AppAgentWebsocket | undefined;
@@ -140,7 +121,6 @@ export class Conductor implements IConductor {
     this.conductorProcess = undefined;
     this.conductorDir = undefined;
     this.adminApiUrl = new URL(HOST_URL.href);
-    this.appApiUrl = new URL(HOST_URL.href);
     this._adminWs = undefined;
     this._appWs = undefined;
     this._appAgentWs = undefined;
@@ -215,31 +195,32 @@ export class Conductor implements IConductor {
       return;
     }
 
-    const runConductorProcess = spawn(
-      "hc",
-      ["sandbox", "--piped", "run", "-e", this.conductorDir]
-      // {
-      //   detached: true, // create a process group; without this option, killing
-      //   // the process doesn't kill the conductor
-      // }
-    );
+    const runConductorProcess = spawn("hc", [
+      "sandbox",
+      "--piped",
+      "run",
+      "-e",
+      this.conductorDir,
+    ]);
     runConductorProcess.stdin.write(LAIR_PASSWORD);
     runConductorProcess.stdin.end();
 
     const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
-        const adminPortMatches = data
+        const conductorLaunched = data
           .toString()
-          .match(/Running conductor on admin port (\d+)/);
-        const isConductorStarted = data
+          .match(/Conductor launched #!\d ({.*})/);
+        const holochainRunning = data
           .toString()
           .includes("Connected successfully to a running holochain");
-        if (adminPortMatches || isConductorStarted) {
-          if (adminPortMatches) {
-            this.adminApiUrl.port = adminPortMatches[1];
+        if (conductorLaunched || holochainRunning) {
+          if (conductorLaunched) {
+            const portConfiguration = JSON.parse(conductorLaunched[1]);
+            const adminPort = portConfiguration.admin_port;
+            this.adminApiUrl.port = adminPort;
             logger.debug(`starting conductor\n${data}`);
           }
-          if (isConductorStarted) {
+          if (holochainRunning) {
             // this is the last output of the startup process
             this.conductorProcess = runConductorProcess;
             resolve();
@@ -303,6 +284,7 @@ export class Conductor implements IConductor {
    * Attach a web socket to the App API.
    *
    * @param request - Specify a port for the web socket (optional).
+   * @returns The app interface port.
    */
   async attachAppInterface(request?: AttachAppInterfaceRequest) {
     request = request ?? {
@@ -310,52 +292,70 @@ export class Conductor implements IConductor {
     };
     logger.debug(`attaching App API to port ${request.port}\n`);
     const { port } = await this.adminWs().attachAppInterface(request);
-    this.appApiUrl.port = port.toString();
+    return port;
   }
 
   /**
-   * Connect a web socket to the App API.
+   * Connect a web socket to the App API,
+   *
+   * @param port - The websocket port to connect to.
+   * @returns An app websocket.
    */
-  async connectAppInterface() {
-    assert(
-      this.appApiUrl.port,
-      "error connecting app interface: app api port has not been defined"
-    );
+  async connectAppWs(port: number) {
+    logger.debug(`connecting App WebSocket to port ${port}\n`);
+    const appApiUrl = new URL(this.adminApiUrl.href);
+    appApiUrl.port = port.toString();
+    const appWs = await AppWebsocket.connect(appApiUrl.href, this.timeout);
 
-    logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
-    this._appWs = await AppWebsocket.connect(this.appApiUrl.href, this.timeout);
-    this.setUpImplicitZomeCallSigning();
-  }
-
-  /**
-   * Connect a web socket for a specific app to the App API.
-   */
-  async connectAppAgentInterface(appId: InstalledAppId) {
-    assert(
-      this.appApiUrl.port,
-      "error connecting app interface: app api port has not been defined"
-    );
-
-    logger.debug(`connecting App API to port ${this.appApiUrl.port}\n`);
-    this._appAgentWs = await AppAgentWebsocket.connect(
-      this.appApiUrl.href,
-      appId,
-      this.timeout
-    );
-    this._appWs = this._appAgentWs.appWebsocket;
-    this.setUpImplicitZomeCallSigning();
-  }
-
-  private setUpImplicitZomeCallSigning() {
-    const callZome = this.appWs().callZome;
-    this.appWs().callZome = async (
-      req: CallZomeRequest | CallZomeRequestSigned
-    ) => {
+    // set up automatic zome call signing
+    const callZome = appWs.callZome;
+    appWs.callZome = async (req: CallZomeRequest | CallZomeRequestSigned) => {
       if (!getSigningCredentials(req.cell_id)) {
         await this.adminWs().authorizeSigningCredentials(req.cell_id);
       }
       return callZome(req);
     };
+
+    return appWs;
+  }
+
+  /**
+   * Connect a web socket for a specific app and agent to the App API,
+   *
+   * @param port - The websocket port to connect to.
+   * @param appId - The app id to make requests to.
+   * @returns An app agent websocket.
+   */
+  async connectAppAgentWs(port: number, appId: string) {
+    logger.debug(`connecting App Agent WebSocket to port ${port}\n`);
+    const appApiUrl = new URL(HOST_URL.href);
+    appApiUrl.port = port.toString();
+    const appAgentWs = await AppAgentWebsocket.connect(
+      appApiUrl.href,
+      appId,
+      this.timeout
+    );
+
+    // set up automatic zome call signing
+    const callZome = appAgentWs.callZome.bind(appAgentWs);
+    appAgentWs.callZome = async (req: AppAgentCallZomeRequest) => {
+      let cellId;
+      if ("role_name" in req) {
+        assert(appAgentWs.cachedAppInfo);
+        cellId = appAgentWs.getCellIdFromRoleName(
+          req.role_name,
+          appAgentWs.cachedAppInfo
+        );
+      } else {
+        cellId = req.cell_id;
+      }
+      if (!getSigningCredentials(cellId)) {
+        await this.adminWs().authorizeSigningCredentials(cellId);
+      }
+      return callZome(req);
+    };
+
+    return appAgentWs;
   }
 
   /**
@@ -377,26 +377,6 @@ export class Conductor implements IConductor {
   adminWs() {
     assert(this._adminWs, "admin ws has not been connected");
     return this._adminWs;
-  }
-
-  /**
-   * Get all App API methods.
-   *
-   * @returns The App API web socket.
-   */
-  appWs() {
-    assert(this._appWs, "app ws has not been connected");
-    return this._appWs;
-  }
-
-  /**
-   * Get all App API methods of a specific app.
-   *
-   * @returns The app agent web socket.
-   */
-  appAgentWs() {
-    assert(this._appAgentWs, "app ws has not been connected");
-    return this._appAgentWs;
   }
 
   /**
@@ -433,30 +413,23 @@ export class Conductor implements IConductor {
         agent_key
       )}`
     );
-    const installedAppInfo = await this.adminWs().installApp(installAppRequest);
-    const agentApp: AgentApp = await enableAndGetAgentApp(
-      this,
-      agent_key,
-      installedAppInfo
-    );
-    return agentApp;
+    return this.adminWs().installApp(installAppRequest);
   }
 
   /**
    * Install an app for multiple agents into the conductor.
    */
   async installAgentsApps(options: AgentsAppsOptions) {
-    const agentsApps: AgentApp[] = [];
-    for (const appsForAgent of options.agentsApps) {
-      const agentApp = await this.installApp(appsForAgent.app, {
-        agentPubKey: appsForAgent.agentPubKey,
-        membraneProofs: appsForAgent.membraneProofs,
-        installedAppId: options.installedAppId,
-        networkSeed: options.networkSeed,
-      });
-      agentsApps.push(agentApp);
-    }
-    return agentsApps;
+    return Promise.all(
+      options.agentsApps.map((appsForAgent) =>
+        this.installApp(appsForAgent.app, {
+          agentPubKey: appsForAgent.agentPubKey,
+          membraneProofs: appsForAgent.membraneProofs,
+          installedAppId: options.installedAppId,
+          networkSeed: options.networkSeed,
+        })
+      )
+    );
   }
 }
 

@@ -17,5 +17,6 @@ export interface IPlayer extends AgentApp
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
+|  [appAgentWs](./tryorama.iplayer.appagentws.md) |  | AppAgentWebsocket \| [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md) |  |
 |  [conductor](./tryorama.iplayer.conductor.md) |  | [IConductor](./tryorama.iconductor.md) |  |
 

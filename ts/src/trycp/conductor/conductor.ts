@@ -2,7 +2,9 @@ import {
   AddAgentInfoRequest,
   AgentInfoRequest,
   AgentPubKey,
+  AppAgentCallZomeRequest,
   AppBundleSource,
+  AppInfo,
   AppInfoRequest,
   AppSignalCb,
   AttachAppInterfaceRequest,
@@ -10,6 +12,7 @@ import {
   CallZomeRequestSigned,
   CapSecret,
   CellId,
+  CellType,
   CreateCloneCellRequest,
   DeleteCloneCellRequest,
   DisableAppRequest,
@@ -31,10 +34,12 @@ import {
   GrantedFunctionsType,
   GrantZomeCallCapabilityRequest,
   InstallAppRequest,
+  InstalledAppId,
   ListAppsRequest,
   NetworkInfoRequest,
   randomCapSecret,
   RegisterDnaRequest,
+  RoleName,
   setSigningCredentials,
   signZomeCall,
   StartAppRequest,
@@ -46,14 +51,8 @@ import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
-import { enableAndGetAgentApp } from "../../common.js";
 import { makeLogger } from "../../logger.js";
-import {
-  AgentApp,
-  AgentsAppsOptions,
-  AppOptions,
-  IConductor,
-} from "../../types.js";
+import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
 import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
   RequestAdminInterfaceMessage,
@@ -67,6 +66,8 @@ const HOLO_SIGNALING_SERVER = new URL("wss://signal.holo.host");
 const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
 const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
 const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
+
+const CLONE_ID_DELIMITER = ".";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -148,7 +149,6 @@ export const createTryCpConductor = async (
  */
 export class TryCpConductor implements IConductor {
   readonly id: string;
-  private appInterfacePort: undefined | number;
   readonly tryCpClient: TryCpClient;
 
   constructor(tryCpClient: TryCpClient, id?: ConductorId) {
@@ -200,17 +200,13 @@ export class TryCpConductor implements IConductor {
   }
 
   /**
-   * Disconnect app interface and shut down the conductor.
+   * Shut down the conductor.
    *
    * @returns An empty success response.
    *
    * @public
    */
   async shutDown() {
-    if (this.appInterfacePort) {
-      const response = await this.disconnectAppInterface();
-      assert(response === TRYCP_SUCCESS_RESPONSE);
-    }
     const response = await this.tryCpClient.call({
       type: "shutdown",
       id: this.id,
@@ -263,29 +259,28 @@ export class TryCpConductor implements IConductor {
   /**
    * Connect a web socket to the App API.
    *
+   * @param port - The port to attach the app interface to.
    * @returns An empty success response.
    */
-  async connectAppInterface(signalHandler?: AppSignalCb) {
-    assert(this.appInterfacePort, "no app interface attached to conductor");
+  async connectAppInterface(port: number) {
     const response = await this.tryCpClient.call({
       type: "connect_app_interface",
-      port: this.appInterfacePort,
+      port,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
-    this.tryCpClient.setSignalHandler(this.appInterfacePort, signalHandler);
     return response;
   }
 
   /**
-   * Disconnect the web socket from the App API.
+   * Disconnect a web socket from the App API.
    *
+   * @param port - The port of the app interface to disconnect.
    * @returns An empty success response.
    */
-  async disconnectAppInterface() {
-    assert(this.appInterfacePort, "no app interface attached");
+  async disconnectAppInterface(port: number) {
     const response = await this.tryCpClient.call({
       type: "disconnect_app_interface",
-      port: this.appInterfacePort,
+      port,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
@@ -295,18 +290,17 @@ export class TryCpConductor implements IConductor {
    * Attach a signal handler.
    *
    * @param signalHandler - The signal handler to register.
+   * @param port - The port of the app interface.
    */
-  on(signalHandler: AppSignalCb) {
-    assert(this.appInterfacePort, "no app interface attached to conductor");
-    this.tryCpClient.setSignalHandler(this.appInterfacePort, signalHandler);
+  on(port: number, signalHandler: AppSignalCb) {
+    this.tryCpClient.setSignalHandler(port, signalHandler);
   }
 
   /**
    * Detach the registered signal handler.
    */
-  off() {
-    assert(this.appInterfacePort, "no app interface attached to conductor");
-    this.tryCpClient.setSignalHandler(this.appInterfacePort, undefined);
+  off(port: number) {
+    this.tryCpClient.unsetSignalHandler(port);
   }
 
   /**
@@ -541,7 +535,6 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "app_interface_attached");
-      this.appInterfacePort = request.port;
       return { port: response.data.port };
     };
 
@@ -741,11 +734,13 @@ export class TryCpConductor implements IConductor {
   /**
    * Call to the conductor's App API.
    */
-  private async callAppApi(message: RequestCallAppInterfaceMessage) {
-    assert(this.appInterfacePort, "No App interface attached to conductor");
+  private async callAppApi(
+    port: number,
+    message: RequestCallAppInterfaceMessage
+  ) {
     const response = await this.tryCpClient.call({
       type: "call_app_interface",
-      port: this.appInterfacePort,
+      port,
       message,
     });
     assert(response !== TRYCP_SUCCESS_RESPONSE);
@@ -760,15 +755,16 @@ export class TryCpConductor implements IConductor {
    *
    * @returns The App API web socket.
    */
-  appWs() {
+  async connectAppWs(port: number) {
     /**
      * Request info of an installed hApp.
      *
+     * @param port - The app interface port.
      * @param request - The hApp id to query.
      * @returns The app info.
      */
     const appInfo = async (request: AppInfoRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "app_info",
         data: request,
       });
@@ -804,7 +800,7 @@ export class TryCpConductor implements IConductor {
         const signedZomeCall = await signZomeCall(request);
         signedRequest = signedZomeCall;
       }
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "call_zome",
         data: signedRequest,
       });
@@ -824,7 +820,7 @@ export class TryCpConductor implements IConductor {
      * @returns The clone id and cell id of the created clone cell.
      */
     const createCloneCell = async (request: CreateCloneCellRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "create_clone_cell",
         data: request,
       });
@@ -840,7 +836,7 @@ export class TryCpConductor implements IConductor {
      * @returns The enabled clone cell's clone id and cell id.
      */
     const enableCloneCell = async (request: EnableCloneCellRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "enable_clone_cell",
         data: request,
       });
@@ -855,7 +851,7 @@ export class TryCpConductor implements IConductor {
      * @returns An empty success response.
      */
     const disableCloneCell = async (request: DisableCloneCellRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "disable_clone_cell",
         data: request,
       });
@@ -870,7 +866,7 @@ export class TryCpConductor implements IConductor {
      * @returns {@link NetworkInfoResponse}.
      */
     const networkInfo = async (request: NetworkInfoRequest) => {
-      const response = await this.callAppApi({
+      const response = await this.callAppApi(port, {
         type: "network_info",
         data: request,
       });
@@ -888,12 +884,98 @@ export class TryCpConductor implements IConductor {
     };
   }
 
+  private isCloneId(roleName: RoleName) {
+    return roleName.includes(CLONE_ID_DELIMITER);
+  }
+
+  private getBaseRoleNameFromCloneId(roleName: RoleName) {
+    if (!this.isCloneId(roleName)) {
+      throw new Error(
+        "invalid clone id: no clone id delimiter found in role name"
+      );
+    }
+    return roleName.split(CLONE_ID_DELIMITER)[0];
+  }
+
+  private getCellIdFromRoleName(roleName: RoleName, appInfo: AppInfo) {
+    if (this.isCloneId(roleName)) {
+      const baseRoleName = this.getBaseRoleNameFromCloneId(roleName);
+      if (!(baseRoleName in appInfo.cell_info)) {
+        throw new Error(`No cell found with role_name ${roleName}`);
+      }
+      const cloneCell = appInfo.cell_info[baseRoleName].find(
+        (c) => CellType.Cloned in c && c[CellType.Cloned].clone_id === roleName
+      );
+      if (!cloneCell || !(CellType.Cloned in cloneCell)) {
+        throw new Error(`No clone cell found with clone id ${roleName}`);
+      }
+      return cloneCell[CellType.Cloned].cell_id;
+    }
+    if (!(roleName in appInfo.cell_info)) {
+      throw new Error(`No cell found with role_name ${roleName}`);
+    }
+    const cell = appInfo.cell_info[roleName].find(
+      (c) => CellType.Provisioned in c
+    );
+    if (!cell || !(CellType.Provisioned in cell)) {
+      throw new Error(`No provisioned cell found with role_name ${roleName}`);
+    }
+    return cell[CellType.Provisioned].cell_id;
+  }
+
+  async connectAppAgentWs(port: number, appId: InstalledAppId) {
+    const appWs = await this.connectAppWs(port);
+    let cachedAppInfo = await appWs.appInfo({ installed_app_id: appId });
+
+    const appInfo = appWs.appInfo.bind(appWs);
+    appWs.appInfo = async () => {
+      const currentAppInfo = await appInfo({ installed_app_id: appId });
+      cachedAppInfo = currentAppInfo;
+      return currentAppInfo;
+    };
+
+    const callZome = appWs.callZome.bind(appWs);
+    appWs.callZome = async (request: AppAgentCallZomeRequest) => {
+      if ("role_name" in request && request.role_name) {
+        const cell_id = this.getCellIdFromRoleName(
+          request.role_name,
+          cachedAppInfo
+        );
+
+        const zomeCallPayload = {
+          ...request,
+          // ...omit(request, "role_name"),
+          provenance: cachedAppInfo.agent_pub_key,
+          cell_id,
+        };
+        // eslint-disable-next-line
+        // @ts-ignore
+        delete zomeCallPayload.role_name;
+        return callZome(zomeCallPayload);
+      } else if ("cell_id" in request && request.cell_id) {
+        request = {
+          ...request,
+          provenance:
+            "provenance" in request
+              ? request.provenance
+              : cachedAppInfo.agent_pub_key,
+        };
+        // eslint-disable-next-line
+        // @ts-ignore
+        return callZome(request);
+      }
+      throw new Error("callZome requires a role_name or cell_id arg");
+    };
+
+    return appWs;
+  }
+
   /**
    * Install a hApp bundle into the conductor.
    *
    * @param appBundleSource - The bundle or path to the bundle.
    * @param options - {@link AppOptions} for the hApp bundle (optional).
-   * @returns A hApp for the agent.
+   * @returns The installed app info.
    */
   async installApp(appBundleSource: AppBundleSource, options?: AppOptions) {
     const agent_key =
@@ -917,64 +999,48 @@ export class TryCpConductor implements IConductor {
             installed_app_id,
             network_seed,
           };
-    const installedAppInfo = await this.adminWs().installApp(installAppRequest);
-
-    const agentHapp: AgentApp = await enableAndGetAgentApp(
-      this,
-      agent_key,
-      installedAppInfo
-    );
-    return agentHapp;
+    return this.adminWs().installApp(installAppRequest);
   }
 
   /**
    * Install a hApp bundle into the conductor.
    *
    * @param options - Apps to install for each agent, with agent pub keys etc.
-   * (optional).
-   * @returns A hApp for the agent.
+   * @returns The installed app infos.
    */
   async installAgentsApps(options: AgentsAppsOptions) {
-    const agentsApps: AgentApp[] = [];
-    for (const appForAgent of options.agentsApps) {
-      const agent_key =
-        appForAgent.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
-      const membrane_proofs = appForAgent.membraneProofs ?? {};
-      const installed_app_id = options.installedAppId ?? `app-${uuidv4()}`;
-      const network_seed = options.networkSeed;
-      const installAppRequest: InstallAppRequest =
-        "bundle" in appForAgent.app
-          ? {
-              bundle: appForAgent.app.bundle,
-              agent_key,
-              membrane_proofs,
-              installed_app_id,
-              network_seed,
-            }
-          : {
-              path: appForAgent.app.path,
-              agent_key,
-              membrane_proofs,
-              installed_app_id,
-              network_seed,
-            };
+    return Promise.all(
+      options.agentsApps.map(async (appForAgent) => {
+        const agent_key =
+          appForAgent.agentPubKey ??
+          (await this.adminWs().generateAgentPubKey());
+        const membrane_proofs = appForAgent.membraneProofs ?? {};
+        const installed_app_id = options.installedAppId ?? `app-${uuidv4()}`;
+        const network_seed = options.networkSeed;
+        const installAppRequest: InstallAppRequest =
+          "bundle" in appForAgent.app
+            ? {
+                bundle: appForAgent.app.bundle,
+                agent_key,
+                membrane_proofs,
+                installed_app_id,
+                network_seed,
+              }
+            : {
+                path: appForAgent.app.path,
+                agent_key,
+                membrane_proofs,
+                installed_app_id,
+                network_seed,
+              };
 
-      logger.debug(
-        `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
-          agent_key
-        )}`
-      );
-      const installedAppInfo = await this.adminWs().installApp(
-        installAppRequest
-      );
-
-      const agentApp = await enableAndGetAgentApp(
-        this,
-        agent_key,
-        installedAppInfo
-      );
-      agentsApps.push(agentApp);
-    }
-    return agentsApps;
+        logger.debug(
+          `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
+            agent_key
+          )}`
+        );
+        return this.adminWs().installApp(installAppRequest);
+      })
+    );
   }
 }
