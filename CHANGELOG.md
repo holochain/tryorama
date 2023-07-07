@@ -7,9 +7,14 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
-- TryCP scenario: Optimize multi client/multi player installation. All agent app installations for a conductor and all conductor installations for a client are triggered in parallel instead of sequentially.
+### Fixed
+
+## 2023-07-07: v0.15.0-rc.1
+### Changed
+- **BREAKING CHANGE**: Upgrade to Holochain v0.3.0-beta-dev.8. `hc` output has changed which lead to local conductor startup refactoring.
 - **BREAKING CHANGE**: `runScenario` re-throws caught errors.
 - **BREAKING CHANGE**: To imitate a hApp client more closely in a test, App websockets are decoupled from conductors. This change plays out mainly on the conductor level, but a player contains the app agent websocket now too for registering signals. Previously there used to be a single app websocket per conductor for all of its agents. Now there is one app agent websocket connection per agent.
+- TryCP scenario: Optimize multi client/multi player installation. All agent app installations for a conductor and all conductor installations for a client are triggered in parallel instead of sequentially.
 ### Fixed
 - **BREAKING CHANGE**: Awaiting DHT sync of multiple players received a more universal API. Scenario methods were removed, so that in all cases the util function must be called.
 
