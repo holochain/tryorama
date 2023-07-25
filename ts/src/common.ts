@@ -154,7 +154,7 @@ export const enableAndGetAgentApp = async (
   return agentApp;
 };
 
-const getCallableCell = (
+export const getCallableCell = (
   appWs: IAppWebsocket | IAppAgentWebsocket,
   cell: ClonedCell | ProvisionedCell
 ) => ({
