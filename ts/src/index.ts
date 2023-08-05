@@ -12,6 +12,10 @@
  */
 export * from "./local/index.js";
 export * from "./trycp/index.js";
-export { addAllAgentsToAllConductors, getZomeCaller } from "./common.js";
+export {
+  addAllAgentsToAllConductors,
+  enableAndGetAgentApp,
+  getZomeCaller,
+} from "./common.js";
 export * from "./types.js";
 export * from "./util.js";
