@@ -5,8 +5,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- Export all common helper functions.
 ### Removed
 ### Changed
+- Upgrade to Holochain v0.2.1
+- Upgrade to JS client v0.16.0
 ### Fixed
 
 ## 2023-07-07: v0.15.0-rc.1
