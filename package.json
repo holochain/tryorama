@@ -1,7 +1,7 @@
 {
   "name": "@holochain/tryorama",
   "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
-  "version": "0.15.0-rc.1",
+  "version": "0.15.0",
   "author": "Holochain Foundation",
   "keywords": [
     "holochain",
@@ -19,9 +19,6 @@
   "engines": {
     "node": ">=16.0.0 || >=18.0.0"
   },
-  "workspaces": [
-    "crates/trycp_server/test"
-  ],
   "exports": {
     ".": "./lib/index.js"
   },
@@ -64,8 +61,8 @@
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
     "@typescript-eslint/parser": "^5.46.1",
-    "eslint": "^8.30.0",
-    "eslint-config-prettier": "^8.5.0",
+    "eslint": "^8.46.0",
+    "eslint-config-prettier": "^8.10.0",
     "eslint-plugin-prettier": "^4.2.1",
     "eslint-plugin-tsdoc": "^0.2.17",
     "prettier": "^2.8.1",
