@@ -16,7 +16,6 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Upgrade to Holochain v0.2.1
 - Upgrade to JS client v0.16.0
 
-
 ## 2023-07-07: v0.15.0-rc.1
 ### Changed
 - **BREAKING CHANGE**: Upgrade to Holochain v0.3.0-beta-dev.8. `hc` output has changed which lead to local conductor startup refactoring.
