@@ -23,6 +23,8 @@ const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL - ADDR: ";
 
 /**
  * Spawn a signalling server to enable connections between conductors.
+ *
+ * @public
  */
 export const runLocalServices = async () => {
   const logger = makeLogger("Local services");
@@ -57,6 +59,8 @@ export const runLocalServices = async () => {
 
 /**
  * Shutdown signalling server process.
+ *
+ * @public
  */
 export const stopLocalServices = (
   localServicesProcess: ChildProcessWithoutNullStreams
@@ -111,6 +115,16 @@ function assertZomeResponse<T>(
   return;
 }
 
+/**
+ * Enable an app and build an agent app object.
+ *
+ * @param adminWs - The admin websocket to use for admin requests.
+ * @param appWs - The app websocket to use for app requests.
+ * @param appInfo - The app info of the app to enable.
+ * @returns An app agent object.
+ *
+ * @public
+ */
 export const enableAndGetAgentApp = async (
   adminWs: IAdminWebsocket,
   appWs: IAppWebsocket | IAppAgentWebsocket,
@@ -154,7 +168,16 @@ export const enableAndGetAgentApp = async (
   return agentApp;
 };
 
-const getCallableCell = (
+/**
+ * Create curried version of `callZome` function for a specific cell.
+ *
+ * @param appWs - App websocket to use for calling zome.
+ * @param cell - Cell to bind zome call function to.
+ * @returns A callable cell.
+ *
+ * @public
+ */
+export const getCallableCell = (
   appWs: IAppWebsocket | IAppAgentWebsocket,
   cell: ClonedCell | ProvisionedCell
 ) => ({

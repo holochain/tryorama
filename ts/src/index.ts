@@ -10,12 +10,8 @@
  *
  * @packageDocumentation
  */
+export * from "./common.js";
 export * from "./local/index.js";
 export * from "./trycp/index.js";
-export {
-  addAllAgentsToAllConductors,
-  enableAndGetAgentApp,
-  getZomeCaller,
-} from "./common.js";
 export * from "./types.js";
 export * from "./util.js";

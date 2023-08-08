@@ -274,7 +274,7 @@ export class Conductor implements IConductor {
 
   private async connectAdminWs() {
     this._adminWs = await AdminWebsocket.connect(
-      this.adminApiUrl.href,
+      this.adminApiUrl,
       this.timeout
     );
     logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
@@ -305,7 +305,7 @@ export class Conductor implements IConductor {
     logger.debug(`connecting App WebSocket to port ${port}\n`);
     const appApiUrl = new URL(this.adminApiUrl.href);
     appApiUrl.port = port.toString();
-    const appWs = await AppWebsocket.connect(appApiUrl.href, this.timeout);
+    const appWs = await AppWebsocket.connect(appApiUrl, this.timeout);
 
     // set up automatic zome call signing
     const callZome = appWs.callZome;
@@ -331,7 +331,7 @@ export class Conductor implements IConductor {
     const appApiUrl = new URL(HOST_URL.href);
     appApiUrl.port = port.toString();
     const appAgentWs = await AppAgentWebsocket.connect(
-      appApiUrl.href,
+      appApiUrl,
       appId,
       this.timeout
     );
