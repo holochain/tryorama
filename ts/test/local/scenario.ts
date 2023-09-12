@@ -96,6 +96,7 @@ test("Local Scenario - Install hApp bundle and access cell by role name", async 
 
 test("Local Scenario - Add players with hApp bundles", async (t) => {
   const scenario = new Scenario();
+  t.ok(scenario.networkSeed);
   const [alice, bob] = await scenario.addPlayersWithApps([
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
@@ -107,32 +108,44 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
 });
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
-  const scenario = new Scenario();
-  t.ok(scenario.networkSeed);
+  //The wrapper takes care of creating a scenario and shutting down or deleting
+  // all conductors involved in the test scenario.
+  await runScenario(async (scenario) => {
+    // Construct proper paths for a hApp file created by the `hc app pack` command.
+    const appBundleSource: AppBundleSource = {
+      path: FIXTURE_HAPP_URL.pathname,
+    };
 
-  const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
-  const [alice, bob] = await scenario.addPlayersWithApps([
-    { appBundleSource },
-    { appBundleSource },
-  ]);
+    // Add 2 players with the test hApp to the Scenario. The returned players
+    // can be destructured.
+    const [alice, bob] = await scenario.addPlayersWithApps([
+      { appBundleSource },
+      { appBundleSource },
+    ]);
 
-  const content = "Hi dare";
-  const createEntryHash = await alice.cells[0].callZome<EntryHash>({
-    zome_name: TEST_ZOME_NAME,
-    fn_name: "create",
-    payload: content,
+    // Content to be passed to the zome function that create an entry,
+    const content = "Hello Tryorama";
+
+    // The cells of the installed hApp are returned in the same order as the DNAs
+    // in the app manifest.
+    const createEntryHash = await alice.cells[0].callZome<EntryHash>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "create",
+      payload: content,
+    });
+
+    // Wait for the created entry to be propagated to the other player.
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
+
+    // Using the same cell and zome as before, the second player reads the
+    // created entry.
+    const readContent = await bob.cells[0].callZome<typeof content>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "read",
+      payload: createEntryHash,
+    });
+    t.equal(readContent, content);
   });
-
-  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
-
-  const readContent = await bob.cells[0].callZome<typeof content>({
-    zome_name: TEST_ZOME_NAME,
-    fn_name: "read",
-    payload: createEntryHash,
-  });
-  t.equal(readContent, content);
-
-  await scenario.cleanUp();
 });
 
 test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
@@ -142,10 +155,12 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
     { appBundleSource },
     { appBundleSource },
   ]);
+  // Get shortcut functions to call a specific zome of a specific agent
   const aliceCaller = getZomeCaller(alice.cells[0], TEST_ZOME_NAME);
   const bobCaller = getZomeCaller(bob.cells[0], TEST_ZOME_NAME);
 
   const content = "Before shutdown";
+  // Use the curried function to call alice's coordinator zome
   const createEntryHash = await aliceCaller<EntryHash>("create", content);
 
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
@@ -198,10 +213,8 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     { appBundleSource },
   ]);
   assert(signalHandlerAlice);
-  assert("on" in alice.appAgentWs);
   alice.appAgentWs.on("signal", signalHandlerAlice);
   assert(signalHandlerBob);
-  assert("on" in bob.appAgentWs);
   bob.appAgentWs.on("signal", signalHandlerBob);
 
   const signalAlice = { value: "hello alice" };

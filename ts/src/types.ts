@@ -54,6 +54,7 @@ export type IAppWebsocket = Pick<
   | "enableCloneCell"
   | "disableCloneCell"
   | "networkInfo"
+  | "on"
 >;
 
 /**
@@ -61,7 +62,7 @@ export type IAppWebsocket = Pick<
  *
  * @public
  */
-export type IAppAgentWebsocket = Pick<AppAgentWebsocket, "callZome">;
+export type IAppAgentWebsocket = Pick<AppAgentWebsocket, "callZome" | "on">;
 
 /**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and
