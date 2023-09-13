@@ -213,8 +213,10 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     { appBundleSource },
   ]);
   assert(signalHandlerAlice);
+  assert("on" in alice.appAgentWs);
   alice.appAgentWs.on("signal", signalHandlerAlice);
   assert(signalHandlerBob);
+  assert("on" in bob.appAgentWs);
   bob.appAgentWs.on("signal", signalHandlerBob);
 
   const signalAlice = { value: "hello alice" };
