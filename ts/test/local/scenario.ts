@@ -108,7 +108,7 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
 });
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
-  //The wrapper takes care of creating a scenario and shutting down or deleting
+  // The wrapper takes care of creating a scenario and shutting down or deleting
   // all conductors involved in the test scenario.
   await runScenario(async (scenario) => {
     // Construct proper paths for a hApp file created by the `hc app pack` command.
