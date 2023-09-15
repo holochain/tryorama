@@ -30,7 +30,7 @@ With a few lines of code you can start testing your Holochain application. The
 examples in this repository use [tape](https://github.com/substack/tape) as
 test runner and assertion library. You can choose any other runner and library.
 
-> [Example with 2 conductors creating and reding an entry.](./ts/test/local/scenario.ts#L110)
+> [Example with 2 conductors creating and reading an entry.](./ts/test/local/scenario.ts#L110)
 
 ### Curried function to get a zome caller
 
