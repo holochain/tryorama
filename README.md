@@ -32,6 +32,11 @@ test runner and assertion library. You can choose any other runner and library.
 
 > [Example with 2 conductors creating and reading an entry.](./ts/test/local/scenario.ts#L110)
 
+There are lots of examples for working with scenarios and conductors
+in the [`scenario`](./ts/test/local/scenario.ts) and 
+[`conductor`](./ts/test/local/conductor.ts) test folders.
+
+
 ### Curried function to get a zome caller
 
 > [Example](./ts/test/local/scenario.ts#L158)
@@ -68,7 +73,3 @@ One level underneath the Scenario is the
 [Conductor](./docs/tryorama.localconductor.md). Apart from methods for
 creation, startup and shutdown, it comes with complete functionality of Admin
 and App API that the JavaScript client offers.
-
-> There are lots of examples for working with conductors
-in the [`local`](./ts/test/local/conductor.ts) and
-[`trycp`](/ts/test/trycp//conductor.ts) test folders.
