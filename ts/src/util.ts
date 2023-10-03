@@ -6,7 +6,7 @@ import {
 } from "@holochain/client";
 import isEqual from "lodash/isEqual.js";
 import sortBy from "lodash/sortBy.js";
-import { IPlayer } from "./types.js";
+import { IConductorCell, IPlayer } from "./types.js";
 
 /**
  * A utility function to wait the given amount of time.
@@ -22,6 +22,12 @@ export const pause = (milliseconds: number) => {
   });
 };
 
+const playersToConductorCells = (players: IPlayer[], dnaHash: DnaHash) =>
+  players.map((player) => ({
+    conductor: player.conductor,
+    cellId: [dnaHash, player.agentPubKey] as CellId,
+  }));
+
 /**
  * A utility function to compare conductors' integrated DhtOps.
  *
@@ -32,19 +38,37 @@ export const pause = (milliseconds: number) => {
  * @public
  */
 export const areDhtsSynced = async (players: IPlayer[], dnaHash: DnaHash) => {
+  const conductorCells = playersToConductorCells(players, dnaHash);
+  return areConductorCellsDhtsSynced(conductorCells);
+};
+
+/**
+ * A utility function to compare conductors' integrated DhtOps.
+ *
+ * @param conductorCells - Array of ConductorCells
+ * @returns A promise that is resolved after conductors' Integrated DhtOps match.
+ *
+ * @public
+ */
+export const areConductorCellsDhtsSynced = async (
+  conductorCells: IConductorCell[]
+) => {
+  if (!isConductorCellDnaHashEqual(conductorCells)) {
+    throw Error("Cannot compare DHT state of different DNAs");
+  }
+
   // Dump all conductors' states
   const conductorStates: FullStateDump[] = await Promise.all(
-    players.map((player) => {
-      const cell_id: CellId = [dnaHash, player.agentPubKey];
-      return player.conductor.adminWs().dumpFullState({
-        cell_id,
+    conductorCells.map((conductorCell) => {
+      return conductorCell.conductor.adminWs().dumpFullState({
+        cell_id: conductorCell.cellId,
         dht_ops_cursor: undefined,
       });
     })
   );
 
   // Compare conductors' integrated DhtOps
-  const playersDhtOpsIntegrated = conductorStates.map((conductor) =>
+  const conductorDhtOpsIntegrated = conductorStates.map((conductor) =>
     sortBy(conductor.integration_dump.integrated, [
       // the only property's key of each DhtOp is the DhtOp type
       (op) => Object.keys(op)[0],
@@ -52,8 +76,8 @@ export const areDhtsSynced = async (players: IPlayer[], dnaHash: DnaHash) => {
       (op) => encodeHashToBase64(Object.values(op)[0][0]),
     ])
   );
-  const status = playersDhtOpsIntegrated.every((playerOps) =>
-    isEqual(playerOps, playersDhtOpsIntegrated[0])
+  const status = conductorDhtOpsIntegrated.every((ops) =>
+    isEqual(ops, conductorDhtOpsIntegrated[0])
   );
 
   return status;
@@ -77,6 +101,30 @@ export const dhtSync = async (
   interval = 50,
   timeout?: number
 ) => {
+  const conductorCells = playersToConductorCells(players, dnaHash);
+  return conductorCellsDhtSync(conductorCells, interval, timeout);
+};
+
+/**
+ * A utility function to wait until all conductors' integrated DhtOps are
+ * identical for a DNA.
+ *
+ * @param conductorCells - Array of IConductorCell.
+ * @param interval - Interval to pause between comparisons (defaults to 50 ms).
+ * @param timeout - A timeout for the delay (optional).
+ * @returns A promise that is resolved after all agents' DHT states match.
+ *
+ * @public
+ */
+export const conductorCellsDhtSync = async (
+  conductorCells: IConductorCell[],
+  interval = 50,
+  timeout?: number
+) => {
+  if (!isConductorCellDnaHashEqual(conductorCells)) {
+    throw Error("Cannot compare DHT state of different DNAs");
+  }
+
   const startTime = performance.now();
   let completed = false;
 
@@ -89,10 +137,26 @@ export const dhtSync = async (
       );
 
     // Check if Integrated DhtOps are syncronized
-    completed = await areDhtsSynced(players, dnaHash);
+    completed = await areConductorCellsDhtsSynced(conductorCells);
 
     if (!completed) {
       await pause(interval);
     }
   }
+};
+
+/**
+ * A utility function to verify if all IConductorCells in an array have CellIds with
+ * the same DnaHash.
+ *
+ * @param conductorCells - Array of IConductorCell.
+ * @returns boolean
+ *
+ * @internal
+ */
+const isConductorCellDnaHashEqual = (conductorCells: IConductorCell[]) => {
+  const dnaHashes = conductorCells.map(
+    (conductorCell) => conductorCell.cellId[0]
+  );
+  return dnaHashes.every((val: DnaHash) => val === dnaHashes[0]);
 };

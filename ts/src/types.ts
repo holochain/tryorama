@@ -7,6 +7,7 @@ import type {
   AppSignalCb,
   AppWebsocket,
   CallZomeRequest,
+  CellId,
   ClonedCell,
   DnaBundle,
   DnaProperties,
@@ -199,4 +200,12 @@ export interface Dna {
   membraneProof?: MembraneProof;
   properties?: DnaProperties;
   roleName?: string;
+}
+
+/**
+ * A Conductor and a CellId
+ */
+export interface IConductorCell {
+  conductor: IConductor;
+  cellId: CellId;
 }
