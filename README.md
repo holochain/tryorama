@@ -26,131 +26,28 @@ npm install @holochain/tryorama
 
 ## Example
 
-With a few lines of code you can start testing your Holochain application. This
-example uses [tape](https://github.com/substack/tape) as test runner and
-assertion library. You can choose any other runner and library.
+With a few lines of code you can start testing your Holochain application. The
+examples in this repository use [tape](https://github.com/substack/tape) as
+test runner and assertion library. You can choose any other runner and library.
 
-```typescript
-import { ActionHash } from "@holochain/client";
-import { Scenario, dhtSync, runScenario } from "@holochain/tryorama";
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import test from "tape-promise/tape.js";
+> [Example with 2 conductors creating and reading an entry.](./ts/test/local/scenario.ts#L110)
 
-test("Create 2 players and create and read an entry", async (t) => {
-  await runScenario(async (scenario: Scenario) => {
-    // Construct proper paths for a hApp file created by the `hc app pack` command.
-    const testHappUrl = dirname(fileURLToPath(import.meta.url)) + "/test.happ";
+There are lots of examples for working with scenarios and conductors
+in the [`scenario`](./ts/test/local/scenario.ts) and 
+[`conductor`](./ts/test/local/conductor.ts) test folders.
 
-    // Add 2 players with the test hApp to the Scenario. The returned players
-    // can be destructured.
-    const [alice, bob] = await scenario.addPlayersWithApps([
-      { appBundleSource: { path: testHappUrl } },
-      { appBundleSource: { path: testHappUrl } },
-    ]);
-
-    // Shortcut peer discovery through gossip and register all agents in every
-    // conductor of the scenario.
-    await scenario.shareAllAgents();
-
-    // Content to be passed to the zome function that create an entry,
-    const content = "Hello Tryorama";
-
-    // The cells of the installed hApp are returned in the same order as the DNAs
-    // in the app manifest.
-    const createEntryHash: ActionHash = await alice.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "create",
-      payload: content,
-    });
-
-    // Wait for the created entry to be propagated to the other player.
-    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
-
-    // Using the same cell and zome as before, the second player reads the
-    // created entry.
-    const readContent: typeof content = await bob.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "read",
-      payload: createEntryHash,
-    });
-    t.equal(readContent, content);
-  });
-});
-```
-
-> Have a look at the [tests](./ts/test/local/scenario.ts) for many more examples.
 
 ### Curried function to get a zome caller
 
-During a test usually a specific zome of a specific agent is called repeatedly.
-You can avail of a curried function for making these calls.
+> [Example](./ts/test/local/scenario.ts#L158)
 
-```typescript
-const alice = await scenario.addPlayerWithApp({ path: testHappUrl });
+## Signals
 
-// Get shortcut functions to call a specific zome of a specific agent
-const aliceCoordinatorCaller = getZomeCaller(alice.cells[0], "coordinator");
+`Scenario.addPlayerWithHapp` as well as `Conductor.installAgentsHapps` allow for a
+signal handler to be specified. Signal handlers are registered with
+the conductor and act as a callback when a signal is received.
 
-const content = "Hello Tryorama";
-// Use the curried function to call alice's coordinator zome
-const createEntryHash: ActionHash = await aliceCoordinatorCaller(
-  "create",
-  content
-);
-
-// Use the caller for another of alice's zome functions
-const readContent: typeof content = await aliceCoordinatorCaller(
-  "read",
-  createEntryHash
-);
-```
-
-### Example without wrapper
-
-Written out without the wrapper function, the same example looks like this:
-
-```typescript
-import { DnaSource, EntryHash } from "@holochain/client";
-import { Scenario } from "@holochain/tryorama";
-import { dirname } from "node:path";
-import { fileURLToPath } from "node:url";
-import test from "tape-promise/tape.js";
-import { dhtSync } from "./src/util.js";
-
-test("Create 2 players and create and read an entry", async (t) => {
-  const testDnaPath = dirname(fileURLToPath(import.meta.url)) + "/test.dna";
-  const dnas: DnaSource[] = [{ path: testDnaPath }];
-
-  // Create an empty scenario.
-  const scenario = new Scenario();
-  const [alice, bob] = await scenario.addPlayersWithHapps([dnas, dnas]);
-
-  await scenario.shareAllAgents();
-
-  const content = "Hello Tryorama";
-  const createEntryHash: EntryHash = await alice.cells[0].callZome({
-    zome_name: "coordinator",
-    fn_name: "create",
-    payload: content,
-  });
-
-  await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
-
-  const readContent: typeof content = await bob.cells[0].callZome({
-    zome_name: "coordinator",
-    fn_name: "read",
-    payload: createEntryHash,
-  });
-  t.equal(readContent, content);
-
-  // Shut down all conductors and delete their files and directories.
-  await scenario.cleanUp();
-});
-```
-
-> The wrapper takes care of creating a scenario and shutting down or deleting
-all conductors involved in the test scenario.
+> [Example sending and receiving a signal](./ts/test//local//scenario.ts#L193)
 
 ### Logging
 
@@ -176,43 +73,3 @@ One level underneath the Scenario is the
 [Conductor](./docs/tryorama.localconductor.md). Apart from methods for
 creation, startup and shutdown, it comes with complete functionality of Admin
 and App API that the JavaScript client offers.
-
-> There are lots of examples for working with conductors
-in the [`local`](./ts/test/local/conductor.ts) and
-[`trycp`](/ts/test/trycp//conductor.ts) test folders.
-
-## Signals
-
-`Scenario.addPlayerWithHapp` as well as `Conductor.installAgentsHapps` allow for a
-signal handler to be specified. Signal handlers are registered with
-the conductor and act as a callback when a signal is received.
-
-```typescript
-test("Receive a signal", async (t) => {
-  await runScenario(async (scenario) => {
-    const testHappUrl = dirname(fileURLToPath(import.meta.url)) + "/test.happ";
-
-    let signalHandler: AppSignalCb | undefined;
-    const signalReceived = new Promise<AppSignal>((resolve) => {
-      signalHandler = (signal) => {
-        resolve(signal);
-      };
-    });
-
-    const alice = await scenario.addPlayerWithApp(
-      { path: testHappUrl },
-      { signalHandler }
-    );
-
-    const signal = { value: "hello alice" };
-    alice.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "signal_loopback",
-      payload: signal,
-    });
-
-    const actualSignalAlice = await signalReceived;
-    t.deepEqual(actualSignalAlice.payload, signal);
-  });
-});
-```
