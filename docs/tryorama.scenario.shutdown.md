@@ -6,12 +6,12 @@
 
 Shut down all conductors in the scenario.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 shutDown(): Promise<void>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;void&gt;
 

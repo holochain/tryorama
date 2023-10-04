@@ -4,7 +4,7 @@
 
 ## RequestStartup.log\_level property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 log_level?: TryCpConductorLogLevel;

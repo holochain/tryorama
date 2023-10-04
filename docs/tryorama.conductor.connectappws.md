@@ -6,7 +6,7 @@
 
 Connect a web socket to the App API,
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 connectAppWs(port: number): Promise<AppWebsocket>;
@@ -18,7 +18,7 @@ connectAppWs(port: number): Promise<AppWebsocket>;
 |  --- | --- | --- |
 |  port | number | The websocket port to connect to. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;AppWebsocket&gt;
 

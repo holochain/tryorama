@@ -6,7 +6,7 @@
 
 Start up conductor after creation.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 startup?: boolean;

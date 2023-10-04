@@ -4,7 +4,7 @@
 
 ## TryCpConductor.tryCpClient property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 readonly tryCpClient: TryCpClient;

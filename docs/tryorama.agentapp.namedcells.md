@@ -4,7 +4,7 @@
 
 ## AgentApp.namedCells property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 namedCells: Map<RoleName, CallableCell>;

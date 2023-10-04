@@ -6,12 +6,12 @@
 
 A class to manage a conductor running on localhost.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export declare class Conductor implements IConductor 
 ```
-<b>Implements:</b> [IConductor](./tryorama.iconductor.md)
+**Implements:** [IConductor](./tryorama.iconductor.md)
 
 ## Methods
 

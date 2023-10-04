@@ -4,7 +4,7 @@
 
 ## Scenario.serviceProcess property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 serviceProcess: ChildProcessWithoutNullStreams | undefined;

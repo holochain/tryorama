@@ -6,7 +6,7 @@
 
 The function to create a TryCP Conductor. By default configures and starts it.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 createTryCpConductor: (tryCpClient: TryCpClient, options?: TryCpConductorOptions) => Promise<TryCpConductor>

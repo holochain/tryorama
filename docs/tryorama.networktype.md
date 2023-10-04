@@ -6,7 +6,7 @@
 
 The network type the conductor should use to communicate with peers.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export declare enum NetworkType 

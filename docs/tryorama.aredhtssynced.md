@@ -6,7 +6,7 @@
 
 A utility function to compare conductors' integrated DhtOps.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 areDhtsSynced: (players: IPlayer[], dnaHash: DnaHash) => Promise<boolean>

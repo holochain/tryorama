@@ -6,7 +6,7 @@
 
 Proofs of membership for the hApp.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 membraneProofs?: Record<string, MembraneProof>;

@@ -4,7 +4,7 @@
 
 ## IConductor.adminWs property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 adminWs: () => IAdminWebsocket;

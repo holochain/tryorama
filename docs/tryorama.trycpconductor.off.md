@@ -6,7 +6,7 @@
 
 Detach the registered signal handler.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 off(port: number): void;
@@ -18,7 +18,7 @@ off(port: number): void;
 |  --- | --- | --- |
 |  port | number |  |
 
-<b>Returns:</b>
+**Returns:**
 
 void
 

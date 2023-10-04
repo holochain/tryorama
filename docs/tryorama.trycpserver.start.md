@@ -6,7 +6,7 @@
 
 Builds and starts a local TryCP server on the specified port.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 static start(port?: number): Promise<TryCpServer>;
@@ -16,9 +16,9 @@ static start(port?: number): Promise<TryCpServer>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  port | number | <i>(Optional)</i> The network port the server should listen on. |
+|  port | number | _(Optional)_ The network port the server should listen on. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[TryCpServer](./tryorama.trycpserver.md)<!-- -->&gt;
 

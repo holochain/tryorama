@@ -6,7 +6,7 @@
 
 Request a call to the Admin API.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestCallAdminInterface 

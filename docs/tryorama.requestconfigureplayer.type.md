@@ -4,7 +4,7 @@
 
 ## RequestConfigurePlayer.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "configure_player";

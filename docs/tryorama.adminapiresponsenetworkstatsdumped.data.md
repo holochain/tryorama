@@ -4,7 +4,7 @@
 
 ## AdminApiResponseNetworkStatsDumped.data property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 data: DumpNetworkStatsResponse;

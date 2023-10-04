@@ -6,7 +6,7 @@
 
 Install an application into the conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 installApp(appBundleSource: AppBundleSource, options?: AppOptions): Promise<import("@holochain/client").AppInfo>;
@@ -17,9 +17,9 @@ installApp(appBundleSource: AppBundleSource, options?: AppOptions): Promise<impo
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
-|  options | [AppOptions](./tryorama.appoptions.md) | <i>(Optional)</i> [AppOptions](./tryorama.appoptions.md) for the hApp bundle (optional). |
+|  options | [AppOptions](./tryorama.appoptions.md) | _(Optional)_ [AppOptions](./tryorama.appoptions.md) for the hApp bundle (optional). |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;import("@holochain/client").AppInfo&gt;
 

@@ -6,12 +6,12 @@
 
 Stops the server instance by killing the server process.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 stop(): Promise<void>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;void&gt;
 

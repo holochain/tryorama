@@ -6,7 +6,7 @@
 
 Attach a web socket to the App API.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 attachAppInterface(request?: AttachAppInterfaceRequest): Promise<number>;
@@ -16,9 +16,9 @@ attachAppInterface(request?: AttachAppInterfaceRequest): Promise<number>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  request | AttachAppInterfaceRequest | <i>(Optional)</i> Specify a port for the web socket (optional). |
+|  request | AttachAppInterfaceRequest | _(Optional)_ Specify a port for the web socket (optional). |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;number&gt;
 

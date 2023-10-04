@@ -4,7 +4,7 @@
 
 ## AppApiResponseCloneCellDisabled.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "clone_cell_disabled";

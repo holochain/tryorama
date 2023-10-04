@@ -4,7 +4,7 @@
 
 ## AdminApiResponseDnasListed.data property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 data: ListDnasResponse;

@@ -6,7 +6,7 @@
 
 Shutdown signalling server process.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 stopLocalServices: (localServicesProcess: ChildProcessWithoutNullStreams) => Promise<number | null> | null

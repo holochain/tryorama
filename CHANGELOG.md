@@ -9,6 +9,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2023-10-04: v0.15.1
+### Added
+- Awaiting DHT sync: Add duplicated functions `conductorCellDhtSync` and `isConductorCellDhtEqual` of existing functions `dhtSync` and make the prior versions aliases to these. New versions take in an `IConductorCell` which just wraps an `IConductor` and `CellId`.
+### Fixed
+- Security bump: `webpki` to v0.22.2
+- Security bump: `@microsoft/api-extractor` to v7.36.2
+
 ## 2023-08-07: v0.15.0
 ### Added
 - Export all common helper functions.

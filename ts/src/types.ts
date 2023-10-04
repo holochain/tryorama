@@ -204,6 +204,8 @@ export interface Dna {
 
 /**
  * A Conductor and a CellId
+ *
+ * @public
  */
 export interface IConductorCell {
   conductor: IConductor;

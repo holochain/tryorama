@@ -6,12 +6,12 @@
 
 Close Admin and App API connections and kill the conductor process.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 shutDown(): Promise<number | null>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;number \| null&gt;
 

@@ -6,7 +6,7 @@
 
 Constructs a new instance of the `TryCpConductor` class
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 constructor(tryCpClient: TryCpClient, id?: ConductorId);
@@ -17,5 +17,5 @@ constructor(tryCpClient: TryCpClient, id?: ConductorId);
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) |  |
-|  id | [ConductorId](./tryorama.conductorid.md) | <i>(Optional)</i> |
+|  id | [ConductorId](./tryorama.conductorid.md) | _(Optional)_ |
 

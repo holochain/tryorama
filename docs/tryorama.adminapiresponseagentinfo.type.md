@@ -4,7 +4,7 @@
 
 ## AdminApiResponseAgentInfo.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "agent_info";

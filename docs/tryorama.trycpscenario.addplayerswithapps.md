@@ -6,7 +6,7 @@
 
 Creates and adds multiple players with an installed app to the scenario.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 addPlayersWithApps(tryCpClient: TryCpClient, playersApps: Array<{
@@ -22,7 +22,7 @@ addPlayersWithApps(tryCpClient: TryCpClient, playersApps: Array<{
 |  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
 |  playersApps | Array&lt;{ appBundleSource: AppBundleSource; options?: [AppOptions](./tryorama.appoptions.md)<!-- -->; }&gt; | An array with an app for each player. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->\[\]&gt;
 

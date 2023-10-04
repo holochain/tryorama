@@ -6,7 +6,7 @@
 
 Request to create configuration files and directories for a conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestConfigurePlayer 

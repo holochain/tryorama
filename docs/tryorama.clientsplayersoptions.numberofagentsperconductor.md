@@ -6,7 +6,7 @@
 
 Number of agents per conductor. Defaults to 1.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 numberOfAgentsPerConductor?: number;

@@ -6,7 +6,7 @@
 
 AppAgentWebsocket interface for local and TryCP conductors.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export type IAppAgentWebsocket = Pick<AppAgentWebsocket, "callZome">;

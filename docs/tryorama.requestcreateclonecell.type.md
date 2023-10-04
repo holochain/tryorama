@@ -4,7 +4,7 @@
 
 ## RequestCreateCloneCell.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "create_clone_cell";

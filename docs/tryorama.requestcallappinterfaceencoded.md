@@ -6,12 +6,12 @@
 
 Msgpack encoded request to call an app interface.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestCallAppInterfaceEncoded extends Omit<RequestCallAppInterface, "message"> 
 ```
-<b>Extends:</b> Omit&lt;[RequestCallAppInterface](./tryorama.requestcallappinterface.md)<!-- -->, "message"&gt;
+**Extends:** Omit&lt;[RequestCallAppInterface](./tryorama.requestcallappinterface.md)<!-- -->, "message"&gt;
 
 ## Properties
 

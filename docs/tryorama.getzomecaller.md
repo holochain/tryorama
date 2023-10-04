@@ -6,7 +6,7 @@
 
 Get a shorthand function to call a cell's zome.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 getZomeCaller: (cell: CallableCell, zomeName: string) => <T>(fnName: string, payload?: unknown, timeout?: number) => Promise<T>

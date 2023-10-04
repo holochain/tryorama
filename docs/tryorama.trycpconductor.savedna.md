@@ -6,7 +6,7 @@
 
 Upload a DNA file from the local file system to the server.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 saveDna(dnaContent: Buffer): Promise<string>;
@@ -18,7 +18,7 @@ saveDna(dnaContent: Buffer): Promise<string>;
 |  --- | --- | --- |
 |  dnaContent | Buffer | The DNA as binary content. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;string&gt;
 

@@ -4,7 +4,7 @@
 
 ## TryCpScenario.servicesProcess property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 servicesProcess: ChildProcessWithoutNullStreams | undefined;

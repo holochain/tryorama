@@ -4,7 +4,7 @@
 
 ## TryCpScenario.bootstrapServerUrl property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 bootstrapServerUrl: URL | undefined;

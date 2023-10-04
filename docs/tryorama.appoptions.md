@@ -6,7 +6,7 @@
 
 Optional arguments when installing a hApp.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface AppOptions 
@@ -16,9 +16,9 @@ export interface AppOptions
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [agentPubKey?](./tryorama.appoptions.agentpubkey.md) |  | AgentPubKey | <i>(Optional)</i> |
-|  [installedAppId?](./tryorama.appoptions.installedappid.md) |  | string | <i>(Optional)</i> App ID to override the app manifest's app name. |
-|  [membraneProofs?](./tryorama.appoptions.membraneproofs.md) |  | Record&lt;string, MembraneProof&gt; | <i>(Optional)</i> Proofs of membership for the hApp. |
-|  [networkSeed?](./tryorama.appoptions.networkseed.md) |  | string | <i>(Optional)</i> A network seed to override the hApps' network seed. |
-|  [signalHandler?](./tryorama.appoptions.signalhandler.md) |  | AppSignalCb | <i>(Optional)</i> A signal handler for the conductor. |
+|  [agentPubKey?](./tryorama.appoptions.agentpubkey.md) |  | AgentPubKey | _(Optional)_ |
+|  [installedAppId?](./tryorama.appoptions.installedappid.md) |  | string | _(Optional)_ App ID to override the app manifest's app name. |
+|  [membraneProofs?](./tryorama.appoptions.membraneproofs.md) |  | Record&lt;string, MembraneProof&gt; | _(Optional)_ Proofs of membership for the hApp. |
+|  [networkSeed?](./tryorama.appoptions.networkseed.md) |  | string | _(Optional)_ A network seed to override the hApps' network seed. |
+|  [signalHandler?](./tryorama.appoptions.signalhandler.md) |  | AppSignalCb | _(Optional)_ A signal handler for the conductor. |
 

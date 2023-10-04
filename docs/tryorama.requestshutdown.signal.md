@@ -4,7 +4,7 @@
 
 ## RequestShutdown.signal property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 signal?: "SIGTERM" | "SIGKILL" | "SIGINT";

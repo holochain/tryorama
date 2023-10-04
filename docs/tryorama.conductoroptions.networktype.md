@@ -6,7 +6,7 @@
 
 The network type the conductor should use.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 networkType?: NetworkType;

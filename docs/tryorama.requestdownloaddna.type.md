@@ -4,7 +4,7 @@
 
 ## RequestDownloadDna.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "download_dna";

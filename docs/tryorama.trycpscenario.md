@@ -8,7 +8,7 @@ A test scenario abstraction with convenience functions to manage TryCP clients a
 
 Clients in turn help manage conductors on TryCP servers. Clients can be added to a scenario to keep track of all server connections. When finishing a test scenario, all conductors of all clients can be easily cleaned up and the client connections closed.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export declare class TryCpScenario 

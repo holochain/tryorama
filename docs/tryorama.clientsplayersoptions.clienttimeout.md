@@ -6,7 +6,7 @@
 
 A timeout for the web socket connection (optional).
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 clientTimeout?: number;

@@ -4,7 +4,7 @@
 
 ## TryCpClient.unsetSignalHandler() method
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 unsetSignalHandler(port: number): void;
@@ -16,7 +16,7 @@ unsetSignalHandler(port: number): void;
 |  --- | --- | --- |
 |  port | number |  |
 
-<b>Returns:</b>
+**Returns:**
 
 void
 

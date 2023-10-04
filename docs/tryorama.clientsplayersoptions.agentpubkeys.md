@@ -6,7 +6,7 @@
 
 A list of previously generated agent pub keys (optional).
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 agentPubKeys?: AgentPubKey[];

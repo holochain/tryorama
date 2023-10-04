@@ -6,7 +6,7 @@
 
 Identifier for the conductor (optional).
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 id?: ConductorId;

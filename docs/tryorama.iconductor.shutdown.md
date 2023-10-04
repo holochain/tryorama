@@ -4,7 +4,7 @@
 
 ## IConductor.shutDown property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 shutDown: () => Promise<number | null>;

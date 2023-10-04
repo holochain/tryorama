@@ -6,7 +6,7 @@
 
 Error response from the Admin or App API.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface ApiErrorResponse 

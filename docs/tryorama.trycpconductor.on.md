@@ -6,7 +6,7 @@
 
 Attach a signal handler.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 on(port: number, signalHandler: AppSignalCb): void;
@@ -19,7 +19,7 @@ on(port: number, signalHandler: AppSignalCb): void;
 |  port | number | The port of the app interface. |
 |  signalHandler | AppSignalCb | The signal handler to register. |
 
-<b>Returns:</b>
+**Returns:**
 
 void
 

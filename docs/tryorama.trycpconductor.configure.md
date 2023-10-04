@@ -6,7 +6,7 @@
 
 Create conductor configuration.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 configure(partialConfig?: string): Promise<null>;
@@ -16,9 +16,9 @@ configure(partialConfig?: string): Promise<null>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  partialConfig | string | <i>(Optional)</i> The configuration to add to the default configuration. |
+|  partialConfig | string | _(Optional)_ The configuration to add to the default configuration. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;null&gt;
 

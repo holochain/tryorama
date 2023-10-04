@@ -4,7 +4,7 @@
 
 ## RequestConnectAppInterface.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "connect_app_interface";

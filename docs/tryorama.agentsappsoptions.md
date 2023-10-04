@@ -6,7 +6,7 @@
 
 An app and an optional agent pub key for each agent. Optionally a network seed to be used for DNA installation.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export type AgentsAppsOptions = {
@@ -17,5 +17,5 @@ export type AgentsAppsOptions = {
     installedAppId?: InstalledAppId;
 };
 ```
-<b>References:</b> [AppOptions](./tryorama.appoptions.md)
+**References:** [AppOptions](./tryorama.appoptions.md)
 

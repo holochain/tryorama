@@ -4,7 +4,7 @@
 
 ## TryCpPlayer.conductor property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 conductor: TryCpConductor;

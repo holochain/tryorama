@@ -6,7 +6,7 @@
 
 DNA source and additional options.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface Dna 
@@ -16,8 +16,8 @@ export interface Dna
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [membraneProof?](./tryorama.dna.membraneproof.md) |  | MembraneProof | <i>(Optional)</i> |
-|  [properties?](./tryorama.dna.properties.md) |  | DnaProperties | <i>(Optional)</i> |
-|  [roleName?](./tryorama.dna.rolename.md) |  | string | <i>(Optional)</i> |
+|  [membraneProof?](./tryorama.dna.membraneproof.md) |  | MembraneProof | _(Optional)_ |
+|  [properties?](./tryorama.dna.properties.md) |  | DnaProperties | _(Optional)_ |
+|  [roleName?](./tryorama.dna.rolename.md) |  | string | _(Optional)_ |
 |  [source](./tryorama.dna.source.md) |  | DnaSource |  |
 

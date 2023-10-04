@@ -4,7 +4,7 @@
 
 ## RequestNetworkInfo.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "network_info";

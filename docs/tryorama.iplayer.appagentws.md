@@ -4,7 +4,7 @@
 
 ## IPlayer.appAgentWs property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 appAgentWs: AppAgentWebsocket | IAppAgentWebsocket;

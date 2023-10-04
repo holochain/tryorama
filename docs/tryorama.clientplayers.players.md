@@ -4,7 +4,7 @@
 
 ## ClientPlayers.players property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 players: TryCpPlayer[];

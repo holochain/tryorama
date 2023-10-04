@@ -4,7 +4,7 @@
 
 ## AppApiResponseCloneCellEnabled.data property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 data: EnableCloneCellResponse;

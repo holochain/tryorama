@@ -4,7 +4,7 @@
 
 ## RequestCallAdminInterface.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "call_admin_interface";

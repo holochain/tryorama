@@ -6,7 +6,7 @@
 
 Create curried version of `callZome` function for a specific cell.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 getCallableCell: (appWs: IAppWebsocket | IAppAgentWebsocket, cell: ClonedCell | ProvisionedCell) => {

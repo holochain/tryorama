@@ -6,7 +6,7 @@
 
 Connect a web socket for a specific app and agent to the App API,
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 connectAppAgentWs(port: number, appId: string): Promise<AppAgentWebsocket>;
@@ -19,7 +19,7 @@ connectAppAgentWs(port: number, appId: string): Promise<AppAgentWebsocket>;
 |  port | number | The websocket port to connect to. |
 |  appId | string | The app id to make requests to. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;AppAgentWebsocket&gt;
 

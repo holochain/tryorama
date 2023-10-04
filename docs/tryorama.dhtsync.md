@@ -6,7 +6,7 @@
 
 A utility function to wait until all conductors' integrated DhtOps are identical for a DNA.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 dhtSync: (players: IPlayer[], dnaHash: DnaHash, interval?: number, timeout?: number) => Promise<void>

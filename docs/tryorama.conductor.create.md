@@ -6,7 +6,7 @@
 
 Factory to create a conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 static create(signalingServerUrl: URL, options?: CreateConductorOptions): Promise<Conductor>;
@@ -17,9 +17,9 @@ static create(signalingServerUrl: URL, options?: CreateConductorOptions): Promis
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  signalingServerUrl | URL |  |
-|  options | [CreateConductorOptions](./tryorama.createconductoroptions.md) | <i>(Optional)</i> |
+|  options | [CreateConductorOptions](./tryorama.createconductoroptions.md) | _(Optional)_ |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[Conductor](./tryorama.conductor.md)<!-- -->&gt;
 

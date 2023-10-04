@@ -4,7 +4,7 @@
 
 ## AppApiResponseZomeCall.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "zome_call";

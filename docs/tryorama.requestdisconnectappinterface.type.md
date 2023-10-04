@@ -4,7 +4,7 @@
 
 ## RequestDisconnectAppInterface.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "disconnect_app_interface";

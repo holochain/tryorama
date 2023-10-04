@@ -4,7 +4,7 @@
 
 ## RequestSaveDna.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "save_dna";

@@ -4,7 +4,7 @@
 
 ## IConductor.connectAppAgentWs property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 connectAppAgentWs: (port: number, appId: InstalledAppId) => Promise<IAppAgentWebsocket>;

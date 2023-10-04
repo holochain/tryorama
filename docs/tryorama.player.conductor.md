@@ -4,7 +4,7 @@
 
 ## Player.conductor property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 conductor: Conductor;

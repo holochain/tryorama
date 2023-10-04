@@ -6,7 +6,7 @@
 
 Request to connect an app interface to a conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestConnectAppInterface 

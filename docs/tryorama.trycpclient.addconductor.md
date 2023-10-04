@@ -6,7 +6,7 @@
 
 Create and add a conductor to the client.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 addConductor(partialConfig?: string): Promise<TryCpConductor>;
@@ -16,9 +16,9 @@ addConductor(partialConfig?: string): Promise<TryCpConductor>;
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  partialConfig | string | <i>(Optional)</i> Conductor configuration (optional). |
+|  partialConfig | string | _(Optional)_ Conductor configuration (optional). |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[TryCpConductor](./tryorama.trycpconductor.md)<!-- -->&gt;
 

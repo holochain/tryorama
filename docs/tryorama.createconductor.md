@@ -6,7 +6,7 @@
 
 The function to create a conductor. It starts a sandbox conductor via the Holochain CLI.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 createConductor: (signalingServerUrl: URL, options?: ConductorOptions) => Promise<Conductor>

@@ -6,7 +6,7 @@
 
 Request a call to the App API.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestCallAppInterface 

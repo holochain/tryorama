@@ -6,7 +6,7 @@
 
 A factory class to start and stop local instances of the TryCP server.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export declare class TryCpServer 

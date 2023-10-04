@@ -6,7 +6,7 @@
 
 Base interface of a Tryorama conductor. Both [Conductor](./tryorama.conductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface IConductor 

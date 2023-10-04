@@ -6,7 +6,7 @@
 
 Request to download a DNA from a URL.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestDownloadDna 

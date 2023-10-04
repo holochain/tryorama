@@ -6,7 +6,7 @@
 
 Empty success response.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 TRYCP_SUCCESS_RESPONSE: null

@@ -6,7 +6,7 @@
 
 Options when creating a scenario.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface ScenarioOptions 
@@ -16,5 +16,5 @@ export interface ScenarioOptions
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [timeout?](./tryorama.scenariooptions.timeout.md) |  | number | <i>(Optional)</i> |
+|  [timeout?](./tryorama.scenariooptions.timeout.md) |  | number | _(Optional)_ |
 

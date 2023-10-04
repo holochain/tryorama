@@ -6,7 +6,7 @@
 
 A TryCP client and its associated players.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface ClientPlayers 

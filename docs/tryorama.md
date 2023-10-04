@@ -69,6 +69,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [ConductorOptions](./tryorama.conductoroptions.md) |  |
 |  [Dna](./tryorama.dna.md) | DNA source and additional options. |
 |  [IConductor](./tryorama.iconductor.md) | Base interface of a Tryorama conductor. Both [Conductor](./tryorama.conductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface. |
+|  [IConductorCell](./tryorama.iconductorcell.md) | A Conductor and a CellId |
 |  [IPlayer](./tryorama.iplayer.md) | Combines an agent hApp with the conductor they belong to. |
 |  [Player](./tryorama.player.md) | A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->. |
 |  [RequestAdminInterfaceMessage](./tryorama.requestadmininterfacemessage.md) | All possible calls to the Admin API. |
@@ -99,8 +100,10 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  Variable | Description |
 |  --- | --- |
 |  [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md) | Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping. |
+|  [areConductorCellsDhtsSynced](./tryorama.areconductorcellsdhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
 |  [areDhtsSynced](./tryorama.aredhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
 |  [cleanAllConductors](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
+|  [conductorCellsDhtSync](./tryorama.conductorcellsdhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
 |  [createConductor](./tryorama.createconductor.md) | The function to create a conductor. It starts a sandbox conductor via the Holochain CLI. |
 |  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor. By default configures and starts it. |
 |  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) | The default partial config for a TryCP conductor. |

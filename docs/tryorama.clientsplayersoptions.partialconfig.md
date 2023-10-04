@@ -6,7 +6,7 @@
 
 Configuration for the conductor (optional).
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 partialConfig?: string;

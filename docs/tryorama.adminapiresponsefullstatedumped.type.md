@@ -4,7 +4,7 @@
 
 ## AdminApiResponseFullStateDumped.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "full_state_dumped";

@@ -6,7 +6,7 @@
 
 Request app info from a conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestAppInfo 

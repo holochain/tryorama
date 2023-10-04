@@ -4,7 +4,7 @@
 
 ## RequestCallAppInterface.message property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 message: RequestCallAppInterfaceMessage;

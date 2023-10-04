@@ -4,7 +4,7 @@
 
 ## RequestSaveDna.content property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 content: Buffer;

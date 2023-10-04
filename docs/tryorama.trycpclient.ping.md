@@ -6,7 +6,7 @@
 
 Send a ping with data.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 ping(data: unknown): Promise<Buffer>;
@@ -18,7 +18,7 @@ ping(data: unknown): Promise<Buffer>;
 |  --- | --- | --- |
 |  data | unknown | Data to send and receive with the ping-pong. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;Buffer&gt;
 

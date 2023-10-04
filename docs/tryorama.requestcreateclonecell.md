@@ -6,7 +6,7 @@
 
 Create a clone cell.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestCreateCloneCell 

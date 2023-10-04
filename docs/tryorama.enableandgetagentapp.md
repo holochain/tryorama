@@ -6,7 +6,7 @@
 
 Enable an app and build an agent app object.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 enableAndGetAgentApp: (adminWs: IAdminWebsocket, appWs: IAppWebsocket | IAppAgentWebsocket, appInfo: AppInfo) => Promise<AgentApp>

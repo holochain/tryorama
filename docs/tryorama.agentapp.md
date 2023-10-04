@@ -6,7 +6,7 @@
 
 Provides direct access to cells of an app and the agent key.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface AgentApp 

@@ -6,7 +6,7 @@
 
 Log level for a TryCP conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export type TryCpConductorLogLevel = "error" | "warn" | "info" | "debug" | "trace";

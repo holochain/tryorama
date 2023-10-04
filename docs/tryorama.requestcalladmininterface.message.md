@@ -4,7 +4,7 @@
 
 ## RequestCallAdminInterface.message property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 message: RequestAdminInterfaceMessage;

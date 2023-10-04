@@ -6,7 +6,7 @@
 
 Request to disconnect a connected app interface from a conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestDisconnectAppInterface 

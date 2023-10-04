@@ -4,7 +4,7 @@
 
 ## RequestDisableCloneCell.data property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 data: DisableCloneCellRequest;

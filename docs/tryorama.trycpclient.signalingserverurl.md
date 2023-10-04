@@ -4,7 +4,7 @@
 
 ## TryCpClient.signalingServerUrl property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 signalingServerUrl: URL | undefined;

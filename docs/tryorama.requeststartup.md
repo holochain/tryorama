@@ -6,7 +6,7 @@
 
 Request startup of a conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestStartup 
@@ -17,6 +17,6 @@ export interface RequestStartup
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [id](./tryorama.requeststartup.id.md) |  | [ConductorId](./tryorama.conductorid.md) |  |
-|  [log\_level?](./tryorama.requeststartup.log_level.md) |  | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | <i>(Optional)</i> |
+|  [log\_level?](./tryorama.requeststartup.log_level.md) |  | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | _(Optional)_ |
 |  [type](./tryorama.requeststartup.type.md) |  | "startup" |  |
 

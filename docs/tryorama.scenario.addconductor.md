@@ -6,12 +6,12 @@
 
 Create and add a conductor to the scenario.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 addConductor(): Promise<Conductor>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[Conductor](./tryorama.conductor.md)<!-- -->&gt;
 

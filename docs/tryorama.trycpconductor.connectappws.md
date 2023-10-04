@@ -6,7 +6,7 @@
 
 Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_appwebsocket.md) of the Holochain client.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 connectAppWs(port: number): Promise<{
@@ -25,7 +25,7 @@ connectAppWs(port: number): Promise<{
 |  --- | --- | --- |
 |  port | number |  |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;AppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; networkInfo: (request: NetworkInfoRequest) =&gt; Promise&lt;import("@holochain/client").NetworkInfoResponse&gt;; }&gt;
 

@@ -4,7 +4,7 @@
 
 ## AdminApiResponseStateDumped.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "state_dumped";

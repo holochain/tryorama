@@ -5,7 +5,7 @@
 ## AdminApiResponseAppsListed interface
 
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface AdminApiResponseAppsListed 

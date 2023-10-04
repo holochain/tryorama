@@ -6,7 +6,7 @@
 
 Disconnect a web socket from the App API.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 disconnectAppInterface(port: number): Promise<null>;
@@ -18,7 +18,7 @@ disconnectAppInterface(port: number): Promise<null>;
 |  --- | --- | --- |
 |  port | number | The port of the app interface to disconnect. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;null&gt;
 

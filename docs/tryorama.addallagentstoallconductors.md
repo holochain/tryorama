@@ -6,7 +6,7 @@
 
 Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 addAllAgentsToAllConductors: (conductors: IConductor[]) => Promise<void>

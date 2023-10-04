@@ -6,7 +6,7 @@
 
 Number of conductors per client. Defaults to 1.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 numberOfConductorsPerClient?: number;

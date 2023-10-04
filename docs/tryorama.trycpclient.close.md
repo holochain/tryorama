@@ -6,12 +6,12 @@
 
 Closes the client connection.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 close(): Promise<unknown>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;unknown&gt;
 

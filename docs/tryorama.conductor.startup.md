@@ -6,12 +6,12 @@
 
 Start the conductor and establish a web socket connection to the Admin API.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 startUp(): Promise<void>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;void&gt;
 

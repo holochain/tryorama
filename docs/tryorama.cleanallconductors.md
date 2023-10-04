@@ -6,7 +6,7 @@
 
 Run the `hc` command to delete all conductor data.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 cleanAllConductors: () => Promise<void>

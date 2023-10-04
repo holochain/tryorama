@@ -4,7 +4,7 @@
 
 ## AdminApiResponseAppUninstalled.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "app_uninstalled";

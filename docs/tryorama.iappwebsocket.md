@@ -6,7 +6,7 @@
 
 AppWebsocket interface for local and TryCP conductors.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export type IAppWebsocket = Pick<AppWebsocket, "callZome" | "appInfo" | "createCloneCell" | "enableCloneCell" | "disableCloneCell" | "networkInfo">;

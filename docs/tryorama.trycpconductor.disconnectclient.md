@@ -6,12 +6,12 @@
 
 Disconnect the TryCP client from the TryCP server.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 disconnectClient(): Promise<number>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;number&gt;
 

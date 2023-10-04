@@ -4,7 +4,7 @@
 
 ## ClientPlayers.client property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 client: TryCpClient;

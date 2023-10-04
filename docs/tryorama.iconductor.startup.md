@@ -4,7 +4,7 @@
 
 ## IConductor.startUp property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 startUp: () => Promise<void | null>;

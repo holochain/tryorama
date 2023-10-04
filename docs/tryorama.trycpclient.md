@@ -8,7 +8,7 @@ A factory class to create client connections to a running TryCP server.
 
 With a client, conductors on the server can ba configured, started and stopped. All valid Admin and App API commands can be sent to the server too.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export declare class TryCpClient 

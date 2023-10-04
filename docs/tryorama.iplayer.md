@@ -6,12 +6,12 @@
 
 Combines an agent hApp with the conductor they belong to.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface IPlayer extends AgentApp 
 ```
-<b>Extends:</b> [AgentApp](./tryorama.agentapp.md)
+**Extends:** [AgentApp](./tryorama.agentapp.md)
 
 ## Properties
 

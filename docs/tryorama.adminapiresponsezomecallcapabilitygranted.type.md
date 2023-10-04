@@ -4,7 +4,7 @@
 
 ## AdminApiResponseZomeCallCapabilityGranted.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "zome_call_capability_granted";

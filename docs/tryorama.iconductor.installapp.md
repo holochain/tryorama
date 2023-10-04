@@ -4,7 +4,7 @@
 
 ## IConductor.installApp property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 installApp: (appBundleSource: AppBundleSource, options?: AppOptions) => Promise<AppInfo>;

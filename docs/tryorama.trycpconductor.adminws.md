@@ -6,7 +6,7 @@
 
 Get all [Admin API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_adminwebsocket.md) of the Holochain client.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 adminWs(): {
@@ -38,7 +38,7 @@ adminWs(): {
         updateCoordinators: (request: UpdateCoordinatorsRequest) => Promise<void>;
     };
 ```
-<b>Returns:</b>
+**Returns:**
 
 { addAgentInfo: (request: AddAgentInfoRequest) =&gt; Promise&lt;void&gt;; agentInfo: (req: AgentInfoRequest) =&gt; Promise&lt;import("@holochain/client").AgentInfoResponse&gt;; attachAppInterface: (request?: AttachAppInterfaceRequest) =&gt; Promise&lt;{ port: number; }&gt;; authorizeSigningCredentials: (cellId: CellId, functions?: GrantedFunctions) =&gt; Promise&lt;void&gt;; deleteCloneCell: (request: DeleteCloneCellRequest) =&gt; Promise&lt;void&gt;; disableApp: (request: DisableAppRequest) =&gt; Promise&lt;null&gt;; dumpFullState: (request: DumpFullStateRequest) =&gt; Promise&lt;FullStateDump&gt;; dumpNetworkStats: (request: DumpNetworkStatsRequest) =&gt; Promise&lt;string&gt;; dumpState: (request: DumpStateRequest) =&gt; Promise&lt;\[FullStateDump, string\]&gt;; enableApp: (request: EnableAppRequest) =&gt; Promise&lt;import("@holochain/client").EnableAppResponse&gt;; generateAgentPubKey: () =&gt; Promise&lt;AgentPubKey&gt;; getDnaDefinition: (dnaHash: GetDnaDefinitionRequest) =&gt; Promise&lt;DnaDefinition&gt;; grantSigningKey: (cellId: CellId, functions: GrantedFunctions, signingKey: AgentPubKey) =&gt; Promise&lt;CapSecret&gt;; grantZomeCallCapability: (request: GrantZomeCallCapabilityRequest) =&gt; Promise&lt;void&gt;; installApp: (data: InstallAppRequest) =&gt; Promise&lt;AppInfo&gt;; listAppInterfaces: () =&gt; Promise&lt;import("@holochain/client").ListAppInterfacesResponse&gt;; listApps: (request: ListAppsRequest) =&gt; Promise&lt;import("@holochain/client").ListAppsResponse&gt;; listCellIds: () =&gt; Promise&lt;import("@holochain/client").ListCellIdsResponse&gt;; listDnas: () =&gt; Promise&lt;import("@holochain/client").ListDnasResponse&gt;; registerDna: (request: RegisterDnaRequest &amp; DnaSource) =&gt; Promise&lt;DnaHash&gt;; startApp: (request: StartAppRequest) =&gt; Promise&lt;boolean&gt;; storageInfo: (request: StorageInfoRequest) =&gt; Promise&lt;import("@holochain/client").StorageInfo&gt;; uninstallApp: (request: UninstallAppRequest) =&gt; Promise&lt;null&gt;; updateCoordinators: (request: UpdateCoordinatorsRequest) =&gt; Promise&lt;void&gt;; }
 

@@ -4,7 +4,7 @@
 
 ## TryCpScenario.clients property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 clients: TryCpClient[];

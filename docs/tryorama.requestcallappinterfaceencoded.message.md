@@ -4,7 +4,7 @@
 
 ## RequestCallAppInterfaceEncoded.message property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 message: Uint8Array;

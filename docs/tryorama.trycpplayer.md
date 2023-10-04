@@ -6,12 +6,12 @@
 
 A player tied to a [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface TryCpPlayer extends IPlayer 
 ```
-<b>Extends:</b> [IPlayer](./tryorama.iplayer.md)
+**Extends:** [IPlayer](./tryorama.iplayer.md)
 
 ## Properties
 

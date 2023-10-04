@@ -6,7 +6,7 @@
 
 The default partial config for a TryCP conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 DEFAULT_PARTIAL_PLAYER_CONFIG: string

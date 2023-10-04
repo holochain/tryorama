@@ -4,7 +4,7 @@
 
 ## Dna.membraneProof property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 membraneProof?: MembraneProof;

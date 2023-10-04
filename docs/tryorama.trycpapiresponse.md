@@ -6,10 +6,10 @@
 
 Possible responses from the Admin and App APIs.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export type TryCpApiResponse = AdminApiResponse | AppApiResponse | ApiErrorResponse;
 ```
-<b>References:</b> [AdminApiResponse](./tryorama.adminapiresponse.md)<!-- -->, [AppApiResponse](./tryorama.appapiresponse.md)<!-- -->, [ApiErrorResponse](./tryorama.apierrorresponse.md)
+**References:** [AdminApiResponse](./tryorama.adminapiresponse.md)<!-- -->, [AppApiResponse](./tryorama.appapiresponse.md)<!-- -->, [ApiErrorResponse](./tryorama.apierrorresponse.md)
 

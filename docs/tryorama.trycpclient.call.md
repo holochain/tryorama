@@ -6,7 +6,7 @@
 
 Send a call to the TryCP server.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 call(request: TryCpRequest): Promise<TryCpSuccessResponse>;
@@ -18,7 +18,7 @@ call(request: TryCpRequest): Promise<TryCpSuccessResponse>;
 |  --- | --- | --- |
 |  request | [TryCpRequest](./tryorama.trycprequest.md) | [TryCpRequest](./tryorama.trycprequest.md) |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[TryCpSuccessResponse](./tryorama.trycpsuccessresponse.md)<!-- -->&gt;
 

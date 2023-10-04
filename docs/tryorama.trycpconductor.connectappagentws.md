@@ -4,7 +4,7 @@
 
 ## TryCpConductor.connectAppAgentWs() method
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 connectAppAgentWs(port: number, appId: InstalledAppId): Promise<{
@@ -24,7 +24,7 @@ connectAppAgentWs(port: number, appId: InstalledAppId): Promise<{
 |  port | number |  |
 |  appId | InstalledAppId |  |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;AppInfo&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; networkInfo: (request: NetworkInfoRequest) =&gt; Promise&lt;import("@holochain/client").NetworkInfoResponse&gt;; }&gt;
 

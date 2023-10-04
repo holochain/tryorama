@@ -6,12 +6,12 @@
 
 Shut down all registered conductors and delete them, and close the client connection.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 cleanUp(): Promise<void>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;void&gt;
 

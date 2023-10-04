@@ -4,7 +4,7 @@
 
 ## RequestDeleteCloneCell.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "delete_clone_cell";

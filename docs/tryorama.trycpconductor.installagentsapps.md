@@ -6,7 +6,7 @@
 
 Install a hApp bundle into the conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 installAgentsApps(options: AgentsAppsOptions): Promise<AppInfo[]>;
@@ -18,7 +18,7 @@ installAgentsApps(options: AgentsAppsOptions): Promise<AppInfo[]>;
 |  --- | --- | --- |
 |  options | [AgentsAppsOptions](./tryorama.agentsappsoptions.md) | Apps to install for each agent, with agent pub keys etc. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;AppInfo\[\]&gt;
 

@@ -6,7 +6,7 @@
 
 Request shutdown of a conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestShutdown 
@@ -17,6 +17,6 @@ export interface RequestShutdown
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [id](./tryorama.requestshutdown.id.md) |  | [ConductorId](./tryorama.conductorid.md) |  |
-|  [signal?](./tryorama.requestshutdown.signal.md) |  | "SIGTERM" \| "SIGKILL" \| "SIGINT" | <i>(Optional)</i> |
+|  [signal?](./tryorama.requestshutdown.signal.md) |  | "SIGTERM" \| "SIGKILL" \| "SIGINT" | _(Optional)_ |
 |  [type](./tryorama.requestshutdown.type.md) |  | "shutdown" |  |
 

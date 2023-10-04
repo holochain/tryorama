@@ -6,12 +6,12 @@
 
 Run the `reset` command on the TryCP server to delete all conductor data.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 cleanAllConductors(): Promise<null>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;null&gt;
 

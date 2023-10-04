@@ -6,7 +6,7 @@
 
 Connect a web socket to the App API.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 connectAppInterface(port: number): Promise<null>;
@@ -18,7 +18,7 @@ connectAppInterface(port: number): Promise<null>;
 |  --- | --- | --- |
 |  port | number | The port to attach the app interface to. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;null&gt;
 

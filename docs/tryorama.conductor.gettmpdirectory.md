@@ -6,12 +6,12 @@
 
 Get the path of the directory that contains all files and folders of the conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 getTmpDirectory(): string;
 ```
-<b>Returns:</b>
+**Returns:**
 
 string
 

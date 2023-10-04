@@ -6,7 +6,7 @@
 
 A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 runScenario: (testScenario: (scenario: Scenario) => Promise<void>, cleanUp?: boolean, options?: ScenarioOptions) => Promise<void>

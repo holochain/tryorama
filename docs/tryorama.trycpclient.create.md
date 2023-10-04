@@ -6,7 +6,7 @@
 
 Create a client connection to a running TryCP server.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 static create(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
@@ -17,9 +17,9 @@ static create(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  serverUrl | URL | The URL of the TryCP server. |
-|  timeout | number | <i>(Optional)</i> |
+|  timeout | number | _(Optional)_ |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[TryCpClient](./tryorama.trycpclient.md)<!-- -->&gt;
 

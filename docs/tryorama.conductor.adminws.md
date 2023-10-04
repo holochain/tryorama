@@ -6,12 +6,12 @@
 
 Get all Admin API methods.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 adminWs(): AdminWebsocket;
 ```
-<b>Returns:</b>
+**Returns:**
 
 AdminWebsocket
 

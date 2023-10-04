@@ -4,7 +4,7 @@
 
 ## TryCpClient.setSignalHandler() method
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 setSignalHandler(port: number, signalHandler?: AppSignalCb): void;
@@ -15,9 +15,9 @@ setSignalHandler(port: number, signalHandler?: AppSignalCb): void;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  port | number |  |
-|  signalHandler | AppSignalCb | <i>(Optional)</i> |
+|  signalHandler | AppSignalCb | _(Optional)_ |
 
-<b>Returns:</b>
+**Returns:**
 
 void
 

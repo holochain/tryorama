@@ -4,7 +4,7 @@
 
 ## AdminApiResponseAppsListed.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "apps_listed";

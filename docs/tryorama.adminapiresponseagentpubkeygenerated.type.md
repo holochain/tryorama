@@ -4,7 +4,7 @@
 
 ## AdminApiResponseAgentPubKeyGenerated.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "agent_pub_key_generated";

@@ -6,7 +6,7 @@
 
 Creates and adds a single player with an installed app to the scenario,
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 addPlayerWithApp(tryCpClient: TryCpClient, appBundleSource: AppBundleSource, options?: AppOptions): Promise<TryCpPlayer>;
@@ -18,9 +18,9 @@ addPlayerWithApp(tryCpClient: TryCpClient, appBundleSource: AppBundleSource, opt
 |  --- | --- | --- |
 |  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
 |  appBundleSource | AppBundleSource | The bundle or path of the app. |
-|  options | [AppOptions](./tryorama.appoptions.md) | <i>(Optional)</i> [AppOptions](./tryorama.appoptions.md) like agent pub key etc. |
+|  options | [AppOptions](./tryorama.appoptions.md) | _(Optional)_ [AppOptions](./tryorama.appoptions.md) like agent pub key etc. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->&gt;
 

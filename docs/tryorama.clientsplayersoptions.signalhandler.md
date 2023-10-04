@@ -6,7 +6,7 @@
 
 A signal handler to be registered in conductors.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 signalHandler?: AppSignalCb;

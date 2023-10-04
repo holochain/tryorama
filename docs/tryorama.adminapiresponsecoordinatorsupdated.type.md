@@ -4,7 +4,7 @@
 
 ## AdminApiResponseCoordinatorsUpdated.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "coordinators_updated";

@@ -6,7 +6,7 @@
 
 An app that will be installed for each agent.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 app: AppBundleSource;

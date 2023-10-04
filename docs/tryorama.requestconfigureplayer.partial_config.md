@@ -4,7 +4,7 @@
 
 ## RequestConfigurePlayer.partial\_config property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 partial_config: string;

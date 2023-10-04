@@ -6,7 +6,7 @@
 
 Start a configured conductor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 startUp(options?: {
@@ -18,9 +18,9 @@ startUp(options?: {
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | { logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; } | <i>(Optional)</i> Log level of the conductor. Defaults to "info". |
+|  options | { logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; } | _(Optional)_ Log level of the conductor. Defaults to "info". |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;null&gt;
 

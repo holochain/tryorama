@@ -4,7 +4,7 @@
 
 ## Dna.roleName property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 roleName?: string;

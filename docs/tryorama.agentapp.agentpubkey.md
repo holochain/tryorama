@@ -4,7 +4,7 @@
 
 ## AgentApp.agentPubKey property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 agentPubKey: Uint8Array;

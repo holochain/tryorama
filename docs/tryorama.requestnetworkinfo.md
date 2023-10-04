@@ -6,7 +6,7 @@
 
 Request network info.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestNetworkInfo 

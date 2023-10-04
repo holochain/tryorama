@@ -6,7 +6,7 @@
 
 Creates a TryCP client connection and add it to the scenario.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 addClient(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
@@ -17,9 +17,9 @@ addClient(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
 |  Parameter | Type | Description |
 |  --- | --- | --- |
 |  serverUrl | URL | The TryCP server URL to connect to. |
-|  timeout | number | <i>(Optional)</i> An optional timeout for the web socket connection. |
+|  timeout | number | _(Optional)_ An optional timeout for the web socket connection. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[TryCpClient](./tryorama.trycpclient.md)<!-- -->&gt;
 

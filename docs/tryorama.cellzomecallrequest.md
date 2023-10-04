@@ -6,7 +6,7 @@
 
 The zome request options adapted to a specific cell.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export type CellZomeCallRequest = Omit<CallZomeRequest, "cap_secret" | "cell_id" | "payload" | "provenance"> & {

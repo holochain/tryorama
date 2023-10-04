@@ -6,12 +6,12 @@
 
 Extends an installed cell by a function to call a zome.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export type CallableCell = Pick<ClonedCell | ProvisionedCell, "name" | "cell_id" | "dna_modifiers"> & Partial<ClonedCell> & Partial<ProvisionedCell> & {
     callZome: CallZomeFn;
 };
 ```
-<b>References:</b> [CallZomeFn](./tryorama.callzomefn.md)
+**References:** [CallZomeFn](./tryorama.callzomefn.md)
 

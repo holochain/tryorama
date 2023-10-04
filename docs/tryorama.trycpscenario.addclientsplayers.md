@@ -8,7 +8,7 @@ Creates client connections for all passed in URLs and, depending on the options,
 
 If no number of agents per conductor is specified, it defaults to 1.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 addClientsPlayers(serverUrls: URL[], options: ClientsPlayersOptions): Promise<ClientPlayers[]>;
@@ -21,7 +21,7 @@ addClientsPlayers(serverUrls: URL[], options: ClientsPlayersOptions): Promise<Cl
 |  serverUrls | URL\[\] | The TryCP server URLs to connect to. |
 |  options | [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) | [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[ClientPlayers](./tryorama.clientplayers.md)<!-- -->\[\]&gt;
 

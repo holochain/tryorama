@@ -6,7 +6,7 @@
 
 Scenario constructor.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 constructor(options?: ScenarioOptions);
@@ -16,5 +16,5 @@ constructor(options?: ScenarioOptions);
 
 |  Parameter | Type | Description |
 |  --- | --- | --- |
-|  options | [ScenarioOptions](./tryorama.scenariooptions.md) | <i>(Optional)</i> Timeout for requests to Admin and App API calls. |
+|  options | [ScenarioOptions](./tryorama.scenariooptions.md) | _(Optional)_ Timeout for requests to Admin and App API calls. |
 

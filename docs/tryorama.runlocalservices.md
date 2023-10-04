@@ -6,7 +6,7 @@
 
 Spawn a signalling server to enable connections between conductors.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 runLocalServices: () => Promise<{

@@ -6,7 +6,7 @@
 
 App ID to override the app manifest's app name.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 installedAppId?: string;

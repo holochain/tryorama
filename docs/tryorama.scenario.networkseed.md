@@ -4,7 +4,7 @@
 
 ## Scenario.networkSeed property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 networkSeed: string;

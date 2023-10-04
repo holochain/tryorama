@@ -6,7 +6,7 @@
 
 Error response values.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export type TryCpResponseErrorValue = string | Error;

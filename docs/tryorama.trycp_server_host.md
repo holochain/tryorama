@@ -6,7 +6,7 @@
 
 Default TryCP server host address.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 TRYCP_SERVER_HOST = "0.0.0.0"

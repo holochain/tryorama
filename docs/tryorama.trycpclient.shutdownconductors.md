@@ -6,12 +6,12 @@
 
 Shut down all conductors on the connected TryCP server and disconnect their app interfaces.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 shutDownConductors(): Promise<void>;
 ```
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;void&gt;
 

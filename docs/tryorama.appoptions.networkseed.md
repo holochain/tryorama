@@ -6,7 +6,7 @@
 
 A network seed to override the hApps' network seed.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 networkSeed?: string;

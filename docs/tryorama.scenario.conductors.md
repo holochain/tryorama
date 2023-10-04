@@ -4,7 +4,7 @@
 
 ## Scenario.conductors property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 conductors: Conductor[];

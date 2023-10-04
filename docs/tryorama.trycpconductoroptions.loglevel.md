@@ -8,7 +8,7 @@ Log level of the conductor (optional).
 
 default: "info"
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 logLevel?: TryCpConductorLogLevel;

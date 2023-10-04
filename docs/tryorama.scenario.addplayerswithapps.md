@@ -6,7 +6,7 @@
 
 Create and add multiple players to the scenario, with an app installed for each player.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 addPlayersWithApps(playersApps: Array<{
@@ -21,7 +21,7 @@ addPlayersWithApps(playersApps: Array<{
 |  --- | --- | --- |
 |  playersApps | Array&lt;{ appBundleSource: AppBundleSource; options?: [AppOptions](./tryorama.appoptions.md)<!-- -->; }&gt; | An array with an app for each player. |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;[Player](./tryorama.player.md)<!-- -->\[\]&gt;
 

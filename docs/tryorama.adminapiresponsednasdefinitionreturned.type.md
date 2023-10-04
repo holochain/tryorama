@@ -4,7 +4,7 @@
 
 ## AdminApiResponseDnasDefinitionReturned.type property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 type: "dna_definition_returned";

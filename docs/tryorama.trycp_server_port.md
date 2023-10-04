@@ -6,7 +6,7 @@
 
 Default TryCP server port.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 TRYCP_SERVER_PORT = 9000

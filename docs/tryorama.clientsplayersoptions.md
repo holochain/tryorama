@@ -5,7 +5,7 @@
 ## ClientsPlayersOptions interface
 
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface ClientsPlayersOptions 
@@ -15,11 +15,11 @@ export interface ClientsPlayersOptions
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [agentPubKeys?](./tryorama.clientsplayersoptions.agentpubkeys.md) |  | AgentPubKey\[\] | <i>(Optional)</i> A list of previously generated agent pub keys (optional). |
+|  [agentPubKeys?](./tryorama.clientsplayersoptions.agentpubkeys.md) |  | AgentPubKey\[\] | _(Optional)_ A list of previously generated agent pub keys (optional). |
 |  [app](./tryorama.clientsplayersoptions.app.md) |  | AppBundleSource | An app that will be installed for each agent. |
-|  [clientTimeout?](./tryorama.clientsplayersoptions.clienttimeout.md) |  | number | <i>(Optional)</i> A timeout for the web socket connection (optional). |
-|  [numberOfAgentsPerConductor?](./tryorama.clientsplayersoptions.numberofagentsperconductor.md) |  | number | <i>(Optional)</i> Number of agents per conductor. Defaults to 1. |
-|  [numberOfConductorsPerClient?](./tryorama.clientsplayersoptions.numberofconductorsperclient.md) |  | number | <i>(Optional)</i> Number of conductors per client. Defaults to 1. |
-|  [partialConfig?](./tryorama.clientsplayersoptions.partialconfig.md) |  | string | <i>(Optional)</i> Configuration for the conductor (optional). |
-|  [signalHandler?](./tryorama.clientsplayersoptions.signalhandler.md) |  | AppSignalCb | <i>(Optional)</i> A signal handler to be registered in conductors. |
+|  [clientTimeout?](./tryorama.clientsplayersoptions.clienttimeout.md) |  | number | _(Optional)_ A timeout for the web socket connection (optional). |
+|  [numberOfAgentsPerConductor?](./tryorama.clientsplayersoptions.numberofagentsperconductor.md) |  | number | _(Optional)_ Number of agents per conductor. Defaults to 1. |
+|  [numberOfConductorsPerClient?](./tryorama.clientsplayersoptions.numberofconductorsperclient.md) |  | number | _(Optional)_ Number of conductors per client. Defaults to 1. |
+|  [partialConfig?](./tryorama.clientsplayersoptions.partialconfig.md) |  | string | _(Optional)_ Configuration for the conductor (optional). |
+|  [signalHandler?](./tryorama.clientsplayersoptions.signalhandler.md) |  | AppSignalCb | _(Optional)_ A signal handler to be registered in conductors. |
 

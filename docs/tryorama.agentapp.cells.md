@@ -4,7 +4,7 @@
 
 ## AgentApp.cells property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 cells: CallableCell[];

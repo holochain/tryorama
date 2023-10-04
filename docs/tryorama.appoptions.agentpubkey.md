@@ -4,7 +4,7 @@
 
 ## AppOptions.agentPubKey property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 agentPubKey?: AgentPubKey;

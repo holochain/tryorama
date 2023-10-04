@@ -4,7 +4,7 @@
 
 ## IConductor.installAgentsApps property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 installAgentsApps: (options: AgentsAppsOptions) => Promise<AppInfo[]>;

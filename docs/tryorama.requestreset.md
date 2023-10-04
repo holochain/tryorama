@@ -6,7 +6,7 @@
 
 Request deletion of \*\*all\*\* conductors.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestReset 

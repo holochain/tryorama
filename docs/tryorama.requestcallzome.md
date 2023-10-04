@@ -6,7 +6,7 @@
 
 Request to call a zome on a conductor's app interface.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface RequestCallZome 

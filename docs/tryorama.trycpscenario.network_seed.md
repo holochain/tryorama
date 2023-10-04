@@ -4,7 +4,7 @@
 
 ## TryCpScenario.network\_seed property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 network_seed: string;

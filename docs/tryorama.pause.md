@@ -6,7 +6,7 @@
 
 A utility function to wait the given amount of time.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 pause: (milliseconds: number) => Promise<unknown>

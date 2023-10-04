@@ -4,7 +4,7 @@
 
 ## TryCpClient.conductors property
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 conductors: TryCpConductor[];

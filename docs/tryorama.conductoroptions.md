@@ -5,7 +5,7 @@
 ## ConductorOptions interface
 
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 export interface ConductorOptions 
@@ -15,8 +15,8 @@ export interface ConductorOptions
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [bootstrapServerUrl?](./tryorama.conductoroptions.bootstrapserverurl.md) |  | URL | <i>(Optional)</i> A bootstrap server URL for peers to discover each other. |
-|  [networkType?](./tryorama.conductoroptions.networktype.md) |  | [NetworkType](./tryorama.networktype.md) | <i>(Optional)</i> The network type the conductor should use. |
-|  [startup?](./tryorama.conductoroptions.startup.md) |  | boolean | <i>(Optional)</i> Start up conductor after creation. |
-|  [timeout?](./tryorama.conductoroptions.timeout.md) |  | number | <i>(Optional)</i> Timeout for requests to Admin and App API. |
+|  [bootstrapServerUrl?](./tryorama.conductoroptions.bootstrapserverurl.md) |  | URL | _(Optional)_ A bootstrap server URL for peers to discover each other. |
+|  [networkType?](./tryorama.conductoroptions.networktype.md) |  | [NetworkType](./tryorama.networktype.md) | _(Optional)_ The network type the conductor should use. |
+|  [startup?](./tryorama.conductoroptions.startup.md) |  | boolean | _(Optional)_ Start up conductor after creation. |
+|  [timeout?](./tryorama.conductoroptions.timeout.md) |  | number | _(Optional)_ Timeout for requests to Admin and App API. |
 

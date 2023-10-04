@@ -6,7 +6,7 @@
 
 Download a DNA from a URL to the server's file system.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 downloadDna(url: URL): Promise<string>;
@@ -18,7 +18,7 @@ downloadDna(url: URL): Promise<string>;
 |  --- | --- | --- |
 |  url | URL |  |
 
-<b>Returns:</b>
+**Returns:**
 
 Promise&lt;string&gt;
 

@@ -6,7 +6,7 @@
 
 A bootstrap server URL for peers to discover each other.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 bootstrapServerUrl?: URL;

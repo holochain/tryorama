@@ -6,7 +6,7 @@
 
 Timeout for requests to Admin and App API.
 
-<b>Signature:</b>
+**Signature:**
 
 ```typescript
 timeout?: number;
