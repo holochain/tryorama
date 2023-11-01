@@ -24,7 +24,7 @@ import { AgentsAppsOptions, AppOptions, IConductor } from "../types.js";
 const logger = makeLogger("Local Conductor");
 
 const HOST_URL = new URL("ws://127.0.0.1");
-const DEFAULT_TIMEOUT = 15000;
+const DEFAULT_TIMEOUT = 60000;
 const LAIR_PASSWORD = "lair-password";
 
 /**
