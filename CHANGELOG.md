@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- Local: Increase default timeout for websocket calls to 60 seconds.
 ### Fixed
 
 ## 2023-10-04: v0.15.1
