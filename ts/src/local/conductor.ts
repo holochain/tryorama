@@ -309,11 +309,14 @@ export class Conductor implements IConductor {
 
     // set up automatic zome call signing
     const callZome = appWs.callZome;
-    appWs.callZome = async (req: CallZomeRequest | CallZomeRequestSigned) => {
+    appWs.callZome = async (
+      req: CallZomeRequest | CallZomeRequestSigned,
+      timeout?: number
+    ) => {
       if (!getSigningCredentials(req.cell_id)) {
         await this.adminWs().authorizeSigningCredentials(req.cell_id);
       }
-      return callZome(req);
+      return callZome(req, timeout);
     };
 
     return appWs;
@@ -338,7 +341,10 @@ export class Conductor implements IConductor {
 
     // set up automatic zome call signing
     const callZome = appAgentWs.callZome.bind(appAgentWs);
-    appAgentWs.callZome = async (req: AppAgentCallZomeRequest) => {
+    appAgentWs.callZome = async (
+      req: AppAgentCallZomeRequest,
+      timeout?: number
+    ) => {
       let cellId;
       if ("role_name" in req) {
         assert(appAgentWs.cachedAppInfo);
@@ -352,7 +358,7 @@ export class Conductor implements IConductor {
       if (!getSigningCredentials(cellId)) {
         await this.adminWs().authorizeSigningCredentials(cellId);
       }
-      return callZome(req);
+      return callZome(req, timeout);
     };
 
     return appAgentWs;

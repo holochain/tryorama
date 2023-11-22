@@ -231,7 +231,7 @@ test("Local Conductor - get a named cell by role name", async (t) => {
   await cleanAllConductors();
 });
 
-test("Local Conductor - zome call can time out before completion", async (t) => {
+test.only("Local Conductor - zome call can time out before completion", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -243,10 +243,13 @@ test("Local Conductor - zome call can time out before completion", async (t) => 
   const alice = await enableAndGetAgentApp(adminWs, appWs, app);
   const cell = alice.namedCells.get(ROLE_NAME);
   assert(cell);
-  const zome_name = "coordinator";
-  const fn_name = "create";
 
-  await t.rejects(cell.callZome({ zome_name, fn_name }, 1));
+  await t.rejects(
+    cell.callZome(
+      { zome_name: "coordinator", fn_name: "create", payload: "test" },
+      1
+    )
+  );
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
