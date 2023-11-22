@@ -3,8 +3,7 @@ name: Run tests
 on:
   pull_request:
   push:
-    branches:
-      - "main*"
+    branches: [develop, main]
 
 concurrency:
   group: ${{ github.ref_name }}
@@ -20,10 +19,10 @@ jobs:
 
     steps:
       - name: Check out source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install nix
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v23
 
       - name: Set up cachix
         uses: cachix/cachix-action@v12

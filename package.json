@@ -1,7 +1,7 @@
 {
   "name": "@holochain/tryorama",
   "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
-  "version": "0.15.2",
+  "version": "0.16.0-dev.0",
   "author": "Holochain Foundation",
   "keywords": [
     "holochain",
@@ -17,7 +17,7 @@
   "license": "CAL-1.0",
   "type": "module",
   "engines": {
-    "node": ">=16.0.0 || >=18.0.0"
+    "node": ">=18.0.0 || >=20.0.0"
   },
   "exports": {
     ".": "./lib/index.js"
@@ -42,7 +42,7 @@
     "test:trycp:scenario": "node --loader ts-node/esm ts/test/trycp/scenario.ts"
   },
   "dependencies": {
-    "@holochain/client": "^0.16.0",
+    "@holochain/client": "^0.17.0-dev.2",
     "get-port": "^6.1.2",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",
