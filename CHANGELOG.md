@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2023-11-22: v0.16.0-dev.2
+### Changed
+- Upgrade deps to Holochain v0.3.0
+
 ## 2023-11-01: v0.15.2
 ### Changed
 - Local: Increase default timeout for websocket calls to 60 seconds.
