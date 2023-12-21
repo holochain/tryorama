@@ -454,7 +454,7 @@ export interface RequestCallAdminInterface {
 /**
  * The types of all possible calls to the Admin API.
  */
-interface RequestAdminInterfaceMessageType {
+export interface RequestAdminInterfaceMessageType {
   add_agent_info?: null;
   agent_info?: null;
   attach_app_interface?: null;

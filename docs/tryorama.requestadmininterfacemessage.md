@@ -17,5 +17,5 @@ export interface RequestAdminInterfaceMessage
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data?](./tryorama.requestadmininterfacemessage.data.md) |  | AddAgentInfoRequest \| AgentInfoRequest \| AttachAppInterfaceRequest \| DeleteCloneCellRequest \| DisableAppRequest \| DumpFullStateRequest \| DumpNetworkStatsRequest \| DumpStateRequest \| EnableAppRequest \| GetDnaDefinitionRequest \| GrantZomeCallCapabilityRequest \| InstallAppRequest \| ListAppsRequest \| RegisterDnaRequest \| StartAppRequest \| StorageInfoRequest \| UninstallAppRequest \| UpdateCoordinatorsRequest | _(Optional)_ |
-|  [type](./tryorama.requestadmininterfacemessage.type.md) |  | { \[key in keyof RequestAdminInterfaceMessageType\]: null; } |  |
+|  [type](./tryorama.requestadmininterfacemessage.type.md) |  | { \[key in keyof [RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)<!-- -->\]: null; } |  |
 

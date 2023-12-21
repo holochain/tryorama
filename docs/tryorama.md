@@ -73,6 +73,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [IPlayer](./tryorama.iplayer.md) | Combines an agent hApp with the conductor they belong to. |
 |  [Player](./tryorama.player.md) | A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->. |
 |  [RequestAdminInterfaceMessage](./tryorama.requestadmininterfacemessage.md) | All possible calls to the Admin API. |
+|  [RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md) | The types of all possible calls to the Admin API. |
 |  [RequestAppInfo](./tryorama.requestappinfo.md) | Request app info from a conductor. |
 |  [RequestCallAdminInterface](./tryorama.requestcalladmininterface.md) | Request a call to the Admin API. |
 |  [RequestCallAppInterface](./tryorama.requestcallappinterface.md) | Request a call to the App API. |
