@@ -16,5 +16,5 @@ export interface AppApiResponseNetworkInfo
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.appapiresponsenetworkinfo.data.md) |  | NetworkInfoResponse |  |
-|  [type](./tryorama.appapiresponsenetworkinfo.type.md) |  | "network\_info" |  |
+|  [type](./tryorama.appapiresponsenetworkinfo.type.md) |  | { "network\_info": null; } |  |
 

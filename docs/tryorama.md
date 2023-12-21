@@ -117,7 +117,6 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  [stopLocalServices](./tryorama.stoplocalservices.md) | Shutdown signalling server process. |
 |  [TRYCP\_SERVER\_HOST](./tryorama.trycp_server_host.md) | Default TryCP server host address. |
 |  [TRYCP\_SERVER\_PORT](./tryorama.trycp_server_port.md) | Default TryCP server port. |
-|  [TRYCP\_SUCCESS\_ENUM\_RESPONSE](./tryorama.trycp_success_enum_response.md) | Empty success response. |
 |  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) | Empty success response. |
 
 ## Type Aliases

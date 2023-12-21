@@ -15,5 +15,5 @@ export interface AdminApiResponseCloneCellDeleted
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [type](./tryorama.adminapiresponseclonecelldeleted.type.md) |  | "clone\_cell\_deleted" |  |
+|  [type](./tryorama.adminapiresponseclonecelldeleted.type.md) |  | { "clone\_cell\_deleted": null; } |  |
 

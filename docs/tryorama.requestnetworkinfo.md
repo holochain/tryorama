@@ -17,5 +17,5 @@ export interface RequestNetworkInfo
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.requestnetworkinfo.data.md) |  | NetworkInfoRequest |  |
-|  [type](./tryorama.requestnetworkinfo.type.md) |  | "network\_info" |  |
+|  [type](./tryorama.requestnetworkinfo.type.md) |  | { "network\_info": null; } |  |
 

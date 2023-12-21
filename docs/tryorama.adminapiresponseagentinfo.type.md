@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "agent_info";
+type: {
+        "agent_info": null;
+    };
 ```

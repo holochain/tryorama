@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "zome_call";
+type: {
+        "zome_call": null;
+    };
 ```

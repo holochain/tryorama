@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "network_info";
+type: {
+        "network_info": null;
+    };
 ```

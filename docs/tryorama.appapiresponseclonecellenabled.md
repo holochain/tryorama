@@ -16,5 +16,5 @@ export interface AppApiResponseCloneCellEnabled
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.appapiresponseclonecellenabled.data.md) |  | EnableCloneCellResponse |  |
-|  [type](./tryorama.appapiresponseclonecellenabled.type.md) |  | "clone\_cell\_enabled" |  |
+|  [type](./tryorama.appapiresponseclonecellenabled.type.md) |  | { "clone\_cell\_enabled": null; } |  |
 
