@@ -32,7 +32,7 @@
     "prepare": "npm run lint",
     "prepublishOnly": "npm run build",
     "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
-    "test": "ts-node-esm ts/test/index.ts",
+    "test": "node --loader ts-node/esm ts/test/index.ts",
     "test:local": "npm run test:local:conductor && npm run test:local:scenario",
     "test:local:conductor": "node --loader ts-node/esm ts/test/local/conductor.ts",
     "test:local:scenario": "node --loader ts-node/esm ts/test/local/scenario.ts",
