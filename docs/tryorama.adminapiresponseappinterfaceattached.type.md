@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "app_interface_attached": null;
+        app_interface_attached: null;
     };
 ```

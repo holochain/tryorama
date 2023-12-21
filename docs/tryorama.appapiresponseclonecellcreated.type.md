@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "clone_cell_created": null;
+        clone_cell_created: null;
     };
 ```

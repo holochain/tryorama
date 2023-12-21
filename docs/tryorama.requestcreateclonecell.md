@@ -17,5 +17,5 @@ export interface RequestCreateCloneCell
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.requestcreateclonecell.data.md) |  | CreateCloneCellRequest |  |
-|  [type](./tryorama.requestcreateclonecell.type.md) |  | { "create\_clone\_cell": null; } |  |
+|  [type](./tryorama.requestcreateclonecell.type.md) |  | { create\_clone\_cell: null; } |  |
 

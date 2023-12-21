@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "dnas_listed": null;
+        dnas_listed: null;
     };
 ```

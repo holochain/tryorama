@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "dna_definition_returned": null;
+        dna_definition_returned: null;
     };
 ```

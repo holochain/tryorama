@@ -15,5 +15,5 @@ export interface AdminApiResponseZomeCallCapabilityGranted
 
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
-|  [type](./tryorama.adminapiresponsezomecallcapabilitygranted.type.md) |  | { "zome\_call\_capability\_granted": null; } |  |
+|  [type](./tryorama.adminapiresponsezomecallcapabilitygranted.type.md) |  | { zome\_call\_capability\_granted: null; } |  |
 

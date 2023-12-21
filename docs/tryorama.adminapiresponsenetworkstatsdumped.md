@@ -16,5 +16,5 @@ export interface AdminApiResponseNetworkStatsDumped
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponsenetworkstatsdumped.data.md) |  | DumpNetworkStatsResponse |  |
-|  [type](./tryorama.adminapiresponsenetworkstatsdumped.type.md) |  | { "network\_stats\_dumped": null; } |  |
+|  [type](./tryorama.adminapiresponsenetworkstatsdumped.type.md) |  | { network\_stats\_dumped: null; } |  |
 

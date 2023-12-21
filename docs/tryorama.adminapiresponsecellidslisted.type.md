@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "cell_ids_listed": null;
+        cell_ids_listed: null;
     };
 ```

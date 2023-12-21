@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "app_uninstalled": null;
+        app_uninstalled: null;
     };
 ```

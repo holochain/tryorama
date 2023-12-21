@@ -16,5 +16,5 @@ export interface AdminApiResponseStateDumped
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponsestatedumped.data.md) |  | DumpStateResponse |  |
-|  [type](./tryorama.adminapiresponsestatedumped.type.md) |  | { "state\_dumped": null; } |  |
+|  [type](./tryorama.adminapiresponsestatedumped.type.md) |  | { state\_dumped: null; } |  |
 

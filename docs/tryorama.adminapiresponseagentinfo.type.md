@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "agent_info": null;
+        agent_info: null;
     };
 ```

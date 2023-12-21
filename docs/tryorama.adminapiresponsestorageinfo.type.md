@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "storage_info": null;
+        storage_info: null;
     };
 ```

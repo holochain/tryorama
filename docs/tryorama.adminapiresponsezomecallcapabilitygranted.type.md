@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "zome_call_capability_granted": null;
+        zome_call_capability_granted: null;
     };
 ```

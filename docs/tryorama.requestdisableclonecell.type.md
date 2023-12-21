@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "disable_clone_cell": null;
+        disable_clone_cell: null;
     };
 ```

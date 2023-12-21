@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "full_state_dumped": null;
+        full_state_dumped: null;
     };
 ```

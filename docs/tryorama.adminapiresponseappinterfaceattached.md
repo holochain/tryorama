@@ -16,5 +16,5 @@ export interface AdminApiResponseAppInterfaceAttached
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponseappinterfaceattached.data.md) |  | AttachAppInterfaceResponse |  |
-|  [type](./tryorama.adminapiresponseappinterfaceattached.type.md) |  | { "app\_interface\_attached": null; } |  |
+|  [type](./tryorama.adminapiresponseappinterfaceattached.type.md) |  | { app\_interface\_attached: null; } |  |
 

@@ -16,5 +16,5 @@ export interface AdminApiResponseAppInterfacesListed
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponseappinterfaceslisted.data.md) |  | ListAppInterfacesResponse |  |
-|  [type](./tryorama.adminapiresponseappinterfaceslisted.type.md) |  | { "app\_interfaces\_listed": null; } |  |
+|  [type](./tryorama.adminapiresponseappinterfaceslisted.type.md) |  | { app\_interfaces\_listed: null; } |  |
 

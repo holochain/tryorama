@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "app_installed": null;
+        app_installed: null;
     };
 ```

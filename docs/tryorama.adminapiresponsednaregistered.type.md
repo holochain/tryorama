@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "dna_registered": null;
+        dna_registered: null;
     };
 ```

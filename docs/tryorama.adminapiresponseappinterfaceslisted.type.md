@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "app_interfaces_listed": null;
+        app_interfaces_listed: null;
     };
 ```

@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "coordinators_updated": null;
+        coordinators_updated: null;
     };
 ```

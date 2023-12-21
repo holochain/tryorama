@@ -16,5 +16,5 @@ export interface AdminApiResponseDnasDefinitionReturned
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponsednasdefinitionreturned.data.md) |  | DnaDefinition |  |
-|  [type](./tryorama.adminapiresponsednasdefinitionreturned.type.md) |  | { "dna\_definition\_returned": null; } |  |
+|  [type](./tryorama.adminapiresponsednasdefinitionreturned.type.md) |  | { dna\_definition\_returned: null; } |  |
 

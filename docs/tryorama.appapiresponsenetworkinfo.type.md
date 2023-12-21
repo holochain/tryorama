@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "network_info": null;
+        network_info: null;
     };
 ```

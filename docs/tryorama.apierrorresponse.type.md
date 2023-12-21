@@ -8,6 +8,6 @@
 
 ```typescript
 type: {
-        "error": null;
+        error: null;
     };
 ```
