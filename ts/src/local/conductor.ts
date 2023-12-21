@@ -165,11 +165,11 @@ export class Conductor implements IConductor {
     const createConductorPromise = new Promise<Conductor>((resolve, reject) => {
       createConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`creating conductor config\n${data.toString()}`);
-        const tmpDirMatches = data
+        const tmpDirMatches = [...data
           .toString()
-          .match(/ConfigRootPath\("(.*?)"\)/g);
+          .matchAll(/ConfigRootPath\("(.*?)"\)/g)];
         if (tmpDirMatches) {
-          conductor.conductorDir = tmpDirMatches[0];
+          conductor.conductorDir = tmpDirMatches[0][1];
         }
       });
       createConductorProcess.stdout.on("end", () => {
