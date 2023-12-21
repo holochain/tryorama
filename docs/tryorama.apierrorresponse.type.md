@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "error";
+type: {
+        "error": null;
+    };
 ```

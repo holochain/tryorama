@@ -186,8 +186,8 @@ export type _TryCpResponse = _TryCpResponseSuccess | _TryCpResponseError;
  * @internal
  */
 export enum _TryCpResponseResult {
-  Ok = "Ok",
-  Err = "Err",
+  Ok = "0",
+  Err = "1",
 }
 
 /**
@@ -252,7 +252,7 @@ export type TryCpApiResponse =
  * @public
  */
 export interface ApiErrorResponse {
-  type: "error";
+  type: { "error": null };
   data: { type: string; data: string };
 }
 
@@ -394,7 +394,7 @@ export type AppApiResponse =
  * @public
  */
 export interface AppApiResponseAppInfo {
-  type: "app_info";
+  type: { "app_info": null };
   data: AppInfoResponse;
 }
 
@@ -402,7 +402,7 @@ export interface AppApiResponseAppInfo {
  * @public
  */
 export interface AppApiResponseZomeCall {
-  type: "zome_call";
+  type: { "zome_call": null };
   data: Uint8Array;
 }
 
@@ -410,7 +410,7 @@ export interface AppApiResponseZomeCall {
  * @public
  */
 export interface AppApiResponseCloneCellCreated {
-  type: "clone_cell_created";
+  type: { "clone_cell_created": null };
   data: CreateCloneCellResponse;
 }
 
@@ -418,7 +418,7 @@ export interface AppApiResponseCloneCellCreated {
  * @public
  */
 export interface AppApiResponseCloneCellEnabled {
-  type: "clone_cell_enabled";
+  type: { "clone_cell_enabled": null };
   data: EnableCloneCellResponse;
 }
 
@@ -426,7 +426,7 @@ export interface AppApiResponseCloneCellEnabled {
  * @public
  */
 export interface AppApiResponseCloneCellDisabled {
-  type: "clone_cell_disabled";
+  type: { "clone_cell_disabled": null };
   data: DisableCloneCellResponse;
 }
 
@@ -434,7 +434,7 @@ export interface AppApiResponseCloneCellDisabled {
  * @public
  */
 export interface AppApiResponseNetworkInfo {
-  type: "network_info";
+  type: { "network_info": null };
   data: NetworkInfoResponse;
 }
 
@@ -452,36 +452,41 @@ export interface RequestCallAdminInterface {
 }
 
 /**
+ * The types of all possible calls to the Admin API.
+ */
+interface RequestAdminInterfaceMessageType {
+  add_agent_info?: null;
+  agent_info?: null;
+  attach_app_interface?: null;
+  connect_app_interface?: null;
+  delete_clone_cell?: null;
+  disable_app?: null;
+  dump_full_state?: null;
+  dump_network_stats?: null;
+  dump_state?: null;
+  enable_app?: null;
+  generate_agent_pub_key?: null;
+  get_dna_definition?: null;
+  grant_zome_call_capability?: null;
+  install_app?: null;
+  list_apps?: null;
+  list_app_interfaces?: null;
+  list_cell_ids?: null;
+  list_dnas?: null;
+  register_dna?: null;
+  start_app?: null;
+  storage_info?: null;
+  uninstall_app?: null;
+  update_coordinators?: null;
+}
+
+/**
  * All possible calls to the Admin API.
  *
  * @public
  */
 export interface RequestAdminInterfaceMessage {
-  type:
-    | "add_agent_info"
-    | "agent_info"
-    | "attach_app_interface"
-    | "connect_app_interface"
-    | "delete_clone_cell"
-    | "disable_app"
-    | "dump_full_state"
-    | "dump_network_stats"
-    | "dump_state"
-    | "enable_app"
-    | "generate_agent_pub_key"
-    | "get_dna_definition"
-    | "grant_zome_call_capability"
-    | "install_app"
-    | "install_app"
-    | "list_apps"
-    | "list_app_interfaces"
-    | "list_cell_ids"
-    | "list_dnas"
-    | "register_dna"
-    | "start_app"
-    | "storage_info"
-    | "uninstall_app"
-    | "update_coordinators";
+  type: { [key in keyof RequestAdminInterfaceMessageType]: null };
   data?:
     | AddAgentInfoRequest
     | AgentInfoRequest
@@ -536,7 +541,7 @@ export type AdminApiResponse =
  * @public
  */
 export interface AdminApiResponseAgentInfo {
-  type: "agent_info";
+  type: { "agent_info": null };
   data: AgentInfoResponse;
 }
 
@@ -546,7 +551,7 @@ export interface AdminApiResponseAgentInfo {
  * @public
  */
 export interface RequestDeleteCloneCell {
-  type: "delete_clone_cell";
+  type: { "delete_clone_cell": null };
   data: DeleteCloneCellRequest;
 }
 
@@ -554,7 +559,7 @@ export interface RequestDeleteCloneCell {
  * @public
  */
 export interface AdminApiResponseDnaRegistered {
-  type: "dna_registered";
+  type: { "dna_registered": null };
   data: HoloHash;
 }
 
@@ -562,7 +567,7 @@ export interface AdminApiResponseDnaRegistered {
  * @public
  */
 export interface AdminApiResponseFullStateDumped {
-  type: "full_state_dumped";
+  type: { "full_state_dumped": null };
   data: FullStateDump;
 }
 
@@ -570,7 +575,7 @@ export interface AdminApiResponseFullStateDumped {
  * @public
  */
 export interface AdminApiResponseNetworkStatsDumped {
-  type: "network_stats_dumped";
+  type: { "network_stats_dumped": null };
   data: DumpNetworkStatsResponse;
 }
 
@@ -578,7 +583,7 @@ export interface AdminApiResponseNetworkStatsDumped {
  * @public
  */
 export interface AdminApiResponseStorageInfo {
-  type: "storage_info";
+  type: { "storage_info": null };
   data: StorageInfoResponse;
 }
 
@@ -586,7 +591,7 @@ export interface AdminApiResponseStorageInfo {
  * @public
  */
 export interface AdminApiResponseStateDumped {
-  type: "state_dumped";
+  type: { "state_dumped": null };
   data: DumpStateResponse;
 }
 
@@ -594,14 +599,14 @@ export interface AdminApiResponseStateDumped {
  * @public
  */
 export interface AdminApiResponseZomeCallCapabilityGranted {
-  type: "zome_call_capability_granted";
+  type: { "zome_call_capability_granted": null };
 }
 
 /**
  * @public
  */
 export interface AdminApiResponseAgentPubKeyGenerated {
-  type: "agent_pub_key_generated";
+  type: { "agent_pub_key_generated": null };
   data: HoloHash;
 }
 
@@ -609,7 +614,7 @@ export interface AdminApiResponseAgentPubKeyGenerated {
  * @public
  */
 export interface AdminApiResponseAppInstalled {
-  type: "app_installed";
+  type: { "app_installed": null };
   data: AppInfo;
 }
 
@@ -617,7 +622,7 @@ export interface AdminApiResponseAppInstalled {
  * @public
  */
 export interface AdminApiResponseAppEnabled {
-  type: "app_enabled";
+  type: { "app_enabled": null };
   data: EnableAppResponse;
 }
 
@@ -625,7 +630,7 @@ export interface AdminApiResponseAppEnabled {
  * @public
  */
 export interface AdminApiResponseAppDisabled {
-  type: "app_disabled";
+  type: { "app_disabled": null };
   data: DisableAppResponse;
 }
 
@@ -633,7 +638,7 @@ export interface AdminApiResponseAppDisabled {
  * @public
  */
 export interface AdminApiResponseAppStarted {
-  type: "app_started";
+  type: { "app_started": null };
   data: StartAppResponse;
 }
 
@@ -641,7 +646,7 @@ export interface AdminApiResponseAppStarted {
  * @public
  */
 export interface AdminApiResponseAppUninstalled {
-  type: "app_uninstalled";
+  type: { "app_uninstalled": null };
   data: UninstallAppResponse;
 }
 
@@ -649,7 +654,7 @@ export interface AdminApiResponseAppUninstalled {
  * @public
  */
 export interface AdminApiResponseCoordinatorsUpdated {
-  type: "coordinators_updated";
+  type: { "coordinators_updated": null };
   data: UpdateCoordinatorsResponse;
 }
 
@@ -657,7 +662,7 @@ export interface AdminApiResponseCoordinatorsUpdated {
  * @public
  */
 export interface AdminApiResponseAppsListed {
-  type: "apps_listed";
+  type: { "apps_listed": null };
   data: ListAppsResponse;
 }
 
@@ -665,7 +670,7 @@ export interface AdminApiResponseAppsListed {
  * @public
  */
 export interface AdminApiResponseAppInterfacesListed {
-  type: "app_interfaces_listed";
+  type: { "app_interfaces_listed": null };
   data: ListAppInterfacesResponse;
 }
 
@@ -673,7 +678,7 @@ export interface AdminApiResponseAppInterfacesListed {
  * @public
  */
 export interface AdminApiResponseCellIdsListed {
-  type: "cell_ids_listed";
+  type: { "cell_ids_listed": null };
   data: ListCellIdsResponse;
 }
 
@@ -681,7 +686,7 @@ export interface AdminApiResponseCellIdsListed {
  * @public
  */
 export interface AdminApiResponseDnasDefinitionReturned {
-  type: "dna_definition_returned";
+  type: { "dna_definition_returned": null };
   data: DnaDefinition;
 }
 
@@ -689,7 +694,7 @@ export interface AdminApiResponseDnasDefinitionReturned {
  * @public
  */
 export interface AdminApiResponseDnasListed {
-  type: "dnas_listed";
+  type: { "dnas_listed": null };
   data: ListDnasResponse;
 }
 
@@ -697,7 +702,7 @@ export interface AdminApiResponseDnasListed {
  * @public
  */
 export interface AdminApiResponseAppInterfaceAttached {
-  type: "app_interface_attached";
+  type: { "app_interface_attached": null };
   data: AttachAppInterfaceResponse;
 }
 
@@ -705,12 +710,12 @@ export interface AdminApiResponseAppInterfaceAttached {
  * @public
  */
 export interface AdminApiResponseAgentInfoAdded {
-  type: "agent_info_added";
+  type: { "agent_info_added": null };
 }
 
 /**
  * @public
  */
 export interface AdminApiResponseCloneCellDeleted {
-  type: "clone_cell_deleted";
+  type: { "clone_cell_deleted": null };
 }

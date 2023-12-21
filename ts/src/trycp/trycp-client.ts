@@ -18,6 +18,7 @@ import {
   _TryCpCall,
   _TryCpSuccessResponseSeralized,
   _TryCpResponseResult,
+  ApiErrorResponse,
 } from "./types.js";
 import {
   deserializeApiResponse,
@@ -265,12 +266,12 @@ export class TryCpClient {
       return response;
     }
 
-    const deserializedApiResponse = deserializeApiResponse(response);
+    const deserializedApiResponse: TryCpApiResponse = deserializeApiResponse(response);
 
     // when the request fails, the response's type is "error"
-    if (deserializedApiResponse.type === "error") {
+    if (deserializedApiResponse.type.hasOwnProperty("error")) {
       const errorMessage = `error response from Admin API\n${JSON.stringify(
-        deserializedApiResponse.data,
+        (deserializedApiResponse as ApiErrorResponse).data,
         null,
         4
       )}`;
