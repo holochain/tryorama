@@ -453,6 +453,8 @@ export interface RequestCallAdminInterface {
 
 /**
  * The types of all possible calls to the Admin API.
+ * 
+ * @public
  */
 export interface RequestAdminInterfaceMessageType {
   add_agent_info?: null;
