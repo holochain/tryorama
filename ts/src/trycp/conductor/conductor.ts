@@ -788,7 +788,7 @@ export class TryCpConductor implements IConductor {
      */
     const appInfo = async (request: AppInfoRequest) => {
       const response = await this.callAppApi(port, {
-        type: "app_info",
+        type: { "app_info": null },
         data: request,
       });
       assert(response.type.hasOwnProperty("app_info"));
@@ -824,7 +824,7 @@ export class TryCpConductor implements IConductor {
         signedRequest = signedZomeCall;
       }
       const response = await this.callAppApi(port, {
-        type: "call_zome",
+        type: { "call_zome": null },
         data: signedRequest,
       });
       assert("data" in response);
@@ -844,7 +844,7 @@ export class TryCpConductor implements IConductor {
      */
     const createCloneCell = async (request: CreateCloneCellRequest) => {
       const response = await this.callAppApi(port, {
-        type: "create_clone_cell",
+        type: { "create_clone_cell": null },
         data: request,
       });
       assert(response.type.hasOwnProperty("clone_cell_created"));
@@ -860,7 +860,7 @@ export class TryCpConductor implements IConductor {
      */
     const enableCloneCell = async (request: EnableCloneCellRequest) => {
       const response = await this.callAppApi(port, {
-        type: "enable_clone_cell",
+        type: { "enable_clone_cell": null },
         data: request,
       });
       assert(response.type.hasOwnProperty("clone_cell_enabled"));
@@ -875,7 +875,7 @@ export class TryCpConductor implements IConductor {
      */
     const disableCloneCell = async (request: DisableCloneCellRequest) => {
       const response = await this.callAppApi(port, {
-        type: "disable_clone_cell",
+        type: { "disable_clone_cell": null },
         data: request,
       });
       assert(response.type.hasOwnProperty("clone_cell_disabled"));
@@ -890,7 +890,7 @@ export class TryCpConductor implements IConductor {
      */
     const networkInfo = async (request: NetworkInfoRequest) => {
       const response = await this.callAppApi(port, {
-        type: "network_info",
+        type: { "network_info": null },
         data: request,
       });
       assert(response.type.hasOwnProperty("network_info"));

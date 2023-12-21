@@ -313,7 +313,7 @@ export type RequestCallAppInterfaceMessage =
  * @public
  */
 export interface RequestCallZome {
-  type: "call_zome";
+  type: { "call_zome": null };
   data: CallZomeRequestSigned;
 }
 
@@ -323,7 +323,7 @@ export interface RequestCallZome {
  * @public
  */
 export interface RequestAppInfo {
-  type: "app_info";
+  type: { "app_info": null };
   data: { installed_app_id: string };
 }
 
@@ -333,7 +333,7 @@ export interface RequestAppInfo {
  * @public
  */
 export interface RequestCreateCloneCell {
-  type: "create_clone_cell";
+  type: { "create_clone_cell": null };
   data: CreateCloneCellRequest;
 }
 
@@ -343,7 +343,7 @@ export interface RequestCreateCloneCell {
  * @public
  */
 export interface RequestDisableCloneCell {
-  type: "disable_clone_cell";
+  type: { "disable_clone_cell": null };
   data: DisableCloneCellRequest;
 }
 
@@ -353,7 +353,7 @@ export interface RequestDisableCloneCell {
  * @public
  */
 export interface RequestEnableCloneCell {
-  type: "enable_clone_cell";
+  type: { "enable_clone_cell": null };
   data: EnableCloneCellRequest;
 }
 
@@ -363,7 +363,7 @@ export interface RequestEnableCloneCell {
  * @public
  */
 export interface RequestNetworkInfo {
-  type: "network_info";
+  type: { "network_info": null };
   data: NetworkInfoRequest;
 }
 

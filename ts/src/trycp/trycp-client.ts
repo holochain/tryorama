@@ -1,4 +1,4 @@
-import { AppSignalCb } from "@holochain/client";
+import { AppSignalCb, CallZomeRequestSigned } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import cloneDeep from "lodash/cloneDeep.js";
 import assert from "node:assert";
@@ -311,14 +311,15 @@ export class TryCpClient {
     if (
       debugLog.type === "call_app_interface" &&
       "data" in debugLog.message &&
-      debugLog.message.type === "call_zome"
+      debugLog.message.type.hasOwnProperty("call_zome")
     ) {
+      const messageData = debugLog.message.data as CallZomeRequestSigned;
       debugLog.message.data = Object.assign(debugLog.message.data, {
         cell_id: [
-          Buffer.from(debugLog.message.data.cell_id[0]).toString("base64"),
-          Buffer.from(debugLog.message.data.cell_id[1]).toString("base64"),
+          Buffer.from(messageData.cell_id[0]).toString("base64"),
+          Buffer.from(messageData.cell_id[1]).toString("base64"),
         ],
-        provenance: Buffer.from(debugLog.message.data.provenance).toString(
+        provenance: Buffer.from(messageData.provenance).toString(
           "base64"
         ),
       });
