@@ -266,10 +266,11 @@ export class TryCpClient {
       return response;
     }
 
-    const deserializedApiResponse: TryCpApiResponse = deserializeApiResponse(response);
+    const deserializedApiResponse: TryCpApiResponse =
+      deserializeApiResponse(response);
 
     // when the request fails, the response's type is "error"
-    if (deserializedApiResponse.type.hasOwnProperty("error")) {
+    if ("error" in deserializedApiResponse.type) {
       const errorMessage = `error response from Admin API\n${JSON.stringify(
         (deserializedApiResponse as ApiErrorResponse).data,
         null,
@@ -311,7 +312,7 @@ export class TryCpClient {
     if (
       debugLog.type === "call_app_interface" &&
       "data" in debugLog.message &&
-      debugLog.message.type.hasOwnProperty("call_zome")
+      "call_zome" in debugLog.message.type
     ) {
       const messageData = debugLog.message.data as CallZomeRequestSigned;
       debugLog.message.data = Object.assign(debugLog.message.data, {
@@ -319,9 +320,7 @@ export class TryCpClient {
           Buffer.from(messageData.cell_id[0]).toString("base64"),
           Buffer.from(messageData.cell_id[1]).toString("base64"),
         ],
-        provenance: Buffer.from(messageData.provenance).toString(
-          "base64"
-        ),
+        provenance: Buffer.from(messageData.provenance).toString("base64"),
       });
     }
     if ("content" in request) {
