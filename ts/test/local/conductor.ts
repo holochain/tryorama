@@ -35,7 +35,7 @@ test("Local Conductor - spawn a conductor with WebRTC network", async (t) => {
   });
   const tmpDirPath = conductor.getTmpDirectory();
   const conductorConfig = readFileSync(
-    tmpDirPath + "/conductor-config.yaml"
+    tmpDirPath + "/conductor-config.yaml",
   ).toString();
   t.ok(conductorConfig.includes("- type: webrtc"));
   await stopLocalServices(servicesProcess);
@@ -50,7 +50,7 @@ test("Local Conductor - spawn a conductor with mem network", async (t) => {
   });
   const tmpDirPath = conductor.getTmpDirectory();
   const conductorConfig = readFileSync(
-    tmpDirPath + "/conductor-config.yaml"
+    tmpDirPath + "/conductor-config.yaml",
   ).toString();
   t.ok(conductorConfig.includes("transport_pool: []"));
 
@@ -67,7 +67,7 @@ test("Local Conductor - spawn a conductor with a bootstrap service", async (t) =
   });
   const tmpDirPath = conductor.getTmpDirectory();
   const conductorConfig = readFileSync(
-    tmpDirPath + "/conductor-config.yaml"
+    tmpDirPath + "/conductor-config.yaml",
   ).toString();
   t.ok(conductorConfig.includes("network_type: quic_bootstrap"));
   t.ok(conductorConfig.includes(`bootstrap_service: ${bootstrapUrl.href}`));
@@ -118,7 +118,7 @@ test("Local Conductor - get app info with app agent ws", async (t) => {
   const port = await conductor.attachAppInterface();
   const appAgentWs = await conductor.connectAppAgentWs(
     port,
-    app.installed_app_id
+    app.installed_app_id,
   );
   const appInfo = await appAgentWs.appInfo();
   t.deepEqual(appInfo.status, { running: null });
@@ -173,12 +173,12 @@ test("Local Conductor - get a convenience function for zome calls", async (t) =>
   t.equal(
     typeof coordinatorZomeCall,
     "function",
-    "getZomeCaller returns a function"
+    "getZomeCaller returns a function",
   );
 
   const entryHeaderHash: ActionHash = await coordinatorZomeCall(
     "create",
-    "test-entry"
+    "test-entry",
   );
   const entryHeaderHashB64 = Buffer.from(entryHeaderHash).toString("base64");
   t.equal(entryHeaderHash.length, 39, "ActionHash is 39 bytes long");
@@ -205,7 +205,7 @@ test("Local Conductor - install multiple agents and apps and get access to agent
   const bob = await enableAndGetAgentApp(adminWs, appWs, bobApp);
 
   alice.cells.forEach((cell) =>
-    t.deepEqual(cell.cell_id[1], alice.agentPubKey)
+    t.deepEqual(cell.cell_id[1], alice.agentPubKey),
   );
   bob.cells.forEach((cell) => t.deepEqual(cell.cell_id[1], bob.agentPubKey));
 
@@ -247,8 +247,8 @@ test("Local Conductor - zome call can time out before completion", async (t) => 
   await t.rejects(
     cell.callZome(
       { zome_name: "coordinator", fn_name: "create", payload: "test" },
-      1
-    )
+      1,
+    ),
   );
 
   await conductor.shutDown();
@@ -271,7 +271,7 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
     {
       installedAppId: installed_app_id,
       agentPubKey,
-    }
+    },
   );
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -309,7 +309,7 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
   await cleanAllConductors();
 });
 
-test.only("Local Conductor - clone cell management", async (t) => {
+test("Local Conductor - clone cell management", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
@@ -319,7 +319,7 @@ test.only("Local Conductor - clone cell management", async (t) => {
     {
       installedAppId: appId,
       agentPubKey,
-    }
+    },
   );
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -334,12 +334,12 @@ test.only("Local Conductor - clone cell management", async (t) => {
   t.deepEqual(
     cloneCell.clone_id,
     new CloneId(ROLE_NAME, 0).toString(),
-    "clone id is 'role_name.0'"
+    "clone id is 'role_name.0'",
   );
   t.deepEqual(
     cloneCell.cell_id[1],
     alice.cells[0].cell_id[1],
-    "agent pub key in clone cell and base cell match"
+    "agent pub key in clone cell and base cell match",
   );
 
   const testContent = "test-content";
@@ -365,7 +365,7 @@ test.only("Local Conductor - clone cell management", async (t) => {
       cap_secret: null,
       provenance: agentPubKey,
     }),
-    "disabled clone cell cannot be called"
+    "disabled clone cell cannot be called",
   );
 
   // TODO: comment back in when cell joining is fixed
@@ -401,7 +401,7 @@ test.only("Local Conductor - clone cell management", async (t) => {
     .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
   await t.rejects(
     appWs.enableCloneCell({ app_id: appId, clone_cell_id: cloneCell.clone_id }),
-    "deleted clone cell cannot be enabled"
+    "deleted clone cell cannot be enabled",
   );
 
   await conductor.shutDown();
@@ -429,16 +429,16 @@ test("Local Conductor - 2 agent apps test", async (t) => {
   const port2 = await conductor2.attachAppInterface();
   const appAgentWs1 = await conductor1.connectAppAgentWs(
     port1,
-    aliceApp.installed_app_id
+    aliceApp.installed_app_id,
   );
   const appAgentWs2 = await conductor2.connectAppAgentWs(
     port2,
-    bobApp.installed_app_id
+    bobApp.installed_app_id,
   );
   const aliceAppAgent = await enableAndGetAgentApp(
     adminWs1,
     appAgentWs1,
-    aliceApp
+    aliceApp,
   );
   const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
   const alice: Player = {
@@ -487,12 +487,12 @@ test("Local Conductor - create and read an entry using the entry zome, 2 conduct
   const port1 = await conductor1.attachAppInterface();
   const appAgentWs1 = await conductor1.connectAppAgentWs(
     port1,
-    aliceApp.installed_app_id
+    aliceApp.installed_app_id,
   );
   const aliceAppAgent = await enableAndGetAgentApp(
     adminWs1,
     appAgentWs1,
-    aliceApp
+    aliceApp,
   );
   const alice: Player = {
     conductor: conductor1,
