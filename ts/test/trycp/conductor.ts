@@ -586,7 +586,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   await localTryCpServer.stop();
 });
 
-test.only("TryCP Conductor - clone cell management", async (t) => {
+test("TryCP Conductor - clone cell management", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
