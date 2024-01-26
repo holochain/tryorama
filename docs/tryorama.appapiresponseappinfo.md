@@ -16,5 +16,5 @@ export interface AppApiResponseAppInfo
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.appapiresponseappinfo.data.md) |  | AppInfoResponse |  |
-|  [type](./tryorama.appapiresponseappinfo.type.md) |  | "app\_info" |  |
+|  [type](./tryorama.appapiresponseappinfo.type.md) |  | { app\_info: null; } |  |
 

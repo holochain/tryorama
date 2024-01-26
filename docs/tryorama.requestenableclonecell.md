@@ -17,5 +17,5 @@ export interface RequestEnableCloneCell
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.requestenableclonecell.data.md) |  | EnableCloneCellRequest |  |
-|  [type](./tryorama.requestenableclonecell.type.md) |  | "enable\_clone\_cell" |  |
+|  [type](./tryorama.requestenableclonecell.type.md) |  | { enable\_clone\_cell: null; } |  |
 

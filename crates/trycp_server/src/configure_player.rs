@@ -126,7 +126,7 @@ pub(crate) fn configure_player(
         config_file,
         "\
 ---
-environment_path: environment
+data_root_path: environment
 keystore:
     type: lair_server
     connection_url: {}

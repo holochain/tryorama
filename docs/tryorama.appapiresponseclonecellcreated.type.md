@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "clone_cell_created";
+type: {
+        clone_cell_created: null;
+    };
 ```

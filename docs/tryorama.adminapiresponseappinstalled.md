@@ -16,5 +16,5 @@ export interface AdminApiResponseAppInstalled
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponseappinstalled.data.md) |  | AppInfo |  |
-|  [type](./tryorama.adminapiresponseappinstalled.type.md) |  | "app\_installed" |  |
+|  [type](./tryorama.adminapiresponseappinstalled.type.md) |  | { app\_installed: null; } |  |
 

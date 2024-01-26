@@ -16,5 +16,5 @@ export interface AdminApiResponseAppsListed
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponseappslisted.data.md) |  | ListAppsResponse |  |
-|  [type](./tryorama.adminapiresponseappslisted.type.md) |  | "apps\_listed" |  |
+|  [type](./tryorama.adminapiresponseappslisted.type.md) |  | { apps\_listed: null; } |  |
 

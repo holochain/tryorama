@@ -17,5 +17,5 @@ export interface RequestAppInfo
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.requestappinfo.data.md) |  | { installed\_app\_id: string; } |  |
-|  [type](./tryorama.requestappinfo.type.md) |  | "app\_info" |  |
+|  [type](./tryorama.requestappinfo.type.md) |  | { app\_info: null; } |  |
 

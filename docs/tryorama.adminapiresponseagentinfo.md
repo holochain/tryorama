@@ -16,5 +16,5 @@ export interface AdminApiResponseAgentInfo
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponseagentinfo.data.md) |  | AgentInfoResponse |  |
-|  [type](./tryorama.adminapiresponseagentinfo.type.md) |  | "agent\_info" |  |
+|  [type](./tryorama.adminapiresponseagentinfo.type.md) |  | { agent\_info: null; } |  |
 

@@ -32,7 +32,7 @@
     "prepare": "npm run lint",
     "prepublishOnly": "npm run build",
     "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
-    "test": "ts-node-esm ts/test/index.ts",
+    "test": "node --loader ts-node/esm ts/test/index.ts",
     "test:local": "npm run test:local:conductor && npm run test:local:scenario",
     "test:local:conductor": "node --loader ts-node/esm ts/test/local/conductor.ts",
     "test:local:scenario": "node --loader ts-node/esm ts/test/local/scenario.ts",
@@ -42,7 +42,7 @@
     "test:trycp:scenario": "node --loader ts-node/esm ts/test/trycp/scenario.ts"
   },
   "dependencies": {
-    "@holochain/client": "^0.17.0-dev.2",
+    "@holochain/client": "^0.17.0-dev.3",
     "get-port": "^6.1.2",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",

@@ -16,5 +16,5 @@ export interface AdminApiResponseDnasListed
 |  Property | Modifiers | Type | Description |
 |  --- | --- | --- | --- |
 |  [data](./tryorama.adminapiresponsednaslisted.data.md) |  | ListDnasResponse |  |
-|  [type](./tryorama.adminapiresponsednaslisted.type.md) |  | "dnas\_listed" |  |
+|  [type](./tryorama.adminapiresponsednaslisted.type.md) |  | { dnas\_listed: null; } |  |
 
