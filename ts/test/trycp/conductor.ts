@@ -45,7 +45,7 @@ test("TryCP Conductor - stop and restart a conductor", async (t) => {
   await conductor.shutDown();
   await t.rejects(
     conductor.adminWs().generateAgentPubKey,
-    "conductor rejects request after shutdown",
+    "conductor rejects request after shutdown"
   );
 
   await conductor.startUp({});
@@ -69,12 +69,12 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
 
   const aliceApp = await conductor.installApp(
     { path: FIXTURE_HAPP_URL.pathname },
-    { agentPubKey },
+    { agentPubKey }
   );
   t.deepEqual(
     aliceApp.agent_pub_key,
     agentPubKey,
-    "alice's agent pub key matches provided key",
+    "alice's agent pub key matches provided key"
   );
 
   await stopLocalServices(servicesProcess);
@@ -134,7 +134,7 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   t.equal(
     readEntryResponse,
     entryContent,
-    "read entry content matches created entry content",
+    "read entry content matches created entry content"
   );
 
   await stopLocalServices(servicesProcess);
@@ -319,7 +319,7 @@ test("TryCP Conductor - receive a signal", async (t) => {
   t.deepEqual(
     actualSignal.payload,
     testSignal,
-    "received signal matches expected signal",
+    "received signal matches expected signal"
   );
 
   await stopLocalServices(servicesProcess);
@@ -356,11 +356,11 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   const { cell_id } = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
   t.ok(
     Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"),
-    "first part of cell id start with hC0k",
+    "first part of cell id start with hC0k"
   );
   t.ok(
     Buffer.from(cell_id[1]).toString("base64").startsWith("hCAk"),
-    "second part of cell id starts with hC0k",
+    "second part of cell id starts with hC0k"
   );
 
   const enabledAppResponse = await conductor.adminWs().enableApp({
@@ -369,7 +369,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   t.deepEqual(
     enabledAppResponse.app.status,
     { running: null },
-    "enabled app response matches 'running'",
+    "enabled app response matches 'running'"
   );
 
   const { port } = await conductor.adminWs().attachAppInterface();
@@ -377,7 +377,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   t.equal(
     connectAppInterfaceResponse,
     TRYCP_SUCCESS_RESPONSE,
-    "connected app interface responds with success",
+    "connected app interface responds with success"
   );
   const appWs = await conductor.connectAppWs(port);
 
@@ -394,7 +394,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   t.equal(createEntryHash.length, 39, "created entry hash is 39 bytes long");
   t.ok(
     createdEntryHashB64.startsWith("hCkk"),
-    "created entry hash starts with hCkk",
+    "created entry hash starts with hCkk"
   );
 
   const readEntryResponse = await appWs.callZome<typeof entryContent>({
@@ -408,15 +408,16 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   t.equal(
     readEntryResponse,
     entryContent,
-    "read entry content matches created entry content",
+    "read entry content matches created entry content"
   );
 
-  const disconnectAppInterfaceResponse =
-    await conductor.disconnectAppInterface(port);
+  const disconnectAppInterfaceResponse = await conductor.disconnectAppInterface(
+    port
+  );
   t.equal(
     disconnectAppInterfaceResponse,
     TRYCP_SUCCESS_RESPONSE,
-    "disconnect app interface responds with success",
+    "disconnect app interface responds with success"
   );
 
   await stopLocalServices(servicesProcess);
@@ -494,11 +495,11 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     appInfo1.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
   t.ok(
     Buffer.from(cellId1[0]).toString("base64").startsWith("hC0k"),
-    "first part of cell id 1 starts with hC0k",
+    "first part of cell id 1 starts with hC0k"
   );
   t.ok(
     Buffer.from(cellId1[1]).toString("base64").startsWith("hCAk"),
-    "second part of cell id 1 starts with hCAk",
+    "second part of cell id 1 starts with hCAk"
   );
 
   const appId2 = "entry-app2";
@@ -513,16 +514,16 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     appInfo2.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
   t.ok(
     Buffer.from(cellId2[0]).toString("base64").startsWith("hC0k"),
-    "first part of cell id 2 starts with hC0k",
+    "first part of cell id 2 starts with hC0k"
   );
   t.ok(
     Buffer.from(cellId2[1]).toString("base64").startsWith("hCAk"),
-    "second part of cell id 2 starts with hCAk",
+    "second part of cell id 2 starts with hCAk"
   );
   t.deepEqual(
     cellId1[0],
     cellId2[0],
-    "DNA hash of cell 1 matches DNA has of cell 2",
+    "DNA hash of cell 1 matches DNA has of cell 2"
   );
 
   const enabledAppResponse1 = await conductor.adminWs().enableApp({
@@ -531,7 +532,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   t.deepEqual(
     enabledAppResponse1.app.status,
     { running: null },
-    "enabled app response 1 matches 'running'",
+    "enabled app response 1 matches 'running'"
   );
   const enabledAppResponse2 = await conductor.adminWs().enableApp({
     installed_app_id: appId2,
@@ -539,7 +540,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   t.deepEqual(
     enabledAppResponse2.app.status,
     { running: null },
-    "enabled app response 2 matches 'running'",
+    "enabled app response 2 matches 'running'"
   );
 
   const { port } = await conductor.adminWs().attachAppInterface();
@@ -547,7 +548,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   t.equal(
     connectAppInterfaceResponse,
     TRYCP_SUCCESS_RESPONSE,
-    "connect app interface responds with success",
+    "connect app interface responds with success"
   );
   const appWs = await conductor.connectAppWs(port);
 
@@ -564,7 +565,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   t.equal(createEntryHash.length, 39, "created entry hash is 39 bytes long");
   t.ok(
     createdEntryHashB64.startsWith("hCkk"),
-    "created entry hash starts with hCkk",
+    "created entry hash starts with hCkk"
   );
 
   const readEntryResponse = await appWs.callZome<typeof entryContent>({
@@ -578,7 +579,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   t.equal(
     readEntryResponse,
     entryContent,
-    "read entry content matches created entry content",
+    "read entry content matches created entry content"
   );
 
   await stopLocalServices(servicesProcess);
@@ -616,12 +617,12 @@ test("TryCP Conductor - clone cell management", async (t) => {
   t.deepEqual(
     cloneCell.clone_id,
     new CloneId(ROLE_NAME, 0).toString(),
-    "clone id is 'role_name.0'",
+    "clone id is 'role_name.0'"
   );
   t.deepEqual(
     cloneCell.cell_id[1],
     cell_id[1],
-    "agent pub key in clone cell and base cell match",
+    "agent pub key in clone cell and base cell match"
   );
 
   const testContent = "test-content";
@@ -647,7 +648,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
       cap_secret: null,
       provenance: agentPubKey,
     }),
-    "disabled clone cell cannot be called",
+    "disabled clone cell cannot be called"
   );
 
   // TODO: comment back in when network joining error is fixed
@@ -684,7 +685,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
       app_id: appId,
       clone_cell_id: cloneCell.clone_id,
     }),
-    "deleted clone cell cannot be enabled",
+    "deleted clone cell cannot be enabled"
   );
 
   await stopLocalServices(servicesProcess);
@@ -710,12 +711,12 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   await conductor1.connectAppInterface(port1);
   const appAgentWs1 = await conductor1.connectAppAgentWs(
     port1,
-    aliceApp.installed_app_id,
+    aliceApp.installed_app_id
   );
   const aliceAppAgent = await enableAndGetAgentApp(
     adminWs1,
     appAgentWs1,
-    aliceApp,
+    aliceApp
   );
   const alice: TryCpPlayer = {
     conductor: conductor1,
@@ -731,7 +732,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   await conductor2.connectAppInterface(port2);
   const appAgentWs2 = await conductor2.connectAppAgentWs(
     port2,
-    bobApp.installed_app_id,
+    bobApp.installed_app_id
   );
   const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
   const bob: TryCpPlayer = {
@@ -752,7 +753,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   t.equal(createEntryHash.length, 39, "create entry hash is 39 bytes long");
   t.ok(
     createdEntryHashB64.startsWith("hCkk"),
-    "create entry hash starts with hCkk",
+    "create entry hash starts with hCkk"
   );
 
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
@@ -767,7 +768,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   t.equal(
     readEntryResponse,
     entryContent,
-    "read entry content matches created entry content",
+    "read entry content matches created entry content"
   );
 
   await stopLocalServices(servicesProcess);
@@ -791,7 +792,7 @@ test("TryCP Conductor - pass a custom application id to happ installation", asyn
   t.equal(
     actualInstalledAppId,
     expectedInstalledAppId,
-    "installed app id matches",
+    "installed app id matches"
   );
 
   await stopLocalServices(servicesProcess);

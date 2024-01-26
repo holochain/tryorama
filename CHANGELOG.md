@@ -9,7 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
-## 2023-11-22: v0.16.0-dev.2
+## 2024-01-25: v0.16.0-dev.0
 ### Changed
 - Upgrade deps to Holochain v0.3.0
 
