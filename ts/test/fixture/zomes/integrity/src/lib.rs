@@ -9,7 +9,7 @@ pub struct UpdateInput {
     pub content: String,
 }
 
-#[hdk_entry_defs]
+#[hdk_entry_types]
 #[unit_enum(EntryTypesUnit)]
 pub enum EntryTypes {
     Content(Content),
