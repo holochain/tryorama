@@ -275,10 +275,10 @@ export class Conductor implements IConductor {
   }
 
   private async connectAdminWs() {
-    this._adminWs = await AdminWebsocket.connect(
-      this.adminApiUrl,
-      this.timeout
-    );
+    this._adminWs = await AdminWebsocket.connect({
+      url: this.adminApiUrl,
+      defaultTimeout: this.timeout,
+    });
     logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
   }
 
@@ -307,7 +307,10 @@ export class Conductor implements IConductor {
     logger.debug(`connecting App WebSocket to port ${port}\n`);
     const appApiUrl = new URL(this.adminApiUrl.href);
     appApiUrl.port = port.toString();
-    const appWs = await AppWebsocket.connect(appApiUrl, this.timeout);
+    const appWs = await AppWebsocket.connect({
+      url: appApiUrl,
+      defaultTimeout: this.timeout,
+    });
 
     // set up automatic zome call signing
     const callZome = appWs.callZome;
@@ -335,11 +338,10 @@ export class Conductor implements IConductor {
     logger.debug(`connecting App Agent WebSocket to port ${port}\n`);
     const appApiUrl = new URL(HOST_URL.href);
     appApiUrl.port = port.toString();
-    const appAgentWs = await AppAgentWebsocket.connect(
-      appApiUrl,
-      appId,
-      this.timeout
-    );
+    const appAgentWs = await AppAgentWebsocket.connect(appId, {
+      url: appApiUrl,
+      defaultTimeout: this.timeout,
+    });
 
     // set up automatic zome call signing
     const callZome = appAgentWs.callZome.bind(appAgentWs);

@@ -1,6 +1,8 @@
+import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
+import { enableAndGetAgentApp } from "../../src/common.js";
 import {
   createTryCpConductor,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
@@ -13,7 +15,6 @@ import {
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
-import { enableAndGetAgentApp } from "../../src/common.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const createTryCpClient = () => TryCpClient.create(SERVER_URL);
@@ -287,6 +288,7 @@ test("TryCP Server - App API - get app info", async (t) => {
   const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
 
   const appInfo = await appWs.appInfo({ installed_app_id: alice.appId });
+  assert(appInfo);
   t.deepEqual(appInfo.status, { running: null });
 
   await conductor.disconnectAppInterface(port);
