@@ -20,13 +20,13 @@ jobs:
 
     steps:
       - name: Check out source code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Install nix
-        uses: cachix/install-nix-action@v22
+        uses: cachix/install-nix-action@v25
 
       - name: Set up cachix
-        uses: cachix/cachix-action@v12
+        uses: cachix/cachix-action@v14
         with:
           name: holochain-ci
 
@@ -34,7 +34,7 @@ jobs:
         run: nix develop -c $SHELL -c "echo Nix packages built"
 
       - name: Restore TryCP server build
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: crates/trycp_server/target
           key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
@@ -43,13 +43,13 @@ jobs:
         run: nix develop -c $SHELL -c "./build-trycp.sh"
 
       - name: Save TryCP build to cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: crates/trycp_server/target
           key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
       - name: Restore test zome build
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: |
             .cargo
@@ -60,7 +60,7 @@ jobs:
         run: nix develop -c $SHELL -c "./build-fixture.sh"
 
       - name: Save test zome build to cache
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: |
             .cargo

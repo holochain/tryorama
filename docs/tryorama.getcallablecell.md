@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [getCallableCell](./tryorama.getcallablecell.md)
 
-## getCallableCell variable
+## getCallableCell() function
 
 Create curried version of `callZome` function for a specific cell.
 
@@ -24,3 +24,17 @@ getCallableCell: (appWs: IAppWebsocket | IAppAgentWebsocket, cell: ClonedCell | 
     name: string;
 }
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  appWs | [IAppWebsocket](./tryorama.iappwebsocket.md) \| [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md) | App websocket to use for calling zome. |
+|  cell | ClonedCell \| ProvisionedCell | Cell to bind zome call function to. |
+
+**Returns:**
+
+{ callZome: &lt;T&gt;(request: [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)<!-- -->, timeout?: number) =&gt; Promise&lt;T&gt;; cell\_id: import("@holochain/client").CellId; clone\_id: string; original\_dna\_hash: Uint8Array; dna\_modifiers: import("@holochain/client").DnaModifiers; name: string; enabled: boolean; } \| { callZome: &lt;T&gt;(request: [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)<!-- -->, timeout?: number) =&gt; Promise&lt;T&gt;; cell\_id: import("@holochain/client").CellId; dna\_modifiers: import("@holochain/client").DnaModifiers; name: string; }
+
+A callable cell.
+

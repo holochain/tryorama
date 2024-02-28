@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [cleanAllConductors](./tryorama.cleanallconductors.md)
 
-## cleanAllConductors variable
+## cleanAllConductors() function
 
 Run the `hc` command to delete all conductor data.
 
@@ -11,3 +11,9 @@ Run the `hc` command to delete all conductor data.
 ```typescript
 cleanAllConductors: () => Promise<void>
 ```
+**Returns:**
+
+Promise&lt;void&gt;
+
+A promise that resolves when the command is complete.
+

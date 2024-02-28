@@ -33,6 +33,7 @@ import {
   GrantedFunctions,
   GrantedFunctionsType,
   GrantZomeCallCapabilityRequest,
+  HolochainError,
   InstallAppRequest,
   InstalledAppId,
   ListAppsRequest,
@@ -936,6 +937,12 @@ export class TryCpConductor implements IConductor {
 
     const callZome = appWs.callZome.bind(appWs);
     appWs.callZome = async (request: AppAgentCallZomeRequest) => {
+      if (!cachedAppInfo) {
+        throw new HolochainError(
+          "AppNotFound",
+          `App info not found for the provided id "${appId}". App needs to be installed and enabled.`
+        );
+      }
       if ("role_name" in request && request.role_name) {
         const cell_id = this.getCellIdFromRoleName(
           request.role_name,
@@ -944,7 +951,6 @@ export class TryCpConductor implements IConductor {
 
         const zomeCallPayload = {
           ...request,
-          // ...omit(request, "role_name"),
           provenance: cachedAppInfo.agent_pub_key,
           cell_id,
         };

@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [createTryCpConductor](./tryorama.createtrycpconductor.md)
 
-## createTryCpConductor variable
+## createTryCpConductor() function
 
 The function to create a TryCP Conductor. By default configures and starts it.
 
@@ -11,3 +11,17 @@ The function to create a TryCP Conductor. By default configures and starts it.
 ```typescript
 createTryCpConductor: (tryCpClient: TryCpClient, options?: TryCpConductorOptions) => Promise<TryCpConductor>
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the conductor. |
+|  options | [TryCpConductorOptions](./tryorama.trycpconductoroptions.md) | _(Optional)_ |
+
+**Returns:**
+
+Promise&lt;[TryCpConductor](./tryorama.trycpconductor.md)<!-- -->&gt;
+
+A conductor instance.
+

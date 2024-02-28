@@ -29,6 +29,26 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 |  --- | --- |
 |  [NetworkType](./tryorama.networktype.md) | The network type the conductor should use to communicate with peers. |
 
+## Functions
+
+|  Function | Description |
+|  --- | --- |
+|  [addAllAgentsToAllConductors(conductors)](./tryorama.addallagentstoallconductors.md) | Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping. |
+|  [areConductorCellsDhtsSynced(conductorCells)](./tryorama.areconductorcellsdhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
+|  [areDhtsSynced(players, dnaHash)](./tryorama.aredhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
+|  [cleanAllConductors()](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
+|  [conductorCellsDhtSync(conductorCells, interval, timeout)](./tryorama.conductorcellsdhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
+|  [createConductor(signalingServerUrl, options)](./tryorama.createconductor.md) | The function to create a conductor. It starts a sandbox conductor via the Holochain CLI. |
+|  [createTryCpConductor(tryCpClient, options)](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor. By default configures and starts it. |
+|  [dhtSync(players, dnaHash, interval, timeout)](./tryorama.dhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
+|  [enableAndGetAgentApp(adminWs, appWs, appInfo)](./tryorama.enableandgetagentapp.md) | Enable an app and build an agent app object. |
+|  [getCallableCell(appWs, cell)](./tryorama.getcallablecell.md) | Create curried version of <code>callZome</code> function for a specific cell. |
+|  [getZomeCaller(cell, zomeName)](./tryorama.getzomecaller.md) | Get a shorthand function to call a cell's zome. |
+|  [pause(milliseconds)](./tryorama.pause.md) | A utility function to wait the given amount of time. |
+|  [runLocalServices()](./tryorama.runlocalservices.md) | Spawn a signalling server to enable connections between conductors. |
+|  [runScenario(testScenario, cleanUp, options)](./tryorama.runscenario.md) | A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running. |
+|  [stopLocalServices(localServicesProcess)](./tryorama.stoplocalservices.md) | Shutdown signalling server process. |
+
 ## Interfaces
 
 |  Interface | Description |
@@ -99,22 +119,7 @@ TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable r
 
 |  Variable | Description |
 |  --- | --- |
-|  [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md) | Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping. |
-|  [areConductorCellsDhtsSynced](./tryorama.areconductorcellsdhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
-|  [areDhtsSynced](./tryorama.aredhtssynced.md) | A utility function to compare conductors' integrated DhtOps. |
-|  [cleanAllConductors](./tryorama.cleanallconductors.md) | Run the <code>hc</code> command to delete all conductor data. |
-|  [conductorCellsDhtSync](./tryorama.conductorcellsdhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
-|  [createConductor](./tryorama.createconductor.md) | The function to create a conductor. It starts a sandbox conductor via the Holochain CLI. |
-|  [createTryCpConductor](./tryorama.createtrycpconductor.md) | The function to create a TryCP Conductor. By default configures and starts it. |
 |  [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md) | The default partial config for a TryCP conductor. |
-|  [dhtSync](./tryorama.dhtsync.md) | A utility function to wait until all conductors' integrated DhtOps are identical for a DNA. |
-|  [enableAndGetAgentApp](./tryorama.enableandgetagentapp.md) | Enable an app and build an agent app object. |
-|  [getCallableCell](./tryorama.getcallablecell.md) | Create curried version of <code>callZome</code> function for a specific cell. |
-|  [getZomeCaller](./tryorama.getzomecaller.md) | Get a shorthand function to call a cell's zome. |
-|  [pause](./tryorama.pause.md) | A utility function to wait the given amount of time. |
-|  [runLocalServices](./tryorama.runlocalservices.md) | Spawn a signalling server to enable connections between conductors. |
-|  [runScenario](./tryorama.runscenario.md) | A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running. |
-|  [stopLocalServices](./tryorama.stoplocalservices.md) | Shutdown signalling server process. |
 |  [TRYCP\_SERVER\_HOST](./tryorama.trycp_server_host.md) | Default TryCP server host address. |
 |  [TRYCP\_SERVER\_PORT](./tryorama.trycp_server_port.md) | Default TryCP server port. |
 |  [TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md) | Empty success response. |

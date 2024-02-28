@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [areConductorCellsDhtsSynced](./tryorama.areconductorcellsdhtssynced.md)
 
-## areConductorCellsDhtsSynced variable
+## areConductorCellsDhtsSynced() function
 
 A utility function to compare conductors' integrated DhtOps.
 
@@ -11,3 +11,16 @@ A utility function to compare conductors' integrated DhtOps.
 ```typescript
 areConductorCellsDhtsSynced: (conductorCells: IConductorCell[]) => Promise<boolean>
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  conductorCells | [IConductorCell](./tryorama.iconductorcell.md)<!-- -->\[\] | Array of ConductorCells |
+
+**Returns:**
+
+Promise&lt;boolean&gt;
+
+A promise that is resolved after conductors' Integrated DhtOps match.
+
