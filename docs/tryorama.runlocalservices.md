@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [runLocalServices](./tryorama.runlocalservices.md)
 
-## runLocalServices variable
+## runLocalServices() function
 
 Spawn a signalling server to enable connections between conductors.
 
@@ -15,3 +15,7 @@ runLocalServices: () => Promise<{
     signalingServerUrl: URL;
 }>
 ```
+**Returns:**
+
+Promise&lt;{ servicesProcess: ChildProcessWithoutNullStreams; bootstrapServerUrl: URL; signalingServerUrl: URL; }&gt;
+

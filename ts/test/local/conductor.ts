@@ -100,6 +100,7 @@ test("Local Conductor - get app info with app ws", async (t) => {
   const appInfo = await appWs.appInfo({
     installed_app_id: app.installed_app_id,
   });
+  assert(appInfo);
   t.deepEqual(appInfo.status, { running: null });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);

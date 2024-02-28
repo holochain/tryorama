@@ -1,5 +1,6 @@
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
+import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
 import {
   createTryCpConductor,
@@ -287,6 +288,7 @@ test("TryCP Server - App API - get app info", async (t) => {
   const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
 
   const appInfo = await appWs.appInfo({ installed_app_id: alice.appId });
+  assert(appInfo);
   t.deepEqual(appInfo.status, { running: null });
 
   await conductor.disconnectAppInterface(port);

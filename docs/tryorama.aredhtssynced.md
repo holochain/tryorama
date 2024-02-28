@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [areDhtsSynced](./tryorama.aredhtssynced.md)
 
-## areDhtsSynced variable
+## areDhtsSynced() function
 
 A utility function to compare conductors' integrated DhtOps.
 
@@ -11,3 +11,17 @@ A utility function to compare conductors' integrated DhtOps.
 ```typescript
 areDhtsSynced: (players: IPlayer[], dnaHash: DnaHash) => Promise<boolean>
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  players | [IPlayer](./tryorama.iplayer.md)<!-- -->\[\] |  |
+|  dnaHash | DnaHash |  |
+
+**Returns:**
+
+Promise&lt;boolean&gt;
+
+A promise that is resolved after conductors' Integrated DhtOps match.
+

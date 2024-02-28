@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [dhtSync](./tryorama.dhtsync.md)
 
-## dhtSync variable
+## dhtSync() function
 
 A utility function to wait until all conductors' integrated DhtOps are identical for a DNA.
 
@@ -11,3 +11,19 @@ A utility function to wait until all conductors' integrated DhtOps are identical
 ```typescript
 dhtSync: (players: IPlayer[], dnaHash: DnaHash, interval?: number, timeout?: number) => Promise<void>
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  players | [IPlayer](./tryorama.iplayer.md)<!-- -->\[\] | Array of players. |
+|  dnaHash | DnaHash | DNA hash to compare integrated DhtOps from. |
+|  interval | number | _(Optional)_ Interval to pause between comparisons (defaults to 50 ms). |
+|  timeout | number | _(Optional)_ A timeout for the delay (optional). |
+
+**Returns:**
+
+Promise&lt;void&gt;
+
+A promise that is resolved after all agents' DHT states match.
+
