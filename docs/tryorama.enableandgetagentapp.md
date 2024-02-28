@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [enableAndGetAgentApp](./tryorama.enableandgetagentapp.md)
 
-## enableAndGetAgentApp variable
+## enableAndGetAgentApp() function
 
 Enable an app and build an agent app object.
 
@@ -11,3 +11,18 @@ Enable an app and build an agent app object.
 ```typescript
 enableAndGetAgentApp: (adminWs: IAdminWebsocket, appWs: IAppWebsocket | IAppAgentWebsocket, appInfo: AppInfo) => Promise<AgentApp>
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  adminWs | [IAdminWebsocket](./tryorama.iadminwebsocket.md) | The admin websocket to use for admin requests. |
+|  appWs | [IAppWebsocket](./tryorama.iappwebsocket.md) \| [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md) | The app websocket to use for app requests. |
+|  appInfo | AppInfo | The app info of the app to enable. |
+
+**Returns:**
+
+Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->&gt;
+
+An app agent object.
+

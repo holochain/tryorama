@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [pause](./tryorama.pause.md)
 
-## pause variable
+## pause() function
 
 A utility function to wait the given amount of time.
 
@@ -11,3 +11,16 @@ A utility function to wait the given amount of time.
 ```typescript
 pause: (milliseconds: number) => Promise<unknown>
 ```
+
+## Parameters
+
+|  Parameter | Type | Description |
+|  --- | --- | --- |
+|  milliseconds | number | The number of milliseconds to wait. |
+
+**Returns:**
+
+Promise&lt;unknown&gt;
+
+A promise that is resolved after the given amount of milliseconds.
+
