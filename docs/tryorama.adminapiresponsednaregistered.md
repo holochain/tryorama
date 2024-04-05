@@ -13,8 +13,59 @@ export interface AdminApiResponseDnaRegistered
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.adminapiresponsednaregistered.data.md) |  | HoloHash |  |
-|  [type](./tryorama.adminapiresponsednaregistered.type.md) |  | { dna\_registered: null; } |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.adminapiresponsednaregistered.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+HoloHash
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.adminapiresponsednaregistered.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+{ dna\_registered: null; }
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

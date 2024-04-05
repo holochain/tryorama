@@ -15,7 +15,42 @@ export interface Player extends IPlayer
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [conductor](./tryorama.player.conductor.md) |  | [Conductor](./tryorama.conductor.md) |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[conductor](./tryorama.player.conductor.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[Conductor](./tryorama.conductor.md)
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

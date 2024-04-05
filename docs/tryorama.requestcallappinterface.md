@@ -14,9 +14,76 @@ export interface RequestCallAppInterface
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [message](./tryorama.requestcallappinterface.message.md) |  | [RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md) |  |
-|  [port](./tryorama.requestcallappinterface.port.md) |  | number |  |
-|  [type](./tryorama.requestcallappinterface.type.md) |  | "call\_app\_interface" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[message](./tryorama.requestcallappinterface.message.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md)
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[port](./tryorama.requestcallappinterface.port.md)
+
+
+</td><td>
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestcallappinterface.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"call\_app\_interface"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

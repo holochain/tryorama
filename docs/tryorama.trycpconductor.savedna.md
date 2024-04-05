@@ -14,10 +14,39 @@ saveDna(dnaContent: Buffer): Promise<string>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  dnaContent | Buffer | The DNA as binary content. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+dnaContent
+
+
+</td><td>
+
+Buffer
+
+
+</td><td>
+
+The DNA as binary content.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;string&gt;

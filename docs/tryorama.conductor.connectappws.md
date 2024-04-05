@@ -14,10 +14,39 @@ connectAppWs(port: number): Promise<AppWebsocket>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number | The websocket port to connect to. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+The websocket port to connect to.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;AppWebsocket&gt;

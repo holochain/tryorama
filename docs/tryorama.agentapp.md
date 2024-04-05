@@ -14,10 +14,93 @@ export interface AgentApp
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [agentPubKey](./tryorama.agentapp.agentpubkey.md) |  | Uint8Array |  |
-|  [appId](./tryorama.agentapp.appid.md) |  | string |  |
-|  [cells](./tryorama.agentapp.cells.md) |  | [CallableCell](./tryorama.callablecell.md)<!-- -->\[\] |  |
-|  [namedCells](./tryorama.agentapp.namedcells.md) |  | Map&lt;RoleName, [CallableCell](./tryorama.callablecell.md)<!-- -->&gt; |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[agentPubKey](./tryorama.agentapp.agentpubkey.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Uint8Array
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[appId](./tryorama.agentapp.appid.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[cells](./tryorama.agentapp.cells.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[CallableCell](./tryorama.callablecell.md)<!-- -->\[\]
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[namedCells](./tryorama.agentapp.namedcells.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Map&lt;RoleName, [CallableCell](./tryorama.callablecell.md)<!-- -->&gt;
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

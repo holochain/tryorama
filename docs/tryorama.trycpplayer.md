@@ -15,7 +15,42 @@ export interface TryCpPlayer extends IPlayer
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [conductor](./tryorama.trycpplayer.conductor.md) |  | [TryCpConductor](./tryorama.trycpconductor.md) |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[conductor](./tryorama.trycpplayer.conductor.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[TryCpConductor](./tryorama.trycpconductor.md)
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

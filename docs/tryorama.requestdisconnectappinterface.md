@@ -14,8 +14,59 @@ export interface RequestDisconnectAppInterface
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [port](./tryorama.requestdisconnectappinterface.port.md) |  | number |  |
-|  [type](./tryorama.requestdisconnectappinterface.type.md) |  | "disconnect\_app\_interface" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[port](./tryorama.requestdisconnectappinterface.port.md)
+
+
+</td><td>
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestdisconnectappinterface.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"disconnect\_app\_interface"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

@@ -14,12 +14,71 @@ runScenario: (testScenario: (scenario: Scenario) => Promise<void>, cleanUp?: boo
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  testScenario | (scenario: [Scenario](./tryorama.scenario.md)<!-- -->) =&gt; Promise&lt;void&gt; | The test to be run. |
-|  cleanUp | boolean | _(Optional)_ Whether to delete conductors after running. |
-|  options | [ScenarioOptions](./tryorama.scenariooptions.md) | _(Optional)_ |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+testScenario
+
+
+</td><td>
+
+(scenario: [Scenario](./tryorama.scenario.md)<!-- -->) =&gt; Promise&lt;void&gt;
+
+
+</td><td>
+
+The test to be run.
+
+
+</td></tr>
+<tr><td>
+
+cleanUp
+
+
+</td><td>
+
+boolean
+
+
+</td><td>
+
+_(Optional)_ Whether to delete conductors after running.
+
+
+</td></tr>
+<tr><td>
+
+options
+
+
+</td><td>
+
+[ScenarioOptions](./tryorama.scenariooptions.md)
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;void&gt;

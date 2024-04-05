@@ -14,8 +14,48 @@ export declare enum NetworkType
 
 ## Enumeration Members
 
-|  Member | Value | Description |
-|  --- | --- | --- |
-|  Mem | <code>&quot;mem&quot;</code> |  |
-|  WebRtc | <code>&quot;webrtc&quot;</code> |  |
+<table><thead><tr><th>
 
+Member
+
+
+</th><th>
+
+Value
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+Mem
+
+
+</td><td>
+
+`"mem"`
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+WebRtc
+
+
+</td><td>
+
+`"webrtc"`
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

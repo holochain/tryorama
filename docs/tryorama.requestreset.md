@@ -14,7 +14,42 @@ export interface RequestReset
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [type](./tryorama.requestreset.type.md) |  | "reset" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[type](./tryorama.requestreset.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"reset"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

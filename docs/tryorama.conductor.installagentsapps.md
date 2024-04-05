@@ -14,10 +14,37 @@ installAgentsApps(options: AgentsAppsOptions): Promise<import("@holochain/client
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  options | [AgentsAppsOptions](./tryorama.agentsappsoptions.md) |  |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+options
+
+
+</td><td>
+
+[AgentsAppsOptions](./tryorama.agentsappsoptions.md)
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;import("@holochain/client").AppInfo\[\]&gt;

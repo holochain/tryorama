@@ -14,8 +14,59 @@ export interface IConductorCell
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [cellId](./tryorama.iconductorcell.cellid.md) |  | CellId |  |
-|  [conductor](./tryorama.iconductorcell.conductor.md) |  | [IConductor](./tryorama.iconductor.md) |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[cellId](./tryorama.iconductorcell.cellid.md)
+
+
+</td><td>
+
+
+</td><td>
+
+CellId
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[conductor](./tryorama.iconductorcell.conductor.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[IConductor](./tryorama.iconductor.md)
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
