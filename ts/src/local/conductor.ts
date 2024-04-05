@@ -20,6 +20,7 @@ import { v4 as uuidv4 } from "uuid";
 
 import { makeLogger } from "../logger.js";
 import { AgentsAppsOptions, AppOptions, IConductor } from "../types.js";
+import { ALLOWED_ORIGIN } from "../common.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -114,7 +115,6 @@ export class Conductor implements IConductor {
   private adminApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
-  private _appAgentWs: AppAgentWebsocket | undefined;
   private readonly timeout: number;
 
   private constructor(timeout?: number) {
@@ -123,7 +123,6 @@ export class Conductor implements IConductor {
     this.adminApiUrl = new URL(HOST_URL.href);
     this._adminWs = undefined;
     this._appWs = undefined;
-    this._appAgentWs = undefined;
     this.timeout = timeout ?? DEFAULT_TIMEOUT;
   }
 
@@ -277,6 +276,7 @@ export class Conductor implements IConductor {
   private async connectAdminWs() {
     this._adminWs = await AdminWebsocket.connect({
       url: this.adminApiUrl,
+      wsClientOptions: { origin: ALLOWED_ORIGIN },
       defaultTimeout: this.timeout,
     });
     logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
@@ -291,6 +291,7 @@ export class Conductor implements IConductor {
   async attachAppInterface(request?: AttachAppInterfaceRequest) {
     request = request ?? {
       port: await getPort({ port: portNumbers(30000, 40000) }),
+      allowed_origins: ALLOWED_ORIGIN,
     };
     logger.debug(`attaching App API to port ${request.port}\n`);
     const { port } = await this.adminWs().attachAppInterface(request);
@@ -309,6 +310,7 @@ export class Conductor implements IConductor {
     appApiUrl.port = port.toString();
     const appWs = await AppWebsocket.connect({
       url: appApiUrl,
+      wsClientOptions: { origin: ALLOWED_ORIGIN },
       defaultTimeout: this.timeout,
     });
 
@@ -340,6 +342,7 @@ export class Conductor implements IConductor {
     appApiUrl.port = port.toString();
     const appAgentWs = await AppAgentWebsocket.connect(appId, {
       url: appApiUrl,
+      wsClientOptions: { origin: ALLOWED_ORIGIN },
       defaultTimeout: this.timeout,
     });
 
