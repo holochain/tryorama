@@ -114,7 +114,7 @@ struct RequestWrapper {
     request: Request,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 enum Request {
@@ -251,6 +251,7 @@ async fn ws_message(
         id: request_id,
         request,
     } = rmp_serde::from_slice(&bytes).context(DeserializeRequestWrapper { bytes })?;
+    println!("incoming request {request:?}");
 
     let response = match request {
         Request::SaveDna { id, content } => spawn_blocking(move || {
@@ -324,7 +325,7 @@ type WsRequestWriter =
 
 type WsResponseWriter = futures::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
 
-type WsClientDuplex = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
+type WsClientDuplex = WebSocketStream<tokio::net::TcpStream>;
 
 type WsReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
 

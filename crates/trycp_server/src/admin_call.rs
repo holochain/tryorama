@@ -1,20 +1,22 @@
+use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
 use futures::{SinkExt, StreamExt};
 use snafu::{OptionExt, ResultExt, Snafu};
 use tokio::task::spawn_blocking;
 use tokio_tungstenite::tungstenite::{
     self,
-    protocol::{frame::coding::CloseCode, CloseFrame},
+    handshake::client::Request,
+    protocol::{frame::coding::CloseCode, CloseFrame, WebSocketConfig},
     Message,
 };
-
-use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
 
 #[derive(Debug, Snafu)]
 pub(crate) enum AdminCallError {
     #[snafu(display("Could not find a configuration for player with ID {:?}", id))]
     PlayerNotConfigured { id: String },
+    #[snafu(display("Could not establish a tcp connection: {}", source))]
+    TcpConnect { source: std::io::Error },
     #[snafu(display("Could not establish a websocket connection: {}", source))]
-    Connect { source: tungstenite::Error },
+    WsConnect { source: tungstenite::Error },
     #[snafu(context(false))]
     Call { source: CallError },
 }
@@ -28,14 +30,29 @@ pub(crate) async fn admin_call(id: String, message: Vec<u8>) -> Result<Vec<u8>, 
         .unwrap()
         .context(PlayerNotConfigured { id })?;
 
-    let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
-    url.set_port(Some(port)).expect("can set port on localhost");
-
-    println!("Established admin interface with {}", url);
-
-    let (mut ws_stream, _resp) = tokio_tungstenite::connect_async(url)
+    let addr = format!("127.0.0.1:{port}");
+    let stream = tokio::net::TcpStream::connect(addr.clone())
         .await
-        .context(Connect)?;
+        .context(TcpConnect)?;
+    let uri = format!("ws://{}", addr);
+    let request = Request::builder()
+        .uri(uri.clone())
+        // needed for admin websocket connection to be accepted
+        .header("origin", "trycp-admin")
+        .body(())
+        .expect("request to be valid");
+
+    println!("Establishing admin interface with {:?}", uri);
+
+    let (mut ws_stream, _) = tokio_tungstenite::client_async_with_config(
+        request,
+        stream,
+        Some(WebSocketConfig::default()),
+    )
+    .await
+    .context(WsConnect)?;
+
+    println!("Established admin interface");
 
     let call_result = call(&mut ws_stream, 0, message).await;
     let _ = ws_stream
