@@ -2,7 +2,7 @@ import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
-import { enableAndGetAgentApp } from "../../src/common.js";
+import { ALLOWED_ORIGIN, enableAndGetAgentApp } from "../../src/common.js";
 import {
   createTryCpConductor,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
@@ -252,7 +252,9 @@ test("TryCP Server - Admin API - connect app interface", async (t) => {
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
 
-  const { port } = await conductor.adminWs().attachAppInterface();
+  const { port } = await conductor
+    .adminWs()
+    .attachAppInterface({ allowed_origins: ALLOWED_ORIGIN });
   t.ok(typeof port === "number");
 
   const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
@@ -282,7 +284,9 @@ test("TryCP Server - App API - get app info", async (t) => {
     path: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
-  const { port } = await adminWs.attachAppInterface();
+  const { port } = await adminWs.attachAppInterface({
+    allowed_origins: ALLOWED_ORIGIN,
+  });
   await conductor.connectAppInterface(port);
   const appWs = await conductor.connectAppWs(port);
   const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);

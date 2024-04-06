@@ -1,7 +1,6 @@
 use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
 use futures::{SinkExt, StreamExt};
 use snafu::{OptionExt, ResultExt, Snafu};
-use tokio::task::spawn_blocking;
 use tokio_tungstenite::tungstenite::{
     self,
     handshake::client::Request,
@@ -24,10 +23,10 @@ pub(crate) enum AdminCallError {
 pub(crate) async fn admin_call(id: String, message: Vec<u8>) -> Result<Vec<u8>, AdminCallError> {
     println!("admin_interface_call id: {:?}", id);
 
-    let id2 = id.clone();
-    let port = spawn_blocking(move || PLAYERS.read().get(&id2).map(|player| player.admin_port))
-        .await
-        .unwrap()
+    let port = PLAYERS
+        .read()
+        .get(&id)
+        .map(|player| player.admin_port)
         .context(PlayerNotConfigured { id })?;
 
     let addr = format!("127.0.0.1:{port}");

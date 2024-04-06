@@ -4,6 +4,8 @@ use futures::{future, SinkExt, StreamExt, TryStreamExt};
 use once_cell::sync::Lazy;
 use slab::Slab;
 use snafu::{IntoError, OptionExt, ResultExt, Snafu};
+use tokio_tungstenite::tungstenite::handshake::client::Request;
+use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
 use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
 use tokio_tungstenite::tungstenite::{protocol::frame::coding::CloseCode, Message};
 
@@ -26,11 +28,13 @@ type PendingRequests = Arc<futures::lock::Mutex<Slab<u64>>>;
 
 #[derive(Debug, Snafu)]
 pub(crate) enum ConnectError {
+    #[snafu(display("Could not establish a tcp connection to app interface: {}", source))]
+    TcpConnect { source: std::io::Error },
     #[snafu(display(
         "Could not establish a websocket connection to app interface: {}",
         source
     ))]
-    Connect { source: tungstenite::Error },
+    WsConnect { source: tungstenite::Error },
 }
 
 pub(crate) async fn connect(
@@ -44,12 +48,27 @@ pub(crate) async fn connect(
         return Ok(());
     }
 
-    let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
-    url.set_port(Some(port)).expect("can set port on localhost");
-
-    let (ws_stream, _resp) = tokio_tungstenite::connect_async(url)
+    let addr = format!("127.0.0.1:{port}");
+    let stream = tokio::net::TcpStream::connect(addr.clone())
         .await
-        .context(Connect)?;
+        .context(TcpConnect)?;
+    let uri = format!("ws://{}", addr);
+    let request = Request::builder()
+        .uri(uri.clone())
+        // needed for admin websocket connection to be accepted
+        .header("origin", "tryorama-interface")
+        .body(())
+        .expect("request to be valid");
+
+    println!("Establishing app interface with {:?}", uri);
+
+    let (ws_stream, _) = tokio_tungstenite::client_async_with_config(
+        request,
+        stream,
+        Some(WebSocketConfig::default()),
+    )
+    .await
+    .context(WsConnect)?;
 
     let (request_writer, read) = ws_stream.split();
 
