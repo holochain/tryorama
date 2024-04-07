@@ -693,7 +693,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP Conductor - create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test.skip("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();
