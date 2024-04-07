@@ -7,6 +7,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- Upgrade to latest JS client.
+  - Set allowed origins for admin websockets in Tryorama conductors and when attaching app websockets.
+  - Pass origin when connecting admin and app websockets.
 ### Fixed
 
 ## 2024-02-28: v0.16.0-dev.1
