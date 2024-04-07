@@ -42,7 +42,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@holochain/client": "^0.17.0-dev.7",
+    "@holochain/client": "^0.17.0-dev.8",
     "get-port": "^6.1.2",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",
@@ -67,11 +67,9 @@
     "eslint-plugin-tsdoc": "^0.2.17",
     "prettier": "^2.8.1",
     "rimraf": "^3.0.2",
-    "sinon": "^7.5.0",
     "tape": "^5.7.5",
     "tape-promise": "^4.0.0",
     "tsx": "^4.7.2",
-    "typescript": "^4.9.4",
-    "vitest": "^0.33.0"
+    "typescript": "^4.9.4"
   }
 }
