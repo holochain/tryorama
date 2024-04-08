@@ -197,6 +197,7 @@ export class TryCpConductor implements IConductor {
         (this.tryCpClient.signalingServerUrl || HOLO_SIGNALING_SERVER).href
       );
     }
+    console.log("partialConfig", partialConfig);
     const response = await this.tryCpClient.call({
       type: "configure_player",
       id: this.id,
