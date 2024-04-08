@@ -22,6 +22,6 @@ serde_bytes = "0.11"
 slab = "0.4"
 snafu = "0.6"
 structopt = "0.2"
-tokio = { version = "1.24", features = ["macros", "rt-multi-thread", "process", "fs", "sync"]}
+tokio = { version = "1.24", features = ["macros", "rt-multi-thread", "process", "fs"]}
 tokio-tungstenite = "0.14"
 url = "2"
