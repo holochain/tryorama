@@ -119,15 +119,19 @@ pub(crate) async fn listen(
     pending_requests: PendingRequests,
     response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
 ) -> Result<(), ListenError> {
-    reader
+    let result = reader
         .map_err(|e| Read.into_error(e))
         .try_for_each(|holochain_message| async {
             let bytes = match holochain_message {
                 Message::Binary(bytes) => bytes,
+                Message::Ping(p) => {
+                    response_writer.lock().await.send(Message::Pong(p)).await.context(SendResponse)?;
+                    return Ok(());
+                },
                 message => return UnexpectedMessageType { message }.fail(),
             };
 
-            let deserialized: HolochainMessage =rmp_serde::from_slice(&bytes).context(DeserializeMessage { bytes })?;
+            let deserialized: HolochainMessage = rmp_serde::from_slice(&bytes).context(DeserializeMessage { bytes })?;
 
             match deserialized {
                 HolochainMessage::Response { id, data } => {
@@ -153,7 +157,9 @@ pub(crate) async fn listen(
 
             Ok(())
         })
-        .await
+        .await;
+    println!("App listener closed: {:?}", result);
+    Ok(())
 }
 
 #[derive(Debug, Snafu)]
