@@ -473,7 +473,7 @@ test("Local Conductor - 2 agent apps test", async (t) => {
   await cleanAllConductors();
 });
 
-test.only("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agents", async (t) => {
+test("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agents", async (t) => {
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();
   const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
