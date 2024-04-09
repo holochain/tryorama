@@ -1,6 +1,7 @@
 use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
 use futures::{SinkExt, StreamExt};
 use snafu::{OptionExt, ResultExt, Snafu};
+use tokio::time::error::Elapsed;
 use tokio_tungstenite::tungstenite::{
     self,
     handshake::client::Request,
@@ -74,6 +75,8 @@ pub(crate) enum CallError {
     ReceiveResponse { source: tungstenite::Error },
     #[snafu(display("Expected a binary response, got {:?}", response))]
     UnexpectedResponseType { response: Message },
+    #[snafu(display("Timeout while making call"))]
+    ResponseTimeout { source: Elapsed },
     #[snafu(display(
         "Could not deserialize response {:?} as MessagePack: {}",
         response,
@@ -103,19 +106,29 @@ async fn call(
         .await
         .context(SendRequest)?;
 
-    let ws_message = ws_stream
-        .next()
-        .await
-        .context(NoResponse)?
-        .context(ReceiveResponse)?;
-    let ws_data = if let Message::Binary(ws_data) = ws_message {
-        ws_data
-    } else {
-        return UnexpectedResponseType {
-            response: ws_message,
+    let ws_data = tokio::time::timeout(std::time::Duration::from_secs(30), async move {
+        loop {
+            let ws_message = ws_stream
+                .next()
+                .await
+                .context(NoResponse)?
+                .context(ReceiveResponse)?;
+            match ws_message {
+                Message::Close(_) => {
+                    return Err(CallError::NoResponse)
+                }
+                Message::Binary(ws_data) => {
+                    return Ok(ws_data);
+                }
+                Message::Ping(p) => {
+                    ws_stream.send(Message::Pong(p)).await.context(SendRequest)?;
+                }
+                _ => {
+                    return Err(CallError::UnexpectedResponseType { response: ws_message });
+                }
+            }
         }
-        .fail();
-    };
+    }).await.context(ResponseTimeout)??;
 
     let message: HolochainMessage = rmp_serde::from_slice(&ws_data)
         .with_context(|| DeserializeResponse { response: ws_data })?;
