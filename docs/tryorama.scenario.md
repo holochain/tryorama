@@ -14,28 +14,248 @@ export declare class Scenario
 
 ## Constructors
 
-|  Constructor | Modifiers | Description |
-|  --- | --- | --- |
-|  [(constructor)(options)](./tryorama.scenario._constructor_.md) |  | Scenario constructor. |
+<table><thead><tr><th>
+
+Constructor
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[(constructor)(options)](./tryorama.scenario._constructor_.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Scenario constructor.
+
+
+</td></tr>
+</tbody></table>
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [bootstrapServerUrl](./tryorama.scenario.bootstrapserverurl.md) |  | URL \| undefined |  |
-|  [conductors](./tryorama.scenario.conductors.md) |  | [Conductor](./tryorama.conductor.md)<!-- -->\[\] |  |
-|  [networkSeed](./tryorama.scenario.networkseed.md) |  | string |  |
-|  [serviceProcess](./tryorama.scenario.serviceprocess.md) |  | ChildProcessWithoutNullStreams \| undefined |  |
-|  [signalingServerUrl](./tryorama.scenario.signalingserverurl.md) |  | URL \| undefined |  |
+<table><thead><tr><th>
+
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[bootstrapServerUrl](./tryorama.scenario.bootstrapserverurl.md)
+
+
+</td><td>
+
+
+</td><td>
+
+URL \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[conductors](./tryorama.scenario.conductors.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[Conductor](./tryorama.conductor.md)<!-- -->\[\]
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[networkSeed](./tryorama.scenario.networkseed.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[serviceProcess](./tryorama.scenario.serviceprocess.md)
+
+
+</td><td>
+
+
+</td><td>
+
+ChildProcessWithoutNullStreams \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[signalingServerUrl](./tryorama.scenario.signalingserverurl.md)
+
+
+</td><td>
+
+
+</td><td>
+
+URL \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [addConductor()](./tryorama.scenario.addconductor.md) |  | Create and add a conductor to the scenario. |
-|  [addPlayersWithApps(playersApps)](./tryorama.scenario.addplayerswithapps.md) |  | Create and add multiple players to the scenario, with an app installed for each player. |
-|  [addPlayerWithApp(appBundleSource, options)](./tryorama.scenario.addplayerwithapp.md) |  | Create and add a single player with an app installed to the scenario. |
-|  [cleanUp()](./tryorama.scenario.cleanup.md) |  | Shut down and delete all conductors in the scenario. |
-|  [shareAllAgents()](./tryorama.scenario.shareallagents.md) |  | Register all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
-|  [shutDown()](./tryorama.scenario.shutdown.md) |  | Shut down all conductors in the scenario. |
+<table><thead><tr><th>
 
+Method
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[addConductor()](./tryorama.scenario.addconductor.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Create and add a conductor to the scenario.
+
+
+</td></tr>
+<tr><td>
+
+[addPlayersWithApps(playersApps)](./tryorama.scenario.addplayerswithapps.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Create and add multiple players to the scenario, with an app installed for each player.
+
+
+</td></tr>
+<tr><td>
+
+[addPlayerWithApp(appBundleSource, options)](./tryorama.scenario.addplayerwithapp.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Create and add a single player with an app installed to the scenario.
+
+
+</td></tr>
+<tr><td>
+
+[cleanUp()](./tryorama.scenario.cleanup.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Shut down and delete all conductors in the scenario.
+
+
+</td></tr>
+<tr><td>
+
+[shareAllAgents()](./tryorama.scenario.shareallagents.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Register all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs.
+
+
+</td></tr>
+<tr><td>
+
+[shutDown()](./tryorama.scenario.shutdown.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Shut down all conductors in the scenario.
+
+
+</td></tr>
+</tbody></table>

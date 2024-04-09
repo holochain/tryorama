@@ -14,12 +14,71 @@ addPlayerWithApp(tryCpClient: TryCpClient, appBundleSource: AppBundleSource, opt
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
-|  appBundleSource | AppBundleSource | The bundle or path of the app. |
-|  options | [AppOptions](./tryorama.appoptions.md) | _(Optional)_ [AppOptions](./tryorama.appoptions.md) like agent pub key etc. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+tryCpClient
+
+
+</td><td>
+
+[TryCpClient](./tryorama.trycpclient.md)
+
+
+</td><td>
+
+The client connection to the TryCP server on which to create the player.
+
+
+</td></tr>
+<tr><td>
+
+appBundleSource
+
+
+</td><td>
+
+AppBundleSource
+
+
+</td><td>
+
+The bundle or path of the app.
+
+
+</td></tr>
+<tr><td>
+
+options
+
+
+</td><td>
+
+[AppOptions](./tryorama.appoptions.md)
+
+
+</td><td>
+
+_(Optional)_ [AppOptions](./tryorama.appoptions.md) like agent pub key etc.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->&gt;

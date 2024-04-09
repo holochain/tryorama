@@ -14,10 +14,39 @@ addAllAgentsToAllConductors: (conductors: IConductor[]) => Promise<void>
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  conductors | [IConductor](./tryorama.iconductor.md)<!-- -->\[\] | Conductors to mutually exchange all agents with. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+conductors
+
+
+</td><td>
+
+[IConductor](./tryorama.iconductor.md)<!-- -->\[\]
+
+
+</td><td>
+
+Conductors to mutually exchange all agents with.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;void&gt;

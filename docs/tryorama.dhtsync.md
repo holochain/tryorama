@@ -14,13 +14,87 @@ dhtSync: (players: IPlayer[], dnaHash: DnaHash, interval?: number, timeout?: num
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  players | [IPlayer](./tryorama.iplayer.md)<!-- -->\[\] | Array of players. |
-|  dnaHash | DnaHash | DNA hash to compare integrated DhtOps from. |
-|  interval | number | _(Optional)_ Interval to pause between comparisons (defaults to 50 ms). |
-|  timeout | number | _(Optional)_ A timeout for the delay (optional). |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+players
+
+
+</td><td>
+
+[IPlayer](./tryorama.iplayer.md)<!-- -->\[\]
+
+
+</td><td>
+
+Array of players.
+
+
+</td></tr>
+<tr><td>
+
+dnaHash
+
+
+</td><td>
+
+DnaHash
+
+
+</td><td>
+
+DNA hash to compare integrated DhtOps from.
+
+
+</td></tr>
+<tr><td>
+
+interval
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ Interval to pause between comparisons (defaults to 50 ms).
+
+
+</td></tr>
+<tr><td>
+
+timeout
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ A timeout for the delay (optional).
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;void&gt;

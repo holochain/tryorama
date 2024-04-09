@@ -369,34 +369,32 @@ test("Local Conductor - clone cell management", async (t) => {
     "disabled clone cell cannot be called"
   );
 
-  // TODO: comment back in when cell joining is fixed
+  const enabledCloneCell = await appWs.enableCloneCell({
+    app_id: appId,
+    clone_cell_id: cloneCell.clone_id,
+  });
+  t.deepEqual(
+    enabledCloneCell,
+    cloneCell,
+    "enabled clone cell matches created clone cell"
+  );
+  const readEntryResponse: typeof testContent = await appWs.callZome(
+    {
+      cell_id: cloneCell.cell_id,
+      zome_name: "coordinator",
+      fn_name: "read",
+      payload: entryActionHash,
+      cap_secret: null,
+      provenance: agentPubKey,
+    },
+    40000
+  );
+  t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
-  // const enabledCloneCell = await appWs.enableCloneCell({
-  //   app_id: appId,
-  //   clone_cell_id: cloneCell.clone_id,
-  // });
-  // t.deepEqual(
-  //   enabledCloneCell,
-  //   cloneCell,
-  //   "enabled clone cell matches created clone cell"
-  // );
-  // const readEntryResponse: typeof testContent = await appWs.callZome(
-  //   {
-  //     cell_id: cloneCell.cell_id,
-  //     zome_name: "coordinator",
-  //     fn_name: "read",
-  //     payload: entryActionHash,
-  //     cap_secret: null,
-  //     provenance: agentPubKey,
-  //   },
-  //   40000
-  // );
-  // t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
-
-  // await appWs.disableCloneCell({
-  //   app_id: appId,
-  //   clone_cell_id: cloneCell.cell_id,
-  // });
+  await appWs.disableCloneCell({
+    app_id: appId,
+    clone_cell_id: cloneCell.cell_id,
+  });
   await conductor
     .adminWs()
     .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
@@ -475,7 +473,7 @@ test("Local Conductor - 2 agent apps test", async (t) => {
   await cleanAllConductors();
 });
 
-test("Local Conductor - create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agents", async (t) => {
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();
   const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };

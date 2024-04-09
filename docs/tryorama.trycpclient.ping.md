@@ -14,10 +14,39 @@ ping(data: unknown): Promise<Buffer>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  data | unknown | Data to send and receive with the ping-pong. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+data
+
+
+</td><td>
+
+unknown
+
+
+</td><td>
+
+Data to send and receive with the ping-pong.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;Buffer&gt;

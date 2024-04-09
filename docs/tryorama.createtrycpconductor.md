@@ -14,11 +14,55 @@ createTryCpConductor: (tryCpClient: TryCpClient, options?: TryCpConductorOptions
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the conductor. |
-|  options | [TryCpConductorOptions](./tryorama.trycpconductoroptions.md) | _(Optional)_ |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+tryCpClient
+
+
+</td><td>
+
+[TryCpClient](./tryorama.trycpclient.md)
+
+
+</td><td>
+
+The client connection to the TryCP server on which to create the conductor.
+
+
+</td></tr>
+<tr><td>
+
+options
+
+
+</td><td>
+
+[TryCpConductorOptions](./tryorama.trycpconductoroptions.md)
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[TryCpConductor](./tryorama.trycpconductor.md)<!-- -->&gt;

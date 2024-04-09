@@ -14,10 +14,39 @@ configure(partialConfig?: string): Promise<null>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  partialConfig | string | _(Optional)_ The configuration to add to the default configuration. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+partialConfig
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ The configuration to add to the default configuration.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;null&gt;

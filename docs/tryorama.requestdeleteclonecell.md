@@ -14,8 +14,59 @@ export interface RequestDeleteCloneCell
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.requestdeleteclonecell.data.md) |  | DeleteCloneCellRequest |  |
-|  [type](./tryorama.requestdeleteclonecell.type.md) |  | { delete\_clone\_cell: null; } |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.requestdeleteclonecell.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DeleteCloneCellRequest
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestdeleteclonecell.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+{ delete\_clone\_cell: null; }
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

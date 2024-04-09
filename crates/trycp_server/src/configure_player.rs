@@ -134,6 +134,7 @@ admin_interfaces:
     - driver:
         type: websocket
         port: {}
+        allowed_origins: \"*\"
 {}",
         connection_url, port, partial_config
     )

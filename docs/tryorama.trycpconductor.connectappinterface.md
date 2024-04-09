@@ -14,10 +14,39 @@ connectAppInterface(port: number): Promise<null>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number | The port to attach the app interface to. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+The port to attach the app interface to.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;null&gt;

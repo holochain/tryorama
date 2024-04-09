@@ -5,7 +5,7 @@
  * and {@link @holochain/tryorama#TryCpConductor | TryCP Conductors}.
  *
  * @remarks
- * TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to
+ * TryCP stands for Tryorama Control Protocol and is a protocol to
  * enable remote management of Holochain conductors on network hosts.
  *
  * @packageDocumentation

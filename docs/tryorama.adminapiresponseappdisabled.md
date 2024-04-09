@@ -13,8 +13,59 @@ export interface AdminApiResponseAppDisabled
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.adminapiresponseappdisabled.data.md) |  | DisableAppResponse |  |
-|  [type](./tryorama.adminapiresponseappdisabled.type.md) |  | { app\_disabled: null; } |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.adminapiresponseappdisabled.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DisableAppResponse
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.adminapiresponseappdisabled.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+{ app\_disabled: null; }
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

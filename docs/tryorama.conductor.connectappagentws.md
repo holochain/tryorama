@@ -14,11 +14,55 @@ connectAppAgentWs(port: number, appId: string): Promise<AppAgentWebsocket>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number | The websocket port to connect to. |
-|  appId | string | The app id to make requests to. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+The websocket port to connect to.
+
+
+</td></tr>
+<tr><td>
+
+appId
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+The app id to make requests to.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;AppAgentWebsocket&gt;

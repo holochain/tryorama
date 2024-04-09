@@ -14,11 +14,53 @@ createConductor: (signalingServerUrl: URL, options?: ConductorOptions) => Promis
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  signalingServerUrl | URL |  |
-|  options | [ConductorOptions](./tryorama.conductoroptions.md) | _(Optional)_ |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+signalingServerUrl
+
+
+</td><td>
+
+URL
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+options
+
+
+</td><td>
+
+[ConductorOptions](./tryorama.conductoroptions.md)
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[Conductor](./tryorama.conductor.md)<!-- -->&gt;

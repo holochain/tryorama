@@ -43,7 +43,9 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
       path: FIXTURE_HAPP_URL.pathname,
     });
 
-    await t.rejects(alice.conductor.attachAppInterface({ port: 300 }));
+    await t.rejects(
+      alice.conductor.attachAppInterface({ port: 300, allowed_origins: "*" })
+    );
   });
 });
 

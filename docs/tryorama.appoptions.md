@@ -14,11 +14,120 @@ export interface AppOptions
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [agentPubKey?](./tryorama.appoptions.agentpubkey.md) |  | AgentPubKey | _(Optional)_ |
-|  [installedAppId?](./tryorama.appoptions.installedappid.md) |  | string | _(Optional)_ App ID to override the app manifest's app name. |
-|  [membraneProofs?](./tryorama.appoptions.membraneproofs.md) |  | Record&lt;string, MembraneProof&gt; | _(Optional)_ Proofs of membership for the hApp. |
-|  [networkSeed?](./tryorama.appoptions.networkseed.md) |  | string | _(Optional)_ A network seed to override the hApps' network seed. |
-|  [signalHandler?](./tryorama.appoptions.signalhandler.md) |  | AppSignalCb | _(Optional)_ A signal handler for the conductor. |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[agentPubKey?](./tryorama.appoptions.agentpubkey.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AgentPubKey
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+<tr><td>
+
+[installedAppId?](./tryorama.appoptions.installedappid.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ App ID to override the app manifest's app name.
+
+
+</td></tr>
+<tr><td>
+
+[membraneProofs?](./tryorama.appoptions.membraneproofs.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Record&lt;string, MembraneProof&gt;
+
+
+</td><td>
+
+_(Optional)_ Proofs of membership for the hApp.
+
+
+</td></tr>
+<tr><td>
+
+[networkSeed?](./tryorama.appoptions.networkseed.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ A network seed to override the hApps' network seed.
+
+
+</td></tr>
+<tr><td>
+
+[signalHandler?](./tryorama.appoptions.signalhandler.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppSignalCb
+
+
+</td><td>
+
+_(Optional)_ A signal handler for the conductor.
+
+
+</td></tr>
+</tbody></table>

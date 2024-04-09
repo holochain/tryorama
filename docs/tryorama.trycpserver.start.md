@@ -14,10 +14,39 @@ static start(port?: number): Promise<TryCpServer>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number | _(Optional)_ The network port the server should listen on. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ The network port the server should listen on.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[TryCpServer](./tryorama.trycpserver.md)<!-- -->&gt;

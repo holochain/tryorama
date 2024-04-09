@@ -84,6 +84,7 @@ import {
   TRYCP_SUCCESS_RESPONSE,
 } from "../types.js";
 import { deserializeZomeResponsePayload } from "../util.js";
+import { ALLOWED_ORIGIN } from "../../common.js";
 
 const logger = makeLogger("TryCP conductor");
 const HOLO_SIGNALING_SERVER = new URL("wss://signal.holo.host");
@@ -553,8 +554,10 @@ export class TryCpConductor implements IConductor {
      * @returns The port the App interface was attached to.
      */
     const attachAppInterface = async (request?: AttachAppInterfaceRequest) => {
-      request = request ?? {
-        port: await getPort({ port: portNumbers(30000, 40000) }),
+      request = {
+        allowed_origins: request?.allowed_origins ?? ALLOWED_ORIGIN,
+        port:
+          request?.port ?? (await getPort({ port: portNumbers(30000, 40000) })),
       };
       const response = await this.callAdminApi({
         type: { attach_app_interface: null },

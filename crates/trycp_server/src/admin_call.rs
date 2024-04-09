@@ -1,20 +1,22 @@
+use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
 use futures::{SinkExt, StreamExt};
 use snafu::{OptionExt, ResultExt, Snafu};
-use tokio::task::spawn_blocking;
+use tokio::time::error::Elapsed;
 use tokio_tungstenite::tungstenite::{
     self,
-    protocol::{frame::coding::CloseCode, CloseFrame},
+    handshake::client::Request,
+    protocol::{frame::coding::CloseCode, CloseFrame, WebSocketConfig},
     Message,
 };
-
-use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
 
 #[derive(Debug, Snafu)]
 pub(crate) enum AdminCallError {
     #[snafu(display("Could not find a configuration for player with ID {:?}", id))]
     PlayerNotConfigured { id: String },
+    #[snafu(display("Could not establish a tcp connection: {}", source))]
+    TcpConnect { source: std::io::Error },
     #[snafu(display("Could not establish a websocket connection: {}", source))]
-    Connect { source: tungstenite::Error },
+    WsConnect { source: tungstenite::Error },
     #[snafu(context(false))]
     Call { source: CallError },
 }
@@ -22,20 +24,35 @@ pub(crate) enum AdminCallError {
 pub(crate) async fn admin_call(id: String, message: Vec<u8>) -> Result<Vec<u8>, AdminCallError> {
     println!("admin_interface_call id: {:?}", id);
 
-    let id2 = id.clone();
-    let port = spawn_blocking(move || PLAYERS.read().get(&id2).map(|player| player.admin_port))
-        .await
-        .unwrap()
+    let port = PLAYERS
+        .read()
+        .get(&id)
+        .map(|player| player.admin_port)
         .context(PlayerNotConfigured { id })?;
 
-    let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
-    url.set_port(Some(port)).expect("can set port on localhost");
-
-    println!("Established admin interface with {}", url);
-
-    let (mut ws_stream, _resp) = tokio_tungstenite::connect_async(url)
+    let addr = format!("127.0.0.1:{port}");
+    let stream = tokio::net::TcpStream::connect(addr.clone())
         .await
-        .context(Connect)?;
+        .context(TcpConnect)?;
+    let uri = format!("ws://{}", addr);
+    let request = Request::builder()
+        .uri(uri.clone())
+        // needed for admin websocket connection to be accepted
+        .header("origin", "trycp-admin")
+        .body(())
+        .expect("request to be valid");
+
+    println!("Establishing admin interface with {:?}", uri);
+
+    let (mut ws_stream, _) = tokio_tungstenite::client_async_with_config(
+        request,
+        stream,
+        Some(WebSocketConfig::default()),
+    )
+    .await
+    .context(WsConnect)?;
+
+    println!("Established admin interface");
 
     let call_result = call(&mut ws_stream, 0, message).await;
     let _ = ws_stream
@@ -58,6 +75,8 @@ pub(crate) enum CallError {
     ReceiveResponse { source: tungstenite::Error },
     #[snafu(display("Expected a binary response, got {:?}", response))]
     UnexpectedResponseType { response: Message },
+    #[snafu(display("Timeout while making call"))]
+    ResponseTimeout { source: Elapsed },
     #[snafu(display(
         "Could not deserialize response {:?} as MessagePack: {}",
         response,
@@ -87,19 +106,29 @@ async fn call(
         .await
         .context(SendRequest)?;
 
-    let ws_message = ws_stream
-        .next()
-        .await
-        .context(NoResponse)?
-        .context(ReceiveResponse)?;
-    let ws_data = if let Message::Binary(ws_data) = ws_message {
-        ws_data
-    } else {
-        return UnexpectedResponseType {
-            response: ws_message,
+    let ws_data = tokio::time::timeout(std::time::Duration::from_secs(30), async move {
+        loop {
+            let ws_message = ws_stream
+                .next()
+                .await
+                .context(NoResponse)?
+                .context(ReceiveResponse)?;
+            match ws_message {
+                Message::Close(_) => {
+                    return Err(CallError::NoResponse)
+                }
+                Message::Binary(ws_data) => {
+                    return Ok(ws_data);
+                }
+                Message::Ping(p) => {
+                    ws_stream.send(Message::Pong(p)).await.context(SendRequest)?;
+                }
+                _ => {
+                    return Err(CallError::UnexpectedResponseType { response: ws_message });
+                }
+            }
         }
-        .fail();
-    };
+    }).await.context(ResponseTimeout)??;
 
     let message: HolochainMessage = rmp_serde::from_slice(&ws_data)
         .with_context(|| DeserializeResponse { response: ws_data })?;

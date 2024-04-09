@@ -14,12 +14,71 @@ enableAndGetAgentApp: (adminWs: IAdminWebsocket, appWs: IAppWebsocket | IAppAgen
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  adminWs | [IAdminWebsocket](./tryorama.iadminwebsocket.md) | The admin websocket to use for admin requests. |
-|  appWs | [IAppWebsocket](./tryorama.iappwebsocket.md) \| [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md) | The app websocket to use for app requests. |
-|  appInfo | AppInfo | The app info of the app to enable. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+adminWs
+
+
+</td><td>
+
+[IAdminWebsocket](./tryorama.iadminwebsocket.md)
+
+
+</td><td>
+
+The admin websocket to use for admin requests.
+
+
+</td></tr>
+<tr><td>
+
+appWs
+
+
+</td><td>
+
+[IAppWebsocket](./tryorama.iappwebsocket.md) \| [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md)
+
+
+</td><td>
+
+The app websocket to use for app requests.
+
+
+</td></tr>
+<tr><td>
+
+appInfo
+
+
+</td><td>
+
+AppInfo
+
+
+</td><td>
+
+The app info of the app to enable.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[AgentApp](./tryorama.agentapp.md)<!-- -->&gt;

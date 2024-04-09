@@ -14,11 +14,51 @@ areDhtsSynced: (players: IPlayer[], dnaHash: DnaHash) => Promise<boolean>
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  players | [IPlayer](./tryorama.iplayer.md)<!-- -->\[\] |  |
-|  dnaHash | DnaHash |  |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+players
+
+
+</td><td>
+
+[IPlayer](./tryorama.iplayer.md)<!-- -->\[\]
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+dnaHash
+
+
+</td><td>
+
+DnaHash
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;boolean&gt;

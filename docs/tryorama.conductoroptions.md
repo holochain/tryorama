@@ -13,10 +13,101 @@ export interface ConductorOptions
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [bootstrapServerUrl?](./tryorama.conductoroptions.bootstrapserverurl.md) |  | URL | _(Optional)_ A bootstrap server URL for peers to discover each other. |
-|  [networkType?](./tryorama.conductoroptions.networktype.md) |  | [NetworkType](./tryorama.networktype.md) | _(Optional)_ The network type the conductor should use. |
-|  [startup?](./tryorama.conductoroptions.startup.md) |  | boolean | _(Optional)_ Start up conductor after creation. |
-|  [timeout?](./tryorama.conductoroptions.timeout.md) |  | number | _(Optional)_ Timeout for requests to Admin and App API. |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[bootstrapServerUrl?](./tryorama.conductoroptions.bootstrapserverurl.md)
+
+
+</td><td>
+
+
+</td><td>
+
+URL
+
+
+</td><td>
+
+_(Optional)_ A bootstrap server URL for peers to discover each other.
+
+
+</td></tr>
+<tr><td>
+
+[networkType?](./tryorama.conductoroptions.networktype.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[NetworkType](./tryorama.networktype.md)
+
+
+</td><td>
+
+_(Optional)_ The network type the conductor should use.
+
+
+</td></tr>
+<tr><td>
+
+[startup?](./tryorama.conductoroptions.startup.md)
+
+
+</td><td>
+
+
+</td><td>
+
+boolean
+
+
+</td><td>
+
+_(Optional)_ Start up conductor after creation.
+
+
+</td></tr>
+<tr><td>
+
+[timeout?](./tryorama.conductoroptions.timeout.md)
+
+
+</td><td>
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ Timeout for requests to Admin and App API.
+
+
+</td></tr>
+</tbody></table>

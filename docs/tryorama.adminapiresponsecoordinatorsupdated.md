@@ -13,8 +13,59 @@ export interface AdminApiResponseCoordinatorsUpdated
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.adminapiresponsecoordinatorsupdated.data.md) |  | UpdateCoordinatorsResponse |  |
-|  [type](./tryorama.adminapiresponsecoordinatorsupdated.type.md) |  | { coordinators\_updated: null; } |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.adminapiresponsecoordinatorsupdated.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+UpdateCoordinatorsResponse
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.adminapiresponsecoordinatorsupdated.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+{ coordinators\_updated: null; }
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

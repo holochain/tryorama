@@ -14,8 +14,61 @@ export interface RequestAdminInterfaceMessage
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data?](./tryorama.requestadmininterfacemessage.data.md) |  | AddAgentInfoRequest \| AgentInfoRequest \| AttachAppInterfaceRequest \| DeleteCloneCellRequest \| DisableAppRequest \| DumpFullStateRequest \| DumpNetworkStatsRequest \| DumpStateRequest \| EnableAppRequest \| GetDnaDefinitionRequest \| GrantZomeCallCapabilityRequest \| InstallAppRequest \| ListAppsRequest \| RegisterDnaRequest \| StartAppRequest \| StorageInfoRequest \| UninstallAppRequest \| UpdateCoordinatorsRequest | _(Optional)_ |
-|  [type](./tryorama.requestadmininterfacemessage.type.md) |  | { \[key in keyof [RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)<!-- -->\]: null; } |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data?](./tryorama.requestadmininterfacemessage.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AddAgentInfoRequest \| AgentInfoRequest \| AttachAppInterfaceRequest \| DeleteCloneCellRequest \| DisableAppRequest \| DumpFullStateRequest \| DumpNetworkStatsRequest \| DumpStateRequest \| EnableAppRequest \| GetDnaDefinitionRequest \| GrantZomeCallCapabilityRequest \| InstallAppRequest \| ListAppsRequest \| RegisterDnaRequest \| StartAppRequest \| StorageInfoRequest \| UninstallAppRequest \| UpdateCoordinatorsRequest
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestadmininterfacemessage.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+{ \[key in keyof [RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)<!-- -->\]: null; }
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

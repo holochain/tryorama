@@ -14,10 +14,39 @@ pause: (milliseconds: number) => Promise<unknown>
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  milliseconds | number | The number of milliseconds to wait. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+milliseconds
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+The number of milliseconds to wait.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;unknown&gt;

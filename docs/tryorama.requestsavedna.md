@@ -14,9 +14,76 @@ export interface RequestSaveDna
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [content](./tryorama.requestsavedna.content.md) |  | Buffer |  |
-|  [id](./tryorama.requestsavedna.id.md) |  | string |  |
-|  [type](./tryorama.requestsavedna.type.md) |  | "save\_dna" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[content](./tryorama.requestsavedna.content.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Buffer
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[id](./tryorama.requestsavedna.id.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestsavedna.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"save\_dna"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

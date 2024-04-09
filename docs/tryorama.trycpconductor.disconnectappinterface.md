@@ -14,10 +14,39 @@ disconnectAppInterface(port: number): Promise<null>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number | The port of the app interface to disconnect. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+The port of the app interface to disconnect.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;null&gt;

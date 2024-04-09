@@ -14,9 +14,76 @@ export interface RequestCallAdminInterface
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [id](./tryorama.requestcalladmininterface.id.md) |  | [ConductorId](./tryorama.conductorid.md) |  |
-|  [message](./tryorama.requestcalladmininterface.message.md) |  | [RequestAdminInterfaceMessage](./tryorama.requestadmininterfacemessage.md) |  |
-|  [type](./tryorama.requestcalladmininterface.type.md) |  | "call\_admin\_interface" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[id](./tryorama.requestcalladmininterface.id.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[ConductorId](./tryorama.conductorid.md)
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[message](./tryorama.requestcalladmininterface.message.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[RequestAdminInterfaceMessage](./tryorama.requestadmininterfacemessage.md)
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestcalladmininterface.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"call\_admin\_interface"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
