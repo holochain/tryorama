@@ -84,7 +84,7 @@ import {
   TRYCP_SUCCESS_RESPONSE,
 } from "../types.js";
 import { deserializeZomeResponsePayload } from "../util.js";
-import { ALLOWED_ORIGIN } from "../../common.js";
+import { _ALLOWED_ORIGIN } from "../../common.js";
 
 const logger = makeLogger("TryCP conductor");
 const HOLO_SIGNALING_SERVER = new URL("wss://signal.holo.host");
@@ -555,7 +555,7 @@ export class TryCpConductor implements IConductor {
      */
     const attachAppInterface = async (request?: AttachAppInterfaceRequest) => {
       request = {
-        allowed_origins: request?.allowed_origins ?? ALLOWED_ORIGIN,
+        allowed_origins: request?.allowed_origins ?? _ALLOWED_ORIGIN,
         port:
           request?.port ?? (await getPort({ port: portNumbers(30000, 40000) })),
       };
