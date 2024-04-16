@@ -4,7 +4,7 @@ use futures::{future, SinkExt, StreamExt, TryStreamExt};
 use once_cell::sync::Lazy;
 use slab::Slab;
 use snafu::{IntoError, OptionExt, ResultExt, Snafu};
-use tokio_tungstenite::tungstenite::handshake::client::Request;
+use tokio_tungstenite::tungstenite::client::IntoClientRequest;
 use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
 use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
 use tokio_tungstenite::tungstenite::{protocol::frame::coding::CloseCode, Message};
@@ -48,17 +48,20 @@ pub(crate) async fn connect(
         return Ok(());
     }
 
-    let addr = format!("127.0.0.1:{port}");
+    let addr = format!("localhost:{port}");
     let stream = tokio::net::TcpStream::connect(addr.clone())
         .await
         .context(TcpConnect)?;
     let uri = format!("ws://{}", addr);
-    let request = Request::builder()
-        .uri(uri.clone())
-        // needed for admin websocket connection to be accepted
-        .header("origin", "tryorama-interface")
-        .body(())
-        .expect("request to be valid");
+    let mut request = uri.clone().into_client_request().expect("not a valid URI");
+    // needed for app websocket connection to be accepted
+    request.headers_mut().insert(
+        "origin",
+        "tryorama-interface"
+            .parse()
+            .expect("invalid origin header value"),
+    );
+    request.body();
 
     println!("Establishing app interface with {:?}", uri);
 
