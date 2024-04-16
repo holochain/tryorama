@@ -48,7 +48,7 @@ pub(crate) async fn connect(
         return Ok(());
     }
 
-    let addr = format!("127.0.0.1:{port}");
+    let addr = format!("localhost:{port}");
     let stream = tokio::net::TcpStream::connect(addr.clone())
         .await
         .context(TcpConnect)?;

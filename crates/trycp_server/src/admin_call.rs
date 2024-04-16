@@ -30,7 +30,7 @@ pub(crate) async fn admin_call(id: String, message: Vec<u8>) -> Result<Vec<u8>, 
         .map(|player| player.admin_port)
         .context(PlayerNotConfigured { id })?;
 
-    let addr = format!("127.0.0.1:{port}");
+    let addr = format!("localhost:{port}");
     let stream = tokio::net::TcpStream::connect(addr.clone())
         .await
         .context(TcpConnect)?;
@@ -114,21 +114,26 @@ async fn call(
                 .context(NoResponse)?
                 .context(ReceiveResponse)?;
             match ws_message {
-                Message::Close(_) => {
-                    return Err(CallError::NoResponse)
-                }
+                Message::Close(_) => return Err(CallError::NoResponse),
                 Message::Binary(ws_data) => {
                     return Ok(ws_data);
                 }
                 Message::Ping(p) => {
-                    ws_stream.send(Message::Pong(p)).await.context(SendRequest)?;
+                    ws_stream
+                        .send(Message::Pong(p))
+                        .await
+                        .context(SendRequest)?;
                 }
                 _ => {
-                    return Err(CallError::UnexpectedResponseType { response: ws_message });
+                    return Err(CallError::UnexpectedResponseType {
+                        response: ws_message,
+                    });
                 }
             }
         }
-    }).await.context(ResponseTimeout)??;
+    })
+    .await
+    .context(ResponseTimeout)??;
 
     let message: HolochainMessage = rmp_serde::from_slice(&ws_data)
         .with_context(|| DeserializeResponse { response: ws_data })?;
