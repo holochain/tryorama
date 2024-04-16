@@ -4,7 +4,7 @@ use snafu::{OptionExt, ResultExt, Snafu};
 use tokio::time::error::Elapsed;
 use tokio_tungstenite::tungstenite::{
     self,
-    handshake::client::Request,
+    client::IntoClientRequest,
     protocol::{frame::coding::CloseCode, CloseFrame, WebSocketConfig},
     Message,
 };
@@ -35,12 +35,13 @@ pub(crate) async fn admin_call(id: String, message: Vec<u8>) -> Result<Vec<u8>, 
         .await
         .context(TcpConnect)?;
     let uri = format!("ws://{}", addr);
-    let request = Request::builder()
-        .uri(uri.clone())
-        // needed for admin websocket connection to be accepted
-        .header("origin", "trycp-admin")
-        .body(())
-        .expect("request to be valid");
+    let mut request = uri.clone().into_client_request().expect("not a valid URI");
+    // needed for admin websocket connection to be accepted
+    request.headers_mut().insert(
+        "origin",
+        "trycp-admin".parse().expect("invalid origin header value"),
+    );
+    request.body();
 
     println!("Establishing admin interface with {:?}", uri);
 
