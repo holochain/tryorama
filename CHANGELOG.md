@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2024-04-16: v0.16.0-dev.3
+### Changed
+- TryCP: Upgraded `tokio-tungstenite` to fix vulnerability.
+### Fixed
+- Replace all IPv4 websocket addresses `127.0.0.1` by `localhost`.
+
 ## 2024-04-09: v0.16.0-dev.2
 ### Changed
 - Upgrade to latest JS client.
