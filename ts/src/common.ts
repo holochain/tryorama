@@ -20,7 +20,10 @@ import {
 
 const BOOTSTRAP_SERVER_STARTUP_STRING = "HC BOOTSTRAP - ADDR: ";
 const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL - ADDR: ";
-export const ALLOWED_ORIGIN = "tryorama-interface";
+/**
+ * @internal
+ */
+export const _ALLOWED_ORIGIN = "tryorama-interface";
 
 /**
  * Spawn a signalling server to enable connections between conductors.

@@ -1,7 +1,7 @@
 {
   "name": "@holochain/tryorama",
   "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
-  "version": "0.16.0-dev.1",
+  "version": "0.16.0-dev.3",
   "author": "Holochain Foundation",
   "license": "MIT",
   "keywords": [
@@ -42,7 +42,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@holochain/client": "^0.17.0-dev.8",
+    "@holochain/client": "^0.17.0-dev.9",
     "get-port": "^6.1.2",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",

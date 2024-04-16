@@ -984,15 +984,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[ALLOWED\_ORIGIN](./tryorama.allowed_origin.md)
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md)
 
 

@@ -4,7 +4,7 @@ use snafu::{OptionExt, ResultExt, Snafu};
 use tokio::time::error::Elapsed;
 use tokio_tungstenite::tungstenite::{
     self,
-    handshake::client::Request,
+    client::IntoClientRequest,
     protocol::{frame::coding::CloseCode, CloseFrame, WebSocketConfig},
     Message,
 };
@@ -30,17 +30,18 @@ pub(crate) async fn admin_call(id: String, message: Vec<u8>) -> Result<Vec<u8>, 
         .map(|player| player.admin_port)
         .context(PlayerNotConfigured { id })?;
 
-    let addr = format!("127.0.0.1:{port}");
+    let addr = format!("localhost:{port}");
     let stream = tokio::net::TcpStream::connect(addr.clone())
         .await
         .context(TcpConnect)?;
     let uri = format!("ws://{}", addr);
-    let request = Request::builder()
-        .uri(uri.clone())
-        // needed for admin websocket connection to be accepted
-        .header("origin", "trycp-admin")
-        .body(())
-        .expect("request to be valid");
+    let mut request = uri.clone().into_client_request().expect("not a valid URI");
+    // needed for admin websocket connection to be accepted
+    request.headers_mut().insert(
+        "origin",
+        "trycp-admin".parse().expect("invalid origin header value"),
+    );
+    request.body();
 
     println!("Establishing admin interface with {:?}", uri);
 
@@ -114,21 +115,26 @@ async fn call(
                 .context(NoResponse)?
                 .context(ReceiveResponse)?;
             match ws_message {
-                Message::Close(_) => {
-                    return Err(CallError::NoResponse)
-                }
+                Message::Close(_) => return Err(CallError::NoResponse),
                 Message::Binary(ws_data) => {
                     return Ok(ws_data);
                 }
                 Message::Ping(p) => {
-                    ws_stream.send(Message::Pong(p)).await.context(SendRequest)?;
+                    ws_stream
+                        .send(Message::Pong(p))
+                        .await
+                        .context(SendRequest)?;
                 }
                 _ => {
-                    return Err(CallError::UnexpectedResponseType { response: ws_message });
+                    return Err(CallError::UnexpectedResponseType {
+                        response: ws_message,
+                    });
                 }
             }
         }
-    }).await.context(ResponseTimeout)??;
+    })
+    .await
+    .context(ResponseTimeout)??;
 
     let message: HolochainMessage = rmp_serde::from_slice(&ws_data)
         .with_context(|| DeserializeResponse { response: ws_data })?;
