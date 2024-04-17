@@ -16,24 +16,234 @@ export declare class TryCpClient
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [bootstrapServerUrl](./tryorama.trycpclient.bootstrapserverurl.md) |  | URL \| undefined |  |
-|  [conductors](./tryorama.trycpclient.conductors.md) |  | [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->\[\] |  |
-|  [signalingServerUrl](./tryorama.trycpclient.signalingserverurl.md) |  | URL \| undefined |  |
+<table><thead><tr><th>
+
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[bootstrapServerUrl](./tryorama.trycpclient.bootstrapserverurl.md)
+
+
+</td><td>
+
+
+</td><td>
+
+URL \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[conductors](./tryorama.trycpclient.conductors.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[TryCpConductor](./tryorama.trycpconductor.md)<!-- -->\[\]
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[signalingServerUrl](./tryorama.trycpclient.signalingserverurl.md)
+
+
+</td><td>
+
+
+</td><td>
+
+URL \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [addConductor(partialConfig)](./tryorama.trycpclient.addconductor.md) |  | Create and add a conductor to the client. |
-|  [call(request)](./tryorama.trycpclient.call.md) |  | Send a call to the TryCP server. |
-|  [cleanAllConductors()](./tryorama.trycpclient.cleanallconductors.md) |  | Run the <code>reset</code> command on the TryCP server to delete all conductor data. |
-|  [cleanUp()](./tryorama.trycpclient.cleanup.md) |  | Shut down all registered conductors and delete them, and close the client connection. |
-|  [close()](./tryorama.trycpclient.close.md) |  | Closes the client connection. |
-|  [create(serverUrl, timeout)](./tryorama.trycpclient.create.md) | <code>static</code> | Create a client connection to a running TryCP server. |
-|  [ping(data)](./tryorama.trycpclient.ping.md) |  | Send a ping with data. |
-|  [setSignalHandler(port, signalHandler)](./tryorama.trycpclient.setsignalhandler.md) |  |  |
-|  [shutDownConductors()](./tryorama.trycpclient.shutdownconductors.md) |  | Shut down all conductors on the connected TryCP server and disconnect their app interfaces. |
-|  [unsetSignalHandler(port)](./tryorama.trycpclient.unsetsignalhandler.md) |  |  |
+<table><thead><tr><th>
 
+Method
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[addConductor(partialConfig)](./tryorama.trycpclient.addconductor.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Create and add a conductor to the client.
+
+
+</td></tr>
+<tr><td>
+
+[call(request)](./tryorama.trycpclient.call.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Send a call to the TryCP server.
+
+
+</td></tr>
+<tr><td>
+
+[cleanAllConductors()](./tryorama.trycpclient.cleanallconductors.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Run the `reset` command on the TryCP server to delete all conductor data.
+
+
+</td></tr>
+<tr><td>
+
+[cleanUp()](./tryorama.trycpclient.cleanup.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Shut down all registered conductors and delete them, and close the client connection.
+
+
+</td></tr>
+<tr><td>
+
+[close()](./tryorama.trycpclient.close.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Closes the client connection.
+
+
+</td></tr>
+<tr><td>
+
+[create(serverUrl, timeout)](./tryorama.trycpclient.create.md)
+
+
+</td><td>
+
+`static`
+
+
+</td><td>
+
+Create a client connection to a running TryCP server.
+
+
+</td></tr>
+<tr><td>
+
+[ping(data)](./tryorama.trycpclient.ping.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Send a ping with data.
+
+
+</td></tr>
+<tr><td>
+
+[setSignalHandler(port, signalHandler)](./tryorama.trycpclient.setsignalhandler.md)
+
+
+</td><td>
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[shutDownConductors()](./tryorama.trycpclient.shutdownconductors.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Shut down all conductors on the connected TryCP server and disconnect their app interfaces.
+
+
+</td></tr>
+<tr><td>
+
+[unsetSignalHandler(port)](./tryorama.trycpclient.unsetsignalhandler.md)
+
+
+</td><td>
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

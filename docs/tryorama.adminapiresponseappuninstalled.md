@@ -13,8 +13,59 @@ export interface AdminApiResponseAppUninstalled
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.adminapiresponseappuninstalled.data.md) |  | UninstallAppResponse |  |
-|  [type](./tryorama.adminapiresponseappuninstalled.type.md) |  | "app\_uninstalled" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.adminapiresponseappuninstalled.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+UninstallAppResponse
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.adminapiresponseappuninstalled.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"app\_uninstalled"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

@@ -13,8 +13,59 @@ export interface AdminApiResponseAppStarted
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.adminapiresponseappstarted.data.md) |  | StartAppResponse |  |
-|  [type](./tryorama.adminapiresponseappstarted.type.md) |  | "app\_started" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.adminapiresponseappstarted.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+StartAppResponse
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.adminapiresponseappstarted.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"app\_started"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

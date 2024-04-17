@@ -14,11 +14,55 @@ addClient(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  serverUrl | URL | The TryCP server URL to connect to. |
-|  timeout | number | _(Optional)_ An optional timeout for the web socket connection. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+serverUrl
+
+
+</td><td>
+
+URL
+
+
+</td><td>
+
+The TryCP server URL to connect to.
+
+
+</td></tr>
+<tr><td>
+
+timeout
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ An optional timeout for the web socket connection.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[TryCpClient](./tryorama.trycpclient.md)<!-- -->&gt;

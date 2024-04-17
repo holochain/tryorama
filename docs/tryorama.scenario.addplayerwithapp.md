@@ -14,11 +14,55 @@ addPlayerWithApp(appBundleSource: AppBundleSource, options?: AppOptions): Promis
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  appBundleSource | AppBundleSource | The bundle or path to the bundle. |
-|  options | [AppOptions](./tryorama.appoptions.md) | _(Optional)_ [AppOptions](./tryorama.appoptions.md)<!-- -->. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+appBundleSource
+
+
+</td><td>
+
+AppBundleSource
+
+
+</td><td>
+
+The bundle or path to the bundle.
+
+
+</td></tr>
+<tr><td>
+
+options
+
+
+</td><td>
+
+[AppOptions](./tryorama.appoptions.md)
+
+
+</td><td>
+
+_(Optional)_ [AppOptions](./tryorama.appoptions.md)<!-- -->.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[Player](./tryorama.player.md)<!-- -->&gt;

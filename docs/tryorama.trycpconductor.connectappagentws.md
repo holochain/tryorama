@@ -19,11 +19,51 @@ connectAppAgentWs(port: number, appId: InstalledAppId): Promise<{
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number |  |
-|  appId | InstalledAppId |  |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+appId
+
+
+</td><td>
+
+InstalledAppId
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").AppInfoResponse&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; networkInfo: (request: NetworkInfoRequest) =&gt; Promise&lt;import("@holochain/client").NetworkInfoResponse&gt;; }&gt;

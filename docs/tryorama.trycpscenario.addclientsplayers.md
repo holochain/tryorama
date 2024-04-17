@@ -16,11 +16,55 @@ addClientsPlayers(serverUrls: URL[], options: ClientsPlayersOptions): Promise<Cl
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  serverUrls | URL\[\] | The TryCP server URLs to connect to. |
-|  options | [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) | [ClientsPlayersOptions](./tryorama.clientsplayersoptions.md) |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+serverUrls
+
+
+</td><td>
+
+URL\[\]
+
+
+</td><td>
+
+The TryCP server URLs to connect to.
+
+
+</td></tr>
+<tr><td>
+
+options
+
+
+</td><td>
+
+[ClientsPlayersOptions](./tryorama.clientsplayersoptions.md)
+
+
+</td><td>
+
+[ClientsPlayersOptions](./tryorama.clientsplayersoptions.md)
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[ClientPlayers](./tryorama.clientplayers.md)<!-- -->\[\]&gt;

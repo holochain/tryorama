@@ -15,34 +15,325 @@ export declare class TryCpConductor implements IConductor
 
 ## Constructors
 
-|  Constructor | Modifiers | Description |
-|  --- | --- | --- |
-|  [(constructor)(tryCpClient, id)](./tryorama.trycpconductor._constructor_.md) |  | Constructs a new instance of the <code>TryCpConductor</code> class |
+<table><thead><tr><th>
+
+Constructor
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[(constructor)(tryCpClient, id)](./tryorama.trycpconductor._constructor_.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Constructs a new instance of the `TryCpConductor` class
+
+
+</td></tr>
+</tbody></table>
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [id](./tryorama.trycpconductor.id.md) | <code>readonly</code> | string |  |
-|  [tryCpClient](./tryorama.trycpconductor.trycpclient.md) | <code>readonly</code> | [TryCpClient](./tryorama.trycpclient.md) |  |
+<table><thead><tr><th>
+
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[id](./tryorama.trycpconductor.id.md)
+
+
+</td><td>
+
+`readonly`
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[tryCpClient](./tryorama.trycpconductor.trycpclient.md)
+
+
+</td><td>
+
+`readonly`
+
+
+</td><td>
+
+[TryCpClient](./tryorama.trycpclient.md)
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [adminWs()](./tryorama.trycpconductor.adminws.md) |  | Get all [Admin API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_adminwebsocket.md) of the Holochain client. |
-|  [configure(partialConfig)](./tryorama.trycpconductor.configure.md) |  | Create conductor configuration. |
-|  [connectAppAgentWs(port, appId)](./tryorama.trycpconductor.connectappagentws.md) |  |  |
-|  [connectAppInterface(port)](./tryorama.trycpconductor.connectappinterface.md) |  | Connect a web socket to the App API. |
-|  [connectAppWs(port)](./tryorama.trycpconductor.connectappws.md) |  | Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_appwebsocket.md) of the Holochain client. |
-|  [disconnectAppInterface(port)](./tryorama.trycpconductor.disconnectappinterface.md) |  | Disconnect a web socket from the App API. |
-|  [disconnectClient()](./tryorama.trycpconductor.disconnectclient.md) |  | Disconnect the TryCP client from the TryCP server. |
-|  [downloadDna(url)](./tryorama.trycpconductor.downloaddna.md) |  | Download a DNA from a URL to the server's file system. |
-|  [installAgentsApps(options)](./tryorama.trycpconductor.installagentsapps.md) |  | Install a hApp bundle into the conductor. |
-|  [installApp(appBundleSource, options)](./tryorama.trycpconductor.installapp.md) |  | Install a hApp bundle into the conductor. |
-|  [off(port)](./tryorama.trycpconductor.off.md) |  | Detach the registered signal handler. |
-|  [on(port, signalHandler)](./tryorama.trycpconductor.on.md) |  | Attach a signal handler. |
-|  [saveDna(dnaContent)](./tryorama.trycpconductor.savedna.md) |  | Upload a DNA file from the local file system to the server. |
-|  [shutDown()](./tryorama.trycpconductor.shutdown.md) |  | Shut down the conductor. |
-|  [startUp(options)](./tryorama.trycpconductor.startup.md) |  | Start a configured conductor. |
+<table><thead><tr><th>
 
+Method
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[adminWs()](./tryorama.trycpconductor.adminws.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Get all [Admin API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_adminwebsocket.md) of the Holochain client.
+
+
+</td></tr>
+<tr><td>
+
+[configure(partialConfig)](./tryorama.trycpconductor.configure.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Create conductor configuration.
+
+
+</td></tr>
+<tr><td>
+
+[connectAppAgentWs(port, appId)](./tryorama.trycpconductor.connectappagentws.md)
+
+
+</td><td>
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[connectAppInterface(port)](./tryorama.trycpconductor.connectappinterface.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Connect a web socket to the App API.
+
+
+</td></tr>
+<tr><td>
+
+[connectAppWs(port)](./tryorama.trycpconductor.connectappws.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_appwebsocket.md) of the Holochain client.
+
+
+</td></tr>
+<tr><td>
+
+[disconnectAppInterface(port)](./tryorama.trycpconductor.disconnectappinterface.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Disconnect a web socket from the App API.
+
+
+</td></tr>
+<tr><td>
+
+[disconnectClient()](./tryorama.trycpconductor.disconnectclient.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Disconnect the TryCP client from the TryCP server.
+
+
+</td></tr>
+<tr><td>
+
+[downloadDna(url)](./tryorama.trycpconductor.downloaddna.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Download a DNA from a URL to the server's file system.
+
+
+</td></tr>
+<tr><td>
+
+[installAgentsApps(options)](./tryorama.trycpconductor.installagentsapps.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Install a hApp bundle into the conductor.
+
+
+</td></tr>
+<tr><td>
+
+[installApp(appBundleSource, options)](./tryorama.trycpconductor.installapp.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Install a hApp bundle into the conductor.
+
+
+</td></tr>
+<tr><td>
+
+[off(port)](./tryorama.trycpconductor.off.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Detach the registered signal handler.
+
+
+</td></tr>
+<tr><td>
+
+[on(port, signalHandler)](./tryorama.trycpconductor.on.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Attach a signal handler.
+
+
+</td></tr>
+<tr><td>
+
+[saveDna(dnaContent)](./tryorama.trycpconductor.savedna.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Upload a DNA file from the local file system to the server.
+
+
+</td></tr>
+<tr><td>
+
+[shutDown()](./tryorama.trycpconductor.shutdown.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Shut down the conductor.
+
+
+</td></tr>
+<tr><td>
+
+[startUp(options)](./tryorama.trycpconductor.startup.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Start a configured conductor.
+
+
+</td></tr>
+</tbody></table>

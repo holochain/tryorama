@@ -14,10 +14,37 @@ stopLocalServices: (localServicesProcess: ChildProcessWithoutNullStreams) => Pro
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  localServicesProcess | ChildProcessWithoutNullStreams |  |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+localServicesProcess
+
+
+</td><td>
+
+ChildProcessWithoutNullStreams
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;number \| null&gt; \| null

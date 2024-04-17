@@ -13,13 +13,158 @@ export interface ClientsPlayersOptions
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [agentPubKeys?](./tryorama.clientsplayersoptions.agentpubkeys.md) |  | AgentPubKey\[\] | _(Optional)_ A list of previously generated agent pub keys (optional). |
-|  [app](./tryorama.clientsplayersoptions.app.md) |  | AppBundleSource | An app that will be installed for each agent. |
-|  [clientTimeout?](./tryorama.clientsplayersoptions.clienttimeout.md) |  | number | _(Optional)_ A timeout for the web socket connection (optional). |
-|  [numberOfAgentsPerConductor?](./tryorama.clientsplayersoptions.numberofagentsperconductor.md) |  | number | _(Optional)_ Number of agents per conductor. Defaults to 1. |
-|  [numberOfConductorsPerClient?](./tryorama.clientsplayersoptions.numberofconductorsperclient.md) |  | number | _(Optional)_ Number of conductors per client. Defaults to 1. |
-|  [partialConfig?](./tryorama.clientsplayersoptions.partialconfig.md) |  | string | _(Optional)_ Configuration for the conductor (optional). |
-|  [signalHandler?](./tryorama.clientsplayersoptions.signalhandler.md) |  | AppSignalCb | _(Optional)_ A signal handler to be registered in conductors. |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[agentPubKeys?](./tryorama.clientsplayersoptions.agentpubkeys.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AgentPubKey\[\]
+
+
+</td><td>
+
+_(Optional)_ A list of previously generated agent pub keys (optional).
+
+
+</td></tr>
+<tr><td>
+
+[app](./tryorama.clientsplayersoptions.app.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppBundleSource
+
+
+</td><td>
+
+An app that will be installed for each agent.
+
+
+</td></tr>
+<tr><td>
+
+[clientTimeout?](./tryorama.clientsplayersoptions.clienttimeout.md)
+
+
+</td><td>
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ A timeout for the web socket connection (optional).
+
+
+</td></tr>
+<tr><td>
+
+[numberOfAgentsPerConductor?](./tryorama.clientsplayersoptions.numberofagentsperconductor.md)
+
+
+</td><td>
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ Number of agents per conductor. Defaults to 1.
+
+
+</td></tr>
+<tr><td>
+
+[numberOfConductorsPerClient?](./tryorama.clientsplayersoptions.numberofconductorsperclient.md)
+
+
+</td><td>
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ Number of conductors per client. Defaults to 1.
+
+
+</td></tr>
+<tr><td>
+
+[partialConfig?](./tryorama.clientsplayersoptions.partialconfig.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ Configuration for the conductor (optional).
+
+
+</td></tr>
+<tr><td>
+
+[signalHandler?](./tryorama.clientsplayersoptions.signalhandler.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppSignalCb
+
+
+</td><td>
+
+_(Optional)_ A signal handler to be registered in conductors.
+
+
+</td></tr>
+</tbody></table>

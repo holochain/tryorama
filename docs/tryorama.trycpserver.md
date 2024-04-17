@@ -14,8 +14,50 @@ export declare class TryCpServer
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [start(port)](./tryorama.trycpserver.start.md) | <code>static</code> | Builds and starts a local TryCP server on the specified port. |
-|  [stop()](./tryorama.trycpserver.stop.md) |  | Stops the server instance by killing the server process. |
+<table><thead><tr><th>
 
+Method
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[start(port)](./tryorama.trycpserver.start.md)
+
+
+</td><td>
+
+`static`
+
+
+</td><td>
+
+Builds and starts a local TryCP server on the specified port.
+
+
+</td></tr>
+<tr><td>
+
+[stop()](./tryorama.trycpserver.stop.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Stops the server instance by killing the server process.
+
+
+</td></tr>
+</tbody></table>

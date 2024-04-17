@@ -13,8 +13,59 @@ export interface AppApiResponseCloneCellCreated
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.appapiresponseclonecellcreated.data.md) |  | CreateCloneCellResponse |  |
-|  [type](./tryorama.appapiresponseclonecellcreated.type.md) |  | "clone\_cell\_created" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.appapiresponseclonecellcreated.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+CreateCloneCellResponse
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.appapiresponseclonecellcreated.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"clone\_cell\_created"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

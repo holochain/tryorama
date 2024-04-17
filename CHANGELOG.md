@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2024-04-17: v0.15.4
+### Fixed
+- Replace all IPv4 addresses `127.0.0.1` by `localhost`.
+
 ## 2024-02-28: v0.15.3
 ### Changed
 - Update JS client to v0.16.0

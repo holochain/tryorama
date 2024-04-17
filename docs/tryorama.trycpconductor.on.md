@@ -14,11 +14,55 @@ on(port: number, signalHandler: AppSignalCb): void;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number | The port of the app interface. |
-|  signalHandler | AppSignalCb | The signal handler to register. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+The port of the app interface.
+
+
+</td></tr>
+<tr><td>
+
+signalHandler
+
+
+</td><td>
+
+AppSignalCb
+
+
+</td><td>
+
+The signal handler to register.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 void

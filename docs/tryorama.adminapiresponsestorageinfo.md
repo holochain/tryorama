@@ -13,8 +13,59 @@ export interface AdminApiResponseStorageInfo
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.adminapiresponsestorageinfo.data.md) |  | StorageInfoResponse |  |
-|  [type](./tryorama.adminapiresponsestorageinfo.type.md) |  | "storage\_info" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.adminapiresponsestorageinfo.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+StorageInfoResponse
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.adminapiresponsestorageinfo.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"storage\_info"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

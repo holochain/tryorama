@@ -14,11 +14,55 @@ getZomeCaller: (cell: CallableCell, zomeName: string) => <T>(fnName: string, pay
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  cell | [CallableCell](./tryorama.callablecell.md) | The cell to call the zome on. |
-|  zomeName | string | The name of the Zome to call. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+cell
+
+
+</td><td>
+
+[CallableCell](./tryorama.callablecell.md)
+
+
+</td><td>
+
+The cell to call the zome on.
+
+
+</td></tr>
+<tr><td>
+
+zomeName
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+The name of the Zome to call.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 &lt;T&gt;(fnName: string, payload?: unknown, timeout?: number) =&gt; Promise&lt;T&gt;

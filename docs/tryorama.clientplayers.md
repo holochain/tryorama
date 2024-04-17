@@ -14,8 +14,59 @@ export interface ClientPlayers
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [client](./tryorama.clientplayers.client.md) |  | [TryCpClient](./tryorama.trycpclient.md) |  |
-|  [players](./tryorama.clientplayers.players.md) |  | [TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->\[\] |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[client](./tryorama.clientplayers.client.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[TryCpClient](./tryorama.trycpclient.md)
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[players](./tryorama.clientplayers.players.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->\[\]
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

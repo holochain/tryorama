@@ -13,8 +13,59 @@ export interface AdminApiResponseAgentPubKeyGenerated
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.adminapiresponseagentpubkeygenerated.data.md) |  | HoloHash |  |
-|  [type](./tryorama.adminapiresponseagentpubkeygenerated.type.md) |  | "agent\_pub\_key\_generated" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.adminapiresponseagentpubkeygenerated.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+HoloHash
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.adminapiresponseagentpubkeygenerated.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"agent\_pub\_key\_generated"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

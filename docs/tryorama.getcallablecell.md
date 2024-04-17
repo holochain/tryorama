@@ -27,11 +27,55 @@ getCallableCell: (appWs: IAppWebsocket | IAppAgentWebsocket, cell: ClonedCell | 
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  appWs | [IAppWebsocket](./tryorama.iappwebsocket.md) \| [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md) | App websocket to use for calling zome. |
-|  cell | ClonedCell \| ProvisionedCell | Cell to bind zome call function to. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+appWs
+
+
+</td><td>
+
+[IAppWebsocket](./tryorama.iappwebsocket.md) \| [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md)
+
+
+</td><td>
+
+App websocket to use for calling zome.
+
+
+</td></tr>
+<tr><td>
+
+cell
+
+
+</td><td>
+
+ClonedCell \| ProvisionedCell
+
+
+</td><td>
+
+Cell to bind zome call function to.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 { callZome: &lt;T&gt;(request: [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)<!-- -->, timeout?: number) =&gt; Promise&lt;T&gt;; cell\_id: import("@holochain/client").CellId; clone\_id: string; original\_dna\_hash: Uint8Array; dna\_modifiers: import("@holochain/client").DnaModifiers; name: string; enabled: boolean; } \| { callZome: &lt;T&gt;(request: [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)<!-- -->, timeout?: number) =&gt; Promise&lt;T&gt;; cell\_id: import("@holochain/client").CellId; dna\_modifiers: import("@holochain/client").DnaModifiers; name: string; }

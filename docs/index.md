@@ -6,7 +6,28 @@
 
 ## Packages
 
-|  Package | Description |
-|  --- | --- |
-|  [@holochain/tryorama](./tryorama.md) | <p>Tryorama</p><p>Tools for managing Holochain [Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->.</p> |
+<table><thead><tr><th>
 
+Package
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[@holochain/tryorama](./tryorama.md)
+
+
+</td><td>
+
+Tryorama
+
+Tools for managing Holochain [Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->.
+
+
+</td></tr>
+</tbody></table>

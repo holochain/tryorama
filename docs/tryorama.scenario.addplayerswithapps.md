@@ -17,10 +17,39 @@ addPlayersWithApps(playersApps: Array<{
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  playersApps | Array&lt;{ appBundleSource: AppBundleSource; options?: [AppOptions](./tryorama.appoptions.md)<!-- -->; }&gt; | An array with an app for each player. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+playersApps
+
+
+</td><td>
+
+Array&lt;{ appBundleSource: AppBundleSource; options?: [AppOptions](./tryorama.appoptions.md)<!-- -->; }&gt;
+
+
+</td><td>
+
+An array with an app for each player.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[Player](./tryorama.player.md)<!-- -->\[\]&gt;

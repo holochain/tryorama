@@ -15,16 +15,162 @@ export declare class Conductor implements IConductor
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [adminWs()](./tryorama.conductor.adminws.md) |  | Get all Admin API methods. |
-|  [attachAppInterface(request)](./tryorama.conductor.attachappinterface.md) |  | Attach a web socket to the App API. |
-|  [connectAppAgentWs(port, appId)](./tryorama.conductor.connectappagentws.md) |  | Connect a web socket for a specific app and agent to the App API, |
-|  [connectAppWs(port)](./tryorama.conductor.connectappws.md) |  | Connect a web socket to the App API, |
-|  [create(signalingServerUrl, options)](./tryorama.conductor.create.md) | <code>static</code> | Factory to create a conductor. |
-|  [getTmpDirectory()](./tryorama.conductor.gettmpdirectory.md) |  | Get the path of the directory that contains all files and folders of the conductor. |
-|  [installAgentsApps(options)](./tryorama.conductor.installagentsapps.md) |  | Install an app for multiple agents into the conductor. |
-|  [installApp(appBundleSource, options)](./tryorama.conductor.installapp.md) |  | Install an application into the conductor. |
-|  [shutDown()](./tryorama.conductor.shutdown.md) |  | Close Admin and App API connections and kill the conductor process. |
-|  [startUp()](./tryorama.conductor.startup.md) |  | Start the conductor and establish a web socket connection to the Admin API. |
+<table><thead><tr><th>
 
+Method
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[adminWs()](./tryorama.conductor.adminws.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Get all Admin API methods.
+
+
+</td></tr>
+<tr><td>
+
+[attachAppInterface(request)](./tryorama.conductor.attachappinterface.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Attach a web socket to the App API.
+
+
+</td></tr>
+<tr><td>
+
+[connectAppAgentWs(port, appId)](./tryorama.conductor.connectappagentws.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Connect a web socket for a specific app and agent to the App API,
+
+
+</td></tr>
+<tr><td>
+
+[connectAppWs(port)](./tryorama.conductor.connectappws.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Connect a web socket to the App API,
+
+
+</td></tr>
+<tr><td>
+
+[create(signalingServerUrl, options)](./tryorama.conductor.create.md)
+
+
+</td><td>
+
+`static`
+
+
+</td><td>
+
+Factory to create a conductor.
+
+
+</td></tr>
+<tr><td>
+
+[getTmpDirectory()](./tryorama.conductor.gettmpdirectory.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Get the path of the directory that contains all files and folders of the conductor.
+
+
+</td></tr>
+<tr><td>
+
+[installAgentsApps(options)](./tryorama.conductor.installagentsapps.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Install an app for multiple agents into the conductor.
+
+
+</td></tr>
+<tr><td>
+
+[installApp(appBundleSource, options)](./tryorama.conductor.installapp.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Install an application into the conductor.
+
+
+</td></tr>
+<tr><td>
+
+[shutDown()](./tryorama.conductor.shutdown.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Close Admin and App API connections and kill the conductor process.
+
+
+</td></tr>
+<tr><td>
+
+[startUp()](./tryorama.conductor.startup.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Start the conductor and establish a web socket connection to the Admin API.
+
+
+</td></tr>
+</tbody></table>

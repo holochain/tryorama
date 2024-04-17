@@ -14,10 +14,39 @@ areConductorCellsDhtsSynced: (conductorCells: IConductorCell[]) => Promise<boole
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  conductorCells | [IConductorCell](./tryorama.iconductorcell.md)<!-- -->\[\] | Array of ConductorCells |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+conductorCells
+
+
+</td><td>
+
+[IConductorCell](./tryorama.iconductorcell.md)<!-- -->\[\]
+
+
+</td><td>
+
+Array of ConductorCells
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;boolean&gt;
