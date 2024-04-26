@@ -184,7 +184,6 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
     issuedBob.token,
     appInterfaceInfo.port
   );
-  console.log("Connected");
   const readContentAfterRestart: typeof content = await bob.appWs.callZome({
     cell_id: bob.cells[0].cell_id,
     zome_name: TEST_ZOME_NAME,
