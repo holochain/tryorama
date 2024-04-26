@@ -170,7 +170,6 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   const readContent = await bobCaller<typeof content>("read", createEntryHash);
   t.equal(readContent, content);
 
-
   await bob.conductor.shutDown();
   t.throws(bob.conductor.adminWs);
 

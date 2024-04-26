@@ -303,6 +303,25 @@ _(Optional)_
 </td></tr>
 <tr><td>
 
+[issue\_app\_authentication\_token?](./tryorama.requestadmininterfacemessagetype.issue_app_authentication_token.md)
+
+
+</td><td>
+
+
+</td><td>
+
+null
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+<tr><td>
+
 [list\_app\_interfaces?](./tryorama.requestadmininterfacemessagetype.list_app_interfaces.md)
 
 

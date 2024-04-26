@@ -9,8 +9,8 @@ Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/
 **Signature:**
 
 ```typescript
-connectAppWs(port: number): Promise<{
-        appInfo: (request: AppInfoRequest) => Promise<import("@holochain/client").AppInfoResponse>;
+connectAppWs(_token: AppAuthenticationToken, port: number): Promise<{
+        appInfo: () => Promise<import("@holochain/client").AppInfoResponse>;
         callZome: <T>(request: CallZomeRequest | CallZomeRequestSigned) => Promise<T>;
         createCloneCell: (request: CreateCloneCellRequest) => Promise<import("@holochain/client").ClonedCell>;
         enableCloneCell: (request: EnableCloneCellRequest) => Promise<import("@holochain/client").ClonedCell>;
@@ -39,6 +39,20 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
+\_token
+
+
+</td><td>
+
+AppAuthenticationToken
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
 port
 
 
@@ -54,7 +68,7 @@ number
 </tbody></table>
 **Returns:**
 
-Promise&lt;{ appInfo: (request: AppInfoRequest) =&gt; Promise&lt;import("@holochain/client").AppInfoResponse&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; networkInfo: (request: NetworkInfoRequest) =&gt; Promise&lt;import("@holochain/client").NetworkInfoResponse&gt;; }&gt;
+Promise&lt;{ appInfo: () =&gt; Promise&lt;import("@holochain/client").AppInfoResponse&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; networkInfo: (request: NetworkInfoRequest) =&gt; Promise&lt;import("@holochain/client").NetworkInfoResponse&gt;; }&gt;
 
 The App API web socket.
 

@@ -61,21 +61,7 @@ Attach a web socket to the App API.
 </td></tr>
 <tr><td>
 
-[connectAppAgentWs(port, appId)](./tryorama.conductor.connectappagentws.md)
-
-
-</td><td>
-
-
-</td><td>
-
-Connect a web socket for a specific app and agent to the App API,
-
-
-</td></tr>
-<tr><td>
-
-[connectAppWs(port)](./tryorama.conductor.connectappws.md)
+[connectAppWs(token, port)](./tryorama.conductor.connectappws.md)
 
 
 </td><td>

@@ -9,7 +9,7 @@ Install a hApp bundle into the conductor.
 **Signature:**
 
 ```typescript
-installAgentsApps(options: AgentsAppsOptions): Promise<AppInfo[]>;
+installAgentsApps(options: AgentsAppsOptions): Promise<import("@holochain/client").AppInfo[]>;
 ```
 
 ## Parameters
@@ -49,7 +49,7 @@ Apps to install for each agent, with agent pub keys etc.
 </tbody></table>
 **Returns:**
 
-Promise&lt;AppInfo\[\]&gt;
+Promise&lt;import("@holochain/client").AppInfo\[\]&gt;
 
 The installed app infos.
 

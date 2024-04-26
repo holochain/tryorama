@@ -9,7 +9,7 @@ Connect a web socket to the App API,
 **Signature:**
 
 ```typescript
-connectAppWs(port: number): Promise<AppWebsocket>;
+connectAppWs(token: AppAuthenticationToken, port: number): Promise<AppWebsocket>;
 ```
 
 ## Parameters
@@ -31,6 +31,22 @@ Description
 
 </th></tr></thead>
 <tbody><tr><td>
+
+token
+
+
+</td><td>
+
+AppAuthenticationToken
+
+
+</td><td>
+
+A token to authenticate the connection.
+
+
+</td></tr>
+<tr><td>
 
 port
 

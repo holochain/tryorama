@@ -58,7 +58,7 @@ options
 
 </td><td>
 
-_(Optional)_
+_(Optional)_ Options to configure how the conductor will be started and run.
 
 
 </td></tr>

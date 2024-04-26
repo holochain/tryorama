@@ -37,23 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.requestappinfo.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-{ installed\_app\_id: string; }
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.requestappinfo.type.md)
 
 

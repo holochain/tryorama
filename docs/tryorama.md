@@ -348,6 +348,16 @@ Description
 </td></tr>
 <tr><td>
 
+[AdminApiResponseAppAuthenticationTokenIssued](./tryorama.adminapiresponseappauthenticationtokenissued.md)
+
+
+</td><td>
+
+
+
+</td></tr>
+<tr><td>
+
 [AdminApiResponseAppDisabled](./tryorama.adminapiresponseappdisabled.md)
 
 
@@ -1136,17 +1146,6 @@ Options for using the conductor factory.
 </td><td>
 
 AdminWebsocket interface for local and TryCP conductors.
-
-
-</td></tr>
-<tr><td>
-
-[IAppAgentWebsocket](./tryorama.iappagentwebsocket.md)
-
-
-</td><td>
-
-AppAgentWebsocket interface for local and TryCP conductors.
 
 
 </td></tr>

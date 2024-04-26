@@ -9,8 +9,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
-## 2024-04-26: v0.16.0-dev.4
+## 2024-04-27: v0.16.0-dev.5
+### Changed
+- Update the version of the JS client to v0.17.0-dev.12.
 
+## 2024-04-26: v0.16.0-dev.4
 ### Changed
 - **BREAKING** Integrated the updated JS client which adds app websocket authentication and merges the `AppAgentWebsocket`
   with the `AppWebsocket`. This affects tests when opening app websockets directly but using the 'players' API, this detail
