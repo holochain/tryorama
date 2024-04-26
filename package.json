@@ -31,6 +31,7 @@
     "build:docs": "api-extractor run --local && api-documenter markdown -i docs/temp -o docs",
     "prepare": "npm run lint",
     "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
+    "format": "prettier --write \"ts/**/*.ts\"",
     "test": "tsx ts/test/index.ts",
     "test:local": "npm run test:local:conductor && npm run test:local:scenario",
     "test:local:conductor": "tsx ts/test/local/conductor.ts",
@@ -42,7 +43,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@holochain/client": "^0.17.0-dev.9",
+    "@holochain/client": "^0.17.0-dev.11",
     "get-port": "^6.1.2",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",

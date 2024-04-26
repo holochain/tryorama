@@ -158,6 +158,7 @@ enum Request {
         message: Vec<u8>,
     },
     ConnectAppInterface {
+        token: Vec<u8>,
         port: u16,
     },
     DisconnectAppInterface {
@@ -296,9 +297,9 @@ async fn ws_message(
                 .await
                 .map_err(|e| e.to_string()),
         ),
-        Request::ConnectAppInterface { port } => serialize_resp(
+        Request::ConnectAppInterface { token, port } => serialize_resp(
             request_id,
-            app_interface::connect(port, ws_write)
+            app_interface::connect(token, port, ws_write)
                 .await
                 .map_err(|e| e.to_string()),
         ),

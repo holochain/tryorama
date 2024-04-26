@@ -1,7 +1,5 @@
 import {
   AdminWebsocket,
-  AppAgentCallZomeRequest,
-  AppAgentWebsocket,
   AppBundleSource,
   AppWebsocket,
   AttachAppInterfaceRequest,
@@ -10,6 +8,7 @@ import {
   encodeHashToBase64,
   getSigningCredentials,
   InstallAppRequest,
+  AppAuthenticationToken,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -301,21 +300,23 @@ export class Conductor implements IConductor {
   /**
    * Connect a web socket to the App API,
    *
+   * @param token - A token to authenticate the connection.
    * @param port - The websocket port to connect to.
    * @returns An app websocket.
    */
-  async connectAppWs(port: number) {
+  async connectAppWs(token: AppAuthenticationToken, port: number) {
     logger.debug(`connecting App WebSocket to port ${port}\n`);
     const appApiUrl = new URL(this.adminApiUrl.href);
     appApiUrl.port = port.toString();
     const appWs = await AppWebsocket.connect({
+      token,
       url: appApiUrl,
       wsClientOptions: { origin: _ALLOWED_ORIGIN },
       defaultTimeout: this.timeout,
     });
 
     // set up automatic zome call signing
-    const callZome = appWs.callZome;
+    const callZome = appWs.callZome.bind(appWs);
     appWs.callZome = async (
       req: CallZomeRequest | CallZomeRequestSigned,
       timeout?: number
@@ -327,48 +328,6 @@ export class Conductor implements IConductor {
     };
 
     return appWs;
-  }
-
-  /**
-   * Connect a web socket for a specific app and agent to the App API,
-   *
-   * @param port - The websocket port to connect to.
-   * @param appId - The app id to make requests to.
-   * @returns An app agent websocket.
-   */
-  async connectAppAgentWs(port: number, appId: string) {
-    logger.debug(`connecting App Agent WebSocket to port ${port}\n`);
-    const appApiUrl = new URL(HOST_URL.href);
-    appApiUrl.port = port.toString();
-    const appAgentWs = await AppAgentWebsocket.connect(appId, {
-      url: appApiUrl,
-      wsClientOptions: { origin: _ALLOWED_ORIGIN },
-      defaultTimeout: this.timeout,
-    });
-
-    // set up automatic zome call signing
-    const callZome = appAgentWs.callZome.bind(appAgentWs);
-    appAgentWs.callZome = async (
-      req: AppAgentCallZomeRequest,
-      timeout?: number
-    ) => {
-      let cellId;
-      if ("role_name" in req) {
-        assert(appAgentWs.cachedAppInfo);
-        cellId = appAgentWs.getCellIdFromRoleName(
-          req.role_name,
-          appAgentWs.cachedAppInfo
-        );
-      } else {
-        cellId = req.cell_id;
-      }
-      if (!getSigningCredentials(cellId)) {
-        await this.adminWs().authorizeSigningCredentials(cellId);
-      }
-      return callZome(req, timeout);
-    };
-
-    return appAgentWs;
   }
 
   /**

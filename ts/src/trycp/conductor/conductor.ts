@@ -2,17 +2,14 @@ import {
   AddAgentInfoRequest,
   AgentInfoRequest,
   AgentPubKey,
-  AppAgentCallZomeRequest,
+  AppAuthenticationToken,
   AppBundleSource,
-  AppInfo,
-  AppInfoRequest,
   AppSignalCb,
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CallZomeRequestSigned,
   CapSecret,
   CellId,
-  CellType,
   CreateCloneCellRequest,
   DeleteCloneCellRequest,
   DisableAppRequest,
@@ -33,9 +30,8 @@ import {
   GrantedFunctions,
   GrantedFunctionsType,
   GrantZomeCallCapabilityRequest,
-  HolochainError,
   InstallAppRequest,
-  InstalledAppId,
+  IssueAppAuthenticationTokenRequest,
   ListAppsRequest,
   NetworkInfoRequest,
   randomCapSecret,
@@ -54,7 +50,11 @@ import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { makeLogger } from "../../logger.js";
 import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
-import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
+import {
+  AdminApiResponseAppAuthenticationTokenIssued,
+  TryCpClient,
+  TryCpConductorLogLevel,
+} from "../index.js";
 import {
   AdminApiResponseAgentInfo,
   AdminApiResponseAgentPubKeyGenerated,
@@ -150,6 +150,7 @@ export interface TryCpConductorOptions {
  *
  * @param tryCpClient - The client connection to the TryCP server on which to
  * create the conductor.
+ * @param options - Options to configure how the conductor will be started and run.
  * @returns A conductor instance.
  *
  * @public
@@ -287,9 +288,10 @@ export class TryCpConductor implements IConductor {
    * @param port - The port to attach the app interface to.
    * @returns An empty success response.
    */
-  async connectAppInterface(port: number) {
+  async connectAppInterface(token: AppAuthenticationToken, port: number) {
     const response = await this.tryCpClient.call({
       type: "connect_app_interface",
+      token,
       port,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
@@ -687,6 +689,17 @@ export class TryCpConductor implements IConductor {
       return (response as AdminApiResponseStorageInfo).data;
     };
 
+    const issueAppAuthenticationToken = async (
+      request: IssueAppAuthenticationTokenRequest
+    ) => {
+      const response = await this.callAdminApi({
+        type: { issue_app_authentication_token: null },
+        data: request,
+      });
+      assert("app_authentication_token_issued" in response.type);
+      return (response as AdminApiResponseAppAuthenticationTokenIssued).data;
+    };
+
     /**
      * Grant a capability for signing zome calls.
      *
@@ -761,6 +774,7 @@ export class TryCpConductor implements IConductor {
       storageInfo,
       uninstallApp,
       updateCoordinators,
+      issueAppAuthenticationToken,
     };
   }
 
@@ -788,18 +802,15 @@ export class TryCpConductor implements IConductor {
    *
    * @returns The App API web socket.
    */
-  async connectAppWs(port: number) {
+  async connectAppWs(_token: AppAuthenticationToken, port: number) {
     /**
-     * Request info of an installed hApp.
+     * Request info of the installed hApp.
      *
-     * @param port - The app interface port.
-     * @param request - The hApp id to query.
      * @returns The app info.
      */
-    const appInfo = async (request: AppInfoRequest) => {
+    const appInfo = async () => {
       const response = await this.callAppApi(port, {
         type: { app_info: null },
-        data: request,
       });
       assert("app_info" in response.type);
       return (response as AppApiResponseAppInfo).data;
@@ -928,90 +939,6 @@ export class TryCpConductor implements IConductor {
       );
     }
     return roleName.split(CLONE_ID_DELIMITER)[0];
-  }
-
-  private getCellIdFromRoleName(roleName: RoleName, appInfo: AppInfo) {
-    if (this.isCloneId(roleName)) {
-      const baseRoleName = this.getBaseRoleNameFromCloneId(roleName);
-      if (!(baseRoleName in appInfo.cell_info)) {
-        throw new Error(`No cell found with role_name ${roleName}`);
-      }
-      const cloneCell = appInfo.cell_info[baseRoleName].find(
-        (c) => CellType.Cloned in c && c[CellType.Cloned].clone_id === roleName
-      );
-      if (!cloneCell || !(CellType.Cloned in cloneCell)) {
-        throw new Error(`No clone cell found with clone id ${roleName}`);
-      }
-      return cloneCell[CellType.Cloned].cell_id;
-    }
-    if (!(roleName in appInfo.cell_info)) {
-      throw new Error(`No cell found with role_name ${roleName}`);
-    }
-    const cell = appInfo.cell_info[roleName].find(
-      (c) => CellType.Provisioned in c
-    );
-    if (!cell || !(CellType.Provisioned in cell)) {
-      throw new Error(`No provisioned cell found with role_name ${roleName}`);
-    }
-    return cell[CellType.Provisioned].cell_id;
-  }
-
-  async connectAppAgentWs(port: number, appId: InstalledAppId) {
-    const appWs = await this.connectAppWs(port);
-    let cachedAppInfo = await appWs.appInfo({ installed_app_id: appId });
-
-    const appInfo = appWs.appInfo.bind(appWs);
-    appWs.appInfo = async () => {
-      const currentAppInfo = await appInfo({ installed_app_id: appId });
-      if (!currentAppInfo) {
-        throw new HolochainError(
-          "AppNotFound",
-          `App info not found for the provided id "${appId}". App needs to be installed and enabled.`
-        );
-      }
-      cachedAppInfo = currentAppInfo;
-      return currentAppInfo;
-    };
-
-    const callZome = appWs.callZome.bind(appWs);
-    appWs.callZome = async (request: AppAgentCallZomeRequest) => {
-      if (!cachedAppInfo) {
-        throw new HolochainError(
-          "AppNotFound",
-          `App info not found for the provided id "${appId}". App needs to be installed and enabled.`
-        );
-      }
-      if ("role_name" in request && request.role_name) {
-        const cell_id = this.getCellIdFromRoleName(
-          request.role_name,
-          cachedAppInfo
-        );
-
-        const zomeCallPayload = {
-          ...request,
-          provenance: cachedAppInfo.agent_pub_key,
-          cell_id,
-        };
-        // eslint-disable-next-line
-        // @ts-ignore
-        delete zomeCallPayload.role_name;
-        return callZome(zomeCallPayload);
-      } else if ("cell_id" in request && request.cell_id) {
-        request = {
-          ...request,
-          provenance:
-            "provenance" in request
-              ? request.provenance
-              : cachedAppInfo.agent_pub_key,
-        };
-        // eslint-disable-next-line
-        // @ts-ignore
-        return callZome(request);
-      }
-      throw new Error("callZome requires a role_name or cell_id arg");
-    };
-
-    return appWs;
   }
 
   /**

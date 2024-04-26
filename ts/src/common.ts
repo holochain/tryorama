@@ -13,7 +13,6 @@ import {
   CallableCell,
   CellZomeCallRequest,
   IAdminWebsocket,
-  IAppAgentWebsocket,
   IAppWebsocket,
   IConductor,
 } from "./types.js";
@@ -131,7 +130,7 @@ function assertZomeResponse<T>(
  */
 export const enableAndGetAgentApp = async (
   adminWs: IAdminWebsocket,
-  appWs: IAppWebsocket | IAppAgentWebsocket,
+  appWs: IAppWebsocket,
   appInfo: AppInfo
 ) => {
   const enableAppResponse = await adminWs.enableApp({
@@ -182,7 +181,7 @@ export const enableAndGetAgentApp = async (
  * @public
  */
 export const getCallableCell = (
-  appWs: IAppWebsocket | IAppAgentWebsocket,
+  appWs: IAppWebsocket,
   cell: ClonedCell | ProvisionedCell
 ) => ({
   ...cell,

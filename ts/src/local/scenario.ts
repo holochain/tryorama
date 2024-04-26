@@ -9,7 +9,7 @@ import {
   stopLocalServices,
 } from "../common.js";
 import { AgentApp, AppOptions, IPlayer } from "../types.js";
-import { Conductor, cleanAllConductors, createConductor } from "./conductor.js";
+import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
 
 /**
  * A player tied to a {@link Conductor}.
@@ -95,16 +95,16 @@ export class Scenario {
     const appInfo = await conductor.installApp(appBundleSource, options);
     const adminWs = conductor.adminWs();
     const port = await conductor.attachAppInterface();
-    const appAgentWs = await conductor.connectAppAgentWs(
-      port,
-      appInfo.installed_app_id
-    );
+    const issued = await adminWs.issueAppAuthenticationToken({
+      installed_app_id: appInfo.installed_app_id,
+    });
+    const appWs = await conductor.connectAppWs(issued.token, port);
     const agentApp: AgentApp = await enableAndGetAgentApp(
       adminWs,
-      appAgentWs,
+      appWs,
       appInfo
     );
-    return { conductor, appAgentWs, ...agentApp };
+    return { conductor, appWs, ...agentApp };
   }
 
   /**
@@ -121,12 +121,11 @@ export class Scenario {
     }>
   ) {
     await this.ensureLocalServices();
-    const players = await Promise.all(
+    return await Promise.all(
       playersApps.map((playerApp) =>
         this.addPlayerWithApp(playerApp.appBundleSource, playerApp.options)
       )
     );
-    return players;
   }
 
   /**
