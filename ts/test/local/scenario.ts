@@ -179,7 +179,6 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   const issuedBob = await bob.conductor
     .adminWs()
     .issueAppAuthenticationToken({ installed_app_id: bob.appId });
-  console.log("Connect new client");
   bob.appWs = await bob.conductor.connectAppWs(
     issuedBob.token,
     appInterfaceInfo.port
