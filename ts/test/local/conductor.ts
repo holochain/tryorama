@@ -121,8 +121,8 @@ test("Local Conductor - get app info with app agent ws", async (t) => {
   const issued = await conductor
     .adminWs()
     .issueAppAuthenticationToken({ installed_app_id: app.installed_app_id });
-  const appAgentWs = await conductor.connectAppWs(issued.token, port);
-  const appInfo = await appAgentWs.appInfo();
+  const appWs = await conductor.connectAppWs(issued.token, port);
+  const appInfo = await appWs.appInfo();
   t.deepEqual(appInfo.status, { running: null });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -140,8 +140,8 @@ test("Local Conductor - install and call an app", async (t) => {
   const issued = await adminWs.issueAppAuthenticationToken({
     installed_app_id: app.installed_app_id,
   });
-  const appAgentWs = await conductor.connectAppWs(issued.token, port);
-  const alice = await enableAndGetAgentApp(adminWs, appAgentWs, app);
+  const appWs = await conductor.connectAppWs(issued.token, port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
   t.ok(app.installed_app_id);
 
   const entryContent = "Bye bye, world";
@@ -454,23 +454,19 @@ test("Local Conductor - 2 agent apps test", async (t) => {
   const issued2 = await adminWs2.issueAppAuthenticationToken({
     installed_app_id: bobApp.installed_app_id,
   });
-  const appAgentWs1 = await conductor1.connectAppWs(issued1.token, port1);
-  const appAgentWs2 = await conductor2.connectAppWs(issued2.token, port2);
-  const aliceAppAgent = await enableAndGetAgentApp(
-    adminWs1,
-    appAgentWs1,
-    aliceApp
-  );
-  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
+  const appWs1 = await conductor1.connectAppWs(issued1.token, port1);
+  const appWs2 = await conductor2.connectAppWs(issued2.token, port2);
+  const aliceAgentApp = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
+  const bobAgentApp = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
   const alice: Player = {
     conductor: conductor1,
-    appWs: appAgentWs1,
-    ...aliceAppAgent,
+    appWs: appWs1,
+    ...aliceAgentApp,
   };
   const bob: Player = {
     conductor: conductor2,
-    appWs: appAgentWs2,
-    ...bobAppAgent,
+    appWs: appWs2,
+    ...bobAgentApp,
   };
 
   const entryContent = "test-content";
@@ -509,16 +505,12 @@ test("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agent
   const issued1 = await adminWs1.issueAppAuthenticationToken({
     installed_app_id: aliceApp.installed_app_id,
   });
-  const appAgentWs1 = await conductor1.connectAppWs(issued1.token, port1);
-  const aliceAppAgent = await enableAndGetAgentApp(
-    adminWs1,
-    appAgentWs1,
-    aliceApp
-  );
+  const appWs1 = await conductor1.connectAppWs(issued1.token, port1);
+  const aliceAgentApp = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
   const alice: Player = {
     conductor: conductor1,
-    appWs: appAgentWs1,
-    ...aliceAppAgent,
+    appWs: appWs1,
+    ...aliceAgentApp,
   };
 
   const conductor2 = await createConductor(signalingServerUrl, {
@@ -530,12 +522,12 @@ test("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agent
   const issued2 = await adminWs2.issueAppAuthenticationToken({
     installed_app_id: bobApp.installed_app_id,
   });
-  const appAgentWs2 = await conductor2.connectAppWs(issued2.token, port2);
-  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
+  const appWs2 = await conductor2.connectAppWs(issued2.token, port2);
+  const bobAgentApp = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
   const bob: Player = {
     conductor: conductor2,
-    appWs: appAgentWs2,
-    ...bobAppAgent,
+    appWs: appWs2,
+    ...bobAgentApp,
   };
 
   const entryContent = "test-content";
@@ -587,7 +579,7 @@ test("Local Conductor - Receive a signal", async (t) => {
   assert(signalHandler);
   appWs.on("signal", signalHandler);
   const aliceSignal = { value: "signal" };
-  alice.cells[0].callZome({
+  await alice.cells[0].callZome({
     zome_name: "coordinator",
     fn_name: "signal_loopback",
     payload: aliceSignal,

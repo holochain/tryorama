@@ -224,12 +224,12 @@ export class TryCpScenario {
       installed_app_id: appInfo.installed_app_id,
     });
     await conductor.connectAppInterface(issued.token, port);
-    const appAgentWs = await conductor.connectAppWs(issued.token, port);
-    const agentApp = await enableAndGetAgentApp(adminWs, appAgentWs, appInfo);
+    const appWs = await conductor.connectAppWs(issued.token, port);
+    const agentApp = await enableAndGetAgentApp(adminWs, appWs, appInfo);
     if (options.signalHandler) {
       conductor.on(port, options.signalHandler);
     }
-    const player: TryCpPlayer = { conductor, appWs: appAgentWs, ...agentApp };
+    const player: TryCpPlayer = { conductor, appWs: appWs, ...agentApp };
     return player;
   }
 

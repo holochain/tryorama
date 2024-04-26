@@ -728,16 +728,12 @@ test.skip("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 
     installed_app_id: aliceApp.installed_app_id,
   });
   await conductor1.connectAppInterface(issued1.token, port1);
-  const appAgentWs1 = await conductor1.connectAppWs(issued1.token, port1);
-  const aliceAppAgent = await enableAndGetAgentApp(
-    adminWs1,
-    appAgentWs1,
-    aliceApp
-  );
+  const appWs1 = await conductor1.connectAppWs(issued1.token, port1);
+  const aliceAgentApp = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
   const alice: TryCpPlayer = {
     conductor: conductor1,
-    appWs: appAgentWs1,
-    ...aliceAppAgent,
+    appWs: appWs1,
+    ...aliceAgentApp,
   };
 
   const conductor2 = await createTryCpConductor(client);
@@ -749,16 +745,16 @@ test.skip("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 
     installed_app_id: bobApp.installed_app_id,
   });
   await conductor2.connectAppInterface(issued2.token, port2);
-  const appAgentWs2 = await conductor2.connectAppWs(issued2.token, port2);
-  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
+  const appWs2 = await conductor2.connectAppWs(issued2.token, port2);
+  const bobAgentApp = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
   const bob: TryCpPlayer = {
     conductor: conductor2,
-    appWs: appAgentWs2,
-    ...bobAppAgent,
+    appWs: appWs2,
+    ...bobAgentApp,
   };
 
   const entryContent = "test-content";
-  const createEntryHash = await appAgentWs1.callZome<EntryHash>({
+  const createEntryHash = await appWs1.callZome<EntryHash>({
     cell_id: alice.cells[0].cell_id,
     zome_name: "coordinator",
     fn_name: "create",
@@ -774,7 +770,7 @@ test.skip("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 
 
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-  const readEntryResponse = await appAgentWs2.callZome<typeof entryContent>({
+  const readEntryResponse = await appWs2.callZome<typeof entryContent>({
     cell_id: bob.cells[0].cell_id,
     zome_name: "coordinator",
     fn_name: "read",

@@ -43,7 +43,7 @@ export type IAdminWebsocket = Omit<
 >;
 
 /**
- * AppAgentWebsocket interface for local and TryCP conductors.
+ * AppWebsocket interface for local and TryCP conductors.
  *
  * @public
  */
