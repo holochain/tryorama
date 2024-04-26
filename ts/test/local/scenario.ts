@@ -192,7 +192,6 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   });
   t.equal(readContentAfterRestart, content);
 
-  console.log("Done");
   await scenario.cleanUp();
 });
 
