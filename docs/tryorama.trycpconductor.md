@@ -158,19 +158,7 @@ Create conductor configuration.
 </td></tr>
 <tr><td>
 
-[connectAppAgentWs(port, appId)](./tryorama.trycpconductor.connectappagentws.md)
-
-
-</td><td>
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
-[connectAppInterface(port)](./tryorama.trycpconductor.connectappinterface.md)
+[connectAppInterface(token, port)](./tryorama.trycpconductor.connectappinterface.md)
 
 
 </td><td>
@@ -184,7 +172,7 @@ Connect a web socket to the App API.
 </td></tr>
 <tr><td>
 
-[connectAppWs(port)](./tryorama.trycpconductor.connectappws.md)
+[connectAppWs(\_token, port)](./tryorama.trycpconductor.connectappws.md)
 
 
 </td><td>

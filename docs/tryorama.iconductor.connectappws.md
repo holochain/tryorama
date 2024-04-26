@@ -7,5 +7,5 @@
 **Signature:**
 
 ```typescript
-connectAppWs: (port: number) => Promise<IAppWebsocket>;
+connectAppWs: (token: AppAuthenticationToken, port: number) => Promise<IAppWebsocket>;
 ```

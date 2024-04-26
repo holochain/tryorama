@@ -595,6 +595,9 @@ export interface AdminApiResponseStorageInfo {
   data: StorageInfoResponse;
 }
 
+/**
+ * @public
+ */
 export interface AdminApiResponseAppAuthenticationTokenIssued {
   type: { app_authentication_token_issued: null };
   data: IssueAppAuthenticationTokenResponse;
