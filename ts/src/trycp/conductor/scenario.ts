@@ -156,22 +156,32 @@ export class TryCpScenario {
                 agentsApps: appOptions,
               });
               const adminWs = conductor.adminWs();
-              const { port } = await adminWs.attachAppInterface();
-              await conductor.connectAppInterface(port);
               const players: TryCpPlayer[] = await Promise.all(
-                appInfos.map((appInfo) =>
-                  conductor
-                    .connectAppAgentWs(port, appInfo.installed_app_id)
-                    .then((appAgentWs) =>
-                      enableAndGetAgentApp(adminWs, appAgentWs, appInfo).then(
-                        (agentApp) => ({
-                          conductor,
-                          appAgentWs,
-                          ...agentApp,
-                        })
+                appInfos.map(async (appInfo) => {
+                  const { port } = await adminWs.attachAppInterface();
+                  const issued = await adminWs.issueAppAuthenticationToken({
+                    installed_app_id: appInfo.installed_app_id,
+                  });
+                  // This doesn't make a lot of sense... but we are asking the trycp server to create a connection,
+                  // which needs to be authenticated here.
+                  await conductor.connectAppInterface(issued.token, port);
+                  return (
+                    conductor
+                      // Then here we are just connecting to the same backend connection, but we don't actually need to
+                      // authenticate. We still have to follow the same interface to 'connect' though, even though this
+                      // isn't establishing a connection.
+                      .connectAppWs(issued.token, port)
+                      .then((appWs) =>
+                        enableAndGetAgentApp(adminWs, appWs, appInfo).then(
+                          (agentApp) => ({
+                            conductor,
+                            appWs,
+                            ...agentApp,
+                          })
+                        )
                       )
-                    )
-                )
+                  );
+                })
               );
               return { conductor, players };
             });
@@ -210,16 +220,16 @@ export class TryCpScenario {
     const appInfo = await conductor.installApp(appBundleSource, options);
     const adminWs = conductor.adminWs();
     const { port } = await adminWs.attachAppInterface();
-    await conductor.connectAppInterface(port);
-    const appAgentWs = await conductor.connectAppAgentWs(
-      port,
-      appInfo.installed_app_id
-    );
+    const issued = await adminWs.issueAppAuthenticationToken({
+      installed_app_id: appInfo.installed_app_id,
+    });
+    await conductor.connectAppInterface(issued.token, port);
+    const appAgentWs = await conductor.connectAppWs(issued.token, port);
     const agentApp = await enableAndGetAgentApp(adminWs, appAgentWs, appInfo);
     if (options.signalHandler) {
       conductor.on(port, options.signalHandler);
     }
-    const player: TryCpPlayer = { conductor, appAgentWs, ...agentApp };
+    const player: TryCpPlayer = { conductor, appWs: appAgentWs, ...agentApp };
     return player;
   }
 

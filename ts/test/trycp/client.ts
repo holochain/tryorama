@@ -251,20 +251,30 @@ test("TryCP Server - Admin API - connect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
+  const app = await conductor.installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
 
   const { port } = await conductor
     .adminWs()
     .attachAppInterface({ allowed_origins: _ALLOWED_ORIGIN });
   t.ok(typeof port === "number");
 
-  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
+  const issued = await conductor
+    .adminWs()
+    .issueAppAuthenticationToken({ installed_app_id: app.installed_app_id });
+  const connectAppInterfaceResponse = await conductor.connectAppInterface(
+    issued.token,
+    port
+  );
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
-  const appWs = await conductor.connectAppWs(port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
   t.equal(typeof appWs.appInfo, "function");
 
-  const appInfoResponse = await appWs.appInfo({ installed_app_id: "" });
-  t.equal(appInfoResponse, null);
+  const appInfoResponse = await appWs.appInfo();
+  t.ok(appInfoResponse);
+  t.equal(appInfoResponse?.installed_app_id, app.installed_app_id);
 
   const disconnectAppInterfaceResponse = await conductor.disconnectAppInterface(
     port
@@ -287,11 +297,14 @@ test("TryCP Server - App API - get app info", async (t) => {
   const { port } = await adminWs.attachAppInterface({
     allowed_origins: _ALLOWED_ORIGIN,
   });
-  await conductor.connectAppInterface(port);
-  const appWs = await conductor.connectAppWs(port);
-  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: aliceApp.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
+  await enableAndGetAgentApp(adminWs, appWs, aliceApp);
 
-  const appInfo = await appWs.appInfo({ installed_app_id: alice.appId });
+  const appInfo = await appWs.appInfo();
   assert(appInfo);
   t.deepEqual(appInfo.status, { running: null });
 

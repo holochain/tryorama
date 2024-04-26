@@ -26,10 +26,30 @@ pub(crate) static CONNECTIONS: Lazy<
 
 type PendingRequests = Arc<futures::lock::Mutex<Slab<u64>>>;
 
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type")]
+enum WireMessage {
+    Authenticate {
+        #[serde(with = "serde_bytes")]
+        data: Vec<u8>
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct AppAuthenticationRequest {
+    pub token: Vec<u8>,
+}
+
 #[derive(Debug, Snafu)]
 pub(crate) enum ConnectError {
     #[snafu(display("Could not establish a tcp connection to app interface: {}", source))]
     TcpConnect { source: std::io::Error },
+    #[snafu(display(
+        "Could not serialize authentication message for app interface: {}",
+        source
+    ))]
+    SerializeAuth { source: rmp_serde::encode::Error },
     #[snafu(display(
         "Could not establish a websocket connection to app interface: {}",
         source
@@ -38,6 +58,7 @@ pub(crate) enum ConnectError {
 }
 
 pub(crate) async fn connect(
+    token: Vec<u8>,
     port: u16,
     response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
 ) -> Result<(), ConnectError> {
@@ -73,7 +94,7 @@ pub(crate) async fn connect(
     .await
     .context(WsConnect)?;
 
-    let (request_writer, read) = ws_stream.split();
+    let (mut request_writer, read) = ws_stream.split();
 
     let read: WsReader = read;
 
@@ -83,6 +104,11 @@ pub(crate) async fn connect(
     let (abortable_listen_future, abort_handle) = future::abortable(listen_future);
 
     let listen_task = tokio::task::spawn(abortable_listen_future);
+
+    // As soon as we've started listening, authenticate the connection
+    let auth_payload = rmp_serde::to_vec_named(&AppAuthenticationRequest { token }).context(SerializeAuth)?;
+    let auth_msg = rmp_serde::to_vec_named(&WireMessage::Authenticate { data: auth_payload }).context(SerializeAuth)?;
+    request_writer.send(Message::Binary(auth_msg)).await.context(WsConnect)?;
 
     *connection = Some(Connection {
         listen_task,

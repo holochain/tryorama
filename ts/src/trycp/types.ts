@@ -2,6 +2,7 @@ import {
   AddAgentInfoRequest,
   AgentInfoRequest,
   AgentInfoResponse,
+  AppAuthenticationToken,
   AppInfo,
   AppInfoResponse,
   AttachAppInterfaceRequest,
@@ -29,6 +30,8 @@ import {
   GrantZomeCallCapabilityRequest,
   HoloHash,
   InstallAppRequest,
+  IssueAppAuthenticationTokenRequest,
+  IssueAppAuthenticationTokenResponse,
   ListAppInterfacesResponse,
   ListAppsRequest,
   ListAppsResponse,
@@ -160,6 +163,7 @@ export interface RequestReset {
  */
 export interface RequestConnectAppInterface {
   type: "connect_app_interface";
+  token: AppAuthenticationToken;
   port: number;
 }
 
@@ -324,7 +328,6 @@ export interface RequestCallZome {
  */
 export interface RequestAppInfo {
   type: { app_info: null };
-  data: { installed_app_id: string };
 }
 
 /**
@@ -480,6 +483,7 @@ export interface RequestAdminInterfaceMessageType {
   storage_info?: null;
   uninstall_app?: null;
   update_coordinators?: null;
+  issue_app_authentication_token?: null;
 }
 
 /**
@@ -507,7 +511,8 @@ export interface RequestAdminInterfaceMessage {
     | StartAppRequest
     | StorageInfoRequest
     | UninstallAppRequest
-    | UpdateCoordinatorsRequest;
+    | UpdateCoordinatorsRequest
+    | IssueAppAuthenticationTokenRequest;
 }
 
 /**
@@ -537,6 +542,7 @@ export type AdminApiResponse =
   | AdminApiResponseNetworkStatsDumped
   | AdminApiResponseStateDumped
   | AdminApiResponseStorageInfo
+  | AdminApiResponseAppAuthenticationTokenIssued
   | AdminApiResponseZomeCallCapabilityGranted;
 
 /**
@@ -587,6 +593,11 @@ export interface AdminApiResponseNetworkStatsDumped {
 export interface AdminApiResponseStorageInfo {
   type: { storage_info: null };
   data: StorageInfoResponse;
+}
+
+export interface AdminApiResponseAppAuthenticationTokenIssued {
+  type: { app_authentication_token_issued: null };
+  data: IssueAppAuthenticationTokenResponse;
 }
 
 /**

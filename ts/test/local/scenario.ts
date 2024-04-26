@@ -6,10 +6,10 @@ import {
 } from "@holochain/client";
 import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
-import { getZomeCaller } from "../../src/common.js";
-import { Scenario, runScenario } from "../../src/local/scenario.js";
-import { FIXTURE_HAPP_URL } from "../fixture/index.js";
-import { dhtSync } from "../../src/util.js";
+import { getZomeCaller } from "../../src";
+import { Scenario, runScenario } from "../../src";
+import { FIXTURE_HAPP_URL } from "../fixture";
+import { dhtSync } from "../../src";
 
 const TEST_ZOME_NAME = "coordinator";
 
@@ -72,8 +72,8 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
       path: FIXTURE_HAPP_URL.pathname,
     });
     assert(signalHandlerAlice);
-    assert("on" in alice.appAgentWs);
-    alice.appAgentWs.on("signal", signalHandlerAlice);
+    assert("on" in alice.appWs);
+    alice.appWs.on("signal", signalHandlerAlice);
 
     const signalAlice = { value: "hello alice" };
     alice.cells[0].callZome({
@@ -170,25 +170,31 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   const readContent = await bobCaller<typeof content>("read", createEntryHash);
   t.equal(readContent, content);
 
+  console.log("Ready to shutdown");
+
   await bob.conductor.shutDown();
   t.throws(bob.conductor.adminWs);
 
   await bob.conductor.startUp();
-  const [appInterfacePort] = await bob.conductor.adminWs().listAppInterfaces();
-  bob.appAgentWs = await bob.conductor.connectAppAgentWs(
-    appInterfacePort,
-    bob.appId
+  const [appInterfaceInfo] = await bob.conductor.adminWs().listAppInterfaces();
+  const issuedBob = await bob.conductor
+    .adminWs()
+    .issueAppAuthenticationToken({ installed_app_id: bob.appId });
+  console.log("Connect new client");
+  bob.appWs = await bob.conductor.connectAppWs(
+    issuedBob.token,
+    appInterfaceInfo.port
   );
-  const readContentAfterRestart: typeof content = await bob.appAgentWs.callZome(
-    {
-      cell_id: bob.cells[0].cell_id,
-      zome_name: TEST_ZOME_NAME,
-      fn_name: "read",
-      payload: createEntryHash,
-    }
-  );
+  console.log("Connected");
+  const readContentAfterRestart: typeof content = await bob.appWs.callZome({
+    cell_id: bob.cells[0].cell_id,
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "read",
+    payload: createEntryHash,
+  });
   t.equal(readContentAfterRestart, content);
 
+  console.log("Done");
   await scenario.cleanUp();
 });
 
@@ -215,11 +221,11 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     { appBundleSource },
   ]);
   assert(signalHandlerAlice);
-  assert("on" in alice.appAgentWs);
-  alice.appAgentWs.on("signal", signalHandlerAlice);
+  assert("on" in alice.appWs);
+  alice.appWs.on("signal", signalHandlerAlice);
   assert(signalHandlerBob);
-  assert("on" in bob.appAgentWs);
-  bob.appAgentWs.on("signal", signalHandlerBob);
+  assert("on" in bob.appWs);
+  bob.appWs.on("signal", signalHandlerBob);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({

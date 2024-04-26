@@ -1,7 +1,7 @@
 import type {
   AdminWebsocket,
   AgentPubKey,
-  AppAgentWebsocket,
+  AppAuthenticationToken,
   AppBundleSource,
   AppInfo,
   AppSignalCb,
@@ -43,26 +43,11 @@ export type IAdminWebsocket = Omit<
 >;
 
 /**
- * AppWebsocket interface for local and TryCP conductors.
- *
- * @public
- */
-export type IAppWebsocket = Pick<
-  AppWebsocket,
-  | "callZome"
-  | "appInfo"
-  | "createCloneCell"
-  | "enableCloneCell"
-  | "disableCloneCell"
-  | "networkInfo"
->;
-
-/**
  * AppAgentWebsocket interface for local and TryCP conductors.
  *
  * @public
  */
-export type IAppAgentWebsocket = Pick<AppAgentWebsocket, "callZome">;
+export type IAppWebsocket = Pick<AppWebsocket, "callZome">;
 
 /**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and
@@ -75,11 +60,10 @@ export interface IConductor {
   shutDown: () => Promise<number | null>;
 
   adminWs: () => IAdminWebsocket;
-  connectAppWs: (port: number) => Promise<IAppWebsocket>;
-  connectAppAgentWs: (
-    port: number,
-    appId: InstalledAppId
-  ) => Promise<IAppAgentWebsocket>;
+  connectAppWs: (
+    token: AppAuthenticationToken,
+    port: number
+  ) => Promise<IAppWebsocket>;
 
   installApp: (
     appBundleSource: AppBundleSource,
@@ -142,7 +126,7 @@ export interface AgentApp {
  */
 export interface IPlayer extends AgentApp {
   conductor: IConductor;
-  appAgentWs: AppAgentWebsocket | IAppAgentWebsocket;
+  appWs: AppWebsocket | IAppWebsocket;
 }
 
 /**
