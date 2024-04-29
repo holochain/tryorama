@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2024-04-29: v0.16.0-dev.6
+### Fixed
+- Restored the ability to make a zome call on the app websocket using a role name instead of a cell id.
+
 ## 2024-04-27: v0.16.0-dev.5
 ### Changed
 - Update the version of the JS client to v0.17.0-dev.12.
