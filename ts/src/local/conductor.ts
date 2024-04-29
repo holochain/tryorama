@@ -3,8 +3,6 @@ import {
   AppBundleSource,
   AppWebsocket,
   AttachAppInterfaceRequest,
-  CallZomeRequest,
-  CallZomeRequestSigned,
   encodeHashToBase64,
   getSigningCredentials,
   InstallAppRequest,
