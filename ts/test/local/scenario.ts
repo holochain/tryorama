@@ -1,4 +1,5 @@
 import {
+  ActionHash,
   AppBundleSource,
   AppSignal,
   AppSignalCb,
@@ -277,4 +278,21 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
   t.equal(readContent, lastCreatedContent);
 
   await scenario.cleanUp();
+});
+
+test("Local Scenario - runScenario - call zome by role name", async (t) => {
+  await runScenario(async (scenario: Scenario) => {
+    const alice = await scenario.addPlayerWithApp({
+      path: FIXTURE_HAPP_URL.pathname,
+    });
+
+    const result = (await alice.appWs.callZome({
+      role_name: "test",
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: "hello",
+    })) as ActionHash;
+
+    t.ok(result);
+  });
 });

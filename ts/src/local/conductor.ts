@@ -9,6 +9,7 @@ import {
   getSigningCredentials,
   InstallAppRequest,
   AppAuthenticationToken,
+  AppCallZomeRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -317,12 +318,19 @@ export class Conductor implements IConductor {
 
     // set up automatic zome call signing
     const callZome = appWs.callZome.bind(appWs);
-    appWs.callZome = async (
-      req: CallZomeRequest | CallZomeRequestSigned,
-      timeout?: number
-    ) => {
-      if (!getSigningCredentials(req.cell_id)) {
-        await this.adminWs().authorizeSigningCredentials(req.cell_id);
+    appWs.callZome = async (req: AppCallZomeRequest, timeout?: number) => {
+      let cellId;
+      if ("role_name" in req) {
+        assert(appWs.cachedAppInfo);
+        cellId = appWs.getCellIdFromRoleName(
+          req.role_name,
+          appWs.cachedAppInfo
+        );
+      } else {
+        cellId = req.cell_id;
+      }
+      if (!getSigningCredentials(cellId)) {
+        await this.adminWs().authorizeSigningCredentials(cellId);
       }
       return callZome(req, timeout);
     };
