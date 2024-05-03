@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        [key in keyof RequestAdminInterfaceMessageType]: null;
-    };
+type: RequestAdminInterfaceMessageType;
 ```

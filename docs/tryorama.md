@@ -738,17 +738,6 @@ All possible calls to the Admin API.
 </td></tr>
 <tr><td>
 
-[RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)
-
-
-</td><td>
-
-The types of all possible calls to the Admin API.
-
-
-</td></tr>
-<tr><td>
-
 [RequestAppInfo](./tryorama.requestappinfo.md)
 
 
@@ -1157,6 +1146,17 @@ AdminWebsocket interface for local and TryCP conductors.
 </td><td>
 
 AppWebsocket interface for local and TryCP conductors.
+
+
+</td></tr>
+<tr><td>
+
+[RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)
+
+
+</td><td>
+
+The types of all possible calls to the Admin API.
 
 
 </td></tr>

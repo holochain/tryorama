@@ -62,7 +62,7 @@ CreateCloneCellRequest
 
 </td><td>
 
-{ create\_clone\_cell: null; }
+"create\_clone\_cell"
 
 
 </td><td>

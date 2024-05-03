@@ -61,7 +61,7 @@ ListDnasResponse
 
 </td><td>
 
-{ dnas\_listed: null; }
+"dnas\_listed"
 
 
 </td><td>

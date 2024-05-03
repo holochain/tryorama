@@ -61,7 +61,7 @@ StartAppResponse
 
 </td><td>
 
-{ app\_started: null; }
+"app\_started"
 
 
 </td><td>

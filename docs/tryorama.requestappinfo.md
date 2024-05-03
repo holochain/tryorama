@@ -45,7 +45,7 @@ Description
 
 </td><td>
 
-{ app\_info: null; }
+"app\_info"
 
 
 </td><td>

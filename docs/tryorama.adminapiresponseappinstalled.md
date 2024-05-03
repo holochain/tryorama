@@ -61,7 +61,7 @@ AppInfo
 
 </td><td>
 
-{ app\_installed: null; }
+"app\_installed"
 
 
 </td><td>

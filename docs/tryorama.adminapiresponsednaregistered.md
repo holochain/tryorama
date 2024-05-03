@@ -61,7 +61,7 @@ HoloHash
 
 </td><td>
 
-{ dna\_registered: null; }
+"dna\_registered"
 
 
 </td><td>

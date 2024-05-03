@@ -61,7 +61,7 @@ Uint8Array
 
 </td><td>
 
-{ zome\_call: null; }
+"zome\_call"
 
 
 </td><td>

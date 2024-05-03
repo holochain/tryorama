@@ -64,7 +64,7 @@ _(Optional)_
 
 </td><td>
 
-{ \[key in keyof [RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)<!-- -->\]: null; }
+[RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)
 
 
 </td><td>

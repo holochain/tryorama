@@ -61,7 +61,7 @@ EnableAppResponse
 
 </td><td>
 
-{ app\_enabled: null; }
+"app\_enabled"
 
 
 </td><td>

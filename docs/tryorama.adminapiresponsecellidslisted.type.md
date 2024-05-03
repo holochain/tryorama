@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        cell_ids_listed: null;
-    };
+type: "cell_ids_listed";
 ```

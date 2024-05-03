@@ -62,7 +62,7 @@ CallZomeRequestSigned
 
 </td><td>
 
-{ call\_zome: null; }
+"call\_zome"
 
 
 </td><td>
