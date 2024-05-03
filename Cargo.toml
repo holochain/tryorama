@@ -10,8 +10,8 @@ resolver = "2"
 
 [workspace.dependencies]
 futures = "0.3"
-hdi = "0.4.1-rc.0"
-hdk = "0.3.1-rc.0"
+hdi = "0.4.1"
+hdk = "0.3.1"
 nix = { version = "0.29", features = ["signal"] }
 once_cell = "1.5.0"
 parking_lot = "0.12"
