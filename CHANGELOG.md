@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- **BREAKING** Update enum serialization to match [changed Conductor API serialization format](https://github.com/holochain/holochain/blob/develop/crates/holochain/CHANGELOG.md#040-dev1).
 ### Fixed
 
 ## 2024-04-29: v0.16.0-dev.6

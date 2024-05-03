@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
-import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
 import { _ALLOWED_ORIGIN, enableAndGetAgentApp } from "../../src/common.js";
 import {
-  createTryCpConductor,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
+  createTryCpConductor,
 } from "../../src/trycp/index.js";
 import { TryCpClient } from "../../src/trycp/trycp-client.js";
 import {
@@ -60,6 +59,7 @@ test("TryCP Server - download DNA from web", async (t) => {
     type: "download_dna",
     url,
   });
+  console.log("actual url", actualUrl);
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 
   await tryCpClient.close();
@@ -307,7 +307,7 @@ test("TryCP Server - App API - get app info", async (t) => {
 
   const appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.deepEqual(appInfo.status, { running: null });
+  t.deepEqual(appInfo.status, "running");
 
   await conductor.disconnectAppInterface(port);
   await conductor.shutDown();

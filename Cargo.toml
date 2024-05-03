@@ -7,9 +7,9 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-hdi = "0.4.0-beta-dev.36"
-hdk = "0.3.0-beta-dev.41"
-serde = "1.0.181"
+hdi = "0.4.1"
+hdk = "0.3.1"
+serde = "1.0.192"
 
 [profile.dev]
 opt-level = "z"
