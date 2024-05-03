@@ -54,23 +54,6 @@ Description
 </td></tr>
 <tr><td>
 
-[connectAppAgentWs](./tryorama.iconductor.connectappagentws.md)
-
-
-</td><td>
-
-
-</td><td>
-
-(port: number, appId: InstalledAppId) =&gt; Promise&lt;[IAppAgentWebsocket](./tryorama.iappagentwebsocket.md)<!-- -->&gt;
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [connectAppWs](./tryorama.iconductor.connectappws.md)
 
 
@@ -79,7 +62,7 @@ Description
 
 </td><td>
 
-(port: number) =&gt; Promise&lt;[IAppWebsocket](./tryorama.iappwebsocket.md)<!-- -->&gt;
+(token: AppAuthenticationToken, port: number) =&gt; Promise&lt;[IAppWebsocket](./tryorama.iappwebsocket.md)<!-- -->&gt;
 
 
 </td><td>

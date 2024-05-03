@@ -38,7 +38,7 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[appAgentWs](./tryorama.iplayer.appagentws.md)
+[appWs](./tryorama.iplayer.appws.md)
 
 
 </td><td>
@@ -46,7 +46,7 @@ Description
 
 </td><td>
 
-AppAgentWebsocket \| [IAppAgentWebsocket](./tryorama.iappagentwebsocket.md)
+AppWebsocket \| [IAppWebsocket](./tryorama.iappwebsocket.md)
 
 
 </td><td>

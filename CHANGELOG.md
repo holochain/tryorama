@@ -9,13 +9,47 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2024-04-29: v0.16.0-dev.6
+### Fixed
+- Restored the ability to make a zome call on the app websocket using a role name instead of a cell id.
+
+## 2024-04-27: v0.16.0-dev.5
+### Changed
+- Update the version of the JS client to v0.17.0-dev.12.
+
+## 2024-04-26: v0.16.0-dev.4
+### Changed
+- **BREAKING** Integrated the updated JS client which adds app websocket authentication and merges the `AppAgentWebsocket`
+  with the `AppWebsocket`. This affects tests when opening app websockets directly but using the 'players' API, this detail
+  is abstracted away.
+
 ## 2024-04-17: v0.15.4
 ### Fixed
 - Replace all IPv4 addresses `127.0.0.1` by `localhost`.
 
+## 2024-04-16: v0.16.0-dev.3
+### Changed
+- TryCP: Upgraded `tokio-tungstenite` to fix vulnerability.
+### Fixed
+- Replace all IPv4 websocket addresses `127.0.0.1` by `localhost`.
+
+## 2024-04-09: v0.16.0-dev.2
+### Changed
+- Upgrade to latest JS client.
+  - Set allowed origins for admin websockets in Tryorama conductors and when attaching app websockets.
+  - Pass origin when connecting admin and app websockets.
+
+## 2024-02-28: v0.16.0-dev.1
+### Changed
+- Upgrade JS client.
+
 ## 2024-02-28: v0.15.3
 ### Changed
 - Update JS client to v0.16.0
+
+## 2024-01-25: v0.16.0-dev.0
+### Changed
+- Upgrade deps to Holochain v0.3.0
 
 ## 2023-11-01: v0.15.2
 ### Changed

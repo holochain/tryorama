@@ -61,7 +61,7 @@ DisableCloneCellResponse
 
 </td><td>
 
-"clone\_cell\_disabled"
+{ clone\_cell\_disabled: null; }
 
 
 </td><td>

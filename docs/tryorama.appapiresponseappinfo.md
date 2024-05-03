@@ -61,7 +61,7 @@ AppInfoResponse
 
 </td><td>
 
-"app\_info"
+{ app\_info: null; }
 
 
 </td><td>

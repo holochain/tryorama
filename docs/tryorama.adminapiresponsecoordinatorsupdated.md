@@ -61,7 +61,7 @@ UpdateCoordinatorsResponse
 
 </td><td>
 
-"coordinators\_updated"
+{ coordinators\_updated: null; }
 
 
 </td><td>

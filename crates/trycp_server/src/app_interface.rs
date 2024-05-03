@@ -4,6 +4,8 @@ use futures::{future, SinkExt, StreamExt, TryStreamExt};
 use once_cell::sync::Lazy;
 use slab::Slab;
 use snafu::{IntoError, OptionExt, ResultExt, Snafu};
+use tokio_tungstenite::tungstenite::client::IntoClientRequest;
+use tokio_tungstenite::tungstenite::protocol::WebSocketConfig;
 use tokio_tungstenite::tungstenite::{self, protocol::CloseFrame};
 use tokio_tungstenite::tungstenite::{protocol::frame::coding::CloseCode, Message};
 
@@ -24,16 +26,39 @@ pub(crate) static CONNECTIONS: Lazy<
 
 type PendingRequests = Arc<futures::lock::Mutex<Slab<u64>>>;
 
+
+#[derive(serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type")]
+enum WireMessage {
+    Authenticate {
+        #[serde(with = "serde_bytes")]
+        data: Vec<u8>
+    }
+}
+
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct AppAuthenticationRequest {
+    pub token: Vec<u8>,
+}
+
 #[derive(Debug, Snafu)]
 pub(crate) enum ConnectError {
+    #[snafu(display("Could not establish a tcp connection to app interface: {}", source))]
+    TcpConnect { source: std::io::Error },
+    #[snafu(display(
+        "Could not serialize authentication message for app interface: {}",
+        source
+    ))]
+    SerializeAuth { source: rmp_serde::encode::Error },
     #[snafu(display(
         "Could not establish a websocket connection to app interface: {}",
         source
     ))]
-    Connect { source: tungstenite::Error },
+    WsConnect { source: tungstenite::Error },
 }
 
 pub(crate) async fn connect(
+    token: Vec<u8>,
     port: u16,
     response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
 ) -> Result<(), ConnectError> {
@@ -44,14 +69,32 @@ pub(crate) async fn connect(
         return Ok(());
     }
 
-    let mut url = url::Url::parse("ws://localhost").expect("localhost to be valid URL");
-    url.set_port(Some(port)).expect("can set port on localhost");
-
-    let (ws_stream, _resp) = tokio_tungstenite::connect_async(url)
+    let addr = format!("localhost:{port}");
+    let stream = tokio::net::TcpStream::connect(addr.clone())
         .await
-        .context(Connect)?;
+        .context(TcpConnect)?;
+    let uri = format!("ws://{}", addr);
+    let mut request = uri.clone().into_client_request().expect("not a valid URI");
+    // needed for app websocket connection to be accepted
+    request.headers_mut().insert(
+        "origin",
+        "tryorama-interface"
+            .parse()
+            .expect("invalid origin header value"),
+    );
+    request.body();
 
-    let (request_writer, read) = ws_stream.split();
+    println!("Establishing app interface with {:?}", uri);
+
+    let (ws_stream, _) = tokio_tungstenite::client_async_with_config(
+        request,
+        stream,
+        Some(WebSocketConfig::default()),
+    )
+    .await
+    .context(WsConnect)?;
+
+    let (mut request_writer, read) = ws_stream.split();
 
     let read: WsReader = read;
 
@@ -61,6 +104,11 @@ pub(crate) async fn connect(
     let (abortable_listen_future, abort_handle) = future::abortable(listen_future);
 
     let listen_task = tokio::task::spawn(abortable_listen_future);
+
+    // As soon as we've started listening, authenticate the connection
+    let auth_payload = rmp_serde::to_vec_named(&AppAuthenticationRequest { token }).context(SerializeAuth)?;
+    let auth_msg = rmp_serde::to_vec_named(&WireMessage::Authenticate { data: auth_payload }).context(SerializeAuth)?;
+    request_writer.send(Message::Binary(auth_msg)).await.context(WsConnect)?;
 
     *connection = Some(Connection {
         listen_task,
@@ -100,15 +148,19 @@ pub(crate) async fn listen(
     pending_requests: PendingRequests,
     response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
 ) -> Result<(), ListenError> {
-    reader
+    let result = reader
         .map_err(|e| Read.into_error(e))
         .try_for_each(|holochain_message| async {
             let bytes = match holochain_message {
                 Message::Binary(bytes) => bytes,
+                Message::Ping(p) => {
+                    response_writer.lock().await.send(Message::Pong(p)).await.context(SendResponse)?;
+                    return Ok(());
+                },
                 message => return UnexpectedMessageType { message }.fail(),
             };
 
-            let deserialized: HolochainMessage =rmp_serde::from_slice(&bytes).context(DeserializeMessage { bytes })?;
+            let deserialized: HolochainMessage = rmp_serde::from_slice(&bytes).context(DeserializeMessage { bytes })?;
 
             match deserialized {
                 HolochainMessage::Response { id, data } => {
@@ -134,7 +186,9 @@ pub(crate) async fn listen(
 
             Ok(())
         })
-        .await
+        .await;
+    println!("App listener closed: {:?}", result);
+    Ok(())
 }
 
 #[derive(Debug, Snafu)]

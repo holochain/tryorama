@@ -34,7 +34,7 @@ use tokio::net::TcpStream;
 use tokio::task::spawn_blocking;
 use tokio_tungstenite::{
     tungstenite::{self, Message},
-    MaybeTlsStream, WebSocketStream,
+    WebSocketStream,
 };
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
@@ -114,7 +114,7 @@ struct RequestWrapper {
     request: Request,
 }
 
-#[derive(Deserialize)]
+#[derive(Debug, Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
 enum Request {
@@ -158,6 +158,7 @@ enum Request {
         message: Vec<u8>,
     },
     ConnectAppInterface {
+        token: Vec<u8>,
         port: u16,
     },
     DisconnectAppInterface {
@@ -186,7 +187,7 @@ enum MessageToClient<R> {
 enum ConnectionError {
     #[snafu(display("Could not complete handshake with client: {}", source))]
     Handshake { source: tungstenite::Error },
-    #[snafu(display("Could not read reqeuest from websocket: {}", source))]
+    #[snafu(display("Could not read request from websocket: {}", source))]
     ReadRequest { source: tungstenite::Error },
     #[snafu(display("Could not write response to websocket: {}", source))]
     WriteResponse { source: tungstenite::Error },
@@ -296,9 +297,9 @@ async fn ws_message(
                 .await
                 .map_err(|e| e.to_string()),
         ),
-        Request::ConnectAppInterface { port } => serialize_resp(
+        Request::ConnectAppInterface { token, port } => serialize_resp(
             request_id,
-            app_interface::connect(port, ws_write)
+            app_interface::connect(token, port, ws_write)
                 .await
                 .map_err(|e| e.to_string()),
         ),
@@ -319,14 +320,13 @@ async fn ws_message(
     Ok(Some(Message::Binary(response)))
 }
 
-type WsRequestWriter =
-    futures::stream::SplitSink<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>, Message>;
+type WsRequestWriter = futures::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
 
 type WsResponseWriter = futures::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
 
-type WsClientDuplex = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
+type WsClientDuplex = WebSocketStream<tokio::net::TcpStream>;
 
-type WsReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
+type WsReader = SplitStream<WebSocketStream<tokio::net::TcpStream>>;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case", tag = "type")]

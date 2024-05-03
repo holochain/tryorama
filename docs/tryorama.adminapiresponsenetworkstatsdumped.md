@@ -61,7 +61,7 @@ DumpNetworkStatsResponse
 
 </td><td>
 
-"network\_stats\_dumped"
+{ network\_stats\_dumped: null; }
 
 
 </td><td>

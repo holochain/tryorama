@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "dna_definition_returned";
+type: {
+        dna_definition_returned: null;
+    };
 ```

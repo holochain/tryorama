@@ -1,7 +1,9 @@
+import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
+import { _ALLOWED_ORIGIN, enableAndGetAgentApp } from "../../src/common.js";
 import {
   createTryCpConductor,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
@@ -14,7 +16,6 @@ import {
 } from "../../src/trycp/trycp-server.js";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
-import { enableAndGetAgentApp } from "../../src/common.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const createTryCpClient = () => TryCpClient.create(SERVER_URL);
@@ -251,18 +252,30 @@ test("TryCP Server - Admin API - connect app interface", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
+  const app = await conductor.installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
 
-  const { port } = await conductor.adminWs().attachAppInterface();
+  const { port } = await conductor
+    .adminWs()
+    .attachAppInterface({ allowed_origins: _ALLOWED_ORIGIN });
   t.ok(typeof port === "number");
 
-  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
+  const issued = await conductor
+    .adminWs()
+    .issueAppAuthenticationToken({ installed_app_id: app.installed_app_id });
+  const connectAppInterfaceResponse = await conductor.connectAppInterface(
+    issued.token,
+    port
+  );
   t.equal(connectAppInterfaceResponse, TRYCP_SUCCESS_RESPONSE);
 
-  const appWs = await conductor.connectAppWs(port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
   t.equal(typeof appWs.appInfo, "function");
 
-  const appInfoResponse = await appWs.appInfo({ installed_app_id: "" });
-  t.equal(appInfoResponse, null);
+  const appInfoResponse = await appWs.appInfo();
+  t.ok(appInfoResponse);
+  t.equal(appInfoResponse?.installed_app_id, app.installed_app_id);
 
   const disconnectAppInterfaceResponse = await conductor.disconnectAppInterface(
     port
@@ -282,12 +295,17 @@ test("TryCP Server - App API - get app info", async (t) => {
     path: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
-  const { port } = await adminWs.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const appWs = await conductor.connectAppWs(port);
-  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
+  const { port } = await adminWs.attachAppInterface({
+    allowed_origins: _ALLOWED_ORIGIN,
+  });
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: aliceApp.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
+  await enableAndGetAgentApp(adminWs, appWs, aliceApp);
 
-  const appInfo = await appWs.appInfo({ installed_app_id: alice.appId });
+  const appInfo = await appWs.appInfo();
   assert(appInfo);
   t.deepEqual(appInfo.status, { running: null });
 

@@ -62,7 +62,7 @@ DeleteCloneCellRequest
 
 </td><td>
 
-"delete\_clone\_cell"
+{ delete\_clone\_cell: null; }
 
 
 </td><td>

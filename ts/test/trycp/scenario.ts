@@ -276,7 +276,7 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   );
 
   const [appInterfacePort] = await bob.conductor.adminWs().listAppInterfaces();
-  await bob.conductor.disconnectAppInterface(appInterfacePort);
+  await bob.conductor.disconnectAppInterface(appInterfacePort.port);
   await bob.conductor.shutDown();
   await t.rejects(
     bob.conductor.adminWs().generateAgentPubKey,
@@ -284,7 +284,10 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   );
 
   await bob.conductor.startUp({});
-  await bob.conductor.connectAppInterface(appInterfacePort);
+  const issued = await bob.conductor
+    .adminWs()
+    .issueAppAuthenticationToken({ installed_app_id: bob.appId });
+  await bob.conductor.connectAppInterface(issued.token, appInterfacePort.port);
   const readContentAfterRestart = await bob.cells[0].callZome<typeof content>({
     zome_name: "coordinator",
     fn_name: "read",

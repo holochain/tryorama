@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "delete_clone_cell";
+type: {
+        delete_clone_cell: null;
+    };
 ```

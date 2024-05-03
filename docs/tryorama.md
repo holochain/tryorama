@@ -10,7 +10,7 @@ Tools for managing Holochain [Conductors](./tryorama.conductor.md) and [TryCP Co
 
 ## Remarks
 
-TryCP stands for Tryorama Control Protocol (TryCP) and is a protocol to enable remote management of Holochain conductors on network hosts.
+TryCP stands for Tryorama Control Protocol and is a protocol to enable remote management of Holochain conductors on network hosts.
 
 ## Classes
 
@@ -339,6 +339,16 @@ Description
 <tr><td>
 
 [AdminApiResponseAgentPubKeyGenerated](./tryorama.adminapiresponseagentpubkeygenerated.md)
+
+
+</td><td>
+
+
+
+</td></tr>
+<tr><td>
+
+[AdminApiResponseAppAuthenticationTokenIssued](./tryorama.adminapiresponseappauthenticationtokenissued.md)
 
 
 </td><td>
@@ -723,6 +733,17 @@ A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->.
 </td><td>
 
 All possible calls to the Admin API.
+
+
+</td></tr>
+<tr><td>
+
+[RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)
+
+
+</td><td>
+
+The types of all possible calls to the Admin API.
 
 
 </td></tr>
@@ -1125,17 +1146,6 @@ Options for using the conductor factory.
 </td><td>
 
 AdminWebsocket interface for local and TryCP conductors.
-
-
-</td></tr>
-<tr><td>
-
-[IAppAgentWebsocket](./tryorama.iappagentwebsocket.md)
-
-
-</td><td>
-
-AppAgentWebsocket interface for local and TryCP conductors.
 
 
 </td></tr>

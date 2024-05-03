@@ -62,7 +62,7 @@ NetworkInfoRequest
 
 </td><td>
 
-"network\_info"
+{ network\_info: null; }
 
 
 </td><td>

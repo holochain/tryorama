@@ -54,6 +54,23 @@ number
 </td></tr>
 <tr><td>
 
+[token](./tryorama.requestconnectappinterface.token.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppAuthenticationToken
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
 [type](./tryorama.requestconnectappinterface.type.md)
 
 

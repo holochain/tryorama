@@ -44,7 +44,7 @@ Description
 
 </td><td>
 
-"clone\_cell\_deleted"
+{ clone\_cell\_deleted: null; }
 
 
 </td><td>

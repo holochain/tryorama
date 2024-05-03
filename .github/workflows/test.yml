@@ -3,8 +3,7 @@ name: Run tests
 on:
   pull_request:
   push:
-    branches:
-      - "main*"
+    branches: [develop, main]
 
 concurrency:
   group: ${{ github.ref_name }}

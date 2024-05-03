@@ -62,7 +62,7 @@ DisableCloneCellRequest
 
 </td><td>
 
-"disable\_clone\_cell"
+{ disable\_clone\_cell: null; }
 
 
 </td><td>

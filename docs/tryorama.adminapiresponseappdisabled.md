@@ -61,7 +61,7 @@ DisableAppResponse
 
 </td><td>
 
-"app\_disabled"
+{ app\_disabled: null; }
 
 
 </td><td>

@@ -1,4 +1,5 @@
 #!/bin/bash
+set -e
 
 # build test hApp
 cd ts/test/fixture/zomes/integrity

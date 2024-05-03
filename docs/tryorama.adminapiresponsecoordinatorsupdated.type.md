@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "coordinators_updated";
+type: {
+        coordinators_updated: null;
+    };
 ```

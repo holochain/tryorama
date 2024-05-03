@@ -61,7 +61,7 @@ StorageInfoResponse
 
 </td><td>
 
-"storage\_info"
+{ storage\_info: null; }
 
 
 </td><td>

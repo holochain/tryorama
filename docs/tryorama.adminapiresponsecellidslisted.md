@@ -61,7 +61,7 @@ ListCellIdsResponse
 
 </td><td>
 
-"cell\_ids\_listed"
+{ cell\_ids\_listed: null; }
 
 
 </td><td>

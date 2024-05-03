@@ -7,5 +7,7 @@
 **Signature:**
 
 ```typescript
-type: "app_interface_attached";
+type: {
+        app_interface_attached: null;
+    };
 ```

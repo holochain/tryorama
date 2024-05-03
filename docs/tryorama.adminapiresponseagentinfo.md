@@ -61,7 +61,7 @@ AgentInfoResponse
 
 </td><td>
 
-"agent\_info"
+{ agent\_info: null; }
 
 
 </td><td>

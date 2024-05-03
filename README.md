@@ -24,6 +24,8 @@ npm install @holochain/tryorama
 
 **Tryorama v0.15.x** is compatible with **JS client v0.16.x** and **Holochain v0.2.x**.
 
+**Tryorama v0.16.x** is compatible with **JS client v0.17.x** and **Holochain v0.3.x**.
+
 ## Example
 
 With a few lines of code you can start testing your Holochain application. The

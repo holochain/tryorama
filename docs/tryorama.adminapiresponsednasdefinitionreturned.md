@@ -61,7 +61,7 @@ DnaDefinition
 
 </td><td>
 
-"dna\_definition\_returned"
+{ dna\_definition\_returned: null; }
 
 
 </td><td>

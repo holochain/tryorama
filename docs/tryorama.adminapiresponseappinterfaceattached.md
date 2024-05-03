@@ -61,7 +61,7 @@ AttachAppInterfaceResponse
 
 </td><td>
 
-"app\_interface\_attached"
+{ app\_interface\_attached: null; }
 
 
 </td><td>

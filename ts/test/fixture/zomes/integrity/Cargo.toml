@@ -8,6 +8,7 @@ crate-type = ["cdylib", "rlib"]
 name = "integrity"
 
 [dependencies]
+chrono = {version = "0.4.27", default-features = false}
+getrandom = {version = "0.2", features = ["custom"]}
 hdi = {workspace = true}
 serde = {workspace = true}
-getrandom = { version = "=0.2.7", features = ["custom"] }
