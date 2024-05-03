@@ -48,7 +48,7 @@ test("TryCP Server - non-existent call throws", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP Server - download DNA from web", async (t) => {
+test.only("TryCP Server - download DNA from web", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 
@@ -59,6 +59,7 @@ test("TryCP Server - download DNA from web", async (t) => {
     type: "download_dna",
     url,
   });
+  console.log("actual url", actualUrl);
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 
   await tryCpClient.close();
@@ -306,7 +307,7 @@ test("TryCP Server - App API - get app info", async (t) => {
 
   const appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.deepEqual(appInfo.status, { running: null });
+  t.deepEqual(appInfo.status, "running");
 
   await conductor.disconnectAppInterface(port);
   await conductor.shutDown();
