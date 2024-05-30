@@ -44,7 +44,7 @@ Description
 
 </td><td>
 
-{ agent\_info\_added: null; }
+"agent\_info\_added"
 
 
 </td><td>

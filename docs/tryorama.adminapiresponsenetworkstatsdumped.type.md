@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        network_stats_dumped: null;
-    };
+type: "network_stats_dumped";
 ```

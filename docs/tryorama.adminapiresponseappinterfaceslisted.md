@@ -61,7 +61,7 @@ ListAppInterfacesResponse
 
 </td><td>
 
-{ app\_interfaces\_listed: null; }
+"app\_interfaces\_listed"
 
 
 </td><td>

@@ -9,6 +9,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2024-04-29: v0.16.0-dev.7
+### Changed
+- Update the version of the JS client to 0.17.0-rc.0.
+### Fixed
+- TryCP integration with the latest Holochain release candidate 0.3.1-rc.0.
+
 ## 2024-04-29: v0.16.0-dev.6
 ### Fixed
 - Restored the ability to make a zome call on the app websocket using a role name instead of a cell id.

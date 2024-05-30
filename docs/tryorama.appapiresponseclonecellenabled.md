@@ -61,7 +61,7 @@ EnableCloneCellResponse
 
 </td><td>
 
-{ clone\_cell\_enabled: null; }
+"clone\_cell\_enabled"
 
 
 </td><td>

@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        full_state_dumped: null;
-    };
+type: "full_state_dumped";
 ```

@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        dnas_listed: null;
-    };
+type: "dnas_listed";
 ```

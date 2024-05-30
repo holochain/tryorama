@@ -61,7 +61,7 @@ ListAppsResponse
 
 </td><td>
 
-{ apps\_listed: null; }
+"apps\_listed"
 
 
 </td><td>

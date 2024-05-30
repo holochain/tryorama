@@ -61,7 +61,7 @@ CreateCloneCellResponse
 
 </td><td>
 
-{ clone\_cell\_created: null; }
+"clone\_cell\_created"
 
 
 </td><td>

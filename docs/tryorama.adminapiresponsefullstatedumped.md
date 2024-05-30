@@ -61,7 +61,7 @@ FullStateDump
 
 </td><td>
 
-{ full\_state\_dumped: null; }
+"full\_state\_dumped"
 
 
 </td><td>

@@ -61,7 +61,7 @@ DumpStateResponse
 
 </td><td>
 
-{ state\_dumped: null; }
+"state\_dumped"
 
 
 </td><td>
