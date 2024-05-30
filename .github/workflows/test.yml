@@ -72,6 +72,9 @@ jobs:
       - name: Run tests
         run: nix develop -c $SHELL -c "npm t"
 
+      - name: Build trycp-server package
+        run: nix build .#trycp-server
+
       - name: Setup tmate session if build or test run failed
         if: ${{ failure() }}
         uses: mxschmitt/action-tmate@v3
