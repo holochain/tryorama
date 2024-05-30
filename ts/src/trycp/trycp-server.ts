@@ -17,7 +17,7 @@ export const TRYCP_SERVER_HOST = "0.0.0.0";
  *
  * @public
  */
-export const TRYCP_SERVER_PORT = 9000;
+export const TRYCP_SERVER_PORT = 9005;
 
 /**
  * A factory class to start and stop local instances of the TryCP server.

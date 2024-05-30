@@ -30,7 +30,6 @@ import {
   GrantedFunctions,
   GrantedFunctionsType,
   GrantZomeCallCapabilityRequest,
-  HolochainError,
   InstallAppRequest,
   IssueAppAuthenticationTokenRequest,
   ListAppsRequest,
@@ -371,7 +370,7 @@ export class TryCpConductor implements IConductor {
         type: { register_dna: null },
         data: request,
       });
-      assert("dna_registered" in response.type);
+      assert("dna_registered" === response.type);
       return (response as AdminApiResponseDnaRegistered).data;
     };
 
@@ -388,7 +387,7 @@ export class TryCpConductor implements IConductor {
         type: { get_dna_definition: null },
         data: dnaHash,
       });
-      assert("dna_definition_returned" in response.type);
+      assert("dna_definition_returned" === response.type);
       return (response as AdminApiResponseDnasDefinitionReturned).data;
     };
 
@@ -405,7 +404,7 @@ export class TryCpConductor implements IConductor {
         type: { grant_zome_call_capability: null },
         data: request,
       });
-      assert("zome_call_capability_granted" in response.type);
+      assert("zome_call_capability_granted" === response.type);
     };
 
     /**
@@ -417,7 +416,7 @@ export class TryCpConductor implements IConductor {
       const response = await this.callAdminApi({
         type: { generate_agent_pub_key: null },
       });
-      assert("agent_pub_key_generated" in response.type);
+      assert("agent_pub_key_generated" === response.type);
       return (response as AdminApiResponseAgentPubKeyGenerated).data;
     };
 
@@ -432,7 +431,7 @@ export class TryCpConductor implements IConductor {
         type: { install_app: null },
         data,
       });
-      assert("app_installed" in response.type);
+      assert("app_installed" === response.type);
       return (response as AdminApiResponseAppInstalled).data;
     };
 
@@ -447,7 +446,7 @@ export class TryCpConductor implements IConductor {
         type: { enable_app: null },
         data: request,
       });
-      assert("app_enabled" in response.type);
+      assert("app_enabled" === response.type);
       return (response as AdminApiResponseAppEnabled).data;
     };
 
@@ -462,7 +461,7 @@ export class TryCpConductor implements IConductor {
         type: { disable_app: null },
         data: request,
       });
-      assert("app_disabled" in response.type);
+      assert("app_disabled" === response.type);
       return (response as AdminApiResponseAppDisabled).data;
     };
 
@@ -477,7 +476,7 @@ export class TryCpConductor implements IConductor {
         type: { start_app: null },
         data: request,
       });
-      assert("app_started" in response.type);
+      assert("app_started" === response.type);
       return (response as AdminApiResponseAppStarted).data;
     };
 
@@ -492,7 +491,7 @@ export class TryCpConductor implements IConductor {
         type: { uninstall_app: null },
         data: request,
       });
-      assert("app_uninstalled" in response.type);
+      assert("app_uninstalled" === response.type);
       return (response as AdminApiResponseAppUninstalled).data;
     };
 
@@ -507,7 +506,7 @@ export class TryCpConductor implements IConductor {
         type: { update_coordinators: null },
         data: request,
       });
-      assert("coordinators_updated" in response.type);
+      assert("coordinators_updated" === response.type);
       return (response as AdminApiResponseCoordinatorsUpdated).data;
     };
 
@@ -522,7 +521,7 @@ export class TryCpConductor implements IConductor {
         type: { list_apps: null },
         data: request,
       });
-      assert("apps_listed" in response.type);
+      assert("apps_listed" === response.type);
       return (response as AdminApiResponseAppsListed).data;
     };
 
@@ -535,7 +534,7 @@ export class TryCpConductor implements IConductor {
       const response = await this.callAdminApi({
         type: { list_cell_ids: null },
       });
-      assert("cell_ids_listed" in response.type);
+      assert("cell_ids_listed" === response.type);
       return (response as AdminApiResponseCellIdsListed).data;
     };
 
@@ -546,7 +545,7 @@ export class TryCpConductor implements IConductor {
      */
     const listDnas = async () => {
       const response = await this.callAdminApi({ type: { list_dnas: null } });
-      assert("dnas_listed" in response.type);
+      assert("dnas_listed" === response.type);
       return (response as AdminApiResponseDnasListed).data;
     };
 
@@ -566,7 +565,7 @@ export class TryCpConductor implements IConductor {
         type: { attach_app_interface: null },
         data: request,
       });
-      assert("app_interface_attached" in response.type);
+      assert("app_interface_attached" === response.type);
       return {
         port: (response as AdminApiResponseAppInterfaceAttached).data.port,
       };
@@ -581,7 +580,7 @@ export class TryCpConductor implements IConductor {
       const response = await this.callAdminApi({
         type: { list_app_interfaces: null },
       });
-      assert("app_interfaces_listed" in response.type);
+      assert("app_interfaces_listed" === response.type);
       return (response as AdminApiResponseAppInterfacesListed).data;
     };
 
@@ -598,7 +597,7 @@ export class TryCpConductor implements IConductor {
           cell_id: req.cell_id || null,
         },
       });
-      assert("agent_info" in response.type);
+      assert("agent_info" === response.type);
       return (response as AdminApiResponseAgentInfo).data;
     };
 
@@ -612,7 +611,7 @@ export class TryCpConductor implements IConductor {
         type: { add_agent_info: null },
         data: request,
       });
-      assert("agent_info_added" in response.type);
+      assert("agent_info_added" === response.type);
     };
 
     /**
@@ -625,7 +624,7 @@ export class TryCpConductor implements IConductor {
         type: { delete_clone_cell: null },
         data: request,
       });
-      assert("clone_cell_deleted" in response.type);
+      assert("clone_cell_deleted" === response.type);
     };
 
     /**
@@ -656,7 +655,7 @@ export class TryCpConductor implements IConductor {
         type: { dump_full_state: null },
         data: request,
       });
-      assert("full_state_dumped" in response.type);
+      assert("full_state_dumped" === response.type);
       return (response as AdminApiResponseFullStateDumped).data;
     };
 
@@ -671,7 +670,7 @@ export class TryCpConductor implements IConductor {
         type: { dump_network_stats: null },
         data: request,
       });
-      assert("network_stats_dumped" in response.type);
+      assert("network_stats_dumped" === response.type);
       return (response as AdminApiResponseNetworkStatsDumped).data;
     };
 
@@ -686,7 +685,7 @@ export class TryCpConductor implements IConductor {
         type: { storage_info: null },
         data: request,
       });
-      assert("storage_info" in response.type);
+      assert("storage_info" === response.type);
       return (response as AdminApiResponseStorageInfo).data;
     };
 
@@ -697,7 +696,7 @@ export class TryCpConductor implements IConductor {
         type: { issue_app_authentication_token: null },
         data: request,
       });
-      assert("app_authentication_token_issued" in response.type);
+      assert("app_authentication_token_issued" === response.type);
       return (response as AdminApiResponseAppAuthenticationTokenIssued).data;
     };
 
@@ -744,7 +743,7 @@ export class TryCpConductor implements IConductor {
       const [keyPair, signingKey] = await generateSigningKeyPair();
       const capSecret = await grantSigningKey(
         cellId,
-        functions || { [GrantedFunctionsType.All]: null },
+        functions || GrantedFunctionsType.All,
         signingKey
       );
       setSigningCredentials(cellId, { capSecret, keyPair, signingKey });
@@ -813,7 +812,7 @@ export class TryCpConductor implements IConductor {
       const response = await this.callAppApi(port, {
         type: { app_info: null },
       });
-      assert("app_info" in response.type);
+      assert("app_info" === response.type);
       return (response as AppApiResponseAppInfo).data;
     };
 
@@ -869,7 +868,7 @@ export class TryCpConductor implements IConductor {
         type: { create_clone_cell: null },
         data: request,
       });
-      assert("clone_cell_created" in response.type);
+      assert("clone_cell_created" === response.type);
       return (response as AppApiResponseCloneCellCreated).data;
     };
 
@@ -885,7 +884,7 @@ export class TryCpConductor implements IConductor {
         type: { enable_clone_cell: null },
         data: request,
       });
-      assert("clone_cell_enabled" in response.type);
+      assert("clone_cell_enabled" === response.type);
       return (response as AppApiResponseCloneCellEnabled).data;
     };
 
@@ -900,7 +899,7 @@ export class TryCpConductor implements IConductor {
         type: { disable_clone_cell: null },
         data: request,
       });
-      assert("clone_cell_disabled" in response.type);
+      assert("clone_cell_disabled" === response.type);
       return (response as AppApiResponseCloneCellDisabled).data;
     };
 
@@ -915,7 +914,7 @@ export class TryCpConductor implements IConductor {
         type: { network_info: null },
         data: request,
       });
-      assert("network_info" in response.type);
+      assert("network_info" === response.type);
       return (response as AppApiResponseNetworkInfo).data;
     };
 
