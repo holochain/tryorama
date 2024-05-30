@@ -24,7 +24,7 @@
       # provide a dev shell for all systems that the holonix flake supports
       systems = builtins.attrNames holonix.devShells;
 
-      perSystem = { config, system, pkgs, ... }:
+      perSystem = { config, system, pkgs, lib, ... }:
         {
           formatter = pkgs.nixpkgs-fmt;
 
@@ -54,6 +54,13 @@
               version = crateInfo.version;
               src = craneLib.cleanCargoSource (craneLib.path ./.);
               doCheck = false;
+
+              buildInputs = [ ]
+                ++ (lib.optionals pkgs.stdenv.isDarwin
+                (with pkgs.darwin.apple_sdk_11_0.frameworks; [
+                  CoreFoundation
+                  Security
+                ]));
             };
         };
     };
