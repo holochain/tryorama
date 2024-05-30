@@ -373,7 +373,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   });
   t.deepEqual(
     enabledAppResponse.app.status,
-    { running: null },
+    "running",
     "enabled app response matches 'running'"
   );
 
@@ -545,7 +545,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   });
   t.deepEqual(
     enabledAppResponse1.app.status,
-    { running: null },
+    "running",
     "enabled app response 1 matches 'running'"
   );
   const enabledAppResponse2 = await conductor.adminWs().enableApp({
@@ -553,7 +553,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   });
   t.deepEqual(
     enabledAppResponse2.app.status,
-    { running: null },
+    "running",
     "enabled app response 2 matches 'running'"
   );
 

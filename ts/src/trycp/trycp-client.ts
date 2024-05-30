@@ -270,7 +270,7 @@ export class TryCpClient {
       deserializeApiResponse(response);
 
     // when the request fails, the response's type is "error"
-    if ("error" in deserializedApiResponse.type) {
+    if ("error" === deserializedApiResponse.type) {
       const errorMessage = `error response from Admin API\n${JSON.stringify(
         (deserializedApiResponse as ApiErrorResponse).data,
         null,
