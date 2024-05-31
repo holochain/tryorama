@@ -39,7 +39,7 @@ impl SignalRecv {
 pub struct TrycpClient {
     ws: Ws,
     pend: Arc<
-        std::sync::Mutex<HashMap<u64, tokio::sync::oneshot::Sender<Result<serde_json::Value>>>>,
+        std::sync::Mutex<HashMap<u64, tokio::sync::oneshot::Sender<Result<MessageResponse>>>>,
     >,
     recv_task: tokio::task::JoinHandle<()>,
 }
@@ -66,7 +66,7 @@ impl TrycpClient {
 
         let (sink, mut stream) = w.split();
 
-        let map: HashMap<u64, tokio::sync::oneshot::Sender<Result<serde_json::Value>>> =
+        let map: HashMap<u64, tokio::sync::oneshot::Sender<Result<MessageResponse>>> =
             HashMap::new();
         let pend = Arc::new(std::sync::Mutex::new(map));
 
@@ -108,7 +108,7 @@ impl TrycpClient {
         &self,
         request: Request,
         timeout: std::time::Duration,
-    ) -> Result<serde_json::Value> {
+    ) -> Result<MessageResponse> {
         static RID: std::sync::atomic::AtomicU64 = std::sync::atomic::AtomicU64::new(1);
         let mid = RID.fetch_add(1, std::sync::atomic::Ordering::Relaxed);
 

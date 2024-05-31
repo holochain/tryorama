@@ -108,7 +108,29 @@ pub enum Request {
     },
 }
 
-/// A Message from a trycp_server
+/// Message response types.
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+#[serde(rename_all = "snake_case")]
+#[serde(untagged)]
+pub enum MessageResponse {
+    /// Unit response.
+    Null,
+
+    /// Encoded response.
+    Bytes(Vec<u8>)
+}
+
+impl MessageResponse {
+    /// Convert into bytes.
+    pub fn into_bytes(self) -> Vec<u8> {
+        match self {
+            Self::Null => Vec::new(),
+            Self::Bytes(v) => v,
+        }
+    }
+}
+
+/// A Message from a trycp_server.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case")]
 #[serde(tag = "type")]
@@ -128,6 +150,6 @@ pub enum MessageToClient {
         id: u64,
 
         /// message content.
-        response: std::result::Result<serde_json::Value, String>,
+        response: std::result::Result<MessageResponse, String>,
     },
 }
