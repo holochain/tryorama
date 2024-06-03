@@ -1,6 +1,6 @@
 [package]
 name = "trycp_server"
-version = "0.0.100-alpha0"
+version = "0.16.0-dev.7"
 description = "conductor provisioner for tryorama"
 license = "CAL-1.0"
 keywords = ["holochain", "holo", "p2p", "network", "simulation"]
@@ -11,26 +11,27 @@ authors = ["Holochain Core Dev Team <devcore@holochain.org>"]
 edition = "2021"
 
 [dependencies]
-futures = "0.3"
-nix = { version = "0.28", features = ["signal"] }
-once_cell = "1.5.0"
-parking_lot = "0.12"
-reqwest = { version = "0.12", default-features = false, features = [
+futures = { workspace = true }
+nix = { workspace = true, features = ["signal"] }
+once_cell = { workspace = true }
+parking_lot = { workspace = true }
+reqwest = { workspace = true, default-features = false, features = [
   "blocking",
   "json",
   "rustls-tls-native-roots",
 ] }
-rmp-serde = "=0.15.5"
-serde = { version = "1.0.181", features = ["derive"] }
-serde_bytes = "0.11"
-slab = "0.4"
-snafu = "0.6"
-structopt = "0.2"
-tokio = { version = "1.24", features = [
+rmp-serde = { workspace = true }
+serde = { workspace = true, features = ["derive"] }
+serde_bytes = { workspace = true }
+slab = { workspace = true }
+snafu = { workspace = true }
+structopt = { workspace = true }
+tokio = { workspace = true, features = [
   "macros",
   "rt-multi-thread",
   "process",
   "fs",
 ] }
-tokio-tungstenite = "0.21"
-url = "2"
+tokio-tungstenite = { workspace = true }
+trycp_api = { workspace = true }
+url = { workspace = true }

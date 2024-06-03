@@ -36,6 +36,7 @@ use tokio_tungstenite::{
     tungstenite::{self, Message},
     WebSocketStream,
 };
+use trycp_api::*;
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
 const CONDUCTOR_MAGIC_STRING: &str = "Conductor ready.";
@@ -105,70 +106,6 @@ struct Player {
 struct PlayerProcesses {
     lair: Child,
     holochain: Child,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-struct RequestWrapper {
-    id: u64,
-    request: Request,
-}
-
-#[derive(Debug, Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "type")]
-enum Request {
-    // Given a DNA file, stores the DNA and returns the path at which it is stored.
-    SaveDna {
-        id: String,
-        #[serde(with = "serde_bytes")]
-        content: Vec<u8>,
-    },
-    // Given a DNA URL, ensures that the DNA is downloaded and returns the path at which it is stored.
-    DownloadDna {
-        url: String,
-    },
-    ConfigurePlayer {
-        id: String,
-        /// The Holochain configuration data that is not provided by trycp.
-        ///
-        /// For example:
-        /// ```yaml
-        /// signing_service_uri: ~
-        /// encryption_service_uri: ~
-        /// decryption_service_uri: ~
-        /// dpki: ~
-        /// network: ~
-        /// ```
-        partial_config: String,
-    },
-    Startup {
-        id: String,
-        log_level: Option<String>,
-    },
-    Shutdown {
-        id: String,
-        signal: Option<String>,
-    },
-    // Shuts down all running conductors.
-    Reset,
-    CallAdminInterface {
-        id: String,
-        #[serde(with = "serde_bytes")]
-        message: Vec<u8>,
-    },
-    ConnectAppInterface {
-        token: Vec<u8>,
-        port: u16,
-    },
-    DisconnectAppInterface {
-        port: u16,
-    },
-    CallAppInterface {
-        port: u16,
-        #[serde(with = "serde_bytes")]
-        message: Vec<u8>,
-    },
 }
 
 fn serialize_resp<R: Serialize>(id: u64, data: R) -> Vec<u8> {
