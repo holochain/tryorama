@@ -1,0 +1,10 @@
+[package]
+name = "trycp_api"
+version = "0.17.0-dev.0"
+license = "CAL-1.0"
+edition = "2021"
+
+[dependencies]
+serde = { workspace = true, features = ["derive"] }
+serde_bytes = { workspace = true }
+serde_json = { workspace = true }

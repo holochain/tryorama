@@ -26,14 +26,13 @@ pub(crate) static CONNECTIONS: Lazy<
 
 type PendingRequests = Arc<futures::lock::Mutex<Slab<u64>>>;
 
-
 #[derive(serde::Serialize, serde::Deserialize)]
 #[serde(rename_all = "snake_case", tag = "type")]
 enum WireMessage {
     Authenticate {
         #[serde(with = "serde_bytes")]
-        data: Vec<u8>
-    }
+        data: Vec<u8>,
+    },
 }
 
 #[derive(serde::Serialize, serde::Deserialize)]
@@ -106,9 +105,14 @@ pub(crate) async fn connect(
     let listen_task = tokio::task::spawn(abortable_listen_future);
 
     // As soon as we've started listening, authenticate the connection
-    let auth_payload = rmp_serde::to_vec_named(&AppAuthenticationRequest { token }).context(SerializeAuth)?;
-    let auth_msg = rmp_serde::to_vec_named(&WireMessage::Authenticate { data: auth_payload }).context(SerializeAuth)?;
-    request_writer.send(Message::Binary(auth_msg)).await.context(WsConnect)?;
+    let auth_payload =
+        rmp_serde::to_vec_named(&AppAuthenticationRequest { token }).context(SerializeAuth)?;
+    let auth_msg = rmp_serde::to_vec_named(&WireMessage::Authenticate { data: auth_payload })
+        .context(SerializeAuth)?;
+    request_writer
+        .send(Message::Binary(auth_msg))
+        .await
+        .context(WsConnect)?;
 
     *connection = Some(Connection {
         listen_task,
