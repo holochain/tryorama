@@ -1,6 +1,7 @@
 [package]
 name = "trycp_client"
 version = "0.16.0-dev.7"
+description = "Client for TryCP"
 license = "CAL-1.0"
 edition = "2021"
 
