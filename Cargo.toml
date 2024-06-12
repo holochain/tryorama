@@ -24,8 +24,8 @@ slab = "0.4"
 snafu = "0.6"
 structopt = "0.3"
 tokio = "1.38"
-tokio-tungstenite = "0.23"
-trycp_api = { version = "0.16.0-dev.7", path = "crates/trycp_api" }
+tokio-tungstenite = "0.21"
+trycp_api = { version = "0.16.0-dev.8", path = "crates/trycp_api" }
 url = "2"
 
 [profile.dev]
