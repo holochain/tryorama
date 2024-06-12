@@ -39,6 +39,7 @@ import {
   ListDnasResponse,
   NetworkInfoRequest,
   NetworkInfoResponse,
+  ProvideMemproofsRequest,
   RegisterDnaRequest,
   StartAppRequest,
   StartAppResponse,
@@ -306,10 +307,21 @@ export interface RequestCallAppInterface {
 export type RequestCallAppInterfaceMessage =
   | RequestCallZome
   | RequestAppInfo
+  | RequestProvideMemproofs
   | RequestCreateCloneCell
   | RequestEnableCloneCell
   | RequestDisableCloneCell
   | RequestNetworkInfo;
+
+/**
+ * Request to provide deferred memproofs for an app.
+ *
+ * @public
+ */
+export interface RequestProvideMemproofs {
+  type: "provide_memproofs";
+  data: ProvideMemproofsRequest;
+}
 
 /**
  * Request to call a zome on a conductor's app interface.
@@ -387,6 +399,7 @@ export interface RequestCallAppInterfaceEncoded
  */
 export type AppApiResponse =
   | AppApiResponseAppInfo
+  | AppApiResponseMemproofsProvided
   | AppApiResponseZomeCall
   | AppApiResponseCloneCellCreated
   | AppApiResponseCloneCellEnabled
@@ -396,9 +409,21 @@ export type AppApiResponse =
 /**
  * @public
  */
+export const AppApiResponseOk = "ok";
+
+/**
+ * @public
+ */
 export interface AppApiResponseAppInfo {
   type: "app_info";
   data: AppInfoResponse;
+}
+
+/**
+ * @public
+ */
+export interface AppApiResponseMemproofsProvided {
+  type: typeof AppApiResponseOk;
 }
 
 /**

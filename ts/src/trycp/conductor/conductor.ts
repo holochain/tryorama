@@ -33,10 +33,10 @@ import {
   InstallAppRequest,
   IssueAppAuthenticationTokenRequest,
   ListAppsRequest,
+  MemproofMap,
   NetworkInfoRequest,
   randomCapSecret,
   RegisterDnaRequest,
-  RoleName,
   setSigningCredentials,
   signZomeCall,
   StartAppRequest,
@@ -48,6 +48,7 @@ import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
+import { _ALLOWED_ORIGIN } from "../../common.js";
 import { makeLogger } from "../../logger.js";
 import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
 import {
@@ -79,20 +80,18 @@ import {
   AppApiResponseCloneCellDisabled,
   AppApiResponseCloneCellEnabled,
   AppApiResponseNetworkInfo,
+  AppApiResponseOk,
   RequestAdminInterfaceMessage,
   RequestCallAppInterfaceMessage,
   TRYCP_SUCCESS_RESPONSE,
 } from "../types.js";
 import { deserializeZomeResponsePayload } from "../util.js";
-import { _ALLOWED_ORIGIN } from "../../common.js";
 
 const logger = makeLogger("TryCP conductor");
 const HOLO_SIGNALING_SERVER = new URL("wss://signal.holo.host");
 const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
 const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
 const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
-
-const CLONE_ID_DELIMITER = ".";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -817,6 +816,19 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Provide membrane proofs for the app.
+     *
+     * @param memproofs - A map of {@link MembraneProof}s.
+     */
+    const provideMemproofs = async (request: MemproofMap) => {
+      const response = await this.callAppApi(port, {
+        type: "provide_memproofs",
+        data: request,
+      });
+      assert(response.type === AppApiResponseOk);
+    };
+
+    /**
      * Make a zome call to a cell in the conductor.
      *
      * @param request - {@link CallZomeRequest}.
@@ -925,20 +937,8 @@ export class TryCpConductor implements IConductor {
       enableCloneCell,
       disableCloneCell,
       networkInfo,
+      provideMemproofs,
     };
-  }
-
-  private isCloneId(roleName: RoleName) {
-    return roleName.includes(CLONE_ID_DELIMITER);
-  }
-
-  private getBaseRoleNameFromCloneId(roleName: RoleName) {
-    if (!this.isCloneId(roleName)) {
-      throw new Error(
-        "invalid clone id: no clone id delimiter found in role name"
-      );
-    }
-    return roleName.split(CLONE_ID_DELIMITER)[0];
   }
 
   /**
