@@ -61,7 +61,7 @@ UninstallAppResponse
 
 </td><td>
 
-{ app\_uninstalled: null; }
+"app\_uninstalled"
 
 
 </td><td>

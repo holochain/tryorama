@@ -44,7 +44,7 @@ Description
 
 </td><td>
 
-{ zome\_call\_capability\_granted: null; }
+"zome\_call\_capability\_granted"
 
 
 </td><td>

@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        app_uninstalled: null;
-    };
+type: "app_uninstalled";
 ```

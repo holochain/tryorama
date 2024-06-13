@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        storage_info: null;
-    };
+type: "storage_info";
 ```

@@ -61,7 +61,7 @@ HoloHash
 
 </td><td>
 
-{ agent\_pub\_key\_generated: null; }
+"agent\_pub\_key\_generated"
 
 
 </td><td>

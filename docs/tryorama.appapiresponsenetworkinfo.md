@@ -61,7 +61,7 @@ NetworkInfoResponse
 
 </td><td>
 
-{ network\_info: null; }
+"network\_info"
 
 
 </td><td>

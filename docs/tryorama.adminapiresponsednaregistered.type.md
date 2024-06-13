@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        dna_registered: null;
-    };
+type: "dna_registered";
 ```

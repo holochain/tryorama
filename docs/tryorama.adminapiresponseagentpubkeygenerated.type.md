@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        agent_pub_key_generated: null;
-    };
+type: "agent_pub_key_generated";
 ```

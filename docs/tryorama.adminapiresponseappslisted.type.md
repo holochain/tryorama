@@ -7,7 +7,5 @@
 **Signature:**
 
 ```typescript
-type: {
-        apps_listed: null;
-    };
+type: "apps_listed";
 ```
