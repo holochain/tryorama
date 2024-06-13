@@ -610,6 +610,16 @@ Error response from the Admin or App API.
 </td></tr>
 <tr><td>
 
+[AppApiResponseMemproofsProvided](./tryorama.appapiresponsememproofsprovided.md)
+
+
+</td><td>
+
+
+
+</td></tr>
+<tr><td>
+
 [AppApiResponseNetworkInfo](./tryorama.appapiresponsenetworkinfo.md)
 
 
@@ -892,6 +902,17 @@ Request network info.
 </td></tr>
 <tr><td>
 
+[RequestProvideMemproofs](./tryorama.requestprovidememproofs.md)
+
+
+</td><td>
+
+Request to provide deferred memproofs for an app.
+
+
+</td></tr>
+<tr><td>
+
 [RequestReset](./tryorama.requestreset.md)
 
 
@@ -982,6 +1003,16 @@ Description
 
 </th></tr></thead>
 <tbody><tr><td>
+
+[AppApiResponseOk](./tryorama.appapiresponseok.md)
+
+
+</td><td>
+
+
+
+</td></tr>
+<tr><td>
 
 [DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md)
 

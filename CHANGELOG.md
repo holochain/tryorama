@@ -5,10 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
-- New call `AppRequest::ProvideMemproofs`. An app can be installed with deferred membrane proofs, which can later be provided through this call.
 ### Removed
 ### Changed
 ### Fixed
+
+## 2024-06-13: v0.17.0-dev.1
+### Added
+- New call `AppRequest::ProvideMemproofs`. An app can be installed with deferred membrane proofs, which can later be provided through this call.
 
 ## 2024-05-03: v0.17.0-dev.0
 ### Changed
