@@ -68,14 +68,28 @@ export const areConductorCellsDhtsSynced = async (
   );
 
   // Compare conductors' integrated DhtOps
-  const conductorDhtOpsIntegrated = conductorStates.map((conductor) =>
-    sortBy(conductor.integration_dump.integrated, [
-      // the only property's key of each DhtOp is the DhtOp type
-      (op) => Object.keys(op)[0],
-      // the DhtOp's signature
-      (op) => encodeHashToBase64(Object.values(op)[0][0]),
-    ])
-  );
+  const conductorDhtOpsIntegrated = conductorStates.map((conductor) => {
+    return sortBy(conductor.integration_dump.integrated, [
+      // There are chain and warrant ops
+      (op) => {
+        if ("ChainOp" in op) {
+          // Sort chain ops by op type (e. g. StoreEntry).
+          return Object.keys(op.ChainOp)[0];
+        } else {
+          // Sort warrant ops by signature.
+          return encodeHashToBase64(op.WarrantOp.signature);
+        }
+      },
+      (op) => {
+        if ("ChainOp" in op) {
+          // Secondly sort by chain op signature.
+          return encodeHashToBase64(Object.values(op.ChainOp)[0][0]);
+        } else {
+          // Sorting by signatures is sufficient for warrant ops.
+        }
+      },
+    ]);
+  });
   const status = conductorDhtOpsIntegrated.every((ops) =>
     isEqual(ops, conductorDhtOpsIntegrated[0])
   );
