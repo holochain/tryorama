@@ -3,11 +3,12 @@ import {
   AppBundleSource,
   AppSignal,
   AppSignalCb,
+  CellProvisioningStrategy,
   CloneId,
   EntryHash,
 } from "@holochain/client";
 import assert from "node:assert";
-import { readFileSync } from "node:fs";
+import { readFileSync, realpathSync } from "node:fs";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import {
@@ -23,7 +24,7 @@ import {
   createConductor,
 } from "../../src";
 import { dhtSync } from "../../src";
-import { FIXTURE_HAPP_URL } from "../fixture";
+import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 
 const ROLE_NAME = "test";
 
@@ -124,6 +125,62 @@ test("Local Conductor - get app info with app agent ws", async (t) => {
   const appWs = await conductor.connectAppWs(issued.token, port);
   const appInfo = await appWs.appInfo();
   t.deepEqual(appInfo.status, "running");
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
+test("Local Conductor - install app with deferred memproofs", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl);
+
+  const app = await conductor.installApp({
+    bundle: {
+      manifest: {
+        manifest_version: "1",
+        name: "app",
+        roles: [
+          {
+            name: ROLE_NAME,
+            provisioning: {
+              strategy: CellProvisioningStrategy.Create,
+              deferred: false,
+            },
+            dna: {
+              path: realpathSync(FIXTURE_DNA_URL),
+              modifiers: { network_seed: "some_seed" },
+            },
+          },
+        ],
+        membrane_proofs_deferred: true,
+      },
+      resources: {},
+    },
+  });
+
+  const port = await conductor.attachAppInterface();
+  const issued = await conductor
+    .adminWs()
+    .issueAppAuthenticationToken({ installed_app_id: app.installed_app_id });
+  const appWs = await conductor.connectAppWs(issued.token, port);
+
+  let appInfo = await appWs.appInfo();
+  t.equal(
+    appInfo.status,
+    "awaiting_memproofs",
+    "app status is awaiting_memproofs"
+  );
+
+  const response = await appWs.provideMemproofs({});
+  t.equal(response, undefined, "providing memproofs successful");
+
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: app.installed_app_id });
+
+  appInfo = await appWs.appInfo();
+  t.equal(appInfo.status, "running", "app status is running");
+
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();

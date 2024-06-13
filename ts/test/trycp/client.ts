@@ -48,7 +48,7 @@ test("TryCP Server - non-existent call throws", async (t) => {
   await localTryCpServer.stop();
 });
 
-test.only("TryCP Server - download DNA from web", async (t) => {
+test("TryCP Server - download DNA from web", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
 

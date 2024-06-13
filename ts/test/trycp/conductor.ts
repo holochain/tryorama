@@ -2,6 +2,7 @@ import {
   ActionHash,
   AppBundleSource,
   AppSignal,
+  CellProvisioningStrategy,
   CellType,
   CloneId,
   EntryHash,
@@ -10,6 +11,7 @@ import {
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
+import { realpathSync } from "node:fs";
 import test from "tape-promise/tape.js";
 import {
   enableAndGetAgentApp,
@@ -69,6 +71,69 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
     agentPubKey,
     "alice's agent pub key matches provided key"
   );
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - install app with deferred memproofs", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client);
+  const adminWs = conductor.adminWs();
+
+  const app = await conductor.installApp({
+    bundle: {
+      manifest: {
+        manifest_version: "1",
+        name: "app",
+        roles: [
+          {
+            name: ROLE_NAME,
+            provisioning: {
+              strategy: CellProvisioningStrategy.Create,
+              deferred: false,
+            },
+            dna: {
+              path: realpathSync(FIXTURE_DNA_URL),
+              modifiers: { network_seed: "some_seed" },
+            },
+          },
+        ],
+        membrane_proofs_deferred: true,
+      },
+      resources: {},
+    },
+  });
+
+  const { port } = await adminWs.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: app.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
+
+  let appInfo = await appWs.appInfo();
+  assert(appInfo);
+  t.equal(
+    appInfo.status,
+    "awaiting_memproofs",
+    "app status is awaiting_memproofs"
+  );
+
+  const response = await appWs.provideMemproofs({});
+  t.equal(response, undefined, "providing memproofs successful");
+
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: app.installed_app_id });
+
+  appInfo = await appWs.appInfo();
+  assert(appInfo);
+  t.equal(appInfo.status, "running", "app status is running");
 
   await stopLocalServices(servicesProcess);
   await client.cleanUp();
