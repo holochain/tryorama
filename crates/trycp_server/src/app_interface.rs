@@ -61,7 +61,7 @@ pub(crate) async fn connect(
     port: u16,
     response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
 ) -> Result<(), ConnectError> {
-    let connection_lock = Arc::clone(&CONNECTIONS.lock().await.entry(port).or_default());
+    let connection_lock = Arc::clone(CONNECTIONS.lock().await.entry(port).or_default());
 
     let mut connection = connection_lock.lock().await;
     if connection.is_some() {
