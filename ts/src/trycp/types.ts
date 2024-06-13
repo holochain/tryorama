@@ -190,8 +190,8 @@ export type _TryCpResponse = _TryCpResponseSuccess | _TryCpResponseError;
  * @internal
  */
 export enum _TryCpResponseResult {
-  Ok = "0",
-  Err = "1",
+  Ok = "Ok",
+  Err = "Err",
 }
 
 /**
