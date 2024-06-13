@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2024-06-13: v0.16.0-dev.8
+### Changed
+- Upgraded Rust dependencies for `trycp_server` and updated JS client for it to match serialisation changes. 
+
 ## 2024-04-29: v0.16.0-dev.7
 ### Changed
 - Update the version of the JS client to 0.17.0-rc.0.
