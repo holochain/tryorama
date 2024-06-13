@@ -78,8 +78,8 @@ impl TrycpClient {
         let recv_task = tokio::task::spawn(async move {
             while let Some(Ok(msg)) = stream.next().await {
                 let msg = match msg {
-                    Message::Close(_) => {
-                        eprintln!("Received websocket close from TryCP server");
+                    Message::Close(close_msg) => {
+                        eprintln!("Received websocket close from TryCP server: {}", close_msg.map(|f| f.reason).unwrap_or("No reason".into()));
                         break;
                     }
                     Message::Ping(p) => {
