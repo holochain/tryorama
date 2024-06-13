@@ -127,8 +127,8 @@ export class TryCpClient {
           responseReject(responseWrapper.response[_TryCpResponseResult.Err]);
         } else {
           logger.error(
-            "unknown response type",
-            JSON.stringify(responseWrapper, null, 4)
+            "unknown response type:\n" +
+              JSON.stringify(responseWrapper, null, 4)
           );
           throw new Error(`Unknown response type: ${responseWrapper}`);
         }
@@ -270,7 +270,7 @@ export class TryCpClient {
       deserializeApiResponse(response);
 
     // when the request fails, the response's type is "error"
-    if ("error" === deserializedApiResponse.type) {
+    if (deserializedApiResponse.type === "error") {
       const errorMessage = `error response from Admin API\n${JSON.stringify(
         (deserializedApiResponse as ApiErrorResponse).data,
         null,
@@ -312,7 +312,7 @@ export class TryCpClient {
     if (
       debugLog.type === "call_app_interface" &&
       "data" in debugLog.message &&
-      "call_zome" in debugLog.message.type
+      debugLog.message.type === "call_zome"
     ) {
       const messageData = debugLog.message.data as CallZomeRequestSigned;
       debugLog.message.data = Object.assign(debugLog.message.data, {

@@ -1,12 +1,11 @@
 import assert from "node:assert/strict";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
-import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
 import { _ALLOWED_ORIGIN, enableAndGetAgentApp } from "../../src/common.js";
 import {
-  createTryCpConductor,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
+  createTryCpConductor,
 } from "../../src/trycp/index.js";
 import { TryCpClient } from "../../src/trycp/trycp-client.js";
 import {

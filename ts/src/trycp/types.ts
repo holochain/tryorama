@@ -317,7 +317,7 @@ export type RequestCallAppInterfaceMessage =
  * @public
  */
 export interface RequestCallZome {
-  type: { call_zome: null };
+  type: "call_zome";
   data: CallZomeRequestSigned;
 }
 
@@ -327,7 +327,7 @@ export interface RequestCallZome {
  * @public
  */
 export interface RequestAppInfo {
-  type: { app_info: null };
+  type: "app_info";
 }
 
 /**
@@ -336,7 +336,7 @@ export interface RequestAppInfo {
  * @public
  */
 export interface RequestCreateCloneCell {
-  type: { create_clone_cell: null };
+  type: "create_clone_cell";
   data: CreateCloneCellRequest;
 }
 
@@ -346,7 +346,7 @@ export interface RequestCreateCloneCell {
  * @public
  */
 export interface RequestDisableCloneCell {
-  type: { disable_clone_cell: null };
+  type: "disable_clone_cell";
   data: DisableCloneCellRequest;
 }
 
@@ -356,7 +356,7 @@ export interface RequestDisableCloneCell {
  * @public
  */
 export interface RequestEnableCloneCell {
-  type: { enable_clone_cell: null };
+  type: "enable_clone_cell";
   data: EnableCloneCellRequest;
 }
 
@@ -366,7 +366,7 @@ export interface RequestEnableCloneCell {
  * @public
  */
 export interface RequestNetworkInfo {
-  type: { network_info: null };
+  type: "network_info";
   data: NetworkInfoRequest;
 }
 
@@ -459,32 +459,31 @@ export interface RequestCallAdminInterface {
  *
  * @public
  */
-export interface RequestAdminInterfaceMessageType {
-  add_agent_info?: null;
-  agent_info?: null;
-  attach_app_interface?: null;
-  connect_app_interface?: null;
-  delete_clone_cell?: null;
-  disable_app?: null;
-  dump_full_state?: null;
-  dump_network_stats?: null;
-  dump_state?: null;
-  enable_app?: null;
-  generate_agent_pub_key?: null;
-  get_dna_definition?: null;
-  grant_zome_call_capability?: null;
-  install_app?: null;
-  list_apps?: null;
-  list_app_interfaces?: null;
-  list_cell_ids?: null;
-  list_dnas?: null;
-  register_dna?: null;
-  start_app?: null;
-  storage_info?: null;
-  uninstall_app?: null;
-  update_coordinators?: null;
-  issue_app_authentication_token?: null;
-}
+export type RequestAdminInterfaceMessageType =
+  | "add_agent_info"
+  | "agent_info"
+  | "attach_app_interface"
+  | "connect_app_interface"
+  | "delete_clone_cell"
+  | "disable_app"
+  | "dump_full_state"
+  | "dump_network_stats"
+  | "dump_state"
+  | "enable_app"
+  | "generate_agent_pub_key"
+  | "get_dna_definition"
+  | "grant_zome_call_capability"
+  | "install_app"
+  | "list_apps"
+  | "list_app_interfaces"
+  | "list_cell_ids"
+  | "list_dnas"
+  | "register_dna"
+  | "start_app"
+  | "storage_info"
+  | "uninstall_app"
+  | "update_coordinators"
+  | "issue_app_authentication_token";
 
 /**
  * All possible calls to the Admin API.
@@ -492,7 +491,7 @@ export interface RequestAdminInterfaceMessageType {
  * @public
  */
 export interface RequestAdminInterfaceMessage {
-  type: { [key in keyof RequestAdminInterfaceMessageType]: null };
+  type: RequestAdminInterfaceMessageType;
   data?:
     | AddAgentInfoRequest
     | AgentInfoRequest
