@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [getZomeCaller](./tryorama.getzomecaller.md)
 
-## getZomeCaller variable
+## getZomeCaller() function
 
 Get a shorthand function to call a cell's zome.
 
@@ -11,3 +11,61 @@ Get a shorthand function to call a cell's zome.
 ```typescript
 getZomeCaller: (cell: CallableCell, zomeName: string) => <T>(fnName: string, payload?: unknown, timeout?: number) => Promise<T>
 ```
+
+## Parameters
+
+<table><thead><tr><th>
+
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+cell
+
+
+</td><td>
+
+[CallableCell](./tryorama.callablecell.md)
+
+
+</td><td>
+
+The cell to call the zome on.
+
+
+</td></tr>
+<tr><td>
+
+zomeName
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+The name of the Zome to call.
+
+
+</td></tr>
+</tbody></table>
+**Returns:**
+
+&lt;T&gt;(fnName: string, payload?: unknown, timeout?: number) =&gt; Promise&lt;T&gt;
+
+A function to call the specified Zome.
+

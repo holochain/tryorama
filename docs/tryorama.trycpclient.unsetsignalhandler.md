@@ -12,10 +12,37 @@ unsetSignalHandler(port: number): void;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number |  |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 void

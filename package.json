@@ -1,8 +1,9 @@
 {
   "name": "@holochain/tryorama",
   "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
-  "version": "0.16.0-dev.0",
+  "version": "0.17.0-dev.1",
   "author": "Holochain Foundation",
+  "license": "MIT",
   "keywords": [
     "holochain",
     "conductor",
@@ -14,7 +15,6 @@
     "type": "git",
     "url": "https://github.com/holochain/tryorama"
   },
-  "license": "CAL-1.0",
   "type": "module",
   "engines": {
     "node": ">=18.0.0 || >=20.0.0"
@@ -30,19 +30,20 @@
     "build": "rimraf ./lib && tsc && npm run build:docs",
     "build:docs": "api-extractor run --local && api-documenter markdown -i docs/temp -o docs",
     "prepare": "npm run lint",
-    "prepublishOnly": "npm run build",
     "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
-    "test": "ts-node-esm ts/test/index.ts",
+    "format": "prettier --write \"ts/**/*.ts\"",
+    "test": "tsx ts/test/index.ts",
     "test:local": "npm run test:local:conductor && npm run test:local:scenario",
-    "test:local:conductor": "node --loader ts-node/esm ts/test/local/conductor.ts",
-    "test:local:scenario": "node --loader ts-node/esm ts/test/local/scenario.ts",
+    "test:local:conductor": "tsx ts/test/local/conductor.ts",
+    "test:local:scenario": "tsx ts/test/local/scenario.ts",
     "test:trycp": "npm run test:trycp:client && npm run test:trycp:conductor && npm run test:trycp:scenario",
-    "test:trycp:client": "node --loader ts-node/esm ts/test/trycp/client.ts",
-    "test:trycp:conductor": "node --loader ts-node/esm ts/test/trycp/conductor.ts",
-    "test:trycp:scenario": "node --loader ts-node/esm ts/test/trycp/scenario.ts"
+    "test:trycp:client": "tsx ts/test/trycp/client.ts",
+    "test:trycp:conductor": "tsx ts/test/trycp/conductor.ts",
+    "test:trycp:scenario": "tsx ts/test/trycp/scenario.ts",
+    "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@holochain/client": "^0.17.0-dev.2",
+    "@holochain/client": "^0.18.0-dev.3",
     "get-port": "^6.1.2",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",
@@ -67,11 +68,9 @@
     "eslint-plugin-tsdoc": "^0.2.17",
     "prettier": "^2.8.1",
     "rimraf": "^3.0.2",
-    "sinon": "^7.5.0",
-    "tape": "^5.6.1",
+    "tape": "^5.7.5",
     "tape-promise": "^4.0.0",
-    "ts-node": "^10.9.1",
-    "typescript": "^4.9.4",
-    "vitest": "^0.33.0"
+    "tsx": "^4.7.2",
+    "typescript": "^4.9.4"
   }
 }

@@ -13,8 +13,59 @@ export interface AdminApiResponseCellIdsListed
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.adminapiresponsecellidslisted.data.md) |  | ListCellIdsResponse |  |
-|  [type](./tryorama.adminapiresponsecellidslisted.type.md) |  | "cell\_ids\_listed" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.adminapiresponsecellidslisted.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+ListCellIdsResponse
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.adminapiresponsecellidslisted.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"cell\_ids\_listed"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

@@ -2,6 +2,7 @@ import {
   AddAgentInfoRequest,
   AgentInfoRequest,
   AgentInfoResponse,
+  AppAuthenticationToken,
   AppInfo,
   AppInfoResponse,
   AttachAppInterfaceRequest,
@@ -29,6 +30,8 @@ import {
   GrantZomeCallCapabilityRequest,
   HoloHash,
   InstallAppRequest,
+  IssueAppAuthenticationTokenRequest,
+  IssueAppAuthenticationTokenResponse,
   ListAppInterfacesResponse,
   ListAppsRequest,
   ListAppsResponse,
@@ -36,6 +39,7 @@ import {
   ListDnasResponse,
   NetworkInfoRequest,
   NetworkInfoResponse,
+  ProvideMemproofsRequest,
   RegisterDnaRequest,
   StartAppRequest,
   StartAppResponse,
@@ -160,6 +164,7 @@ export interface RequestReset {
  */
 export interface RequestConnectAppInterface {
   type: "connect_app_interface";
+  token: AppAuthenticationToken;
   port: number;
 }
 
@@ -302,10 +307,21 @@ export interface RequestCallAppInterface {
 export type RequestCallAppInterfaceMessage =
   | RequestCallZome
   | RequestAppInfo
+  | RequestProvideMemproofs
   | RequestCreateCloneCell
   | RequestEnableCloneCell
   | RequestDisableCloneCell
   | RequestNetworkInfo;
+
+/**
+ * Request to provide deferred memproofs for an app.
+ *
+ * @public
+ */
+export interface RequestProvideMemproofs {
+  type: "provide_memproofs";
+  data: ProvideMemproofsRequest;
+}
 
 /**
  * Request to call a zome on a conductor's app interface.
@@ -324,7 +340,6 @@ export interface RequestCallZome {
  */
 export interface RequestAppInfo {
   type: "app_info";
-  data: { installed_app_id: string };
 }
 
 /**
@@ -384,6 +399,7 @@ export interface RequestCallAppInterfaceEncoded
  */
 export type AppApiResponse =
   | AppApiResponseAppInfo
+  | AppApiResponseMemproofsProvided
   | AppApiResponseZomeCall
   | AppApiResponseCloneCellCreated
   | AppApiResponseCloneCellEnabled
@@ -393,9 +409,21 @@ export type AppApiResponse =
 /**
  * @public
  */
+export const AppApiResponseOk = "ok";
+
+/**
+ * @public
+ */
 export interface AppApiResponseAppInfo {
   type: "app_info";
   data: AppInfoResponse;
+}
+
+/**
+ * @public
+ */
+export interface AppApiResponseMemproofsProvided {
+  type: typeof AppApiResponseOk;
 }
 
 /**
@@ -452,36 +480,43 @@ export interface RequestCallAdminInterface {
 }
 
 /**
+ * The types of all possible calls to the Admin API.
+ *
+ * @public
+ */
+export type RequestAdminInterfaceMessageType =
+  | "add_agent_info"
+  | "agent_info"
+  | "attach_app_interface"
+  | "connect_app_interface"
+  | "delete_clone_cell"
+  | "disable_app"
+  | "dump_full_state"
+  | "dump_network_stats"
+  | "dump_state"
+  | "enable_app"
+  | "generate_agent_pub_key"
+  | "get_dna_definition"
+  | "grant_zome_call_capability"
+  | "install_app"
+  | "list_apps"
+  | "list_app_interfaces"
+  | "list_cell_ids"
+  | "list_dnas"
+  | "register_dna"
+  | "start_app"
+  | "storage_info"
+  | "uninstall_app"
+  | "update_coordinators"
+  | "issue_app_authentication_token";
+
+/**
  * All possible calls to the Admin API.
  *
  * @public
  */
 export interface RequestAdminInterfaceMessage {
-  type:
-    | "add_agent_info"
-    | "agent_info"
-    | "attach_app_interface"
-    | "connect_app_interface"
-    | "delete_clone_cell"
-    | "disable_app"
-    | "dump_full_state"
-    | "dump_network_stats"
-    | "dump_state"
-    | "enable_app"
-    | "generate_agent_pub_key"
-    | "get_dna_definition"
-    | "grant_zome_call_capability"
-    | "install_app"
-    | "install_app"
-    | "list_apps"
-    | "list_app_interfaces"
-    | "list_cell_ids"
-    | "list_dnas"
-    | "register_dna"
-    | "start_app"
-    | "storage_info"
-    | "uninstall_app"
-    | "update_coordinators";
+  type: RequestAdminInterfaceMessageType;
   data?:
     | AddAgentInfoRequest
     | AgentInfoRequest
@@ -500,7 +535,8 @@ export interface RequestAdminInterfaceMessage {
     | StartAppRequest
     | StorageInfoRequest
     | UninstallAppRequest
-    | UpdateCoordinatorsRequest;
+    | UpdateCoordinatorsRequest
+    | IssueAppAuthenticationTokenRequest;
 }
 
 /**
@@ -530,6 +566,7 @@ export type AdminApiResponse =
   | AdminApiResponseNetworkStatsDumped
   | AdminApiResponseStateDumped
   | AdminApiResponseStorageInfo
+  | AdminApiResponseAppAuthenticationTokenIssued
   | AdminApiResponseZomeCallCapabilityGranted;
 
 /**
@@ -580,6 +617,14 @@ export interface AdminApiResponseNetworkStatsDumped {
 export interface AdminApiResponseStorageInfo {
   type: "storage_info";
   data: StorageInfoResponse;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAppAuthenticationTokenIssued {
+  type: "app_authentication_token_issued";
+  data: IssueAppAuthenticationTokenResponse;
 }
 
 /**

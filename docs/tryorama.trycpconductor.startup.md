@@ -16,10 +16,39 @@ startUp(options?: {
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  options | { logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; } | _(Optional)_ Log level of the conductor. Defaults to "info". |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+options
+
+
+</td><td>
+
+{ logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; }
+
+
+</td><td>
+
+_(Optional)_ Log level of the conductor. Defaults to "info".
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;null&gt;

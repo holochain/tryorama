@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [addAllAgentsToAllConductors](./tryorama.addallagentstoallconductors.md)
 
-## addAllAgentsToAllConductors variable
+## addAllAgentsToAllConductors() function
 
 Add all agents of all conductors to each other. Shortcuts peer discovery through a bootstrap server or gossiping.
 
@@ -11,3 +11,43 @@ Add all agents of all conductors to each other. Shortcuts peer discovery through
 ```typescript
 addAllAgentsToAllConductors: (conductors: IConductor[]) => Promise<void>
 ```
+
+## Parameters
+
+<table><thead><tr><th>
+
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+conductors
+
+
+</td><td>
+
+[IConductor](./tryorama.iconductor.md)<!-- -->\[\]
+
+
+</td><td>
+
+Conductors to mutually exchange all agents with.
+
+
+</td></tr>
+</tbody></table>
+**Returns:**
+
+Promise&lt;void&gt;
+

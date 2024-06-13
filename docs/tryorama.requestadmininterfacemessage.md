@@ -14,8 +14,61 @@ export interface RequestAdminInterfaceMessage
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data?](./tryorama.requestadmininterfacemessage.data.md) |  | AddAgentInfoRequest \| AgentInfoRequest \| AttachAppInterfaceRequest \| DeleteCloneCellRequest \| DisableAppRequest \| DumpFullStateRequest \| DumpNetworkStatsRequest \| DumpStateRequest \| EnableAppRequest \| GetDnaDefinitionRequest \| GrantZomeCallCapabilityRequest \| InstallAppRequest \| ListAppsRequest \| RegisterDnaRequest \| StartAppRequest \| StorageInfoRequest \| UninstallAppRequest \| UpdateCoordinatorsRequest | _(Optional)_ |
-|  [type](./tryorama.requestadmininterfacemessage.type.md) |  | "add\_agent\_info" \| "agent\_info" \| "attach\_app\_interface" \| "connect\_app\_interface" \| "delete\_clone\_cell" \| "disable\_app" \| "dump\_full\_state" \| "dump\_network\_stats" \| "dump\_state" \| "enable\_app" \| "generate\_agent\_pub\_key" \| "get\_dna\_definition" \| "grant\_zome\_call\_capability" \| "install\_app" \| "install\_app" \| "list\_apps" \| "list\_app\_interfaces" \| "list\_cell\_ids" \| "list\_dnas" \| "register\_dna" \| "start\_app" \| "storage\_info" \| "uninstall\_app" \| "update\_coordinators" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data?](./tryorama.requestadmininterfacemessage.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AddAgentInfoRequest \| AgentInfoRequest \| AttachAppInterfaceRequest \| DeleteCloneCellRequest \| DisableAppRequest \| DumpFullStateRequest \| DumpNetworkStatsRequest \| DumpStateRequest \| EnableAppRequest \| GetDnaDefinitionRequest \| GrantZomeCallCapabilityRequest \| InstallAppRequest \| ListAppsRequest \| RegisterDnaRequest \| StartAppRequest \| StorageInfoRequest \| UninstallAppRequest \| UpdateCoordinatorsRequest \| IssueAppAuthenticationTokenRequest
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestadmininterfacemessage.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

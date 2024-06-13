@@ -14,10 +14,39 @@ call(request: TryCpRequest): Promise<TryCpSuccessResponse>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  request | [TryCpRequest](./tryorama.trycprequest.md) | [TryCpRequest](./tryorama.trycprequest.md) |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+request
+
+
+</td><td>
+
+[TryCpRequest](./tryorama.trycprequest.md)
+
+
+</td><td>
+
+[TryCpRequest](./tryorama.trycprequest.md)
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[TryCpSuccessResponse](./tryorama.trycpsuccessresponse.md)<!-- -->&gt;

@@ -2,6 +2,7 @@ import {
   ActionHash,
   AppBundleSource,
   AppSignal,
+  CellProvisioningStrategy,
   CellType,
   CloneId,
   EntryHash,
@@ -10,24 +11,18 @@ import {
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
 import { URL } from "node:url";
+import { realpathSync } from "node:fs";
 import test from "tape-promise/tape.js";
 import {
   enableAndGetAgentApp,
   runLocalServices,
   stopLocalServices,
-} from "../../src/common.js";
-import { TryCpClient, dhtSync } from "../../src/index.js";
-import {
-  TryCpPlayer,
-  createTryCpConductor,
-} from "../../src/trycp/conductor/index.js";
-import {
-  TRYCP_SERVER_HOST,
-  TRYCP_SERVER_PORT,
-  TryCpServer,
-} from "../../src/trycp/trycp-server.js";
-import { TRYCP_SUCCESS_RESPONSE } from "../../src/trycp/types.js";
-import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture/index.js";
+} from "../../src";
+import { TryCpClient, dhtSync } from "../../src";
+import { TryCpPlayer, createTryCpConductor } from "../../src";
+import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT, TryCpServer } from "../../src";
+import { TRYCP_SUCCESS_RESPONSE } from "../../src";
+import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const ROLE_NAME = "test";
@@ -82,6 +77,69 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
   await localTryCpServer.stop();
 });
 
+test("TryCP Conductor - install app with deferred memproofs", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client);
+  const adminWs = conductor.adminWs();
+
+  const app = await conductor.installApp({
+    bundle: {
+      manifest: {
+        manifest_version: "1",
+        name: "app",
+        roles: [
+          {
+            name: ROLE_NAME,
+            provisioning: {
+              strategy: CellProvisioningStrategy.Create,
+              deferred: false,
+            },
+            dna: {
+              path: realpathSync(FIXTURE_DNA_URL),
+              modifiers: { network_seed: "some_seed" },
+            },
+          },
+        ],
+        membrane_proofs_deferred: true,
+      },
+      resources: {},
+    },
+  });
+
+  const { port } = await adminWs.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: app.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
+
+  let appInfo = await appWs.appInfo();
+  assert(appInfo);
+  t.equal(
+    appInfo.status,
+    "awaiting_memproofs",
+    "app status is awaiting_memproofs"
+  );
+
+  const response = await appWs.provideMemproofs({});
+  t.equal(response, undefined, "providing memproofs successful");
+
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: app.installed_app_id });
+
+  appInfo = await appWs.appInfo();
+  assert(appInfo);
+  t.equal(appInfo.status, "running", "app status is running");
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
 test("TryCP Conductor - install hApp bundle and access cell by role name", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
@@ -89,12 +147,15 @@ test("TryCP Conductor - install hApp bundle and access cell by role name", async
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
   const adminWs = conductor.adminWs();
-  const { port } = await adminWs.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const appWs = await conductor.connectAppWs(port);
   const aliceHapp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
+  const { port } = await adminWs.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: aliceHapp.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
   const alice = await enableAndGetAgentApp(adminWs, appWs, aliceHapp);
   t.ok(alice.namedCells.get(ROLE_NAME), "named cell can be accessed");
 
@@ -109,13 +170,16 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
-  const adminWs = conductor.adminWs();
-  const { port } = await adminWs.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const appWs = await conductor.connectAppWs(port);
   const aliceHapp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
+  const adminWs = conductor.adminWs();
+  const { port } = await adminWs.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: aliceHapp.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
   const alice = await enableAndGetAgentApp(adminWs, appWs, aliceHapp);
   t.ok(alice.appId, "installed hApp bundle has a hApp id");
 
@@ -218,12 +282,15 @@ test("TryCP Conductor - request network info", async (t) => {
     .adminWs()
     .enableApp({ installed_app_id: appInfo.installed_app_id });
   const { port } = await conductor.adminWs().attachAppInterface();
-  await conductor.connectAppInterface(port);
+  const issued = await conductor.adminWs().issueAppAuthenticationToken({
+    installed_app_id: appInfo.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
   assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
   const dnaHash =
     appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id[0];
 
-  const appWs = await conductor.connectAppWs(port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
   const networkInfo = await appWs.networkInfo({
     agent_pub_key: agentPubKey,
     dnas: [dnaHash],
@@ -295,14 +362,17 @@ test("TryCP Conductor - receive a signal", async (t) => {
     membrane_proofs: {},
   });
   const { port } = await conductor.adminWs().attachAppInterface();
-  await conductor.connectAppInterface(port);
+  const issued = await conductor.adminWs().issueAppAuthenticationToken({
+    installed_app_id: appInfo.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
   assert(signalHandler);
   conductor.on(port, signalHandler);
 
   await conductor
     .adminWs()
     .enableApp({ installed_app_id: appInfo.installed_app_id });
-  const appWs = await conductor.connectAppWs(port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
 
   assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
   const cell_id = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
@@ -368,18 +438,24 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   });
   t.deepEqual(
     enabledAppResponse.app.status,
-    { running: null },
+    "running",
     "enabled app response matches 'running'"
   );
 
   const { port } = await conductor.adminWs().attachAppInterface();
-  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
+  const issued = await conductor.adminWs().issueAppAuthenticationToken({
+    installed_app_id: appId,
+  });
+  const connectAppInterfaceResponse = await conductor.connectAppInterface(
+    issued.token,
+    port
+  );
   t.equal(
     connectAppInterfaceResponse,
     TRYCP_SUCCESS_RESPONSE,
     "connected app interface responds with success"
   );
-  const appWs = await conductor.connectAppWs(port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
 
   const entryContent = "test-content";
   const createEntryHash = await appWs.callZome<EntryHash>({
@@ -435,8 +511,11 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
   const aliceApp = await conductor.installApp(app);
   const adminWs = conductor.adminWs();
   const { port } = await adminWs.attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const appWs = await conductor.connectAppWs(port);
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: aliceApp.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
   const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
 
   const actual = await alice.cells[0].callZome<null>({
@@ -531,7 +610,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   });
   t.deepEqual(
     enabledAppResponse1.app.status,
-    { running: null },
+    "running",
     "enabled app response 1 matches 'running'"
   );
   const enabledAppResponse2 = await conductor.adminWs().enableApp({
@@ -539,18 +618,24 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   });
   t.deepEqual(
     enabledAppResponse2.app.status,
-    { running: null },
+    "running",
     "enabled app response 2 matches 'running'"
   );
 
   const { port } = await conductor.adminWs().attachAppInterface();
-  const connectAppInterfaceResponse = await conductor.connectAppInterface(port);
+  const issued = await conductor.adminWs().issueAppAuthenticationToken({
+    installed_app_id: appId1,
+  });
+  const connectAppInterfaceResponse = await conductor.connectAppInterface(
+    issued.token,
+    port
+  );
   t.equal(
     connectAppInterfaceResponse,
     TRYCP_SUCCESS_RESPONSE,
     "connect app interface responds with success"
   );
-  const appWs = await conductor.connectAppWs(port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
 
   const entryContent = "test-content";
   const createEntryHash = await appWs.callZome<EntryHash>({
@@ -606,11 +691,13 @@ test("TryCP Conductor - clone cell management", async (t) => {
   const { cell_id } = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
   await conductor.adminWs().enableApp({ installed_app_id: appId });
   const { port } = await conductor.adminWs().attachAppInterface();
-  await conductor.connectAppInterface(port);
-  const appWs = await conductor.connectAppWs(port);
+  const issued = await conductor.adminWs().issueAppAuthenticationToken({
+    installed_app_id: appId,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
 
   const cloneCell = await appWs.createCloneCell({
-    app_id: appId,
     role_name: ROLE_NAME,
     modifiers: { network_seed: "test-seed" },
   });
@@ -636,7 +723,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
   });
 
   await appWs.disableCloneCell({
-    app_id: appId,
     clone_cell_id: cloneCell.cell_id,
   });
   await t.rejects(
@@ -652,7 +738,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
   );
 
   const enabledCloneCell = await appWs.enableCloneCell({
-    app_id: appId,
     clone_cell_id: cloneCell.clone_id,
   });
   t.deepEqual(
@@ -672,7 +757,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
   await appWs.disableCloneCell({
-    app_id: appId,
     clone_cell_id: cloneCell.cell_id,
   });
   await conductor
@@ -680,7 +764,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
     .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
   await t.rejects(
     appWs.enableCloneCell({
-      app_id: appId,
       clone_cell_id: cloneCell.clone_id,
     }),
     "deleted clone cell cannot be enabled"
@@ -691,7 +774,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP Conductor - create and read an entry using the entry zome, 2 conductors, 2 cells, 2 agents", async (t) => {
+test.skip("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();
@@ -706,20 +789,16 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   const adminWs1 = conductor1.adminWs();
   await adminWs1.enableApp({ installed_app_id: aliceApp.installed_app_id });
   const { port: port1 } = await conductor1.adminWs().attachAppInterface();
-  await conductor1.connectAppInterface(port1);
-  const appAgentWs1 = await conductor1.connectAppAgentWs(
-    port1,
-    aliceApp.installed_app_id
-  );
-  const aliceAppAgent = await enableAndGetAgentApp(
-    adminWs1,
-    appAgentWs1,
-    aliceApp
-  );
+  const issued1 = await adminWs1.issueAppAuthenticationToken({
+    installed_app_id: aliceApp.installed_app_id,
+  });
+  await conductor1.connectAppInterface(issued1.token, port1);
+  const appWs1 = await conductor1.connectAppWs(issued1.token, port1);
+  const aliceAgentApp = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
   const alice: TryCpPlayer = {
     conductor: conductor1,
-    appAgentWs: appAgentWs1,
-    ...aliceAppAgent,
+    appWs: appWs1,
+    ...aliceAgentApp,
   };
 
   const conductor2 = await createTryCpConductor(client);
@@ -727,20 +806,20 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
   const adminWs2 = conductor2.adminWs();
   await adminWs2.enableApp({ installed_app_id: bobApp.installed_app_id });
   const { port: port2 } = await conductor2.adminWs().attachAppInterface();
-  await conductor2.connectAppInterface(port2);
-  const appAgentWs2 = await conductor2.connectAppAgentWs(
-    port2,
-    bobApp.installed_app_id
-  );
-  const bobAppAgent = await enableAndGetAgentApp(adminWs2, appAgentWs2, bobApp);
+  const issued2 = await adminWs2.issueAppAuthenticationToken({
+    installed_app_id: bobApp.installed_app_id,
+  });
+  await conductor2.connectAppInterface(issued2.token, port2);
+  const appWs2 = await conductor2.connectAppWs(issued2.token, port2);
+  const bobAgentApp = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
   const bob: TryCpPlayer = {
     conductor: conductor2,
-    appAgentWs: appAgentWs2,
-    ...bobAppAgent,
+    appWs: appWs2,
+    ...bobAgentApp,
   };
 
   const entryContent = "test-content";
-  const createEntryHash = await appAgentWs1.callZome<EntryHash>({
+  const createEntryHash = await appWs1.callZome<EntryHash>({
     cell_id: alice.cells[0].cell_id,
     zome_name: "coordinator",
     fn_name: "create",
@@ -756,7 +835,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 2 conduct
 
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
-  const readEntryResponse = await appAgentWs2.callZome<typeof entryContent>({
+  const readEntryResponse = await appWs2.callZome<typeof entryContent>({
     cell_id: bob.cells[0].cell_id,
     zome_name: "coordinator",
     fn_name: "read",

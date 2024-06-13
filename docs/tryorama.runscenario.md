@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [runScenario](./tryorama.runscenario.md)
 
-## runScenario variable
+## runScenario() function
 
 A wrapper function to create and run a scenario. A scenario is created and all involved conductors are shut down and cleaned up after running.
 
@@ -11,3 +11,75 @@ A wrapper function to create and run a scenario. A scenario is created and all i
 ```typescript
 runScenario: (testScenario: (scenario: Scenario) => Promise<void>, cleanUp?: boolean, options?: ScenarioOptions) => Promise<void>
 ```
+
+## Parameters
+
+<table><thead><tr><th>
+
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+testScenario
+
+
+</td><td>
+
+(scenario: [Scenario](./tryorama.scenario.md)<!-- -->) =&gt; Promise&lt;void&gt;
+
+
+</td><td>
+
+The test to be run.
+
+
+</td></tr>
+<tr><td>
+
+cleanUp
+
+
+</td><td>
+
+boolean
+
+
+</td><td>
+
+_(Optional)_ Whether to delete conductors after running.
+
+
+</td></tr>
+<tr><td>
+
+options
+
+
+</td><td>
+
+[ScenarioOptions](./tryorama.scenariooptions.md)
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+</tbody></table>
+**Returns:**
+
+Promise&lt;void&gt;
+

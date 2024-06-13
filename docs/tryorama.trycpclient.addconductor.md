@@ -14,10 +14,39 @@ addConductor(partialConfig?: string): Promise<TryCpConductor>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  partialConfig | string | _(Optional)_ Conductor configuration (optional). |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+partialConfig
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ Conductor configuration (optional).
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[TryCpConductor](./tryorama.trycpconductor.md)<!-- -->&gt;

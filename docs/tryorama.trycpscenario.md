@@ -16,29 +16,264 @@ export declare class TryCpScenario
 
 ## Constructors
 
-|  Constructor | Modifiers | Description |
-|  --- | --- | --- |
-|  [(constructor)()](./tryorama.trycpscenario._constructor_.md) |  | Constructs a new instance of the <code>TryCpScenario</code> class |
+<table><thead><tr><th>
+
+Constructor
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[(constructor)()](./tryorama.trycpscenario._constructor_.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Constructs a new instance of the `TryCpScenario` class
+
+
+</td></tr>
+</tbody></table>
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [bootstrapServerUrl](./tryorama.trycpscenario.bootstrapserverurl.md) |  | URL \| undefined |  |
-|  [clients](./tryorama.trycpscenario.clients.md) |  | [TryCpClient](./tryorama.trycpclient.md)<!-- -->\[\] |  |
-|  [network\_seed](./tryorama.trycpscenario.network_seed.md) |  | string |  |
-|  [servicesProcess](./tryorama.trycpscenario.servicesprocess.md) |  | ChildProcessWithoutNullStreams \| undefined |  |
-|  [signalingServerUrl](./tryorama.trycpscenario.signalingserverurl.md) |  | URL \| undefined |  |
+<table><thead><tr><th>
+
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[bootstrapServerUrl](./tryorama.trycpscenario.bootstrapserverurl.md)
+
+
+</td><td>
+
+
+</td><td>
+
+URL \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[clients](./tryorama.trycpscenario.clients.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[TryCpClient](./tryorama.trycpclient.md)<!-- -->\[\]
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[network\_seed](./tryorama.trycpscenario.network_seed.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[servicesProcess](./tryorama.trycpscenario.servicesprocess.md)
+
+
+</td><td>
+
+
+</td><td>
+
+ChildProcessWithoutNullStreams \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[signalingServerUrl](./tryorama.trycpscenario.signalingserverurl.md)
+
+
+</td><td>
+
+
+</td><td>
+
+URL \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 
 ## Methods
 
-|  Method | Modifiers | Description |
-|  --- | --- | --- |
-|  [addClient(serverUrl, timeout)](./tryorama.trycpscenario.addclient.md) |  | Creates a TryCP client connection and add it to the scenario. |
-|  [addClientsPlayers(serverUrls, options)](./tryorama.trycpscenario.addclientsplayers.md) |  | <p>Creates client connections for all passed in URLs and, depending on the options, creates multiple players with apps. Adds all clients to the scenario.</p><p>If no number of agents per conductor is specified, it defaults to 1.</p> |
-|  [addPlayersWithApps(tryCpClient, playersApps)](./tryorama.trycpscenario.addplayerswithapps.md) |  | Creates and adds multiple players with an installed app to the scenario. |
-|  [addPlayerWithApp(tryCpClient, appBundleSource, options)](./tryorama.trycpscenario.addplayerwithapp.md) |  | Creates and adds a single player with an installed app to the scenario, |
-|  [cleanUp()](./tryorama.trycpscenario.cleanup.md) |  | Shut down and delete all conductors and close all client connections in the scenario. |
-|  [shareAllAgents()](./tryorama.trycpscenario.shareallagents.md) |  | Registers all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs. |
-|  [shutDown()](./tryorama.trycpscenario.shutdown.md) |  | Shut down all conductors of all clients in the scenario. |
+<table><thead><tr><th>
 
+Method
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[addClient(serverUrl, timeout)](./tryorama.trycpscenario.addclient.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Creates a TryCP client connection and add it to the scenario.
+
+
+</td></tr>
+<tr><td>
+
+[addClientsPlayers(serverUrls, options)](./tryorama.trycpscenario.addclientsplayers.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Creates client connections for all passed in URLs and, depending on the options, creates multiple players with apps. Adds all clients to the scenario.
+
+If no number of agents per conductor is specified, it defaults to 1.
+
+
+</td></tr>
+<tr><td>
+
+[addPlayersWithApps(tryCpClient, playersApps)](./tryorama.trycpscenario.addplayerswithapps.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Creates and adds multiple players with an installed app to the scenario.
+
+
+</td></tr>
+<tr><td>
+
+[addPlayerWithApp(tryCpClient, appBundleSource, options)](./tryorama.trycpscenario.addplayerwithapp.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Creates and adds a single player with an installed app to the scenario,
+
+
+</td></tr>
+<tr><td>
+
+[cleanUp()](./tryorama.trycpscenario.cleanup.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Shut down and delete all conductors and close all client connections in the scenario.
+
+
+</td></tr>
+<tr><td>
+
+[shareAllAgents()](./tryorama.trycpscenario.shareallagents.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Registers all agents of all passed in conductors to each other. This skips peer discovery through gossip and thus accelerates test runs.
+
+
+</td></tr>
+<tr><td>
+
+[shutDown()](./tryorama.trycpscenario.shutdown.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Shut down all conductors of all clients in the scenario.
+
+
+</td></tr>
+</tbody></table>

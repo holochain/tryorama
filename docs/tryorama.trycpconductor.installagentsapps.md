@@ -9,18 +9,47 @@ Install a hApp bundle into the conductor.
 **Signature:**
 
 ```typescript
-installAgentsApps(options: AgentsAppsOptions): Promise<AppInfo[]>;
+installAgentsApps(options: AgentsAppsOptions): Promise<import("@holochain/client").AppInfo[]>;
 ```
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  options | [AgentsAppsOptions](./tryorama.agentsappsoptions.md) | Apps to install for each agent, with agent pub keys etc. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+options
+
+
+</td><td>
+
+[AgentsAppsOptions](./tryorama.agentsappsoptions.md)
+
+
+</td><td>
+
+Apps to install for each agent, with agent pub keys etc.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
-Promise&lt;AppInfo\[\]&gt;
+Promise&lt;import("@holochain/client").AppInfo\[\]&gt;
 
 The installed app infos.
 

@@ -1,4 +1,5 @@
 import {
+  ActionHash,
   AppBundleSource,
   AppSignal,
   AppSignalCb,
@@ -6,10 +7,10 @@ import {
 } from "@holochain/client";
 import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
-import { getZomeCaller } from "../../src/common.js";
-import { Scenario, runScenario } from "../../src/local/scenario.js";
-import { FIXTURE_HAPP_URL } from "../fixture/index.js";
-import { dhtSync } from "../../src/util.js";
+import { getZomeCaller } from "../../src";
+import { Scenario, runScenario } from "../../src";
+import { FIXTURE_HAPP_URL } from "../fixture";
+import { dhtSync } from "../../src";
 
 const TEST_ZOME_NAME = "coordinator";
 
@@ -43,7 +44,9 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
       path: FIXTURE_HAPP_URL.pathname,
     });
 
-    await t.rejects(alice.conductor.attachAppInterface({ port: 300 }));
+    await t.rejects(
+      alice.conductor.attachAppInterface({ port: 300, allowed_origins: "*" })
+    );
   });
 });
 
@@ -70,8 +73,8 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
       path: FIXTURE_HAPP_URL.pathname,
     });
     assert(signalHandlerAlice);
-    assert("on" in alice.appAgentWs);
-    alice.appAgentWs.on("signal", signalHandlerAlice);
+    assert("on" in alice.appWs);
+    alice.appWs.on("signal", signalHandlerAlice);
 
     const signalAlice = { value: "hello alice" };
     alice.cells[0].callZome({
@@ -172,19 +175,20 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   t.throws(bob.conductor.adminWs);
 
   await bob.conductor.startUp();
-  const [appInterfacePort] = await bob.conductor.adminWs().listAppInterfaces();
-  bob.appAgentWs = await bob.conductor.connectAppAgentWs(
-    appInterfacePort,
-    bob.appId
+  const [appInterfaceInfo] = await bob.conductor.adminWs().listAppInterfaces();
+  const issuedBob = await bob.conductor
+    .adminWs()
+    .issueAppAuthenticationToken({ installed_app_id: bob.appId });
+  bob.appWs = await bob.conductor.connectAppWs(
+    issuedBob.token,
+    appInterfaceInfo.port
   );
-  const readContentAfterRestart: typeof content = await bob.appAgentWs.callZome(
-    {
-      cell_id: bob.cells[0].cell_id,
-      zome_name: TEST_ZOME_NAME,
-      fn_name: "read",
-      payload: createEntryHash,
-    }
-  );
+  const readContentAfterRestart: typeof content = await bob.appWs.callZome({
+    cell_id: bob.cells[0].cell_id,
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "read",
+    payload: createEntryHash,
+  });
   t.equal(readContentAfterRestart, content);
 
   await scenario.cleanUp();
@@ -213,11 +217,11 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
     { appBundleSource },
   ]);
   assert(signalHandlerAlice);
-  assert("on" in alice.appAgentWs);
-  alice.appAgentWs.on("signal", signalHandlerAlice);
+  assert("on" in alice.appWs);
+  alice.appWs.on("signal", signalHandlerAlice);
   assert(signalHandlerBob);
-  assert("on" in bob.appAgentWs);
-  bob.appAgentWs.on("signal", signalHandlerBob);
+  assert("on" in bob.appWs);
+  bob.appWs.on("signal", signalHandlerBob);
 
   const signalAlice = { value: "hello alice" };
   alice.cells[0].callZome({
@@ -274,4 +278,21 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
   t.equal(readContent, lastCreatedContent);
 
   await scenario.cleanUp();
+});
+
+test("Local Scenario - runScenario - call zome by role name", async (t) => {
+  await runScenario(async (scenario: Scenario) => {
+    const alice = await scenario.addPlayerWithApp({
+      path: FIXTURE_HAPP_URL.pathname,
+    });
+
+    const result = (await alice.appWs.callZome({
+      role_name: "test",
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: "hello",
+    })) as ActionHash;
+
+    t.ok(result);
+  });
 });

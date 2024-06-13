@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [createConductor](./tryorama.createconductor.md)
 
-## createConductor variable
+## createConductor() function
 
 The function to create a conductor. It starts a sandbox conductor via the Holochain CLI.
 
@@ -11,3 +11,59 @@ The function to create a conductor. It starts a sandbox conductor via the Holoch
 ```typescript
 createConductor: (signalingServerUrl: URL, options?: ConductorOptions) => Promise<Conductor>
 ```
+
+## Parameters
+
+<table><thead><tr><th>
+
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+signalingServerUrl
+
+
+</td><td>
+
+URL
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+options
+
+
+</td><td>
+
+[ConductorOptions](./tryorama.conductoroptions.md)
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+</tbody></table>
+**Returns:**
+
+Promise&lt;[Conductor](./tryorama.conductor.md)<!-- -->&gt;
+
+A conductor instance.
+

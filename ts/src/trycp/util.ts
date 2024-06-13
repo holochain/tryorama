@@ -48,8 +48,7 @@ export const deserializeTryCpSignal = <T>(signal: Uint8Array) => {
 export const deserializeApiResponse = (response: Uint8Array) => {
   const decodedResponse = msgpack.decode(response);
   assertIsApiResponse(decodedResponse);
-  const decodedAdminApiResponse = decodedResponse;
-  return decodedAdminApiResponse;
+  return decodedResponse;
 };
 
 /**

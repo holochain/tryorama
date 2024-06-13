@@ -15,7 +15,42 @@ export interface RequestCallAppInterfaceEncoded extends Omit<RequestCallAppInter
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [message](./tryorama.requestcallappinterfaceencoded.message.md) |  | Uint8Array |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[message](./tryorama.requestcallappinterfaceencoded.message.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Uint8Array
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

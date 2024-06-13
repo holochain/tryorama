@@ -1,15 +1,13 @@
 import {
   AdminWebsocket,
-  AppAgentCallZomeRequest,
-  AppAgentWebsocket,
   AppBundleSource,
   AppWebsocket,
   AttachAppInterfaceRequest,
-  CallZomeRequest,
-  CallZomeRequestSigned,
   encodeHashToBase64,
   getSigningCredentials,
   InstallAppRequest,
+  AppAuthenticationToken,
+  AppCallZomeRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -20,10 +18,11 @@ import { v4 as uuidv4 } from "uuid";
 
 import { makeLogger } from "../logger.js";
 import { AgentsAppsOptions, AppOptions, IConductor } from "../types.js";
+import { _ALLOWED_ORIGIN } from "../common.js";
 
 const logger = makeLogger("Local Conductor");
 
-const HOST_URL = new URL("ws://127.0.0.1");
+const HOST_URL = new URL("ws://localhost");
 const DEFAULT_TIMEOUT = 60000;
 const LAIR_PASSWORD = "lair-password";
 
@@ -114,7 +113,6 @@ export class Conductor implements IConductor {
   private adminApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
-  private _appAgentWs: AppAgentWebsocket | undefined;
   private readonly timeout: number;
 
   private constructor(timeout?: number) {
@@ -123,7 +121,6 @@ export class Conductor implements IConductor {
     this.adminApiUrl = new URL(HOST_URL.href);
     this._adminWs = undefined;
     this._appWs = undefined;
-    this._appAgentWs = undefined;
     this.timeout = timeout ?? DEFAULT_TIMEOUT;
   }
 
@@ -165,9 +162,11 @@ export class Conductor implements IConductor {
     const createConductorPromise = new Promise<Conductor>((resolve, reject) => {
       createConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`creating conductor config\n${data.toString()}`);
-        const tmpDirMatches = data.toString().match(/Created (\[".+"])/);
-        if (tmpDirMatches) {
-          conductor.conductorDir = JSON.parse(tmpDirMatches[1])[0];
+        const tmpDirMatches = [
+          ...data.toString().matchAll(/ConfigRootPath\("(.*?)"\)/g),
+        ];
+        if (tmpDirMatches.length) {
+          conductor.conductorDir = tmpDirMatches[0][1];
         }
       });
       createConductorProcess.stdout.on("end", () => {
@@ -273,10 +272,11 @@ export class Conductor implements IConductor {
   }
 
   private async connectAdminWs() {
-    this._adminWs = await AdminWebsocket.connect(
-      this.adminApiUrl,
-      this.timeout
-    );
+    this._adminWs = await AdminWebsocket.connect({
+      url: this.adminApiUrl,
+      wsClientOptions: { origin: _ALLOWED_ORIGIN },
+      defaultTimeout: this.timeout,
+    });
     logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
   }
 
@@ -289,6 +289,7 @@ export class Conductor implements IConductor {
   async attachAppInterface(request?: AttachAppInterfaceRequest) {
     request = request ?? {
       port: await getPort({ port: portNumbers(30000, 40000) }),
+      allowed_origins: _ALLOWED_ORIGIN,
     };
     logger.debug(`attaching App API to port ${request.port}\n`);
     const { port } = await this.adminWs().attachAppInterface(request);
@@ -298,53 +299,30 @@ export class Conductor implements IConductor {
   /**
    * Connect a web socket to the App API,
    *
+   * @param token - A token to authenticate the connection.
    * @param port - The websocket port to connect to.
    * @returns An app websocket.
    */
-  async connectAppWs(port: number) {
+  async connectAppWs(token: AppAuthenticationToken, port: number) {
     logger.debug(`connecting App WebSocket to port ${port}\n`);
     const appApiUrl = new URL(this.adminApiUrl.href);
     appApiUrl.port = port.toString();
-    const appWs = await AppWebsocket.connect(appApiUrl, this.timeout);
+    const appWs = await AppWebsocket.connect({
+      token,
+      url: appApiUrl,
+      wsClientOptions: { origin: _ALLOWED_ORIGIN },
+      defaultTimeout: this.timeout,
+    });
 
     // set up automatic zome call signing
-    const callZome = appWs.callZome;
-    appWs.callZome = async (req: CallZomeRequest | CallZomeRequestSigned) => {
-      if (!getSigningCredentials(req.cell_id)) {
-        await this.adminWs().authorizeSigningCredentials(req.cell_id);
-      }
-      return callZome(req);
-    };
-
-    return appWs;
-  }
-
-  /**
-   * Connect a web socket for a specific app and agent to the App API,
-   *
-   * @param port - The websocket port to connect to.
-   * @param appId - The app id to make requests to.
-   * @returns An app agent websocket.
-   */
-  async connectAppAgentWs(port: number, appId: string) {
-    logger.debug(`connecting App Agent WebSocket to port ${port}\n`);
-    const appApiUrl = new URL(HOST_URL.href);
-    appApiUrl.port = port.toString();
-    const appAgentWs = await AppAgentWebsocket.connect(
-      appApiUrl,
-      appId,
-      this.timeout
-    );
-
-    // set up automatic zome call signing
-    const callZome = appAgentWs.callZome.bind(appAgentWs);
-    appAgentWs.callZome = async (req: AppAgentCallZomeRequest) => {
+    const callZome = appWs.callZome.bind(appWs);
+    appWs.callZome = async (req: AppCallZomeRequest, timeout?: number) => {
       let cellId;
       if ("role_name" in req) {
-        assert(appAgentWs.cachedAppInfo);
-        cellId = appAgentWs.getCellIdFromRoleName(
+        assert(appWs.cachedAppInfo);
+        cellId = appWs.getCellIdFromRoleName(
           req.role_name,
-          appAgentWs.cachedAppInfo
+          appWs.cachedAppInfo
         );
       } else {
         cellId = req.cell_id;
@@ -352,10 +330,10 @@ export class Conductor implements IConductor {
       if (!getSigningCredentials(cellId)) {
         await this.adminWs().authorizeSigningCredentials(cellId);
       }
-      return callZome(req);
+      return callZome(req, timeout);
     };
 
-    return appAgentWs;
+    return appWs;
   }
 
   /**

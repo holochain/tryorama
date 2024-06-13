@@ -2,7 +2,7 @@
 
 [Home](./index.md) &gt; [@holochain/tryorama](./tryorama.md) &gt; [stopLocalServices](./tryorama.stoplocalservices.md)
 
-## stopLocalServices variable
+## stopLocalServices() function
 
 Shutdown signalling server process.
 
@@ -11,3 +11,41 @@ Shutdown signalling server process.
 ```typescript
 stopLocalServices: (localServicesProcess: ChildProcessWithoutNullStreams) => Promise<number | null> | null
 ```
+
+## Parameters
+
+<table><thead><tr><th>
+
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+localServicesProcess
+
+
+</td><td>
+
+ChildProcessWithoutNullStreams
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
+**Returns:**
+
+Promise&lt;number \| null&gt; \| null
+

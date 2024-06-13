@@ -12,11 +12,53 @@ setSignalHandler(port: number, signalHandler?: AppSignalCb): void;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number |  |
-|  signalHandler | AppSignalCb | _(Optional)_ |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+signalHandler
+
+
+</td><td>
+
+AppSignalCb
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 void

@@ -14,7 +14,36 @@ constructor(options?: ScenarioOptions);
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  options | [ScenarioOptions](./tryorama.scenariooptions.md) | _(Optional)_ Timeout for requests to Admin and App API calls. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+options
+
+
+</td><td>
+
+[ScenarioOptions](./tryorama.scenariooptions.md)
+
+
+</td><td>
+
+_(Optional)_ Timeout for requests to Admin and App API calls.
+
+
+</td></tr>
+</tbody></table>

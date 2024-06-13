@@ -13,8 +13,59 @@ export interface AppApiResponseAppInfo
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.appapiresponseappinfo.data.md) |  | AppInfoResponse |  |
-|  [type](./tryorama.appapiresponseappinfo.type.md) |  | "app\_info" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.appapiresponseappinfo.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppInfoResponse
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.appapiresponseappinfo.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"app\_info"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

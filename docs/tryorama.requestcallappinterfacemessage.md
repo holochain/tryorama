@@ -9,7 +9,7 @@ All possible calls to the App API.
 **Signature:**
 
 ```typescript
-export type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo | RequestCreateCloneCell | RequestEnableCloneCell | RequestDisableCloneCell | RequestNetworkInfo;
+export type RequestCallAppInterfaceMessage = RequestCallZome | RequestAppInfo | RequestProvideMemproofs | RequestCreateCloneCell | RequestEnableCloneCell | RequestDisableCloneCell | RequestNetworkInfo;
 ```
-**References:** [RequestCallZome](./tryorama.requestcallzome.md)<!-- -->, [RequestAppInfo](./tryorama.requestappinfo.md)<!-- -->, [RequestCreateCloneCell](./tryorama.requestcreateclonecell.md)<!-- -->, [RequestEnableCloneCell](./tryorama.requestenableclonecell.md)<!-- -->, [RequestDisableCloneCell](./tryorama.requestdisableclonecell.md)<!-- -->, [RequestNetworkInfo](./tryorama.requestnetworkinfo.md)
+**References:** [RequestCallZome](./tryorama.requestcallzome.md)<!-- -->, [RequestAppInfo](./tryorama.requestappinfo.md)<!-- -->, [RequestProvideMemproofs](./tryorama.requestprovidememproofs.md)<!-- -->, [RequestCreateCloneCell](./tryorama.requestcreateclonecell.md)<!-- -->, [RequestEnableCloneCell](./tryorama.requestenableclonecell.md)<!-- -->, [RequestDisableCloneCell](./tryorama.requestdisableclonecell.md)<!-- -->, [RequestNetworkInfo](./tryorama.requestnetworkinfo.md)
 

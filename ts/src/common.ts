@@ -13,13 +13,16 @@ import {
   CallableCell,
   CellZomeCallRequest,
   IAdminWebsocket,
-  IAppAgentWebsocket,
   IAppWebsocket,
   IConductor,
 } from "./types.js";
 
 const BOOTSTRAP_SERVER_STARTUP_STRING = "HC BOOTSTRAP - ADDR: ";
 const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL - ADDR: ";
+/**
+ * @internal
+ */
+export const _ALLOWED_ORIGIN = "tryorama-interface";
 
 /**
  * Spawn a signalling server to enable connections between conductors.
@@ -127,7 +130,7 @@ function assertZomeResponse<T>(
  */
 export const enableAndGetAgentApp = async (
   adminWs: IAdminWebsocket,
-  appWs: IAppWebsocket | IAppAgentWebsocket,
+  appWs: IAppWebsocket,
   appInfo: AppInfo
 ) => {
   const enableAppResponse = await adminWs.enableApp({
@@ -178,7 +181,7 @@ export const enableAndGetAgentApp = async (
  * @public
  */
 export const getCallableCell = (
-  appWs: IAppWebsocket | IAppAgentWebsocket,
+  appWs: IAppWebsocket,
   cell: ClonedCell | ProvisionedCell
 ) => ({
   ...cell,

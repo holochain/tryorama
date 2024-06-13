@@ -17,11 +17,55 @@ addPlayersWithApps(tryCpClient: TryCpClient, playersApps: Array<{
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  tryCpClient | [TryCpClient](./tryorama.trycpclient.md) | The client connection to the TryCP server on which to create the player. |
-|  playersApps | Array&lt;{ appBundleSource: AppBundleSource; options?: [AppOptions](./tryorama.appoptions.md)<!-- -->; }&gt; | An array with an app for each player. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+tryCpClient
+
+
+</td><td>
+
+[TryCpClient](./tryorama.trycpclient.md)
+
+
+</td><td>
+
+The client connection to the TryCP server on which to create the player.
+
+
+</td></tr>
+<tr><td>
+
+playersApps
+
+
+</td><td>
+
+Array&lt;{ appBundleSource: AppBundleSource; options?: [AppOptions](./tryorama.appoptions.md)<!-- -->; }&gt;
+
+
+</td><td>
+
+An array with an app for each player.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[TryCpPlayer](./tryorama.trycpplayer.md)<!-- -->\[\]&gt;

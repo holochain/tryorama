@@ -9,15 +9,58 @@ Connect a web socket to the App API.
 **Signature:**
 
 ```typescript
-connectAppInterface(port: number): Promise<null>;
+connectAppInterface(token: AppAuthenticationToken, port: number): Promise<null>;
 ```
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  port | number | The port to attach the app interface to. |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+token
+
+
+</td><td>
+
+AppAuthenticationToken
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+port
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+The port to attach the app interface to.
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;null&gt;

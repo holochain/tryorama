@@ -14,10 +14,37 @@ downloadDna(url: URL): Promise<string>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  url | URL |  |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+url
+
+
+</td><td>
+
+URL
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;string&gt;

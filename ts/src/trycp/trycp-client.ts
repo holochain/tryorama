@@ -1,4 +1,4 @@
-import { AppSignalCb } from "@holochain/client";
+import { AppSignalCb, CallZomeRequestSigned } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import cloneDeep from "lodash/cloneDeep.js";
 import assert from "node:assert";
@@ -18,6 +18,7 @@ import {
   _TryCpCall,
   _TryCpSuccessResponseSeralized,
   _TryCpResponseResult,
+  ApiErrorResponse,
 } from "./types.js";
 import {
   deserializeApiResponse,
@@ -126,8 +127,8 @@ export class TryCpClient {
           responseReject(responseWrapper.response[_TryCpResponseResult.Err]);
         } else {
           logger.error(
-            "unknown response type",
-            JSON.stringify(responseWrapper, null, 4)
+            "unknown response type:\n" +
+              JSON.stringify(responseWrapper, null, 4)
           );
           throw new Error("Unknown response type");
         }
@@ -265,12 +266,13 @@ export class TryCpClient {
       return response;
     }
 
-    const deserializedApiResponse = deserializeApiResponse(response);
+    const deserializedApiResponse: TryCpApiResponse =
+      deserializeApiResponse(response);
 
     // when the request fails, the response's type is "error"
     if (deserializedApiResponse.type === "error") {
       const errorMessage = `error response from Admin API\n${JSON.stringify(
-        deserializedApiResponse.data,
+        (deserializedApiResponse as ApiErrorResponse).data,
         null,
         4
       )}`;
@@ -312,14 +314,13 @@ export class TryCpClient {
       "data" in debugLog.message &&
       debugLog.message.type === "call_zome"
     ) {
+      const messageData = debugLog.message.data as CallZomeRequestSigned;
       debugLog.message.data = Object.assign(debugLog.message.data, {
         cell_id: [
-          Buffer.from(debugLog.message.data.cell_id[0]).toString("base64"),
-          Buffer.from(debugLog.message.data.cell_id[1]).toString("base64"),
+          Buffer.from(messageData.cell_id[0]).toString("base64"),
+          Buffer.from(messageData.cell_id[1]).toString("base64"),
         ],
-        provenance: Buffer.from(debugLog.message.data.provenance).toString(
-          "base64"
-        ),
+        provenance: Buffer.from(messageData.provenance).toString("base64"),
       });
     }
     if ("content" in request) {

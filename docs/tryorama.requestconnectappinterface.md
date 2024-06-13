@@ -14,8 +14,76 @@ export interface RequestConnectAppInterface
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [port](./tryorama.requestconnectappinterface.port.md) |  | number |  |
-|  [type](./tryorama.requestconnectappinterface.type.md) |  | "connect\_app\_interface" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[port](./tryorama.requestconnectappinterface.port.md)
+
+
+</td><td>
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[token](./tryorama.requestconnectappinterface.token.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppAuthenticationToken
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestconnectappinterface.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"connect\_app\_interface"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

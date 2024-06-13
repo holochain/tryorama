@@ -14,11 +14,55 @@ static create(serverUrl: URL, timeout?: number): Promise<TryCpClient>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  serverUrl | URL | The URL of the TryCP server. |
-|  timeout | number | _(Optional)_ |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+serverUrl
+
+
+</td><td>
+
+URL
+
+
+</td><td>
+
+The URL of the TryCP server.
+
+
+</td></tr>
+<tr><td>
+
+timeout
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[TryCpClient](./tryorama.trycpclient.md)<!-- -->&gt;

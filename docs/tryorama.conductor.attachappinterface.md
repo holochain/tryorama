@@ -14,10 +14,39 @@ attachAppInterface(request?: AttachAppInterfaceRequest): Promise<number>;
 
 ## Parameters
 
-|  Parameter | Type | Description |
-|  --- | --- | --- |
-|  request | AttachAppInterfaceRequest | _(Optional)_ Specify a port for the web socket (optional). |
+<table><thead><tr><th>
 
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+request
+
+
+</td><td>
+
+AttachAppInterfaceRequest
+
+
+</td><td>
+
+_(Optional)_ Specify a port for the web socket (optional).
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;number&gt;

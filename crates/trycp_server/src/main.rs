@@ -34,8 +34,9 @@ use tokio::net::TcpStream;
 use tokio::task::spawn_blocking;
 use tokio_tungstenite::{
     tungstenite::{self, Message},
-    MaybeTlsStream, WebSocketStream,
+    WebSocketStream,
 };
+use trycp_api::*;
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
 const CONDUCTOR_MAGIC_STRING: &str = "Conductor ready.";
@@ -107,69 +108,6 @@ struct PlayerProcesses {
     holochain: Child,
 }
 
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-struct RequestWrapper {
-    id: u64,
-    request: Request,
-}
-
-#[derive(Deserialize)]
-#[serde(rename_all = "snake_case")]
-#[serde(tag = "type")]
-enum Request {
-    // Given a DNA file, stores the DNA and returns the path at which it is stored.
-    SaveDna {
-        id: String,
-        #[serde(with = "serde_bytes")]
-        content: Vec<u8>,
-    },
-    // Given a DNA URL, ensures that the DNA is downloaded and returns the path at which it is stored.
-    DownloadDna {
-        url: String,
-    },
-    ConfigurePlayer {
-        id: String,
-        /// The Holochain configuration data that is not provided by trycp.
-        ///
-        /// For example:
-        /// ```yaml
-        /// signing_service_uri: ~
-        /// encryption_service_uri: ~
-        /// decryption_service_uri: ~
-        /// dpki: ~
-        /// network: ~
-        /// ```
-        partial_config: String,
-    },
-    Startup {
-        id: String,
-        log_level: Option<String>,
-    },
-    Shutdown {
-        id: String,
-        signal: Option<String>,
-    },
-    // Shuts down all running conductors.
-    Reset,
-    CallAdminInterface {
-        id: String,
-        #[serde(with = "serde_bytes")]
-        message: Vec<u8>,
-    },
-    ConnectAppInterface {
-        port: u16,
-    },
-    DisconnectAppInterface {
-        port: u16,
-    },
-    CallAppInterface {
-        port: u16,
-        #[serde(with = "serde_bytes")]
-        message: Vec<u8>,
-    },
-}
-
 fn serialize_resp<R: Serialize>(id: u64, data: R) -> Vec<u8> {
     rmp_serde::to_vec_named(&MessageToClient::Response { response: data, id }).unwrap()
 }
@@ -186,7 +124,7 @@ enum MessageToClient<R> {
 enum ConnectionError {
     #[snafu(display("Could not complete handshake with client: {}", source))]
     Handshake { source: tungstenite::Error },
-    #[snafu(display("Could not read reqeuest from websocket: {}", source))]
+    #[snafu(display("Could not read request from websocket: {}", source))]
     ReadRequest { source: tungstenite::Error },
     #[snafu(display("Could not write response to websocket: {}", source))]
     WriteResponse { source: tungstenite::Error },
@@ -296,9 +234,9 @@ async fn ws_message(
                 .await
                 .map_err(|e| e.to_string()),
         ),
-        Request::ConnectAppInterface { port } => serialize_resp(
+        Request::ConnectAppInterface { token, port } => serialize_resp(
             request_id,
-            app_interface::connect(port, ws_write)
+            app_interface::connect(token, port, ws_write)
                 .await
                 .map_err(|e| e.to_string()),
         ),
@@ -319,14 +257,13 @@ async fn ws_message(
     Ok(Some(Message::Binary(response)))
 }
 
-type WsRequestWriter =
-    futures::stream::SplitSink<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>, Message>;
+type WsRequestWriter = futures::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
 
 type WsResponseWriter = futures::stream::SplitSink<WebSocketStream<tokio::net::TcpStream>, Message>;
 
-type WsClientDuplex = WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>;
+type WsClientDuplex = WebSocketStream<tokio::net::TcpStream>;
 
-type WsReader = SplitStream<WebSocketStream<MaybeTlsStream<tokio::net::TcpStream>>>;
+type WsReader = SplitStream<WebSocketStream<tokio::net::TcpStream>>;
 
 #[derive(Debug, Deserialize, Serialize)]
 #[serde(rename_all = "snake_case", tag = "type")]

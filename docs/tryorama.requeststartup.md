@@ -14,9 +14,78 @@ export interface RequestStartup
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [id](./tryorama.requeststartup.id.md) |  | [ConductorId](./tryorama.conductorid.md) |  |
-|  [log\_level?](./tryorama.requeststartup.log_level.md) |  | [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md) | _(Optional)_ |
-|  [type](./tryorama.requeststartup.type.md) |  | "startup" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[id](./tryorama.requeststartup.id.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[ConductorId](./tryorama.conductorid.md)
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[log\_level?](./tryorama.requeststartup.log_level.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requeststartup.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"startup"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>

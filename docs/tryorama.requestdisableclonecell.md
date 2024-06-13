@@ -14,8 +14,59 @@ export interface RequestDisableCloneCell
 
 ## Properties
 
-|  Property | Modifiers | Type | Description |
-|  --- | --- | --- | --- |
-|  [data](./tryorama.requestdisableclonecell.data.md) |  | DisableCloneCellRequest |  |
-|  [type](./tryorama.requestdisableclonecell.type.md) |  | "disable\_clone\_cell" |  |
+<table><thead><tr><th>
 
+Property
+
+
+</th><th>
+
+Modifiers
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[data](./tryorama.requestdisableclonecell.data.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DisableCloneCellRequest
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[type](./tryorama.requestdisableclonecell.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+"disable\_clone\_cell"
+
+
+</td><td>
+
+
+</td></tr>
+</tbody></table>
