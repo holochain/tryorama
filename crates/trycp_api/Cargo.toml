@@ -1,6 +1,6 @@
 [package]
 name = "trycp_api"
-version = "0.16.0-dev.8"
+version = "0.16.0"
 description = "conductor provisioner API for tryorama"
 license = "CAL-1.0"
 edition = "2021"

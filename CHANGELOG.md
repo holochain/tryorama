@@ -8,12 +8,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 ### Fixed
-- The `trycp_client` now handles ping/pong messages from the TryCP server to keep the connection alive.
-- The `trycp_client` now handles the `close` event from the TryCP server to close the connection.
 
 ## 2024-06-13: v0.16.0
 ### Changed
 - Upgraded Rust dependencies for `trycp_server` and updated JS client for it to match serialisation changes. 
+### Fixed
+- The `trycp_client` now handles ping/pong messages from the TryCP server to keep the connection alive.
+- The `trycp_client` now handles the `close` event from the TryCP server to close the connection.
 
 ## 2024-04-29: v0.16.0-dev.7
 ### Changed

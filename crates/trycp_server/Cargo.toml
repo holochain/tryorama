@@ -1,6 +1,6 @@
 [package]
 name = "trycp_server"
-version = "0.16.0-dev.8"
+version = "0.16.0"
 description = "conductor provisioner for tryorama"
 license = "CAL-1.0"
 keywords = ["holochain", "holo", "p2p", "network", "simulation"]
