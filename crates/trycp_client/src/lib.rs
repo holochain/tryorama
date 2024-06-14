@@ -72,10 +72,30 @@ impl TrycpClient {
 
         let (recv_send, recv_recv) = tokio::sync::mpsc::channel(32);
 
+        let ws = Arc::new(tokio::sync::Mutex::new(sink));
+        let ws2 = ws.clone();
         let pend2 = pend.clone();
         let recv_task = tokio::task::spawn(async move {
             while let Some(Ok(msg)) = stream.next().await {
-                let msg = msg.into_data();
+                let msg = match msg {
+                    Message::Close(close_msg) => {
+                        eprintln!("Received websocket close from TryCP server: {}", close_msg.map(|f| f.reason).unwrap_or("No reason".into()));
+                        break;
+                    }
+                    Message::Ping(p) => {
+                        ws2.lock().await.send(Message::Pong(p)).await.unwrap();
+                        continue;
+                    }
+                    Message::Pong(_) => {
+                        continue;
+                    }
+                    Message::Binary(msg) => {
+                        msg
+                    }
+                    _ => {
+                        panic!("Unexpected message from TryCP server: {:?}", msg);
+                    }
+                };
                 let msg: MessageToClient = rmp_serde::from_slice(&msg).unwrap();
 
                 match msg {
@@ -90,8 +110,6 @@ impl TrycpClient {
                 }
             }
         });
-
-        let ws = Arc::new(tokio::sync::Mutex::new(sink));
 
         Ok((
             Self {

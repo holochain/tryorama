@@ -74,7 +74,7 @@ pub(crate) async fn download_dna(url_str: String) -> Result<String, DownloadDnaE
 fn get_downloaded_dna_path(url: &url::Url) -> PathBuf {
     Path::new(DNA_DIR_PATH)
         .join(url.scheme())
-        .join(url.path().replace("/", "").replace("%", "_"))
+        .join(url.path().replace('/', "").replace('%', "_"))
 }
 
 /// Tries to create a file, returning Ok(None) if a file already exists at path
