@@ -8,6 +8,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 ### Fixed
+- The `trycp_client` now handles ping/pong messages from the TryCP server to keep the connection alive.
+- The `trycp_client` now handles the `close` event from the TryCP server to close the connection.
 
 ## 2024-05-03: v0.17.0-dev.0
 ### Changed
