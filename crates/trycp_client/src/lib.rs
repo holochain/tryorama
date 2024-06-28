@@ -151,6 +151,6 @@ impl TrycpClient {
             .await
             .map_err(std::io::Error::other)?;
 
-        r.await.map_err(|_| std::io::Error::other("Closed"))?
+        r.await.map_err(|_| std::io::Error::other("Timeout"))?
     }
 }
