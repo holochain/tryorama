@@ -1,21 +1,19 @@
 {
   inputs = {
-    nixpkgs.follows = "holonix/nixpkgs";
+    holonix.url = "github:holochain/holonix/main";
 
-    versions.url = "github:holochain/holochain?dir=versions/weekly";
-    holonix.url = "github:holochain/holochain";
-    holonix.inputs.versions.follows = "versions";
+    nixpkgs.follows = "holonix/nixpkgs";
 
     # lib to build a nix package from a rust crate
     crane = {
       url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "holonix/nixpkgs";
     };
 
     # Rust toolchain
     rust-overlay = {
       url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "nixpkgs";
+      inputs.nixpkgs.follows = "holonix/nixpkgs";
     };
   };
 
@@ -24,16 +22,20 @@
       # provide a dev shell for all systems that the holonix flake supports
       systems = builtins.attrNames holonix.devShells;
 
-      perSystem = { config, system, pkgs, lib, ... }:
+      perSystem = { inputs', config, system, pkgs, lib, ... }:
         {
           formatter = pkgs.nixpkgs-fmt;
 
           devShells.default = pkgs.mkShell {
-            inputsFrom = [ holonix.devShells.${system}.holochainBinaries ];
-            packages = with pkgs; [
+            inputsFrom = [ inputs'.holonix.devShells ];
+            packages = (with inputs'.holonix.packages; [
+                # add packages from Holonix
+                holochain
+                rust
+            ]) ++ (with pkgs; [
               # add further packages from nixpkgs
               nodejs
-            ];
+            ]);
           };
 
           packages.trycp-server =
