@@ -58,7 +58,7 @@
               src = craneLib.cleanCargoSource (craneLib.path ./.);
               doCheck = false;
 
-              buildInputs = [ ]
+              nativeBuildInputs = [ ]
                 ++ (lib.optionals pkgs.stdenv.isDarwin
                 (with pkgs.darwin.apple_sdk.frameworks; [
                   CoreFoundation
