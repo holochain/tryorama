@@ -29,11 +29,15 @@
           devShells.default = pkgs.mkShell {
             inputsFrom = [ inputs'.holonix.devShells ];
             packages = (with inputs'.holonix.packages; [
-                # add packages from Holonix
-                holochain
-                lair-keystore
-                rust
-            ]) ++ (with pkgs; [
+              # add packages from Holonix
+              holochain
+              lair-keystore
+              rust
+            ]) ++ (lib.optionals pkgs.stdenv.isDarwin
+              (with pkgs.darwin.apple_sdk.frameworks; [
+                CoreFoundation
+                Security
+              ])) ++ (with pkgs; [
               # add further packages from nixpkgs
               nodejs
             ]);
