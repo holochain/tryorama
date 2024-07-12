@@ -31,6 +31,7 @@
             packages = (with inputs'.holonix.packages; [
                 # add packages from Holonix
                 holochain
+                lair-keystore
                 rust
             ]) ++ (with pkgs; [
               # add further packages from nixpkgs
