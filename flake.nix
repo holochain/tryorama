@@ -27,7 +27,6 @@
           formatter = pkgs.nixpkgs-fmt;
 
           devShells.default = pkgs.mkShell {
-            inputsFrom = [ inputs'.holonix.devShells ];
             packages = (with inputs'.holonix.packages; [
               # add packages from Holonix
               holochain
