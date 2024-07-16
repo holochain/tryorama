@@ -261,7 +261,11 @@ export class TryCpClient {
   }
 
   private processSuccessResponse(response: _TryCpSuccessResponseSeralized) {
-    if (response === TRYCP_SUCCESS_RESPONSE || typeof response === "string") {
+    if (
+      response === TRYCP_SUCCESS_RESPONSE ||
+      typeof response === "string" ||
+      typeof response === "object"
+    ) {
       logger.debug(`response ${JSON.stringify(response, null, 4)}\n`);
       return response;
     }

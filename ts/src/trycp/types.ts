@@ -90,7 +90,8 @@ export type TryCpRequest =
   | RequestDisconnectAppInterface
   | RequestCallAppInterface
   | RequestCallAppInterfaceEncoded
-  | RequestCallAdminInterface;
+  | RequestCallAdminInterface
+  | RequestDownloadLogs;
 
 /**
  * Request to download a DNA from a URL.
@@ -249,7 +250,16 @@ export type TryCpResponseErrorValue = string | Error;
 export type TryCpApiResponse =
   | AdminApiResponse
   | AppApiResponse
+  | TryCpControlResponse
   | ApiErrorResponse;
+
+export type TryCpControlResponse = DownloadLogsResponse;
+
+export interface DownloadLogsResponse {
+  lair_stderr: Uint8Array;
+  conductor_stdout: Uint8Array;
+  conductor_stderr: Uint8Array;
+}
 
 /**
  * Error response from the Admin or App API.
@@ -477,6 +487,11 @@ export interface RequestCallAdminInterface {
   type: "call_admin_interface";
   id: ConductorId;
   message: RequestAdminInterfaceMessage;
+}
+
+export interface RequestDownloadLogs {
+  type: "download_logs";
+  id: ConductorId;
 }
 
 /**

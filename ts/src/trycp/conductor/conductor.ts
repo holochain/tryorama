@@ -53,6 +53,7 @@ import { makeLogger } from "../../logger.js";
 import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
 import {
   AdminApiResponseAppAuthenticationTokenIssued,
+  DownloadLogsResponse,
   TryCpClient,
   TryCpConductorLogLevel,
 } from "../index.js";
@@ -310,6 +311,17 @@ export class TryCpConductor implements IConductor {
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;
+  }
+
+  async downloadLogs() {
+    const response = await this.tryCpClient.call({
+      type: "download_logs",
+      id: this.id,
+    });
+    assert(response !== TRYCP_SUCCESS_RESPONSE);
+    assert(typeof response !== "string");
+    console.log(response);
+    return response as DownloadLogsResponse;
   }
 
   /**

@@ -106,6 +106,12 @@ pub enum Request {
         #[serde(with = "serde_bytes")]
         message: Vec<u8>,
     },
+
+    /// Request the logs for a player's conductor and keystore.
+    DownloadLogs {
+        /// The conductor id.
+        id: String,
+    },
 }
 
 /// Message response types.
@@ -152,4 +158,15 @@ pub enum MessageToClient {
         /// message content.
         response: std::result::Result<MessageResponse, String>,
     },
+}
+
+/// The successful response type for a [Request::DownloadLogs] request.
+#[derive(Debug, serde::Serialize, serde::Deserialize)]
+pub struct DownloadLogsResponse {
+    /// The lair keystore stderr log.
+    pub lair_stderr: Vec<u8>,
+    /// The holochain conductor stdout log.
+    pub conductor_stdout: Vec<u8>,
+    /// The holochain conductor stderr log.
+    pub conductor_stderr: Vec<u8>,
 }
