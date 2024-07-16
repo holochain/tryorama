@@ -1,7 +1,8 @@
+use crate::admin_call::ADMIN_CONNECTIONS;
+use crate::{kill_player, player_config_exists, KillError, PLAYERS};
 use nix::sys::signal::Signal;
 use snafu::{ensure, Snafu};
-
-use crate::{kill_player, player_config_exists, KillError, PLAYERS};
+use tokio::task::spawn_blocking;
 
 #[derive(Debug, Snafu)]
 pub(crate) enum ShutdownError {
@@ -13,8 +14,10 @@ pub(crate) enum ShutdownError {
     Kill { source: KillError },
 }
 
-pub(crate) fn shutdown(id: String, signal: Option<String>) -> Result<(), ShutdownError> {
+pub(crate) async fn shutdown(id: String, signal: Option<String>) -> Result<(), ShutdownError> {
     ensure!(player_config_exists(&id), PlayerNotConfigured { id });
+
+    ADMIN_CONNECTIONS.lock().await.remove(&id);
 
     let signal = match signal.as_deref() {
         Some("SIGTERM") | None => Signal::SIGTERM,
@@ -27,15 +30,21 @@ pub(crate) fn shutdown(id: String, signal: Option<String>) -> Result<(), Shutdow
         }
     };
 
-    let players_guard = PLAYERS.read();
-    let processes_lock = match players_guard.get(&id) {
-        Some(player) => &player.processes,
-        None => return Ok(()),
-    };
+    spawn_blocking(move || -> Result<(), ShutdownError> {
+        let players_guard = PLAYERS.read();
+        let processes_lock = match players_guard.get(&id) {
+            Some(player) => &player.processes,
+            None => return Ok(()),
+        };
 
-    let mut player_cell = processes_lock.lock();
+        let mut player_cell = processes_lock.lock();
 
-    kill_player(&mut player_cell, &id, signal)?;
+        kill_player(&mut player_cell, &id, signal)?;
+
+        Ok(())
+    })
+    .await
+    .expect("Task to kill player should have completed")?;
 
     Ok(())
 }

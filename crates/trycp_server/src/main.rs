@@ -217,12 +217,12 @@ async fn ws_message(
         })
         .await
         .unwrap(),
-        Request::Shutdown { id, signal } => spawn_blocking(move || {
-            let resp = shutdown::shutdown(id, signal).map_err(|e| e.to_string());
-            serialize_resp(request_id, resp)
-        })
-        .await
-        .unwrap(),
+        Request::Shutdown { id, signal } => serialize_resp(
+            request_id,
+            shutdown::shutdown(id, signal)
+                .await
+                .map_err(|e| e.to_string()),
+        ),
         Request::Reset => spawn_blocking(move || {
             serialize_resp(request_id, reset::reset().map_err(|e| e.to_string()))
         })
