@@ -314,3 +314,20 @@ test("TryCP Server - App API - get app info", async (t) => {
   await conductor.disconnectClient();
   await localTryCpServer.stop();
 });
+
+test("TryCP Client - download logs", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const tryCpClient = await createTryCpClient();
+  const conductor = await createTryCpConductor(tryCpClient);
+  const logs = await conductor.downloadLogs();
+
+  t.true(logs.lair_stderr.length === 0, "lair stderr logs are empty");
+  t.true(
+    logs.conductor_stdout.length > 0,
+    "conductor stdout logs are not empty"
+  );
+  t.true(logs.conductor_stderr.length === 0, "conductor stderr logs are empty");
+
+  await conductor.shutDown();
+  await localTryCpServer.stop();
+});

@@ -5,6 +5,7 @@ mod admin_call;
 mod app_interface;
 mod configure_player;
 mod download_dna;
+mod download_logs;
 mod reset;
 mod save_dna;
 mod shutdown;
@@ -252,6 +253,14 @@ async fn ws_message(
                 Err(e) => serialize_resp(request_id, Err::<(), _>(e.to_string())),
             }
         }
+        Request::DownloadLogs { id } => spawn_blocking(move || {
+            serialize_resp(
+                request_id,
+                download_logs::download_logs(id).map_err(|e| e.to_string()),
+            )
+        })
+        .await
+        .unwrap(),
     };
 
     Ok(Some(Message::Binary(response)))
