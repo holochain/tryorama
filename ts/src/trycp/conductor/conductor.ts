@@ -320,7 +320,6 @@ export class TryCpConductor implements IConductor {
     });
     assert(response !== TRYCP_SUCCESS_RESPONSE);
     assert(typeof response !== "string");
-    console.log(response);
     return response as DownloadLogsResponse;
   }
 
