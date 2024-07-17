@@ -253,13 +253,28 @@ export type TryCpApiResponse =
   | TryCpControlResponse
   | ApiErrorResponse;
 
+/**
+ * A response from the TryCP server.
+ *
+ * @public
+ */
 export type TryCpControlResponse = DownloadLogsResponseType;
 
+/**
+ * Enumerated response for downloading logs.
+ *
+ * @public
+ */
 export interface DownloadLogsResponseType {
   type: "download_logs";
   data: DownloadLogsResponse;
 }
 
+/**
+ * Response for downloading logs.
+ *
+ * @public
+ */
 export interface DownloadLogsResponse {
   lair_stderr: Uint8Array;
   conductor_stdout: Uint8Array;
@@ -494,6 +509,11 @@ export interface RequestCallAdminInterface {
   message: RequestAdminInterfaceMessage;
 }
 
+/**
+ * Request type for fetching logs from a given conductor.
+ *
+ * @public
+ */
 export interface RequestDownloadLogs {
   type: "download_logs";
   id: ConductorId;

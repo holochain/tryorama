@@ -228,6 +228,18 @@ Download a DNA from a URL to the server's file system.
 </td></tr>
 <tr><td>
 
+[downloadLogs()](./tryorama.trycpconductor.downloadlogs.md)
+
+
+</td><td>
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
 [installAgentsApps(options)](./tryorama.trycpconductor.installagentsapps.md)
 
 

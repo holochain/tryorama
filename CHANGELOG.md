@@ -8,6 +8,20 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 ### Fixed
+
+## 2024-07-17: v0.17.0-dev.2
+### Added
+- New feature for TryCP to allow logs to be downloaded. This is useful when you are working with remote nodes and need
+  to read the Holochain logs locally. The logs are given back as raw bytes, so you can write them to a file or otherwise
+  further process them. #222
+
+### Removed
+### Changed
+- The TryCP server used to open a new admin websocket for each admin request made to Holochain. A single
+  admin websocket is now used for all requests. It is opened by the first request and closed when the Holochain instance
+  it shut down. #221
+
+### Fixed
 - The `trycp_client` now handles ping/pong messages from the TryCP server to keep the connection alive.
 - The `trycp_client` now handles the `close` event from the TryCP server to close the connection.
 

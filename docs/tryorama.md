@@ -693,6 +693,28 @@ DNA source and additional options.
 </td></tr>
 <tr><td>
 
+[DownloadLogsResponse](./tryorama.downloadlogsresponse.md)
+
+
+</td><td>
+
+Response for downloading logs.
+
+
+</td></tr>
+<tr><td>
+
+[DownloadLogsResponseType](./tryorama.downloadlogsresponsetype.md)
+
+
+</td><td>
+
+Enumerated response for downloading logs.
+
+
+</td></tr>
+<tr><td>
+
 [IConductor](./tryorama.iconductor.md)
 
 
@@ -875,6 +897,17 @@ Request to disconnect a connected app interface from a conductor.
 </td><td>
 
 Request to download a DNA from a URL.
+
+
+</td></tr>
+<tr><td>
+
+[RequestDownloadLogs](./tryorama.requestdownloadlogs.md)
+
+
+</td><td>
+
+Request type for fetching logs from a given conductor.
 
 
 </td></tr>
@@ -1221,6 +1254,17 @@ Possible responses from the Admin and App APIs.
 </td><td>
 
 Log level for a TryCP conductor.
+
+
+</td></tr>
+<tr><td>
+
+[TryCpControlResponse](./tryorama.trycpcontrolresponse.md)
+
+
+</td><td>
+
+A response from the TryCP server.
 
 
 </td></tr>

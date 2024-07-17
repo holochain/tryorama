@@ -1,6 +1,10 @@
 {
   inputs = {
-    holonix.url = "github:holochain/holonix/main";
+    holonix = {
+        url = "github:holochain/holonix/main";
+        inputs.crane.follows = "crane";
+        inputs.rust-overlay.follows = "rust-overlay";
+    };
 
     nixpkgs.follows = "holonix/nixpkgs";
 
