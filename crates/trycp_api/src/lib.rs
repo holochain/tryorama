@@ -117,7 +117,7 @@ pub enum MessageResponse {
     Null,
 
     /// Encoded response.
-    Bytes(Vec<u8>)
+    Bytes(Vec<u8>),
 }
 
 impl MessageResponse {

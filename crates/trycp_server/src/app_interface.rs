@@ -20,7 +20,7 @@ pub(crate) struct Connection {
     pending_requests: PendingRequests,
 }
 
-pub(crate) static CONNECTIONS: Lazy<
+pub(crate) static APP_CONNECTIONS: Lazy<
     futures::lock::Mutex<HashMap<u16, Arc<futures::lock::Mutex<Option<Connection>>>>>,
 > = Lazy::new(Default::default);
 
@@ -61,7 +61,7 @@ pub(crate) async fn connect(
     port: u16,
     response_writer: Arc<futures::lock::Mutex<WsResponseWriter>>,
 ) -> Result<(), ConnectError> {
-    let connection_lock = Arc::clone(CONNECTIONS.lock().await.entry(port).or_default());
+    let connection_lock = Arc::clone(APP_CONNECTIONS.lock().await.entry(port).or_default());
 
     let mut connection = connection_lock.lock().await;
     if connection.is_some() {
@@ -196,15 +196,15 @@ pub(crate) async fn listen(
 }
 
 #[derive(Debug, Snafu)]
-pub(crate) enum DisconnectError {
+pub(crate) enum AppDisconnectError {
     #[snafu(display("Couldn't complete closing handshake: {}", source))]
     CloseHandshake { source: tungstenite::Error },
     #[snafu(display("Couldn't listen on app interface: {}", source))]
     Listen { source: ListenError },
 }
 
-pub(crate) async fn disconnect_by_port(port: u16) -> Result<(), DisconnectError> {
-    let connection_lock = match CONNECTIONS.lock().await.get(&port) {
+pub(crate) async fn disconnect_by_port(port: u16) -> Result<(), AppDisconnectError> {
+    let connection_lock = match APP_CONNECTIONS.lock().await.get(&port) {
         Some(connection_lock) => Arc::clone(connection_lock),
         None => return Ok(()),
     };
@@ -214,7 +214,7 @@ pub(crate) async fn disconnect_by_port(port: u16) -> Result<(), DisconnectError>
 
 pub(crate) async fn disconnect(
     connection_lock: Arc<futures::lock::Mutex<Option<Connection>>>,
-) -> Result<(), DisconnectError> {
+) -> Result<(), AppDisconnectError> {
     let mut connection_guard = connection_lock.lock().await;
     let Connection {
         mut request_writer,
@@ -251,7 +251,7 @@ pub(crate) enum CallError {
 
 pub(crate) async fn call(request_id: u64, port: u16, message: Vec<u8>) -> Result<(), CallError> {
     let connection_lock = Arc::clone(
-        CONNECTIONS
+        APP_CONNECTIONS
             .lock()
             .await
             .get(&port)

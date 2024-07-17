@@ -38,9 +38,8 @@ impl SignalRecv {
 /// Trycp client.
 pub struct TrycpClient {
     ws: Ws,
-    pend: Arc<
-        std::sync::Mutex<HashMap<u64, tokio::sync::oneshot::Sender<Result<MessageResponse>>>>,
-    >,
+    pend:
+        Arc<std::sync::Mutex<HashMap<u64, tokio::sync::oneshot::Sender<Result<MessageResponse>>>>>,
     recv_task: tokio::task::JoinHandle<()>,
 }
 
@@ -79,7 +78,10 @@ impl TrycpClient {
             while let Some(Ok(msg)) = stream.next().await {
                 let msg = match msg {
                     Message::Close(close_msg) => {
-                        eprintln!("Received websocket close from TryCP server: {}", close_msg.map(|f| f.reason).unwrap_or("No reason".into()));
+                        eprintln!(
+                            "Received websocket close from TryCP server: {}",
+                            close_msg.map(|f| f.reason).unwrap_or("No reason".into())
+                        );
                         break;
                     }
                     Message::Ping(p) => {
@@ -89,9 +91,7 @@ impl TrycpClient {
                     Message::Pong(_) => {
                         continue;
                     }
-                    Message::Binary(msg) => {
-                        msg
-                    }
+                    Message::Binary(msg) => msg,
                     _ => {
                         panic!("Unexpected message from TryCP server: {:?}", msg);
                     }

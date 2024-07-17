@@ -1,13 +1,22 @@
 use crate::{HolochainMessage, WsClientDuplex, PLAYERS};
+use futures::lock::Mutex;
 use futures::{SinkExt, StreamExt};
+use once_cell::sync::Lazy;
 use snafu::{OptionExt, ResultExt, Snafu};
+use std::collections::HashMap;
+use std::sync::Arc;
+use tokio::net::TcpStream;
 use tokio::time::error::Elapsed;
+use tokio_tungstenite::tungstenite::protocol::frame::coding::CloseCode;
+use tokio_tungstenite::tungstenite::protocol::CloseFrame;
 use tokio_tungstenite::tungstenite::{
-    self,
-    client::IntoClientRequest,
-    protocol::{frame::coding::CloseCode, CloseFrame, WebSocketConfig},
-    Message,
+    self, client::IntoClientRequest, protocol::WebSocketConfig, Message,
 };
+use tokio_tungstenite::WebSocketStream;
+
+pub(crate) static ADMIN_CONNECTIONS: Lazy<
+    futures::lock::Mutex<HashMap<String, Arc<futures::lock::Mutex<WebSocketStream<TcpStream>>>>>,
+> = Lazy::new(Default::default);
 
 #[derive(Debug, Snafu)]
 pub(crate) enum AdminCallError {
@@ -24,44 +33,45 @@ pub(crate) enum AdminCallError {
 pub(crate) async fn admin_call(id: String, message: Vec<u8>) -> Result<Vec<u8>, AdminCallError> {
     println!("admin_interface_call id: {:?}", id);
 
-    let port = PLAYERS
-        .read()
-        .get(&id)
-        .map(|player| player.admin_port)
-        .context(PlayerNotConfigured { id })?;
+    let mut admin_connections = ADMIN_CONNECTIONS.lock().await;
+    if !admin_connections.contains_key(&id) {
+        let port = PLAYERS
+            .read()
+            .get(&id)
+            .map(|player| player.admin_port)
+            .context(PlayerNotConfigured { id: id.clone() })?;
 
-    let addr = format!("localhost:{port}");
-    let stream = tokio::net::TcpStream::connect(addr.clone())
+        let stream = tokio::net::TcpStream::connect(("localhost", port))
+            .await
+            .context(TcpConnect)?;
+
+        let uri = format!("ws://localhost:{}", port);
+        let mut request = uri.clone().into_client_request().expect("not a valid URI");
+        // needed for admin websocket connection to be accepted
+        request.headers_mut().insert(
+            "origin",
+            "trycp-admin".parse().expect("invalid origin header value"),
+        );
+        request.body();
+
+        println!("Establishing admin interface with {:?}", uri);
+
+        let (ws_stream, _) = tokio_tungstenite::client_async_with_config(
+            request,
+            stream,
+            Some(WebSocketConfig::default()),
+        )
         .await
-        .context(TcpConnect)?;
-    let uri = format!("ws://{}", addr);
-    let mut request = uri.clone().into_client_request().expect("not a valid URI");
-    // needed for admin websocket connection to be accepted
-    request.headers_mut().insert(
-        "origin",
-        "trycp-admin".parse().expect("invalid origin header value"),
-    );
-    request.body();
+        .context(WsConnect)?;
 
-    println!("Establishing admin interface with {:?}", uri);
+        println!("Established admin interface");
 
-    let (mut ws_stream, _) = tokio_tungstenite::client_async_with_config(
-        request,
-        stream,
-        Some(WebSocketConfig::default()),
-    )
-    .await
-    .context(WsConnect)?;
+        admin_connections.insert(id.clone(), Arc::new(futures::lock::Mutex::new(ws_stream)));
+    }
 
-    println!("Established admin interface");
+    let mut ws_stream = admin_connections[&id].lock().await;
 
     let call_result = call(&mut ws_stream, 0, message).await;
-    let _ = ws_stream
-        .send(Message::Close(Some(CloseFrame {
-            code: CloseCode::Normal,
-            reason: "fulfilled purpose".into(),
-        })))
-        .await;
 
     Ok(call_result?)
 }
@@ -146,4 +156,26 @@ async fn call(
     };
 
     Ok(response_data)
+}
+
+#[derive(Debug, Snafu)]
+pub(crate) enum AdminDisconnectError {
+    #[snafu(display("Couldn't complete closing handshake: {}", source))]
+    CloseHandshake { source: tungstenite::Error },
+}
+
+pub(crate) async fn disconnect(
+    ws_stream: Arc<Mutex<WebSocketStream<TcpStream>>>,
+) -> Result<(), AdminDisconnectError> {
+    let _ = ws_stream
+        .lock()
+        .await
+        .send(Message::Close(Some(CloseFrame {
+            code: CloseCode::Normal,
+            reason: "fulfilled purpose".into(),
+        })))
+        .await
+        .context(CloseHandshake)?;
+
+    Ok(())
 }
