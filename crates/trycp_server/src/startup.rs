@@ -102,7 +102,7 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
             // Disable ANSI color codes in Holochain output, which should be set any time the output
             // is being written to a file.
             // See https://docs.rs/tracing-subscriber/0.3.18/tracing_subscriber/fmt/struct.Layer.html#method.with_ansi
-            .env(" NO_COLOR", "1")
+            .env("NO_COLOR", "1")
             .env("RUST_BACKTRACE", "full")
             .env("RUST_LOG", rust_log)
             .stdin(Stdio::piped())
