@@ -160,6 +160,14 @@ pub enum MessageToClient {
     },
 }
 
+/// Messages returned directly by the TryCp server, rather than relayed from Holochain
+#[derive(Debug, serde::Deserialize, serde::Serialize)]
+#[serde(rename_all = "snake_case", tag = "type", content = "data")]
+pub enum TryCpServerResponse {
+    /// See [DownloadLogsResponse].
+    DownloadLogs(DownloadLogsResponse),
+}
+
 /// The successful response type for a [Request::DownloadLogs] request.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct DownloadLogsResponse {

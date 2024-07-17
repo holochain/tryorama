@@ -319,8 +319,10 @@ export class TryCpConductor implements IConductor {
       id: this.id,
     });
     assert(response !== TRYCP_SUCCESS_RESPONSE);
-    assert(typeof response !== "string");
-    return response as DownloadLogsResponse;
+    assert(typeof response === "object");
+    assert("type" in response);
+    assert(response.type === "download_logs");
+    return response.data;
   }
 
   /**

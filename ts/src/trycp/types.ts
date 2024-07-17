@@ -253,7 +253,12 @@ export type TryCpApiResponse =
   | TryCpControlResponse
   | ApiErrorResponse;
 
-export type TryCpControlResponse = DownloadLogsResponse;
+export type TryCpControlResponse = DownloadLogsResponseType;
+
+export interface DownloadLogsResponseType {
+  type: "download_logs";
+  data: DownloadLogsResponse;
+}
 
 export interface DownloadLogsResponse {
   lair_stderr: Uint8Array;

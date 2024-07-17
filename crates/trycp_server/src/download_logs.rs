@@ -3,7 +3,7 @@ use crate::{
     CONDUCTOR_STDOUT_LOG_FILENAME, LAIR_STDERR_LOG_FILENAME,
 };
 use snafu::{ResultExt, Snafu};
-use trycp_api::DownloadLogsResponse;
+use trycp_api::{DownloadLogsResponse, MessageResponse, TryCpServerResponse};
 
 #[derive(Debug, Snafu)]
 pub(crate) enum DownloadLogsError {
@@ -23,9 +23,11 @@ pub(crate) enum DownloadLogsError {
         source
     ))]
     HolochainStderr { id: String, source: std::io::Error },
+    #[snafu(display("Could not serialize response: {}", source))]
+    SerializeResponse { source: rmp_serde::encode::Error },
 }
 
-pub(crate) fn download_logs(id: String) -> Result<DownloadLogsResponse, DownloadLogsError> {
+pub(crate) fn download_logs(id: String) -> Result<MessageResponse, DownloadLogsError> {
     if !player_config_exists(&id) {
         return Err(DownloadLogsError::PlayerNotConfigured { id });
     }
@@ -33,20 +35,21 @@ pub(crate) fn download_logs(id: String) -> Result<DownloadLogsResponse, Download
     let player_dir = get_player_dir(&id);
 
     let lair_stderr = player_dir.join(LAIR_STDERR_LOG_FILENAME);
-    let lair_stderr =
-        std::fs::read(&lair_stderr).context(LairStdErr { id: id.clone() })?;
+    let lair_stderr = std::fs::read(&lair_stderr).context(LairStdErr { id: id.clone() })?;
 
     let conductor_stdout = player_dir.join(CONDUCTOR_STDOUT_LOG_FILENAME);
     let conductor_stdout =
         std::fs::read(&conductor_stdout).context(HolochainStdout { id: id.clone() })?;
 
     let conductor_stderr = player_dir.join(CONDUCTOR_STDERR_LOG_FILENAME);
-    let conductor_stderr =
-        std::fs::read(&conductor_stderr).context(HolochainStderr { id })?;
+    let conductor_stderr = std::fs::read(&conductor_stderr).context(HolochainStderr { id })?;
 
-    Ok(DownloadLogsResponse {
-        lair_stderr,
-        conductor_stdout,
-        conductor_stderr,
-    })
+    Ok(MessageResponse::Bytes(
+        rmp_serde::to_vec_named(&TryCpServerResponse::DownloadLogs(DownloadLogsResponse {
+            lair_stderr,
+            conductor_stdout,
+            conductor_stderr,
+        }))
+        .context(SerializeResponse)?,
+    ))
 }
