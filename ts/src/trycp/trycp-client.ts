@@ -264,7 +264,7 @@ export class TryCpClient {
     if (
       response === TRYCP_SUCCESS_RESPONSE ||
       typeof response === "string" ||
-      typeof response === "object"
+      (typeof response === "object" && response.length === undefined) // Some object, duck-typed to not be a bytearray
     ) {
       logger.debug(`response ${JSON.stringify(response, null, 4)}\n`);
       return response;
