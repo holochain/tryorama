@@ -842,6 +842,15 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Enablie an app only if the app is in the `AppStatus::Disabled(DisabledAppReason::NotStartedAfterProvidingMemproofs)`
+     * state. Attempting to enable the app from other states (other than Running) will fail.
+     */
+    const enableApp = async () => {
+      const response = await this.callAppApi(port, { type: "enable_app" });
+      assert(response.type === AppApiResponseOk);
+    };
+
+    /**
      * Make a zome call to a cell in the conductor.
      *
      * @param request - {@link CallZomeRequest}.
@@ -946,6 +955,7 @@ export class TryCpConductor implements IConductor {
     return {
       appInfo,
       callZome,
+      enableApp,
       createCloneCell,
       enableCloneCell,
       disableCloneCell,

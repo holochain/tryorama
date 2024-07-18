@@ -5,6 +5,7 @@ import {
   CellProvisioningStrategy,
   CellType,
   CloneId,
+  encodeHashToBase64,
   EntryHash,
   GrantedFunctionsType,
 } from "@holochain/client";
@@ -124,12 +125,23 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
     "app status is awaiting_memproofs"
   );
 
+  t.rejects(
+    appWs.enableApp,
+    "app cannot be enabled before providing memproofs"
+  );
+
   const response = await appWs.provideMemproofs({});
   t.equal(response, undefined, "providing memproofs successful");
 
-  await conductor
-    .adminWs()
-    .enableApp({ installed_app_id: app.installed_app_id });
+  appInfo = await appWs.appInfo();
+  assert(appInfo);
+  t.deepEqual(
+    appInfo.status,
+    { disabled: { reason: "not_started_after_providing_memproofs" } },
+    "app status is not_started_after_providing_memproofs"
+  );
+
+  await appWs.enableApp();
 
   appInfo = await appWs.appInfo();
   assert(appInfo);

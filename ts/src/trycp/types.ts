@@ -338,6 +338,7 @@ export type RequestCallAppInterfaceMessage =
   | RequestCallZome
   | RequestAppInfo
   | RequestProvideMemproofs
+  | RequestEnableApp
   | RequestCreateCloneCell
   | RequestEnableCloneCell
   | RequestDisableCloneCell
@@ -351,6 +352,15 @@ export type RequestCallAppInterfaceMessage =
 export interface RequestProvideMemproofs {
   type: "provide_memproofs";
   data: ProvideMemproofsRequest;
+}
+
+/**
+ * Request to enable the app.
+ *
+ * @public
+ */
+export interface RequestEnableApp {
+  type: "enable_app";
 }
 
 /**
