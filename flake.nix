@@ -1,9 +1,9 @@
 {
   inputs = {
     holonix = {
-        url = "github:holochain/holonix/main";
-        inputs.crane.follows = "crane";
-        inputs.rust-overlay.follows = "rust-overlay";
+      url = "github:holochain/holonix/main";
+      inputs.crane.follows = "crane";
+      inputs.rust-overlay.follows = "rust-overlay";
     };
 
     nixpkgs.follows = "holonix/nixpkgs";
@@ -31,19 +31,21 @@
           formatter = pkgs.nixpkgs-fmt;
 
           devShells.default = pkgs.mkShell {
-            packages = (with inputs'.holonix.packages; [
+            packages = [
               # add packages from Holonix
-              holochain
-              lair-keystore
-              rust
-            ]) ++ (lib.optionals pkgs.stdenv.isDarwin
-              (with pkgs.darwin.apple_sdk.frameworks; [
-                CoreFoundation
-                Security
-              ])) ++ (with pkgs; [
+              inputs'.holonix.packages.holochain
+              inputs'.holonix.packages.lair-keystore
+              # inputs'.holonix.packages.rust
+
               # add further packages from nixpkgs
-              nodejs
-            ]);
+              pkgs.nodejs
+
+              (lib.optional pkgs.stdenv.isDarwin [
+                pkgs.libiconv
+                pkgs.darwin.apple_sdk.frameworks.CoreFoundation
+                pkgs.darwin.apple_sdk.frameworks.Security
+              ])
+            ];
           };
 
           packages.trycp-server =
