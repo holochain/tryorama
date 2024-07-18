@@ -25,6 +25,8 @@ import {
   encodeHashToBase64,
   FullStateDump,
   generateSigningKeyPair,
+  GetCompatibleCellsRequest,
+  GetCompatibleCellsResponse,
   GetDnaDefinitionRequest,
   getSigningCredentials,
   GrantedFunctions,
@@ -53,7 +55,6 @@ import { makeLogger } from "../../logger.js";
 import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
 import {
   AdminApiResponseAppAuthenticationTokenIssued,
-  DownloadLogsResponse,
   TryCpClient,
   TryCpConductorLogLevel,
 } from "../index.js";
@@ -401,6 +402,23 @@ export class TryCpConductor implements IConductor {
       });
       assert(response.type === "dna_definition_returned");
       return (response as AdminApiResponseDnasDefinitionReturned).data;
+    };
+
+    /**
+     * Get set of compatible DNA hashes of a DNA.
+     *
+     * @param dnaHash - Hash of DNA to query.
+     * @returns The {@link GetCompatibleCellsResponse}.
+     */
+    const getCompatibleCells = async (
+      dnaHash: GetCompatibleCellsRequest
+    ): Promise<GetCompatibleCellsResponse> => {
+      const response = await this.callAdminApi({
+        type: "get_compatible_cells",
+        data: dnaHash,
+      });
+      assert(response.type === "compatible_cells");
+      return response.data;
     };
 
     /**
@@ -773,6 +791,7 @@ export class TryCpConductor implements IConductor {
       dumpState,
       enableApp,
       generateAgentPubKey,
+      getCompatibleCells,
       getDnaDefinition,
       grantSigningKey,
       grantZomeCallCapability,
