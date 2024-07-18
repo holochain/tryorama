@@ -9,5 +9,5 @@ The types of all possible calls to the Admin API.
 **Signature:**
 
 ```typescript
-export type RequestAdminInterfaceMessageType = "add_agent_info" | "agent_info" | "attach_app_interface" | "connect_app_interface" | "delete_clone_cell" | "disable_app" | "dump_full_state" | "dump_network_stats" | "dump_state" | "enable_app" | "generate_agent_pub_key" | "get_dna_definition" | "grant_zome_call_capability" | "install_app" | "list_apps" | "list_app_interfaces" | "list_cell_ids" | "list_dnas" | "register_dna" | "start_app" | "storage_info" | "uninstall_app" | "update_coordinators" | "issue_app_authentication_token";
+export type RequestAdminInterfaceMessageType = "add_agent_info" | "agent_info" | "attach_app_interface" | "connect_app_interface" | "delete_clone_cell" | "disable_app" | "dump_full_state" | "dump_network_stats" | "dump_state" | "enable_app" | "generate_agent_pub_key" | "get_compatible_cells" | "get_dna_definition" | "grant_zome_call_capability" | "install_app" | "list_apps" | "list_app_interfaces" | "list_cell_ids" | "list_dnas" | "register_dna" | "start_app" | "storage_info" | "uninstall_app" | "update_coordinators" | "issue_app_authentication_token";
 ```

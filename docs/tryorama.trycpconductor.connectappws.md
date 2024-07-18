@@ -12,6 +12,7 @@ Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/
 connectAppWs(_token: AppAuthenticationToken, port: number): Promise<{
         appInfo: () => Promise<import("@holochain/client").AppInfoResponse>;
         callZome: <T>(request: CallZomeRequest | CallZomeRequestSigned) => Promise<T>;
+        enableApp: () => Promise<void>;
         createCloneCell: (request: CreateCloneCellRequest) => Promise<import("@holochain/client").ClonedCell>;
         enableCloneCell: (request: EnableCloneCellRequest) => Promise<import("@holochain/client").ClonedCell>;
         disableCloneCell: (request: DisableCloneCellRequest) => Promise<void>;
@@ -69,7 +70,7 @@ number
 </tbody></table>
 **Returns:**
 
-Promise&lt;{ appInfo: () =&gt; Promise&lt;import("@holochain/client").AppInfoResponse&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; networkInfo: (request: NetworkInfoRequest) =&gt; Promise&lt;import("@holochain/client").NetworkInfoResponse&gt;; provideMemproofs: (request: MemproofMap) =&gt; Promise&lt;void&gt;; }&gt;
+Promise&lt;{ appInfo: () =&gt; Promise&lt;import("@holochain/client").AppInfoResponse&gt;; callZome: &lt;T&gt;(request: CallZomeRequest \| CallZomeRequestSigned) =&gt; Promise&lt;T&gt;; enableApp: () =&gt; Promise&lt;void&gt;; createCloneCell: (request: CreateCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; enableCloneCell: (request: EnableCloneCellRequest) =&gt; Promise&lt;import("@holochain/client").ClonedCell&gt;; disableCloneCell: (request: DisableCloneCellRequest) =&gt; Promise&lt;void&gt;; networkInfo: (request: NetworkInfoRequest) =&gt; Promise&lt;import("@holochain/client").NetworkInfoResponse&gt;; provideMemproofs: (request: MemproofMap) =&gt; Promise&lt;void&gt;; }&gt;
 
 The App API web socket.
 
