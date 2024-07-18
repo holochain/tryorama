@@ -35,7 +35,7 @@
               # add packages from Holonix
               inputs'.holonix.packages.holochain
               inputs'.holonix.packages.lair-keystore
-              # inputs'.holonix.packages.rust
+              inputs'.holonix.packages.rust
 
               # add further packages from nixpkgs
               pkgs.nodejs
