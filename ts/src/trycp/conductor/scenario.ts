@@ -156,33 +156,30 @@ export class TryCpScenario {
                 agentsApps: appOptions,
               });
               const adminWs = conductor.adminWs();
-              const players: TryCpPlayer[] = await Promise.all(
-                appInfos.map(async (appInfo) => {
-                  const { port } = await adminWs.attachAppInterface();
-                  const issued = await adminWs.issueAppAuthenticationToken({
-                    installed_app_id: appInfo.installed_app_id,
-                  });
-                  // This doesn't make a lot of sense... but we are asking the trycp server to create a connection,
-                  // which needs to be authenticated here.
-                  await conductor.connectAppInterface(issued.token, port);
-                  return (
-                    conductor
-                      // Then here we are just connecting to the same backend connection, but we don't actually need to
-                      // authenticate. We still have to follow the same interface to 'connect' though, even though this
-                      // isn't establishing a connection.
-                      .connectAppWs(issued.token, port)
-                      .then((appWs) =>
-                        enableAndGetAgentApp(adminWs, appWs, appInfo).then(
-                          (agentApp) => ({
-                            conductor,
-                            appWs,
-                            ...agentApp,
-                          })
-                        )
-                      )
-                  );
-                })
-              );
+              const players: TryCpPlayer[] = [];
+              for (const appInfo of appInfos) {
+                const { port } = await adminWs.attachAppInterface();
+                const issued = await adminWs.issueAppAuthenticationToken({
+                  installed_app_id: appInfo.installed_app_id,
+                });
+                // This doesn't make a lot of sense... but we are asking the trycp server to create a connection,
+                // which needs to be authenticated here.
+                await conductor.connectAppInterface(issued.token, port);
+                // Then here we are just connecting to the same backend connection, but we don't actually need to
+                // authenticate. We still have to follow the same interface to 'connect' though, even though this
+                // isn't establishing a connection.
+                const appWs = await conductor.connectAppWs(issued.token, port);
+                const agentApp = await enableAndGetAgentApp(
+                  adminWs,
+                  appWs,
+                  appInfo
+                );
+                players.push({
+                  conductor,
+                  appWs,
+                  ...agentApp,
+                });
+              }
               return { conductor, players };
             });
           conductorsCreated.push(conductorCreated);
