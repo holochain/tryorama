@@ -508,6 +508,16 @@ Description
 </td></tr>
 <tr><td>
 
+[AdminApiResponseGetCompatibleCells](./tryorama.adminapiresponsegetcompatiblecells.md)
+
+
+</td><td>
+
+
+
+</td></tr>
+<tr><td>
+
 [AdminApiResponseNetworkStatsDumped](./tryorama.adminapiresponsenetworkstatsdumped.md)
 
 
@@ -908,6 +918,17 @@ Request to download a DNA from a URL.
 </td><td>
 
 Request type for fetching logs from a given conductor.
+
+
+</td></tr>
+<tr><td>
+
+[RequestEnableApp](./tryorama.requestenableapp.md)
+
+
+</td><td>
+
+Request to enable the app.
 
 
 </td></tr>

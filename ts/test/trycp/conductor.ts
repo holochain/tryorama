@@ -5,6 +5,7 @@ import {
   CellProvisioningStrategy,
   CellType,
   CloneId,
+  encodeHashToBase64,
   EntryHash,
   GrantedFunctionsType,
 } from "@holochain/client";
@@ -77,6 +78,39 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
   await localTryCpServer.stop();
 });
 
+test("TryCP Conductor - get compatible cells", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client);
+  const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+  const app = await conductor.installApp(
+    { path: FIXTURE_HAPP_URL.pathname },
+    { agentPubKey }
+  );
+  assert(CellType.Provisioned in app.cell_info[ROLE_NAME][0]);
+  const cellId = app.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
+  const dnaHash = cellId[0];
+  const dnaHashB64 = encodeHashToBase64(dnaHash);
+
+  const response = await conductor.adminWs().getCompatibleCells(dnaHashB64);
+  const compatibleCells = response.values();
+  const compatibleCell_1 = compatibleCells.next();
+  t.deepEqual(
+    compatibleCell_1.value,
+    [app.installed_app_id, [cellId]],
+    "compatible cells contains tuple of installed app id and cell id"
+  );
+  const next = compatibleCells.next();
+  t.equal(next.value, undefined, "no other value in set");
+  t.assert(next.done);
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
 test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
@@ -124,12 +158,23 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
     "app status is awaiting_memproofs"
   );
 
+  t.rejects(
+    appWs.enableApp,
+    "app cannot be enabled before providing memproofs"
+  );
+
   const response = await appWs.provideMemproofs({});
   t.equal(response, undefined, "providing memproofs successful");
 
-  await conductor
-    .adminWs()
-    .enableApp({ installed_app_id: app.installed_app_id });
+  appInfo = await appWs.appInfo();
+  assert(appInfo);
+  t.deepEqual(
+    appInfo.status,
+    { disabled: { reason: "not_started_after_providing_memproofs" } },
+    "app status is not_started_after_providing_memproofs"
+  );
+
+  await appWs.enableApp();
 
   appInfo = await appWs.appInfo();
   assert(appInfo);

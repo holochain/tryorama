@@ -7,9 +7,9 @@
 **Signature:**
 
 ```typescript
-downloadLogs(): Promise<DownloadLogsResponse>;
+downloadLogs(): Promise<import("../types.js").DownloadLogsResponse>;
 ```
 **Returns:**
 
-Promise&lt;[DownloadLogsResponse](./tryorama.downloadlogsresponse.md)<!-- -->&gt;
+Promise&lt;import("../types.js").[DownloadLogsResponse](./tryorama.downloadlogsresponse.md)<!-- -->&gt;
 

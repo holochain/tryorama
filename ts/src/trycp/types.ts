@@ -26,6 +26,8 @@ import {
   EnableCloneCellRequest,
   EnableCloneCellResponse,
   FullStateDump,
+  GetCompatibleCellsRequest,
+  GetCompatibleCellsResponse,
   GetDnaDefinitionRequest,
   GrantZomeCallCapabilityRequest,
   HoloHash,
@@ -338,6 +340,7 @@ export type RequestCallAppInterfaceMessage =
   | RequestCallZome
   | RequestAppInfo
   | RequestProvideMemproofs
+  | RequestEnableApp
   | RequestCreateCloneCell
   | RequestEnableCloneCell
   | RequestDisableCloneCell
@@ -351,6 +354,15 @@ export type RequestCallAppInterfaceMessage =
 export interface RequestProvideMemproofs {
   type: "provide_memproofs";
   data: ProvideMemproofsRequest;
+}
+
+/**
+ * Request to enable the app.
+ *
+ * @public
+ */
+export interface RequestEnableApp {
+  type: "enable_app";
 }
 
 /**
@@ -536,6 +548,7 @@ export type RequestAdminInterfaceMessageType =
   | "dump_state"
   | "enable_app"
   | "generate_agent_pub_key"
+  | "get_compatible_cells"
   | "get_dna_definition"
   | "grant_zome_call_capability"
   | "install_app"
@@ -567,6 +580,7 @@ export interface RequestAdminInterfaceMessage {
     | DumpNetworkStatsRequest
     | DumpStateRequest
     | EnableAppRequest
+    | GetCompatibleCellsRequest
     | GetDnaDefinitionRequest
     | GrantZomeCallCapabilityRequest
     | InstallAppRequest
@@ -600,6 +614,7 @@ export type AdminApiResponse =
   | AdminApiResponseCloneCellDeleted
   | AdminApiResponseCoordinatorsUpdated
   | AdminApiResponseDnasDefinitionReturned
+  | AdminApiResponseGetCompatibleCells
   | AdminApiResponseDnasListed
   | AdminApiResponseDnaRegistered
   | AdminApiResponseFullStateDumped
@@ -633,6 +648,14 @@ export interface RequestDeleteCloneCell {
 export interface AdminApiResponseDnaRegistered {
   type: "dna_registered";
   data: HoloHash;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseGetCompatibleCells {
+  type: "compatible_cells";
+  data: GetCompatibleCellsResponse;
 }
 
 /**
