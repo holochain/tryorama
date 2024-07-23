@@ -90,7 +90,7 @@ import {
 import { deserializeZomeResponsePayload } from "../util.js";
 
 const logger = makeLogger("TryCP conductor");
-const HOLO_SIGNALING_SERVER = new URL("wss://signal.holo.host");
+const HOLO_SIGNALING_SERVER = new URL("wss://sbd-0.main.infra.holo.host");
 const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
 const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
 const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
