@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2024-07-23: v0.17.0-dev.4
+### Changed
+- Update default signal server to wss://sbd-0.main.infra.holo.host.
+
 ## 2024-07-19: v0.17.0-dev.3
 ### Added
 - New value `NotStartedAfterProvidingMemproofs` for type `DisabledAppReason` which effectively allows a new app status, corresponding to the specific state where a UI has just called AppRequest::ProvideMemproofs, but the app has not yet been enabled for the first time.
