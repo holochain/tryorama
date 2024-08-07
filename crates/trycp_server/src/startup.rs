@@ -37,7 +37,9 @@ pub enum Error {
 }
 
 pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
-    let rust_log = log_level.unwrap_or_else(|| "error".to_string());
+    let rust_log = log_level.unwrap_or_else(|| {
+        std::env::var("HOLOCHAIN_LOG_LEVEL").unwrap_or_else(|_| "error".to_string())
+    });
 
     let player_dir = get_player_dir(&id);
 
