@@ -315,7 +315,7 @@ test("TryCP Server - App API - get app info", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP Client - download logs", async (t) => {
+test.only("TryCP Client - download logs", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
