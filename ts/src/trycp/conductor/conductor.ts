@@ -140,7 +140,7 @@ export interface TryCpConductorOptions {
   /**
    * Log level of the conductor (optional).
    *
-   * default: "info"
+   * default: "error"
    */
   logLevel?: TryCpConductorLogLevel;
 }

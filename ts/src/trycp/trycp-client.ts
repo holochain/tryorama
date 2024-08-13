@@ -8,6 +8,7 @@ import { makeLogger } from "../logger.js";
 import {
   createTryCpConductor as createConductor,
   TryCpConductor,
+  TryCpConductorOptions,
 } from "./conductor/conductor.js";
 import {
   TryCpApiResponse,
@@ -223,11 +224,11 @@ export class TryCpClient {
   /**
    * Create and add a conductor to the client.
    *
-   * @param partialConfig - Conductor configuration (optional).
+   * @param options - Conductor configuration, log level and other settings (optional).
    * @returns The newly added conductor instance.
    */
-  async addConductor(partialConfig?: string) {
-    const conductor = await createConductor(this, { partialConfig });
+  async addConductor(options?: TryCpConductorOptions) {
+    const conductor = await createConductor(this, options);
     this.conductors.push(conductor);
     return conductor;
   }

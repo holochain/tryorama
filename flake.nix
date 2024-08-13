@@ -1,9 +1,9 @@
 {
   inputs = {
     holonix = {
-      url = "github:holochain/holonix/main";
-      inputs.crane.follows = "crane";
-      inputs.rust-overlay.follows = "rust-overlay";
+        url = "github:holochain/holonix?ref=main";
+        inputs.crane.follows = "crane";
+        inputs.rust-overlay.follows = "rust-overlay";
     };
 
     nixpkgs.follows = "holonix/nixpkgs";
@@ -46,6 +46,10 @@
                 pkgs.darwin.apple_sdk.frameworks.Security
               ])
             ];
+
+            shellHook = ''
+              export PS1='\[\033[1;34m\][holonix:\w]\$\[\033[0m\] '
+            '';
           };
 
           packages.trycp-server =
