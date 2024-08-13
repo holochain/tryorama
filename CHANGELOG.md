@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- New parameter can be specified when calling `addPlayerWithApp` to specify the logLevel that the Holochain conductor
+  should be launched with.
 ### Removed
 ### Changed
 ### Fixed
