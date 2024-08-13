@@ -145,10 +145,9 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
 
 fn open_log_file(path: PathBuf) -> io::Result<std::fs::File> {
     std::fs::OpenOptions::new()
-        .write(true)
         .create(true)
         .append(true)
-        .open(&path)
+        .open(path)
 }
 
 fn stream_output_with_ready(

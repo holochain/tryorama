@@ -35,14 +35,14 @@ pub(crate) fn download_logs(id: String) -> Result<MessageResponse, DownloadLogsE
     let player_dir = get_player_dir(&id);
 
     let lair_stderr = player_dir.join(LAIR_STDERR_LOG_FILENAME);
-    let lair_stderr = std::fs::read(&lair_stderr).context(LairStdErr { id: id.clone() })?;
+    let lair_stderr = std::fs::read(lair_stderr).context(LairStdErr { id: id.clone() })?;
 
     let conductor_stdout = player_dir.join(CONDUCTOR_STDOUT_LOG_FILENAME);
     let conductor_stdout =
-        std::fs::read(&conductor_stdout).context(HolochainStdout { id: id.clone() })?;
+        std::fs::read(conductor_stdout).context(HolochainStdout { id: id.clone() })?;
 
     let conductor_stderr = player_dir.join(CONDUCTOR_STDERR_LOG_FILENAME);
-    let conductor_stderr = std::fs::read(&conductor_stderr).context(HolochainStderr { id })?;
+    let conductor_stderr = std::fs::read(conductor_stderr).context(HolochainStderr { id })?;
 
     Ok(MessageResponse::Bytes(
         rmp_serde::to_vec_named(&TryCpServerResponse::DownloadLogs(DownloadLogsResponse {
