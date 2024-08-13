@@ -138,7 +138,7 @@ export class TryCpScenario {
         // create conductors for each client
         for (let i = 0; i < numberOfConductorsPerClient; i++) {
           const conductorCreated = client
-            .addConductor(options?.partialConfig)
+            .addConductor({partialConfig: options?.partialConfig})
             .then(async (conductor) => {
               const app = options.app;
               let appOptions;

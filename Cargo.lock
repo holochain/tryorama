@@ -3160,7 +3160,7 @@ checksum = "e421abadd41a4225275504ea4d6566923418b7f05506fbc9c0fe86ba7396114b"
 
 [[package]]
 name = "trycp_api"
-version = "0.17.0-dev.2"
+version = "0.17.0-dev.5"
 dependencies = [
  "serde",
  "serde_bytes",
@@ -3169,7 +3169,7 @@ dependencies = [
 
 [[package]]
 name = "trycp_client"
-version = "0.17.0-dev.2"
+version = "0.17.0-dev.5"
 dependencies = [
  "futures",
  "rmp-serde",
@@ -3181,7 +3181,7 @@ dependencies = [
 
 [[package]]
 name = "trycp_server"
-version = "0.17.0-dev.2"
+version = "0.17.0-dev.5"
 dependencies = [
  "futures",
  "nix",

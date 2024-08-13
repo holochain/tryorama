@@ -6,7 +6,7 @@
 
 Log level of the conductor (optional).
 
-default: "info"
+default: "error"
 
 **Signature:**
 

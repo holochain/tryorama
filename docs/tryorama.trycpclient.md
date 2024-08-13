@@ -110,7 +110,7 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[addConductor(partialConfig)](./tryorama.trycpclient.addconductor.md)
+[addConductor(options)](./tryorama.trycpclient.addconductor.md)
 
 
 </td><td>

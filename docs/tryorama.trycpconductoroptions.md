@@ -70,7 +70,7 @@ _(Optional)_ Identifier for the conductor (optional).
 
 _(Optional)_ Log level of the conductor (optional).
 
-default: "info"
+default: "error"
 
 
 </td></tr>

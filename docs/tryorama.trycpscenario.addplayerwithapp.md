@@ -9,7 +9,9 @@ Creates and adds a single player with an installed app to the scenario,
 **Signature:**
 
 ```typescript
-addPlayerWithApp(tryCpClient: TryCpClient, appBundleSource: AppBundleSource, options?: AppOptions): Promise<TryCpPlayer>;
+addPlayerWithApp(tryCpClient: TryCpClient, appBundleSource: AppBundleSource, options?: AppOptions & {
+        logLevel?: TryCpConductorLogLevel;
+    }): Promise<TryCpPlayer>;
 ```
 
 ## Parameters
@@ -69,7 +71,7 @@ options
 
 </td><td>
 
-[AppOptions](./tryorama.appoptions.md)
+[AppOptions](./tryorama.appoptions.md) &amp; { logLevel?: [TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)<!-- -->; }
 
 
 </td><td>

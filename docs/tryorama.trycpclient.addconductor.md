@@ -9,7 +9,7 @@ Create and add a conductor to the client.
 **Signature:**
 
 ```typescript
-addConductor(partialConfig?: string): Promise<TryCpConductor>;
+addConductor(options?: TryCpConductorOptions): Promise<TryCpConductor>;
 ```
 
 ## Parameters
@@ -32,17 +32,17 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-partialConfig
+options
 
 
 </td><td>
 
-string
+[TryCpConductorOptions](./tryorama.trycpconductoroptions.md)
 
 
 </td><td>
 
-_(Optional)_ Conductor configuration (optional).
+_(Optional)_ Conductor configuration, log level and other settings (optional).
 
 
 </td></tr>
