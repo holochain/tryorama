@@ -1,15 +1,15 @@
+use crate::{
+    get_player_dir, PlayerProcesses, CONDUCTOR_CONFIG_FILENAME, CONDUCTOR_MAGIC_STRING,
+    CONDUCTOR_STDERR_LOG_FILENAME, CONDUCTOR_STDOUT_LOG_FILENAME, LAIR_MAGIC_STRING,
+    LAIR_PASSPHRASE, LAIR_STDERR_LOG_FILENAME, PLAYERS,
+};
 use snafu::{OptionExt, ResultExt, Snafu};
+use std::io::Lines;
 use std::process::ChildStdout;
 use std::{
     io::{self, BufRead, BufReader, Write},
     path::PathBuf,
     process::{Command, Stdio},
-};
-use std::io::Lines;
-use crate::{
-    get_player_dir, PlayerProcesses, CONDUCTOR_CONFIG_FILENAME, CONDUCTOR_MAGIC_STRING,
-    CONDUCTOR_STDERR_LOG_FILENAME, CONDUCTOR_STDOUT_LOG_FILENAME, LAIR_MAGIC_STRING,
-    LAIR_PASSPHRASE, LAIR_STDERR_LOG_FILENAME, PLAYERS,
 };
 
 #[derive(Debug, Snafu)]
@@ -89,7 +89,8 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
                 LAIR_MAGIC_STRING,
                 None,
                 format!("lair-keystore({id})"),
-            ).context(CheckLairReady)?;
+            )
+            .context(CheckLairReady)?;
         }
 
         let mut conductor = Command::new("holochain")
@@ -124,19 +125,51 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
         });
     }
 
-    stream_output_with_ready(conductor_stdout, CONDUCTOR_MAGIC_STRING, Some(player_dir.join(CONDUCTOR_STDOUT_LOG_FILENAME)), format!("holochain({id})")).context(CheckHolochainReady)?;
+    stream_output_with_ready(
+        conductor_stdout,
+        CONDUCTOR_MAGIC_STRING,
+        Some(player_dir.join(CONDUCTOR_STDOUT_LOG_FILENAME)),
+        format!("holochain({id})"),
+    )
+    .context(CheckHolochainReady)?;
 
-    stream_output(BufReader::new(conductor_stderr).lines(), Some(player_dir.join(CONDUCTOR_STDERR_LOG_FILENAME)), format!("holochain({id})"));
+    stream_output(
+        BufReader::new(conductor_stderr).lines(),
+        Some(player_dir.join(CONDUCTOR_STDERR_LOG_FILENAME)),
+        format!("holochain({id})"),
+    );
 
     println!("conductor started up for {}", id);
     Ok(())
 }
 
-fn stream_output_with_ready(stdout: ChildStdout, ready_line: &str, into_file: Option<PathBuf>, context: String) -> io::Result<()> {
+fn open_log_file(path: PathBuf) -> io::Result<std::fs::File> {
+    std::fs::OpenOptions::new()
+        .write(true)
+        .create(true)
+        .append(true)
+        .open(&path)
+}
+
+fn stream_output_with_ready(
+    stdout: ChildStdout,
+    ready_line: &str,
+    into_file: Option<PathBuf>,
+    context: String,
+) -> io::Result<()> {
+    let mut f = into_file.clone().map(open_log_file).transpose()?;
+
     let mut reader = BufReader::new(stdout).lines();
     for line in &mut reader {
         let line = line?;
+        if let Some(f) = &mut f {
+            writeln!(f, "{}: {}", context, line)?;
+        }
+        println!("{context}: {line}");
         if line == ready_line {
+            if let Some(f) = f {
+                drop(f);
+            }
             stream_output(reader, into_file, context);
             break;
         }
@@ -145,11 +178,13 @@ fn stream_output_with_ready(stdout: ChildStdout, ready_line: &str, into_file: Op
     Ok(())
 }
 
-fn stream_output<B: BufRead + Send + 'static>(mut reader: Lines<B>, into_file: Option<PathBuf>, context: String) {
+fn stream_output<B: BufRead + Send + 'static>(
+    mut reader: Lines<B>,
+    into_file: Option<PathBuf>,
+    context: String,
+) {
     tokio::task::spawn_blocking(move || {
-        let mut f = into_file.map(|path| {
-            std::fs::File::create(&path).unwrap()
-        });
+        let mut f = into_file.clone().map(open_log_file).transpose().unwrap();
         while let Some(Ok(line)) = reader.next() {
             if let Some(f) = &mut f {
                 writeln!(f, "{}: {}", context, line).unwrap();
