@@ -321,8 +321,6 @@ test.only("TryCP Client - download logs", async (t) => {
   const conductor = await createTryCpConductor(tryCpClient);
   const logs = await conductor.downloadLogs();
 
-  console.log("logs", logs);
-
   t.true(logs.lair_stderr.length === 0, "lair stderr logs are empty");
   t.true(
     logs.conductor_stdout.length > 0,
