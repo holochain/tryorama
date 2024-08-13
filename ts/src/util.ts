@@ -83,7 +83,7 @@ export const areConductorCellsDhtsSynced = async (
       (op) => {
         if ("ChainOp" in op) {
           // Secondly sort by chain op signature.
-          return encodeHashToBase64(Object.values(op.ChainOp)[0][0]);
+          return Buffer.from(Object.values(op.ChainOp)[0][0]).toString('base64');
         } else {
           // Sorting by signatures is sufficient for warrant ops.
         }

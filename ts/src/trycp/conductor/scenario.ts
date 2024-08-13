@@ -10,6 +10,7 @@ import {
 import { AppOptions, IPlayer } from "../../types.js";
 import { TryCpClient } from "../trycp-client.js";
 import { TryCpConductor } from "./conductor.js";
+import { TryCpConductorLogLevel } from "../types";
 
 /**
  * @public
@@ -207,9 +208,11 @@ export class TryCpScenario {
   async addPlayerWithApp(
     tryCpClient: TryCpClient,
     appBundleSource: AppBundleSource,
-    options?: AppOptions
+    options?: AppOptions & { logLevel?: TryCpConductorLogLevel }
   ) {
-    const conductor = await tryCpClient.addConductor();
+    const conductor = await tryCpClient.addConductor({
+      logLevel: options?.logLevel,
+    });
     options = {
       ...options,
       networkSeed: options?.networkSeed ?? this.network_seed,
