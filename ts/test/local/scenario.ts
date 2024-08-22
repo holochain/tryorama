@@ -301,7 +301,7 @@ test("Local Scenario - runScenario - call zome by role name", async (t) => {
   });
 });
 
-test.only("Local Scenario - countersigning", async (t) => {
+test("Local Scenario - countersigning", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const appBundleSource: AppBundleSource = {
       path: FIXTURE_HAPP_URL.pathname,
