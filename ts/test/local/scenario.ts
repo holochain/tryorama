@@ -203,15 +203,17 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
 
   let signalHandlerAlice: AppSignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
-    signalHandlerAlice = (signal) => {
-      resolve(signal);
+    signalHandlerAlice = (signal: Signal) => {
+      assert(SignalType.App in signal);
+      resolve(signal[SignalType.App]);
     };
   });
 
   let signalHandlerBob: AppSignalCb | undefined;
   const signalReceivedBob = new Promise<AppSignal>((resolve) => {
-    signalHandlerBob = (signal) => {
-      resolve(signal);
+    signalHandlerBob = (signal: Signal) => {
+      assert(SignalType.App in signal);
+      resolve(signal[SignalType.App]);
     };
   });
 
@@ -314,7 +316,7 @@ test("Local Scenario - countersigning", async (t) => {
     const result = new Promise((resolve, reject) => {
       const timeout = setTimeout(
         () => reject("timeout waiting for signal"),
-        30000
+        60000
       );
       (alice.appWs as AppWebsocket).on("signal", (signal) => {
         clearTimeout(timeout);

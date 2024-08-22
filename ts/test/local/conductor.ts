@@ -6,6 +6,8 @@ import {
   CellProvisioningStrategy,
   CloneId,
   EntryHash,
+  Signal,
+  SignalType,
 } from "@holochain/client";
 import assert from "node:assert";
 import { readFileSync, realpathSync } from "node:fs";
@@ -165,10 +167,10 @@ test("Local Conductor - install app with deferred memproofs", async (t) => {
   const appWs = await conductor.connectAppWs(issued.token, port);
 
   let appInfo = await appWs.appInfo();
-  t.equal(
+  t.deepEqual(
     appInfo.status,
-    "awaiting_memproofs",
-    "app status is awaiting_memproofs"
+    { disabled: { reason: "never_started" } },
+    "app status is never_started"
   );
 
   const response = await appWs.provideMemproofs({});
@@ -616,8 +618,9 @@ test("Local Conductor - Receive a signal", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   let signalHandler: AppSignalCb | undefined;
   const signalReceived = new Promise<AppSignal>((resolve) => {
-    signalHandler = (signal) => {
-      resolve(signal);
+    signalHandler = (signal: Signal) => {
+      assert(SignalType.App in signal);
+      resolve(signal[SignalType.App]);
     };
   });
   const conductor = await createConductor(signalingServerUrl);
