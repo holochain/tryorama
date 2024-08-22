@@ -3,7 +3,10 @@ import {
   AppBundleSource,
   AppSignal,
   AppSignalCb,
+  AppWebsocket,
   EntryHash,
+  Signal,
+  SignalType,
 } from "@holochain/client";
 import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
@@ -11,6 +14,7 @@ import { getZomeCaller } from "../../src";
 import { Scenario, runScenario } from "../../src";
 import { FIXTURE_HAPP_URL } from "../fixture";
 import { dhtSync } from "../../src";
+import { PreflightResponse } from "@holochain/client/lib/lib";
 
 const TEST_ZOME_NAME = "coordinator";
 
@@ -294,5 +298,76 @@ test("Local Scenario - runScenario - call zome by role name", async (t) => {
     })) as ActionHash;
 
     t.ok(result);
+  });
+});
+
+test.only("Local Scenario - countersigning", async (t) => {
+  await runScenario(async (scenario: Scenario) => {
+    const appBundleSource: AppBundleSource = {
+      path: FIXTURE_HAPP_URL.pathname,
+    };
+    const [alice, bob] = await scenario.addPlayersWithApps([
+      { appBundleSource },
+      { appBundleSource },
+    ]);
+
+    const result = new Promise((resolve, reject) => {
+      const timeout = setTimeout(
+        () => reject("timeout waiting for signal"),
+        30000
+      );
+      (alice.appWs as AppWebsocket).on("signal", (signal) => {
+        clearTimeout(timeout);
+        resolve(signal);
+      });
+    });
+
+    // Make sure init has been called
+    await alice.appWs.callZome({
+      role_name: "test",
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: "hello",
+    });
+
+    await bob.appWs.callZome({
+      role_name: "test",
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: "hello",
+    });
+
+    const response1: PreflightResponse = await alice.appWs.callZome({
+      role_name: "test",
+      zome_name: "coordinator",
+      fn_name: "create_two_party_countersigning_session",
+      payload: bob.agentPubKey,
+    });
+
+    const response2: PreflightResponse = await bob.appWs.callZome({
+      role_name: "test",
+      zome_name: "coordinator",
+      fn_name: "accept_two_party",
+      payload: response1.request,
+    });
+
+    await alice.appWs.callZome({
+      role_name: "test",
+      zome_name: "coordinator",
+      fn_name: "commit_two_party",
+      payload: [response1, response2],
+    });
+
+    await bob.appWs.callZome({
+      role_name: "test",
+      zome_name: "coordinator",
+      fn_name: "commit_two_party",
+      payload: [response1, response2],
+    });
+
+    const completionSignal = (await result) as Signal;
+    assert(SignalType.System in completionSignal);
+    const systemSignal = completionSignal[SignalType.System];
+    t.assert("SuccessfulCountersigning" in systemSignal);
   });
 });
