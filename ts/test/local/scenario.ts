@@ -367,7 +367,7 @@ test("Local Scenario - countersigning", async (t) => {
       payload: [response1, response2],
     });
 
-    const completionSignal = (await result) as Signal;
+    const completionSignal = await result;
     assert(SignalType.System in completionSignal);
     const systemSignal = completionSignal[SignalType.System];
     t.assert("SuccessfulCountersigning" in systemSignal);
