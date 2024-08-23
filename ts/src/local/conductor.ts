@@ -365,8 +365,7 @@ export class Conductor implements IConductor {
    * @returns An agent app with cells and conductor handle.
    */
   async installApp(appBundleSource: AppBundleSource, options?: AppOptions) {
-    const agent_key =
-      options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
+    const agent_key = options?.agentPubKey;
     const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
     const membrane_proofs = options?.membraneProofs ?? {};
     const network_seed = options?.networkSeed;
