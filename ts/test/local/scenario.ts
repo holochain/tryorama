@@ -313,7 +313,7 @@ test("Local Scenario - countersigning", async (t) => {
       { appBundleSource },
     ]);
 
-    const result = new Promise((resolve, reject) => {
+    const result = new Promise<Signal>((resolve, reject) => {
       const timeout = setTimeout(
         () => reject("timeout waiting for signal"),
         60000
