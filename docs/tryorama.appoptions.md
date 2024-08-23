@@ -121,7 +121,7 @@ _(Optional)_ A network seed to override the hApps' network seed.
 
 </td><td>
 
-AppSignalCb
+SignalCb
 
 
 </td><td>

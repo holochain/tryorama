@@ -1,12 +1,12 @@
 import {
   ActionHash,
   AppBundleSource,
-  AppSignal,
-  AppSignalCb,
+  Signal,
+  SignalCb,
   CellProvisioningStrategy,
   CloneId,
   EntryHash,
-  Signal,
+  AppSignal,
   SignalType,
 } from "@holochain/client";
 import assert from "node:assert";
@@ -616,8 +616,8 @@ test("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agent
 
 test("Local Conductor - Receive a signal", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
-  let signalHandler: AppSignalCb | undefined;
-  const signalReceived = new Promise<AppSignal>((resolve) => {
+  let signalHandler: SignalCb | undefined;
+  const signalReceived = new Promise<Signal>((resolve) => {
     signalHandler = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);

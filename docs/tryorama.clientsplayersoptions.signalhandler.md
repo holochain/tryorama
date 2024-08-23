@@ -9,5 +9,5 @@ A signal handler to be registered in conductors.
 **Signature:**
 
 ```typescript
-signalHandler?: AppSignalCb;
+signalHandler?: SignalCb;
 ```
