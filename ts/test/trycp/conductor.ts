@@ -152,10 +152,10 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
 
   let appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.equal(
+  t.deepEqual(
     appInfo.status,
-    "awaiting_memproofs",
-    "app status is awaiting_memproofs"
+    { disabled: { reason: "never_started" } },
+    "app status is never_started"
   );
 
   t.rejects(
