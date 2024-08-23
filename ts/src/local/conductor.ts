@@ -385,11 +385,13 @@ export class Conductor implements IConductor {
             installed_app_id,
             network_seed,
           };
-    logger.debug(
-      `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
-        agent_key
-      )}`
-    );
+          if (!!agent_key) {
+            logger.debug(
+              `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
+                agent_key
+              )}`
+            );
+          }
     return this.adminWs().installApp(installAppRequest);
   }
 

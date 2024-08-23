@@ -4,7 +4,7 @@ import {
   AgentPubKey,
   AppAuthenticationToken,
   AppBundleSource,
-  AppSignalCb,
+  SignalCb,
   AttachAppInterfaceRequest,
   CallZomeRequest,
   CallZomeRequestSigned,
@@ -332,7 +332,7 @@ export class TryCpConductor implements IConductor {
    * @param signalHandler - The signal handler to register.
    * @param port - The port of the app interface.
    */
-  on(port: number, signalHandler: AppSignalCb) {
+  on(port: number, signalHandler: SignalCb) {
     this.tryCpClient.setSignalHandler(port, signalHandler);
   }
 

@@ -158,7 +158,7 @@ _(Optional)_ Configuration for the conductor (optional).
 
 </td><td>
 
-AppSignalCb
+SignalCb
 
 
 </td><td>

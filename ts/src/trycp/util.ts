@@ -23,15 +23,15 @@ export const deserializeTryCpResponse = (response: Uint8Array) => {
  * @param signal - The signal to deserialize.
  * @returns The deserialized signal.
  */
-export const deserializeTryCpSignal = <T>(signal: Uint8Array) => {
+export const deserializeTryCpSignal = (signal: Uint8Array) => {
   const deserializedSignal = msgpack.decode(signal);
   assertIsSignal(deserializedSignal);
   if (SignalType.App in deserializedSignal) {
     const {
-      [SignalType.App]: { cell_id, signal: payload, zome_name },
+      [SignalType.App]: { cell_id, payload: decodedPayload, zome_name },
     } = deserializedSignal;
-    const decodedPayload = msgpack.decode(payload) as T;
-    return { cell_id, payload: decodedPayload, zome_name };
+    let app_payload = { cell_id, payload: decodedPayload, zome_name };
+     return { App: app_payload } as Signal
   } else {
     throw new Error("Receiving system signals is not implemented yet");
   }

@@ -1,4 +1,4 @@
-import { AppSignal, AppSignalCb, EntryHash } from "@holochain/client";
+import { Signal, SignalCb, EntryHash } from "@holochain/client";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import { runLocalServices } from "../../src/common.js";
@@ -152,14 +152,14 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
   } = await runLocalServices());
   const client = await scenario.addClient(SERVER_URL);
 
-  let signalHandlerAlice: AppSignalCb | undefined;
-  const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
+  let signalHandlerAlice: SignalCb | undefined;
+  const signalReceivedAlice = new Promise<Signal>((resolve) => {
     signalHandlerAlice = (signal) => {
       resolve(signal);
     };
   });
-  let signalHandlerBob: AppSignalCb | undefined;
-  const signalReceivedBob = new Promise<AppSignal>((resolve) => {
+  let signalHandlerBob: SignalCb | undefined;
+  const signalReceivedBob = new Promise<Signal>((resolve) => {
     signalHandlerBob = (signal) => {
       resolve(signal);
     };
