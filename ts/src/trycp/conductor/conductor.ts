@@ -131,6 +131,13 @@ export interface TryCpConductorOptions {
   partialConfig?: string;
 
   /**
+   * Exclude dpki in the conductor instance.
+   *
+   * default: false // defaults to using the dpki
+   */
+  noDpki?: boolean;
+
+  /**
    * Start up conductor after creation.
    *
    * default: true

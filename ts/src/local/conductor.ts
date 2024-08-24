@@ -60,6 +60,11 @@ export interface ConductorOptions {
   bootstrapServerUrl?: URL;
 
   /**
+   * Exclude dpki in the conductor instance.
+   */
+  noDpki?: boolean;
+
+  /**
    * Timeout for requests to Admin and App API.
    */
   timeout?: number;
@@ -72,7 +77,7 @@ export interface ConductorOptions {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  "bootstrapServerUrl" | "networkType" | "timeout"
+  "bootstrapServerUrl" | "networkType" | "noDpki" | "timeout"
 >;
 
 /**
@@ -90,6 +95,7 @@ export const createConductor = async (
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
     "networkType",
+    "noDpki",
     "timeout",
   ]);
   const conductor = await Conductor.create(
@@ -150,6 +156,9 @@ export class Conductor implements IConductor {
     if (options?.bootstrapServerUrl) {
       args.push("--bootstrap", options.bootstrapServerUrl.href);
     }
+    // if (options?.noDpki) {
+    //   args.push("--dpki", options.noDpki.href);
+    // }
     args.push(networkType);
     if (networkType === NetworkType.WebRtc) {
       args.push(signalingServerUrl.href);
@@ -365,7 +374,8 @@ export class Conductor implements IConductor {
    * @returns An agent app with cells and conductor handle.
    */
   async installApp(appBundleSource: AppBundleSource, options?: AppOptions) {
-    const agent_key = options?.agentPubKey;
+    const agent_key =
+      options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
     const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
     const membrane_proofs = options?.membraneProofs ?? {};
     const network_seed = options?.networkSeed;
@@ -385,13 +395,13 @@ export class Conductor implements IConductor {
             installed_app_id,
             network_seed,
           };
-          if (!!agent_key) {
-            logger.debug(
-              `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
-                agent_key
-              )}`
-            );
-          }
+    if (agent_key) {
+      logger.debug(
+        `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
+          agent_key
+        )}`
+      );
+    }
     return this.adminWs().installApp(installAppRequest);
   }
 
