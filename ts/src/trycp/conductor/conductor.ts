@@ -94,6 +94,7 @@ const HOLO_SIGNALING_SERVER = new URL("wss://sbd-0.main.infra.holo.host");
 const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
 const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
 const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
+const DPKI_CONFIG_DEFAULT = "~"
 
 /**
  * The default partial config for a TryCP conductor.
@@ -103,7 +104,7 @@ const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
-dpki: ~
+dpki: ${DPKI_CONFIG_DEFAULT}
 network:
   network_type: "quic_bootstrap"
   bootstrap_service: ${BOOTSTRAP_SERVER_PLACEHOLDER}
@@ -170,7 +171,7 @@ export const createTryCpConductor = async (
   const conductor = new TryCpConductor(tryCpClient, options?.id);
   if (options?.startup !== false) {
     // configure and startup conductor by default
-    await conductor.configure(options?.partialConfig);
+    await conductor.configure(options?.partialConfig, options?.noDpki);
     await conductor.startUp({ logLevel: options?.logLevel });
   }
   return conductor;
@@ -196,7 +197,7 @@ export class TryCpConductor implements IConductor {
    * @param partialConfig - The configuration to add to the default configuration.
    * @returns An empty success response.
    */
-  async configure(partialConfig?: string) {
+  async configure(partialConfig?: string, noDpki: boolean = false) {
     if (!partialConfig) {
       partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
         BOOTSTRAP_SERVER_PLACEHOLDER,
@@ -205,11 +206,20 @@ export class TryCpConductor implements IConductor {
         SIGNALING_SERVER_PLACEHOLDER,
         (this.tryCpClient.signalingServerUrl || HOLO_SIGNALING_SERVER).href
       );
+      if (noDpki) {
+        partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
+          DPKI_CONFIG_DEFAULT,
+          `
+  dna_path: None
+  device_seed_lair_tag: "disabled"
+  no_dpki: true`)
+      }
     }
+
     const response = await this.tryCpClient.call({
       type: "configure_player",
       id: this.id,
-      partial_config: partialConfig,
+      partial_config: partialConfig
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;

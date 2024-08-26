@@ -156,9 +156,10 @@ export class Conductor implements IConductor {
     if (options?.bootstrapServerUrl) {
       args.push("--bootstrap", options.bootstrapServerUrl.href);
     }
-    // if (options?.noDpki) {
-    //   args.push("--dpki", options.noDpki.href);
-    // }
+    // add "no-dpki" flag when passed as true
+    if (options?.noDpki) {
+      args.push("--no-dpki");
+    }
     args.push(networkType);
     if (networkType === NetworkType.WebRtc) {
       args.push(signalingServerUrl.href);

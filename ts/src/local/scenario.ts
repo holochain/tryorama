@@ -63,13 +63,14 @@ export class Scenario {
    *
    * @returns The newly added conductor instance.
    */
-  async addConductor() {
+  async addConductor(noDpki = false) {
     await this.ensureLocalServices();
     assert(this.serviceProcess);
     assert(this.signalingServerUrl);
     const conductor = await createConductor(this.signalingServerUrl, {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
+      noDpki
     });
     this.conductors.push(conductor);
     return conductor;
