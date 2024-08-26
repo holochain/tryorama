@@ -1,7 +1,8 @@
-import { Signal, SignalType } from "@holochain/client";
+import { AppSignal, RawSignal, EncodedAppSignal, Signal, SignalType } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import assert from "node:assert";
 import { TryCpApiResponse, _TryCpResponseWrapper } from "./types.js";
+import { inspect } from "util";
 
 /**
  * Deserialize the binary response from TryCP
@@ -24,14 +25,17 @@ export const deserializeTryCpResponse = (response: Uint8Array) => {
  * @returns The deserialized signal.
  */
 export const deserializeTryCpSignal = (signal: Uint8Array) => {
-  const deserializedSignal = msgpack.decode(signal);
+  const deserializedSignal = msgpack.decode(signal) as RawSignal;
   assertIsSignal(deserializedSignal);
   if (SignalType.App in deserializedSignal) {
-    const {
-      [SignalType.App]: { cell_id, payload: decodedPayload, zome_name },
-    } = deserializedSignal;
-    let app_payload = { cell_id, payload: decodedPayload, zome_name };
-     return { App: app_payload } as Signal
+    const { cell_id, signal, zome_name } = deserializedSignal[SignalType.App] as EncodedAppSignal;
+    const decodedPayload = msgpack.decode(signal);
+    const app_signal: AppSignal = {
+      cell_id,
+      zome_name,
+      payload: decodedPayload,
+    };
+    return { App: app_signal } as Signal;
   } else {
     throw new Error("Receiving system signals is not implemented yet");
   }
