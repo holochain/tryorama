@@ -1,11 +1,10 @@
 import {
   ActionHash,
   AppBundleSource,
-  AppSignal,
-  AppSignalCb,
+  Signal,
+  SignalCb,
   AppWebsocket,
   EntryHash,
-  Signal,
   SignalType,
 } from "@holochain/client";
 import assert from "node:assert/strict";
@@ -66,8 +65,8 @@ test("Local Scenario - runScenario - Catch error when calling a zome of an undef
 
 test("Local Scenario - runScenario - Catch error that occurs in a signal handler", async (t) => {
   await runScenario(async (scenario: Scenario) => {
-    let signalHandlerAlice: AppSignalCb | undefined;
-    const signalReceivedAlice = new Promise<AppSignal>((_, reject) => {
+    let signalHandlerAlice: SignalCb | undefined;
+    const signalReceivedAlice = new Promise<Signal>((_, reject) => {
       signalHandlerAlice = () => {
         reject();
       };
@@ -201,16 +200,16 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
 test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
 
-  let signalHandlerAlice: AppSignalCb | undefined;
-  const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
+  let signalHandlerAlice: SignalCb | undefined;
+  const signalReceivedAlice = new Promise<Signal>((resolve) => {
     signalHandlerAlice = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);
     };
   });
 
-  let signalHandlerBob: AppSignalCb | undefined;
-  const signalReceivedBob = new Promise<AppSignal>((resolve) => {
+  let signalHandlerBob: SignalCb | undefined;
+  const signalReceivedBob = new Promise<Signal>((resolve) => {
     signalHandlerBob = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);

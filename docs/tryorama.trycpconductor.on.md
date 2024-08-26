@@ -9,7 +9,7 @@ Attach a signal handler.
 **Signature:**
 
 ```typescript
-on(port: number, signalHandler: AppSignalCb): void;
+on(port: number, signalHandler: SignalCb): void;
 ```
 
 ## Parameters
@@ -53,7 +53,7 @@ signalHandler
 
 </td><td>
 
-AppSignalCb
+SignalCb
 
 
 </td><td>

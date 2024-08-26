@@ -1,4 +1,4 @@
-import { AgentPubKey, AppBundleSource, AppSignalCb } from "@holochain/client";
+import { AgentPubKey, AppBundleSource, SignalCb } from "@holochain/client";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { URL } from "url";
 import { v4 as uuidv4 } from "uuid";
@@ -49,7 +49,7 @@ export interface ClientsPlayersOptions {
   /**
    * A signal handler to be registered in conductors.
    */
-  signalHandler?: AppSignalCb;
+  signalHandler?: SignalCb;
 }
 
 /**

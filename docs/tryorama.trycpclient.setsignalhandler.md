@@ -7,7 +7,7 @@
 **Signature:**
 
 ```typescript
-setSignalHandler(port: number, signalHandler?: AppSignalCb): void;
+setSignalHandler(port: number, signalHandler?: SignalCb): void;
 ```
 
 ## Parameters
@@ -49,7 +49,7 @@ signalHandler
 
 </td><td>
 
-AppSignalCb
+SignalCb
 
 
 </td><td>

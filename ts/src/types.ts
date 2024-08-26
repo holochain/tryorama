@@ -4,7 +4,7 @@ import type {
   AppAuthenticationToken,
   AppBundleSource,
   AppInfo,
-  AppSignalCb,
+  SignalCb,
   AppWebsocket,
   CallZomeRequest,
   CellId,
@@ -151,7 +151,7 @@ export interface AppOptions {
   /**
    * A signal handler for the conductor.
    */
-  signalHandler?: AppSignalCb;
+  signalHandler?: SignalCb;
 }
 
 /**

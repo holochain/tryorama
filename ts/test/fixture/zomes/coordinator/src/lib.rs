@@ -44,7 +44,9 @@ fn signal_loopback(value: LoopBack) -> ExternResult<()> {
 }
 
 #[hdk_extern]
-fn create_two_party_countersigning_session(with_other: AgentPubKey) -> ExternResult<PreflightResponse> {
+fn create_two_party_countersigning_session(
+    with_other: AgentPubKey,
+) -> ExternResult<PreflightResponse> {
     let my_agent_info = agent_info()?;
 
     let entry = Content("hello".to_string());
@@ -55,27 +57,22 @@ fn create_two_party_countersigning_session(with_other: AgentPubKey) -> ExternRes
     let request = PreflightRequest::try_new(
         entry_hash,
         vec![
-            (
-                my_agent_info.agent_initial_pubkey,
-                vec![],
-            ),
+            (my_agent_info.agent_initial_pubkey, vec![]),
             (with_other.clone(), vec![]),
         ],
         Vec::with_capacity(0),
         0,
         true,
         session_times,
-        ActionBase::Create(CreateBase::new(
-            EntryTypesUnit::Content.try_into()?,
-        )),
+        ActionBase::Create(CreateBase::new(EntryTypesUnit::Content.try_into()?)),
         PreflightBytes(vec![]),
     )
-        .map_err(|e| {
-            wasm_error!(WasmErrorInner::Guest(format!(
+    .map_err(|e| {
+        wasm_error!(WasmErrorInner::Guest(format!(
             "Failed to create countersigning request: {:?}",
             e
         )))
-        })?;
+    })?;
 
     // Accept ours now and then Holochain should wait for the other party to join the session
     let my_acceptance = accept_countersigning_preflight_request(request.clone())?;
@@ -97,9 +94,7 @@ fn create_two_party_countersigning_session(with_other: AgentPubKey) -> ExternRes
 fn accept_two_party(request: PreflightRequest) -> ExternResult<PreflightResponse> {
     let my_accept = accept_countersigning_preflight_request(request)?;
     match my_accept {
-        PreflightRequestAcceptance::Accepted(response) => {
-            Ok(response)
-        }
+        PreflightRequestAcceptance::Accepted(response) => Ok(response),
         e => Err(wasm_error!(WasmErrorInner::Guest(format!(
             "Unexpected response: {:?}",
             e

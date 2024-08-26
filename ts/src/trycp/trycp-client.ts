@@ -1,4 +1,4 @@
-import { AppSignalCb, CallZomeRequestSigned } from "@holochain/client";
+import { SignalCb, CallZomeRequestSigned } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import cloneDeep from "lodash/cloneDeep.js";
 import assert from "node:assert";
@@ -46,7 +46,7 @@ export class TryCpClient {
       responseReject: (reason: TryCpResponseErrorValue) => void;
     };
   };
-  private signalHandlers: Record<number, AppSignalCb | undefined>;
+  private signalHandlers: Record<number, SignalCb | undefined>;
 
   // can be set in local test cases
   bootstrapServerUrl: URL | undefined;
@@ -143,7 +143,7 @@ export class TryCpClient {
     return connectPromise;
   }
 
-  setSignalHandler(port: number, signalHandler?: AppSignalCb) {
+  setSignalHandler(port: number, signalHandler?: SignalCb) {
     this.signalHandlers[port] = signalHandler;
   }
 

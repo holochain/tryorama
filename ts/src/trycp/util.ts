@@ -1,7 +1,8 @@
-import { Signal, SignalType } from "@holochain/client";
+import { AppSignal, RawSignal, Signal, SignalType } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import assert from "node:assert";
 import { TryCpApiResponse, _TryCpResponseWrapper } from "./types.js";
+import { inspect } from "util";
 
 /**
  * Deserialize the binary response from TryCP
@@ -25,13 +26,18 @@ export const deserializeTryCpResponse = (response: Uint8Array) => {
  */
 export const deserializeTryCpSignal = <T>(signal: Uint8Array) => {
   const deserializedSignal = msgpack.decode(signal);
-  assertIsSignal(deserializedSignal);
+  assertIsRawSignal(deserializedSignal);
   if (SignalType.App in deserializedSignal) {
     const {
-      [SignalType.App]: { cell_id, signal: payload, zome_name },
+      [SignalType.App]: { cell_id, signal, zome_name },
     } = deserializedSignal;
-    const decodedPayload = msgpack.decode(payload) as T;
-    return { cell_id, payload: decodedPayload, zome_name };
+    const decodedPayload = msgpack.decode(signal) as T;
+    const app_signal: AppSignal = {
+      cell_id,
+      zome_name,
+      payload: decodedPayload,
+    };
+    return { App: app_signal } as Signal;
   } else {
     throw new Error("Receiving system signals is not implemented yet");
   }
@@ -85,7 +91,7 @@ function assertIsApiResponse(
   assert(response && typeof response === "object" && "type" in response);
 }
 
-function assertIsSignal(signal: unknown): asserts signal is Signal {
+function assertIsRawSignal(signal: unknown): asserts signal is RawSignal {
   assert(
     signal &&
       typeof signal === "object" &&

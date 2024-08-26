@@ -1,12 +1,14 @@
 import {
   ActionHash,
   AppBundleSource,
+  Signal,
   AppSignal,
   CellProvisioningStrategy,
   CellType,
   CloneId,
   encodeHashToBase64,
   EntryHash,
+  SignalType,
   GrantedFunctionsType,
 } from "@holochain/client";
 import assert from "node:assert";
@@ -395,8 +397,8 @@ test("TryCP Conductor - receive a signal", async (t) => {
   const testSignal = { value: "signal" };
 
   let signalHandler;
-  const signalReceived = new Promise<AppSignal>((resolve) => {
-    signalHandler = (signal: AppSignal) => {
+  const signalReceived = new Promise<Signal>((resolve) => {
+    signalHandler = (signal: Signal) => {
       resolve(signal);
     };
   });
@@ -432,7 +434,7 @@ test("TryCP Conductor - receive a signal", async (t) => {
   });
   const actualSignal = await signalReceived;
   t.deepEqual(
-    actualSignal.payload,
+    actualSignal[SignalType.App].payload,
     testSignal,
     "received signal matches expected signal"
   );
