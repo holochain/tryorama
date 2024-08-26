@@ -1,4 +1,4 @@
-import { AppSignal, RawSignal, EncodedAppSignal, Signal, SignalType } from "@holochain/client";
+import { AppSignal, RawSignal, Signal, SignalType } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import assert from "node:assert";
 import { TryCpApiResponse, _TryCpResponseWrapper } from "./types.js";
@@ -24,12 +24,14 @@ export const deserializeTryCpResponse = (response: Uint8Array) => {
  * @param signal - The signal to deserialize.
  * @returns The deserialized signal.
  */
-export const deserializeTryCpSignal = (signal: Uint8Array) => {
-  const deserializedSignal = msgpack.decode(signal) as RawSignal;
-  assertIsSignal(deserializedSignal);
+export const deserializeTryCpSignal = <T>(signal: Uint8Array) => {
+  const deserializedSignal = msgpack.decode(signal);
+  assertIsRawSignal(deserializedSignal);
   if (SignalType.App in deserializedSignal) {
-    const { cell_id, signal, zome_name } = deserializedSignal[SignalType.App] as EncodedAppSignal;
-    const decodedPayload = msgpack.decode(signal);
+    const {
+      [SignalType.App]: { cell_id, signal, zome_name },
+    } = deserializedSignal;
+    const decodedPayload = msgpack.decode(signal) as T;
     const app_signal: AppSignal = {
       cell_id,
       zome_name,
@@ -89,7 +91,7 @@ function assertIsApiResponse(
   assert(response && typeof response === "object" && "type" in response);
 }
 
-function assertIsSignal(signal: unknown): asserts signal is Signal {
+function assertIsRawSignal(signal: unknown): asserts signal is RawSignal {
   assert(
     signal &&
       typeof signal === "object" &&

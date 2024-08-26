@@ -6,7 +6,6 @@ import {
   CellProvisioningStrategy,
   CloneId,
   EntryHash,
-  AppSignal,
   SignalType,
 } from "@holochain/client";
 import assert from "node:assert";

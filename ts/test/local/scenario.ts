@@ -5,7 +5,6 @@ import {
   SignalCb,
   AppWebsocket,
   EntryHash,
-  AppSignal,
   SignalType,
 } from "@holochain/client";
 import assert from "node:assert/strict";

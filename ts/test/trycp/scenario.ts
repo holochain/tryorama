@@ -199,7 +199,11 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
     "received alice's signal"
   );
 
-  t.deepEqual(actualSignalBob[SignalType.App].payload, signalBob, "received bob's signal");
+  t.deepEqual(
+    actualSignalBob[SignalType.App].payload,
+    signalBob,
+    "received bob's signal"
+  );
 
   await scenario.cleanUp();
   await tryCpServer.stop();
