@@ -94,7 +94,7 @@ const HOLO_SIGNALING_SERVER = new URL("wss://sbd-0.main.infra.holo.host");
 const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
 const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
 const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
-const DPKI_CONFIG_DEFAULT = "~"
+const DPKI_CONFIG_DEFAULT = "~";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -197,7 +197,7 @@ export class TryCpConductor implements IConductor {
    * @param partialConfig - The configuration to add to the default configuration.
    * @returns An empty success response.
    */
-  async configure(partialConfig?: string, noDpki: boolean = false) {
+  async configure(partialConfig?: string, noDpki = false) {
     if (!partialConfig) {
       partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
         BOOTSTRAP_SERVER_PLACEHOLDER,
@@ -212,14 +212,15 @@ export class TryCpConductor implements IConductor {
           `
   dna_path: None
   device_seed_lair_tag: "disabled"
-  no_dpki: true`)
+  no_dpki: true`
+        );
       }
     }
 
     const response = await this.tryCpClient.call({
       type: "configure_player",
       id: this.id,
-      partial_config: partialConfig
+      partial_config: partialConfig,
     });
     assert(response === TRYCP_SUCCESS_RESPONSE);
     return response;

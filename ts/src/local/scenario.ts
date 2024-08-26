@@ -70,7 +70,7 @@ export class Scenario {
     const conductor = await createConductor(this.signalingServerUrl, {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
-      noDpki
+      noDpki,
     });
     this.conductors.push(conductor);
     return conductor;
