@@ -2,6 +2,7 @@ import { AppSignal, RawSignal, Signal, SignalType } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import assert from "node:assert";
 import { TryCpApiResponse, _TryCpResponseWrapper } from "./types.js";
+import { inspect } from "util";
 
 /**
  * Deserialize the binary response from TryCP
