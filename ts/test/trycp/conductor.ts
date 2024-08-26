@@ -8,6 +8,7 @@ import {
   CloneId,
   encodeHashToBase64,
   EntryHash,
+  SignalType,
   GrantedFunctionsType,
 } from "@holochain/client";
 import assert from "node:assert";
@@ -433,7 +434,7 @@ test("TryCP Conductor - receive a signal", async (t) => {
   });
   const actualSignal = await signalReceived;
   t.deepEqual(
-    actualSignal.payload,
+    actualSignal[SignalType.App].payload,
     testSignal,
     "received signal matches expected signal"
   );

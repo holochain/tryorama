@@ -1,4 +1,4 @@
-import { SignalCb, AppSignal, CallZomeRequestSigned } from "@holochain/client";
+import { SignalCb, CallZomeRequestSigned } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
 import cloneDeep from "lodash/cloneDeep.js";
 import assert from "node:assert";

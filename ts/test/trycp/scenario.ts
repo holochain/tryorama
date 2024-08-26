@@ -1,4 +1,4 @@
-import { Signal, SignalCb, EntryHash } from "@holochain/client";
+import { Signal, SignalCb, EntryHash, SignalType } from "@holochain/client";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import { runLocalServices } from "../../src/common.js";
@@ -192,12 +192,18 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
     signalReceivedAlice,
     signalReceivedBob,
   ]);
+
   t.deepEqual(
-    actualSignalAlice.payload,
+    actualSignalAlice[SignalType.App].payload,
     signalAlice,
     "received alice's signal"
   );
-  t.deepEqual(actualSignalBob.payload, signalBob, "received bob's signal");
+
+  t.deepEqual(
+    actualSignalBob[SignalType.App].payload,
+    signalBob,
+    "received bob's signal"
+  );
 
   await scenario.cleanUp();
   await tryCpServer.stop();
