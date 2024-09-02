@@ -11,7 +11,6 @@
     # lib to build a nix package from a rust crate
     crane = {
       url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "holonix/nixpkgs";
     };
 
     # Rust toolchain
@@ -59,7 +58,7 @@
                 overlays = [ (import rust-overlay) ];
               };
 
-              rustToolchain = pkgs.rust-bin.stable."1.78.0".minimal;
+              rustToolchain = pkgs.rust-bin.stable."1.80.0".minimal;
 
               craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
 
@@ -70,6 +69,8 @@
               version = crateInfo.version;
               src = craneLib.cleanCargoSource (craneLib.path ./.);
               doCheck = false;
+
+              cargoExtraArgs = "-p trycp_server";
 
               buildInputs = [ ]
                 ++ (lib.optionals pkgs.stdenv.isDarwin
