@@ -23,7 +23,7 @@ export const deserializeTryCpResponse = (response: Uint8Array) => {
  * @param signal - The signal to deserialize.
  * @returns The deserialized signal.
  */
-export const deserializeTryCpSignal = (signal: Uint8Array) => {
+export const deserializeTryCpSignal = <T>(signal: Uint8Array) => {
   const deserializedSignal = msgpack.decode(signal);
   assertIsRawSignal(deserializedSignal);
   if (SignalType.App in deserializedSignal) {
