@@ -2,7 +2,6 @@ import {
   ActionHash,
   AppBundleSource,
   Signal,
-  AppSignal,
   CellProvisioningStrategy,
   CellType,
   CloneId,
