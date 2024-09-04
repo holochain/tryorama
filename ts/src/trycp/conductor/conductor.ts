@@ -94,7 +94,7 @@ const HOLO_SIGNALING_SERVER = new URL("wss://sbd-0.main.infra.holo.host");
 const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
 const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
 const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
-const DPKI_CONFIG_DEFAULT = "~";
+const DPKI_CONFIG_DEFAULT = "<dpki_config>";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -104,7 +104,7 @@ const DPKI_CONFIG_DEFAULT = "~";
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
-dpki: ${DPKI_CONFIG_DEFAULT}
+${DPKI_CONFIG_DEFAULT}
 network:
   network_type: "quic_bootstrap"
   bootstrap_service: ${BOOTSTRAP_SERVER_PLACEHOLDER}
@@ -195,6 +195,7 @@ export class TryCpConductor implements IConductor {
    * Create conductor configuration.
    *
    * @param partialConfig - The configuration to add to the default configuration.
+   * @param noDpki - Disable the DPKI service on this conductor.
    * @returns An empty success response.
    */
   async configure(partialConfig?: string, noDpki = false) {
@@ -202,19 +203,22 @@ export class TryCpConductor implements IConductor {
       partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
         BOOTSTRAP_SERVER_PLACEHOLDER,
         (this.tryCpClient.bootstrapServerUrl || HOLO_BOOTSTRAP_SERVEr).href
-      ).replace(
-        SIGNALING_SERVER_PLACEHOLDER,
-        (this.tryCpClient.signalingServerUrl || HOLO_SIGNALING_SERVER).href
-      );
-      if (noDpki) {
-        partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
+      )
+        .replace(
+          SIGNALING_SERVER_PLACEHOLDER,
+          (this.tryCpClient.signalingServerUrl || HOLO_SIGNALING_SERVER).href
+        )
+        .replace(
           DPKI_CONFIG_DEFAULT,
-          `
-  dna_path: None
+          noDpki
+            ? `dpki:
+  dna_path: ~
   device_seed_lair_tag: "disabled"
   no_dpki: true`
+            : `dpki:
+  dna_path: ~
+  device_seed_lair_tag: "trycp"`
         );
-      }
     }
 
     const response = await this.tryCpClient.call({
