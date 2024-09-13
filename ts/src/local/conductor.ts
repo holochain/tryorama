@@ -65,6 +65,11 @@ export interface ConductorOptions {
   noDpki?: boolean;
 
   /**
+   * Set the network seed for the DPKI network.
+   */
+  dpkiNetworkSeed?: string;
+
+  /**
    * Timeout for requests to Admin and App API.
    */
   timeout?: number;
@@ -77,7 +82,7 @@ export interface ConductorOptions {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  "bootstrapServerUrl" | "networkType" | "noDpki" | "timeout"
+  "bootstrapServerUrl" | "networkType" | "noDpki" | "dpkiNetworkSeed" | "timeout"
 >;
 
 /**
@@ -96,6 +101,7 @@ export const createConductor = async (
     "bootstrapServerUrl",
     "networkType",
     "noDpki",
+    "dpkiNetworkSeed",
     "timeout",
   ]);
   const conductor = await Conductor.create(
@@ -159,6 +165,9 @@ export class Conductor implements IConductor {
     // add "no-dpki" flag when passed as true
     if (options?.noDpki) {
       args.push("--no-dpki");
+    }
+    if (options?.dpkiNetworkSeed) {
+      args.push("--dpki-network-seed", options.dpkiNetworkSeed);
     }
     args.push(networkType);
     if (networkType === NetworkType.WebRtc) {
@@ -383,19 +392,19 @@ export class Conductor implements IConductor {
     const installAppRequest: InstallAppRequest =
       "bundle" in appBundleSource
         ? {
-            bundle: appBundleSource.bundle,
-            agent_key,
-            membrane_proofs,
-            installed_app_id,
-            network_seed,
-          }
+          bundle: appBundleSource.bundle,
+          agent_key,
+          membrane_proofs,
+          installed_app_id,
+          network_seed,
+        }
         : {
-            path: appBundleSource.path,
-            agent_key,
-            membrane_proofs,
-            installed_app_id,
-            network_seed,
-          };
+          path: appBundleSource.path,
+          agent_key,
+          membrane_proofs,
+          installed_app_id,
+          network_seed,
+        };
     logger.debug(
       `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
         agent_key

@@ -139,6 +139,11 @@ export interface TryCpConductorOptions {
   noDpki?: boolean;
 
   /**
+   * Set the network seed for the DPKI network (optional).
+   */
+  dpkiNetworkSeed?: string;
+
+  /**
    * Start up conductor after creation.
    *
    * default: true
@@ -1021,19 +1026,19 @@ export class TryCpConductor implements IConductor {
     const installAppRequest: InstallAppRequest =
       "bundle" in appBundleSource
         ? {
-            bundle: appBundleSource.bundle,
-            agent_key,
-            membrane_proofs,
-            installed_app_id,
-            network_seed,
-          }
+          bundle: appBundleSource.bundle,
+          agent_key,
+          membrane_proofs,
+          installed_app_id,
+          network_seed,
+        }
         : {
-            path: appBundleSource.path,
-            agent_key,
-            membrane_proofs,
-            installed_app_id,
-            network_seed,
-          };
+          path: appBundleSource.path,
+          agent_key,
+          membrane_proofs,
+          installed_app_id,
+          network_seed,
+        };
     return this.adminWs().installApp(installAppRequest);
   }
 
@@ -1055,19 +1060,19 @@ export class TryCpConductor implements IConductor {
         const installAppRequest: InstallAppRequest =
           "bundle" in appForAgent.app
             ? {
-                bundle: appForAgent.app.bundle,
-                agent_key,
-                membrane_proofs,
-                installed_app_id,
-                network_seed,
-              }
+              bundle: appForAgent.app.bundle,
+              agent_key,
+              membrane_proofs,
+              installed_app_id,
+              network_seed,
+            }
             : {
-                path: appForAgent.app.path,
-                agent_key,
-                membrane_proofs,
-                installed_app_id,
-                network_seed,
-              };
+              path: appForAgent.app.path,
+              agent_key,
+              membrane_proofs,
+              installed_app_id,
+              network_seed,
+            };
 
         logger.debug(
           `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
