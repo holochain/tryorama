@@ -88,6 +88,40 @@ test("Local Conductor - spawn a conductor and check for admin ws", async (t) => 
   await cleanAllConductors();
 });
 
+test("Local Conductor - default conductor has DPKI enabled", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl);
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.assert(
+    conductorConfig.includes("no_dpki: false"),
+    "DPKI enabled in conductor config"
+  );
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
+test("Local Conductor - spawn a conductor without DPKI enabled", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl, { noDpki: true });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.assert(
+    conductorConfig.includes("no_dpki: true"),
+    "DPKI disabled in conductor config"
+  );
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
 test("Local Conductor - get app info with app ws", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);

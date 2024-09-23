@@ -146,19 +146,14 @@ export class Conductor implements IConductor {
       );
     }
 
-    const args = [
-      "sandbox",
-      "--piped",
-      "create",
-      "--in-process-lair",
-      "network",
-    ];
-    if (options?.bootstrapServerUrl) {
-      args.push("--bootstrap", options.bootstrapServerUrl.href);
-    }
-    // add "no-dpki" flag when passed as true
+    const args = ["sandbox", "--piped", "create", "--in-process-lair"];
+    // Set "no-dpki" flag when passed.
     if (options?.noDpki) {
       args.push("--no-dpki");
+    }
+    args.push("network");
+    if (options?.bootstrapServerUrl) {
+      args.push("--bootstrap", options.bootstrapServerUrl.href);
     }
     args.push(networkType);
     if (networkType === NetworkType.WebRtc) {
