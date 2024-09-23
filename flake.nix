@@ -4,6 +4,7 @@
       url = "github:holochain/holonix?ref=main";
       inputs.crane.follows = "crane";
       inputs.rust-overlay.follows = "rust-overlay";
+      inputs.holochain.url = "github:holochain/holochain?ref=fix/hc-sandbox-dpki-options";
     };
 
     nixpkgs.follows = "holonix/nixpkgs";
@@ -11,7 +12,6 @@
     # lib to build a nix package from a rust crate
     crane = {
       url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "holonix/nixpkgs";
     };
 
     # Rust toolchain
