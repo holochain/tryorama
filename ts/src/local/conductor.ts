@@ -8,6 +8,7 @@ import {
   InstallAppRequest,
   AppAuthenticationToken,
   AppCallZomeRequest,
+  NetworkSeed,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -60,9 +61,14 @@ export interface ConductorOptions {
   bootstrapServerUrl?: URL;
 
   /**
-   * Exclude dpki in the conductor instance.
+   * Disable DPKI in the conductor instance.
    */
   noDpki?: boolean;
+
+  /**
+   * Set a DPKI network seed in the conductor instance.
+   */
+  dpkiNetworkSeed?: NetworkSeed;
 
   /**
    * Timeout for requests to Admin and App API.
@@ -77,7 +83,11 @@ export interface ConductorOptions {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  "bootstrapServerUrl" | "networkType" | "noDpki" | "timeout"
+  | "bootstrapServerUrl"
+  | "networkType"
+  | "noDpki"
+  | "dpkiNetworkSeed"
+  | "timeout"
 >;
 
 /**
@@ -96,6 +106,7 @@ export const createConductor = async (
     "bootstrapServerUrl",
     "networkType",
     "noDpki",
+    "dpkiNetworkSeed",
     "timeout",
   ]);
   const conductor = await Conductor.create(
@@ -150,6 +161,9 @@ export class Conductor implements IConductor {
     // Set "no-dpki" flag when passed.
     if (options?.noDpki) {
       args.push("--no-dpki");
+    }
+    if (options?.dpkiNetworkSeed) {
+      args.push("--dpki-network-seed", options.dpkiNetworkSeed);
     }
     args.push("network");
     if (options?.bootstrapServerUrl) {
