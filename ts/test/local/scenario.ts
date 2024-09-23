@@ -1,19 +1,18 @@
 import {
   ActionHash,
   AppBundleSource,
-  Signal,
-  SignalCb,
   AppWebsocket,
   EntryHash,
+  Signal,
+  SignalCb,
   SignalType,
 } from "@holochain/client";
-import assert from "node:assert/strict";
-import test from "tape-promise/tape.js";
-import { getZomeCaller } from "../../src";
-import { Scenario, runScenario } from "../../src";
-import { FIXTURE_HAPP_URL } from "../fixture";
-import { dhtSync } from "../../src";
 import { PreflightResponse } from "@holochain/client/lib/lib";
+import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
+import test from "tape-promise/tape.js";
+import { Scenario, dhtSync, getZomeCaller, runScenario } from "../../src";
+import { FIXTURE_HAPP_URL } from "../fixture";
 
 const TEST_ZOME_NAME = "coordinator";
 
@@ -109,6 +108,87 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
   ]);
   t.ok(alice.namedCells.get("test"));
   t.ok(bob.namedCells.get("test"));
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - All players have DPKI enabled", async (t) => {
+  const scenario = new Scenario();
+  await scenario.addPlayersWithApps([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  scenario.conductors.every((conductor) => {
+    const tmpDirPath = conductor.getTmpDirectory();
+    const conductorConfig = readFileSync(
+      tmpDirPath + "/conductor-config.yaml"
+    ).toString();
+    t.assert(
+      conductorConfig.includes("no_dpki: false"),
+      "DPKI enabled in conductor config"
+    );
+  });
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - All players have DPKI disabled", async (t) => {
+  const scenario = new Scenario();
+  scenario.noDpki = true;
+  await scenario.addPlayersWithApps([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  scenario.conductors.every((conductor) => {
+    const tmpDirPath = conductor.getTmpDirectory();
+    const conductorConfig = readFileSync(
+      tmpDirPath + "/conductor-config.yaml"
+    ).toString();
+    t.assert(
+      conductorConfig.includes("no_dpki: true"),
+      "DPKI disabled in conductor config"
+    );
+  });
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - All players have the default test DPKI network seed", async (t) => {
+  const scenario = new Scenario();
+  await scenario.addPlayersWithApps([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  scenario.conductors.every((conductor) => {
+    const tmpDirPath = conductor.getTmpDirectory();
+    const conductorConfig = readFileSync(
+      tmpDirPath + "/conductor-config.yaml"
+    ).toString();
+    t.assert(
+      conductorConfig.includes("network_seed: deepkey-test"),
+      "default DPKI network seed set in conductor config"
+    );
+  });
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - All players have a random DPKI network seed", async (t) => {
+  const scenario = new Scenario();
+  await scenario.addPlayersWithApps([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  scenario.conductors.every((conductor) => {
+    const tmpDirPath = conductor.getTmpDirectory();
+    const conductorConfig = readFileSync(
+      tmpDirPath + "/conductor-config.yaml"
+    ).toString();
+    t.assert(
+      conductorConfig.includes(`network_seed: ${scenario.dpkiNetworkSeed}`),
+      "DPKI network seed set in conductor config"
+    );
+  });
 
   await scenario.cleanUp();
 });

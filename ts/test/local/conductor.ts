@@ -1,11 +1,11 @@
 import {
   ActionHash,
   AppBundleSource,
-  Signal,
-  SignalCb,
   CellProvisioningStrategy,
   CloneId,
   EntryHash,
+  Signal,
+  SignalCb,
   SignalType,
 } from "@holochain/client";
 import assert from "node:assert";
@@ -13,18 +13,16 @@ import { readFileSync, realpathSync } from "node:fs";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import {
+  NetworkType,
+  Player,
+  cleanAllConductors,
+  createConductor,
+  dhtSync,
   enableAndGetAgentApp,
   getZomeCaller,
   runLocalServices,
   stopLocalServices,
 } from "../../src";
-import {
-  NetworkType,
-  Player,
-  cleanAllConductors,
-  createConductor,
-} from "../../src";
-import { dhtSync } from "../../src";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 
 const ROLE_NAME = "test";
