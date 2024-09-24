@@ -150,6 +150,12 @@ export class Conductor implements IConductor {
     signalingServerUrl: URL,
     options?: CreateConductorOptions
   ) {
+    if (options?.noDpki && options?.dpkiNetworkSeed) {
+      throw new Error(
+        "DPKI network can not be set when DPKI is disabled. Enable DPKI or do not provide a DPKI network seed."
+      );
+    }
+
     const networkType = options?.networkType ?? NetworkType.WebRtc;
     if (options?.bootstrapServerUrl && networkType !== NetworkType.WebRtc) {
       throw new Error(
@@ -158,7 +164,6 @@ export class Conductor implements IConductor {
     }
 
     const args = ["sandbox", "--piped", "create", "--in-process-lair"];
-    // Set "no-dpki" flag when passed.
     if (options?.noDpki) {
       args.push("--no-dpki");
     }

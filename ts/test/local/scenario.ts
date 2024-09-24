@@ -153,8 +153,9 @@ test("Local Scenario - All players have DPKI disabled", async (t) => {
   await scenario.cleanUp();
 });
 
-test("Local Scenario - All players have the default test DPKI network seed", async (t) => {
+test("Local Scenario - All players have a custom DPKI network seed", async (t) => {
   const scenario = new Scenario();
+  scenario.dpkiNetworkSeed = "tryorama-dpki-test";
   await scenario.addPlayersWithApps([
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
@@ -165,7 +166,7 @@ test("Local Scenario - All players have the default test DPKI network seed", asy
       tmpDirPath + "/conductor-config.yaml"
     ).toString();
     t.assert(
-      conductorConfig.includes("network_seed: deepkey-test"),
+      conductorConfig.includes(`network_seed: ${scenario.dpkiNetworkSeed}`),
       "default DPKI network seed set in conductor config"
     );
   });

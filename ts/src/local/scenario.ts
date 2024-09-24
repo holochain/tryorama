@@ -75,7 +75,7 @@ export class Scenario {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
       noDpki: this.noDpki,
-      dpkiNetworkSeed: this.dpkiNetworkSeed,
+      dpkiNetworkSeed: this.noDpki ? "" : this.dpkiNetworkSeed,
     });
     this.conductors.push(conductor);
     return conductor;
