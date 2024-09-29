@@ -2,4 +2,4 @@
 set -e
 
 # build TryCP server
-cargo build --release --manifest-path crates/trycp_server/Cargo.toml
+cargo build -p trycp_server --target-dir crates/trycp_server/target
