@@ -1,8 +1,8 @@
 use std::{
     io::{self, Write},
+    net::TcpListener,
     path::PathBuf,
     process::{Command, Stdio},
-    sync::atomic,
 };
 
 use parking_lot::Mutex;
@@ -10,8 +10,8 @@ use snafu::{ensure, ResultExt, Snafu};
 use std::str;
 
 use crate::{
-    get_player_dir, player_config_exists, Player, CONDUCTOR_CONFIG_FILENAME, LAIR_PASSPHRASE,
-    LAIR_STDERR_LOG_FILENAME, NEXT_ADMIN_PORT, PLAYERS,
+    get_player_dir, player_config_exists, Player, ADMIN_PORT_RANGE, CONDUCTOR_CONFIG_FILENAME,
+    LAIR_PASSPHRASE, LAIR_STDERR_LOG_FILENAME, PLAYERS,
 };
 
 #[derive(Debug, Snafu)]
@@ -24,8 +24,6 @@ pub(crate) enum ConfigurePlayerError {
     CreateConfig { path: PathBuf, source: io::Error },
     #[snafu(display("Ran out of possible admin ports"))]
     OutOfPorts,
-    #[snafu(display("Could not write to config file at {}: {}", path.display(), source))]
-    WriteConfig { path: PathBuf, source: io::Error },
     #[snafu(display("Player with ID {} has already been configured", id))]
     PlayerAlreadyConfigured { id: String },
 }
@@ -43,11 +41,16 @@ pub(crate) fn configure_player(
 
     ensure!(!player_config_exists(&id), PlayerAlreadyConfigured { id });
 
-    ensure!(
-        NEXT_ADMIN_PORT.load(atomic::Ordering::SeqCst) != 0,
-        OutOfPorts
-    );
-    let port = NEXT_ADMIN_PORT.fetch_add(1, atomic::Ordering::SeqCst);
+    let mut admin_port = 0;
+    for port in ADMIN_PORT_RANGE {
+        let listener = TcpListener::bind(format!("localhost:{port}"));
+        if let Ok(p) = listener {
+            admin_port = p.local_addr().unwrap().port();
+            break;
+        }
+    }
+    ensure!(admin_port != 0, OutOfPorts);
+    println!("Admin port {admin_port} assigned to player.");
 
     {
         let mut players_guard = PLAYERS.write();
@@ -57,7 +60,7 @@ pub(crate) fn configure_player(
         players_guard.insert(
             id.clone(),
             Player {
-                admin_port: port,
+                admin_port,
                 processes: Mutex::default(),
             },
         );
@@ -118,12 +121,7 @@ pub(crate) fn configure_player(
     })?;
     let connection_url = std::str::from_utf8(connection_url_output.stdout.as_slice()).unwrap();
 
-    let mut config_file = std::fs::File::create(&config_path).with_context(|| CreateConfig {
-        path: config_path.clone(),
-    })?;
-
-    writeln!(
-        config_file,
+    let config = format!(
         "\
 ---
 data_root_path: environment
@@ -136,9 +134,10 @@ admin_interfaces:
         port: {}
         allowed_origins: \"*\"
 {}",
-        connection_url, port, partial_config
-    )
-    .with_context(|| WriteConfig {
+        connection_url, admin_port, partial_config
+    );
+
+    std::fs::write(config_path.clone(), config.clone()).with_context(|| CreateConfig {
         path: config_path.clone(),
     })?;
 

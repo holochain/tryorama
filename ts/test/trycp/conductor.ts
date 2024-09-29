@@ -29,14 +29,62 @@ import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const ROLE_NAME = "test";
 
+test("TryCP Conductor - default conductor has DPKI enabled", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client);
+  const agent_key = await conductor.adminWs().generateAgentPubKey();
+  const appInfo = await conductor.adminWs().installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+    agent_key,
+    membrane_proofs: {},
+  });
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: appInfo.installed_app_id });
+  const cellIds = await conductor.adminWs().listCellIds();
+  t.equal(cellIds.length, 2, "Conductor includes DPKI cell id");
+  // const response = await conductor
+  //   .adminWs()
+  //   .revokeAgentKey(appInfo.installed_app_id, appInfo.agent_pub_key);
+  // console.log("response", response);
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - startup DPKI disabled conductor", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client, { noDpki: true });
+  const agent_key = await conductor.adminWs().generateAgentPubKey();
+  const appInfo = await conductor.adminWs().installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+    agent_key,
+    membrane_proofs: {},
+  });
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: appInfo.installed_app_id });
+  const cellIds = await conductor.adminWs().listCellIds();
+  t.equal(cellIds.length, 1, "Conductor contains only the app cell");
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
 test("TryCP Conductor - stop and restart a conductor", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
 
   const agentPubKeyResponse = await conductor.adminWs().generateAgentPubKey();
   t.ok(agentPubKeyResponse, "agent pub key generated before shutdown");
@@ -61,9 +109,7 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
 
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   t.ok(agentPubKey, "agent pub key generated");
@@ -88,9 +134,7 @@ test("TryCP Conductor - get compatible cells", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const app = await conductor.installApp(
     { path: FIXTURE_HAPP_URL.pathname },
@@ -123,9 +167,7 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const adminWs = conductor.adminWs();
 
   const app = await conductor.installApp({
@@ -199,9 +241,7 @@ test("TryCP Conductor - install hApp bundle and access cell by role name", async
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const adminWs = conductor.adminWs();
   const aliceHapp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
@@ -225,9 +265,7 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const aliceHapp = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
@@ -269,9 +307,7 @@ test("TryCP Conductor - get a DNA definition", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
   const dnaHash = await conductor.adminWs().registerDna({ path: relativePath });
 
@@ -288,9 +324,7 @@ test("TryCP Conductor - dump network stats", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
 
   const networkStats = await conductor.adminWs().dumpNetworkStats();
   t.ok(typeof networkStats === "string", "network stats is a string");
@@ -306,11 +340,9 @@ test("TryCP Conductor - request storage info", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-  await conductor.adminWs().installApp({
+  const appInfo = await conductor.adminWs().installApp({
     path: FIXTURE_HAPP_URL.pathname,
     agent_key: agentPubKey,
     membrane_proofs: {},
@@ -323,7 +355,11 @@ test("TryCP Conductor - request storage info", async (t) => {
   t.ok(storageInfo.blobs[0].dna.dht_data_size_on_disk > 0);
   t.ok(storageInfo.blobs[0].dna.cache_data_size > 0);
   t.ok(storageInfo.blobs[0].dna.cache_data_size_on_disk > 0);
-  t.deepEqual(storageInfo.blobs[0].dna.used_by, ["entry-happ"]);
+  t.assert(
+    storageInfo.blobs.some((blob) =>
+      blob.dna.used_by.includes(appInfo.installed_app_id)
+    )
+  );
 
   await stopLocalServices(servicesProcess);
   await client.cleanUp();
@@ -335,13 +371,12 @@ test("TryCP Conductor - request network info", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const appInfo = await conductor.adminWs().installApp({
     path: FIXTURE_HAPP_URL.pathname,
     agent_key: agentPubKey,
+    network_seed: Date.now().toString(),
     membrane_proofs: {},
   });
   await conductor
@@ -379,9 +414,7 @@ test("TryCP Conductor - grant a zome call capability", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const appInfo = await conductor.installApp({
     path: FIXTURE_HAPP_URL.pathname,
   });
@@ -413,9 +446,7 @@ test("TryCP Conductor - receive a signal", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
 
   const testSignal = { value: "signal" };
 
@@ -472,9 +503,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
   const dnaHash = await conductor.adminWs().registerDna({ path: relativePath });
@@ -578,9 +607,7 @@ test("TryCP Conductor - reading a non-existent entry returns null", async (t) =>
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const app = { path: FIXTURE_HAPP_URL.pathname };
   const aliceApp = await conductor.installApp(app);
   const adminWs = conductor.adminWs();
@@ -610,9 +637,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
   const dnaHash1 = await conductor
@@ -753,9 +778,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
 
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const appId = "entry-app";
@@ -801,7 +824,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   });
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id,
+    clone_cell_id: cloneCell.cell_id[0],
   });
   await t.rejects(
     appWs.callZome({
@@ -835,11 +858,11 @@ test("TryCP Conductor - clone cell management", async (t) => {
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id,
+    clone_cell_id: cloneCell.cell_id[0],
   });
   await conductor
     .adminWs()
-    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id[0] });
   await t.rejects(
     appWs.enableCloneCell({
       clone_cell_id: cloneCell.clone_id,
@@ -862,9 +885,7 @@ test.skip("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 
 
   const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
 
-  const conductor1 = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor1 = await createTryCpConductor(client);
   const aliceApp = await conductor1.installApp(app);
   const adminWs1 = conductor1.adminWs();
   await adminWs1.enableApp({ installed_app_id: aliceApp.installed_app_id });
@@ -881,9 +902,7 @@ test.skip("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 
     ...aliceAgentApp,
   };
 
-  const conductor2 = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor2 = await createTryCpConductor(client);
   const bobApp = await conductor2.installApp(app);
   const adminWs2 = conductor2.adminWs();
   await adminWs2.enableApp({ installed_app_id: bobApp.installed_app_id });
@@ -941,9 +960,7 @@ test("TryCP Conductor - pass a custom application id to happ installation", asyn
   const client = await TryCpClient.create(SERVER_URL);
   client.signalingServerUrl = signalingServerUrl;
 
-  const conductor = await createTryCpConductor(client, {
-    noDpki: true,
-  });
+  const conductor = await createTryCpConductor(client);
   const expectedInstalledAppId = "test-app-id";
   const [aliceApp] = await conductor.installAgentsApps({
     agentsApps: [{ app: { path: FIXTURE_HAPP_URL.pathname } }],

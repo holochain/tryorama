@@ -17,7 +17,7 @@ use std::{
     io,
     path::{Path, PathBuf},
     process::Child,
-    sync::{atomic::AtomicU16, Arc},
+    sync::Arc,
 };
 
 use futures::{stream::SplitStream, SinkExt, StreamExt};
@@ -50,9 +50,8 @@ const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
 const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
 const DNA_DIR_PATH: &str = "/tmp/trycp/dnas";
-const FIRST_ADMIN_PORT: u16 = 9100;
+const ADMIN_PORT_RANGE: std::ops::Range<u16> = 9100..9200;
 
-static NEXT_ADMIN_PORT: AtomicU16 = AtomicU16::new(FIRST_ADMIN_PORT);
 static PLAYERS: Lazy<RwLock<HashMap<String, Player>>> = Lazy::new(RwLock::default);
 
 #[tokio::main]
