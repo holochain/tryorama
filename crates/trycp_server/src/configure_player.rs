@@ -66,10 +66,10 @@ data_root_path: environment
 keystore:
     type: lair_server_in_proc
 admin_interfaces:
-    - driver:
-        type: websocket
-        port: {}
-        allowed_origins: \"*\"
+- driver:
+    type: websocket
+    port: {}
+    allowed_origins: \"*\"
 {}",
         admin_port, partial_config
     );

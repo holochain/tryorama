@@ -44,7 +44,6 @@ const CONDUCTOR_MAGIC_STRING: &str = "Conductor ready.";
 
 const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
 const LAIR_PASSPHRASE: &str = "passphrase";
-const LAIR_STDERR_LOG_FILENAME: &str = "lair-stderr.txt";
 const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
 const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
