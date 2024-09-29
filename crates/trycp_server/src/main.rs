@@ -41,7 +41,6 @@ use trycp_api::*;
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
 const CONDUCTOR_MAGIC_STRING: &str = "Conductor ready.";
-const LAIR_MAGIC_STRING: &str = "# lair-keystore running #";
 
 const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
 const LAIR_PASSPHRASE: &str = "passphrase";
@@ -104,7 +103,6 @@ struct Player {
 }
 
 struct PlayerProcesses {
-    lair: Child,
     holochain: Child,
 }
 
@@ -305,8 +303,6 @@ fn player_config_exists(id: &str) -> bool {
 enum KillError {
     #[snafu(display("Could not kill holochain: {}", source))]
     KillHolochain { source: nix::Error },
-    #[snafu(display("Could not kill lair: {}", source))]
-    KillLair { source: nix::Error },
 }
 
 fn kill_player(
@@ -323,8 +319,6 @@ fn kill_player(
 
     signal::kill(Pid::from_raw(player.holochain.id() as i32), signal).context(KillHolochain)?;
     player.holochain.wait().unwrap();
-    signal::kill(Pid::from_raw(player.lair.id() as i32), signal).context(KillLair)?;
-    player.lair.wait().unwrap();
 
     *player_cell = None;
     Ok(())

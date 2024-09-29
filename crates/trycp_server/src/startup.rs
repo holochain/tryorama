@@ -1,7 +1,6 @@
 use crate::{
     get_player_dir, PlayerProcesses, CONDUCTOR_CONFIG_FILENAME, CONDUCTOR_MAGIC_STRING,
-    CONDUCTOR_STDERR_LOG_FILENAME, CONDUCTOR_STDOUT_LOG_FILENAME, LAIR_MAGIC_STRING,
-    LAIR_PASSPHRASE, LAIR_STDERR_LOG_FILENAME, PLAYERS,
+    CONDUCTOR_STDERR_LOG_FILENAME, CONDUCTOR_STDOUT_LOG_FILENAME, LAIR_PASSPHRASE, PLAYERS,
 };
 use snafu::{OptionExt, ResultExt, Snafu};
 use std::io::Lines;
@@ -16,17 +15,8 @@ use std::{
 pub enum Error {
     #[snafu(display("Could not find a configuration for player with ID {:?}", id))]
     PlayerNotConfigured { id: String },
-    #[snafu(display(
-        "Could not create log file at {} for lair-keystore's stdout: {}", path.display(), source
-    ))]
-    CreateLairStdoutFile { path: PathBuf, source: io::Error },
     #[snafu(display("Could not spawn lair-keystore: {}", source))]
     SpawnLair { source: io::Error },
-    #[snafu(display(
-        "Could not check lair-keystore's output to confirm that it's ready: {}",
-        source
-    ))]
-    CheckLairReady { source: io::Error },
     #[snafu(display("Could not spawn holochain: {}", source))]
     SpawnHolochain { source: io::Error },
     #[snafu(display(
@@ -57,42 +47,6 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
 
         println!("starting player with id: {}", id);
 
-        let lair_stderr_log_path = player_dir.join(LAIR_STDERR_LOG_FILENAME);
-        let mut lair = Command::new("lair-keystore")
-            .current_dir(&player_dir)
-            .env("RUST_BACKTRACE", "full")
-            .args(["server", "--piped"])
-            .stdin(Stdio::piped())
-            .stdout(Stdio::piped())
-            .stderr(
-                std::fs::OpenOptions::new()
-                    .append(true)
-                    .create(true)
-                    .open(&lair_stderr_log_path)
-                    .context(CreateLairStdoutFile {
-                        path: lair_stderr_log_path,
-                    })?,
-            )
-            .spawn()
-            .context(SpawnLair)?;
-
-        if let Some(mut lair_stdin) = lair.stdin.take() {
-            lair_stdin
-                .write_all(LAIR_PASSPHRASE.as_bytes())
-                .context(SpawnLair)?;
-        }
-
-        {
-            // Wait until lair begins to output before starting conductor.
-            stream_output_with_ready(
-                lair.stdout.take().unwrap(),
-                LAIR_MAGIC_STRING,
-                None,
-                format!("lair-keystore({id})"),
-            )
-            .context(CheckLairReady)?;
-        }
-
         let mut conductor = Command::new("holochain")
             .current_dir(&player_dir)
             .arg("--piped")
@@ -121,7 +75,6 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
 
         *processes = Some(PlayerProcesses {
             holochain: conductor,
-            lair,
         });
     }
 
