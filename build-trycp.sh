@@ -2,4 +2,4 @@
 set -e
 
 # build TryCP server
-cargo build -p trycp_server --target-dir crates/trycp_server/target
+cargo build -p trycp_server --release --target-dir crates/trycp_server/target
