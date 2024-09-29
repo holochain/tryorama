@@ -2,11 +2,11 @@
   "nodes": {
     "crane": {
       "locked": {
-        "lastModified": 1725409566,
-        "narHash": "sha256-PrtLmqhM6UtJP7v7IGyzjBFhbG4eOAHT6LPYOFmYfbk=",
+        "lastModified": 1727316705,
+        "narHash": "sha256-/mumx8AQ5xFuCJqxCIOFCHTVlxHkMT21idpbgbm/TIE=",
         "owner": "ipetkov",
         "repo": "crane",
-        "rev": "7e4586bad4e3f8f97a9271def747cf58c4b68f3c",
+        "rev": "5b03654ce046b5167e7b0bccbd8244cb56c16f0e",
         "type": "github"
       },
       "original": {
@@ -70,16 +70,16 @@
     "holochain": {
       "flake": false,
       "locked": {
-        "lastModified": 1727116525,
-        "narHash": "sha256-8usyyFmHf9SsOQaYFuzsaXsmY2qKqH3sfrBDvCoiZlo=",
+        "lastModified": 1727364075,
+        "narHash": "sha256-VNgxDgeq2sX/L7D8J7F3QErqMVKdZTCX6SR3Cs5YKgM=",
         "owner": "holochain",
         "repo": "holochain",
-        "rev": "ab0c830d7880853cc275f49c48cd72addfdbbfe5",
+        "rev": "116f88d9baaf2b710c7cbbb7776a4b09e311b076",
         "type": "github"
       },
       "original": {
         "owner": "holochain",
-        "ref": "fix/hc-sandbox-dpki-options",
+        "ref": "holochain-0.4.0-dev.27",
         "repo": "holochain",
         "type": "github"
       }
@@ -100,11 +100,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1727106047,
-        "narHash": "sha256-54LQDxmV9RJAem4rut0TgAywe1u8dahK79md0y9DqUA=",
+        "lastModified": 1727381822,
+        "narHash": "sha256-wa8racInCgydxkm9KOv4DQzqldAMLPnrEisl3jT0ofw=",
         "owner": "holochain",
         "repo": "holonix",
-        "rev": "687934d2f5bdcfe11c1dde438d21315a43aed3c8",
+        "rev": "e78f71a0bf90ff538792d5b9a60c476dc87096bd",
         "type": "github"
       },
       "original": {
@@ -117,16 +117,16 @@
     "lair-keystore": {
       "flake": false,
       "locked": {
-        "lastModified": 1726521249,
-        "narHash": "sha256-SZPhvZ7D5tNr3dKuxUp/zUOnfFe8UBG/uqWc9vQgUMM=",
+        "lastModified": 1726865440,
+        "narHash": "sha256-+ARQs+Sfmh8QXMyjjHjm6Ib8Ag86Jm2vnyB6l3zTCgA=",
         "owner": "holochain",
         "repo": "lair",
-        "rev": "6bbd604bff3d5eda528bb2da9c3aa1e1e71e429d",
+        "rev": "9f306efed597765b70da704e1739ecc67f2510e0",
         "type": "github"
       },
       "original": {
         "owner": "holochain",
-        "ref": "lair_keystore-v0.5.1",
+        "ref": "lair_keystore-v0.5.2",
         "repo": "lair",
         "type": "github"
       }
@@ -178,11 +178,11 @@
         ]
       },
       "locked": {
-        "lastModified": 1725416653,
-        "narHash": "sha256-iNBv7ILlZI6ubhW0ExYy8YgiLKUerudxY7n8R5UQK2E=",
+        "lastModified": 1727404165,
+        "narHash": "sha256-kZCiYpQJBZ3kL9QymS88mCxpQwqo8KqvZeHk6LATuY8=",
         "owner": "oxalica",
         "repo": "rust-overlay",
-        "rev": "e5d3f9c2f24d852cddc79716daf0f65ce8468b28",
+        "rev": "76f0a61e733259e1034dd6523e039d04932ffefc",
         "type": "github"
       },
       "original": {

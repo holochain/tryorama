@@ -4,7 +4,6 @@
       url = "github:holochain/holonix?ref=main";
       inputs.crane.follows = "crane";
       inputs.rust-overlay.follows = "rust-overlay";
-      inputs.holochain.url = "github:holochain/holochain?ref=fix/hc-sandbox-dpki-options";
     };
 
     nixpkgs.follows = "holonix/nixpkgs";
@@ -44,6 +43,7 @@
                 pkgs.libiconv
                 pkgs.darwin.apple_sdk.frameworks.CoreFoundation
                 pkgs.darwin.apple_sdk.frameworks.Security
+                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
               ])
             ];
 
