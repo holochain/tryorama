@@ -48,7 +48,7 @@ jobs:
           key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
 
       - name: Run TryCP integration tests
-        run: nix develop -c $SHELL -c "cargo test -p trycp_server --test integration --target-dir crates/trycp_server/target"
+        run: nix develop -c $SHELL -c "cargo test -p trycp_server --test integration --release --target-dir crates/trycp_server/target"
 
       - name: Restore test zome build
         uses: actions/cache/restore@v4
