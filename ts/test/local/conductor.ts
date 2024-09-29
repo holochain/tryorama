@@ -1,6 +1,7 @@
 import {
   ActionHash,
   AppBundleSource,
+  AppSignal,
   CellProvisioningStrategy,
   CloneId,
   EntryHash,
@@ -544,11 +545,11 @@ test.skip("Local Conductor - clone cell management", async (t) => {
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id,
+    clone_cell_id: cloneCell.cell_id[0],
   });
   await conductor
     .adminWs()
-    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id[0] });
   await t.rejects(
     appWs.enableCloneCell({ clone_cell_id: cloneCell.clone_id }),
     "deleted clone cell cannot be enabled"
@@ -687,7 +688,7 @@ test("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agent
 test("Local Conductor - Receive a signal", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   let signalHandler: SignalCb | undefined;
-  const signalReceived = new Promise<Signal>((resolve) => {
+  const signalReceived = new Promise<AppSignal>((resolve) => {
     signalHandler = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);

@@ -1,13 +1,14 @@
 import {
   ActionHash,
   AppBundleSource,
+  AppSignal,
   AppWebsocket,
   EntryHash,
+  PreflightResponse,
   Signal,
   SignalCb,
   SignalType,
 } from "@holochain/client";
-import { PreflightResponse } from "@holochain/client/lib/lib";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
 import test from "tape-promise/tape.js";
@@ -282,7 +283,7 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
 
   let signalHandlerAlice: SignalCb | undefined;
-  const signalReceivedAlice = new Promise<Signal>((resolve) => {
+  const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
     signalHandlerAlice = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);
@@ -290,7 +291,7 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   });
 
   let signalHandlerBob: SignalCb | undefined;
-  const signalReceivedBob = new Promise<Signal>((resolve) => {
+  const signalReceivedBob = new Promise<AppSignal>((resolve) => {
     signalHandlerBob = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);
