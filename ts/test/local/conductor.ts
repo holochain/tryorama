@@ -461,7 +461,7 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
   await cleanAllConductors();
 });
 
-test.skip("Local Conductor - clone cell management", async (t) => {
+test("Local Conductor - clone cell management", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
@@ -505,12 +505,10 @@ test.skip("Local Conductor - clone cell management", async (t) => {
     cap_secret: null,
     provenance: agentPubKey,
   });
-  console.log("eah", entryActionHash);
 
-  const a = await appWs.disableCloneCell({
-    clone_cell_id: ROLE_NAME,
+  await appWs.disableCloneCell({
+    clone_cell_id: cloneCell.clone_id,
   });
-  console.log("a", a);
   await t.rejects(
     appWs.callZome({
       cell_id: cloneCell.cell_id,
