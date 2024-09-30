@@ -17,7 +17,7 @@ use std::{
     io,
     path::{Path, PathBuf},
     process::Child,
-    sync::Arc,
+    sync::{atomic::AtomicU16, Arc},
 };
 
 use futures::{stream::SplitStream, SinkExt, StreamExt};
@@ -50,6 +50,7 @@ const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
 const DNA_DIR_PATH: &str = "/tmp/trycp/dnas";
 const ADMIN_PORT_RANGE: std::ops::Range<u16> = 9100..9200;
 
+static NEXT_ADMIN_PORT: AtomicU16 = AtomicU16::new(ADMIN_PORT_RANGE.start);
 static PLAYERS: Lazy<RwLock<HashMap<String, Player>>> = Lazy::new(RwLock::default);
 
 #[tokio::main]

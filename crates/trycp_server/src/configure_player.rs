@@ -1,4 +1,4 @@
-use std::{io, net::TcpListener, path::PathBuf};
+use std::{io, net::TcpListener, path::PathBuf, sync::atomic::Ordering};
 
 use parking_lot::Mutex;
 use snafu::{ensure, ResultExt, Snafu};
@@ -6,7 +6,7 @@ use std::str;
 
 use crate::{
     get_player_dir, player_config_exists, Player, ADMIN_PORT_RANGE, CONDUCTOR_CONFIG_FILENAME,
-    PLAYERS,
+    NEXT_ADMIN_PORT, PLAYERS,
 };
 
 #[derive(Debug, Snafu)]
@@ -34,16 +34,17 @@ pub(crate) fn configure_player(
 
     ensure!(!player_config_exists(&id), PlayerAlreadyConfigured { id });
 
-    let mut admin_port = 0;
-    for port in ADMIN_PORT_RANGE {
-        let listener = TcpListener::bind(format!("localhost:{port}"));
+    let mut admin_port = NEXT_ADMIN_PORT.fetch_add(1, Ordering::SeqCst);
+    loop {
+        ensure!(admin_port <= ADMIN_PORT_RANGE.end, OutOfPorts);
+        let listener = TcpListener::bind(format!("localhost:{admin_port}"));
         if let Ok(p) = listener {
             admin_port = p.local_addr().unwrap().port();
             break;
         }
+        admin_port = NEXT_ADMIN_PORT.fetch_add(1, Ordering::SeqCst);
     }
-    ensure!(admin_port != 0, OutOfPorts);
-    println!("Admin port {admin_port} assigned to player.");
+    println!("Admin port {admin_port} assigned to player {id}.");
 
     {
         let mut players_guard = PLAYERS.write();

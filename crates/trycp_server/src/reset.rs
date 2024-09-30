@@ -1,9 +1,11 @@
-use std::io;
+use std::{io, sync::atomic};
 
 use nix::sys::signal::Signal;
 use snafu::{IntoError, Snafu};
 
-use crate::{app_interface, kill_player, PLAYERS, PLAYERS_DIR_PATH};
+use crate::{
+    app_interface, kill_player, ADMIN_PORT_RANGE, NEXT_ADMIN_PORT, PLAYERS, PLAYERS_DIR_PATH,
+};
 
 #[derive(Debug, Snafu)]
 pub(crate) enum ResetError {
@@ -22,6 +24,7 @@ pub(crate) fn reset() -> Result<(), ResetError> {
             futures::executor::block_on(app_interface::APP_CONNECTIONS.lock());
         let mut admin_connections_guard =
             futures::executor::block_on(crate::admin_call::ADMIN_CONNECTIONS.lock());
+        NEXT_ADMIN_PORT.store(ADMIN_PORT_RANGE.start, atomic::Ordering::SeqCst);
         match std::fs::remove_dir_all(PLAYERS_DIR_PATH) {
             Ok(()) => {}
             Err(e) if e.kind() == io::ErrorKind::NotFound => {}
