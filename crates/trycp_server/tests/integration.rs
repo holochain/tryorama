@@ -4,6 +4,7 @@ use holochain_conductor_api::conductor::ConductorConfig;
 use tokio::{
     io::{AsyncBufReadExt, BufReader},
     process::Child,
+    sync::oneshot::Receiver,
 };
 use trycp_api::Request;
 
@@ -17,21 +18,7 @@ async fn multiple_conductors_on_same_machine_are_assigned_different_admin_ports(
     let id_player_2 = "player_2";
 
     // Start 1 server.
-    let mut trycp_server_1 = tokio::process::Command::new("cargo")
-        .arg("run")
-        .arg("--release")
-        .arg("--target-dir")
-        .arg("crates/trycp_server/target")
-        .arg("--")
-        .arg("-p")
-        .arg(port_1.to_string())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .kill_on_drop(true)
-        .spawn()
-        .expect("trycp server could not be started");
-    let (trycp_server_running_1, config_path_rx_1) = spawn_output(&mut trycp_server_1);
-    trycp_server_running_1.await.unwrap();
+    let (_trycp_server_1, config_path_rx_1) = start_server(port_1).await;
 
     // Connect client to server 1 and configure a conductor.
     let (trycp_client_1, _) =
@@ -86,21 +73,7 @@ async fn multiple_conductors_on_same_machine_are_assigned_different_admin_ports(
         .unwrap();
 
     // Start server 2 on same machine.
-    let mut trycp_server_2 = tokio::process::Command::new("cargo")
-        .arg("run")
-        .arg("--release")
-        .arg("--target-dir")
-        .arg("crates/trycp_server/target")
-        .arg("--")
-        .arg("-p")
-        .arg(port_2.to_string())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::inherit())
-        .kill_on_drop(true)
-        .spawn()
-        .expect("trycp server could not be started");
-    let (trycp_server_running_2, config_path_rx_2) = spawn_output(&mut trycp_server_2);
-    trycp_server_running_2.await.unwrap();
+    let (_trycp_server_2, config_path_rx_2) = start_server(port_2).await;
 
     // Connect client to server 2 and configure a conductor.
     let (trycp_client_2, _) =
@@ -153,6 +126,25 @@ async fn multiple_conductors_on_same_machine_are_assigned_different_admin_ports(
         .request(Request::Reset, ONE_MIN)
         .await
         .unwrap();
+}
+
+async fn start_server(port: u16) -> (tokio::process::Child, Receiver<String>) {
+    let mut server = tokio::process::Command::new("cargo")
+        .arg("run")
+        .arg("--release")
+        .arg("--target-dir")
+        .arg("crates/trycp_server/target")
+        .arg("--")
+        .arg("-p")
+        .arg(port.to_string())
+        .stdout(Stdio::piped())
+        .stderr(Stdio::inherit())
+        .kill_on_drop(true)
+        .spawn()
+        .expect("trycp server could not be started");
+    let (server_running, config_path_rx) = spawn_output(&mut server);
+    server_running.await.unwrap();
+    (server, config_path_rx)
 }
 
 fn spawn_output(
