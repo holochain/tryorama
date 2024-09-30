@@ -92,6 +92,34 @@ network:
     - type: webrtc
       signal_url: ${SIGNALING_SERVER_PLACEHOLDER}`;
 
+const getPartialConfig = (
+  noDpki = false,
+  dpkiNetworkSeed = "deepkey-test",
+  bootstrapServerUrl?: URL,
+  signalingServerUrl?: URL
+) => {
+  const dpkiConfig = noDpki
+    ? `dpki:
+  dna_path: ~
+  network_seed: ~
+  no_dpki: true`
+    : `dpki:
+  dna_path: ~
+  network_seed: ${dpkiNetworkSeed}
+  allow_throwaway_random_dpki_agent_key: true
+  no_dpki: false`;
+  const partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
+    BOOTSTRAP_SERVER_PLACEHOLDER,
+    (bootstrapServerUrl ?? HOLO_BOOTSTRAP_SERVER).href
+  )
+    .replace(
+      SIGNALING_SERVER_PLACEHOLDER,
+      (signalingServerUrl ?? HOLO_SIGNALING_SERVER).href
+    )
+    .replace(DPKI_CONFIG_PLACEHOLDER, dpkiConfig);
+  return partialConfig;
+};
+
 /**
  * @public
  */
@@ -180,6 +208,10 @@ export class TryCpConductor implements IConductor {
     this.id = id || `conductor-${uuidv4()}`;
   }
 
+  static defaultPartialConfig() {
+    return getPartialConfig();
+  }
+
   /**
    * Create conductor configuration.
    *
@@ -191,28 +223,15 @@ export class TryCpConductor implements IConductor {
   async configure(
     partialConfig?: string,
     noDpki = false,
-    dpkiNetworkSeed = ""
+    dpkiNetworkSeed = "deepkey-test"
   ) {
     if (!partialConfig) {
-      const dpkiConfig = noDpki
-        ? `dpki:
-  dna_path: ~
-  network_seed: ~
-  no_dpki: true`
-        : `dpki:
-  dna_path: ~
-  network_seed: ${dpkiNetworkSeed}
-  allow_throwaway_random_dpki_agent_key: true
-  no_dpki: false`;
-      partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
-        BOOTSTRAP_SERVER_PLACEHOLDER,
-        (this.tryCpClient.bootstrapServerUrl || HOLO_BOOTSTRAP_SERVER).href
-      )
-        .replace(
-          SIGNALING_SERVER_PLACEHOLDER,
-          (this.tryCpClient.signalingServerUrl || HOLO_SIGNALING_SERVER).href
-        )
-        .replace(DPKI_CONFIG_PLACEHOLDER, dpkiConfig);
+      partialConfig = getPartialConfig(
+        noDpki,
+        dpkiNetworkSeed,
+        this.tryCpClient.bootstrapServerUrl,
+        this.tryCpClient.signalingServerUrl
+      );
     }
 
     const response = await this.tryCpClient.call({

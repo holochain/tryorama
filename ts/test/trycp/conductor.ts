@@ -46,10 +46,6 @@ test("TryCP Conductor - default conductor has DPKI enabled", async (t) => {
     .enableApp({ installed_app_id: appInfo.installed_app_id });
   const cellIds = await conductor.adminWs().listCellIds();
   t.equal(cellIds.length, 2, "Conductor includes DPKI cell id");
-  // const response = await conductor
-  //   .adminWs()
-  //   .revokeAgentKey(appInfo.installed_app_id, appInfo.agent_pub_key);
-  // console.log("response", response);
 
   await stopLocalServices(servicesProcess);
   await client.cleanUp();

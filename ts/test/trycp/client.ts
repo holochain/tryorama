@@ -6,6 +6,7 @@ import { _ALLOWED_ORIGIN, enableAndGetAgentApp } from "../../src/common.js";
 import {
   createTryCpConductor,
   DEFAULT_PARTIAL_PLAYER_CONFIG,
+  TryCpConductor,
 } from "../../src/trycp/index.js";
 import { TryCpClient } from "../../src/trycp/trycp-client.js";
 import {
@@ -59,7 +60,6 @@ test("TryCP Server - download DNA from web", async (t) => {
     type: "download_dna",
     url,
   });
-  console.log("actual url", actualUrl);
   t.ok(typeof actualUrl === "string" && actualUrl.endsWith(expectedUrl));
 
   await tryCpClient.close();
@@ -105,7 +105,7 @@ test("TryCP Server - configure player", async (t) => {
   const actual = await tryCpClient.call({
     type: "configure_player",
     id: "player-1",
-    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+    partial_config: TryCpConductor.defaultPartialConfig(),
   });
   t.equal(actual, TRYCP_SUCCESS_RESPONSE);
 
@@ -121,12 +121,12 @@ test("TryCP Server - 2 parallel calls from one client return corresponding respo
     tryCpClient.call({
       type: "configure_player",
       id: "player-1",
-      partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+      partial_config: TryCpConductor.defaultPartialConfig(),
     }),
     tryCpClient.call({
       type: "configure_player",
       id: "player-2",
-      partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+      partial_config: TryCpConductor.defaultPartialConfig(),
     }),
   ];
   const [response1, response2] = await Promise.all(parallelCallPromises);
@@ -146,12 +146,12 @@ test("TryCP Server - 2 parallel calls from two clients return correct responses"
     tryCpClient1.call({
       type: "configure_player",
       id: "player-1",
-      partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+      partial_config: TryCpConductor.defaultPartialConfig(),
     }),
     tryCpClient2.call({
       type: "configure_player",
       id: "player-2",
-      partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+      partial_config: TryCpConductor.defaultPartialConfig(),
     }),
   ];
   const [response1, response2] = await Promise.all(parallelCallPromises);
@@ -171,7 +171,7 @@ test("TryCP Server - startup and shutdown", async (t) => {
   await tryCpClient.call({
     type: "configure_player",
     id: playerId,
-    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+    partial_config: TryCpConductor.defaultPartialConfig(),
   });
   const actualStartup = await tryCpClient.call({
     type: "startup",
@@ -197,7 +197,7 @@ test("TryCP Server - reset", async (t) => {
   await tryCpClient.call({
     type: "configure_player",
     id: playerId,
-    partial_config: DEFAULT_PARTIAL_PLAYER_CONFIG,
+    partial_config: TryCpConductor.defaultPartialConfig(),
   });
   await tryCpClient.call({
     type: "startup",
