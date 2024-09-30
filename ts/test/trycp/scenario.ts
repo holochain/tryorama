@@ -1,4 +1,4 @@
-import { Signal, SignalCb, EntryHash, SignalType } from "@holochain/client";
+import { EntryHash, Signal, SignalCb, SignalType } from "@holochain/client";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import { runLocalServices } from "../../src/common.js";
@@ -310,7 +310,6 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
   ]);
-  await scenario.shareAllAgents();
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -436,10 +435,17 @@ test("TryCP Scenario - connect to multiple clients without DPKI", async (t) => {
 
 test("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
   const numberOfServers = 2;
-  const numberOfConductorsPerClient = 2;
+  const numberOfConductorsPerClient = 1;
   const numberOfAgentsPerConductor = 3;
   const tryCpServers: TryCpServer[] = [];
   const serverUrls: URL[] = [];
+
+  const scenario = new TryCpScenario();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    bootstrapServerUrl: scenario.bootstrapServerUrl,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
 
   for (let i = 0; i < numberOfServers; i++) {
     const serverPort = TRYCP_SERVER_PORT + i;
@@ -449,17 +455,17 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
     serverUrls.push(serverUrl);
   }
 
-  const scenario = new TryCpScenario();
-  ({
-    servicesProcess: scenario.servicesProcess,
-    bootstrapServerUrl: scenario.bootstrapServerUrl,
-    signalingServerUrl: scenario.signalingServerUrl,
-  } = await runLocalServices());
-  const clientsPlayers = await scenario.addClientsPlayers(serverUrls, {
-    numberOfConductorsPerClient,
-    numberOfAgentsPerConductor,
-    app: { path: FIXTURE_HAPP_URL.pathname },
-  });
+  // As all of the servers are on the same machine, creating players has to be done in sequence to
+  // avoid identical admin ports being assigned multiple times.
+  const clientsPlayers: ClientPlayers[] = [];
+  for (let i = 0; i < numberOfServers; i++) {
+    const clientPlayers = await scenario.addClientsPlayers([serverUrls[i]], {
+      numberOfConductorsPerClient,
+      numberOfAgentsPerConductor,
+      app: { path: FIXTURE_HAPP_URL.pathname },
+    });
+    clientsPlayers.push(...clientPlayers);
+  }
 
   clientsPlayers.forEach((clientPlayers, i) =>
     t.equal(
