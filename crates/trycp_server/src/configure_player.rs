@@ -65,7 +65,7 @@ pub(crate) fn configure_player(
 ---
 data_root_path: environment
 keystore:
-    type: lair_server_in_proc
+  type: lair_server_in_proc
 admin_interfaces:
 - driver:
     type: websocket
