@@ -5,6 +5,8 @@ import {
   CellProvisioningStrategy,
   CloneId,
   EntryHash,
+  HolochainError,
+  RevokeAgentKeyResponse,
   Signal,
   SignalCb,
   SignalType,
@@ -151,6 +153,48 @@ test("Local Conductor - set a DPKI network seed", async (t) => {
   t.assert(
     conductorConfig.includes(`network_seed: ${networkSeed}`),
     "DPKI network seed set in conductor config"
+  );
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
+test("Local Conductor - revoke agent key", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl);
+  const app = await conductor.installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  const adminWs = conductor.adminWs();
+  const port = await conductor.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: app.installed_app_id,
+  });
+  const appWs = await conductor.connectAppWs(issued.token, port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
+
+  // Alice can create an entry before revoking agent key.
+  const entryContent = "test-content";
+  const createEntryResponse: EntryHash = await alice.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: entryContent,
+  });
+  t.ok(createEntryResponse, "created entry successfully");
+
+  const response: RevokeAgentKeyResponse = await conductor
+    .adminWs()
+    .revokeAgentKey({ app_id: alice.appId, agent_key: alice.agentPubKey });
+  t.deepEqual(response, [], "revoked key on all cells");
+
+  // After revoking her key, Alice should no longer be able to create an entry.
+  await t.rejects(
+    alice.cells[0].callZome({
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: entryContent,
+    })
   );
 
   await conductor.shutDown();

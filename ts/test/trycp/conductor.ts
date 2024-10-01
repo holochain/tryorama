@@ -106,15 +106,16 @@ test("TryCP Conductor - revoke agent key", async (t) => {
   const response: RevokeAgentKeyResponse = await conductor
     .adminWs()
     .revokeAgentKey({ app_id: alice.appId, agent_key: alice.agentPubKey });
-  t.deepEqual(response, []);
+  t.deepEqual(response, [], "revoked key on all cells");
 
   // After revoking her key, Alice should no longer be able to create an entry.
-  t.rejects(
+  await t.rejects(
     alice.cells[0].callZome({
       zome_name: "coordinator",
       fn_name: "create",
       payload: entryContent,
-    })
+    }),
+    "creating an entry is not allowed any more"
   );
 
   await stopLocalServices(servicesProcess);
