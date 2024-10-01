@@ -375,9 +375,14 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
     servicesProcess: scenario.servicesProcess,
     signalingServerUrl: scenario.signalingServerUrl,
   } = await runLocalServices());
-  await scenario.addClientsPlayers(serverUrls, {
-    app: { path: FIXTURE_HAPP_URL.pathname },
-  });
+
+  // As all of the servers are on the same machine, creating players has to be done in sequence to
+  // avoid identical admin ports being assigned multiple times.
+  for (let i = 0; i < numberOfServers; i++) {
+    await scenario.addClientsPlayers([serverUrls[i]], {
+      app: { path: FIXTURE_HAPP_URL.pathname },
+    });
+  }
   t.ok(
     scenario.clients.length === numberOfServers,
     "scenario has expected number of clients"
