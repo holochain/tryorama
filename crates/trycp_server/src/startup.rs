@@ -104,7 +104,7 @@ pub fn startup(id: String, log_level: Option<String>) -> Result<(), Error> {
     .unwrap_err();
 
     if let Err(err) = conductor.kill() {
-        eprintln!("could not kill Holochain process: {err}");
+        println!("could not kill Holochain process: {err}");
     }
     Err(error)
 }
@@ -133,7 +133,7 @@ fn log_stdout(
             while let Some(Ok(line)) = reader.next() {
                 if let Some(f) = &mut f {
                     if let Err(err) = writeln!(f, "{}: {}", context, line) {
-                        eprintln!("could not write to log file: {err}");
+                        println!("could not write to log file: {err}");
                     }
                 }
                 println!("{context}: {line}");
