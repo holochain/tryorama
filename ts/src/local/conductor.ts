@@ -67,6 +67,8 @@ export interface ConductorOptions {
 
   /**
    * Set a DPKI network seed in the conductor instance.
+   *
+   * Defaults to "deepkey-test".
    */
   dpkiNetworkSeed?: NetworkSeed;
 
@@ -152,7 +154,7 @@ export class Conductor implements IConductor {
   ) {
     if (options?.noDpki && options?.dpkiNetworkSeed) {
       throw new Error(
-        "DPKI network can not be set when DPKI is disabled. Enable DPKI or do not provide a DPKI network seed."
+        "DPKI network seed can not be set when DPKI is disabled. Enable DPKI or do not provide a DPKI network seed."
       );
     }
 

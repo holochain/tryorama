@@ -5,7 +5,6 @@ import {
   CellProvisioningStrategy,
   CloneId,
   EntryHash,
-  HolochainError,
   RevokeAgentKeyResponse,
   Signal,
   SignalCb,

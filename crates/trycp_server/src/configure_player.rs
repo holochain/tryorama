@@ -36,7 +36,7 @@ pub(crate) fn configure_player(
 
     let mut admin_port = NEXT_ADMIN_PORT.fetch_add(1, Ordering::SeqCst);
     loop {
-        ensure!(admin_port <= ADMIN_PORT_RANGE.end, OutOfPorts);
+        ensure!(ADMIN_PORT_RANGE.contains(&admin_port), OutOfPorts);
         let listener = TcpListener::bind(format!("localhost:{admin_port}"));
         if let Ok(p) = listener {
             admin_port = p.local_addr().unwrap().port();
