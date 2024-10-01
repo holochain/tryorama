@@ -1,11 +1,13 @@
 import {
   ActionHash,
   AppBundleSource,
-  Signal,
-  SignalCb,
+  AppSignal,
   CellProvisioningStrategy,
   CloneId,
   EntryHash,
+  RevokeAgentKeyResponse,
+  Signal,
+  SignalCb,
   SignalType,
 } from "@holochain/client";
 import assert from "node:assert";
@@ -13,18 +15,16 @@ import { readFileSync, realpathSync } from "node:fs";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import {
+  NetworkType,
+  Player,
+  cleanAllConductors,
+  createConductor,
+  dhtSync,
   enableAndGetAgentApp,
   getZomeCaller,
   runLocalServices,
   stopLocalServices,
 } from "../../src";
-import {
-  NetworkType,
-  Player,
-  cleanAllConductors,
-  createConductor,
-} from "../../src";
-import { dhtSync } from "../../src";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 
 const ROLE_NAME = "test";
@@ -82,6 +82,119 @@ test("Local Conductor - spawn a conductor and check for admin ws", async (t) => 
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   t.ok(conductor.adminWs());
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
+test("Local Conductor - default conductor has DPKI enabled", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl);
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.assert(
+    conductorConfig.includes("no_dpki: false"),
+    "DPKI enabled in conductor config"
+  );
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
+test("Local Conductor - spawn a conductor without DPKI enabled", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl, { noDpki: true });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.assert(
+    conductorConfig.includes("no_dpki: true"),
+    "DPKI disabled in conductor config"
+  );
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
+test("Local Conductor - default conductor has test DPKI network seed", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl);
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.assert(
+    conductorConfig.includes("network_seed: deepkey-test"),
+    "default DPKI network seed set in conductor config"
+  );
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
+test("Local Conductor - set a DPKI network seed", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const networkSeed = "tryorama-test-dpki";
+  const conductor = await createConductor(signalingServerUrl, {
+    dpkiNetworkSeed: networkSeed,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = readFileSync(
+    tmpDirPath + "/conductor-config.yaml"
+  ).toString();
+  t.assert(
+    conductorConfig.includes(`network_seed: ${networkSeed}`),
+    "DPKI network seed set in conductor config"
+  );
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
+test("Local Conductor - revoke agent key", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl);
+  const app = await conductor.installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  const adminWs = conductor.adminWs();
+  const port = await conductor.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: app.installed_app_id,
+  });
+  const appWs = await conductor.connectAppWs(issued.token, port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
+
+  // Alice can create an entry before revoking agent key.
+  const entryContent = "test-content";
+  const createEntryResponse: EntryHash = await alice.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: entryContent,
+  });
+  t.ok(createEntryResponse, "created entry successfully");
+
+  const response: RevokeAgentKeyResponse = await conductor
+    .adminWs()
+    .revokeAgentKey({ app_id: alice.appId, agent_key: alice.agentPubKey });
+  t.deepEqual(response, [], "revoked key on all cells");
+
+  // After revoking her key, Alice should no longer be able to create an entry.
+  await t.rejects(
+    alice.cells[0].callZome({
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: entryContent,
+    })
+  );
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -437,7 +550,7 @@ test("Local Conductor - clone cell management", async (t) => {
   });
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id,
+    clone_cell_id: cloneCell.clone_id,
   });
   await t.rejects(
     appWs.callZome({
@@ -473,11 +586,11 @@ test("Local Conductor - clone cell management", async (t) => {
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id,
+    clone_cell_id: cloneCell.cell_id[0],
   });
   await conductor
     .adminWs()
-    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id[0] });
   await t.rejects(
     appWs.enableCloneCell({ clone_cell_id: cloneCell.clone_id }),
     "deleted clone cell cannot be enabled"
@@ -616,7 +729,7 @@ test("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agent
 test("Local Conductor - Receive a signal", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   let signalHandler: SignalCb | undefined;
-  const signalReceived = new Promise<Signal>((resolve) => {
+  const signalReceived = new Promise<AppSignal>((resolve) => {
     signalHandler = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);

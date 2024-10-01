@@ -2,7 +2,6 @@ import {
   ActionHash,
   AppBundleSource,
   Signal,
-  AppSignal,
   CellProvisioningStrategy,
   CellType,
   CloneId,
@@ -10,6 +9,7 @@ import {
   EntryHash,
   SignalType,
   GrantedFunctionsType,
+  RevokeAgentKeyResponse,
 } from "@holochain/client";
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
@@ -29,6 +29,99 @@ import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const ROLE_NAME = "test";
+
+test("TryCP Conductor - default conductor has DPKI enabled", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client);
+  const agent_key = await conductor.adminWs().generateAgentPubKey();
+  const appInfo = await conductor.adminWs().installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+    agent_key,
+    membrane_proofs: {},
+  });
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: appInfo.installed_app_id });
+  const cellIds = await conductor.adminWs().listCellIds();
+  t.equal(cellIds.length, 2, "Conductor includes DPKI cell id");
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - startup DPKI disabled conductor", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client, { noDpki: true });
+  const agent_key = await conductor.adminWs().generateAgentPubKey();
+  const appInfo = await conductor.adminWs().installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+    agent_key,
+    membrane_proofs: {},
+  });
+  await conductor
+    .adminWs()
+    .enableApp({ installed_app_id: appInfo.installed_app_id });
+  const cellIds = await conductor.adminWs().listCellIds();
+  t.equal(cellIds.length, 1, "Conductor contains only the app cell");
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - revoke agent key", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client);
+  const aliceHapp = await conductor.installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  const adminWs = conductor.adminWs();
+  const { port } = await adminWs.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: aliceHapp.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceHapp);
+
+  // Alice can create an entry before revoking her key.
+  const entryContent = "test-content";
+  const createEntryResponse: EntryHash = await alice.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: entryContent,
+  });
+  t.ok(createEntryResponse, "entry created successfully");
+
+  const response: RevokeAgentKeyResponse = await conductor
+    .adminWs()
+    .revokeAgentKey({ app_id: alice.appId, agent_key: alice.agentPubKey });
+  t.deepEqual(response, [], "revoked key on all cells");
+
+  // After revoking her key, Alice should no longer be able to create an entry.
+  await t.rejects(
+    alice.cells[0].callZome({
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: entryContent,
+    }),
+    "creating an entry is not allowed any more"
+  );
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
 
 test("TryCP Conductor - stop and restart a conductor", async (t) => {
   const localTryCpServer = await TryCpServer.start();
@@ -293,7 +386,7 @@ test("TryCP Conductor - request storage info", async (t) => {
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-  await conductor.adminWs().installApp({
+  const appInfo = await conductor.adminWs().installApp({
     path: FIXTURE_HAPP_URL.pathname,
     agent_key: agentPubKey,
     membrane_proofs: {},
@@ -306,7 +399,11 @@ test("TryCP Conductor - request storage info", async (t) => {
   t.ok(storageInfo.blobs[0].dna.dht_data_size_on_disk > 0);
   t.ok(storageInfo.blobs[0].dna.cache_data_size > 0);
   t.ok(storageInfo.blobs[0].dna.cache_data_size_on_disk > 0);
-  t.deepEqual(storageInfo.blobs[0].dna.used_by, ["entry-happ"]);
+  t.assert(
+    storageInfo.blobs.some((blob) =>
+      blob.dna.used_by.includes(appInfo.installed_app_id)
+    )
+  );
 
   await stopLocalServices(servicesProcess);
   await client.cleanUp();
@@ -323,6 +420,7 @@ test("TryCP Conductor - request network info", async (t) => {
   const appInfo = await conductor.adminWs().installApp({
     path: FIXTURE_HAPP_URL.pathname,
     agent_key: agentPubKey,
+    network_seed: Date.now().toString(),
     membrane_proofs: {},
   });
   await conductor
@@ -770,7 +868,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   });
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id,
+    clone_cell_id: cloneCell.cell_id[0],
   });
   await t.rejects(
     appWs.callZome({
@@ -804,11 +902,11 @@ test("TryCP Conductor - clone cell management", async (t) => {
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id,
+    clone_cell_id: cloneCell.cell_id[0],
   });
   await conductor
     .adminWs()
-    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id });
+    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id[0] });
   await t.rejects(
     appWs.enableCloneCell({
       clone_cell_id: cloneCell.clone_id,
@@ -821,7 +919,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   await localTryCpServer.stop();
 });
 
-test.skip("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 agents", async (t) => {
+test("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 agents", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();

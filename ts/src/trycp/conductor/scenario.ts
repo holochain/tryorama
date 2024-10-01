@@ -83,6 +83,8 @@ export interface ClientPlayers {
  * @public
  */
 export class TryCpScenario {
+  noDpki: boolean;
+  dpkiNetworkSeed: string;
   network_seed: string;
   servicesProcess: ChildProcessWithoutNullStreams | undefined;
   bootstrapServerUrl: URL | undefined;
@@ -90,6 +92,8 @@ export class TryCpScenario {
   clients: TryCpClient[];
 
   constructor() {
+    this.noDpki = false;
+    this.dpkiNetworkSeed = uuidv4();
     this.network_seed = uuidv4();
     this.clients = [];
   }
@@ -131,62 +135,63 @@ export class TryCpScenario {
       ).then(async (client) => {
         const numberOfConductorsPerClient =
           options?.numberOfConductorsPerClient ?? 1;
-        const conductorsCreated: Promise<{
+        const conductors: {
           conductor: TryCpConductor;
           players: TryCpPlayer[];
-        }>[] = [];
+        }[] = [];
         // create conductors for each client
         for (let i = 0; i < numberOfConductorsPerClient; i++) {
-          const conductorCreated = client
-            .addConductor({ partialConfig: options?.partialConfig })
-            .then(async (conductor) => {
-              const app = options.app;
-              let appOptions;
-              if (options.agentPubKeys) {
-                appOptions = options.agentPubKeys.map((agentPubKey) => ({
-                  agentPubKey,
-                  app,
-                }));
-              } else {
-                appOptions = [...Array(options.numberOfAgentsPerConductor)].map(
-                  () => ({ app })
-                );
-              }
+          // Conductors must be created in sequence to avoid identical admin ports being assigned multiple times.
+          const conductor = await client.addConductor({
+            partialConfig: options?.partialConfig,
+            noDpki: this.noDpki,
+            // Set a common unique DPKI network seed.
+            dpkiNetworkSeed: this.noDpki ? "" : this.dpkiNetworkSeed,
+          });
+          const app = options.app;
+          let appOptions;
+          if (options.agentPubKeys) {
+            appOptions = options.agentPubKeys.map((agentPubKey) => ({
+              agentPubKey,
+              app,
+            }));
+          } else {
+            appOptions = [...Array(options.numberOfAgentsPerConductor)].map(
+              () => ({ app })
+            );
+          }
 
-              const appInfos = await conductor.installAgentsApps({
-                agentsApps: appOptions,
-              });
-              const adminWs = conductor.adminWs();
-              const players: TryCpPlayer[] = [];
-              for (const appInfo of appInfos) {
-                const { port } = await adminWs.attachAppInterface();
-                const issued = await adminWs.issueAppAuthenticationToken({
-                  installed_app_id: appInfo.installed_app_id,
-                });
-                // This doesn't make a lot of sense... but we are asking the trycp server to create a connection,
-                // which needs to be authenticated here.
-                await conductor.connectAppInterface(issued.token, port);
-                // Then here we are just connecting to the same backend connection, but we don't actually need to
-                // authenticate. We still have to follow the same interface to 'connect' though, even though this
-                // isn't establishing a connection.
-                const appWs = await conductor.connectAppWs(issued.token, port);
-                const agentApp = await enableAndGetAgentApp(
-                  adminWs,
-                  appWs,
-                  appInfo
-                );
-                players.push({
-                  conductor,
-                  appWs,
-                  ...agentApp,
-                });
-              }
-              return { conductor, players };
+          const appInfos = await conductor.installAgentsApps({
+            agentsApps: appOptions,
+          });
+          const adminWs = conductor.adminWs();
+          const players: TryCpPlayer[] = [];
+          for (const appInfo of appInfos) {
+            const { port } = await adminWs.attachAppInterface();
+            const issued = await adminWs.issueAppAuthenticationToken({
+              installed_app_id: appInfo.installed_app_id,
             });
-          conductorsCreated.push(conductorCreated);
+            // This doesn't make a lot of sense... but we are asking the trycp server to create a connection,
+            // which needs to be authenticated here.
+            await conductor.connectAppInterface(issued.token, port);
+            // Then here we are just connecting to the same backend connection, but we don't actually need to
+            // authenticate. We still have to follow the same interface to 'connect' though, even though this
+            // isn't establishing a connection.
+            const appWs = await conductor.connectAppWs(issued.token, port);
+            const agentApp = await enableAndGetAgentApp(
+              adminWs,
+              appWs,
+              appInfo
+            );
+            players.push({
+              conductor,
+              appWs,
+              ...agentApp,
+            });
+          }
+          conductors.push({ conductor, players });
         }
-        const conductorsForClient = await Promise.all(conductorsCreated);
-        const playersForClient = conductorsForClient.flatMap(
+        const playersForClient = conductors.flatMap(
           (conductorForClient) => conductorForClient.players
         );
         return { client, players: playersForClient };
@@ -212,6 +217,8 @@ export class TryCpScenario {
   ) {
     const conductor = await tryCpClient.addConductor({
       logLevel: options?.logLevel,
+      noDpki: this.noDpki,
+      dpkiNetworkSeed: this.dpkiNetworkSeed,
     });
     options = {
       ...options,

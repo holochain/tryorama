@@ -45,6 +45,7 @@ import {
   StorageInfoRequest,
   UninstallAppRequest,
   UpdateCoordinatorsRequest,
+  RevokeAgentKeyRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
@@ -53,30 +54,8 @@ import { v4 as uuidv4 } from "uuid";
 import { _ALLOWED_ORIGIN } from "../../common.js";
 import { makeLogger } from "../../logger.js";
 import { AgentsAppsOptions, AppOptions, IConductor } from "../../types.js";
+import { TryCpClient, TryCpConductorLogLevel } from "../index.js";
 import {
-  AdminApiResponseAppAuthenticationTokenIssued,
-  TryCpClient,
-  TryCpConductorLogLevel,
-} from "../index.js";
-import {
-  AdminApiResponseAgentInfo,
-  AdminApiResponseAgentPubKeyGenerated,
-  AdminApiResponseAppDisabled,
-  AdminApiResponseAppEnabled,
-  AdminApiResponseAppInstalled,
-  AdminApiResponseAppInterfaceAttached,
-  AdminApiResponseAppInterfacesListed,
-  AdminApiResponseAppsListed,
-  AdminApiResponseAppStarted,
-  AdminApiResponseAppUninstalled,
-  AdminApiResponseCellIdsListed,
-  AdminApiResponseCoordinatorsUpdated,
-  AdminApiResponseDnaRegistered,
-  AdminApiResponseDnasDefinitionReturned,
-  AdminApiResponseDnasListed,
-  AdminApiResponseFullStateDumped,
-  AdminApiResponseNetworkStatsDumped,
-  AdminApiResponseStorageInfo,
   AppApiResponseAppInfo,
   AppApiResponseCloneCellCreated,
   AppApiResponseCloneCellDisabled,
@@ -91,9 +70,10 @@ import { deserializeZomeResponsePayload } from "../util.js";
 
 const logger = makeLogger("TryCP conductor");
 const HOLO_SIGNALING_SERVER = new URL("wss://sbd-0.main.infra.holo.host");
-const HOLO_BOOTSTRAP_SERVEr = new URL("https://devnet-bootstrap.holo.host");
+const HOLO_BOOTSTRAP_SERVER = new URL("https://devnet-bootstrap.holo.host");
 const BOOTSTRAP_SERVER_PLACEHOLDER = "<bootstrap_server_url>";
 const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
+const DPKI_CONFIG_PLACEHOLDER = "<dpki_config>";
 
 /**
  * The default partial config for a TryCP conductor.
@@ -103,13 +83,43 @@ const SIGNALING_SERVER_PLACEHOLDER = "<signaling_server_url>";
 export const DEFAULT_PARTIAL_PLAYER_CONFIG = `signing_service_uri: ~
 encryption_service_uri: ~
 decryption_service_uri: ~
-dpki: ~
+device_seed_lair_tag: null
+danger_generate_throwaway_device_seed: false
+${DPKI_CONFIG_PLACEHOLDER}
 network:
   network_type: "quic_bootstrap"
   bootstrap_service: ${BOOTSTRAP_SERVER_PLACEHOLDER}
   transport_pool:
     - type: webrtc
       signal_url: ${SIGNALING_SERVER_PLACEHOLDER}`;
+
+const getPartialConfig = (
+  noDpki = false,
+  dpkiNetworkSeed = "deepkey-test",
+  bootstrapServerUrl?: URL,
+  signalingServerUrl?: URL
+) => {
+  const dpkiConfig = noDpki
+    ? `dpki:
+  dna_path: ~
+  network_seed: ~
+  no_dpki: true`
+    : `dpki:
+  dna_path: ~
+  network_seed: ${dpkiNetworkSeed}
+  allow_throwaway_random_dpki_agent_key: true
+  no_dpki: false`;
+  const partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
+    BOOTSTRAP_SERVER_PLACEHOLDER,
+    (bootstrapServerUrl ?? HOLO_BOOTSTRAP_SERVER).href
+  )
+    .replace(
+      SIGNALING_SERVER_PLACEHOLDER,
+      (signalingServerUrl ?? HOLO_SIGNALING_SERVER).href
+    )
+    .replace(DPKI_CONFIG_PLACEHOLDER, dpkiConfig);
+  return partialConfig;
+};
 
 /**
  * @public
@@ -129,6 +139,18 @@ export interface TryCpConductorOptions {
    * Configuration for the conductor (optional).
    */
   partialConfig?: string;
+
+  /**
+   * Disable DPKI in the conductor instance.
+   *
+   * default: false // defaults to using DPKI
+   */
+  noDpki?: boolean;
+
+  /**
+   * Set a DPKI network seed.
+   */
+  dpkiNetworkSeed?: string;
 
   /**
    * Start up conductor after creation.
@@ -163,7 +185,11 @@ export const createTryCpConductor = async (
   const conductor = new TryCpConductor(tryCpClient, options?.id);
   if (options?.startup !== false) {
     // configure and startup conductor by default
-    await conductor.configure(options?.partialConfig);
+    await conductor.configure(
+      options?.partialConfig,
+      options?.noDpki,
+      options?.dpkiNetworkSeed
+    );
     await conductor.startUp({ logLevel: options?.logLevel });
   }
   return conductor;
@@ -183,22 +209,32 @@ export class TryCpConductor implements IConductor {
     this.id = id || `conductor-${uuidv4()}`;
   }
 
+  static defaultPartialConfig() {
+    return getPartialConfig();
+  }
+
   /**
    * Create conductor configuration.
    *
    * @param partialConfig - The configuration to add to the default configuration.
+   * @param noDpki - Disable the DPKI service on this conductor.
+   * @param dpkiNetworkSeed - Set DPKI network seed.
    * @returns An empty success response.
    */
-  async configure(partialConfig?: string) {
+  async configure(
+    partialConfig?: string,
+    noDpki = false,
+    dpkiNetworkSeed = "deepkey-test"
+  ) {
     if (!partialConfig) {
-      partialConfig = DEFAULT_PARTIAL_PLAYER_CONFIG.replace(
-        BOOTSTRAP_SERVER_PLACEHOLDER,
-        (this.tryCpClient.bootstrapServerUrl || HOLO_BOOTSTRAP_SERVEr).href
-      ).replace(
-        SIGNALING_SERVER_PLACEHOLDER,
-        (this.tryCpClient.signalingServerUrl || HOLO_SIGNALING_SERVER).href
+      partialConfig = getPartialConfig(
+        noDpki,
+        dpkiNetworkSeed,
+        this.tryCpClient.bootstrapServerUrl,
+        this.tryCpClient.signalingServerUrl
       );
     }
+
     const response = await this.tryCpClient.call({
       type: "configure_player",
       id: this.id,
@@ -384,7 +420,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "dna_registered");
-      return (response as AdminApiResponseDnaRegistered).data;
+      return response.data;
     };
 
     /**
@@ -401,7 +437,7 @@ export class TryCpConductor implements IConductor {
         data: dnaHash,
       });
       assert(response.type === "dna_definition_returned");
-      return (response as AdminApiResponseDnasDefinitionReturned).data;
+      return response.data;
     };
 
     /**
@@ -447,7 +483,22 @@ export class TryCpConductor implements IConductor {
         type: "generate_agent_pub_key",
       });
       assert(response.type === "agent_pub_key_generated");
-      return (response as AdminApiResponseAgentPubKeyGenerated).data;
+      return response.data;
+    };
+
+    /**
+     * Revoke an agent key for an app in DPKI.
+     *
+     * @param data - {@link RevokeAgentKeyRequest}
+     * @returns A list of errors of the cells where deletion was unsuccessful.
+     */
+    const revokeAgentKey = async (data: RevokeAgentKeyRequest) => {
+      const response = await this.callAdminApi({
+        type: "revoke_agent_key",
+        data,
+      });
+      assert(response.type === "agent_key_revoked");
+      return response.data;
     };
 
     /**
@@ -462,7 +513,7 @@ export class TryCpConductor implements IConductor {
         data,
       });
       assert(response.type === "app_installed");
-      return (response as AdminApiResponseAppInstalled).data;
+      return response.data;
     };
 
     /**
@@ -477,7 +528,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "app_enabled");
-      return (response as AdminApiResponseAppEnabled).data;
+      return response.data;
     };
 
     /**
@@ -492,7 +543,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "app_disabled");
-      return (response as AdminApiResponseAppDisabled).data;
+      return response.data;
     };
 
     /**
@@ -507,7 +558,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "app_started");
-      return (response as AdminApiResponseAppStarted).data;
+      return response.data;
     };
 
     /**
@@ -522,7 +573,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "app_uninstalled");
-      return (response as AdminApiResponseAppUninstalled).data;
+      return response.data;
     };
 
     /**
@@ -537,7 +588,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "coordinators_updated");
-      return (response as AdminApiResponseCoordinatorsUpdated).data;
+      return response.data;
     };
 
     /**
@@ -552,7 +603,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "apps_listed");
-      return (response as AdminApiResponseAppsListed).data;
+      return response.data;
     };
 
     /**
@@ -565,7 +616,7 @@ export class TryCpConductor implements IConductor {
         type: "list_cell_ids",
       });
       assert(response.type === "cell_ids_listed");
-      return (response as AdminApiResponseCellIdsListed).data;
+      return response.data;
     };
 
     /**
@@ -576,7 +627,7 @@ export class TryCpConductor implements IConductor {
     const listDnas = async () => {
       const response = await this.callAdminApi({ type: "list_dnas" });
       assert(response.type === "dnas_listed");
-      return (response as AdminApiResponseDnasListed).data;
+      return response.data;
     };
 
     /**
@@ -597,7 +648,7 @@ export class TryCpConductor implements IConductor {
       });
       assert(response.type === "app_interface_attached");
       return {
-        port: (response as AdminApiResponseAppInterfaceAttached).data.port,
+        port: response.data.port,
       };
     };
 
@@ -611,7 +662,7 @@ export class TryCpConductor implements IConductor {
         type: "list_app_interfaces",
       });
       assert(response.type === "app_interfaces_listed");
-      return (response as AdminApiResponseAppInterfacesListed).data;
+      return response.data;
     };
 
     /**
@@ -628,7 +679,7 @@ export class TryCpConductor implements IConductor {
         },
       });
       assert(response.type === "agent_info");
-      return (response as AdminApiResponseAgentInfo).data;
+      return response.data;
     };
 
     /**
@@ -686,7 +737,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "full_state_dumped");
-      return (response as AdminApiResponseFullStateDumped).data;
+      return response.data;
     };
 
     /**
@@ -701,7 +752,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "network_stats_dumped");
-      return (response as AdminApiResponseNetworkStatsDumped).data;
+      return response.data;
     };
 
     /**
@@ -716,7 +767,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "storage_info");
-      return (response as AdminApiResponseStorageInfo).data;
+      return response.data;
     };
 
     const issueAppAuthenticationToken = async (
@@ -727,7 +778,7 @@ export class TryCpConductor implements IConductor {
         data: request,
       });
       assert(response.type === "app_authentication_token_issued");
-      return (response as AdminApiResponseAppAuthenticationTokenIssued).data;
+      return response.data;
     };
 
     /**
@@ -801,6 +852,7 @@ export class TryCpConductor implements IConductor {
       listCellIds,
       listDnas,
       registerDna,
+      revokeAgentKey,
       startApp,
       storageInfo,
       uninstallApp,

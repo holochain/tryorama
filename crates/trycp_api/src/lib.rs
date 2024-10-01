@@ -171,8 +171,6 @@ pub enum TryCpServerResponse {
 /// The successful response type for a [Request::DownloadLogs] request.
 #[derive(Debug, serde::Serialize, serde::Deserialize)]
 pub struct DownloadLogsResponse {
-    /// The lair keystore stderr log.
-    pub lair_stderr: Vec<u8>,
     /// The holochain conductor stdout log.
     pub conductor_stdout: Vec<u8>,
     /// The holochain conductor stderr log.

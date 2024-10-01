@@ -11,7 +11,6 @@
     # lib to build a nix package from a rust crate
     crane = {
       url = "github:ipetkov/crane";
-      inputs.nixpkgs.follows = "holonix/nixpkgs";
     };
 
     # Rust toolchain
@@ -44,6 +43,7 @@
                 pkgs.libiconv
                 pkgs.darwin.apple_sdk.frameworks.CoreFoundation
                 pkgs.darwin.apple_sdk.frameworks.Security
+                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
               ])
             ];
 

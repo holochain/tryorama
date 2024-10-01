@@ -1,8 +1,11 @@
-import { Signal, SignalCb, EntryHash, SignalType } from "@holochain/client";
+import { EntryHash, Signal, SignalCb, SignalType } from "@holochain/client";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import { runLocalServices } from "../../src/common.js";
-import { TryCpScenario } from "../../src/trycp/conductor/scenario.js";
+import {
+  ClientPlayers,
+  TryCpScenario,
+} from "../../src/trycp/conductor/scenario.js";
 import {
   TRYCP_SERVER_HOST,
   TRYCP_SERVER_PORT,
@@ -13,6 +16,49 @@ import { dhtSync } from "../../src/util.js";
 import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
+
+test("TryCP Scenario - default player has DPKI enabled", async (t) => {
+  const tryCpServer = await TryCpServer.start();
+
+  const scenario = new TryCpScenario();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
+  const client = await scenario.addClient(SERVER_URL);
+  t.ok(client, "client set up");
+
+  const player = await scenario.addPlayerWithApp(client, {
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  const cellIds = await player.conductor.adminWs().listCellIds();
+  t.equal(cellIds.length, 2, "conductor has 1 app cell and 1 DPKI cell");
+
+  await scenario.cleanUp();
+  await tryCpServer.stop();
+});
+
+test("TryCP Scenario - can create player without DPKI", async (t) => {
+  const tryCpServer = await TryCpServer.start();
+
+  const scenario = new TryCpScenario();
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
+  const client = await scenario.addClient(SERVER_URL);
+  t.ok(client, "client set up");
+
+  scenario.noDpki = true;
+  const player = await scenario.addPlayerWithApp(client, {
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  const cellIds = await player.conductor.adminWs().listCellIds();
+  t.equal(cellIds.length, 1, "conductor has 1 app cell and no DPKI cell");
+
+  await scenario.cleanUp();
+  await tryCpServer.stop();
+});
 
 test("TryCP Scenario - create a conductor", async (t) => {
   const tryCpServer = await TryCpServer.start();
@@ -133,7 +179,11 @@ test("TryCP Scenario - list everything", async (t) => {
   );
 
   const listCellIds = await alice.conductor.adminWs().listCellIds();
-  t.equal(listCellIds.length, 1, "alice's conductor lists 1 cell id");
+  t.equal(
+    listCellIds.length,
+    2,
+    "alice's conductor lists 2 cell ids including DPKI"
+  );
 
   const listedDnas = await alice.conductor.adminWs().listDnas();
   t.equal(listedDnas.length, 1, "alice's conductor lists 1 DNA");
@@ -232,7 +282,6 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
     payload: content,
   });
 
-  await scenario.shareAllAgents();
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent = await bob.cells[0].callZome<typeof content>({
@@ -261,7 +310,6 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
   ]);
-  await scenario.shareAllAgents();
 
   const content = "Before shutdown";
   const createEntryHash = await alice.cells[0].callZome<EntryHash>({
@@ -327,9 +375,14 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
     servicesProcess: scenario.servicesProcess,
     signalingServerUrl: scenario.signalingServerUrl,
   } = await runLocalServices());
-  await scenario.addClientsPlayers(serverUrls, {
-    app: { path: FIXTURE_HAPP_URL.pathname },
-  });
+
+  // As all of the servers are on the same machine, creating players has to be done in sequence to
+  // avoid identical admin ports being assigned multiple times.
+  for (let i = 0; i < numberOfServers; i++) {
+    await scenario.addClientsPlayers([serverUrls[i]], {
+      app: { path: FIXTURE_HAPP_URL.pathname },
+    });
+  }
   t.ok(
     scenario.clients.length === numberOfServers,
     "scenario has expected number of clients"
@@ -345,10 +398,8 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
   await stopAllTryCpServers(tryCpServers);
 });
 
-test("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
+test("TryCP Scenario - connect to multiple clients without DPKI", async (t) => {
   const numberOfServers = 2;
-  const numberOfConductorsPerClient = 2;
-  const numberOfAgentsPerConductor = 3;
   const tryCpServers: TryCpServer[] = [];
   const serverUrls: URL[] = [];
 
@@ -361,16 +412,65 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
   }
 
   const scenario = new TryCpScenario();
+  scenario.noDpki = true;
+  ({
+    servicesProcess: scenario.servicesProcess,
+    signalingServerUrl: scenario.signalingServerUrl,
+  } = await runLocalServices());
+  const clientsPlayers: ClientPlayers[] = [];
+  for (let i = 0; i < numberOfServers; i++) {
+    // As all of the servers are on the same machine, creating players has to be done in sequence to
+    // avoid identical admin ports being assigned multiple times.
+    const clientPlayers = await scenario.addClientsPlayers([serverUrls[i]], {
+      app: { path: FIXTURE_HAPP_URL.pathname },
+    });
+    clientsPlayers.push(...clientPlayers);
+  }
+
+  for (const client of clientsPlayers) {
+    for (const player of client.players) {
+      const cellIds = await player.conductor.adminWs().listCellIds();
+      t.equal(cellIds.length, 1, "conductor has 1 app cell and no DPKI cell");
+    }
+  }
+
+  await scenario.cleanUp();
+  await stopAllTryCpServers(tryCpServers);
+});
+
+test("TryCP Scenario - create multiple agents for multiple conductors for multiple clients", async (t) => {
+  const numberOfServers = 2;
+  const numberOfConductorsPerClient = 1;
+  const numberOfAgentsPerConductor = 3;
+  const tryCpServers: TryCpServer[] = [];
+  const serverUrls: URL[] = [];
+
+  const scenario = new TryCpScenario();
   ({
     servicesProcess: scenario.servicesProcess,
     bootstrapServerUrl: scenario.bootstrapServerUrl,
     signalingServerUrl: scenario.signalingServerUrl,
   } = await runLocalServices());
-  const clientsPlayers = await scenario.addClientsPlayers(serverUrls, {
-    numberOfConductorsPerClient,
-    numberOfAgentsPerConductor,
-    app: { path: FIXTURE_HAPP_URL.pathname },
-  });
+
+  for (let i = 0; i < numberOfServers; i++) {
+    const serverPort = TRYCP_SERVER_PORT + i;
+    const serverUrl = new URL(`ws://${TRYCP_SERVER_HOST}:${serverPort}`);
+    const tryCpServer = await TryCpServer.start(serverPort);
+    tryCpServers.push(tryCpServer);
+    serverUrls.push(serverUrl);
+  }
+
+  // As all of the servers are on the same machine, creating players has to be done in sequence to
+  // avoid identical admin ports being assigned multiple times.
+  const clientsPlayers: ClientPlayers[] = [];
+  for (let i = 0; i < numberOfServers; i++) {
+    const clientPlayers = await scenario.addClientsPlayers([serverUrls[i]], {
+      numberOfConductorsPerClient,
+      numberOfAgentsPerConductor,
+      app: { path: FIXTURE_HAPP_URL.pathname },
+    });
+    clientsPlayers.push(...clientPlayers);
+  }
 
   clientsPlayers.forEach((clientPlayers, i) =>
     t.equal(
@@ -379,8 +479,6 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
       `client ${i + 1} has expected number of players`
     )
   );
-
-  await scenario.shareAllAgents();
 
   // Testing if agents that are installed on two different tryCP servers are able to communicate with each other
   const alice = clientsPlayers[0].players[0];

@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- Support for DPKI in Holochain. DPKI is a Holochain conductor service to manage agent keys. Within a scenario there are two new member properties `noDpki` and `dpkiNetworkSeed`. Set `noDpki` to `true` to disable DPKI for the scenario. If DPKI is enabled, a network seed for the DPKI service can be set with `dpkiNetworkSeed`.
+- Admin API call `RevokeAgentKey` to revoke an agent key. Once revoked, all cells of the app are read-only and the agent can no longer write to it.
 ### Removed
 ### Changed
 ### Fixed

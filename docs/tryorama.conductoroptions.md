@@ -74,6 +74,25 @@ _(Optional)_ The network type the conductor should use.
 </td></tr>
 <tr><td>
 
+[noDpki?](./tryorama.conductoroptions.nodpki.md)
+
+
+</td><td>
+
+
+</td><td>
+
+boolean
+
+
+</td><td>
+
+_(Optional)_ Exclude dpki in the conductor instance.
+
+
+</td></tr>
+<tr><td>
+
 [startup?](./tryorama.conductoroptions.startup.md)
 
 

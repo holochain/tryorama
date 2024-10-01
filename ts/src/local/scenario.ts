@@ -38,6 +38,8 @@ export interface ScenarioOptions {
  */
 export class Scenario {
   private timeout: number | undefined;
+  noDpki: boolean;
+  dpkiNetworkSeed: string;
   networkSeed: string;
   serviceProcess: ChildProcessWithoutNullStreams | undefined;
   bootstrapServerUrl: URL | undefined;
@@ -51,6 +53,8 @@ export class Scenario {
    */
   constructor(options?: ScenarioOptions) {
     this.timeout = options?.timeout;
+    this.noDpki = false;
+    this.dpkiNetworkSeed = uuidv4();
     this.networkSeed = uuidv4();
     this.serviceProcess = undefined;
     this.bootstrapServerUrl = undefined;
@@ -70,6 +74,8 @@ export class Scenario {
     const conductor = await createConductor(this.signalingServerUrl, {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
+      noDpki: this.noDpki,
+      dpkiNetworkSeed: this.noDpki ? "" : this.dpkiNetworkSeed,
     });
     this.conductors.push(conductor);
     return conductor;

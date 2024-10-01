@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Install nix
-        uses: cachix/install-nix-action@v27
+        uses: cachix/install-nix-action@v29
 
       - name: Set up cachix
         uses: cachix/cachix-action@v15
@@ -36,16 +36,19 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: crates/trycp_server/target
-          key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+          key: ${{ runner.os }}-build-trycp-${{ hashFiles('Cargo.lock') }}
 
       - name: Build TryCP server
         run: nix develop -c $SHELL -c "./build-trycp.sh"
+
+      - name: Run TryCP integration tests
+        run: nix develop -c $SHELL -c "cargo test -p trycp_server --release --target-dir crates/trycp_server/target"
 
       - name: Save TryCP build to cache
         uses: actions/cache/save@v4
         with:
           path: crates/trycp_server/target
-          key: ${{ runner.os }}-build-trycp-${{ hashFiles('crates/trycp_server/Cargo.lock') }}
+          key: ${{ runner.os }}-build-trycp-${{ hashFiles('Cargo.lock') }}
 
       - name: Restore test zome build
         uses: actions/cache/restore@v4

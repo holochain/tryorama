@@ -1,19 +1,19 @@
 import {
   ActionHash,
   AppBundleSource,
-  Signal,
-  SignalCb,
+  AppSignal,
   AppWebsocket,
   EntryHash,
+  PreflightResponse,
+  Signal,
+  SignalCb,
   SignalType,
 } from "@holochain/client";
 import assert from "node:assert/strict";
+import { readFileSync } from "node:fs";
 import test from "tape-promise/tape.js";
-import { getZomeCaller } from "../../src";
-import { Scenario, runScenario } from "../../src";
+import { Scenario, dhtSync, getZomeCaller, runScenario } from "../../src";
 import { FIXTURE_HAPP_URL } from "../fixture";
-import { dhtSync } from "../../src";
-import { PreflightResponse } from "@holochain/client/lib/lib";
 
 const TEST_ZOME_NAME = "coordinator";
 
@@ -113,6 +113,88 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
   await scenario.cleanUp();
 });
 
+test("Local Scenario - All players have DPKI enabled", async (t) => {
+  const scenario = new Scenario();
+  await scenario.addPlayersWithApps([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  scenario.conductors.every((conductor) => {
+    const tmpDirPath = conductor.getTmpDirectory();
+    const conductorConfig = readFileSync(
+      tmpDirPath + "/conductor-config.yaml"
+    ).toString();
+    t.assert(
+      conductorConfig.includes("no_dpki: false"),
+      "DPKI enabled in conductor config"
+    );
+  });
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - All players have DPKI disabled", async (t) => {
+  const scenario = new Scenario();
+  scenario.noDpki = true;
+  await scenario.addPlayersWithApps([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  scenario.conductors.every((conductor) => {
+    const tmpDirPath = conductor.getTmpDirectory();
+    const conductorConfig = readFileSync(
+      tmpDirPath + "/conductor-config.yaml"
+    ).toString();
+    t.assert(
+      conductorConfig.includes("no_dpki: true"),
+      "DPKI disabled in conductor config"
+    );
+  });
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - All players have a custom DPKI network seed", async (t) => {
+  const scenario = new Scenario();
+  scenario.dpkiNetworkSeed = "tryorama-dpki-test";
+  await scenario.addPlayersWithApps([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  scenario.conductors.every((conductor) => {
+    const tmpDirPath = conductor.getTmpDirectory();
+    const conductorConfig = readFileSync(
+      tmpDirPath + "/conductor-config.yaml"
+    ).toString();
+    t.assert(
+      conductorConfig.includes(`network_seed: ${scenario.dpkiNetworkSeed}`),
+      "default DPKI network seed set in conductor config"
+    );
+  });
+
+  await scenario.cleanUp();
+});
+
+test("Local Scenario - All players have a random DPKI network seed", async (t) => {
+  const scenario = new Scenario();
+  await scenario.addPlayersWithApps([
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+  ]);
+  scenario.conductors.every((conductor) => {
+    const tmpDirPath = conductor.getTmpDirectory();
+    const conductorConfig = readFileSync(
+      tmpDirPath + "/conductor-config.yaml"
+    ).toString();
+    t.assert(
+      conductorConfig.includes(`network_seed: ${scenario.dpkiNetworkSeed}`),
+      "DPKI network seed set in conductor config"
+    );
+  });
+
+  await scenario.cleanUp();
+});
+
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   // The wrapper takes care of creating a scenario and shutting down or deleting
   // all conductors involved in the test scenario.
@@ -201,7 +283,7 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
 
   let signalHandlerAlice: SignalCb | undefined;
-  const signalReceivedAlice = new Promise<Signal>((resolve) => {
+  const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
     signalHandlerAlice = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);
@@ -209,7 +291,7 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   });
 
   let signalHandlerBob: SignalCb | undefined;
-  const signalReceivedBob = new Promise<Signal>((resolve) => {
+  const signalReceivedBob = new Promise<AppSignal>((resolve) => {
     signalHandlerBob = (signal: Signal) => {
       assert(SignalType.App in signal);
       resolve(signal[SignalType.App]);

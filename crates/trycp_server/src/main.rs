@@ -41,18 +41,16 @@ use trycp_api::*;
 
 // NOTE: don't change without also changing in crates/holochain/src/main.rs
 const CONDUCTOR_MAGIC_STRING: &str = "Conductor ready.";
-const LAIR_MAGIC_STRING: &str = "# lair-keystore running #";
 
 const CONDUCTOR_CONFIG_FILENAME: &str = "conductor-config.yml";
 const LAIR_PASSPHRASE: &str = "passphrase";
-const LAIR_STDERR_LOG_FILENAME: &str = "lair-stderr.txt";
 const CONDUCTOR_STDOUT_LOG_FILENAME: &str = "conductor-stdout.txt";
 const CONDUCTOR_STDERR_LOG_FILENAME: &str = "conductor-stderr.txt";
 const PLAYERS_DIR_PATH: &str = "/tmp/trycp/players";
 const DNA_DIR_PATH: &str = "/tmp/trycp/dnas";
-const FIRST_ADMIN_PORT: u16 = 9100;
+const ADMIN_PORT_RANGE: std::ops::Range<u16> = 9100..9200;
 
-static NEXT_ADMIN_PORT: AtomicU16 = AtomicU16::new(FIRST_ADMIN_PORT);
+static NEXT_ADMIN_PORT: AtomicU16 = AtomicU16::new(ADMIN_PORT_RANGE.start);
 static PLAYERS: Lazy<RwLock<HashMap<String, Player>>> = Lazy::new(RwLock::default);
 
 #[tokio::main]
@@ -105,7 +103,6 @@ struct Player {
 }
 
 struct PlayerProcesses {
-    lair: Child,
     holochain: Child,
 }
 
@@ -224,11 +221,9 @@ async fn ws_message(
                 .await
                 .map_err(|e| e.to_string()),
         ),
-        Request::Reset => spawn_blocking(move || {
-            serialize_resp(request_id, reset::reset().map_err(|e| e.to_string()))
-        })
-        .await
-        .unwrap(),
+        Request::Reset => spawn_blocking(move || serialize_resp(request_id, reset::reset()))
+            .await
+            .unwrap(),
         Request::CallAdminInterface { id, message } => serialize_resp(
             request_id,
             admin_call::admin_call(id, message)
@@ -306,8 +301,6 @@ fn player_config_exists(id: &str) -> bool {
 enum KillError {
     #[snafu(display("Could not kill holochain: {}", source))]
     KillHolochain { source: nix::Error },
-    #[snafu(display("Could not kill lair: {}", source))]
-    KillLair { source: nix::Error },
 }
 
 fn kill_player(
@@ -324,8 +317,6 @@ fn kill_player(
 
     signal::kill(Pid::from_raw(player.holochain.id() as i32), signal).context(KillHolochain)?;
     player.holochain.wait().unwrap();
-    signal::kill(Pid::from_raw(player.lair.id() as i32), signal).context(KillLair)?;
-    player.lair.wait().unwrap();
 
     *player_cell = None;
     Ok(())
