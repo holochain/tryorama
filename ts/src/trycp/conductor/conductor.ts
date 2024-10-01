@@ -45,6 +45,7 @@ import {
   StorageInfoRequest,
   UninstallAppRequest,
   UpdateCoordinatorsRequest,
+  RevokeAgentKeyRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
@@ -486,6 +487,21 @@ export class TryCpConductor implements IConductor {
     };
 
     /**
+     * Revoke an agent key for an app in DPKI.
+     *
+     * @param data - {@link RevokeAgentKeyRequest}
+     * @returns A list of errors of the cells where deletion was unsuccessful.
+     */
+    const revokeAgentKey = async (data: RevokeAgentKeyRequest) => {
+      const response = await this.callAdminApi({
+        type: "revoke_agent_key",
+        data,
+      });
+      assert(response.type === "agent_key_revoked");
+      return response.data;
+    };
+
+    /**
      * Install an app.
      *
      * @param data - {@link InstallAppBundleRequest}.
@@ -836,6 +852,7 @@ export class TryCpConductor implements IConductor {
       listCellIds,
       listDnas,
       registerDna,
+      revokeAgentKey,
       startApp,
       storageInfo,
       uninstallApp,

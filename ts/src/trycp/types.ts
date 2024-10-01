@@ -43,6 +43,8 @@ import {
   NetworkInfoResponse,
   ProvideMemproofsRequest,
   RegisterDnaRequest,
+  RevokeAgentKeyRequest,
+  RevokeAgentKeyResponse,
   StartAppRequest,
   StartAppResponse,
   StorageInfoRequest,
@@ -557,6 +559,7 @@ export type RequestAdminInterfaceMessageType =
   | "list_cell_ids"
   | "list_dnas"
   | "register_dna"
+  | "revoke_agent_key"
   | "start_app"
   | "storage_info"
   | "uninstall_app"
@@ -586,6 +589,7 @@ export interface RequestAdminInterfaceMessage {
     | InstallAppRequest
     | ListAppsRequest
     | RegisterDnaRequest
+    | RevokeAgentKeyRequest
     | StartAppRequest
     | StorageInfoRequest
     | UninstallAppRequest
@@ -619,6 +623,7 @@ export type AdminApiResponse =
   | AdminApiResponseDnaRegistered
   | AdminApiResponseFullStateDumped
   | AdminApiResponseNetworkStatsDumped
+  | AdminApiResponseAgentKeyRevoked
   | AdminApiResponseStateDumped
   | AdminApiResponseStorageInfo
   | AdminApiResponseAppAuthenticationTokenIssued
@@ -711,6 +716,14 @@ export interface AdminApiResponseZomeCallCapabilityGranted {
 export interface AdminApiResponseAgentPubKeyGenerated {
   type: "agent_pub_key_generated";
   data: HoloHash;
+}
+
+/**
+ * @public
+ */
+export interface AdminApiResponseAgentKeyRevoked {
+  type: "agent_key_revoked";
+  data: RevokeAgentKeyResponse;
 }
 
 /**

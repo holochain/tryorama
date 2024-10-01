@@ -9,6 +9,7 @@ import {
   EntryHash,
   SignalType,
   GrantedFunctionsType,
+  RevokeAgentKeyResponse,
 } from "@holochain/client";
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
@@ -69,6 +70,52 @@ test("TryCP Conductor - startup DPKI disabled conductor", async (t) => {
     .enableApp({ installed_app_id: appInfo.installed_app_id });
   const cellIds = await conductor.adminWs().listCellIds();
   t.equal(cellIds.length, 1, "Conductor contains only the app cell");
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
+test("TryCP Conductor - revoke agent key", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client);
+  const aliceHapp = await conductor.installApp({
+    path: FIXTURE_HAPP_URL.pathname,
+  });
+  const adminWs = conductor.adminWs();
+  const { port } = await adminWs.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: aliceHapp.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
+  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceHapp);
+
+  // Alice can create an entry before revoking her key.
+  const entryContent = "test-content";
+  const createEntryResponse: EntryHash = await alice.cells[0].callZome({
+    zome_name: "coordinator",
+    fn_name: "create",
+    payload: entryContent,
+  });
+  t.ok(createEntryResponse, "entry created successfully");
+
+  const response: RevokeAgentKeyResponse = await conductor
+    .adminWs()
+    .revokeAgentKey({ app_id: alice.appId, agent_key: alice.agentPubKey });
+  t.deepEqual(response, []);
+
+  // After revoking her key, Alice should no longer be able to create an entry.
+  t.rejects(
+    alice.cells[0].callZome({
+      zome_name: "coordinator",
+      fn_name: "create",
+      payload: entryContent,
+    })
+  );
 
   await stopLocalServices(servicesProcess);
   await client.cleanUp();
