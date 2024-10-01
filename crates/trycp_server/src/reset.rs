@@ -6,7 +6,7 @@ use crate::{
     app_interface, kill_player, ADMIN_PORT_RANGE, NEXT_ADMIN_PORT, PLAYERS, PLAYERS_DIR_PATH,
 };
 
-pub(crate) fn reset() -> Result<(), ()> {
+pub(crate) fn reset() -> Result<(), String> {
     let (players, app_connections, admin_connections) = {
         let mut players_guard = PLAYERS.write();
         let mut app_connections_guard =

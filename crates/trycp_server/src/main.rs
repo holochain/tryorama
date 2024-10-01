@@ -221,11 +221,9 @@ async fn ws_message(
                 .await
                 .map_err(|e| e.to_string()),
         ),
-        Request::Reset => spawn_blocking(move || {
-            serialize_resp(request_id, reset::reset().map_err(|e| e.to_string()))
-        })
-        .await
-        .unwrap(),
+        Request::Reset => spawn_blocking(move || serialize_resp(request_id, reset::reset()))
+            .await
+            .unwrap(),
         Request::CallAdminInterface { id, message } => serialize_resp(
             request_id,
             admin_call::admin_call(id, message)
