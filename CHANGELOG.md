@@ -5,11 +5,17 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
-- Support for DPKI in Holochain. DPKI is a Holochain conductor service to manage agent keys. Within a scenario there are two new member properties `noDpki` and `dpkiNetworkSeed`. Set `noDpki` to `true` to disable DPKI for the scenario. If DPKI is enabled, a network seed for the DPKI service can be set with `dpkiNetworkSeed`.
-- Admin API call `RevokeAgentKey` to revoke an agent key. Once revoked, all cells of the app are read-only and the agent can no longer write to it.
 ### Removed
 ### Changed
 ### Fixed
+
+## 2024-10-02: v0.17.0-dev.6
+### Added
+- Support for DPKI in Holochain. DPKI is a Holochain conductor service to manage agent keys. Within a scenario there are two new member properties `noDpki` and `dpkiNetworkSeed`. Set `noDpki` to `true` to disable DPKI for the scenario. If DPKI is enabled, a network seed for the DPKI service can be set with `dpkiNetworkSeed`.
+- Admin API call `RevokeAgentKey` to revoke an agent key. Once revoked, all cells of the app are read-only and the agent can no longer write to it.
+### Fixed
+- TryCP: Conductor startup failed silently. Errors are returned now, conductor startup ensured and conductor process only kept alive if startup was successful.
+- TryCP: Admin port assignment did not check if TCP ports were actually free.
 
 ## 2024-08-13: v0.17.0-dev.5
 ### Added
