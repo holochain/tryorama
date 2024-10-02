@@ -32,42 +32,27 @@ jobs:
       - name: Build Nix packages
         run: nix develop -c $SHELL -c "echo Nix packages built"
 
-      - name: Restore TryCP server build
-        uses: actions/cache/restore@v4
-        with:
-          path: crates/trycp_server/target
-          key: ${{ runner.os }}-build-trycp-${{ hashFiles('Cargo.lock') }}
-
-      - name: Build TryCP server
-        run: nix develop -c $SHELL -c "./build-trycp.sh"
-
-      - name: Run TryCP integration tests
-        run: nix develop -c $SHELL -c "cargo test -p trycp_server --release --target-dir crates/trycp_server/target"
-
-      - name: Save TryCP build to cache
-        uses: actions/cache/save@v4
-        with:
-          path: crates/trycp_server/target
-          key: ${{ runner.os }}-build-trycp-${{ hashFiles('Cargo.lock') }}
-
-      - name: Restore test zome build
+      - name: Restore cargo cache
         uses: actions/cache/restore@v4
         with:
           path: |
             .cargo
             target
-          key: ${{ runner.os }}-build-test-zomes-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-cache-${{ hashFiles('Cargo.lock') }}
+
+      - name: Run TryCP integration tests
+        run: nix develop -c $SHELL -c "cargo test -p trycp_server --release"
 
       - name: Build test zomes
         run: nix develop -c $SHELL -c "./build-fixture.sh"
 
-      - name: Save test zome build to cache
+      - name: Save cargo cache
         uses: actions/cache/save@v4
         with:
           path: |
             .cargo
             target
-          key: ${{ runner.os }}-build-test-zomes-${{ hashFiles('Cargo.lock') }}
+          key: ${{ runner.os }}-cargo-cache-${{ hashFiles('Cargo.lock') }}
 
       - name: Install JS packages
         run: nix develop -c $SHELL -c "npm ci"
