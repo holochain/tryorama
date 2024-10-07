@@ -28,19 +28,15 @@ export class TryCpServer {
   private serverProcess: ChildProcessWithoutNullStreams;
 
   private constructor(port: number) {
-    this.serverProcess = spawn(
-      "cargo",
-      [
-        "run",
-        "--release",
-        "--target-dir",
-        "target",
-        "--",
-        "-p",
-        port.toString(),
-      ],
-      { cwd: "crates/trycp_server" }
-    );
+    this.serverProcess = spawn("cargo", [
+      "run",
+      "-p",
+      "trycp_server",
+      "--release",
+      "--",
+      "-p",
+      port.toString(),
+    ]);
   }
 
   /**

@@ -131,9 +131,9 @@ async fn multiple_conductors_on_same_machine_are_assigned_different_admin_ports(
 async fn start_server(port: u16) -> (tokio::process::Child, Receiver<String>) {
     let mut server = tokio::process::Command::new("cargo")
         .arg("run")
+        .arg("-p")
+        .arg("trycp_server")
         .arg("--release")
-        .arg("--target-dir")
-        .arg("crates/trycp_server/target")
         .arg("--")
         .arg("-p")
         .arg(port.to_string())
