@@ -37,7 +37,7 @@ trycp_api = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-holochain_conductor_api = "0.4.0-dev.26"
+holochain_conductor_api = "0.4.0-rc.0"
 rand = "0.8"
 serde_yaml = "0.9"
 trycp_client = { path = "../trycp_client" }

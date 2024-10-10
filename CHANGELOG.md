@@ -7,6 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- Update dependencies to Holochain v0.4.0-rc.0
 ### Fixed
 
 ## 2024-10-02: v0.17.0-dev.6
