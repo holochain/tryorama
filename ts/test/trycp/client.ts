@@ -232,17 +232,23 @@ test("TryCP Client - shut down", async (t) => {
   const client = await createTryCpClient();
   const conductor1 = await client.addConductor();
   const conductor2 = await client.addConductor();
-  t.doesNotReject(
+  await t.doesNotReject(
     conductor1.adminWs().generateAgentPubKey,
     "conductor 1 responds"
   );
-  t.doesNotReject(
+  await t.doesNotReject(
     conductor2.adminWs().generateAgentPubKey,
     "conductor 2 responds"
   );
   await client.shutDownConductors();
-  t.rejects(conductor1.adminWs().generateAgentPubKey, "conductor 1 is down");
-  t.rejects(conductor2.adminWs().generateAgentPubKey, "conductor 2 is down");
+  await t.rejects(
+    conductor1.adminWs().generateAgentPubKey,
+    "conductor 1 is down"
+  );
+  await t.rejects(
+    conductor2.adminWs().generateAgentPubKey,
+    "conductor 2 is down"
+  );
 
   await client.cleanUp();
   await localTryCpServer.stop();
