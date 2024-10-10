@@ -36,6 +36,25 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
+[dpkiNetworkSeed?](./tryorama.trycpconductoroptions.dpkinetworkseed.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ Set a DPKI network seed.
+
+
+</td></tr>
+<tr><td>
+
 [id?](./tryorama.trycpconductoroptions.id.md)
 
 
@@ -89,9 +108,9 @@ boolean
 
 </td><td>
 
-_(Optional)_ Exclude dpki in the conductor instance.
+_(Optional)_ Disable DPKI in the conductor instance.
 
-default: false // defaults to using the dpki
+default: false // defaults to using DPKI
 
 
 </td></tr>

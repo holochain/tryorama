@@ -4,7 +4,7 @@
 
 ## ConductorOptions.noDpki property
 
-Exclude dpki in the conductor instance.
+Disable DPKI in the conductor instance.
 
 **Signature:**
 

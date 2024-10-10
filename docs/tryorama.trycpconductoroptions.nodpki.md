@@ -4,9 +4,9 @@
 
 ## TryCpConductorOptions.noDpki property
 
-Exclude dpki in the conductor instance.
+Disable DPKI in the conductor instance.
 
-default: false // defaults to using the dpki
+default: false // defaults to using DPKI
 
 **Signature:**
 

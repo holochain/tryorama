@@ -55,6 +55,27 @@ _(Optional)_ A bootstrap server URL for peers to discover each other.
 </td></tr>
 <tr><td>
 
+[dpkiNetworkSeed?](./tryorama.conductoroptions.dpkinetworkseed.md)
+
+
+</td><td>
+
+
+</td><td>
+
+NetworkSeed
+
+
+</td><td>
+
+_(Optional)_ Set a DPKI network seed in the conductor instance.
+
+Defaults to "deepkey-test".
+
+
+</td></tr>
+<tr><td>
+
 [networkType?](./tryorama.conductoroptions.networktype.md)
 
 
@@ -87,7 +108,7 @@ boolean
 
 </td><td>
 
-_(Optional)_ Exclude dpki in the conductor instance.
+_(Optional)_ Disable DPKI in the conductor instance.
 
 
 </td></tr>
