@@ -107,23 +107,6 @@ URL \| undefined
 </td></tr>
 <tr><td>
 
-[dpkiNetworkSeed](./tryorama.trycpscenario.dpkinetworkseed.md)
-
-
-</td><td>
-
-
-</td><td>
-
-string
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [network\_seed](./tryorama.trycpscenario.network_seed.md)
 
 
@@ -133,23 +116,6 @@ string
 </td><td>
 
 string
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
-[noDpki](./tryorama.trycpscenario.nodpki.md)
-
-
-</td><td>
-
-
-</td><td>
-
-boolean
 
 
 </td><td>

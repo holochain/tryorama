@@ -74,8 +74,6 @@ export class Scenario {
     const conductor = await createConductor(this.signalingServerUrl, {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
-      noDpki: this.noDpki,
-      dpkiNetworkSeed: this.noDpki ? "" : this.dpkiNetworkSeed,
     });
     this.conductors.push(conductor);
     return conductor;
