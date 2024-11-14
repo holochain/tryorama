@@ -33,7 +33,7 @@ async fn multiple_conductors_on_same_machine_are_assigned_different_admin_ports(
                     partial_config: "dpki:
     dna_path: ~
     network_seed: ~
-    no_dpki: true`"
+    no_dpki: true"
                         .to_string(),
                 },
                 ONE_MIN,
@@ -87,7 +87,7 @@ async fn multiple_conductors_on_same_machine_are_assigned_different_admin_ports(
                     partial_config: "dpki:
     dna_path: ~
     network_seed: ~
-    no_dpki: true`"
+    no_dpki: true"
                         .to_string(),
                 },
                 ONE_MIN,
