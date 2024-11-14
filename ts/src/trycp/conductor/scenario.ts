@@ -83,8 +83,8 @@ export interface ClientPlayers {
  * @public
  */
 export class TryCpScenario {
-  noDpki: boolean;
-  dpkiNetworkSeed: string;
+  private noDpki: boolean;
+  private dpkiNetworkSeed: string;
   network_seed: string;
   servicesProcess: ChildProcessWithoutNullStreams | undefined;
   bootstrapServerUrl: URL | undefined;
@@ -92,7 +92,7 @@ export class TryCpScenario {
   clients: TryCpClient[];
 
   constructor() {
-    this.noDpki = false;
+    this.noDpki = true;
     this.dpkiNetworkSeed = uuidv4();
     this.network_seed = uuidv4();
     this.clients = [];
@@ -144,9 +144,9 @@ export class TryCpScenario {
           // Conductors must be created in sequence to avoid identical admin ports being assigned multiple times.
           const conductor = await client.addConductor({
             partialConfig: options?.partialConfig,
-            noDpki: this.noDpki,
+            // noDpki: this.noDpki,
             // Set a common unique DPKI network seed.
-            dpkiNetworkSeed: this.noDpki ? "" : this.dpkiNetworkSeed,
+            // dpkiNetworkSeed: this.noDpki ? "" : this.dpkiNetworkSeed,
           });
           const app = options.app;
           let appOptions;
@@ -217,8 +217,8 @@ export class TryCpScenario {
   ) {
     const conductor = await tryCpClient.addConductor({
       logLevel: options?.logLevel,
-      noDpki: this.noDpki,
-      dpkiNetworkSeed: this.dpkiNetworkSeed,
+      // noDpki: this.noDpki,
+      // dpkiNetworkSeed: this.dpkiNetworkSeed,
     });
     options = {
       ...options,

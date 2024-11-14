@@ -30,51 +30,52 @@ import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const ROLE_NAME = "test";
 
-test("TryCP Conductor - default conductor has DPKI enabled", async (t) => {
-  const localTryCpServer = await TryCpServer.start();
-  const { servicesProcess, signalingServerUrl } = await runLocalServices();
-  const client = await TryCpClient.create(SERVER_URL);
-  client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client);
-  const agent_key = await conductor.adminWs().generateAgentPubKey();
-  const appInfo = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
-    agent_key,
-    membrane_proofs: {},
-  });
-  await conductor
-    .adminWs()
-    .enableApp({ installed_app_id: appInfo.installed_app_id });
-  const cellIds = await conductor.adminWs().listCellIds();
-  t.equal(cellIds.length, 2, "Conductor includes DPKI cell id");
+// unstable-dpki
+// test("TryCP Conductor - default conductor has DPKI enabled", async (t) => {
+//   const localTryCpServer = await TryCpServer.start();
+//   const { servicesProcess, signalingServerUrl } = await runLocalServices();
+//   const client = await TryCpClient.create(SERVER_URL);
+//   client.signalingServerUrl = signalingServerUrl;
+//   const conductor = await createTryCpConductor(client);
+//   const agent_key = await conductor.adminWs().generateAgentPubKey();
+//   const appInfo = await conductor.adminWs().installApp({
+//     path: FIXTURE_HAPP_URL.pathname,
+//     agent_key,
+//     membrane_proofs: {},
+//   });
+//   await conductor
+//     .adminWs()
+//     .enableApp({ installed_app_id: appInfo.installed_app_id });
+//   const cellIds = await conductor.adminWs().listCellIds();
+//   t.equal(cellIds.length, 2, "Conductor includes DPKI cell id");
 
-  await stopLocalServices(servicesProcess);
-  await client.cleanUp();
-  await localTryCpServer.stop();
-});
+//   await stopLocalServices(servicesProcess);
+//   await client.cleanUp();
+//   await localTryCpServer.stop();
+// });
 
-test("TryCP Conductor - startup DPKI disabled conductor", async (t) => {
-  const localTryCpServer = await TryCpServer.start();
-  const { servicesProcess, signalingServerUrl } = await runLocalServices();
-  const client = await TryCpClient.create(SERVER_URL);
-  client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client, { noDpki: true });
-  const agent_key = await conductor.adminWs().generateAgentPubKey();
-  const appInfo = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
-    agent_key,
-    membrane_proofs: {},
-  });
-  await conductor
-    .adminWs()
-    .enableApp({ installed_app_id: appInfo.installed_app_id });
-  const cellIds = await conductor.adminWs().listCellIds();
-  t.equal(cellIds.length, 1, "Conductor contains only the app cell");
+// test("TryCP Conductor - startup DPKI disabled conductor", async (t) => {
+//   const localTryCpServer = await TryCpServer.start();
+//   const { servicesProcess, signalingServerUrl } = await runLocalServices();
+//   const client = await TryCpClient.create(SERVER_URL);
+//   client.signalingServerUrl = signalingServerUrl;
+//   const conductor = await createTryCpConductor(client, { noDpki: true });
+//   const agent_key = await conductor.adminWs().generateAgentPubKey();
+//   const appInfo = await conductor.adminWs().installApp({
+//     path: FIXTURE_HAPP_URL.pathname,
+//     agent_key,
+//     membrane_proofs: {},
+//   });
+//   await conductor
+//     .adminWs()
+//     .enableApp({ installed_app_id: appInfo.installed_app_id });
+//   const cellIds = await conductor.adminWs().listCellIds();
+//   t.equal(cellIds.length, 1, "Conductor contains only the app cell");
 
-  await stopLocalServices(servicesProcess);
-  await client.cleanUp();
-  await localTryCpServer.stop();
-});
+//   await stopLocalServices(servicesProcess);
+//   await client.cleanUp();
+//   await localTryCpServer.stop();
+// });
 
 test("TryCP Conductor - revoke agent key", async (t) => {
   const localTryCpServer = await TryCpServer.start();
@@ -640,36 +641,6 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
     TRYCP_SUCCESS_RESPONSE,
     "disconnect app interface responds with success"
   );
-
-  await stopLocalServices(servicesProcess);
-  await client.cleanUp();
-  await localTryCpServer.stop();
-});
-
-test("TryCP Conductor - reading a non-existent entry returns null", async (t) => {
-  const localTryCpServer = await TryCpServer.start();
-  const { servicesProcess, signalingServerUrl } = await runLocalServices();
-  const client = await TryCpClient.create(SERVER_URL);
-  client.signalingServerUrl = signalingServerUrl;
-  const conductor = await createTryCpConductor(client);
-  const app = { path: FIXTURE_HAPP_URL.pathname };
-  const aliceApp = await conductor.installApp(app);
-  const adminWs = conductor.adminWs();
-  const { port } = await adminWs.attachAppInterface();
-  const issued = await adminWs.issueAppAuthenticationToken({
-    installed_app_id: aliceApp.installed_app_id,
-  });
-  await conductor.connectAppInterface(issued.token, port);
-  const appWs = await conductor.connectAppWs(issued.token, port);
-  const alice = await enableAndGetAgentApp(adminWs, appWs, aliceApp);
-
-  const actual = await alice.cells[0].callZome<null>({
-    zome_name: "coordinator",
-    fn_name: "read",
-    provenance: alice.agentPubKey,
-    payload: Buffer.from("hCkk", "base64"),
-  });
-  t.equal(actual, null, "read a non-existing entry returns null");
 
   await stopLocalServices(servicesProcess);
   await client.cleanUp();

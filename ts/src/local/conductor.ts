@@ -62,15 +62,19 @@ export interface ConductorOptions {
 
   /**
    * Disable DPKI in the conductor instance.
+   *
+   * unstable
    */
-  noDpki?: boolean;
+  // noDpki?: boolean;
 
   /**
    * Set a DPKI network seed in the conductor instance.
    *
    * Defaults to "deepkey-test".
+   *
+   * unstable
    */
-  dpkiNetworkSeed?: NetworkSeed;
+  // dpkiNetworkSeed?: NetworkSeed;
 
   /**
    * Timeout for requests to Admin and App API.
@@ -85,11 +89,7 @@ export interface ConductorOptions {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  | "bootstrapServerUrl"
-  | "networkType"
-  | "noDpki"
-  | "dpkiNetworkSeed"
-  | "timeout"
+  "bootstrapServerUrl" | "networkType" | "timeout"
 >;
 
 /**
@@ -107,8 +107,8 @@ export const createConductor = async (
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
     "networkType",
-    "noDpki",
-    "dpkiNetworkSeed",
+    // "noDpki",
+    // "dpkiNetworkSeed",
     "timeout",
   ]);
   const conductor = await Conductor.create(
@@ -152,12 +152,6 @@ export class Conductor implements IConductor {
     signalingServerUrl: URL,
     options?: CreateConductorOptions
   ) {
-    if (options?.noDpki && options?.dpkiNetworkSeed) {
-      throw new Error(
-        "DPKI network seed can not be set when DPKI is disabled. Enable DPKI or do not provide a DPKI network seed."
-      );
-    }
-
     const networkType = options?.networkType ?? NetworkType.WebRtc;
     if (options?.bootstrapServerUrl && networkType !== NetworkType.WebRtc) {
       throw new Error(
@@ -166,12 +160,6 @@ export class Conductor implements IConductor {
     }
 
     const args = ["sandbox", "--piped", "create", "--in-process-lair"];
-    if (options?.noDpki) {
-      args.push("--no-dpki");
-    }
-    if (options?.dpkiNetworkSeed) {
-      args.push("--dpki-network-seed", options.dpkiNetworkSeed);
-    }
     args.push("network");
     if (options?.bootstrapServerUrl) {
       args.push("--bootstrap", options.bootstrapServerUrl.href);

@@ -144,13 +144,17 @@ export interface TryCpConductorOptions {
    * Disable DPKI in the conductor instance.
    *
    * default: false // defaults to using DPKI
+   *
+   * unstable
    */
-  noDpki?: boolean;
+  // noDpki?: boolean;
 
   /**
    * Set a DPKI network seed.
+   *
+   * unstable
    */
-  dpkiNetworkSeed?: string;
+  // dpkiNetworkSeed?: string;
 
   /**
    * Start up conductor after creation.
@@ -185,11 +189,7 @@ export const createTryCpConductor = async (
   const conductor = new TryCpConductor(tryCpClient, options?.id);
   if (options?.startup !== false) {
     // configure and startup conductor by default
-    await conductor.configure(
-      options?.partialConfig,
-      options?.noDpki,
-      options?.dpkiNetworkSeed
-    );
+    await conductor.configure(options?.partialConfig, true, undefined);
     await conductor.startUp({ logLevel: options?.logLevel });
   }
   return conductor;
@@ -210,7 +210,7 @@ export class TryCpConductor implements IConductor {
   }
 
   static defaultPartialConfig() {
-    return getPartialConfig();
+    return getPartialConfig(true);
   }
 
   /**
