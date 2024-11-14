@@ -113,87 +113,88 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
   await scenario.cleanUp();
 });
 
-test("Local Scenario - All players have DPKI enabled", async (t) => {
-  const scenario = new Scenario();
-  await scenario.addPlayersWithApps([
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-  ]);
-  scenario.conductors.every((conductor) => {
-    const tmpDirPath = conductor.getTmpDirectory();
-    const conductorConfig = readFileSync(
-      tmpDirPath + "/conductor-config.yaml"
-    ).toString();
-    t.assert(
-      conductorConfig.includes("no_dpki: false"),
-      "DPKI enabled in conductor config"
-    );
-  });
+// unstable-dpki
+// test("Local Scenario - All players have DPKI enabled", async (t) => {
+//   const scenario = new Scenario();
+//   await scenario.addPlayersWithApps([
+//     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+//     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+//   ]);
+//   scenario.conductors.every((conductor) => {
+//     const tmpDirPath = conductor.getTmpDirectory();
+//     const conductorConfig = readFileSync(
+//       tmpDirPath + "/conductor-config.yaml"
+//     ).toString();
+//     t.assert(
+//       conductorConfig.includes("no_dpki: false"),
+//       "DPKI enabled in conductor config"
+//     );
+//   });
 
-  await scenario.cleanUp();
-});
+//   await scenario.cleanUp();
+// });
 
-test("Local Scenario - All players have DPKI disabled", async (t) => {
-  const scenario = new Scenario();
-  scenario.noDpki = true;
-  await scenario.addPlayersWithApps([
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-  ]);
-  scenario.conductors.every((conductor) => {
-    const tmpDirPath = conductor.getTmpDirectory();
-    const conductorConfig = readFileSync(
-      tmpDirPath + "/conductor-config.yaml"
-    ).toString();
-    t.assert(
-      conductorConfig.includes("no_dpki: true"),
-      "DPKI disabled in conductor config"
-    );
-  });
+// test("Local Scenario - All players have DPKI disabled", async (t) => {
+//   const scenario = new Scenario();
+//   scenario.noDpki = true;
+//   await scenario.addPlayersWithApps([
+//     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+//     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+//   ]);
+//   scenario.conductors.every((conductor) => {
+//     const tmpDirPath = conductor.getTmpDirectory();
+//     const conductorConfig = readFileSync(
+//       tmpDirPath + "/conductor-config.yaml"
+//     ).toString();
+//     t.assert(
+//       conductorConfig.includes("no_dpki: true"),
+//       "DPKI disabled in conductor config"
+//     );
+//   });
 
-  await scenario.cleanUp();
-});
+//   await scenario.cleanUp();
+// });
 
-test("Local Scenario - All players have a custom DPKI network seed", async (t) => {
-  const scenario = new Scenario();
-  scenario.dpkiNetworkSeed = "tryorama-dpki-test";
-  await scenario.addPlayersWithApps([
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-  ]);
-  scenario.conductors.every((conductor) => {
-    const tmpDirPath = conductor.getTmpDirectory();
-    const conductorConfig = readFileSync(
-      tmpDirPath + "/conductor-config.yaml"
-    ).toString();
-    t.assert(
-      conductorConfig.includes(`network_seed: ${scenario.dpkiNetworkSeed}`),
-      "default DPKI network seed set in conductor config"
-    );
-  });
+// test("Local Scenario - All players have a custom DPKI network seed", async (t) => {
+//   const scenario = new Scenario();
+//   scenario.dpkiNetworkSeed = "tryorama-dpki-test";
+//   await scenario.addPlayersWithApps([
+//     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+//     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+//   ]);
+//   scenario.conductors.every((conductor) => {
+//     const tmpDirPath = conductor.getTmpDirectory();
+//     const conductorConfig = readFileSync(
+//       tmpDirPath + "/conductor-config.yaml"
+//     ).toString();
+//     t.assert(
+//       conductorConfig.includes(`network_seed: ${scenario.dpkiNetworkSeed}`),
+//       "default DPKI network seed set in conductor config"
+//     );
+//   });
 
-  await scenario.cleanUp();
-});
+//   await scenario.cleanUp();
+// });
 
-test("Local Scenario - All players have a random DPKI network seed", async (t) => {
-  const scenario = new Scenario();
-  await scenario.addPlayersWithApps([
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-  ]);
-  scenario.conductors.every((conductor) => {
-    const tmpDirPath = conductor.getTmpDirectory();
-    const conductorConfig = readFileSync(
-      tmpDirPath + "/conductor-config.yaml"
-    ).toString();
-    t.assert(
-      conductorConfig.includes(`network_seed: ${scenario.dpkiNetworkSeed}`),
-      "DPKI network seed set in conductor config"
-    );
-  });
+// test("Local Scenario - All players have a random DPKI network seed", async (t) => {
+//   const scenario = new Scenario();
+//   await scenario.addPlayersWithApps([
+//     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+//     { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+//   ]);
+//   scenario.conductors.every((conductor) => {
+//     const tmpDirPath = conductor.getTmpDirectory();
+//     const conductorConfig = readFileSync(
+//       tmpDirPath + "/conductor-config.yaml"
+//     ).toString();
+//     t.assert(
+//       conductorConfig.includes(`network_seed: ${scenario.dpkiNetworkSeed}`),
+//       "DPKI network seed set in conductor config"
+//     );
+//   });
 
-  await scenario.cleanUp();
-});
+//   await scenario.cleanUp();
+// });
 
 test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   // The wrapper takes care of creating a scenario and shutting down or deleting
@@ -384,73 +385,74 @@ test("Local Scenario - runScenario - call zome by role name", async (t) => {
   });
 });
 
-test("Local Scenario - countersigning", async (t) => {
-  await runScenario(async (scenario: Scenario) => {
-    const appBundleSource: AppBundleSource = {
-      path: FIXTURE_HAPP_URL.pathname,
-    };
-    const [alice, bob] = await scenario.addPlayersWithApps([
-      { appBundleSource },
-      { appBundleSource },
-    ]);
+// unstable-countersigning
+// test("Local Scenario - countersigning", async (t) => {
+//   await runScenario(async (scenario: Scenario) => {
+//     const appBundleSource: AppBundleSource = {
+//       path: FIXTURE_HAPP_URL.pathname,
+//     };
+//     const [alice, bob] = await scenario.addPlayersWithApps([
+//       { appBundleSource },
+//       { appBundleSource },
+//     ]);
 
-    const result = new Promise<Signal>((resolve, reject) => {
-      const timeout = setTimeout(
-        () => reject("timeout waiting for signal"),
-        60000
-      );
-      (alice.appWs as AppWebsocket).on("signal", (signal) => {
-        clearTimeout(timeout);
-        resolve(signal);
-      });
-    });
+//     const result = new Promise<Signal>((resolve, reject) => {
+//       const timeout = setTimeout(
+//         () => reject("timeout waiting for signal"),
+//         60000
+//       );
+//       (alice.appWs as AppWebsocket).on("signal", (signal) => {
+//         clearTimeout(timeout);
+//         resolve(signal);
+//       });
+//     });
 
-    // Make sure init has been called
-    await alice.appWs.callZome({
-      role_name: "test",
-      zome_name: "coordinator",
-      fn_name: "create",
-      payload: "hello",
-    });
+//     // Make sure init has been called
+//     await alice.appWs.callZome({
+//       role_name: "test",
+//       zome_name: "coordinator",
+//       fn_name: "create",
+//       payload: "hello",
+//     });
 
-    await bob.appWs.callZome({
-      role_name: "test",
-      zome_name: "coordinator",
-      fn_name: "create",
-      payload: "hello",
-    });
+//     await bob.appWs.callZome({
+//       role_name: "test",
+//       zome_name: "coordinator",
+//       fn_name: "create",
+//       payload: "hello",
+//     });
 
-    const response1: PreflightResponse = await alice.appWs.callZome({
-      role_name: "test",
-      zome_name: "coordinator",
-      fn_name: "create_two_party_countersigning_session",
-      payload: bob.agentPubKey,
-    });
+//     const response1: PreflightResponse = await alice.appWs.callZome({
+//       role_name: "test",
+//       zome_name: "coordinator",
+//       fn_name: "create_two_party_countersigning_session",
+//       payload: bob.agentPubKey,
+//     });
 
-    const response2: PreflightResponse = await bob.appWs.callZome({
-      role_name: "test",
-      zome_name: "coordinator",
-      fn_name: "accept_two_party",
-      payload: response1.request,
-    });
+//     const response2: PreflightResponse = await bob.appWs.callZome({
+//       role_name: "test",
+//       zome_name: "coordinator",
+//       fn_name: "accept_two_party",
+//       payload: response1.request,
+//     });
 
-    await alice.appWs.callZome({
-      role_name: "test",
-      zome_name: "coordinator",
-      fn_name: "commit_two_party",
-      payload: [response1, response2],
-    });
+//     await alice.appWs.callZome({
+//       role_name: "test",
+//       zome_name: "coordinator",
+//       fn_name: "commit_two_party",
+//       payload: [response1, response2],
+//     });
 
-    await bob.appWs.callZome({
-      role_name: "test",
-      zome_name: "coordinator",
-      fn_name: "commit_two_party",
-      payload: [response1, response2],
-    });
+//     await bob.appWs.callZome({
+//       role_name: "test",
+//       zome_name: "coordinator",
+//       fn_name: "commit_two_party",
+//       payload: [response1, response2],
+//     });
 
-    const completionSignal = await result;
-    assert(SignalType.System in completionSignal);
-    const systemSignal = completionSignal[SignalType.System];
-    t.assert("SuccessfulCountersigning" in systemSignal);
-  });
-});
+//     const completionSignal = await result;
+//     assert(SignalType.System in completionSignal);
+//     const systemSignal = completionSignal[SignalType.System];
+//     t.assert("SuccessfulCountersigning" in systemSignal);
+//   });
+// });

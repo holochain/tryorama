@@ -32,9 +32,8 @@ async fn multiple_conductors_on_same_machine_are_assigned_different_admin_ports(
                     id: id_player_1.to_string(),
                     partial_config: "dpki:
     dna_path: ~
-    network_seed: test
-    allow_throwaway_random_dpki_agent_key: true
-    no_dpki: false"
+    network_seed: ~
+    no_dpki: true`"
                         .to_string(),
                 },
                 ONE_MIN,
@@ -87,9 +86,8 @@ async fn multiple_conductors_on_same_machine_are_assigned_different_admin_ports(
                     id: id_player_2.to_string(),
                     partial_config: "dpki:
     dna_path: ~
-    network_seed: test
-    allow_throwaway_random_dpki_agent_key: true
-    no_dpki: false"
+    network_seed: ~
+    no_dpki: true`"
                         .to_string(),
                 },
                 ONE_MIN,

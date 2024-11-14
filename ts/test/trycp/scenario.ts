@@ -17,26 +17,27 @@ import { FIXTURE_HAPP_URL } from "../fixture/index.js";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 
-test("TryCP Scenario - default player has DPKI enabled", async (t) => {
-  const tryCpServer = await TryCpServer.start();
+// unstable-dpki
+// test("TryCP Scenario - default player has DPKI enabled", async (t) => {
+//   const tryCpServer = await TryCpServer.start();
 
-  const scenario = new TryCpScenario();
-  ({
-    servicesProcess: scenario.servicesProcess,
-    signalingServerUrl: scenario.signalingServerUrl,
-  } = await runLocalServices());
-  const client = await scenario.addClient(SERVER_URL);
-  t.ok(client, "client set up");
+//   const scenario = new TryCpScenario();
+//   ({
+//     servicesProcess: scenario.servicesProcess,
+//     signalingServerUrl: scenario.signalingServerUrl,
+//   } = await runLocalServices());
+//   const client = await scenario.addClient(SERVER_URL);
+//   t.ok(client, "client set up");
 
-  const player = await scenario.addPlayerWithApp(client, {
-    path: FIXTURE_HAPP_URL.pathname,
-  });
-  const cellIds = await player.conductor.adminWs().listCellIds();
-  t.equal(cellIds.length, 2, "conductor has 1 app cell and 1 DPKI cell");
+//   const player = await scenario.addPlayerWithApp(client, {
+//     path: FIXTURE_HAPP_URL.pathname,
+//   });
+//   const cellIds = await player.conductor.adminWs().listCellIds();
+//   t.equal(cellIds.length, 2, "conductor has 1 app cell and 1 DPKI cell");
 
-  await scenario.cleanUp();
-  await tryCpServer.stop();
-});
+//   await scenario.cleanUp();
+//   await tryCpServer.stop();
+// });
 
 test("TryCP Scenario - can create player without DPKI", async (t) => {
   const tryCpServer = await TryCpServer.start();
@@ -49,7 +50,6 @@ test("TryCP Scenario - can create player without DPKI", async (t) => {
   const client = await scenario.addClient(SERVER_URL);
   t.ok(client, "client set up");
 
-  scenario.noDpki = true;
   const player = await scenario.addPlayerWithApp(client, {
     path: FIXTURE_HAPP_URL.pathname,
   });
@@ -179,11 +179,7 @@ test("TryCP Scenario - list everything", async (t) => {
   );
 
   const listCellIds = await alice.conductor.adminWs().listCellIds();
-  t.equal(
-    listCellIds.length,
-    2,
-    "alice's conductor lists 2 cell ids including DPKI"
-  );
+  t.equal(listCellIds.length, 1, "alice's conductor lists 1 cell id");
 
   const listedDnas = await alice.conductor.adminWs().listDnas();
   t.equal(listedDnas.length, 1, "alice's conductor lists 1 DNA");
@@ -412,7 +408,6 @@ test("TryCP Scenario - connect to multiple clients without DPKI", async (t) => {
   }
 
   const scenario = new TryCpScenario();
-  scenario.noDpki = true;
   ({
     servicesProcess: scenario.servicesProcess,
     signalingServerUrl: scenario.signalingServerUrl,
