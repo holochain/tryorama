@@ -8,6 +8,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 ### Fixed
+
+## 2024-11-14: v0.18.0-dev.1
+### Fixed
 - Disable unstable DPKI.
 - Disable tests with unstable features.
 

@@ -1,6 +1,6 @@
 [package]
 name = "trycp_client"
-version = "0.18.0-dev.0"
+version = "0.18.0-dev.1"
 description = "Client for TryCP"
 license = "CAL-1.0"
 edition = "2021"
@@ -9,6 +9,6 @@ edition = "2021"
 futures = { workspace = true }
 rmp-serde = { workspace = true }
 serde_json = { workspace = true }
-tokio = { workspace = true, features = [ "full" ] }
+tokio = { workspace = true, features = ["full"] }
 tokio-tungstenite = { workspace = true }
 trycp_api = { workspace = true }
