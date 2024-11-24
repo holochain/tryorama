@@ -190,7 +190,6 @@ export const getCallableCell = (
       {
         ...request,
         cell_id: cell.cell_id,
-        provenance: request.provenance ?? cell.cell_id[1],
         payload: request.payload ?? null,
       },
       timeout

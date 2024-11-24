@@ -190,7 +190,7 @@ export class TryCpClient {
    * @returns A promise that resolves to the {@link TryCpSuccessResponse}
    */
   call(request: TryCpRequest) {
-    const requestDebugLog = this.getFormattedRequestLog(request);
+    const requestDebugLog = JSON.stringify(request);
     logger.debug(`request ${requestDebugLog}\n`);
 
     const callPromise = new Promise<TryCpSuccessResponse>((resolve, reject) => {
@@ -306,28 +306,5 @@ export class TryCpClient {
       debugLog = `response ${JSON.stringify(response)}\n`;
     }
     return debugLog;
-  }
-
-  private getFormattedRequestLog(request: TryCpRequest) {
-    let debugLog = cloneDeep(request);
-    if (
-      debugLog.type === "call_app_interface" &&
-      "data" in debugLog.message &&
-      debugLog.message.type === "call_zome"
-    ) {
-      const messageData = debugLog.message.data as CallZomeRequestSigned;
-      debugLog.message.data = Object.assign(debugLog.message.data, {
-        cell_id: [
-          Buffer.from(messageData.cell_id[0]).toString("base64"),
-          Buffer.from(messageData.cell_id[1]).toString("base64"),
-        ],
-        provenance: Buffer.from(messageData.provenance).toString("base64"),
-      });
-    }
-    if ("content" in request) {
-      // Call "save_dna" submits a DNA as binary
-      debugLog = Object.assign(debugLog, { content: undefined });
-    }
-    return JSON.stringify(debugLog);
   }
 }
