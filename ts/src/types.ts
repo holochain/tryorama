@@ -18,6 +18,7 @@ import type {
   ProvisionedCell,
   RegisterDnaRequest,
   RoleName,
+  CallZomeRequestSigned,
 } from "@holochain/client";
 
 /**
@@ -47,7 +48,9 @@ export type IAdminWebsocket = Omit<
  *
  * @public
  */
-export type IAppWebsocket = Pick<AppWebsocket, "callZome">;
+export type IAppWebsocket = {
+  callZome: <T>(request: CallZomeRequest, timeout?: number) => Promise<T>;
+};
 
 /**
  * Base interface of a Tryorama conductor. Both {@link Conductor} and
@@ -79,11 +82,8 @@ export interface IConductor {
  */
 export type CellZomeCallRequest = Omit<
   CallZomeRequest,
-  "cap_secret" | "cell_id" | "payload" | "provenance"
-> & {
-  provenance?: AgentPubKey;
-  payload?: unknown;
-};
+  "cap_secret" | "cell_id"
+>;
 
 /**
  * The function for calling a zome from a specific cell.

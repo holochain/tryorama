@@ -524,7 +524,6 @@ test("TryCP Conductor - receive a signal", async (t) => {
   const cell_id = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
 
   appWs.callZome({
-    cap_secret: null,
     cell_id,
     zome_name: "coordinator",
     fn_name: "signal_loopback",
@@ -605,7 +604,6 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
 
   const entryContent = "test-content";
   const createEntryHash = await appWs.callZome<EntryHash>({
-    cap_secret: null,
     cell_id,
     zome_name: "coordinator",
     fn_name: "create",
@@ -620,7 +618,6 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   );
 
   const readEntryResponse = await appWs.callZome<typeof entryContent>({
-    cap_secret: null,
     cell_id,
     zome_name: "coordinator",
     fn_name: "read",
@@ -755,7 +752,6 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
 
   const entryContent = "test-content";
   const createEntryHash = await appWs.callZome<EntryHash>({
-    cap_secret: null,
     cell_id: cellId1,
     zome_name: "coordinator",
     fn_name: "create",
@@ -770,7 +766,6 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   );
 
   const readEntryResponse = await appWs.callZome<typeof entryContent>({
-    cap_secret: null,
     cell_id: cellId2,
     zome_name: "coordinator",
     fn_name: "read",
@@ -834,7 +829,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
     zome_name: "coordinator",
     fn_name: "create",
     payload: testContent,
-    cap_secret: null,
     provenance: agentPubKey,
   });
 
@@ -847,7 +841,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
       zome_name: "coordinator",
       fn_name: "read",
       payload: entryActionHash,
-      cap_secret: null,
       provenance: agentPubKey,
     }),
     "disabled clone cell cannot be called"
@@ -867,7 +860,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
     zome_name: "coordinator",
     fn_name: "read",
     payload: entryActionHash,
-    cap_secret: null,
     provenance: agentPubKey,
   });
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");

@@ -927,28 +927,20 @@ export class TryCpConductor implements IConductor {
      * @param request - {@link CallZomeRequest}.
      * @returns The result of the zome call.
      */
-    const callZome = async <T>(
-      request: CallZomeRequest | CallZomeRequestSigned
-    ) => {
+    const callZome = async <T>(request: CallZomeRequest) => {
       // authorize signing credentials
       if (!getSigningCredentials(request.cell_id)) {
         await this.adminWs().authorizeSigningCredentials(request.cell_id);
       }
 
-      let signedRequest: CallZomeRequestSigned;
-      if ("signature" in request) {
-        signedRequest = request;
-      } else {
-        // sign zome call
-        const signingCredentials = getSigningCredentials(request.cell_id);
-        if (!signingCredentials) {
-          throw new Error(
-            `cannot sign zome call: no signing credentials have been authorized for cell ${request.cell_id}`
-          );
-        }
-        const signedZomeCall = await signZomeCall(request);
-        signedRequest = signedZomeCall;
+      // sign zome call
+      const signingCredentials = getSigningCredentials(request.cell_id);
+      if (!signingCredentials) {
+        throw new Error(
+          `cannot sign zome call: no signing credentials have been authorized for cell ${request.cell_id}`
+        );
       }
+      const signedRequest = await signZomeCall(request);
       const response = await this.callAppApi(port, {
         type: "call_zome",
         data: signedRequest,
