@@ -7,8 +7,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
-- Update JS client due to modified zome call signing.
 ### Fixed
+
+## 2024-11-25: v0.18.0-dev.2
+### Changed
+- Update JS client due to modified zome call signing.
 
 ## 2024-11-14: v0.18.0-dev.1
 ### Fixed
