@@ -1268,9 +1268,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_conductor_api"
-version = "0.5.0-dev.5"
+version = "0.5.0-dev.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "138dfb6a34285a9d2f842b4eedb1c54a5db47845557fd2da6493ed928d1562d8"
+checksum = "721649eecde51d31d6602d3a7f6cdfd10cabff55145a76f487d31a7addc668d2"
 dependencies = [
  "cfg-if 1.0.0",
  "derive_more",
@@ -1313,9 +1313,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_keystore"
-version = "0.5.0-dev.5"
+version = "0.5.0-dev.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "89d0ba47f19341ed3b800281005063cf911ea31cc12bbbe21add55579d1d1661"
+checksum = "d36f5c77333a5afaacc3b630b10b7b9757b1a515925b2f0a98449e8d242a7e48"
 dependencies = [
  "base64 0.22.1",
  "derive_more",
@@ -1389,9 +1389,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_sqlite"
-version = "0.5.0-dev.5"
+version = "0.5.0-dev.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e286aaa294e4384e3913aafb57ffb4e9feedfab265883ff6ffe71d80cec58583"
+checksum = "eae44976a186d612094ad2ecbb9e449c22f02e8c732bb6860e2a482059797940"
 dependencies = [
  "anyhow",
  "async-trait",
@@ -1434,9 +1434,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_state_types"
-version = "0.5.0-dev.2"
+version = "0.5.0-dev.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0c76a97edf926319b79483ae226e5d02bf86344b157c8021f8949e06578bead4"
+checksum = "93937b0ae3bb6ac53216ae8a59c8212442591875720d9c8310299b9fbcaf913b"
 dependencies = [
  "holo_hash",
  "holochain_integrity_types",
@@ -1463,9 +1463,9 @@ dependencies = [
 
 [[package]]
 name = "holochain_types"
-version = "0.5.0-dev.5"
+version = "0.5.0-dev.7"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "547e0ac56c691964337ebd46b5fbdb9ea36e6d01689079ca4bdc36e52088913e"
+checksum = "dabc1aeb326eea615e9cd38b10c70105ecc871704cee3cd448883e54bbb3f75b"
 dependencies = [
  "anyhow",
  "async-trait",
