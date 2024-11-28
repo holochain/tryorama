@@ -326,7 +326,7 @@ test("TryCP Conductor - install app with roles settings", async (t) => {
     },
     {
       rolesSettings: {
-        foo: {
+        [ROLE_NAME]: {
           type: "Provisioned",
           membrane_proof: new Uint8Array(6),
           modifiers: {
@@ -350,7 +350,7 @@ test("TryCP Conductor - install app with roles settings", async (t) => {
   const appInfo = await appWs.appInfo();
   if (!appInfo) throw new Error("AppInfo undefined.");
   const provisionedCell: ProvisionedCell =
-    appInfo.cell_info["foo"][0][CellType.Provisioned];
+    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
   t.equal(provisionedCell.dna_modifiers.network_seed, "hello");
   t.deepEqual(
     yaml.load(decode(provisionedCell.dna_modifiers.properties) as string),
