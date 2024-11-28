@@ -54,7 +54,7 @@ test("Local Conductor - spawn a conductor with mem network", async (t) => {
   const conductorConfig = readFileSync(
     tmpDirPath + "/conductor-config.yaml"
   ).toString();
-  t.ok(conductorConfig.includes("transport_pool:\n  - type: mem"));
+  t.ok(conductorConfig.includes("transport_pool: []"));
 
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
