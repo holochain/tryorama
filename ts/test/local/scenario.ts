@@ -374,7 +374,7 @@ test("Local Scenario - runScenario - call zome by role name", async (t) => {
       path: FIXTURE_HAPP_URL.pathname,
     });
 
-    const result = (await alice.appWs.callZome({
+    const result = (await (alice.appWs as AppWebsocket).callZome({
       role_name: "test",
       zome_name: "coordinator",
       fn_name: "create",
