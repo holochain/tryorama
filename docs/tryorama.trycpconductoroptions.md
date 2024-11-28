@@ -76,27 +76,6 @@ default: "error"
 </td></tr>
 <tr><td>
 
-[noDpki?](./tryorama.trycpconductoroptions.nodpki.md)
-
-
-</td><td>
-
-
-</td><td>
-
-boolean
-
-
-</td><td>
-
-_(Optional)_ Exclude dpki in the conductor instance.
-
-default: false // defaults to using the dpki
-
-
-</td></tr>
-<tr><td>
-
 [partialConfig?](./tryorama.trycpconductoroptions.partialconfig.md)
 
 

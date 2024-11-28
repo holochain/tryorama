@@ -9,7 +9,7 @@ Create conductor configuration.
 **Signature:**
 
 ```typescript
-configure(partialConfig?: string): Promise<null>;
+configure(partialConfig?: string, noDpki?: boolean, dpkiNetworkSeed?: string): Promise<null>;
 ```
 
 ## Parameters
@@ -43,6 +43,38 @@ string
 </td><td>
 
 _(Optional)_ The configuration to add to the default configuration.
+
+
+</td></tr>
+<tr><td>
+
+noDpki
+
+
+</td><td>
+
+boolean
+
+
+</td><td>
+
+_(Optional)_ Disable the DPKI service on this conductor.
+
+
+</td></tr>
+<tr><td>
+
+dpkiNetworkSeed
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ Set DPKI network seed.
 
 
 </td></tr>

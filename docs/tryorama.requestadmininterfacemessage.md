@@ -45,7 +45,7 @@ Description
 
 </td><td>
 
-AddAgentInfoRequest \| AgentInfoRequest \| AttachAppInterfaceRequest \| DeleteCloneCellRequest \| DisableAppRequest \| DumpFullStateRequest \| DumpNetworkStatsRequest \| DumpStateRequest \| EnableAppRequest \| GetCompatibleCellsRequest \| GetDnaDefinitionRequest \| GrantZomeCallCapabilityRequest \| InstallAppRequest \| ListAppsRequest \| RegisterDnaRequest \| StartAppRequest \| StorageInfoRequest \| UninstallAppRequest \| UpdateCoordinatorsRequest \| IssueAppAuthenticationTokenRequest
+AddAgentInfoRequest \| AgentInfoRequest \| AttachAppInterfaceRequest \| DeleteCloneCellRequest \| DisableAppRequest \| DumpFullStateRequest \| DumpNetworkStatsRequest \| DumpStateRequest \| EnableAppRequest \| GetCompatibleCellsRequest \| GetDnaDefinitionRequest \| GrantZomeCallCapabilityRequest \| InstallAppRequest \| ListAppsRequest \| RegisterDnaRequest \| RevokeAgentKeyRequest \| StartAppRequest \| StorageInfoRequest \| UninstallAppRequest \| UpdateCoordinatorsRequest \| IssueAppAuthenticationTokenRequest
 
 
 </td><td>
