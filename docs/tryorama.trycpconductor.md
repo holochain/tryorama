@@ -144,7 +144,7 @@ Get all [Admin API methods](https://github.com/holochain/holochain-client-js/blo
 </td></tr>
 <tr><td>
 
-[configure(partialConfig)](./tryorama.trycpconductor.configure.md)
+[configure(partialConfig, noDpki, dpkiNetworkSeed)](./tryorama.trycpconductor.configure.md)
 
 
 </td><td>
@@ -181,6 +181,20 @@ Connect a web socket to the App API.
 </td><td>
 
 Get all [App API methods](https://github.com/holochain/holochain-client-js/blob/develop/docs/API_appwebsocket.md) of the Holochain client.
+
+
+</td></tr>
+<tr><td>
+
+[defaultPartialConfig()](./tryorama.trycpconductor.defaultpartialconfig.md)
+
+
+</td><td>
+
+`static`
+
+
+</td><td>
 
 
 </td></tr>

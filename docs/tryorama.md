@@ -338,6 +338,16 @@ Description
 </td></tr>
 <tr><td>
 
+[AdminApiResponseAgentKeyRevoked](./tryorama.adminapiresponseagentkeyrevoked.md)
+
+
+</td><td>
+
+
+
+</td></tr>
+<tr><td>
+
 [AdminApiResponseAgentPubKeyGenerated](./tryorama.adminapiresponseagentpubkeygenerated.md)
 
 
