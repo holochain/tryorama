@@ -3,11 +3,7 @@ import { Buffer } from "node:buffer";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import { _ALLOWED_ORIGIN, enableAndGetAgentApp } from "../../src/common.js";
-import {
-  createTryCpConductor,
-  DEFAULT_PARTIAL_PLAYER_CONFIG,
-  TryCpConductor,
-} from "../../src/trycp/index.js";
+import { createTryCpConductor, TryCpConductor } from "../../src/trycp/index.js";
 import { TryCpClient } from "../../src/trycp/trycp-client.js";
 import {
   TRYCP_SERVER_HOST,

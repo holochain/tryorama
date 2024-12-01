@@ -8,9 +8,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - Disable tests with unstable features.
 
 ### Added
+- Support new `roles_settings` field in `AppOptions`.
 ### Removed
 ### Changed
-- Update dependencies to Holochain v0.4.0-rc.0
+- Update dependencies to Holochain v0.4.0-rc.2
 ### Fixed
 
 ## 2024-10-02: v0.17.0-dev.6
@@ -221,7 +222,7 @@ Compatible with Holochain v0.1.0
 ## [0.6.2]
 
 ### Added
-- feat(common): add app and role id options to hApp installation 
+- feat(common): add app and role id options to hApp installation
 - feat(common): add mem-proofs to installAgentsHapps (#139)
 - feat(trycp): add multiple clients by array of URLs
 - feat(trycp): add multiple clients/players
