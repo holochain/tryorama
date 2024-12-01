@@ -348,7 +348,7 @@ test("TryCP Conductor - install app with roles settings", async (t) => {
   const appWs = await conductor.connectAppWs(issued.token, port);
 
   const appInfo = await appWs.appInfo();
-  if (!appInfo) throw new Error("AppInfo undefined.");
+  assert(appInfo);
   const provisionedCell: ProvisionedCell =
     appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
   t.equal(provisionedCell.dna_modifiers.network_seed, "hello");

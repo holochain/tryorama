@@ -2,15 +2,12 @@ import {
   ActionHash,
   AppBundleSource,
   AppSignal,
-  AppWebsocket,
   EntryHash,
-  PreflightResponse,
   Signal,
   SignalCb,
   SignalType,
 } from "@holochain/client";
 import assert from "node:assert/strict";
-import { readFileSync } from "node:fs";
 import test from "tape-promise/tape.js";
 import { Scenario, dhtSync, getZomeCaller, runScenario } from "../../src";
 import { FIXTURE_HAPP_URL } from "../fixture";
@@ -374,8 +371,7 @@ test("Local Scenario - runScenario - call zome by role name", async (t) => {
       path: FIXTURE_HAPP_URL.pathname,
     });
 
-    const result = (await (alice.appWs as AppWebsocket).callZome({
-      role_name: "test",
+    const result = (await alice.namedCells.get("test")?.callZome({
       zome_name: "coordinator",
       fn_name: "create",
       payload: "hello",

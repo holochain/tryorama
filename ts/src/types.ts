@@ -19,7 +19,6 @@ import type {
   RegisterDnaRequest,
   RoleName,
   RoleSettingsMap,
-  RoleNameCallZomeRequest,
 } from "@holochain/client";
 
 /**
