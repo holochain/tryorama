@@ -45,6 +45,7 @@ import {
   UninstallAppRequest,
   UpdateCoordinatorsRequest,
   RevokeAgentKeyRequest,
+  CallZomeRequestSigned,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
