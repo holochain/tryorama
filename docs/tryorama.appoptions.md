@@ -75,25 +75,6 @@ _(Optional)_ App ID to override the app manifest's app name.
 </td></tr>
 <tr><td>
 
-[membraneProofs?](./tryorama.appoptions.membraneproofs.md)
-
-
-</td><td>
-
-
-</td><td>
-
-Record&lt;string, MembraneProof&gt;
-
-
-</td><td>
-
-_(Optional)_ Proofs of membership for the hApp.
-
-
-</td></tr>
-<tr><td>
-
 [networkSeed?](./tryorama.appoptions.networkseed.md)
 
 
@@ -108,6 +89,25 @@ string
 </td><td>
 
 _(Optional)_ A network seed to override the hApps' network seed.
+
+
+</td></tr>
+<tr><td>
+
+[rolesSettings?](./tryorama.appoptions.rolessettings.md)
+
+
+</td><td>
+
+
+</td><td>
+
+RoleSettingsMap
+
+
+</td><td>
+
+_(Optional)_ Role specific settings or modifiers that will override any settings in the hApp's dna manifest(s).
 
 
 </td></tr>

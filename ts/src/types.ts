@@ -18,7 +18,7 @@ import type {
   ProvisionedCell,
   RegisterDnaRequest,
   RoleName,
-  CallZomeRequestSigned,
+  RoleSettingsMap,
 } from "@holochain/client";
 
 /**
@@ -145,9 +145,9 @@ export interface AppOptions {
    */
   networkSeed?: string;
   /**
-   * Proofs of membership for the hApp.
+   * Role specific settings or modifiers that will override any settings in the hApp's dna manifest(s).
    */
-  membraneProofs?: Record<string, MembraneProof>;
+  rolesSettings?: RoleSettingsMap;
   /**
    * A signal handler for the conductor.
    */
