@@ -7,8 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
-- Support new `roles_settings` field in `AppOptions`.
 ### Fixed
+
+
+## 2024-02-12: v0.18.0-dev.3
+### Changed
+- Support new `roles_settings` field in `AppOptions`.
 
 ## 2024-11-25: v0.18.0-dev.2
 ### Changed
