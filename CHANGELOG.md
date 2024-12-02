@@ -3,16 +3,20 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## \[Unreleased\]
-### Fixed
-- Disable unstable DPKI.
-- Disable tests with unstable features.
 
 ### Added
-- Support new `roles_settings` field in `AppOptions`.
 ### Removed
+### Changed
+### Fixed
+
+## 2024-12-02: v0.17.0-rc.0
+### Added
+- Support new `roles_settings` field in `AppOptions`.
 ### Changed
 - Update dependencies to Holochain v0.4.0-rc.2
 ### Fixed
+- Disable unstable DPKI.
+- Disable tests with unstable features.
 
 ## 2024-10-02: v0.17.0-dev.6
 ### Added
