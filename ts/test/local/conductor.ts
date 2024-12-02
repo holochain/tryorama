@@ -3,8 +3,12 @@ import {
   AppBundleSource,
   AppSignal,
   CellProvisioningStrategy,
+  CellType,
   CloneId,
+  Duration,
   EntryHash,
+  fakeAgentPubKey,
+  ProvisionedCell,
   RevokeAgentKeyResponse,
   Signal,
   SignalCb,
@@ -26,6 +30,8 @@ import {
   stopLocalServices,
 } from "../../src";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
+import { decode } from "@msgpack/msgpack";
+import yaml from "js-yaml";
 
 const ROLE_NAME = "test";
 
@@ -300,6 +306,80 @@ test("Local Conductor - install app with deferred memproofs", async (t) => {
   await cleanAllConductors();
 });
 
+test("Local Conductor - install app with roles settings", async (t) => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const conductor = await createConductor(signalingServerUrl);
+
+  const originTime = Date.now();
+  const quantumTime: Duration = {
+    secs: originTime,
+    nanos: 0,
+  };
+
+  const progenitorKey = Uint8Array.from(await fakeAgentPubKey());
+
+  const app = await conductor.installApp(
+    {
+      bundle: {
+        manifest: {
+          manifest_version: "1",
+          name: "app",
+          roles: [
+            {
+              name: ROLE_NAME,
+              provisioning: {
+                strategy: CellProvisioningStrategy.Create,
+                deferred: false,
+              },
+              dna: {
+                path: realpathSync(FIXTURE_DNA_URL),
+                modifiers: { network_seed: "some_seed" },
+              },
+            },
+          ],
+          membrane_proofs_deferred: true,
+        },
+        resources: {},
+      },
+    },
+    {
+      rolesSettings: {
+        [ROLE_NAME]: {
+          type: "Provisioned",
+          membrane_proof: new Uint8Array(6),
+          modifiers: {
+            network_seed: "hello",
+            properties: yaml.dump({ progenitor: progenitorKey }),
+            origin_time: originTime,
+            quantum_time: quantumTime,
+          },
+        },
+      },
+    }
+  );
+
+  const port = await conductor.attachAppInterface();
+  const issued = await conductor
+    .adminWs()
+    .issueAppAuthenticationToken({ installed_app_id: app.installed_app_id });
+  const appWs = await conductor.connectAppWs(issued.token, port);
+
+  const appInfo = await appWs.appInfo();
+  const provisionedCell: ProvisionedCell =
+    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
+  t.equal(provisionedCell.dna_modifiers.network_seed, "hello");
+  t.deepEqual(
+    yaml.load(decode(provisionedCell.dna_modifiers.properties) as string),
+    { progenitor: progenitorKey }
+  );
+  t.equal(provisionedCell.dna_modifiers.origin_time, originTime);
+  t.deepEqual(provisionedCell.dna_modifiers.quantum_time, quantumTime);
+
+  await conductor.shutDown();
+  await stopLocalServices(servicesProcess);
+  await cleanAllConductors();
+});
+
 test("Local Conductor - install and call an app", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
@@ -478,7 +558,6 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
 
   const entryContent = "test-content";
   const createEntryHash: EntryHash = await appWs.callZome({
-    cap_secret: null,
     cell_id,
     zome_name: "coordinator",
     fn_name: "create",
@@ -490,7 +569,6 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
   t.ok(createdEntryHashB64.startsWith("hCkk"));
 
   const readEntryResponse: typeof entryContent = await appWs.callZome({
-    cap_secret: null,
     cell_id,
     zome_name: "coordinator",
     fn_name: "read",
@@ -545,7 +623,6 @@ test("Local Conductor - clone cell management", async (t) => {
     zome_name: "coordinator",
     fn_name: "create",
     payload: testContent,
-    cap_secret: null,
     provenance: agentPubKey,
   });
 
@@ -558,7 +635,6 @@ test("Local Conductor - clone cell management", async (t) => {
       zome_name: "coordinator",
       fn_name: "read",
       payload: entryActionHash,
-      cap_secret: null,
       provenance: agentPubKey,
     }),
     "disabled clone cell cannot be called"
@@ -578,7 +654,6 @@ test("Local Conductor - clone cell management", async (t) => {
       zome_name: "coordinator",
       fn_name: "read",
       payload: entryActionHash,
-      cap_secret: null,
       provenance: agentPubKey,
     },
     40000

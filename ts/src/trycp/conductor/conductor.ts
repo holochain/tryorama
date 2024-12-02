@@ -7,7 +7,6 @@ import {
   SignalCb,
   AttachAppInterfaceRequest,
   CallZomeRequest,
-  CallZomeRequestSigned,
   CapSecret,
   CellId,
   CreateCloneCellRequest,
@@ -46,6 +45,7 @@ import {
   UninstallAppRequest,
   UpdateCoordinatorsRequest,
   RevokeAgentKeyRequest,
+  CallZomeRequestSigned,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import assert from "node:assert";
@@ -1045,7 +1045,7 @@ export class TryCpConductor implements IConductor {
   async installApp(appBundleSource: AppBundleSource, options?: AppOptions) {
     const agent_key =
       options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
-    const membrane_proofs = options?.membraneProofs ?? {};
+    const roles_settings = options?.rolesSettings;
     const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
     const network_seed = options?.networkSeed;
     const installAppRequest: InstallAppRequest =
@@ -1053,14 +1053,14 @@ export class TryCpConductor implements IConductor {
         ? {
             bundle: appBundleSource.bundle,
             agent_key,
-            membrane_proofs,
+            roles_settings,
             installed_app_id,
             network_seed,
           }
         : {
             path: appBundleSource.path,
             agent_key,
-            membrane_proofs,
+            roles_settings,
             installed_app_id,
             network_seed,
           };
@@ -1079,7 +1079,7 @@ export class TryCpConductor implements IConductor {
         const agent_key =
           appForAgent.agentPubKey ??
           (await this.adminWs().generateAgentPubKey());
-        const membrane_proofs = appForAgent.membraneProofs ?? {};
+        const roles_settings = appForAgent.rolesSettings;
         const installed_app_id = options.installedAppId ?? `app-${uuidv4()}`;
         const network_seed = options.networkSeed;
         const installAppRequest: InstallAppRequest =
@@ -1087,14 +1087,14 @@ export class TryCpConductor implements IConductor {
             ? {
                 bundle: appForAgent.app.bundle,
                 agent_key,
-                membrane_proofs,
+                roles_settings,
                 installed_app_id,
                 network_seed,
               }
             : {
                 path: appForAgent.app.path,
                 agent_key,
-                membrane_proofs,
+                roles_settings,
                 installed_app_id,
                 network_seed,
               };

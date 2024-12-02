@@ -10,6 +10,9 @@ import {
   SignalType,
   GrantedFunctionsType,
   RevokeAgentKeyResponse,
+  Duration,
+  fakeAgentPubKey,
+  ProvisionedCell,
 } from "@holochain/client";
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
@@ -26,6 +29,8 @@ import { TryCpPlayer, createTryCpConductor } from "../../src";
 import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT, TryCpServer } from "../../src";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
+import { decode } from "@msgpack/msgpack";
+import yaml from "js-yaml";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const ROLE_NAME = "test";
@@ -41,7 +46,6 @@ const ROLE_NAME = "test";
 //   const appInfo = await conductor.adminWs().installApp({
 //     path: FIXTURE_HAPP_URL.pathname,
 //     agent_key,
-//     membrane_proofs: {},
 //   });
 //   await conductor
 //     .adminWs()
@@ -64,7 +68,6 @@ const ROLE_NAME = "test";
 //   const appInfo = await conductor.adminWs().installApp({
 //     path: FIXTURE_HAPP_URL.pathname,
 //     agent_key,
-//     membrane_proofs: {},
 //   });
 //   await conductor
 //     .adminWs()
@@ -281,6 +284,86 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   await localTryCpServer.stop();
 });
 
+test("TryCP Conductor - install app with roles settings", async (t) => {
+  const localTryCpServer = await TryCpServer.start();
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const client = await TryCpClient.create(SERVER_URL);
+  client.signalingServerUrl = signalingServerUrl;
+  const conductor = await createTryCpConductor(client);
+  const adminWs = conductor.adminWs();
+
+  const originTime = Date.now();
+  const quantumTime: Duration = {
+    secs: originTime,
+    nanos: 0,
+  };
+
+  const progenitorKey = Uint8Array.from(await fakeAgentPubKey());
+
+  const app = await conductor.installApp(
+    {
+      bundle: {
+        manifest: {
+          manifest_version: "1",
+          name: "app",
+          roles: [
+            {
+              name: ROLE_NAME,
+              provisioning: {
+                strategy: CellProvisioningStrategy.Create,
+                deferred: false,
+              },
+              dna: {
+                path: realpathSync(FIXTURE_DNA_URL),
+                modifiers: { network_seed: "some_seed" },
+              },
+            },
+          ],
+          membrane_proofs_deferred: true,
+        },
+        resources: {},
+      },
+    },
+    {
+      rolesSettings: {
+        [ROLE_NAME]: {
+          type: "Provisioned",
+          membrane_proof: new Uint8Array(6),
+          modifiers: {
+            network_seed: "hello",
+            properties: yaml.dump({ progenitor: progenitorKey }),
+            origin_time: originTime,
+            quantum_time: quantumTime,
+          },
+        },
+      },
+    }
+  );
+
+  const { port } = await adminWs.attachAppInterface();
+  const issued = await adminWs.issueAppAuthenticationToken({
+    installed_app_id: app.installed_app_id,
+  });
+  await conductor.connectAppInterface(issued.token, port);
+  const appWs = await conductor.connectAppWs(issued.token, port);
+
+  const appInfo = await appWs.appInfo();
+  assert(appInfo);
+  const provisionedCell: ProvisionedCell =
+    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
+  t.equal(provisionedCell.dna_modifiers.network_seed, "hello");
+  t.deepEqual(
+    yaml.load(decode(provisionedCell.dna_modifiers.properties) as string),
+    { progenitor: progenitorKey }
+  );
+  t.equal(provisionedCell.dna_modifiers.origin_time, originTime);
+  t.deepEqual(provisionedCell.dna_modifiers.quantum_time, quantumTime);
+
+  await stopLocalServices(servicesProcess);
+  await client.cleanUp();
+  await localTryCpServer.stop();
+});
+
 test("TryCP Conductor - install hApp bundle and access cell by role name", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
@@ -390,7 +473,6 @@ test("TryCP Conductor - request storage info", async (t) => {
   const appInfo = await conductor.adminWs().installApp({
     path: FIXTURE_HAPP_URL.pathname,
     agent_key: agentPubKey,
-    membrane_proofs: {},
   });
 
   const storageInfo = await conductor.adminWs().storageInfo();
@@ -422,7 +504,6 @@ test("TryCP Conductor - request network info", async (t) => {
     path: FIXTURE_HAPP_URL.pathname,
     agent_key: agentPubKey,
     network_seed: Date.now().toString(),
-    membrane_proofs: {},
   });
   await conductor
     .adminWs()
@@ -505,7 +586,6 @@ test("TryCP Conductor - receive a signal", async (t) => {
   const appInfo = await conductor.adminWs().installApp({
     path: FIXTURE_HAPP_URL.pathname,
     agent_key: agentPubKey,
-    membrane_proofs: {},
   });
   const { port } = await conductor.adminWs().attachAppInterface();
   const issued = await conductor.adminWs().issueAppAuthenticationToken({
@@ -564,7 +644,6 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   const appId = "entry-app";
   const appInfo = await conductor.adminWs().installApp({
     path: FIXTURE_HAPP_URL.pathname,
-    membrane_proofs: {},
     installed_app_id: appId,
     agent_key: agentPubKey,
   });
@@ -683,7 +762,6 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     path: FIXTURE_HAPP_URL.pathname,
     installed_app_id: appId1,
     agent_key: agent1PubKey,
-    membrane_proofs: {},
   });
   assert(CellType.Provisioned in appInfo1.cell_info[ROLE_NAME][0]);
   const cellId1 =
@@ -702,7 +780,6 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
     path: FIXTURE_HAPP_URL.pathname,
     installed_app_id: appId2,
     agent_key: agent2PubKey,
-    membrane_proofs: {},
   });
   assert(CellType.Provisioned in appInfo2.cell_info[ROLE_NAME][0]);
   const cellId2 =
@@ -801,7 +878,6 @@ test("TryCP Conductor - clone cell management", async (t) => {
     path: FIXTURE_HAPP_URL.pathname,
     installed_app_id: appId,
     agent_key: agentPubKey,
-    membrane_proofs: {},
   });
   assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
   const { cell_id } = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];

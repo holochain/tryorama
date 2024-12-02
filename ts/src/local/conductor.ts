@@ -8,7 +8,6 @@ import {
   InstallAppRequest,
   AppAuthenticationToken,
   AppCallZomeRequest,
-  NetworkSeed,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
 import pick from "lodash/pick.js";
@@ -382,21 +381,21 @@ export class Conductor implements IConductor {
     const agent_key =
       options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
     const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
-    const membrane_proofs = options?.membraneProofs ?? {};
+    const roles_settings = options?.rolesSettings;
     const network_seed = options?.networkSeed;
     const installAppRequest: InstallAppRequest =
       "bundle" in appBundleSource
         ? {
             bundle: appBundleSource.bundle,
             agent_key,
-            membrane_proofs,
+            roles_settings,
             installed_app_id,
             network_seed,
           }
         : {
             path: appBundleSource.path,
             agent_key,
-            membrane_proofs,
+            roles_settings,
             installed_app_id,
             network_seed,
           };
@@ -416,7 +415,7 @@ export class Conductor implements IConductor {
       options.agentsApps.map((appsForAgent) =>
         this.installApp(appsForAgent.app, {
           agentPubKey: appsForAgent.agentPubKey,
-          membraneProofs: appsForAgent.membraneProofs,
+          rolesSettings: appsForAgent.rolesSettings,
           installedAppId: options.installedAppId,
           networkSeed: options.networkSeed,
         })
