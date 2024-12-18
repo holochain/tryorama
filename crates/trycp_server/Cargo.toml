@@ -1,6 +1,6 @@
 [package]
 name = "trycp_server"
-version = "0.17.0-dev.6"
+version = "0.17.0"
 description = "conductor provisioner for tryorama"
 license = "CAL-1.0"
 keywords = ["holochain", "holo", "p2p", "network", "simulation"]
@@ -37,7 +37,7 @@ trycp_api = { workspace = true }
 url = { workspace = true }
 
 [dev-dependencies]
-holochain_conductor_api = "0.4.0-rc.2"
+holochain_conductor_api = "0.4.0"
 rand = "0.8"
 serde_yaml = "0.9"
 trycp_client = { path = "../trycp_client" }
