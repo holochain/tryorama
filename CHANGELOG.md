@@ -9,6 +9,10 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 ### Fixed
 
+## 2024-12-18: v0.17.0
+### Changed
+- Updated to Holochain v0.4.0
+
 ## 2024-12-02: v0.17.0-rc.0
 ### Added
 - Support new `roles_settings` field in `AppOptions`.
