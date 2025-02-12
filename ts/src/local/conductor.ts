@@ -220,26 +220,17 @@ export class Conductor implements IConductor {
 
     const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
+        logger.info(data.toString());
         const conductorLaunched = data
           .toString()
           .match(/Conductor launched #!\d ({.*})/);
-        const holochainRunning = data
-          .toString()
-          .includes("Connected successfully to a running holochain");
-        if (conductorLaunched || holochainRunning) {
-          if (conductorLaunched) {
-            const portConfiguration = JSON.parse(conductorLaunched[1]);
-            const adminPort = portConfiguration.admin_port;
-            this.adminApiUrl.port = adminPort;
-            logger.debug(`starting conductor\n${data}`);
-          }
-          if (holochainRunning) {
-            // this is the last output of the startup process
-            this.conductorProcess = runConductorProcess;
-            resolve();
-          }
-        } else {
-          logger.info(data.toString());
+        if (conductorLaunched) {
+          // This is the last output of the startup process.
+          const portConfiguration = JSON.parse(conductorLaunched[1]);
+          const adminPort = portConfiguration.admin_port;
+          this.adminApiUrl.port = adminPort;
+          this.conductorProcess = runConductorProcess;
+          resolve();
         }
       });
 
