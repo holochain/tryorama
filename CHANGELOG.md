@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 ### Fixed
+- Local: Conductor startup string parsing. This lead to flaky tests because the client attempted to connect to Holochain before it was fully started up.
 
 ## 2024-12-18: v0.17.0
 ### Changed
