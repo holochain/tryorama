@@ -3,7 +3,6 @@ import {
   AppBundleSource,
   AppSignal,
   CellProvisioningStrategy,
-  CellType,
   CloneId,
   Duration,
   EntryHash,
@@ -371,8 +370,8 @@ test("Local Conductor - install app with roles settings", async (t) => {
   const appWs = await conductor.connectAppWs(issued.token, port);
 
   const appInfo = await appWs.appInfo();
-  const provisionedCell: ProvisionedCell =
-    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
+  const provisionedCell = appInfo.cell_info[ROLE_NAME][0]
+    .value as ProvisionedCell;
   t.equal(provisionedCell.dna_modifiers.network_seed, "hello");
   t.deepEqual(
     yaml.load(decode(provisionedCell.dna_modifiers.properties) as string),

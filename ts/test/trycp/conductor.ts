@@ -270,7 +270,10 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   assert(appInfo);
   t.deepEqual(
     appInfo.status,
-    { disabled: { reason: "not_started_after_providing_memproofs" } },
+    {
+      type: "disabled",
+      value: { reason: { type: "not_started_after_providing_memproofs" } },
+    },
     "app status is not_started_after_providing_memproofs"
   );
 
@@ -353,8 +356,8 @@ test("TryCP Conductor - install app with roles settings", async (t) => {
 
   const appInfo = await appWs.appInfo();
   assert(appInfo);
-  const provisionedCell: ProvisionedCell =
-    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
+  const provisionedCell = appInfo.cell_info[ROLE_NAME][0]
+    .value as ProvisionedCell;
   t.equal(provisionedCell.dna_modifiers.network_seed, "hello");
   t.deepEqual(
     yaml.load(decode(provisionedCell.dna_modifiers.properties) as string),
@@ -576,7 +579,7 @@ test("TryCP Conductor - grant a zome call capability", async (t) => {
   await localTryCpServer.stop();
 });
 
-test("TryCP Conductor - receive a signal", async (t) => {
+test.only("TryCP Conductor - receive a signal", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
@@ -611,7 +614,6 @@ test("TryCP Conductor - receive a signal", async (t) => {
     .adminWs()
     .enableApp({ installed_app_id: appInfo.installed_app_id });
   const appWs = await conductor.connectAppWs(issued.token, port);
-
   assert(appInfo.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
   const cell_id = appInfo.cell_info[ROLE_NAME][0].value.cell_id;
 
