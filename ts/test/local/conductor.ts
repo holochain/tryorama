@@ -224,7 +224,7 @@ test("Local Conductor - get app info with app ws", async (t) => {
   const appWs = await conductor.connectAppWs(issued.token, port);
   const appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.deepEqual(appInfo.status, "running");
+  t.deepEqual(appInfo.status, { type: "running" });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
@@ -246,7 +246,7 @@ test("Local Conductor - get app info with app agent ws", async (t) => {
     .issueAppAuthenticationToken({ installed_app_id: app.installed_app_id });
   const appWs = await conductor.connectAppWs(issued.token, port);
   const appInfo = await appWs.appInfo();
-  t.deepEqual(appInfo.status, "running");
+  t.deepEqual(appInfo.status, { type: "running" });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
@@ -290,7 +290,7 @@ test("Local Conductor - install app with deferred memproofs", async (t) => {
   let appInfo = await appWs.appInfo();
   t.deepEqual(
     appInfo.status,
-    { disabled: { reason: "never_started" } },
+    { type: "disabled", value: { reason: { type: "never_started" } } },
     "app status is never_started"
   );
 
@@ -302,7 +302,7 @@ test("Local Conductor - install app with deferred memproofs", async (t) => {
     .enableApp({ installed_app_id: app.installed_app_id });
 
   appInfo = await appWs.appInfo();
-  t.equal(appInfo.status, "running", "app status is running");
+  t.deepEqual(appInfo.status, { type: "running" }, "app status is running");
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);

@@ -254,7 +254,7 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   assert(appInfo);
   t.deepEqual(
     appInfo.status,
-    { disabled: { reason: "never_started" } },
+    { type: "disabled", value: { reason: { type: "never_started" } } },
     "app status is never_started"
   );
 
@@ -278,7 +278,7 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
 
   appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.equal(appInfo.status, "running", "app status is running");
+  t.deepEqual(appInfo.status, { type: "running" }, "app status is running");
 
   await stopLocalServices(servicesProcess);
   await client.cleanUp();
@@ -676,7 +676,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   });
   t.deepEqual(
     enabledAppResponse.app.status,
-    "running",
+    { type: "running" },
     "enabled app response matches 'running'"
   );
 
@@ -812,7 +812,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   });
   t.deepEqual(
     enabledAppResponse1.app.status,
-    "running",
+    { type: "running" },
     "enabled app response 1 matches 'running'"
   );
   const enabledAppResponse2 = await conductor.adminWs().enableApp({
@@ -820,7 +820,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   });
   t.deepEqual(
     enabledAppResponse2.app.status,
-    "running",
+    { type: "running" },
     "enabled app response 2 matches 'running'"
   );
 

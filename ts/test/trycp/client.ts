@@ -305,7 +305,7 @@ test("TryCP Server - App API - get app info", async (t) => {
 
   const appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.deepEqual(appInfo.status, "running");
+  t.deepEqual(appInfo.status, { type: "running" });
 
   await conductor.disconnectAppInterface(port);
   await conductor.shutDown();
