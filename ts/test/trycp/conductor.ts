@@ -579,7 +579,7 @@ test("TryCP Conductor - grant a zome call capability", async (t) => {
   await localTryCpServer.stop();
 });
 
-test.only("TryCP Conductor - receive a signal", async (t) => {
+test("TryCP Conductor - receive a signal", async (t) => {
   const localTryCpServer = await TryCpServer.start();
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const client = await TryCpClient.create(SERVER_URL);
