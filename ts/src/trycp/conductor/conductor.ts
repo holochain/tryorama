@@ -15,7 +15,6 @@ import {
   DisableCloneCellRequest,
   DnaDefinition,
   DnaHash,
-  DnaSource,
   DumpFullStateRequest,
   DumpNetworkStatsRequest,
   DumpStateRequest,
@@ -29,7 +28,6 @@ import {
   GetDnaDefinitionRequest,
   getSigningCredentials,
   GrantedFunctions,
-  GrantedFunctionsType,
   GrantZomeCallCapabilityRequest,
   InstallAppRequest,
   IssueAppAuthenticationTokenRequest,
@@ -412,7 +410,7 @@ export class TryCpConductor implements IConductor {
      * @returns The registered DNA's {@link HoloHash}.
      */
     const registerDna = async (
-      request: RegisterDnaRequest & DnaSource
+      request: RegisterDnaRequest
     ): Promise<DnaHash> => {
       const response = await this.callAdminApi({
         type: "register_dna",
@@ -800,7 +798,8 @@ export class TryCpConductor implements IConductor {
           tag: "zome-call-signing-key",
           functions,
           access: {
-            Assigned: {
+            type: "assigned",
+            value: {
               secret: capSecret,
               assignees: [signingKey],
             },
@@ -823,7 +822,7 @@ export class TryCpConductor implements IConductor {
       const [keyPair, signingKey] = await generateSigningKeyPair();
       const capSecret = await grantSigningKey(
         cellId,
-        functions || GrantedFunctionsType.All,
+        functions || { type: "all" },
         signingKey
       );
       setSigningCredentials(cellId, { capSecret, keyPair, signingKey });
@@ -1039,22 +1038,13 @@ export class TryCpConductor implements IConductor {
     const roles_settings = options?.rolesSettings;
     const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
     const network_seed = options?.networkSeed;
-    const installAppRequest: InstallAppRequest =
-      "bundle" in appBundleSource
-        ? {
-            bundle: appBundleSource.bundle,
-            agent_key,
-            roles_settings,
-            installed_app_id,
-            network_seed,
-          }
-        : {
-            path: appBundleSource.path,
-            agent_key,
-            roles_settings,
-            installed_app_id,
-            network_seed,
-          };
+    const installAppRequest: InstallAppRequest = {
+      source: appBundleSource,
+      agent_key,
+      roles_settings,
+      installed_app_id,
+      network_seed,
+    };
     return this.adminWs().installApp(installAppRequest);
   }
 
@@ -1073,22 +1063,13 @@ export class TryCpConductor implements IConductor {
         const roles_settings = appForAgent.rolesSettings;
         const installed_app_id = options.installedAppId ?? `app-${uuidv4()}`;
         const network_seed = options.networkSeed;
-        const installAppRequest: InstallAppRequest =
-          "bundle" in appForAgent.app
-            ? {
-                bundle: appForAgent.app.bundle,
-                agent_key,
-                roles_settings,
-                installed_app_id,
-                network_seed,
-              }
-            : {
-                path: appForAgent.app.path,
-                agent_key,
-                roles_settings,
-                installed_app_id,
-                network_seed,
-              };
+        const installAppRequest: InstallAppRequest = {
+          source: appForAgent.app,
+          agent_key,
+          roles_settings,
+          installed_app_id,
+          network_seed,
+        };
 
         logger.debug(
           `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(

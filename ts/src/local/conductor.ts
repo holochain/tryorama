@@ -378,22 +378,13 @@ export class Conductor implements IConductor {
     const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
     const roles_settings = options?.rolesSettings;
     const network_seed = options?.networkSeed;
-    const installAppRequest: InstallAppRequest =
-      "bundle" in appBundleSource
-        ? {
-            bundle: appBundleSource.bundle,
-            agent_key,
-            roles_settings,
-            installed_app_id,
-            network_seed,
-          }
-        : {
-            path: appBundleSource.path,
-            agent_key,
-            roles_settings,
-            installed_app_id,
-            network_seed,
-          };
+    const installAppRequest: InstallAppRequest = {
+      source: appBundleSource,
+      agent_key,
+      roles_settings,
+      installed_app_id,
+      network_seed,
+    };
     logger.debug(
       `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
         agent_key

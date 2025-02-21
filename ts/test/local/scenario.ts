@@ -5,7 +5,6 @@ import {
   EntryHash,
   Signal,
   SignalCb,
-  SignalType,
 } from "@holochain/client";
 import assert from "node:assert/strict";
 import test from "tape-promise/tape.js";
@@ -17,7 +16,8 @@ const TEST_ZOME_NAME = "coordinator";
 test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      path: FIXTURE_HAPP_URL.pathname,
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     });
     t.ok(alice.namedCells.get("test"));
   });
@@ -26,7 +26,8 @@ test("Local Scenario - runScenario - Install hApp bundle and access cells throug
 test("Local Scenario - runScenario - Catch error when calling non-existent zome", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      path: FIXTURE_HAPP_URL.pathname,
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     });
 
     await t.rejects(
@@ -41,7 +42,8 @@ test("Local Scenario - runScenario - Catch error when calling non-existent zome"
 test("Local Scenario - runScenario - Catch error when attaching a protected port", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      path: FIXTURE_HAPP_URL.pathname,
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     });
 
     await t.rejects(
@@ -53,7 +55,8 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
 test("Local Scenario - runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      path: FIXTURE_HAPP_URL.pathname,
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     });
 
     t.throws(() => alice.cells[2].callZome({ zome_name: "", fn_name: "" }));
@@ -70,7 +73,8 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
     });
 
     const alice = await scenario.addPlayerWithApp({
-      path: FIXTURE_HAPP_URL.pathname,
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     });
     assert(signalHandlerAlice);
     assert("on" in alice.appWs);
@@ -91,7 +95,8 @@ test("Local Scenario - Install hApp bundle and access cell by role name", async 
   const scenario = new Scenario();
 
   const alice = await scenario.addPlayerWithApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   t.ok(alice.namedCells.get("test"));
   await scenario.cleanUp();
@@ -101,8 +106,8 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
   const scenario = new Scenario();
   t.ok(scenario.networkSeed);
   const [alice, bob] = await scenario.addPlayersWithApps([
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+    { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
   ]);
   t.ok(alice.namedCells.get("test"));
   t.ok(bob.namedCells.get("test"));
@@ -199,7 +204,8 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   await runScenario(async (scenario) => {
     // Construct proper paths for a hApp file created by the `hc app pack` command.
     const appBundleSource: AppBundleSource = {
-      path: FIXTURE_HAPP_URL.pathname,
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     };
 
     // Add 2 players with the test hApp to the Scenario. The returned players
@@ -236,7 +242,10 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
 
 test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
   const scenario = new Scenario();
-  const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const appBundleSource: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
   const [alice, bob] = await scenario.addPlayersWithApps([
     { appBundleSource },
     { appBundleSource },
@@ -283,20 +292,23 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   let signalHandlerAlice: SignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
     signalHandlerAlice = (signal: Signal) => {
-      assert(SignalType.App in signal);
-      resolve(signal[SignalType.App]);
+      assert(signal.type === "app");
+      resolve(signal.value);
     };
   });
 
   let signalHandlerBob: SignalCb | undefined;
   const signalReceivedBob = new Promise<AppSignal>((resolve) => {
     signalHandlerBob = (signal: Signal) => {
-      assert(SignalType.App in signal);
-      resolve(signal[SignalType.App]);
+      assert(signal.type === "app");
+      resolve(signal.value);
     };
   });
 
-  const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const appBundleSource: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
   const [alice, bob] = await scenario.addPlayersWithApps([
     { appBundleSource },
     { appBundleSource },
@@ -334,7 +346,10 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
 test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the last, 2 conductors", async (t) => {
   const scenario = new Scenario();
 
-  const appBundleSource: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const appBundleSource: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
   const [alice, bob] = await scenario.addPlayersWithApps([
     { appBundleSource },
     { appBundleSource },
@@ -368,7 +383,8 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
 test("Local Scenario - runScenario - call zome by role name", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      path: FIXTURE_HAPP_URL.pathname,
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     });
 
     const result = (await alice.namedCells.get("test")?.callZome({
