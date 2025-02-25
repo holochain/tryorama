@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsecellidslisted.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-ListCellIdsResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsecellidslisted.type.md)
 
 
@@ -62,6 +45,23 @@ ListCellIdsResponse
 </td><td>
 
 "cell\_ids\_listed"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsecellidslisted.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+ListCellIdsResponse
 
 
 </td><td>

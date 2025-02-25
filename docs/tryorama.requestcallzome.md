@@ -37,23 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.requestcallzome.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-CallZomeRequestSigned
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.requestcallzome.type.md)
 
 
@@ -63,6 +46,23 @@ CallZomeRequestSigned
 </td><td>
 
 "call\_zome"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.requestcallzome.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+CallZomeRequestSigned
 
 
 </td><td>

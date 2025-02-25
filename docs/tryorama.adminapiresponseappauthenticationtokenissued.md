@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseappauthenticationtokenissued.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-IssueAppAuthenticationTokenResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseappauthenticationtokenissued.type.md)
 
 
@@ -62,6 +45,23 @@ IssueAppAuthenticationTokenResponse
 </td><td>
 
 "app\_authentication\_token\_issued"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseappauthenticationtokenissued.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+IssueAppAuthenticationTokenResponse
 
 
 </td><td>

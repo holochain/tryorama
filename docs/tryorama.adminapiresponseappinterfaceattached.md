@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseappinterfaceattached.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-AttachAppInterfaceResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseappinterfaceattached.type.md)
 
 
@@ -62,6 +45,23 @@ AttachAppInterfaceResponse
 </td><td>
 
 "app\_interface\_attached"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseappinterfaceattached.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AttachAppInterfaceResponse
 
 
 </td><td>

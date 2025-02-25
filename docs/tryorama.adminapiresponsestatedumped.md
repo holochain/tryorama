@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsestatedumped.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-DumpStateResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsestatedumped.type.md)
 
 
@@ -62,6 +45,23 @@ DumpStateResponse
 </td><td>
 
 "state\_dumped"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsestatedumped.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DumpStateResponse
 
 
 </td><td>

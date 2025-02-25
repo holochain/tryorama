@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseagentpubkeygenerated.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-HoloHash
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseagentpubkeygenerated.type.md)
 
 
@@ -62,6 +45,23 @@ HoloHash
 </td><td>
 
 "agent\_pub\_key\_generated"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseagentpubkeygenerated.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+HoloHash
 
 
 </td><td>

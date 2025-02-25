@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseappinstalled.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-AppInfo
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseappinstalled.type.md)
 
 
@@ -62,6 +45,23 @@ AppInfo
 </td><td>
 
 "app\_installed"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseappinstalled.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppInfo
 
 
 </td><td>

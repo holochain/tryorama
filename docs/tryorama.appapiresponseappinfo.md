@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.appapiresponseappinfo.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-AppInfoResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.appapiresponseappinfo.type.md)
 
 
@@ -62,6 +45,23 @@ AppInfoResponse
 </td><td>
 
 "app\_info"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.appapiresponseappinfo.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppInfoResponse
 
 
 </td><td>

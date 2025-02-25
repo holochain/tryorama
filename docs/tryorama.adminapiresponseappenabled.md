@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseappenabled.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-EnableAppResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseappenabled.type.md)
 
 
@@ -62,6 +45,23 @@ EnableAppResponse
 </td><td>
 
 "app\_enabled"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseappenabled.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+EnableAppResponse
 
 
 </td><td>

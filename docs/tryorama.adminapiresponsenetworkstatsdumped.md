@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsenetworkstatsdumped.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-DumpNetworkStatsResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsenetworkstatsdumped.type.md)
 
 
@@ -62,6 +45,23 @@ DumpNetworkStatsResponse
 </td><td>
 
 "network\_stats\_dumped"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsenetworkstatsdumped.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DumpNetworkStatsResponse
 
 
 </td><td>

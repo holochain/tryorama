@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseagentkeyrevoked.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-RevokeAgentKeyResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseagentkeyrevoked.type.md)
 
 
@@ -62,6 +45,23 @@ RevokeAgentKeyResponse
 </td><td>
 
 "agent\_key\_revoked"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseagentkeyrevoked.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+RevokeAgentKeyResponse
 
 
 </td><td>
