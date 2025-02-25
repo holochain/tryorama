@@ -41,7 +41,7 @@ jobs:
           key: ${{ runner.os }}-cargo-cache-${{ hashFiles('Cargo.lock') }}
 
       - name: Run TryCP integration tests
-        run: nix develop -c $SHELL -c "cargo test -p trycp_server --release"
+        run: nix develop -c $SHELL -c "holochain --version && cargo test -p trycp_server --release"
 
       - name: Build test zomes
         run: nix develop -c $SHELL -c "./build-fixture.sh"
