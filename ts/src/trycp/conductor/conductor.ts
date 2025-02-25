@@ -15,7 +15,6 @@ import {
   DisableCloneCellRequest,
   DnaDefinition,
   DnaHash,
-  DnaSource,
   DumpFullStateRequest,
   DumpNetworkStatsRequest,
   DumpStateRequest,
@@ -29,7 +28,6 @@ import {
   GetDnaDefinitionRequest,
   getSigningCredentials,
   GrantedFunctions,
-  GrantedFunctionsType,
   GrantZomeCallCapabilityRequest,
   InstallAppRequest,
   IssueAppAuthenticationTokenRequest,
@@ -412,14 +410,14 @@ export class TryCpConductor implements IConductor {
      * @returns The registered DNA's {@link HoloHash}.
      */
     const registerDna = async (
-      request: RegisterDnaRequest & DnaSource
+      request: RegisterDnaRequest
     ): Promise<DnaHash> => {
       const response = await this.callAdminApi({
         type: "register_dna",
-        data: request,
+        value: request,
       });
       assert(response.type === "dna_registered");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -433,10 +431,10 @@ export class TryCpConductor implements IConductor {
     ): Promise<DnaDefinition> => {
       const response = await this.callAdminApi({
         type: "get_dna_definition",
-        data: dnaHash,
+        value: dnaHash,
       });
       assert(response.type === "dna_definition_returned");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -450,10 +448,10 @@ export class TryCpConductor implements IConductor {
     ): Promise<GetCompatibleCellsResponse> => {
       const response = await this.callAdminApi({
         type: "get_compatible_cells",
-        data: dnaHash,
+        value: dnaHash,
       });
       assert(response.type === "compatible_cells");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -467,7 +465,7 @@ export class TryCpConductor implements IConductor {
     ) => {
       const response = await this.callAdminApi({
         type: "grant_zome_call_capability",
-        data: request,
+        value: request,
       });
       assert(response.type === "zome_call_capability_granted");
     };
@@ -482,7 +480,7 @@ export class TryCpConductor implements IConductor {
         type: "generate_agent_pub_key",
       });
       assert(response.type === "agent_pub_key_generated");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -491,13 +489,13 @@ export class TryCpConductor implements IConductor {
      * @param data - {@link RevokeAgentKeyRequest}
      * @returns A list of errors of the cells where deletion was unsuccessful.
      */
-    const revokeAgentKey = async (data: RevokeAgentKeyRequest) => {
+    const revokeAgentKey = async (request: RevokeAgentKeyRequest) => {
       const response = await this.callAdminApi({
         type: "revoke_agent_key",
-        data,
+        value: request,
       });
       assert(response.type === "agent_key_revoked");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -506,13 +504,13 @@ export class TryCpConductor implements IConductor {
      * @param data - {@link InstallAppBundleRequest}.
      * @returns {@link @holochain/client#InstalledAppInfo}.
      */
-    const installApp = async (data: InstallAppRequest) => {
+    const installApp = async (request: InstallAppRequest) => {
       const response = await this.callAdminApi({
         type: "install_app",
-        data,
+        value: request,
       });
       assert(response.type === "app_installed");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -524,10 +522,10 @@ export class TryCpConductor implements IConductor {
     const enableApp = async (request: EnableAppRequest) => {
       const response = await this.callAdminApi({
         type: "enable_app",
-        data: request,
+        value: request,
       });
       assert(response.type === "app_enabled");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -539,10 +537,10 @@ export class TryCpConductor implements IConductor {
     const disableApp = async (request: DisableAppRequest) => {
       const response = await this.callAdminApi({
         type: "disable_app",
-        data: request,
+        value: request,
       });
       assert(response.type === "app_disabled");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -554,10 +552,10 @@ export class TryCpConductor implements IConductor {
     const startApp = async (request: StartAppRequest) => {
       const response = await this.callAdminApi({
         type: "start_app",
-        data: request,
+        value: request,
       });
       assert(response.type === "app_started");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -569,10 +567,10 @@ export class TryCpConductor implements IConductor {
     const uninstallApp = async (request: UninstallAppRequest) => {
       const response = await this.callAdminApi({
         type: "uninstall_app",
-        data: request,
+        value: request,
       });
       assert(response.type === "app_uninstalled");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -584,10 +582,10 @@ export class TryCpConductor implements IConductor {
     const updateCoordinators = async (request: UpdateCoordinatorsRequest) => {
       const response = await this.callAdminApi({
         type: "update_coordinators",
-        data: request,
+        value: request,
       });
       assert(response.type === "coordinators_updated");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -599,10 +597,10 @@ export class TryCpConductor implements IConductor {
     const listApps = async (request: ListAppsRequest) => {
       const response = await this.callAdminApi({
         type: "list_apps",
-        data: request,
+        value: request,
       });
       assert(response.type === "apps_listed");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -615,7 +613,7 @@ export class TryCpConductor implements IConductor {
         type: "list_cell_ids",
       });
       assert(response.type === "cell_ids_listed");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -626,7 +624,7 @@ export class TryCpConductor implements IConductor {
     const listDnas = async () => {
       const response = await this.callAdminApi({ type: "list_dnas" });
       assert(response.type === "dnas_listed");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -643,11 +641,11 @@ export class TryCpConductor implements IConductor {
       };
       const response = await this.callAdminApi({
         type: "attach_app_interface",
-        data: request,
+        value: request,
       });
       assert(response.type === "app_interface_attached");
       return {
-        port: response.data.port,
+        port: response.value.port,
       };
     };
 
@@ -661,7 +659,7 @@ export class TryCpConductor implements IConductor {
         type: "list_app_interfaces",
       });
       assert(response.type === "app_interfaces_listed");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -673,12 +671,12 @@ export class TryCpConductor implements IConductor {
     const agentInfo = async (req: AgentInfoRequest) => {
       const response = await this.callAdminApi({
         type: "agent_info",
-        data: {
+        value: {
           cell_id: req.cell_id || null,
         },
       });
       assert(response.type === "agent_info");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -689,7 +687,7 @@ export class TryCpConductor implements IConductor {
     const addAgentInfo = async (request: AddAgentInfoRequest) => {
       const response = await this.callAdminApi({
         type: "add_agent_info",
-        data: request,
+        value: request,
       });
       assert(response.type === "agent_info_added");
     };
@@ -702,7 +700,7 @@ export class TryCpConductor implements IConductor {
     const deleteCloneCell = async (request: DeleteCloneCellRequest) => {
       const response = await this.callAdminApi({
         type: "delete_clone_cell",
-        data: request,
+        value: request,
       });
       assert(response.type === "clone_cell_deleted");
     };
@@ -716,11 +714,11 @@ export class TryCpConductor implements IConductor {
     const dumpState = async (request: DumpStateRequest) => {
       const response = await this.callAdminApi({
         type: "dump_state",
-        data: request,
+        value: request,
       });
-      assert("data" in response);
+      assert("value" in response);
       assert(response.type === "state_dumped");
-      const stateDump = JSON.parse(response.data.replace(/\\n/g, ""));
+      const stateDump = JSON.parse(response.value.replace(/\\n/g, ""));
       return stateDump as [FullStateDump, string];
     };
 
@@ -733,10 +731,10 @@ export class TryCpConductor implements IConductor {
     const dumpFullState = async (request: DumpFullStateRequest) => {
       const response = await this.callAdminApi({
         type: "dump_full_state",
-        data: request,
+        value: request,
       });
       assert(response.type === "full_state_dumped");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -748,10 +746,10 @@ export class TryCpConductor implements IConductor {
     const dumpNetworkStats = async (request: DumpNetworkStatsRequest) => {
       const response = await this.callAdminApi({
         type: "dump_network_stats",
-        data: request,
+        value: request,
       });
       assert(response.type === "network_stats_dumped");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -763,10 +761,10 @@ export class TryCpConductor implements IConductor {
     const storageInfo = async (request: StorageInfoRequest) => {
       const response = await this.callAdminApi({
         type: "storage_info",
-        data: request,
+        value: request,
       });
       assert(response.type === "storage_info");
-      return response.data;
+      return response.value;
     };
 
     const issueAppAuthenticationToken = async (
@@ -774,10 +772,10 @@ export class TryCpConductor implements IConductor {
     ) => {
       const response = await this.callAdminApi({
         type: "issue_app_authentication_token",
-        data: request,
+        value: request,
       });
       assert(response.type === "app_authentication_token_issued");
-      return response.data;
+      return response.value;
     };
 
     /**
@@ -800,7 +798,8 @@ export class TryCpConductor implements IConductor {
           tag: "zome-call-signing-key",
           functions,
           access: {
-            Assigned: {
+            type: "assigned",
+            value: {
               secret: capSecret,
               assignees: [signingKey],
             },
@@ -823,7 +822,7 @@ export class TryCpConductor implements IConductor {
       const [keyPair, signingKey] = await generateSigningKeyPair();
       const capSecret = await grantSigningKey(
         cellId,
-        functions || GrantedFunctionsType.All,
+        functions || { type: "all" },
         signingKey
       );
       setSigningCredentials(cellId, { capSecret, keyPair, signingKey });
@@ -895,7 +894,7 @@ export class TryCpConductor implements IConductor {
         type: "app_info",
       });
       assert(response.type === "app_info");
-      return (response as AppApiResponseAppInfo).data;
+      return (response as AppApiResponseAppInfo).value;
     };
 
     /**
@@ -906,7 +905,7 @@ export class TryCpConductor implements IConductor {
     const provideMemproofs = async (request: MemproofMap) => {
       const response = await this.callAppApi(port, {
         type: "provide_memproofs",
-        data: request,
+        value: request,
       });
       assert(response.type === AppApiResponseOk);
     };
@@ -942,13 +941,13 @@ export class TryCpConductor implements IConductor {
       const signedRequest = await signZomeCall(request);
       const response = await this.callAppApi(port, {
         type: "call_zome",
-        data: signedRequest,
+        value: signedRequest,
       });
-      assert("data" in response);
-      assert(response.data);
-      assert("BYTES_PER_ELEMENT" in response.data);
+      assert("value" in response);
+      assert(response.value);
+      assert("BYTES_PER_ELEMENT" in response.value);
       const deserializedPayload = deserializeZomeResponsePayload<T>(
-        response.data
+        response.value
       );
       return deserializedPayload;
     };
@@ -962,10 +961,10 @@ export class TryCpConductor implements IConductor {
     const createCloneCell = async (request: CreateCloneCellRequest) => {
       const response = await this.callAppApi(port, {
         type: "create_clone_cell",
-        data: request,
+        value: request,
       });
       assert(response.type === "clone_cell_created");
-      return (response as AppApiResponseCloneCellCreated).data;
+      return (response as AppApiResponseCloneCellCreated).value;
     };
 
     /**
@@ -978,10 +977,10 @@ export class TryCpConductor implements IConductor {
     const enableCloneCell = async (request: EnableCloneCellRequest) => {
       const response = await this.callAppApi(port, {
         type: "enable_clone_cell",
-        data: request,
+        value: request,
       });
       assert(response.type === "clone_cell_enabled");
-      return (response as AppApiResponseCloneCellEnabled).data;
+      return (response as AppApiResponseCloneCellEnabled).value;
     };
 
     /**
@@ -993,10 +992,10 @@ export class TryCpConductor implements IConductor {
     const disableCloneCell = async (request: DisableCloneCellRequest) => {
       const response = await this.callAppApi(port, {
         type: "disable_clone_cell",
-        data: request,
+        value: request,
       });
       assert(response.type === "clone_cell_disabled");
-      return (response as AppApiResponseCloneCellDisabled).data;
+      return (response as AppApiResponseCloneCellDisabled).value;
     };
 
     /**
@@ -1008,10 +1007,10 @@ export class TryCpConductor implements IConductor {
     const networkInfo = async (request: NetworkInfoRequest) => {
       const response = await this.callAppApi(port, {
         type: "network_info",
-        data: request,
+        value: request,
       });
       assert(response.type === "network_info");
-      return (response as AppApiResponseNetworkInfo).data;
+      return (response as AppApiResponseNetworkInfo).value;
     };
 
     return {
@@ -1039,22 +1038,13 @@ export class TryCpConductor implements IConductor {
     const roles_settings = options?.rolesSettings;
     const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
     const network_seed = options?.networkSeed;
-    const installAppRequest: InstallAppRequest =
-      "bundle" in appBundleSource
-        ? {
-            bundle: appBundleSource.bundle,
-            agent_key,
-            roles_settings,
-            installed_app_id,
-            network_seed,
-          }
-        : {
-            path: appBundleSource.path,
-            agent_key,
-            roles_settings,
-            installed_app_id,
-            network_seed,
-          };
+    const installAppRequest: InstallAppRequest = {
+      source: appBundleSource,
+      agent_key,
+      roles_settings,
+      installed_app_id,
+      network_seed,
+    };
     return this.adminWs().installApp(installAppRequest);
   }
 
@@ -1073,22 +1063,13 @@ export class TryCpConductor implements IConductor {
         const roles_settings = appForAgent.rolesSettings;
         const installed_app_id = options.installedAppId ?? `app-${uuidv4()}`;
         const network_seed = options.networkSeed;
-        const installAppRequest: InstallAppRequest =
-          "bundle" in appForAgent.app
-            ? {
-                bundle: appForAgent.app.bundle,
-                agent_key,
-                roles_settings,
-                installed_app_id,
-                network_seed,
-              }
-            : {
-                path: appForAgent.app.path,
-                agent_key,
-                roles_settings,
-                installed_app_id,
-                network_seed,
-              };
+        const installAppRequest: InstallAppRequest = {
+          source: appForAgent.app,
+          agent_key,
+          roles_settings,
+          installed_app_id,
+          network_seed,
+        };
 
         logger.debug(
           `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(

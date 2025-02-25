@@ -7,12 +7,11 @@ import {
   CloneId,
   encodeHashToBase64,
   EntryHash,
-  SignalType,
-  GrantedFunctionsType,
   RevokeAgentKeyResponse,
   Duration,
   fakeAgentPubKey,
   ProvisionedCell,
+  AppSignal,
 } from "@holochain/client";
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
@@ -87,7 +86,8 @@ test("TryCP Conductor - revoke agent key", async (t) => {
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
   const aliceHapp = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const { port } = await adminWs.attachAppInterface();
@@ -163,7 +163,7 @@ test("TryCP Conductor - provide agent pub keys when installing hApp", async (t) 
   t.ok(agentPubKey, "agent pub key generated");
 
   const aliceApp = await conductor.installApp(
-    { path: FIXTURE_HAPP_URL.pathname },
+    { type: "path", value: FIXTURE_HAPP_URL.pathname },
     { agentPubKey }
   );
   t.deepEqual(
@@ -185,11 +185,11 @@ test("TryCP Conductor - get compatible cells", async (t) => {
   const conductor = await createTryCpConductor(client);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const app = await conductor.installApp(
-    { path: FIXTURE_HAPP_URL.pathname },
+    { type: "path", value: FIXTURE_HAPP_URL.pathname },
     { agentPubKey }
   );
-  assert(CellType.Provisioned in app.cell_info[ROLE_NAME][0]);
-  const cellId = app.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
+  assert(app.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
+  const cellId = app.cell_info[ROLE_NAME][0].value.cell_id;
   const dnaHash = cellId[0];
   const dnaHashB64 = encodeHashToBase64(dnaHash);
 
@@ -219,7 +219,8 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   const adminWs = conductor.adminWs();
 
   const app = await conductor.installApp({
-    bundle: {
+    type: "bundle",
+    value: {
       manifest: {
         manifest_version: "1",
         name: "app",
@@ -253,7 +254,7 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   assert(appInfo);
   t.deepEqual(
     appInfo.status,
-    { disabled: { reason: "never_started" } },
+    { type: "disabled", value: { reason: { type: "never_started" } } },
     "app status is never_started"
   );
 
@@ -269,7 +270,10 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   assert(appInfo);
   t.deepEqual(
     appInfo.status,
-    { disabled: { reason: "not_started_after_providing_memproofs" } },
+    {
+      type: "disabled",
+      value: { reason: { type: "not_started_after_providing_memproofs" } },
+    },
     "app status is not_started_after_providing_memproofs"
   );
 
@@ -277,7 +281,7 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
 
   appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.equal(appInfo.status, "running", "app status is running");
+  t.deepEqual(appInfo.status, { type: "running" }, "app status is running");
 
   await stopLocalServices(servicesProcess);
   await client.cleanUp();
@@ -302,7 +306,8 @@ test("TryCP Conductor - install app with roles settings", async (t) => {
 
   const app = await conductor.installApp(
     {
-      bundle: {
+      type: "bundle",
+      value: {
         manifest: {
           manifest_version: "1",
           name: "app",
@@ -327,13 +332,15 @@ test("TryCP Conductor - install app with roles settings", async (t) => {
     {
       rolesSettings: {
         [ROLE_NAME]: {
-          type: "Provisioned",
-          membrane_proof: new Uint8Array(6),
-          modifiers: {
-            network_seed: "hello",
-            properties: yaml.dump({ progenitor: progenitorKey }),
-            origin_time: originTime,
-            quantum_time: quantumTime,
+          type: "provisioned",
+          value: {
+            membrane_proof: new Uint8Array(6),
+            modifiers: {
+              network_seed: "hello",
+              properties: yaml.dump({ progenitor: progenitorKey }),
+              origin_time: originTime,
+              quantum_time: quantumTime,
+            },
           },
         },
       },
@@ -349,8 +356,8 @@ test("TryCP Conductor - install app with roles settings", async (t) => {
 
   const appInfo = await appWs.appInfo();
   assert(appInfo);
-  const provisionedCell: ProvisionedCell =
-    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
+  const provisionedCell = appInfo.cell_info[ROLE_NAME][0]
+    .value as ProvisionedCell;
   t.equal(provisionedCell.dna_modifiers.network_seed, "hello");
   t.deepEqual(
     yaml.load(decode(provisionedCell.dna_modifiers.properties) as string),
@@ -372,7 +379,8 @@ test("TryCP Conductor - install hApp bundle and access cell by role name", async
   const conductor = await createTryCpConductor(client);
   const adminWs = conductor.adminWs();
   const aliceHapp = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const { port } = await adminWs.attachAppInterface();
   const issued = await adminWs.issueAppAuthenticationToken({
@@ -395,7 +403,8 @@ test("TryCP Conductor - install and call a hApp bundle", async (t) => {
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
   const aliceHapp = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const { port } = await adminWs.attachAppInterface();
@@ -437,7 +446,9 @@ test("TryCP Conductor - get a DNA definition", async (t) => {
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
-  const dnaHash = await conductor.adminWs().registerDna({ path: relativePath });
+  const dnaHash = await conductor
+    .adminWs()
+    .registerDna({ source: { type: "path", value: relativePath } });
 
   const dnaDefinition = await conductor.adminWs().getDnaDefinition(dnaHash);
   t.equal(dnaDefinition.name, "crud-dna", "dna name matches name in manifest");
@@ -471,20 +482,20 @@ test("TryCP Conductor - request storage info", async (t) => {
   const conductor = await createTryCpConductor(client);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const appInfo = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    source: { type: "path", value: FIXTURE_HAPP_URL.pathname },
     agent_key: agentPubKey,
   });
 
   const storageInfo = await conductor.adminWs().storageInfo();
-  t.ok(storageInfo.blobs[0].dna.authored_data_size > 0);
-  t.ok(storageInfo.blobs[0].dna.authored_data_size_on_disk > 0);
-  t.ok(storageInfo.blobs[0].dna.dht_data_size > 0);
-  t.ok(storageInfo.blobs[0].dna.dht_data_size_on_disk > 0);
-  t.ok(storageInfo.blobs[0].dna.cache_data_size > 0);
-  t.ok(storageInfo.blobs[0].dna.cache_data_size_on_disk > 0);
+  t.ok(storageInfo.blobs[0].value.authored_data_size > 0);
+  t.ok(storageInfo.blobs[0].value.authored_data_size_on_disk > 0);
+  t.ok(storageInfo.blobs[0].value.dht_data_size > 0);
+  t.ok(storageInfo.blobs[0].value.dht_data_size_on_disk > 0);
+  t.ok(storageInfo.blobs[0].value.cache_data_size > 0);
+  t.ok(storageInfo.blobs[0].value.cache_data_size_on_disk > 0);
   t.assert(
     storageInfo.blobs.some((blob) =>
-      blob.dna.used_by.includes(appInfo.installed_app_id)
+      blob.value.used_by.includes(appInfo.installed_app_id)
     )
   );
 
@@ -501,7 +512,7 @@ test("TryCP Conductor - request network info", async (t) => {
   const conductor = await createTryCpConductor(client);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const appInfo = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    source: { type: "path", value: FIXTURE_HAPP_URL.pathname },
     agent_key: agentPubKey,
     network_seed: Date.now().toString(),
   });
@@ -513,9 +524,8 @@ test("TryCP Conductor - request network info", async (t) => {
     installed_app_id: appInfo.installed_app_id,
   });
   await conductor.connectAppInterface(issued.token, port);
-  assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
-  const dnaHash =
-    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id[0];
+  assert(appInfo.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
+  const dnaHash = appInfo.cell_info[ROLE_NAME][0].value.cell_id[0];
 
   const appWs = await conductor.connectAppWs(issued.token, port);
   const networkInfo = await appWs.networkInfo({
@@ -542,22 +552,24 @@ test("TryCP Conductor - grant a zome call capability", async (t) => {
   client.signalingServerUrl = signalingServerUrl;
   const conductor = await createTryCpConductor(client);
   const appInfo = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   await conductor
     .adminWs()
     .enableApp({ installed_app_id: appInfo.installed_app_id });
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-  assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
+  assert(appInfo.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
 
   const response = await conductor.adminWs().grantZomeCallCapability({
-    cell_id: appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id,
+    cell_id: appInfo.cell_info[ROLE_NAME][0].value.cell_id,
     cap_grant: {
       tag: "",
       access: {
-        Assigned: { secret: new Uint8Array(64), assignees: [agentPubKey] },
+        type: "assigned",
+        value: { secret: new Uint8Array(64), assignees: [agentPubKey] },
       },
-      functions: { [GrantedFunctionsType.Listed]: [["crud", "create"]] },
+      functions: { type: "listed", value: [["crud", "create"]] },
     },
   });
   t.equal(response, undefined);
@@ -584,7 +596,10 @@ test("TryCP Conductor - receive a signal", async (t) => {
   });
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const appInfo = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    source: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
     agent_key: agentPubKey,
   });
   const { port } = await conductor.adminWs().attachAppInterface();
@@ -599,9 +614,8 @@ test("TryCP Conductor - receive a signal", async (t) => {
     .adminWs()
     .enableApp({ installed_app_id: appInfo.installed_app_id });
   const appWs = await conductor.connectAppWs(issued.token, port);
-
-  assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
-  const cell_id = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
+  assert(appInfo.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
+  const cell_id = appInfo.cell_info[ROLE_NAME][0].value.cell_id;
 
   appWs.callZome({
     cell_id,
@@ -612,7 +626,7 @@ test("TryCP Conductor - receive a signal", async (t) => {
   });
   const actualSignal = await signalReceived;
   t.deepEqual(
-    actualSignal[SignalType.App].payload,
+    (actualSignal.value as AppSignal).payload,
     testSignal,
     "received signal matches expected signal"
   );
@@ -630,7 +644,9 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   const conductor = await createTryCpConductor(client);
 
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
-  const dnaHash = await conductor.adminWs().registerDna({ path: relativePath });
+  const dnaHash = await conductor
+    .adminWs()
+    .registerDna({ source: { type: "path", value: relativePath } });
   const dnaHashB64 = Buffer.from(dnaHash).toString("base64");
   t.equal(dnaHash.length, 39, "DNA hash is 39 bytes long");
   t.ok(dnaHashB64.startsWith("hC0k"), "DNA hash starts with hC0k");
@@ -642,12 +658,12 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
 
   const appId = "entry-app";
   const appInfo = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    source: { type: "path", value: FIXTURE_HAPP_URL.pathname },
     installed_app_id: appId,
     agent_key: agentPubKey,
   });
-  assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
-  const { cell_id } = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
+  assert(appInfo.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
+  const { cell_id } = appInfo.cell_info[ROLE_NAME][0].value;
   t.ok(
     Buffer.from(cell_id[0]).toString("base64").startsWith("hC0k"),
     "first part of cell id start with hC0k"
@@ -662,7 +678,7 @@ test("TryCP Conductor - create and read an entry using the entry zome", async (t
   });
   t.deepEqual(
     enabledAppResponse.app.status,
-    "running",
+    { type: "running" },
     "enabled app response matches 'running'"
   );
 
@@ -733,10 +749,10 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   const relativePath = await conductor.downloadDna(FIXTURE_DNA_URL);
   const dnaHash1 = await conductor
     .adminWs()
-    .registerDna({ path: relativePath });
+    .registerDna({ source: { type: "path", value: relativePath } });
   const dnaHash2 = await conductor
     .adminWs()
-    .registerDna({ path: relativePath });
+    .registerDna({ source: { type: "path", value: relativePath } });
   const dnaHash1B64 = Buffer.from(dnaHash1).toString("base64");
   const dnaHash2B64 = Buffer.from(dnaHash1).toString("base64");
   t.equal(dnaHash1.length, 39, "DNA hash 1 is 39 bytes long");
@@ -756,13 +772,12 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
 
   const appId1 = "entry-app1";
   const appInfo1 = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    source: { type: "path", value: FIXTURE_HAPP_URL.pathname },
     installed_app_id: appId1,
     agent_key: agent1PubKey,
   });
-  assert(CellType.Provisioned in appInfo1.cell_info[ROLE_NAME][0]);
-  const cellId1 =
-    appInfo1.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
+  assert(appInfo1.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
+  const cellId1 = appInfo1.cell_info[ROLE_NAME][0].value.cell_id;
   t.ok(
     Buffer.from(cellId1[0]).toString("base64").startsWith("hC0k"),
     "first part of cell id 1 starts with hC0k"
@@ -774,13 +789,12 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
 
   const appId2 = "entry-app2";
   const appInfo2 = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    source: { type: "path", value: FIXTURE_HAPP_URL.pathname },
     installed_app_id: appId2,
     agent_key: agent2PubKey,
   });
-  assert(CellType.Provisioned in appInfo2.cell_info[ROLE_NAME][0]);
-  const cellId2 =
-    appInfo2.cell_info[ROLE_NAME][0][CellType.Provisioned].cell_id;
+  assert(appInfo2.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
+  const cellId2 = appInfo2.cell_info[ROLE_NAME][0].value.cell_id;
   t.ok(
     Buffer.from(cellId2[0]).toString("base64").startsWith("hC0k"),
     "first part of cell id 2 starts with hC0k"
@@ -800,7 +814,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   });
   t.deepEqual(
     enabledAppResponse1.app.status,
-    "running",
+    { type: "running" },
     "enabled app response 1 matches 'running'"
   );
   const enabledAppResponse2 = await conductor.adminWs().enableApp({
@@ -808,7 +822,7 @@ test("TryCP Conductor - create and read an entry using the entry zome, 1 conduct
   });
   t.deepEqual(
     enabledAppResponse2.app.status,
-    "running",
+    { type: "running" },
     "enabled app response 2 matches 'running'"
   );
 
@@ -870,12 +884,12 @@ test("TryCP Conductor - clone cell management", async (t) => {
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const appId = "entry-app";
   const appInfo = await conductor.adminWs().installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    source: { type: "path", value: FIXTURE_HAPP_URL.pathname },
     installed_app_id: appId,
     agent_key: agentPubKey,
   });
-  assert(CellType.Provisioned in appInfo.cell_info[ROLE_NAME][0]);
-  const { cell_id } = appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
+  assert(appInfo.cell_info[ROLE_NAME][0].type === CellType.Provisioned);
+  const { cell_id } = appInfo.cell_info[ROLE_NAME][0].value;
   await conductor.adminWs().enableApp({ installed_app_id: appId });
   const { port } = await conductor.adminWs().attachAppInterface();
   const issued = await conductor.adminWs().issueAppAuthenticationToken({
@@ -909,7 +923,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   });
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id[0],
+    clone_cell_id: { type: "dna_hash", value: cloneCell.cell_id[0] },
   });
   await t.rejects(
     appWs.callZome({
@@ -923,7 +937,7 @@ test("TryCP Conductor - clone cell management", async (t) => {
   );
 
   const enabledCloneCell = await appWs.enableCloneCell({
-    clone_cell_id: cloneCell.clone_id,
+    clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
   });
   t.deepEqual(
     enabledCloneCell,
@@ -941,14 +955,15 @@ test("TryCP Conductor - clone cell management", async (t) => {
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id[0],
+    clone_cell_id: { type: "dna_hash", value: cloneCell.cell_id[0] },
   });
-  await conductor
-    .adminWs()
-    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id[0] });
+  await conductor.adminWs().deleteCloneCell({
+    app_id: appId,
+    clone_cell_id: { type: "dna_hash", value: cloneCell.cell_id[0] },
+  });
   await t.rejects(
     appWs.enableCloneCell({
-      clone_cell_id: cloneCell.clone_id,
+      clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
     }),
     "deleted clone cell cannot be enabled"
   );
@@ -966,7 +981,10 @@ test("TryCP Conductor - create and read an entry, 2 conductors, 2 cells, 2 agent
   client.bootstrapServerUrl = bootstrapServerUrl;
   client.signalingServerUrl = signalingServerUrl;
 
-  const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const app: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
 
   const conductor1 = await createTryCpConductor(client);
   const aliceApp = await conductor1.installApp(app);
@@ -1046,7 +1064,7 @@ test("TryCP Conductor - pass a custom application id to happ installation", asyn
   const conductor = await createTryCpConductor(client);
   const expectedInstalledAppId = "test-app-id";
   const [aliceApp] = await conductor.installAgentsApps({
-    agentsApps: [{ app: { path: FIXTURE_HAPP_URL.pathname } }],
+    agentsApps: [{ app: { type: "path", value: FIXTURE_HAPP_URL.pathname } }],
     installedAppId: expectedInstalledAppId,
   });
   const actualInstalledAppId = aliceApp.installed_app_id;

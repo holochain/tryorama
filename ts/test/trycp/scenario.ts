@@ -1,4 +1,4 @@
-import { EntryHash, Signal, SignalCb, SignalType } from "@holochain/client";
+import { AppSignal, EntryHash, Signal, SignalCb } from "@holochain/client";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import { runLocalServices } from "../../src/common.js";
@@ -51,7 +51,8 @@ test("TryCP Scenario - can create player without DPKI", async (t) => {
   t.ok(client, "client set up");
 
   const player = await scenario.addPlayerWithApp(client, {
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const cellIds = await player.conductor.adminWs().listCellIds();
   t.equal(cellIds.length, 1, "conductor has 1 app cell and no DPKI cell");
@@ -90,7 +91,8 @@ test("TryCP Scenario - install a hApp to 1 conductor with 1 agent", async (t) =>
   t.ok(client, "client set up");
 
   const alice = await scenario.addPlayerWithApp(client, {
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   t.ok(alice.conductor, "player alice is associated with a conductor");
   t.equal(
@@ -122,7 +124,8 @@ test("TryCP Scenario - install a hApp to 2 conductors with 1 agent each", async 
   t.ok(client2, "client 2 set up");
 
   const alice = await scenario.addPlayerWithApp(client1, {
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   t.equal(
     alice.conductor.tryCpClient,
@@ -135,7 +138,8 @@ test("TryCP Scenario - install a hApp to 2 conductors with 1 agent each", async 
   );
 
   const bob = await scenario.addPlayerWithApp(client2, {
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   t.equal(
     bob.conductor.tryCpClient,
@@ -163,7 +167,8 @@ test("TryCP Scenario - list everything", async (t) => {
   const client = await scenario.addClient(SERVER_URL);
 
   const alice = await scenario.addPlayerWithApp(client, {
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
 
   const listedApps = await alice.conductor.adminWs().listApps({});
@@ -212,11 +217,17 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
   });
   const [alice, bob] = await scenario.addPlayersWithApps(client, [
     {
-      appBundleSource: { path: FIXTURE_HAPP_URL.pathname },
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
       options: { signalHandler: signalHandlerAlice },
     },
     {
-      appBundleSource: { path: FIXTURE_HAPP_URL.pathname },
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
       options: { signalHandler: signalHandlerBob },
     },
   ]);
@@ -240,13 +251,13 @@ test("TryCP Scenario - receive signals with 2 conductors", async (t) => {
   ]);
 
   t.deepEqual(
-    actualSignalAlice[SignalType.App].payload,
+    (actualSignalAlice.value as AppSignal).payload,
     signalAlice,
     "received alice's signal"
   );
 
   t.deepEqual(
-    actualSignalBob[SignalType.App].payload,
+    (actualSignalBob.value as AppSignal).payload,
     signalBob,
     "received bob's signal"
   );
@@ -267,8 +278,18 @@ test("TryCp Scenario - create and read an entry, 2 conductors", async (t) => {
   const client = await scenario.addClient(SERVER_URL);
 
   const [alice, bob] = await scenario.addPlayersWithApps(client, [
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    {
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    },
+    {
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    },
   ]);
 
   const content = "Hi dare";
@@ -303,8 +324,18 @@ test("TryCP Scenario - conductor maintains data after shutdown and restart", asy
   const client = await scenario.addClient(SERVER_URL);
 
   const [alice, bob] = await scenario.addPlayersWithApps(client, [
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
-    { appBundleSource: { path: FIXTURE_HAPP_URL.pathname } },
+    {
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    },
+    {
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    },
   ]);
 
   const content = "Before shutdown";
@@ -376,7 +407,10 @@ test("TryCP Scenario - connect to multiple clients by passing a list of URLs", a
   // avoid identical admin ports being assigned multiple times.
   for (let i = 0; i < numberOfServers; i++) {
     await scenario.addClientsPlayers([serverUrls[i]], {
-      app: { path: FIXTURE_HAPP_URL.pathname },
+      app: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
     });
   }
   t.ok(
@@ -417,7 +451,10 @@ test("TryCP Scenario - connect to multiple clients without DPKI", async (t) => {
     // As all of the servers are on the same machine, creating players has to be done in sequence to
     // avoid identical admin ports being assigned multiple times.
     const clientPlayers = await scenario.addClientsPlayers([serverUrls[i]], {
-      app: { path: FIXTURE_HAPP_URL.pathname },
+      app: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
     });
     clientsPlayers.push(...clientPlayers);
   }
@@ -462,7 +499,10 @@ test("TryCP Scenario - create multiple agents for multiple conductors for multip
     const clientPlayers = await scenario.addClientsPlayers([serverUrls[i]], {
       numberOfConductorsPerClient,
       numberOfAgentsPerConductor,
-      app: { path: FIXTURE_HAPP_URL.pathname },
+      app: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
     });
     clientsPlayers.push(...clientPlayers);
   }

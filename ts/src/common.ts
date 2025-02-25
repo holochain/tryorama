@@ -143,20 +143,14 @@ export const enableAndGetAgentApp = async (
   const namedCells = new Map<RoleName, CallableCell>();
   Object.keys(appInfo.cell_info).forEach((role_name) => {
     appInfo.cell_info[role_name].forEach((cellInfo) => {
-      if (CellType.Provisioned in cellInfo) {
-        const callableCell = getCallableCell(
-          appWs,
-          cellInfo[CellType.Provisioned]
-        );
+      if (cellInfo.type === CellType.Provisioned) {
+        const callableCell = getCallableCell(appWs, cellInfo.value);
         cells.push(callableCell);
         namedCells.set(role_name, callableCell);
-      } else if (
-        CellType.Cloned in cellInfo &&
-        cellInfo[CellType.Cloned].clone_id
-      ) {
-        const callableCell = getCallableCell(appWs, cellInfo[CellType.Cloned]);
+      } else if (cellInfo.type === CellType.Cloned && cellInfo.value.clone_id) {
+        const callableCell = getCallableCell(appWs, cellInfo.value);
         cells.push(callableCell);
-        namedCells.set(cellInfo[CellType.Cloned].clone_id, callableCell);
+        namedCells.set(cellInfo.value.clone_id, callableCell);
       } else {
         throw new Error("Stem cells are not implemented");
       }

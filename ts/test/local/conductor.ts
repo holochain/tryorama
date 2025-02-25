@@ -3,7 +3,6 @@ import {
   AppBundleSource,
   AppSignal,
   CellProvisioningStrategy,
-  CellType,
   CloneId,
   Duration,
   EntryHash,
@@ -12,7 +11,6 @@ import {
   RevokeAgentKeyResponse,
   Signal,
   SignalCb,
-  SignalType,
 } from "@holochain/client";
 import assert from "node:assert";
 import { readFileSync, realpathSync } from "node:fs";
@@ -169,7 +167,8 @@ test("Local Conductor - revoke agent key", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -211,7 +210,8 @@ test("Local Conductor - get app info with app ws", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   await conductor
     .adminWs()
@@ -223,7 +223,7 @@ test("Local Conductor - get app info with app ws", async (t) => {
   const appWs = await conductor.connectAppWs(issued.token, port);
   const appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.deepEqual(appInfo.status, "running");
+  t.deepEqual(appInfo.status, { type: "running" });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
@@ -233,7 +233,8 @@ test("Local Conductor - get app info with app agent ws", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   await conductor
     .adminWs()
@@ -244,7 +245,7 @@ test("Local Conductor - get app info with app agent ws", async (t) => {
     .issueAppAuthenticationToken({ installed_app_id: app.installed_app_id });
   const appWs = await conductor.connectAppWs(issued.token, port);
   const appInfo = await appWs.appInfo();
-  t.deepEqual(appInfo.status, "running");
+  t.deepEqual(appInfo.status, { type: "running" });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
@@ -255,7 +256,8 @@ test("Local Conductor - install app with deferred memproofs", async (t) => {
   const conductor = await createConductor(signalingServerUrl);
 
   const app = await conductor.installApp({
-    bundle: {
+    type: "bundle",
+    value: {
       manifest: {
         manifest_version: "1",
         name: "app",
@@ -287,7 +289,7 @@ test("Local Conductor - install app with deferred memproofs", async (t) => {
   let appInfo = await appWs.appInfo();
   t.deepEqual(
     appInfo.status,
-    { disabled: { reason: "never_started" } },
+    { type: "disabled", value: { reason: { type: "never_started" } } },
     "app status is never_started"
   );
 
@@ -299,7 +301,7 @@ test("Local Conductor - install app with deferred memproofs", async (t) => {
     .enableApp({ installed_app_id: app.installed_app_id });
 
   appInfo = await appWs.appInfo();
-  t.equal(appInfo.status, "running", "app status is running");
+  t.deepEqual(appInfo.status, { type: "running" }, "app status is running");
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -320,7 +322,8 @@ test("Local Conductor - install app with roles settings", async (t) => {
 
   const app = await conductor.installApp(
     {
-      bundle: {
+      type: "bundle",
+      value: {
         manifest: {
           manifest_version: "1",
           name: "app",
@@ -345,13 +348,15 @@ test("Local Conductor - install app with roles settings", async (t) => {
     {
       rolesSettings: {
         [ROLE_NAME]: {
-          type: "Provisioned",
-          membrane_proof: new Uint8Array(6),
-          modifiers: {
-            network_seed: "hello",
-            properties: yaml.dump({ progenitor: progenitorKey }),
-            origin_time: originTime,
-            quantum_time: quantumTime,
+          type: "provisioned",
+          value: {
+            membrane_proof: new Uint8Array(6),
+            modifiers: {
+              network_seed: "hello",
+              properties: yaml.dump({ progenitor: progenitorKey }),
+              origin_time: originTime,
+              quantum_time: quantumTime,
+            },
           },
         },
       },
@@ -365,8 +370,8 @@ test("Local Conductor - install app with roles settings", async (t) => {
   const appWs = await conductor.connectAppWs(issued.token, port);
 
   const appInfo = await appWs.appInfo();
-  const provisionedCell: ProvisionedCell =
-    appInfo.cell_info[ROLE_NAME][0][CellType.Provisioned];
+  const provisionedCell = appInfo.cell_info[ROLE_NAME][0]
+    .value as ProvisionedCell;
   t.equal(provisionedCell.dna_modifiers.network_seed, "hello");
   t.deepEqual(
     yaml.load(decode(provisionedCell.dna_modifiers.properties) as string),
@@ -384,7 +389,8 @@ test("Local Conductor - install and call an app", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -418,7 +424,8 @@ test("Local Conductor - get a convenience function for zome calls", async (t) =>
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -453,8 +460,8 @@ test("Local Conductor - install multiple agents and apps and get access to agent
   const conductor = await createConductor(signalingServerUrl);
   const [aliceApp, bobApp] = await conductor.installAgentsApps({
     agentsApps: [
-      { app: { path: FIXTURE_HAPP_URL.pathname } },
-      { app: { path: FIXTURE_HAPP_URL.pathname } },
+      { app: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+      { app: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
     ],
   });
   const adminWs = conductor.adminWs();
@@ -484,7 +491,8 @@ test("Local Conductor - get a named cell by role name", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -504,7 +512,8 @@ test("Local Conductor - zome call can time out before completion", async (t) => 
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -539,7 +548,7 @@ test("Local Conductor - create and read an entry using the entry zome", async (t
 
   const installed_app_id = "entry-app";
   const app = await conductor.installApp(
-    { path: FIXTURE_HAPP_URL.pathname },
+    { type: "path", value: FIXTURE_HAPP_URL.pathname },
     {
       installedAppId: installed_app_id,
       agentPubKey,
@@ -588,7 +597,7 @@ test("Local Conductor - clone cell management", async (t) => {
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const appId = "entry-app";
   const app = await conductor.installApp(
-    { path: FIXTURE_HAPP_URL.pathname },
+    { type: "path", value: FIXTURE_HAPP_URL.pathname },
     {
       installedAppId: appId,
       agentPubKey,
@@ -627,7 +636,7 @@ test("Local Conductor - clone cell management", async (t) => {
   });
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.clone_id,
+    clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
   });
   await t.rejects(
     appWs.callZome({
@@ -641,7 +650,7 @@ test("Local Conductor - clone cell management", async (t) => {
   );
 
   const enabledCloneCell = await appWs.enableCloneCell({
-    clone_cell_id: cloneCell.clone_id,
+    clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
   });
   t.deepEqual(
     enabledCloneCell,
@@ -661,13 +670,16 @@ test("Local Conductor - clone cell management", async (t) => {
   t.equal(readEntryResponse, testContent, "enabled clone cell can be called");
 
   await appWs.disableCloneCell({
-    clone_cell_id: cloneCell.cell_id[0],
+    clone_cell_id: { type: "dna_hash", value: cloneCell.cell_id[0] },
   });
-  await conductor
-    .adminWs()
-    .deleteCloneCell({ app_id: appId, clone_cell_id: cloneCell.cell_id[0] });
+  await conductor.adminWs().deleteCloneCell({
+    app_id: appId,
+    clone_cell_id: { type: "dna_hash", value: cloneCell.cell_id[0] },
+  });
   await t.rejects(
-    appWs.enableCloneCell({ clone_cell_id: cloneCell.clone_id }),
+    appWs.enableCloneCell({
+      clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
+    }),
     "deleted clone cell cannot be enabled"
   );
 
@@ -679,7 +691,10 @@ test("Local Conductor - clone cell management", async (t) => {
 test("Local Conductor - 2 agent apps test", async (t) => {
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();
-  const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const app: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
 
   const conductor1 = await createConductor(signalingServerUrl, {
     bootstrapServerUrl,
@@ -740,7 +755,10 @@ test("Local Conductor - 2 agent apps test", async (t) => {
 test("Local Conductor - create and read an entry, 2 conductors, 2 cells, 2 agents", async (t) => {
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();
-  const app: AppBundleSource = { path: FIXTURE_HAPP_URL.pathname };
+  const app: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
 
   const conductor1 = await createConductor(signalingServerUrl, {
     bootstrapServerUrl,
@@ -806,14 +824,15 @@ test("Local Conductor - Receive a signal", async (t) => {
   let signalHandler: SignalCb | undefined;
   const signalReceived = new Promise<AppSignal>((resolve) => {
     signalHandler = (signal: Signal) => {
-      assert(SignalType.App in signal);
-      resolve(signal[SignalType.App]);
+      assert(signal.type === "app");
+      resolve(signal.value);
     };
   });
   const conductor = await createConductor(signalingServerUrl);
 
   const aliceApp = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();

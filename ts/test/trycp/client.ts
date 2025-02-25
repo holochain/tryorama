@@ -249,7 +249,8 @@ test("TryCP Server - Admin API - connect app interface", async (t) => {
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
   const app = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
 
   const { port } = await conductor
@@ -288,7 +289,8 @@ test("TryCP Server - App API - get app info", async (t) => {
   const tryCpClient = await createTryCpClient();
   const conductor = await createTryCpConductor(tryCpClient);
   const aliceApp = await conductor.installApp({
-    path: FIXTURE_HAPP_URL.pathname,
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
   });
   const adminWs = conductor.adminWs();
   const { port } = await adminWs.attachAppInterface({
@@ -303,7 +305,7 @@ test("TryCP Server - App API - get app info", async (t) => {
 
   const appInfo = await appWs.appInfo();
   assert(appInfo);
-  t.deepEqual(appInfo.status, "running");
+  t.deepEqual(appInfo.status, { type: "running" });
 
   await conductor.disconnectAppInterface(port);
   await conductor.shutDown();

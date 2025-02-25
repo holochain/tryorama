@@ -1,23 +1,17 @@
 {
-  inputs = {
+ inputs = {
     holonix = {
       url = "github:holochain/holonix?ref=main";
-      inputs.crane.follows = "crane";
-      inputs.rust-overlay.follows = "rust-overlay";
     };
 
     nixpkgs.follows = "holonix/nixpkgs";
 
+
     # lib to build a nix package from a rust crate
-    crane = {
-      url = "github:ipetkov/crane";
-    };
+    crane.follows = "holonix/crane";
 
     # Rust toolchain
-    rust-overlay = {
-      url = "github:oxalica/rust-overlay";
-      inputs.nixpkgs.follows = "holonix/nixpkgs";
-    };
+    rust-overlay.follows = "holonix/rust-overlay";
   };
 
   outputs = inputs@{ nixpkgs, holonix, crane, rust-overlay, ... }:

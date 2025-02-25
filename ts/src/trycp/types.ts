@@ -292,7 +292,7 @@ export interface DownloadLogsResponse {
  */
 export interface ApiErrorResponse {
   type: "error";
-  data: { type: string; data: string };
+  value: { type: string; value: string };
 }
 
 /**
@@ -355,7 +355,7 @@ export type RequestCallAppInterfaceMessage =
  */
 export interface RequestProvideMemproofs {
   type: "provide_memproofs";
-  data: ProvideMemproofsRequest;
+  value: ProvideMemproofsRequest;
 }
 
 /**
@@ -374,7 +374,7 @@ export interface RequestEnableApp {
  */
 export interface RequestCallZome {
   type: "call_zome";
-  data: CallZomeRequestSigned;
+  value: CallZomeRequestSigned;
 }
 
 /**
@@ -393,7 +393,7 @@ export interface RequestAppInfo {
  */
 export interface RequestCreateCloneCell {
   type: "create_clone_cell";
-  data: CreateCloneCellRequest;
+  value: CreateCloneCellRequest;
 }
 
 /**
@@ -403,7 +403,7 @@ export interface RequestCreateCloneCell {
  */
 export interface RequestDisableCloneCell {
   type: "disable_clone_cell";
-  data: DisableCloneCellRequest;
+  value: DisableCloneCellRequest;
 }
 
 /**
@@ -413,7 +413,7 @@ export interface RequestDisableCloneCell {
  */
 export interface RequestEnableCloneCell {
   type: "enable_clone_cell";
-  data: EnableCloneCellRequest;
+  value: EnableCloneCellRequest;
 }
 
 /**
@@ -423,7 +423,7 @@ export interface RequestEnableCloneCell {
  */
 export interface RequestNetworkInfo {
   type: "network_info";
-  data: NetworkInfoRequest;
+  value: NetworkInfoRequest;
 }
 
 /**
@@ -460,7 +460,7 @@ export const AppApiResponseOk = "ok";
  */
 export interface AppApiResponseAppInfo {
   type: "app_info";
-  data: AppInfoResponse;
+  value: AppInfoResponse;
 }
 
 /**
@@ -475,7 +475,7 @@ export interface AppApiResponseMemproofsProvided {
  */
 export interface AppApiResponseZomeCall {
   type: "zome_call";
-  data: Uint8Array;
+  value: Uint8Array;
 }
 
 /**
@@ -483,7 +483,7 @@ export interface AppApiResponseZomeCall {
  */
 export interface AppApiResponseCloneCellCreated {
   type: "clone_cell_created";
-  data: CreateCloneCellResponse;
+  value: CreateCloneCellResponse;
 }
 
 /**
@@ -491,7 +491,7 @@ export interface AppApiResponseCloneCellCreated {
  */
 export interface AppApiResponseCloneCellEnabled {
   type: "clone_cell_enabled";
-  data: EnableCloneCellResponse;
+  value: EnableCloneCellResponse;
 }
 
 /**
@@ -499,7 +499,7 @@ export interface AppApiResponseCloneCellEnabled {
  */
 export interface AppApiResponseCloneCellDisabled {
   type: "clone_cell_disabled";
-  data: DisableCloneCellResponse;
+  value: DisableCloneCellResponse;
 }
 
 /**
@@ -507,7 +507,7 @@ export interface AppApiResponseCloneCellDisabled {
  */
 export interface AppApiResponseNetworkInfo {
   type: "network_info";
-  data: NetworkInfoResponse;
+  value: NetworkInfoResponse;
 }
 
 /* ********************** Admin API ********************** */
@@ -573,7 +573,7 @@ export type RequestAdminInterfaceMessageType =
  */
 export interface RequestAdminInterfaceMessage {
   type: RequestAdminInterfaceMessageType;
-  data?:
+  value?:
     | AddAgentInfoRequest
     | AgentInfoRequest
     | AttachAppInterfaceRequest
@@ -634,7 +634,7 @@ export type AdminApiResponse =
  */
 export interface AdminApiResponseAgentInfo {
   type: "agent_info";
-  data: AgentInfoResponse;
+  value: AgentInfoResponse;
 }
 
 /**
@@ -644,7 +644,7 @@ export interface AdminApiResponseAgentInfo {
  */
 export interface RequestDeleteCloneCell {
   type: "delete_clone_cell";
-  data: DeleteCloneCellRequest;
+  value: DeleteCloneCellRequest;
 }
 
 /**
@@ -652,7 +652,7 @@ export interface RequestDeleteCloneCell {
  */
 export interface AdminApiResponseDnaRegistered {
   type: "dna_registered";
-  data: HoloHash;
+  value: HoloHash;
 }
 
 /**
@@ -660,7 +660,7 @@ export interface AdminApiResponseDnaRegistered {
  */
 export interface AdminApiResponseGetCompatibleCells {
   type: "compatible_cells";
-  data: GetCompatibleCellsResponse;
+  value: GetCompatibleCellsResponse;
 }
 
 /**
@@ -668,7 +668,7 @@ export interface AdminApiResponseGetCompatibleCells {
  */
 export interface AdminApiResponseFullStateDumped {
   type: "full_state_dumped";
-  data: FullStateDump;
+  value: FullStateDump;
 }
 
 /**
@@ -676,7 +676,7 @@ export interface AdminApiResponseFullStateDumped {
  */
 export interface AdminApiResponseNetworkStatsDumped {
   type: "network_stats_dumped";
-  data: DumpNetworkStatsResponse;
+  value: DumpNetworkStatsResponse;
 }
 
 /**
@@ -684,7 +684,7 @@ export interface AdminApiResponseNetworkStatsDumped {
  */
 export interface AdminApiResponseStorageInfo {
   type: "storage_info";
-  data: StorageInfoResponse;
+  value: StorageInfoResponse;
 }
 
 /**
@@ -692,7 +692,7 @@ export interface AdminApiResponseStorageInfo {
  */
 export interface AdminApiResponseAppAuthenticationTokenIssued {
   type: "app_authentication_token_issued";
-  data: IssueAppAuthenticationTokenResponse;
+  value: IssueAppAuthenticationTokenResponse;
 }
 
 /**
@@ -700,7 +700,7 @@ export interface AdminApiResponseAppAuthenticationTokenIssued {
  */
 export interface AdminApiResponseStateDumped {
   type: "state_dumped";
-  data: DumpStateResponse;
+  value: DumpStateResponse;
 }
 
 /**
@@ -715,7 +715,7 @@ export interface AdminApiResponseZomeCallCapabilityGranted {
  */
 export interface AdminApiResponseAgentPubKeyGenerated {
   type: "agent_pub_key_generated";
-  data: HoloHash;
+  value: HoloHash;
 }
 
 /**
@@ -723,7 +723,7 @@ export interface AdminApiResponseAgentPubKeyGenerated {
  */
 export interface AdminApiResponseAgentKeyRevoked {
   type: "agent_key_revoked";
-  data: RevokeAgentKeyResponse;
+  value: RevokeAgentKeyResponse;
 }
 
 /**
@@ -731,7 +731,7 @@ export interface AdminApiResponseAgentKeyRevoked {
  */
 export interface AdminApiResponseAppInstalled {
   type: "app_installed";
-  data: AppInfo;
+  value: AppInfo;
 }
 
 /**
@@ -739,7 +739,7 @@ export interface AdminApiResponseAppInstalled {
  */
 export interface AdminApiResponseAppEnabled {
   type: "app_enabled";
-  data: EnableAppResponse;
+  value: EnableAppResponse;
 }
 
 /**
@@ -747,7 +747,7 @@ export interface AdminApiResponseAppEnabled {
  */
 export interface AdminApiResponseAppDisabled {
   type: "app_disabled";
-  data: DisableAppResponse;
+  value: DisableAppResponse;
 }
 
 /**
@@ -755,7 +755,7 @@ export interface AdminApiResponseAppDisabled {
  */
 export interface AdminApiResponseAppStarted {
   type: "app_started";
-  data: StartAppResponse;
+  value: StartAppResponse;
 }
 
 /**
@@ -763,7 +763,7 @@ export interface AdminApiResponseAppStarted {
  */
 export interface AdminApiResponseAppUninstalled {
   type: "app_uninstalled";
-  data: UninstallAppResponse;
+  value: UninstallAppResponse;
 }
 
 /**
@@ -771,7 +771,7 @@ export interface AdminApiResponseAppUninstalled {
  */
 export interface AdminApiResponseCoordinatorsUpdated {
   type: "coordinators_updated";
-  data: UpdateCoordinatorsResponse;
+  value: UpdateCoordinatorsResponse;
 }
 
 /**
@@ -779,7 +779,7 @@ export interface AdminApiResponseCoordinatorsUpdated {
  */
 export interface AdminApiResponseAppsListed {
   type: "apps_listed";
-  data: ListAppsResponse;
+  value: ListAppsResponse;
 }
 
 /**
@@ -787,7 +787,7 @@ export interface AdminApiResponseAppsListed {
  */
 export interface AdminApiResponseAppInterfacesListed {
   type: "app_interfaces_listed";
-  data: ListAppInterfacesResponse;
+  value: ListAppInterfacesResponse;
 }
 
 /**
@@ -795,7 +795,7 @@ export interface AdminApiResponseAppInterfacesListed {
  */
 export interface AdminApiResponseCellIdsListed {
   type: "cell_ids_listed";
-  data: ListCellIdsResponse;
+  value: ListCellIdsResponse;
 }
 
 /**
@@ -803,7 +803,7 @@ export interface AdminApiResponseCellIdsListed {
  */
 export interface AdminApiResponseDnasDefinitionReturned {
   type: "dna_definition_returned";
-  data: DnaDefinition;
+  value: DnaDefinition;
 }
 
 /**
@@ -811,7 +811,7 @@ export interface AdminApiResponseDnasDefinitionReturned {
  */
 export interface AdminApiResponseDnasListed {
   type: "dnas_listed";
-  data: ListDnasResponse;
+  value: ListDnasResponse;
 }
 
 /**
@@ -819,7 +819,7 @@ export interface AdminApiResponseDnasListed {
  */
 export interface AdminApiResponseAppInterfaceAttached {
   type: "app_interface_attached";
-  data: AttachAppInterfaceResponse;
+  value: AttachAppInterfaceResponse;
 }
 
 /**

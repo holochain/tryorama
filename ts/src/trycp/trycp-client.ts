@@ -1,6 +1,5 @@
-import { SignalCb, CallZomeRequestSigned } from "@holochain/client";
+import { SignalCb } from "@holochain/client";
 import msgpack from "@msgpack/msgpack";
-import cloneDeep from "lodash/cloneDeep.js";
 import assert from "node:assert";
 import { URL } from "node:url";
 import { WebSocket } from "ws";
@@ -273,7 +272,7 @@ export class TryCpClient {
     // when the request fails, the response's type is "error"
     if (deserializedApiResponse.type === "error") {
       const errorMessage = `error response from Admin API\n${JSON.stringify(
-        (deserializedApiResponse as ApiErrorResponse).data,
+        (deserializedApiResponse as ApiErrorResponse).value,
         null,
         4
       )}`;
@@ -288,14 +287,14 @@ export class TryCpClient {
   private getFormattedResponseLog(response: TryCpApiResponse) {
     let debugLog;
     if (
-      "data" in response &&
-      response.data &&
-      typeof response.data !== "string" &&
-      "BYTES_PER_ELEMENT" in response.data &&
-      response.data.length === 39
+      "value" in response &&
+      response.value &&
+      typeof response.value !== "string" &&
+      "BYTES_PER_ELEMENT" in response.value &&
+      response.value.length === 39
     ) {
       // Holochain hash
-      const hashB64 = Buffer.from(response.data).toString("base64");
+      const hashB64 = Buffer.from(response.value).toString("base64");
       const deserializedResponseForLog = Object.assign(
         {},
         { ...response },
