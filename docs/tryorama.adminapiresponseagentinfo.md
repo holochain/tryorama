@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseagentinfo.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-AgentInfoResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseagentinfo.type.md)
 
 
@@ -62,6 +45,23 @@ AgentInfoResponse
 </td><td>
 
 "agent\_info"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseagentinfo.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AgentInfoResponse
 
 
 </td><td>

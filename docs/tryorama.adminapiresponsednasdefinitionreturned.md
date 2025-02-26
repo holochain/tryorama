@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsednasdefinitionreturned.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-DnaDefinition
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsednasdefinitionreturned.type.md)
 
 
@@ -62,6 +45,23 @@ DnaDefinition
 </td><td>
 
 "dna\_definition\_returned"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsednasdefinitionreturned.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DnaDefinition
 
 
 </td><td>

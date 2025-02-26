@@ -37,7 +37,24 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data?](./tryorama.requestadmininterfacemessage.data.md)
+[type](./tryorama.requestadmininterfacemessage.type.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value?](./tryorama.requestadmininterfacemessage.value.md)
 
 
 </td><td>
@@ -51,23 +68,6 @@ AddAgentInfoRequest \| AgentInfoRequest \| AttachAppInterfaceRequest \| DeleteCl
 </td><td>
 
 _(Optional)_
-
-
-</td></tr>
-<tr><td>
-
-[type](./tryorama.requestadmininterfacemessage.type.md)
-
-
-</td><td>
-
-
-</td><td>
-
-[RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)
-
-
-</td><td>
 
 
 </td></tr>

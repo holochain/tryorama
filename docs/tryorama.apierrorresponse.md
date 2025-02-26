@@ -37,23 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.apierrorresponse.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-{ type: string; data: string; }
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.apierrorresponse.type.md)
 
 
@@ -63,6 +46,23 @@ Description
 </td><td>
 
 "error"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.apierrorresponse.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+{ type: string; value: string; }
 
 
 </td><td>

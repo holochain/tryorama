@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.appapiresponseclonecellcreated.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-CreateCloneCellResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.appapiresponseclonecellcreated.type.md)
 
 
@@ -62,6 +45,23 @@ CreateCloneCellResponse
 </td><td>
 
 "clone\_cell\_created"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.appapiresponseclonecellcreated.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+CreateCloneCellResponse
 
 
 </td><td>

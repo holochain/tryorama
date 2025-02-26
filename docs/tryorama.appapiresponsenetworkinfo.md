@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.appapiresponsenetworkinfo.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-NetworkInfoResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.appapiresponsenetworkinfo.type.md)
 
 
@@ -62,6 +45,23 @@ NetworkInfoResponse
 </td><td>
 
 "network\_info"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.appapiresponsenetworkinfo.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+NetworkInfoResponse
 
 
 </td><td>

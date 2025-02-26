@@ -37,23 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.requestprovidememproofs.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-ProvideMemproofsRequest
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.requestprovidememproofs.type.md)
 
 
@@ -63,6 +46,23 @@ ProvideMemproofsRequest
 </td><td>
 
 "provide\_memproofs"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.requestprovidememproofs.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+ProvideMemproofsRequest
 
 
 </td><td>
