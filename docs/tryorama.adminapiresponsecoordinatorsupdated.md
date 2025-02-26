@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsecoordinatorsupdated.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-UpdateCoordinatorsResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsecoordinatorsupdated.type.md)
 
 
@@ -62,6 +45,23 @@ UpdateCoordinatorsResponse
 </td><td>
 
 "coordinators\_updated"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsecoordinatorsupdated.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+UpdateCoordinatorsResponse
 
 
 </td><td>

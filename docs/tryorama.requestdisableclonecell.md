@@ -37,23 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.requestdisableclonecell.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-DisableCloneCellRequest
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.requestdisableclonecell.type.md)
 
 
@@ -63,6 +46,23 @@ DisableCloneCellRequest
 </td><td>
 
 "disable\_clone\_cell"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.requestdisableclonecell.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DisableCloneCellRequest
 
 
 </td><td>

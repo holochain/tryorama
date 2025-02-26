@@ -37,23 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.requestcreateclonecell.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-CreateCloneCellRequest
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.requestcreateclonecell.type.md)
 
 
@@ -63,6 +46,23 @@ CreateCloneCellRequest
 </td><td>
 
 "create\_clone\_cell"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.requestcreateclonecell.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+CreateCloneCellRequest
 
 
 </td><td>

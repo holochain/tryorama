@@ -7,8 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
-- Update to `@holochain/client@0.19.0-dev.7` and update types accordingly.
 ### Fixed
+
+## 2025-02-26: v0.18.0-dev.5
+
+### Changed
+- Update to `@holochain/client@0.19.0-dev.7` and update types accordingly.
 
 ## 2025-02-12: v0.18.0-dev.4
 ### Fixed

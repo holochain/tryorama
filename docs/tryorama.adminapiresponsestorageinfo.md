@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsestorageinfo.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-StorageInfoResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsestorageinfo.type.md)
 
 
@@ -62,6 +45,23 @@ StorageInfoResponse
 </td><td>
 
 "storage\_info"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsestorageinfo.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+StorageInfoResponse
 
 
 </td><td>

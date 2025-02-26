@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsednaslisted.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-ListDnasResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsednaslisted.type.md)
 
 
@@ -62,6 +45,23 @@ ListDnasResponse
 </td><td>
 
 "dnas\_listed"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsednaslisted.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+ListDnasResponse
 
 
 </td><td>

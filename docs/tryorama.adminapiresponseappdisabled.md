@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseappdisabled.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-DisableAppResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseappdisabled.type.md)
 
 
@@ -62,6 +45,23 @@ DisableAppResponse
 </td><td>
 
 "app\_disabled"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseappdisabled.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DisableAppResponse
 
 
 </td><td>

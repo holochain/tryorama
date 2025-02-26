@@ -37,23 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.requestnetworkinfo.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-NetworkInfoRequest
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.requestnetworkinfo.type.md)
 
 
@@ -63,6 +46,23 @@ NetworkInfoRequest
 </td><td>
 
 "network\_info"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.requestnetworkinfo.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+NetworkInfoRequest
 
 
 </td><td>

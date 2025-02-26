@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.appapiresponsezomecall.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-Uint8Array
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.appapiresponsezomecall.type.md)
 
 
@@ -62,6 +45,23 @@ Uint8Array
 </td><td>
 
 "zome\_call"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.appapiresponsezomecall.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Uint8Array
 
 
 </td><td>

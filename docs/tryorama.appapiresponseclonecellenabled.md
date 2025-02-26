@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.appapiresponseclonecellenabled.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-EnableCloneCellResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.appapiresponseclonecellenabled.type.md)
 
 
@@ -62,6 +45,23 @@ EnableCloneCellResponse
 </td><td>
 
 "clone\_cell\_enabled"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.appapiresponseclonecellenabled.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+EnableCloneCellResponse
 
 
 </td><td>

@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseappinterfaceslisted.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-ListAppInterfacesResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseappinterfaceslisted.type.md)
 
 
@@ -62,6 +45,23 @@ ListAppInterfacesResponse
 </td><td>
 
 "app\_interfaces\_listed"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseappinterfaceslisted.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+ListAppInterfacesResponse
 
 
 </td><td>

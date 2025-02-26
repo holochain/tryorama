@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsegetcompatiblecells.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-GetCompatibleCellsResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsegetcompatiblecells.type.md)
 
 
@@ -62,6 +45,23 @@ GetCompatibleCellsResponse
 </td><td>
 
 "compatible\_cells"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsegetcompatiblecells.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+GetCompatibleCellsResponse
 
 
 </td><td>

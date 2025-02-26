@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponseappuninstalled.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-UninstallAppResponse
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponseappuninstalled.type.md)
 
 
@@ -62,6 +45,23 @@ UninstallAppResponse
 </td><td>
 
 "app\_uninstalled"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponseappuninstalled.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+UninstallAppResponse
 
 
 </td><td>

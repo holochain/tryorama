@@ -37,23 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.requestdeleteclonecell.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-DeleteCloneCellRequest
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.requestdeleteclonecell.type.md)
 
 
@@ -63,6 +46,23 @@ DeleteCloneCellRequest
 </td><td>
 
 "delete\_clone\_cell"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.requestdeleteclonecell.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+DeleteCloneCellRequest
 
 
 </td><td>

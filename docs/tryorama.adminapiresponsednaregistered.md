@@ -36,23 +36,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[data](./tryorama.adminapiresponsednaregistered.data.md)
-
-
-</td><td>
-
-
-</td><td>
-
-HoloHash
-
-
-</td><td>
-
-
-</td></tr>
-<tr><td>
-
 [type](./tryorama.adminapiresponsednaregistered.type.md)
 
 
@@ -62,6 +45,23 @@ HoloHash
 </td><td>
 
 "dna\_registered"
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
+[value](./tryorama.adminapiresponsednaregistered.value.md)
+
+
+</td><td>
+
+
+</td><td>
+
+HoloHash
 
 
 </td><td>
