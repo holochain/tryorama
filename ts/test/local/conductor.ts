@@ -1,5 +1,6 @@
 import {
   ActionHash,
+  AppBundle,
   AppBundleSource,
   AppSignal,
   CellProvisioningStrategy,
@@ -28,8 +29,10 @@ import {
   stopLocalServices,
 } from "../../src";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
-import { decode } from "@msgpack/msgpack";
+import { decode, encode } from "@msgpack/msgpack";
+import fs from "fs";
 import yaml from "js-yaml";
+import zlib from "zlib";
 
 const ROLE_NAME = "test";
 
@@ -255,29 +258,37 @@ test("Local Conductor - install app with deferred memproofs", async (t) => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
 
-  const app = await conductor.installApp({
-    type: "bundle",
-    value: {
-      manifest: {
-        manifest_version: "1",
-        name: "app",
-        roles: [
-          {
-            name: ROLE_NAME,
-            provisioning: {
-              strategy: CellProvisioningStrategy.Create,
-              deferred: false,
-            },
-            dna: {
-              path: realpathSync(FIXTURE_DNA_URL),
-              modifiers: { network_seed: "some_seed" },
-            },
+  const zippedDnaBundle = fs.readFileSync(realpathSync(FIXTURE_DNA_URL));
+
+  const appBundle: AppBundle = {
+    manifest: {
+      manifest_version: "1",
+      name: "app",
+      roles: [
+        {
+          name: ROLE_NAME,
+          provisioning: {
+            strategy: CellProvisioningStrategy.Create,
+            deferred: false,
           },
-        ],
-        membrane_proofs_deferred: true,
-      },
-      resources: {},
+          dna: {
+            bundled: "dna_1",
+            modifiers: { network_seed: "some_seed" },
+          },
+        },
+      ],
+      membrane_proofs_deferred: true,
     },
+    resources: {
+      dna_1: zippedDnaBundle,
+    },
+  };
+
+  const zippedAppBundle = zlib.gzipSync(encode(appBundle));
+
+  const app = await conductor.installApp({
+    type: "bytes",
+    value: zippedAppBundle,
   });
 
   const port = await conductor.attachAppInterface();
@@ -322,28 +333,8 @@ test("Local Conductor - install app with roles settings", async (t) => {
 
   const app = await conductor.installApp(
     {
-      type: "bundle",
-      value: {
-        manifest: {
-          manifest_version: "1",
-          name: "app",
-          roles: [
-            {
-              name: ROLE_NAME,
-              provisioning: {
-                strategy: CellProvisioningStrategy.Create,
-                deferred: false,
-              },
-              dna: {
-                path: realpathSync(FIXTURE_DNA_URL),
-                modifiers: { network_seed: "some_seed" },
-              },
-            },
-          ],
-          membrane_proofs_deferred: true,
-        },
-        resources: {},
-      },
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     },
     {
       rolesSettings: {

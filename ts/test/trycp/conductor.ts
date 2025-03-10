@@ -12,6 +12,7 @@ import {
   fakeAgentPubKey,
   ProvisionedCell,
   AppSignal,
+  AppBundle,
 } from "@holochain/client";
 import assert from "node:assert";
 import { Buffer } from "node:buffer";
@@ -28,8 +29,10 @@ import { TryCpPlayer, createTryCpConductor } from "../../src";
 import { TRYCP_SERVER_HOST, TRYCP_SERVER_PORT, TryCpServer } from "../../src";
 import { TRYCP_SUCCESS_RESPONSE } from "../../src";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
-import { decode } from "@msgpack/msgpack";
+import { decode, encode } from "@msgpack/msgpack";
+import fs from "fs";
 import yaml from "js-yaml";
+import zlib from "zlib";
 
 const SERVER_URL = new URL(`ws://${TRYCP_SERVER_HOST}:${TRYCP_SERVER_PORT}`);
 const ROLE_NAME = "test";
@@ -218,29 +221,37 @@ test("TryCP Conductor - install app with deferred memproofs", async (t) => {
   const conductor = await createTryCpConductor(client);
   const adminWs = conductor.adminWs();
 
-  const app = await conductor.installApp({
-    type: "bundle",
-    value: {
-      manifest: {
-        manifest_version: "1",
-        name: "app",
-        roles: [
-          {
-            name: ROLE_NAME,
-            provisioning: {
-              strategy: CellProvisioningStrategy.Create,
-              deferred: false,
-            },
-            dna: {
-              path: realpathSync(FIXTURE_DNA_URL),
-              modifiers: { network_seed: "some_seed" },
-            },
+  const zippedDnaBundle = fs.readFileSync(realpathSync(FIXTURE_DNA_URL));
+
+  const appBundle: AppBundle = {
+    manifest: {
+      manifest_version: "1",
+      name: "app",
+      roles: [
+        {
+          name: ROLE_NAME,
+          provisioning: {
+            strategy: CellProvisioningStrategy.Create,
+            deferred: false,
           },
-        ],
-        membrane_proofs_deferred: true,
-      },
-      resources: {},
+          dna: {
+            bundled: "dna_1",
+            modifiers: { network_seed: "some_seed" },
+          },
+        },
+      ],
+      membrane_proofs_deferred: true,
     },
+    resources: {
+      dna_1: zippedDnaBundle,
+    },
+  };
+
+  const zippedAppBundle = zlib.gzipSync(encode(appBundle));
+
+  const app = await conductor.installApp({
+    type: "bytes",
+    value: zippedAppBundle,
   });
 
   const { port } = await adminWs.attachAppInterface();
@@ -306,28 +317,8 @@ test("TryCP Conductor - install app with roles settings", async (t) => {
 
   const app = await conductor.installApp(
     {
-      type: "bundle",
-      value: {
-        manifest: {
-          manifest_version: "1",
-          name: "app",
-          roles: [
-            {
-              name: ROLE_NAME,
-              provisioning: {
-                strategy: CellProvisioningStrategy.Create,
-                deferred: false,
-              },
-              dna: {
-                path: realpathSync(FIXTURE_DNA_URL),
-                modifiers: { network_seed: "some_seed" },
-              },
-            },
-          ],
-          membrane_proofs_deferred: true,
-        },
-        resources: {},
-      },
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
     },
     {
       rolesSettings: {
