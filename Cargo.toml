@@ -1,8 +1,5 @@
 [workspace]
 members = [
-  "crates/trycp_api",
-  "crates/trycp_client",
-  "crates/trycp_server",
   "ts/test/fixture/zomes/coordinator",
   "ts/test/fixture/zomes/integrity",
 ]

@@ -38,23 +38,17 @@ export type _RegisterDnaReqOpts = Omit<
  *
  * @public
  */
-export type IAdminWebsocket = Omit<
-  AdminWebsocket,
-  "client" | "defaultTimeout" | "_requester"
->;
+export type IAdminWebsocket = AdminWebsocket;
 
 /**
  * AppWebsocket interface for local and TryCP conductors.
  *
  * @public
  */
-export type IAppWebsocket = {
-  callZome: <T>(request: CallZomeRequest, timeout?: number) => Promise<T>;
-};
+export type IAppWebsocket = AppWebsocket;
 
 /**
- * Base interface of a Tryorama conductor. Both {@link Conductor} and
- * {@link TryCpConductor} implement this interface.
+ * Base interface of a Tryorama conductor.
  *
  * @public
  */

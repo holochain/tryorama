@@ -6,8 +6,7 @@
 # Tryorama
 
 Tryorama provides a convenient way to run an arbitrary amount of Holochain
-conductors on your local machine, as well as on network nodes that are running
-the TryCP service. In combination with the test runner and assertion library of
+conductors on your local machine. In combination with the test runner and assertion library of
 your choice, you can test the behavior of multiple Holochain nodes in a
 network. Included functions to clean up used resources make sure that all state
 is deleted between tests so that they are independent of one another.

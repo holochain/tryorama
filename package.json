@@ -36,10 +36,6 @@
     "test:local": "npm run test:local:conductor && npm run test:local:scenario",
     "test:local:conductor": "tsx ts/test/local/conductor.ts",
     "test:local:scenario": "tsx ts/test/local/scenario.ts",
-    "test:trycp": "npm run test:trycp:client && npm run test:trycp:conductor && npm run test:trycp:scenario",
-    "test:trycp:client": "tsx ts/test/trycp/client.ts",
-    "test:trycp:conductor": "tsx ts/test/trycp/conductor.ts",
-    "test:trycp:scenario": "tsx ts/test/trycp/scenario.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {

@@ -9,5 +9,5 @@ AdminWebsocket interface for local and TryCP conductors.
 **Signature:**
 
 ```typescript
-export type IAdminWebsocket = Omit<AdminWebsocket, "client" | "defaultTimeout" | "_requester">;
+export type IAdminWebsocket = AdminWebsocket;
 ```
