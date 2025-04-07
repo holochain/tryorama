@@ -6,7 +6,6 @@
 
     nixpkgs.follows = "holonix/nixpkgs";
 
-
     # lib to build a nix package from a rust crate
     crane.follows = "holonix/crane";
 
