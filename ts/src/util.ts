@@ -126,7 +126,7 @@ export const dhtSync = async (
  * A utility function to wait until all conductors' integrated DhtOps are
  * identical for a DNA.
  *
- * @param conductorCells - Array of IConductorCell.
+ * @param conductorCells - Array of ConductorCell.
  * @param interval - Interval to pause between comparisons (defaults to 50 ms).
  * @param timeout - A timeout for the delay (optional).
  * @returns A promise that is resolved after all agents' DHT states match.
@@ -163,10 +163,10 @@ export const conductorCellsDhtSync = async (
 };
 
 /**
- * A utility function to verify if all IConductorCells in an array have CellIds with
+ * A utility function to verify if all ConductorCells in an array have CellIds with
  * the same DnaHash.
  *
- * @param conductorCells - Array of IConductorCell.
+ * @param conductorCells - Array of ConductorCell.
  * @returns boolean
  *
  * @internal

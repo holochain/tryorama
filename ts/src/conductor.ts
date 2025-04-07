@@ -27,16 +27,6 @@ const DEFAULT_TIMEOUT = 60000;
 const LAIR_PASSWORD = "lair-password";
 
 /**
- * The network type the conductor should use to communicate with peers.
- *
- * @public
- */
-export enum NetworkType {
-  WebRtc = "webrtc",
-  Mem = "mem",
-}
-
-/**
  * @public
  */
 export interface ConductorOptions {
@@ -48,32 +38,9 @@ export interface ConductorOptions {
   startup?: boolean;
 
   /**
-   * The network type the conductor should use.
-   *
-   * @defaultValue quic
-   */
-  networkType?: NetworkType;
-
-  /**
    * A bootstrap server URL for peers to discover each other.
    */
   bootstrapServerUrl?: URL;
-
-  /**
-   * Disable DPKI in the conductor instance.
-   *
-   * unstable
-   */
-  // noDpki?: boolean;
-
-  /**
-   * Set a DPKI network seed in the conductor instance.
-   *
-   * Defaults to "deepkey-test".
-   *
-   * unstable
-   */
-  // dpkiNetworkSeed?: NetworkSeed;
 
   /**
    * Timeout for requests to Admin and App API.
@@ -88,7 +55,7 @@ export interface ConductorOptions {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  "bootstrapServerUrl" | "networkType" | "timeout"
+  "bootstrapServerUrl" | "timeout"
 >;
 
 /**
@@ -106,8 +73,6 @@ export const createConductor = async (
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
     "networkType",
-    // "noDpki",
-    // "dpkiNetworkSeed",
     "timeout",
   ]);
   const conductor = await Conductor.create(
@@ -151,22 +116,14 @@ export class Conductor {
     signalingServerUrl: URL,
     options?: CreateConductorOptions
   ) {
-    const networkType = options?.networkType ?? NetworkType.WebRtc;
-    if (options?.bootstrapServerUrl && networkType !== NetworkType.WebRtc) {
-      throw new Error(
-        "error creating conductor: bootstrap service can only be set for webrtc network"
-      );
-    }
-
     const args = ["sandbox", "--piped", "create", "--in-process-lair"];
     args.push("network");
     if (options?.bootstrapServerUrl) {
       args.push("--bootstrap", options.bootstrapServerUrl.href);
     }
-    args.push(networkType);
-    if (networkType === NetworkType.WebRtc) {
-      args.push(signalingServerUrl.href);
-    }
+    args.push("webrtc");
+    args.push(signalingServerUrl.href);
+    logger.debug("spawning hc sandbox with args:", args);
     const createConductorProcess = spawn("hc", args);
     createConductorProcess.stdin.write(LAIR_PASSWORD);
     createConductorProcess.stdin.end();
@@ -234,7 +191,7 @@ export class Conductor {
       });
 
       runConductorProcess.stderr.on("data", (data: Buffer) => {
-        logger.info(data.toString());
+        logger.error(data.toString());
       });
     });
     await startPromise;
