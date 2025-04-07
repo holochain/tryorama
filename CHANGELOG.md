@@ -6,6 +6,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 ### Removed
+- TryCP server, client and test utilities for TryCP conductors.
 ### Changed
 - Update to `@holochain/client@0.19.0-dev.8` and update types accordingly.
 ### Fixed
