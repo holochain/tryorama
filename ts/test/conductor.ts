@@ -27,8 +27,8 @@ import {
   getZomeCaller,
   runLocalServices,
   stopLocalServices,
-} from "../../src";
-import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "../fixture";
+} from "../src";
+import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "./fixture";
 import { decode, encode } from "@msgpack/msgpack";
 import fs from "fs";
 import yaml from "js-yaml";

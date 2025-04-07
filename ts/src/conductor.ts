@@ -1,13 +1,13 @@
 import {
   AdminWebsocket,
+  AppAuthenticationToken,
   AppBundleSource,
   AppWebsocket,
   AttachAppInterfaceRequest,
+  CallZomeRequest,
   encodeHashToBase64,
   getSigningCredentials,
   InstallAppRequest,
-  AppAuthenticationToken,
-  CallZomeRequest,
   RoleNameCallZomeRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
@@ -16,10 +16,9 @@ import assert from "node:assert";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
-
-import { makeLogger } from "../logger.js";
-import { AgentsAppsOptions, AppOptions, IConductor } from "../types.js";
-import { _ALLOWED_ORIGIN } from "../common.js";
+import { _ALLOWED_ORIGIN } from "./conductor-helpers.js";
+import { makeLogger } from "./logger.js";
+import { AgentsAppsOptions, AppOptions } from "./types.js";
 
 const logger = makeLogger("Local Conductor");
 
@@ -126,7 +125,7 @@ export const createConductor = async (
  *
  * @public
  */
-export class Conductor implements IConductor {
+export class Conductor {
   private conductorProcess: ChildProcessWithoutNullStreams | undefined;
   private conductorDir: string | undefined;
   private adminApiUrl: URL;

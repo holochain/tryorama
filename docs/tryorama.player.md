@@ -9,9 +9,9 @@ A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->.
 **Signature:**
 
 ```typescript
-export interface Player extends IPlayer 
+export interface Player extends AgentApp 
 ```
-**Extends:** [IPlayer](./tryorama.iplayer.md)
+**Extends:** [AgentApp](./tryorama.agentapp.md)
 
 ## Properties
 
@@ -37,6 +37,23 @@ Description
 
 </th></tr></thead>
 <tbody><tr><td>
+
+[appWs](./tryorama.player.appws.md)
+
+
+</td><td>
+
+
+</td><td>
+
+AppWebsocket
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
 
 [conductor](./tryorama.player.conductor.md)
 

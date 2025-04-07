@@ -9,9 +9,8 @@ A class to manage a conductor running on localhost.
 **Signature:**
 
 ```typescript
-export declare class Conductor implements IConductor 
+export declare class Conductor 
 ```
-**Implements:** [IConductor](./tryorama.iconductor.md)
 
 ## Methods
 

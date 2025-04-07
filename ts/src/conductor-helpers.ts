@@ -1,5 +1,7 @@
 import {
+  AdminWebsocket,
   AppInfo,
+  AppWebsocket,
   CallZomeResponse,
   CellType,
   ClonedCell,
@@ -7,15 +9,9 @@ import {
   RoleName,
 } from "@holochain/client";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import { Conductor } from "./conductor.js";
 import { makeLogger } from "./logger.js";
-import {
-  AgentApp,
-  CallableCell,
-  CellZomeCallRequest,
-  IAdminWebsocket,
-  IAppWebsocket,
-  IConductor,
-} from "./types.js";
+import { AgentApp, CallableCell, CellZomeCallRequest } from "./types.js";
 
 const BOOTSTRAP_SERVER_STARTUP_STRING = "HC BOOTSTRAP - ADDR: ";
 const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL - ADDR: ";
@@ -91,7 +87,7 @@ export const stopLocalServices = (
  *
  * @public
  */
-export const addAllAgentsToAllConductors = async (conductors: IConductor[]) => {
+export const addAllAgentsToAllConductors = async (conductors: Conductor[]) => {
   await Promise.all(
     conductors.map(async (playerToShareAbout, playerToShareAboutIdx) => {
       const agentInfosToShareAbout = await playerToShareAbout
@@ -129,8 +125,8 @@ function assertZomeResponse<T>(
  * @public
  */
 export const enableAndGetAgentApp = async (
-  adminWs: IAdminWebsocket,
-  appWs: IAppWebsocket,
+  adminWs: AdminWebsocket,
+  appWs: AppWebsocket,
   appInfo: AppInfo
 ) => {
   const enableAppResponse = await adminWs.enableApp({
@@ -175,7 +171,7 @@ export const enableAndGetAgentApp = async (
  * @public
  */
 export const getCallableCell = (
-  appWs: IAppWebsocket,
+  appWs: AppWebsocket,
   cell: ClonedCell | ProvisionedCell
 ) => ({
   ...cell,

@@ -277,6 +277,17 @@ Optional arguments when installing a hApp.
 </td></tr>
 <tr><td>
 
+[ConductorCell](./tryorama.conductorcell.md)
+
+
+</td><td>
+
+A Conductor and a CellId
+
+
+</td></tr>
+<tr><td>
+
 [ConductorOptions](./tryorama.conductoroptions.md)
 
 
@@ -293,39 +304,6 @@ Optional arguments when installing a hApp.
 </td><td>
 
 DNA source and additional options.
-
-
-</td></tr>
-<tr><td>
-
-[IConductor](./tryorama.iconductor.md)
-
-
-</td><td>
-
-Base interface of a Tryorama conductor.
-
-
-</td></tr>
-<tr><td>
-
-[IConductorCell](./tryorama.iconductorcell.md)
-
-
-</td><td>
-
-A Conductor and a CellId
-
-
-</td></tr>
-<tr><td>
-
-[IPlayer](./tryorama.iplayer.md)
-
-
-</td><td>
-
-Combines an agent hApp with the conductor they belong to.
 
 
 </td></tr>
@@ -418,28 +396,6 @@ The zome request options adapted to a specific cell.
 </td><td>
 
 Options for using the conductor factory.
-
-
-</td></tr>
-<tr><td>
-
-[IAdminWebsocket](./tryorama.iadminwebsocket.md)
-
-
-</td><td>
-
-AdminWebsocket interface for local and TryCP conductors.
-
-
-</td></tr>
-<tr><td>
-
-[IAppWebsocket](./tryorama.iappwebsocket.md)
-
-
-</td><td>
-
-AppWebsocket interface for local and TryCP conductors.
 
 
 </td></tr>

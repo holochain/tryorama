@@ -9,7 +9,7 @@ Create curried version of `callZome` function for a specific cell.
 **Signature:**
 
 ```typescript
-getCallableCell: (appWs: IAppWebsocket, cell: ClonedCell | ProvisionedCell) => {
+getCallableCell: (appWs: AppWebsocket, cell: ClonedCell | ProvisionedCell) => {
     callZome: <T>(request: CellZomeCallRequest, timeout?: number) => Promise<T>;
     cell_id: import("@holochain/client").CellId;
     clone_id: string;
@@ -50,7 +50,7 @@ appWs
 
 </td><td>
 
-[IAppWebsocket](./tryorama.iappwebsocket.md)
+AppWebsocket
 
 
 </td><td>

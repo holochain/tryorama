@@ -9,7 +9,7 @@ A utility function to wait until all conductors' integrated DhtOps are identical
 **Signature:**
 
 ```typescript
-conductorCellsDhtSync: (conductorCells: IConductorCell[], interval?: number, timeout?: number) => Promise<void>
+conductorCellsDhtSync: (conductorCells: ConductorCell[], interval?: number, timeout?: number) => Promise<void>
 ```
 
 ## Parameters
@@ -37,7 +37,7 @@ conductorCells
 
 </td><td>
 
-[IConductorCell](./tryorama.iconductorcell.md)<!-- -->\[\]
+[ConductorCell](./tryorama.conductorcell.md)<!-- -->\[\]
 
 
 </td><td>

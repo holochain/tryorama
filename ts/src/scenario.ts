@@ -1,4 +1,4 @@
-import { AppBundleSource } from "@holochain/client";
+import { AppBundleSource, AppWebsocket } from "@holochain/client";
 import assert from "node:assert";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { v4 as uuidv4 } from "uuid";
@@ -7,16 +7,17 @@ import {
   enableAndGetAgentApp,
   runLocalServices,
   stopLocalServices,
-} from "../common.js";
-import { AgentApp, AppOptions, IPlayer } from "../types.js";
+} from "./conductor-helpers.js";
 import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
+import { AgentApp, AppOptions } from "./types.js";
 
 /**
  * A player tied to a {@link Conductor}.
  *
  * @public
  */
-export interface Player extends IPlayer {
+export interface Player extends AgentApp {
+  appWs: AppWebsocket;
   conductor: Conductor;
 }
 

@@ -9,7 +9,7 @@ A utility function to wait until all conductors' integrated DhtOps are identical
 **Signature:**
 
 ```typescript
-dhtSync: (players: IPlayer[], dnaHash: DnaHash, interval?: number, timeout?: number) => Promise<void>
+dhtSync: (players: Player[], dnaHash: DnaHash, interval?: number, timeout?: number) => Promise<void>
 ```
 
 ## Parameters
@@ -37,7 +37,7 @@ players
 
 </td><td>
 
-[IPlayer](./tryorama.iplayer.md)<!-- -->\[\]
+[Player](./tryorama.player.md)<!-- -->\[\]
 
 
 </td><td>

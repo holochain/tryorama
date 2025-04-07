@@ -33,9 +33,8 @@
     "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
     "format": "prettier --write \"ts/**/*.ts\"",
     "test": "tsx ts/test/index.ts",
-    "test:local": "npm run test:local:conductor && npm run test:local:scenario",
-    "test:local:conductor": "tsx ts/test/local/conductor.ts",
-    "test:local:scenario": "tsx ts/test/local/scenario.ts",
+    "test:conductor": "tsx ts/test/conductor.ts",
+    "test:scenario": "tsx ts/test/scenario.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
