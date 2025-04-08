@@ -52,6 +52,35 @@ export interface ConductorOptions {
 }
 
 /**
+ * @public
+ */
+export interface NetworkConfig {
+  /**
+   * The interval in seconds between initiating gossip rounds.
+   *
+   * This controls how often gossip will attempt to find a peer to gossip with.
+   * This can be set as low as you'd like, but you will still be limited by
+   * minInitiateIntervalMs. So a low value for this will result in gossip
+   * doing its initiation in a burst. Then, when it has run out of peers, it will idle
+   * for a while.
+   *
+   * Default: 100
+   */
+  initiateIntervalMs?: number;
+
+  /**
+   * The minimum amount of time that must be allowed to pass before a gossip round can be
+   * initiated by a given peer.
+   *
+   * This is a rate-limiting mechanism to be enforced against incoming gossip and therefore must
+   * be respected when initiating too.
+   *
+   * Default: 100
+   */
+  minInitiateIntervalMs?: number;
+}
+
+/**
  * Options for using the conductor factory.
  *
  * @public
@@ -71,7 +100,7 @@ export type CreateConductorOptions = Pick<
  */
 export const createConductor = async (
   signalingServerUrl: URL,
-  options?: ConductorOptions
+  options?: ConductorOptions & NetworkConfig
 ) => {
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
@@ -82,7 +111,11 @@ export const createConductor = async (
     signalingServerUrl,
     createConductorOptions
   );
-  conductor.setGossipParameters();
+  const networkConfig: NetworkConfig = pick(options, [
+    "initiateIntervalMs",
+    "minInitiateIntervalMs",
+  ]);
+  conductor.setNetworkConfig(networkConfig);
   if (options?.startup !== false) {
     await conductor.startUp();
   }
@@ -154,7 +187,7 @@ export class Conductor {
     return createConductorPromise;
   }
 
-  setGossipParameters() {
+  setNetworkConfig(createConductorOptions: NetworkConfig) {
     const conductorConfig = readFileSync(
       `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
       "utf-8"
@@ -166,28 +199,24 @@ export class Conductor {
         conductorConfigYaml.network &&
         typeof conductorConfigYaml.network === "object"
     );
-    assert("mem_bootstrap" in conductorConfigYaml.network);
-    delete conductorConfigYaml.network.mem_bootstrap;
+    if ("mem_bootstrap" in conductorConfigYaml.network) {
+      delete conductorConfigYaml.network.mem_bootstrap;
+    }
     assert("advanced" in conductorConfigYaml.network);
-    assert(conductorConfigYaml.network.advanced === null);
     conductorConfigYaml.network.advanced = {
       k2Gossip: {
-        initiateIntervalMs: 100,
-        minInitiateIntervalMs: 100,
+        initiateIntervalMs: createConductorOptions.initiateIntervalMs ?? 100,
+        minInitiateIntervalMs:
+          createConductorOptions.minInitiateIntervalMs ?? 100,
       },
       tx5Transport: {
         signalAllowPlainText: true,
       },
     };
-    writeFileSync(
-      `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
-      yaml.dump(conductorConfigYaml)
-    );
-    // const conductorConfigd = readFileSync(
-    //   `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
-    //   "utf-8"
-    // );
-    // console.log("conductor config", conductorConfigd);
+    const yamlDump = yaml.dump(conductorConfigYaml);
+    logger.debug("Updated conductor config:");
+    logger.debug(yamlDump);
+    writeFileSync(`${this.conductorDir}/${CONDUCTOR_CONFIG}`, yamlDump);
   }
 
   /**

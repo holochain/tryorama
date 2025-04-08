@@ -31,7 +31,7 @@
     "prepare": "npm run lint",
     "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
     "format": "prettier --write \"ts/**/*.ts\"",
-    "test": "tsx ts/test/index.ts",
+    "test": "tsx --test ts/test/index.ts",
     "test:conductor": "tsx ts/test/conductor.ts",
     "test:scenario": "tsx ts/test/scenario.ts",
     "prepublishOnly": "npm run build"

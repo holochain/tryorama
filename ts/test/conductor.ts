@@ -15,7 +15,7 @@ import {
 } from "@holochain/client";
 import { readFileSync, realpathSync } from "node:fs";
 import { URL } from "node:url";
-import { test } from "node:test";
+import test from "node:test";
 import assert from "node:assert";
 import {
   CONDUCTOR_CONFIG,
@@ -44,27 +44,60 @@ test("Conductor with custom bootstrap server", async () => {
     startup: false,
   });
   const tmpDirPath = conductor.getTmpDirectory();
-  const conductorConfig = readFileSync(
-    `${tmpDirPath}/${CONDUCTOR_CONFIG}`
-  ).toString();
+  const conductorConfig = readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, {
+    encoding: "utf-8",
+  });
   assert.ok(conductorConfig.includes(`bootstrap_url: ${bootstrapUrl.href}`));
 
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
 });
 
-test("spawn a conductor with a bootstrap service", async (t: TestContext) => {
-  const { servicesProcess, signalingServerUrl } = await runLocalServices();
-  const bootstrapUrl = new URL("https://test.bootstrap.com");
+test("Conductor with custom signaling server", async () => {
+  const signalingServerUrl = new URL("ws://some-signal.server:1234");
   const conductor = await createConductor(signalingServerUrl, {
-    bootstrapServerUrl: bootstrapUrl,
     startup: false,
   });
   const tmpDirPath = conductor.getTmpDirectory();
-  const conductorConfig = readFileSync(
-    `${tmpDirPath}/${CONDUCTOR_CONFIG}`
-  ).toString();
-  assert.ok(conductorConfig.includes(`bootstrap_url: ${bootstrapUrl.href}`));
+  const conductorConfig = readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, {
+    encoding: "utf-8",
+  });
+  assert.ok(conductorConfig.includes(`signal_url: ${signalingServerUrl.href}`));
+
+  await cleanAllConductors();
+});
+
+test("Conductor with custom network config", async () => {
+  const { servicesProcess, signalingServerUrl } = await runLocalServices();
+  const initiateIntervalMs = 10_000;
+  const minInitiateIntervalMs = 20_000;
+  const conductor = await createConductor(signalingServerUrl, {
+    initiateIntervalMs,
+    minInitiateIntervalMs,
+    startup: false,
+  });
+  const tmpDirPath = conductor.getTmpDirectory();
+  const conductorConfig = yaml.load(
+    readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, { encoding: "utf-8" })
+  );
+  assert.ok(
+    conductorConfig &&
+      typeof conductorConfig === "object" &&
+      "network" in conductorConfig
+  );
+  const { network } = conductorConfig;
+  assert.ok(network && typeof network === "object" && "advanced" in network);
+  const { advanced } = network;
+  assert.ok(advanced && typeof advanced === "object" && "k2Gossip" in advanced);
+  const { k2Gossip } = advanced;
+  assert.ok(
+    k2Gossip &&
+      typeof k2Gossip === "object" &&
+      "initiateIntervalMs" in k2Gossip &&
+      "minInitiateIntervalMs" in k2Gossip
+  );
+  assert.strictEqual(k2Gossip.initiateIntervalMs, initiateIntervalMs);
+  assert.strictEqual(k2Gossip.minInitiateIntervalMs, minInitiateIntervalMs);
 
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
@@ -80,7 +113,7 @@ test("Spawn a conductor and check for admin ws", async () => {
   await cleanAllConductors();
 });
 
-test("revoke agent key", async () => {
+test("Revoke agent key", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -123,7 +156,7 @@ test("revoke agent key", async () => {
   await cleanAllConductors();
 });
 
-test("get app info with app ws", async () => {
+test("Get app info with app ws", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -146,7 +179,7 @@ test("get app info with app ws", async () => {
   await cleanAllConductors();
 });
 
-test("get app info with app agent ws", async () => {
+test("Get app info with app agent ws", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -168,7 +201,7 @@ test("get app info with app agent ws", async () => {
   await cleanAllConductors();
 });
 
-test("install app with deferred memproofs", async () => {
+test("Install app with deferred memproofs", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
 
@@ -237,7 +270,7 @@ test("install app with deferred memproofs", async () => {
   await cleanAllConductors();
 });
 
-test("install app with roles settings", async () => {
+test("Install app with roles settings", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
 
@@ -297,7 +330,7 @@ test("install app with roles settings", async () => {
   await cleanAllConductors();
 });
 
-test("install and call an app", async () => {
+test("Install and call an app", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -332,7 +365,7 @@ test("install and call an app", async () => {
   await cleanAllConductors();
 });
 
-test("get a convenience function for zome calls", async () => {
+test("Get a convenience function for zome calls", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -370,7 +403,7 @@ test("get a convenience function for zome calls", async () => {
   await cleanAllConductors();
 });
 
-test("install multiple agents and apps and get access to agents and cells", async () => {
+test("Install multiple agents and apps and get access to agents and cells", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const [aliceApp, bobApp] = await conductor.installAgentsApps({
@@ -404,7 +437,7 @@ test("install multiple agents and apps and get access to agents and cells", asyn
   await cleanAllConductors();
 });
 
-test("get a named cell by role name", async () => {
+test("Get a named cell by role name", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -425,7 +458,7 @@ test("get a named cell by role name", async () => {
   await cleanAllConductors();
 });
 
-test("zome call can time out before completion", async () => {
+test("Zome call can time out before completion", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
@@ -454,7 +487,7 @@ test("zome call can time out before completion", async () => {
   await cleanAllConductors();
 });
 
-test("create and read an entry using the entry zome", async () => {
+test("Create and read an entry using the entry zome", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
 
@@ -508,7 +541,7 @@ test("create and read an entry using the entry zome", async () => {
   await cleanAllConductors();
 });
 
-test("clone cell management", async () => {
+test("Clone cell management", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
