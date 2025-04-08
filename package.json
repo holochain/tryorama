@@ -51,8 +51,6 @@
     "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.14.191",
     "@types/ramda": "^0.26.44",
-    "@types/tape": "^4.13.2",
-    "@types/tape-promise": "^4.0.1",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
@@ -64,8 +62,6 @@
     "js-yaml": "^4.1.0",
     "prettier": "^2.8.1",
     "rimraf": "^3.0.2",
-    "tape": "^5.7.5",
-    "tape-promise": "^4.0.0",
     "tsx": "^4.7.2",
     "typescript": "^4.9.4"
   }

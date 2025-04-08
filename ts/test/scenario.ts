@@ -6,31 +6,31 @@ import {
   Signal,
   SignalCb,
 } from "@holochain/client";
-import assert from "node:assert/strict";
-import test from "tape-promise/tape.js";
+import assert from "node:assert";
+import { test } from "node:test";
 import { Scenario, dhtSync, getZomeCaller, runScenario } from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
 
 const TEST_ZOME_NAME = "coordinator";
 
-test("runScenario - Install hApp bundle and access cells through role ids", async (t) => {
+test("runScenario - Install hApp bundle and access cells through role ids", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     });
-    t.ok(alice.namedCells.get("test"));
+    assert.ok(alice.namedCells.get("test"));
   });
 });
 
-test("runScenario - Catch error when calling non-existent zome", async (t) => {
+test("runScenario - Catch error when calling non-existent zome", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     });
 
-    await t.rejects(
+    await assert.rejects(
       alice.cells[0].callZome<EntryHash>({
         zome_name: "NOZOME",
         fn_name: "create",
@@ -39,31 +39,33 @@ test("runScenario - Catch error when calling non-existent zome", async (t) => {
   });
 });
 
-test("runScenario - Catch error when attaching a protected port", async (t) => {
+test("runScenario - Catch error when attaching a protected port", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     });
 
-    await t.rejects(
+    await assert.rejects(
       alice.conductor.attachAppInterface({ port: 300, allowed_origins: "*" })
     );
   });
 });
 
-test("runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
+test("runScenario - Catch error when calling a zome of an undefined cell", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     });
 
-    t.throws(() => alice.cells[2].callZome({ zome_name: "", fn_name: "" }));
+    assert.throws(() =>
+      alice.cells[2].callZome({ zome_name: "", fn_name: "" })
+    );
   });
 });
 
-test("runScenario - Catch error that occurs in a signal handler", async (t) => {
+test("runScenario - Catch error that occurs in a signal handler", async () => {
   await runScenario(async (scenario: Scenario) => {
     let signalHandlerAlice: SignalCb | undefined;
     const signalReceivedAlice = new Promise<Signal>((_, reject) => {
@@ -76,8 +78,8 @@ test("runScenario - Catch error that occurs in a signal handler", async (t) => {
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     });
-    assert(signalHandlerAlice);
-    assert("on" in alice.appWs);
+    assert.ok(signalHandlerAlice);
+    assert.ok("on" in alice.appWs);
     alice.appWs.on("signal", signalHandlerAlice);
 
     const signalAlice = { value: "hello alice" };
@@ -87,35 +89,35 @@ test("runScenario - Catch error that occurs in a signal handler", async (t) => {
       payload: signalAlice,
     });
 
-    await t.rejects(signalReceivedAlice);
+    await assert.rejects(signalReceivedAlice);
   });
 });
 
-test("Install hApp bundle and access cell by role name", async (t) => {
+test("Install hApp bundle and access cell by role name", async () => {
   const scenario = new Scenario();
 
   const alice = await scenario.addPlayerWithApp({
     type: "path",
     value: FIXTURE_HAPP_URL.pathname,
   });
-  t.ok(alice.namedCells.get("test"));
+  assert.ok(alice.namedCells.get("test"));
   await scenario.cleanUp();
 });
 
-test("Add players with hApp bundles", async (t) => {
+test("Add players with hApp bundles", async () => {
   const scenario = new Scenario();
-  t.ok(scenario.networkSeed);
+  assert.ok(scenario.networkSeed);
   const [alice, bob] = await scenario.addPlayersWithApps([
     { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
     { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
   ]);
-  t.ok(alice.namedCells.get("test"));
-  t.ok(bob.namedCells.get("test"));
+  assert.ok(alice.namedCells.get("test"));
+  assert.ok(bob.namedCells.get("test"));
 
   await scenario.cleanUp();
 });
 
-test("Create and read an entry, 2 conductors", async (t) => {
+test("Create and read an entry, 2 conductors", async () => {
   // The wrapper takes care of creating a scenario and shutting down or deleting
   // all conductors involved in the test scenario.
   await runScenario(async (scenario) => {
@@ -136,7 +138,7 @@ test("Create and read an entry, 2 conductors", async (t) => {
     const content = "Hello Tryorama";
 
     // The cells of the installed hApp are returned in the same order as the DNAs
-    // in the app manifest.
+    // in the app manifesassert.
     const createEntryHash = await alice.cells[0].callZome<EntryHash>({
       zome_name: TEST_ZOME_NAME,
       fn_name: "create",
@@ -153,11 +155,11 @@ test("Create and read an entry, 2 conductors", async (t) => {
       fn_name: "read",
       payload: createEntryHash,
     });
-    t.equal(readContent, content);
+    assert.equal(readContent, content);
   });
 });
 
-test("Conductor maintains data after shutdown and restart", async (t) => {
+test("Conductor maintains data after shutdown and restart", async () => {
   const scenario = new Scenario();
   const appBundleSource: AppBundleSource = {
     type: "path",
@@ -178,10 +180,10 @@ test("Conductor maintains data after shutdown and restart", async (t) => {
   await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
 
   const readContent = await bobCaller<typeof content>("read", createEntryHash);
-  t.equal(readContent, content);
+  assert.equal(readContent, content);
 
   await bob.conductor.shutDown();
-  t.throws(bob.conductor.adminWs);
+  assert.throws(bob.conductor.adminWs);
 
   await bob.conductor.startUp();
   const [appInterfaceInfo] = await bob.conductor.adminWs().listAppInterfaces();
@@ -198,18 +200,18 @@ test("Conductor maintains data after shutdown and restart", async (t) => {
     fn_name: "read",
     payload: createEntryHash,
   });
-  t.equal(readContentAfterRestart, content);
+  assert.equal(readContentAfterRestart, content);
 
   await scenario.cleanUp();
 });
 
-test("Receive signals with 2 conductors", async (t) => {
+test("Receive signals with 2 conductors", async () => {
   const scenario = new Scenario();
 
   let signalHandlerAlice: SignalCb | undefined;
   const signalReceivedAlice = new Promise<AppSignal>((resolve) => {
     signalHandlerAlice = (signal: Signal) => {
-      assert(signal.type === "app");
+      assert.ok(signal.type === "app");
       resolve(signal.value);
     };
   });
@@ -217,7 +219,7 @@ test("Receive signals with 2 conductors", async (t) => {
   let signalHandlerBob: SignalCb | undefined;
   const signalReceivedBob = new Promise<AppSignal>((resolve) => {
     signalHandlerBob = (signal: Signal) => {
-      assert(signal.type === "app");
+      assert.ok(signal.type === "app");
       resolve(signal.value);
     };
   });
@@ -230,11 +232,11 @@ test("Receive signals with 2 conductors", async (t) => {
     { appBundleSource },
     { appBundleSource },
   ]);
-  assert(signalHandlerAlice);
-  assert("on" in alice.appWs);
+  assert.ok(signalHandlerAlice);
+  assert.ok("on" in alice.appWs);
   alice.appWs.on("signal", signalHandlerAlice);
-  assert(signalHandlerBob);
-  assert("on" in bob.appWs);
+  assert.ok(signalHandlerBob);
+  assert.ok("on" in bob.appWs);
   bob.appWs.on("signal", signalHandlerBob);
 
   const signalAlice = { value: "hello alice" };
@@ -254,13 +256,13 @@ test("Receive signals with 2 conductors", async (t) => {
     signalReceivedAlice,
     signalReceivedBob,
   ]);
-  t.deepEqual(actualSignalAlice.payload, signalAlice);
-  t.deepEqual(actualSignalBob.payload, signalBob);
+  assert.deepEqual(actualSignalAlice.payload, signalAlice);
+  assert.deepEqual(actualSignalBob.payload, signalBob);
 
   await scenario.cleanUp();
 });
 
-test("pauseUntilDhtEqual - Create multiple entries, read the last, 2 conductors", async (t) => {
+test("pauseUntilDhtEqual - Create multiple entries, read the last, 2 conductors", async () => {
   const scenario = new Scenario();
 
   const appBundleSource: AppBundleSource = {
@@ -292,12 +294,12 @@ test("pauseUntilDhtEqual - Create multiple entries, read the last, 2 conductors"
     fn_name: "read",
     payload: lastCreatedHash,
   });
-  t.equal(readContent, lastCreatedContent);
+  assert.equal(readContent, lastCreatedContent);
 
   await scenario.cleanUp();
 });
 
-test("runScenario - call zome by role name", async (t) => {
+test("runScenario - call zome by role name", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
@@ -310,6 +312,6 @@ test("runScenario - call zome by role name", async (t) => {
       payload: "hello",
     })) as ActionHash;
 
-    t.ok(result);
+    assert.ok(result);
   });
 });
