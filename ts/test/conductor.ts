@@ -18,6 +18,7 @@ import { readFileSync, realpathSync } from "node:fs";
 import { URL } from "node:url";
 import test from "tape-promise/tape.js";
 import {
+  CONDUCTOR_CONFIG,
   Player,
   cleanAllConductors,
   createConductor,
@@ -42,7 +43,7 @@ test("spawn a conductor defaults to WebRTC network", async (t) => {
   });
   const tmpDirPath = conductor.getTmpDirectory();
   const conductorConfig = readFileSync(
-    tmpDirPath + "/conductor-config.yaml"
+    `${tmpDirPath}/${CONDUCTOR_CONFIG}`
   ).toString();
   t.ok(conductorConfig.includes("webrtc_config"));
   await stopLocalServices(servicesProcess);
@@ -58,7 +59,7 @@ test("spawn a conductor with a bootstrap service", async (t) => {
   });
   const tmpDirPath = conductor.getTmpDirectory();
   const conductorConfig = readFileSync(
-    tmpDirPath + "/conductor-config.yaml"
+    `${tmpDirPath}/${CONDUCTOR_CONFIG}`
   ).toString();
   t.ok(conductorConfig.includes(`bootstrap_url: ${bootstrapUrl.href}`));
 

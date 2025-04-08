@@ -21,7 +21,7 @@ const BOOTSTRAP_SERVER_STARTUP_STRING = "#kitsune2_bootstrap_srv#listening#";
 export const _ALLOWED_ORIGIN = "tryorama-interface";
 
 /**
- * Spawn a signalling server to enable connections between conductors.
+ * Spawn bootstrap and signalling server to enable peer discovery and connections between peers.
  *
  * @public
  */

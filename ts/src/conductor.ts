@@ -19,9 +19,12 @@ import { v4 as uuidv4 } from "uuid";
 import { _ALLOWED_ORIGIN } from "./conductor-helpers.js";
 import { makeLogger } from "./logger.js";
 import { AgentsAppsOptions, AppOptions } from "./types.js";
+import { readFileSync, writeFileSync } from "node:fs";
+import yaml from "js-yaml";
 
-const logger = makeLogger("Local Conductor");
+const logger = makeLogger();
 
+export const CONDUCTOR_CONFIG = "conductor-config.yaml";
 const HOST_URL = new URL("ws://localhost");
 const DEFAULT_TIMEOUT = 60000;
 const LAIR_PASSWORD = "lair-password";
@@ -79,6 +82,7 @@ export const createConductor = async (
     signalingServerUrl,
     createConductorOptions
   );
+  conductor.setGossipParameters();
   if (options?.startup !== false) {
     await conductor.startUp();
   }
@@ -148,6 +152,42 @@ export class Conductor {
       });
     });
     return createConductorPromise;
+  }
+
+  setGossipParameters() {
+    const conductorConfig = readFileSync(
+      `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
+      "utf-8"
+    );
+    const conductorConfigYaml = yaml.load(conductorConfig);
+    assert(conductorConfigYaml && typeof conductorConfigYaml === "object");
+    assert(
+      "network" in conductorConfigYaml &&
+        conductorConfigYaml.network &&
+        typeof conductorConfigYaml.network === "object"
+    );
+    assert("mem_bootstrap" in conductorConfigYaml.network);
+    delete conductorConfigYaml.network.mem_bootstrap;
+    assert("advanced" in conductorConfigYaml.network);
+    assert(conductorConfigYaml.network.advanced === null);
+    conductorConfigYaml.network.advanced = {
+      k2Gossip: {
+        initiateIntervalMs: 100,
+        minInitiateIntervalMs: 100,
+      },
+      tx5Transport: {
+        signalAllowPlainText: true,
+      },
+    };
+    writeFileSync(
+      `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
+      yaml.dump(conductorConfigYaml)
+    );
+    // const conductorConfigd = readFileSync(
+    //   `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
+    //   "utf-8"
+    // );
+    // console.log("conductor config", conductorConfigd);
   }
 
   /**

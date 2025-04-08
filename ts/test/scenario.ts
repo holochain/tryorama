@@ -13,7 +13,7 @@ import { FIXTURE_HAPP_URL } from "./fixture";
 
 const TEST_ZOME_NAME = "coordinator";
 
-test("Local Scenario - runScenario - Install hApp bundle and access cells through role ids", async (t) => {
+test("runScenario - Install hApp bundle and access cells through role ids", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
@@ -23,7 +23,7 @@ test("Local Scenario - runScenario - Install hApp bundle and access cells throug
   });
 });
 
-test("Local Scenario - runScenario - Catch error when calling non-existent zome", async (t) => {
+test("runScenario - Catch error when calling non-existent zome", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
@@ -39,7 +39,7 @@ test("Local Scenario - runScenario - Catch error when calling non-existent zome"
   });
 });
 
-test("Local Scenario - runScenario - Catch error when attaching a protected port", async (t) => {
+test("runScenario - Catch error when attaching a protected port", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
@@ -52,7 +52,7 @@ test("Local Scenario - runScenario - Catch error when attaching a protected port
   });
 });
 
-test("Local Scenario - runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
+test("runScenario - Catch error when calling a zome of an undefined cell", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
@@ -63,7 +63,7 @@ test("Local Scenario - runScenario - Catch error when calling a zome of an undef
   });
 });
 
-test("Local Scenario - runScenario - Catch error that occurs in a signal handler", async (t) => {
+test("runScenario - Catch error that occurs in a signal handler", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     let signalHandlerAlice: SignalCb | undefined;
     const signalReceivedAlice = new Promise<Signal>((_, reject) => {
@@ -91,7 +91,7 @@ test("Local Scenario - runScenario - Catch error that occurs in a signal handler
   });
 });
 
-test("Local Scenario - Install hApp bundle and access cell by role name", async (t) => {
+test("Install hApp bundle and access cell by role name", async (t) => {
   const scenario = new Scenario();
 
   const alice = await scenario.addPlayerWithApp({
@@ -102,7 +102,7 @@ test("Local Scenario - Install hApp bundle and access cell by role name", async 
   await scenario.cleanUp();
 });
 
-test("Local Scenario - Add players with hApp bundles", async (t) => {
+test("Add players with hApp bundles", async (t) => {
   const scenario = new Scenario();
   t.ok(scenario.networkSeed);
   const [alice, bob] = await scenario.addPlayersWithApps([
@@ -115,7 +115,7 @@ test("Local Scenario - Add players with hApp bundles", async (t) => {
   await scenario.cleanUp();
 });
 
-test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
+test("Create and read an entry, 2 conductors", async (t) => {
   // The wrapper takes care of creating a scenario and shutting down or deleting
   // all conductors involved in the test scenario.
   await runScenario(async (scenario) => {
@@ -157,7 +157,7 @@ test("Local Scenario - Create and read an entry, 2 conductors", async (t) => {
   });
 });
 
-test("Local Scenario - Conductor maintains data after shutdown and restart", async (t) => {
+test("Conductor maintains data after shutdown and restart", async (t) => {
   const scenario = new Scenario();
   const appBundleSource: AppBundleSource = {
     type: "path",
@@ -203,7 +203,7 @@ test("Local Scenario - Conductor maintains data after shutdown and restart", asy
   await scenario.cleanUp();
 });
 
-test("Local Scenario - Receive signals with 2 conductors", async (t) => {
+test("Receive signals with 2 conductors", async (t) => {
   const scenario = new Scenario();
 
   let signalHandlerAlice: SignalCb | undefined;
@@ -260,7 +260,7 @@ test("Local Scenario - Receive signals with 2 conductors", async (t) => {
   await scenario.cleanUp();
 });
 
-test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the last, 2 conductors", async (t) => {
+test("pauseUntilDhtEqual - Create multiple entries, read the last, 2 conductors", async (t) => {
   const scenario = new Scenario();
 
   const appBundleSource: AppBundleSource = {
@@ -297,7 +297,7 @@ test("Local Scenario - pauseUntilDhtEqual - Create multiple entries, read the la
   await scenario.cleanUp();
 });
 
-test("Local Scenario - runScenario - call zome by role name", async (t) => {
+test("runScenario - call zome by role name", async (t) => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
       type: "path",
