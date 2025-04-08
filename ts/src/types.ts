@@ -16,7 +16,7 @@ import type {
   RoleSettingsMap,
   SignalCb,
 } from "@holochain/client";
-import { Conductor } from "./conductor.js";
+import { Conductor, NetworkConfig } from "./conductor.js";
 
 /**
  * @internal
@@ -97,6 +97,10 @@ export interface AppOptions {
    * A signal handler for the conductor.
    */
   signalHandler?: SignalCb;
+  /**
+   * Network config for the player.
+   */
+  networkConfig?: NetworkConfig;
 }
 
 /**

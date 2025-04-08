@@ -93,6 +93,9 @@ export class Scenario {
   ): Promise<Player> {
     await this.ensureLocalServices();
     const conductor = await this.addConductor();
+    if (options?.networkConfig) {
+      conductor.setNetworkConfig(options.networkConfig);
+    }
     options = {
       ...options,
       networkSeed: options?.networkSeed ?? this.networkSeed,

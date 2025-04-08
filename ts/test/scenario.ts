@@ -6,9 +6,17 @@ import {
   Signal,
   SignalCb,
 } from "@holochain/client";
+import { readFileSync } from "node:fs";
+import yaml from "js-yaml";
 import assert from "node:assert";
 import { test } from "node:test";
-import { Scenario, dhtSync, getZomeCaller, runScenario } from "../src";
+import {
+  CONDUCTOR_CONFIG,
+  Scenario,
+  dhtSync,
+  getZomeCaller,
+  runScenario,
+} from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
 
 const TEST_ZOME_NAME = "coordinator";
@@ -91,6 +99,45 @@ test("runScenario - Catch error that occurs in a signal handler", async () => {
 
     await assert.rejects(signalReceivedAlice);
   });
+});
+
+test.only("Set custom network config", async () => {
+  const scenario = new Scenario();
+  const initiateIntervalMs = 10_000;
+  const minInitiateIntervalMs = 20_000;
+
+  const alice = await scenario.addPlayerWithApp(
+    {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
+    { networkConfig: { initiateIntervalMs, minInitiateIntervalMs } }
+  );
+
+  const tmpDirPath = alice.conductor.getTmpDirectory();
+  const conductorConfig = yaml.load(
+    readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, { encoding: "utf-8" })
+  );
+  assert.ok(
+    conductorConfig &&
+      typeof conductorConfig === "object" &&
+      "network" in conductorConfig
+  );
+  const { network } = conductorConfig;
+  assert.ok(network && typeof network === "object" && "advanced" in network);
+  const { advanced } = network;
+  assert.ok(advanced && typeof advanced === "object" && "k2Gossip" in advanced);
+  const { k2Gossip } = advanced;
+  assert.ok(
+    k2Gossip &&
+      typeof k2Gossip === "object" &&
+      "initiateIntervalMs" in k2Gossip &&
+      "minInitiateIntervalMs" in k2Gossip
+  );
+  assert.strictEqual(k2Gossip.initiateIntervalMs, initiateIntervalMs);
+  assert.strictEqual(k2Gossip.minInitiateIntervalMs, minInitiateIntervalMs);
+
+  await scenario.cleanUp();
 });
 
 test("Install hApp bundle and access cell by role name", async () => {
