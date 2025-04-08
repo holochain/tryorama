@@ -42,7 +42,7 @@ conductorCells
 
 </td><td>
 
-Array of IConductorCell.
+Array of ConductorCell.
 
 
 </td></tr>

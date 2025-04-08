@@ -24,6 +24,9 @@ import yaml from "js-yaml";
 
 const logger = makeLogger();
 
+/**
+ * @public
+ */
 export const CONDUCTOR_CONFIG = "conductor-config.yaml";
 const HOST_URL = new URL("ws://localhost");
 const DEFAULT_TIMEOUT = 60000;

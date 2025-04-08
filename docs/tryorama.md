@@ -45,32 +45,6 @@ An abstraction of a test scenario to write tests against Holochain hApps, runnin
 </td></tr>
 </tbody></table>
 
-## Enumerations
-
-<table><thead><tr><th>
-
-Enumeration
-
-
-</th><th>
-
-Description
-
-
-</th></tr></thead>
-<tbody><tr><td>
-
-[NetworkType](./tryorama.networktype.md)
-
-
-</td><td>
-
-The network type the conductor should use to communicate with peers.
-
-
-</td></tr>
-</tbody></table>
-
 ## Functions
 
 <table><thead><tr><th>
@@ -212,7 +186,7 @@ A utility function to wait the given amount of time.
 
 </td><td>
 
-Spawn a signalling server to enable connections between conductors.
+Spawn bootstrap and signalling server to enable peer discovery and connections between peers.
 
 
 </td></tr>
@@ -309,6 +283,16 @@ DNA source and additional options.
 </td></tr>
 <tr><td>
 
+[NetworkConfig](./tryorama.networkconfig.md)
+
+
+</td><td>
+
+
+
+</td></tr>
+<tr><td>
+
 [Player](./tryorama.player.md)
 
 
@@ -326,6 +310,31 @@ A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->.
 </td><td>
 
 Options when creating a scenario.
+
+
+</td></tr>
+</tbody></table>
+
+## Variables
+
+<table><thead><tr><th>
+
+Variable
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+[CONDUCTOR\_CONFIG](./tryorama.conductor_config.md)
+
+
+</td><td>
+
 
 
 </td></tr>
