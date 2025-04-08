@@ -8,8 +8,7 @@
     "holochain",
     "conductor",
     "test",
-    "e2e",
-    "trycp"
+    "e2e"
   ],
   "repository": {
     "type": "git",
