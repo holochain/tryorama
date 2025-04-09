@@ -5,10 +5,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- `NetworkConfig` with options to configure gossip in conductors and scenarios.
 ### Removed
 - TryCP server, client and test utilities for TryCP conductors.
 ### Changed
-- Update to `@holochain/client@0.19.0-dev.8` and update types accordingly.
+- Update to `@holochain/client@0.19.0-rc.0` and update types accordingly.
+- Remove tape as test runner and switch to native NodeJS test runner and assertion library.
 ### Fixed
 
 ## 2025-02-26: v0.18.0-dev.5

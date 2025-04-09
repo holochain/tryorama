@@ -13,42 +13,42 @@ import { Conductor } from "./conductor.js";
 import { makeLogger } from "./logger.js";
 import { AgentApp, CallableCell, CellZomeCallRequest } from "./types.js";
 
-const BOOTSTRAP_SERVER_STARTUP_STRING = "HC BOOTSTRAP - ADDR: ";
-const SIGNALING_SERVER_STARTUP_STRING = "HC SIGNAL - ADDR: ";
+const BOOTSTRAP_SERVER_STARTUP_STRING = "#kitsune2_bootstrap_srv#listening#";
+
 /**
  * @internal
  */
 export const _ALLOWED_ORIGIN = "tryorama-interface";
 
 /**
- * Spawn a signalling server to enable connections between conductors.
+ * Spawn bootstrap and signalling server to enable peer discovery and connections between peers.
  *
  * @public
  */
 export const runLocalServices = async () => {
   const logger = makeLogger("Local services");
-  const servicesProcess = spawn("hc", ["run-local-services"]);
+  const servicesProcess = spawn("kitsune2-bootstrap-srv");
   const startUpComplete = new Promise<{
     servicesProcess: ChildProcessWithoutNullStreams;
     bootstrapServerUrl: URL;
     signalingServerUrl: URL;
   }>((resolve) => {
-    let bootstrapServerUrl: URL;
     servicesProcess.stdout.on("data", (data: Buffer) => {
       const processData = data.toString();
       logger.debug(processData);
       if (processData.includes(BOOTSTRAP_SERVER_STARTUP_STRING)) {
-        bootstrapServerUrl = new URL(
-          processData.split(BOOTSTRAP_SERVER_STARTUP_STRING)[1].split("\n")[0]
-        );
+        const listeningAddress = processData
+          .split(BOOTSTRAP_SERVER_STARTUP_STRING)[1]
+          .split("#")[0];
+        const bootstrapServerUrl = new URL(`http://${listeningAddress}`);
+        const signalingServerUrl = new URL(`ws://${listeningAddress}`);
         logger.verbose(`bootstrap server url: ${bootstrapServerUrl}`);
-      }
-      if (processData.includes(SIGNALING_SERVER_STARTUP_STRING)) {
-        const signalingServerUrl = new URL(
-          processData.split(SIGNALING_SERVER_STARTUP_STRING)[1].split("\n")[0]
-        );
         logger.verbose(`signaling server url: ${signalingServerUrl}`);
-        resolve({ servicesProcess, bootstrapServerUrl, signalingServerUrl });
+        resolve({
+          servicesProcess,
+          bootstrapServerUrl,
+          signalingServerUrl,
+        });
       }
     });
     servicesProcess.stderr.on("data", (data) => logger.error(data.toString()));

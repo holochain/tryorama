@@ -31,13 +31,13 @@
     "prepare": "npm run lint",
     "lint": "eslint --fix --ext .ts ts/src ts/test .eslintrc.cjs",
     "format": "prettier --write \"ts/**/*.ts\"",
-    "test": "tsx ts/test/index.ts",
+    "test": "tsx --test ts/test/index.ts",
     "test:conductor": "tsx ts/test/conductor.ts",
     "test:scenario": "tsx ts/test/scenario.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@holochain/client": "^0.19.0-dev.8",
+    "@holochain/client": "^0.19.0-rc.0",
     "get-port": "^6.1.2",
     "lodash": "^4.17.21",
     "uuid": "^8.3.2",
@@ -48,10 +48,9 @@
     "@microsoft/api-documenter": "^7.19.27",
     "@microsoft/api-extractor": "^7.33.7",
     "@msgpack/msgpack": "^2.8.0",
+    "@types/js-yaml": "^4.0.9",
     "@types/lodash": "^4.14.191",
     "@types/ramda": "^0.26.44",
-    "@types/tape": "^4.13.2",
-    "@types/tape-promise": "^4.0.1",
     "@types/uuid": "^8.3.4",
     "@types/ws": "^8.5.3",
     "@typescript-eslint/eslint-plugin": "^5.46.1",
@@ -63,8 +62,6 @@
     "js-yaml": "^4.1.0",
     "prettier": "^2.8.1",
     "rimraf": "^3.0.2",
-    "tape": "^5.7.5",
-    "tape-promise": "^4.0.0",
     "tsx": "^4.7.2",
     "typescript": "^4.9.4"
   }

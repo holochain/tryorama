@@ -132,6 +132,18 @@ Install an application into the conductor.
 </td></tr>
 <tr><td>
 
+[setNetworkConfig(createConductorOptions)](./tryorama.conductor.setnetworkconfig.md)
+
+
+</td><td>
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
 [shutDown()](./tryorama.conductor.shutdown.md)
 
 

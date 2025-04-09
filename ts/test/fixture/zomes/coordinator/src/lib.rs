@@ -3,8 +3,8 @@ use integrity::{Content, EntryTypes, UpdateInput};
 
 #[hdk_extern]
 pub fn create(input: Content) -> ExternResult<ActionHash> {
-    let header_hash = create_entry(EntryTypes::Content(input)).unwrap();
-    Ok(header_hash)
+    let action_hash = create_entry(EntryTypes::Content(input))?;
+    Ok(action_hash)
 }
 
 #[hdk_extern]
@@ -21,14 +21,13 @@ pub fn read(hash: ActionHash) -> ExternResult<Option<Content>> {
 
 #[hdk_extern]
 pub fn update(input: UpdateInput) -> ExternResult<ActionHash> {
-    let updated_hash =
-        update_entry(input.hash, EntryTypes::Content(Content(input.content))).unwrap();
+    let updated_hash = update_entry(input.hash, EntryTypes::Content(Content(input.content)))?;
     Ok(updated_hash)
 }
 
 #[hdk_extern]
 pub fn delete(hash: ActionHash) -> ExternResult<ActionHash> {
-    let deleted_hash = delete_entry(hash).unwrap();
+    let deleted_hash = delete_entry(hash)?;
     Ok(deleted_hash)
 }
 

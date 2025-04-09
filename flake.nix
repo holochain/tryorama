@@ -1,7 +1,7 @@
 {
   inputs = {
     holonix = {
-      url = "github:holochain/holonix?ref=2d9ac2409a81ec67ed237e6f7a1ddcbe5f6d133b";
+      url = "github:holochain/holonix?ref=main";
     };
 
     nixpkgs.follows = "holonix/nixpkgs";
@@ -28,6 +28,7 @@
               inputs'.holonix.packages.holochain
               inputs'.holonix.packages.lair-keystore
               inputs'.holonix.packages.rust
+              inputs'.holonix.packages.bootstrap-srv
 
               # add further packages from nixpkgs
               pkgs.nodejs

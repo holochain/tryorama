@@ -75,6 +75,25 @@ _(Optional)_ App ID to override the app manifest's app name.
 </td></tr>
 <tr><td>
 
+[networkConfig?](./tryorama.appoptions.networkconfig.md)
+
+
+</td><td>
+
+
+</td><td>
+
+[NetworkConfig](./tryorama.networkconfig.md)
+
+
+</td><td>
+
+_(Optional)_ Network config for the player.
+
+
+</td></tr>
+<tr><td>
+
 [networkSeed?](./tryorama.appoptions.networkseed.md)
 
 

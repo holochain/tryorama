@@ -19,22 +19,18 @@ import { v4 as uuidv4 } from "uuid";
 import { _ALLOWED_ORIGIN } from "./conductor-helpers.js";
 import { makeLogger } from "./logger.js";
 import { AgentsAppsOptions, AppOptions } from "./types.js";
+import { readFileSync, writeFileSync } from "node:fs";
+import yaml from "js-yaml";
 
-const logger = makeLogger("Local Conductor");
+const logger = makeLogger();
 
+/**
+ * @public
+ */
+export const CONDUCTOR_CONFIG = "conductor-config.yaml";
 const HOST_URL = new URL("ws://localhost");
 const DEFAULT_TIMEOUT = 60000;
 const LAIR_PASSWORD = "lair-password";
-
-/**
- * The network type the conductor should use to communicate with peers.
- *
- * @public
- */
-export enum NetworkType {
-  WebRtc = "webrtc",
-  Mem = "mem",
-}
 
 /**
  * @public
@@ -48,37 +44,43 @@ export interface ConductorOptions {
   startup?: boolean;
 
   /**
-   * The network type the conductor should use.
-   *
-   * @defaultValue quic
-   */
-  networkType?: NetworkType;
-
-  /**
    * A bootstrap server URL for peers to discover each other.
    */
   bootstrapServerUrl?: URL;
 
   /**
-   * Disable DPKI in the conductor instance.
-   *
-   * unstable
-   */
-  // noDpki?: boolean;
-
-  /**
-   * Set a DPKI network seed in the conductor instance.
-   *
-   * Defaults to "deepkey-test".
-   *
-   * unstable
-   */
-  // dpkiNetworkSeed?: NetworkSeed;
-
-  /**
    * Timeout for requests to Admin and App API.
    */
   timeout?: number;
+}
+
+/**
+ * @public
+ */
+export interface NetworkConfig {
+  /**
+   * The interval in seconds between initiating gossip rounds.
+   *
+   * This controls how often gossip will attempt to find a peer to gossip with.
+   * This can be set as low as you'd like, but you will still be limited by
+   * minInitiateIntervalMs. So a low value for this will result in gossip
+   * doing its initiation in a burst. Then, when it has run out of peers, it will idle
+   * for a while.
+   *
+   * Default: 100
+   */
+  initiateIntervalMs?: number;
+
+  /**
+   * The minimum amount of time that must be allowed to pass before a gossip round can be
+   * initiated by a given peer.
+   *
+   * This is a rate-limiting mechanism to be enforced against incoming gossip and therefore must
+   * be respected when initiating too.
+   *
+   * Default: 100
+   */
+  minInitiateIntervalMs?: number;
 }
 
 /**
@@ -88,7 +90,7 @@ export interface ConductorOptions {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  "bootstrapServerUrl" | "networkType" | "timeout"
+  "bootstrapServerUrl" | "timeout"
 >;
 
 /**
@@ -101,19 +103,22 @@ export type CreateConductorOptions = Pick<
  */
 export const createConductor = async (
   signalingServerUrl: URL,
-  options?: ConductorOptions
+  options?: ConductorOptions & NetworkConfig
 ) => {
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
     "networkType",
-    // "noDpki",
-    // "dpkiNetworkSeed",
     "timeout",
   ]);
   const conductor = await Conductor.create(
     signalingServerUrl,
     createConductorOptions
   );
+  const networkConfig: NetworkConfig = pick(options, [
+    "initiateIntervalMs",
+    "minInitiateIntervalMs",
+  ]);
+  conductor.setNetworkConfig(networkConfig);
   if (options?.startup !== false) {
     await conductor.startUp();
   }
@@ -151,22 +156,14 @@ export class Conductor {
     signalingServerUrl: URL,
     options?: CreateConductorOptions
   ) {
-    const networkType = options?.networkType ?? NetworkType.WebRtc;
-    if (options?.bootstrapServerUrl && networkType !== NetworkType.WebRtc) {
-      throw new Error(
-        "error creating conductor: bootstrap service can only be set for webrtc network"
-      );
-    }
-
     const args = ["sandbox", "--piped", "create", "--in-process-lair"];
     args.push("network");
     if (options?.bootstrapServerUrl) {
       args.push("--bootstrap", options.bootstrapServerUrl.href);
     }
-    args.push(networkType);
-    if (networkType === NetworkType.WebRtc) {
-      args.push(signalingServerUrl.href);
-    }
+    args.push("webrtc");
+    args.push(signalingServerUrl.href);
+    logger.debug("spawning hc sandbox with args:", args);
     const createConductorProcess = spawn("hc", args);
     createConductorProcess.stdin.write(LAIR_PASSWORD);
     createConductorProcess.stdin.end();
@@ -191,6 +188,38 @@ export class Conductor {
       });
     });
     return createConductorPromise;
+  }
+
+  setNetworkConfig(createConductorOptions: NetworkConfig) {
+    const conductorConfig = readFileSync(
+      `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
+      "utf-8"
+    );
+    const conductorConfigYaml = yaml.load(conductorConfig);
+    assert(conductorConfigYaml && typeof conductorConfigYaml === "object");
+    assert(
+      "network" in conductorConfigYaml &&
+        conductorConfigYaml.network &&
+        typeof conductorConfigYaml.network === "object"
+    );
+    if ("mem_bootstrap" in conductorConfigYaml.network) {
+      delete conductorConfigYaml.network.mem_bootstrap;
+    }
+    assert("advanced" in conductorConfigYaml.network);
+    conductorConfigYaml.network.advanced = {
+      k2Gossip: {
+        initiateIntervalMs: createConductorOptions.initiateIntervalMs ?? 100,
+        minInitiateIntervalMs:
+          createConductorOptions.minInitiateIntervalMs ?? 100,
+      },
+      tx5Transport: {
+        signalAllowPlainText: true,
+      },
+    };
+    const yamlDump = yaml.dump(conductorConfigYaml);
+    logger.debug("Updated conductor config:");
+    logger.debug(yamlDump);
+    writeFileSync(`${this.conductorDir}/${CONDUCTOR_CONFIG}`, yamlDump);
   }
 
   /**
@@ -234,7 +263,7 @@ export class Conductor {
       });
 
       runConductorProcess.stderr.on("data", (data: Buffer) => {
-        logger.info(data.toString());
+        logger.error(data.toString());
       });
     });
     await startPromise;

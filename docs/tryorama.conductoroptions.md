@@ -55,25 +55,6 @@ _(Optional)_ A bootstrap server URL for peers to discover each other.
 </td></tr>
 <tr><td>
 
-[networkType?](./tryorama.conductoroptions.networktype.md)
-
-
-</td><td>
-
-
-</td><td>
-
-[NetworkType](./tryorama.networktype.md)
-
-
-</td><td>
-
-_(Optional)_ The network type the conductor should use.
-
-
-</td></tr>
-<tr><td>
-
 [startup?](./tryorama.conductoroptions.startup.md)
 
 
