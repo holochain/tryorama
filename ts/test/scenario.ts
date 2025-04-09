@@ -101,7 +101,7 @@ test("runScenario - Catch error that occurs in a signal handler", async () => {
   });
 });
 
-test.only("Set custom network config", async () => {
+test("Set custom network config", async () => {
   const scenario = new Scenario();
   const initiateIntervalMs = 10_000;
   const minInitiateIntervalMs = 20_000;
