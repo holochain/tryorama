@@ -6,7 +6,8 @@ import {
 } from "@holochain/client";
 import isEqual from "lodash/isEqual.js";
 import sortBy from "lodash/sortBy.js";
-import { IConductorCell, IPlayer } from "./types.js";
+import { Player } from "./scenario.js";
+import { ConductorCell } from "./types.js";
 
 /**
  * A utility function to wait the given amount of time.
@@ -22,7 +23,7 @@ export const pause = (milliseconds: number) => {
   });
 };
 
-const playersToConductorCells = (players: IPlayer[], dnaHash: DnaHash) =>
+const playersToConductorCells = (players: Player[], dnaHash: DnaHash) =>
   players.map((player) => ({
     conductor: player.conductor,
     cellId: [dnaHash, player.agentPubKey] as CellId,
@@ -37,7 +38,7 @@ const playersToConductorCells = (players: IPlayer[], dnaHash: DnaHash) =>
  *
  * @public
  */
-export const areDhtsSynced = async (players: IPlayer[], dnaHash: DnaHash) => {
+export const areDhtsSynced = async (players: Player[], dnaHash: DnaHash) => {
   const conductorCells = playersToConductorCells(players, dnaHash);
   return areConductorCellsDhtsSynced(conductorCells);
 };
@@ -51,7 +52,7 @@ export const areDhtsSynced = async (players: IPlayer[], dnaHash: DnaHash) => {
  * @public
  */
 export const areConductorCellsDhtsSynced = async (
-  conductorCells: IConductorCell[]
+  conductorCells: ConductorCell[]
 ) => {
   if (!isConductorCellDnaHashEqual(conductorCells)) {
     throw Error("Cannot compare DHT state of different DNAs");
@@ -112,7 +113,7 @@ export const areConductorCellsDhtsSynced = async (
  * @public
  */
 export const dhtSync = async (
-  players: IPlayer[],
+  players: Player[],
   dnaHash: DnaHash,
   interval = 50,
   timeout?: number
@@ -133,7 +134,7 @@ export const dhtSync = async (
  * @public
  */
 export const conductorCellsDhtSync = async (
-  conductorCells: IConductorCell[],
+  conductorCells: ConductorCell[],
   interval = 50,
   timeout?: number
 ) => {
@@ -170,7 +171,7 @@ export const conductorCellsDhtSync = async (
  *
  * @internal
  */
-const isConductorCellDnaHashEqual = (conductorCells: IConductorCell[]) => {
+const isConductorCellDnaHashEqual = (conductorCells: ConductorCell[]) => {
   const dnaHashes = conductorCells.map(
     (conductorCell) => conductorCell.cellId[0]
   );

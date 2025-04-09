@@ -9,7 +9,7 @@ A utility function to compare conductors' integrated DhtOps.
 **Signature:**
 
 ```typescript
-areDhtsSynced: (players: IPlayer[], dnaHash: DnaHash) => Promise<boolean>
+areDhtsSynced: (players: Player[], dnaHash: DnaHash) => Promise<boolean>
 ```
 
 ## Parameters
@@ -37,7 +37,7 @@ players
 
 </td><td>
 
-[IPlayer](./tryorama.iplayer.md)<!-- -->\[\]
+[Player](./tryorama.player.md)<!-- -->\[\]
 
 
 </td><td>

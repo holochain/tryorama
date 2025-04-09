@@ -1,11 +1,6 @@
 import type {
-  AdminWebsocket,
   AgentPubKey,
-  AppAuthenticationToken,
   AppBundleSource,
-  AppInfo,
-  SignalCb,
-  AppWebsocket,
   CallZomeRequest,
   CellId,
   ClonedCell,
@@ -19,7 +14,9 @@ import type {
   RegisterDnaRequest,
   RoleName,
   RoleSettingsMap,
+  SignalCb,
 } from "@holochain/client";
+import { Conductor } from "./conductor.js";
 
 /**
  * @internal
@@ -32,48 +29,6 @@ export type _RegisterDnaReqOpts = Omit<
   path?: string;
   bundle?: DnaBundle;
 };
-
-/**
- * AdminWebsocket interface for local and TryCP conductors.
- *
- * @public
- */
-export type IAdminWebsocket = Omit<
-  AdminWebsocket,
-  "client" | "defaultTimeout" | "_requester"
->;
-
-/**
- * AppWebsocket interface for local and TryCP conductors.
- *
- * @public
- */
-export type IAppWebsocket = {
-  callZome: <T>(request: CallZomeRequest, timeout?: number) => Promise<T>;
-};
-
-/**
- * Base interface of a Tryorama conductor. Both {@link Conductor} and
- * {@link TryCpConductor} implement this interface.
- *
- * @public
- */
-export interface IConductor {
-  startUp: () => Promise<void | null>;
-  shutDown: () => Promise<number | null>;
-
-  adminWs: () => IAdminWebsocket;
-  connectAppWs: (
-    token: AppAuthenticationToken,
-    port: number
-  ) => Promise<IAppWebsocket>;
-
-  installApp: (
-    appBundleSource: AppBundleSource,
-    options?: AppOptions
-  ) => Promise<AppInfo>;
-  installAgentsApps: (options: AgentsAppsOptions) => Promise<AppInfo[]>;
-}
 
 /**
  * The zome request options adapted to a specific cell.
@@ -117,16 +72,6 @@ export interface AgentApp {
   agentPubKey: Uint8Array;
   cells: CallableCell[];
   namedCells: Map<RoleName, CallableCell>;
-}
-
-/**
- * Combines an agent hApp with the conductor they belong to.
- *
- * @public
- */
-export interface IPlayer extends AgentApp {
-  conductor: IConductor;
-  appWs: AppWebsocket | IAppWebsocket;
 }
 
 /**
@@ -191,7 +136,7 @@ export interface Dna {
  *
  * @public
  */
-export interface IConductorCell {
-  conductor: IConductor;
+export interface ConductorCell {
+  conductor: Conductor;
   cellId: CellId;
 }

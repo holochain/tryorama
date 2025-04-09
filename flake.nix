@@ -1,11 +1,10 @@
 {
- inputs = {
+  inputs = {
     holonix = {
-      url = "github:holochain/holonix?ref=main";
+      url = "github:holochain/holonix?ref=2d9ac2409a81ec67ed237e6f7a1ddcbe5f6d133b";
     };
 
     nixpkgs.follows = "holonix/nixpkgs";
-
 
     # lib to build a nix package from a rust crate
     crane.follows = "holonix/crane";
@@ -45,33 +44,6 @@
               export PS1='\[\033[1;34m\][holonix:\w]\$\[\033[0m\] '
             '';
           };
-
-          packages.trycp-server =
-            let
-              pkgs = import nixpkgs {
-                inherit system;
-                overlays = [ (import rust-overlay) ];
-              };
-
-              rustToolchain = pkgs.rust-bin.stable."1.78.0".minimal;
-
-              craneLib = (crane.mkLib pkgs).overrideToolchain rustToolchain;
-
-              crateInfo = craneLib.crateNameFromCargoToml { cargoToml = ./crates/trycp_server/Cargo.toml; };
-            in
-            craneLib.buildPackage {
-              pname = "trycp-server";
-              version = crateInfo.version;
-              src = craneLib.cleanCargoSource (craneLib.path ./.);
-              doCheck = false;
-
-              buildInputs = [ ]
-                ++ (lib.optionals pkgs.stdenv.isDarwin
-                (with pkgs.darwin.apple_sdk.frameworks; [
-                  CoreFoundation
-                  Security
-                ]));
-            };
         };
     };
 }
