@@ -25,5 +25,3 @@ export const makeLogger = (label?: string) =>
     ),
     transports: [new transports.Console({ level: env.logLevel })],
   });
-
-export default makeLogger();
