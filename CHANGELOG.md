@@ -3,12 +3,15 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/).
 This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
 ## \[Unreleased\]
-- Fix `js-yaml` still included as a dev-dependency
 
 ### Added
 ### Removed
 ### Changed
 ### Fixed
+
+## 2025-04-11: v0.18.0-rc.1
+### Fixed
+- Fix `js-yaml` still included as a dev-dependency
 
 ## 2025-04-09: v0.18.0-rc.0
 ### Added
