@@ -8,6 +8,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 ### Fixed
+- Return an error if spawning `kitsune2-bootstrap-srv` fails
 
 ## 2025-04-11: v0.18.0-rc.1
 ### Fixed
