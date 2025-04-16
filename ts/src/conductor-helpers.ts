@@ -32,7 +32,17 @@ export const runLocalServices = async () => {
     servicesProcess: ChildProcessWithoutNullStreams;
     bootstrapServerUrl: URL;
     signalingServerUrl: URL;
-  }>((resolve) => {
+  }>((resolve, reject) => {
+    servicesProcess.on("error", (err: NodeJS.ErrnoException) => {
+      if (err.code === "ENOENT") {
+        logger.error(
+          "No kitsune2-bootstrap-srv binary found in the environment."
+        );
+      } else {
+        logger.error("Failed to spawn kitsune2-bootstrap-srv: ", err);
+      }
+      reject("Failed to spawn kitsune2-bootstrap-srv");
+    });
     servicesProcess.stdout.on("data", (data: Buffer) => {
       const processData = data.toString();
       logger.debug(processData);
