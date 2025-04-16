@@ -28,6 +28,13 @@ export const _ALLOWED_ORIGIN = "tryorama-interface";
 export const runLocalServices = async () => {
   const logger = makeLogger("Local services");
   const servicesProcess = spawn("kitsune2-bootstrap-srv");
+  servicesProcess.on("error", (err: NodeJS.ErrnoException) => {
+    if (err.code && err.code === "ENOENT") {
+      logger.error("No kitsune2-bootstrap-srv found in the environment.");
+    } else {
+      logger.error("Failed to spawn kitsune2-bootstrap-srv: ", err);
+    }
+  });
   const startUpComplete = new Promise<{
     servicesProcess: ChildProcessWithoutNullStreams;
     bootstrapServerUrl: URL;
