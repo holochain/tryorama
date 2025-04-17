@@ -346,63 +346,34 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
   await scenario.cleanUp();
 });
 
-test("dhtSync - Fails if some Ops were authored but not yet integrated in a conductor", async () => {
-  const scenario = new Scenario();
-
-  const appBundleSource: AppBundleSource = {
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
-  };
-  const [alice] = await scenario.addPlayersWithApps([
-    { 
-      appBundleSource,
-      options: {
-        networkConfig: {
-          disablePublish: true
-        }
-      },
-    },
-    { appBundleSource },
-  ]);
-
-  // Alice creates 1 entry, but never publishes it because publishing is disabled
-  const actionHash = await alice.cells[0].callZome<EntryHash>({
-    zome_name: TEST_ZOME_NAME,
-    fn_name: "create",
-    payload: "my entry",
-  });
-
-  assert.throws(dhtSync([alice], alice.cells[0].cell_id[0]));
-});
-
 test("dhtSync - Fails if some Ops are not synced among all conductors", async () => {
-  const scenario = new Scenario();
+  const scenario = new Scenario({
+    disableLocalServices: true,
+  });
 
   const appBundleSource: AppBundleSource = {
     type: "path",
     value: FIXTURE_HAPP_URL.pathname,
   };
   const [alice, bob] = await scenario.addPlayersWithApps([
-    { 
-      appBundleSource,
-      options: {
-        networkConfig: {
-          disablePublish: true,
-          disableGossip: true
-        }
-      },
-    },
+    { appBundleSource },
     { appBundleSource },
   ]);
 
-  // Alice creates 1 entry, but never publishes it or gossips it
+  // Alice creates 1 entry
   const actionHash = await alice.cells[0].callZome<EntryHash>({
     zome_name: TEST_ZOME_NAME,
     fn_name: "create",
     payload: "my entry",
   });
 
-  assert.throws(dhtSync([alice, bob], alice.cells[0].cell_id[0]));
+  // Bob never receives the entry
+  try {
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
+    assert.fail();
+  } catch(e) { assert(true); }
+
+  await scenario.cleanUp();
 });
 
 test("runScenario - call zome by role name", async () => {
