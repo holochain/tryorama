@@ -68,6 +68,11 @@ export const areConductorCellsDhtsSynced = async (
     })
   );
 
+  // Compare published DhtOps to integrated DhtOps
+  const allDhtOpsIntegrated = conductorStates.every((conductor: FullStateDump) => {
+    conductor.source_chain_dump.published_ops_count === conductor.integration_dump.integrated.length
+  });
+
   // Compare conductors' integrated DhtOps
   const conductorDhtOpsIntegrated = conductorStates.map((conductor) => {
     return sortBy(conductor.integration_dump.integrated, [
@@ -93,11 +98,11 @@ export const areConductorCellsDhtsSynced = async (
       },
     ]);
   });
-  const status = conductorDhtOpsIntegrated.every((ops) =>
+  const allDhtOpsSynced = conductorDhtOpsIntegrated.every((ops) =>
     isEqual(ops, conductorDhtOpsIntegrated[0])
   );
 
-  return status;
+  return allDhtOpsSynced && allDhtOpsIntegrated;
 };
 
 /**
