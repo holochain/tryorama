@@ -60,12 +60,12 @@ export const areConductorCellsDhtsSynced = async (
 
   // Dump all conductors' states
   const conductorStates: FullStateDump[] = await Promise.all(
-    conductorCells.map((conductorCell) => {
-      return conductorCell.conductor.adminWs().dumpFullState({
+    conductorCells.map((conductorCell,) =>
+       conductorCell.conductor.adminWs().dumpFullState({
         cell_id: conductorCell.cellId,
         dht_ops_cursor: undefined,
-      });
-    })
+      })
+    )
   );
 
   // Compare published DhtOps to integrated DhtOps
@@ -147,9 +147,10 @@ export const conductorCellsDhtSync = async (
     throw Error("Cannot compare DHT state of different DNAs");
   }
 
-  const startTime = Date.now();
-  let completed = false;
+  // Always run the check at least once, even if the timeoutMs is 0.
+  let completed = await areConductorCellsDhtsSynced(conductorCells);
 
+  const startTime = Date.now();
   while (!completed) {
     // Check if timeout has passed
     const currentTime = Date.now();
