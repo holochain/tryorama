@@ -52,6 +52,11 @@ export interface ConductorOptions {
    * Timeout for requests to Admin and App API.
    */
   timeout?: number;
+
+  /**
+   * The conductor was built with the cargo feature `test-utils` enabled.
+   */
+  cargoFeatureTestUtils?: boolean;
 }
 
 /**
@@ -81,6 +86,30 @@ export interface NetworkConfig {
    * Default: 100
    */
   minInitiateIntervalMs?: number;
+
+  /**
+   * Disable publishing Ops
+   * 
+   * This is *ignored* if the ConductorOption `cargoFeatureTestUtils` is false.
+   * 
+   * This should only be used in test scenarios when you need to confirm the behavior of gossip
+   * directly, without publishing.
+   * 
+   * Default: false
+   */
+  disablePublish?: boolean;
+
+  /**
+   * Disable gossip
+   * 
+   * This is *ignored* if the ConductorOption `cargoFeatureTestUtils` is false.
+   *
+   * This should only be used in test scenarios when you need to confirm the behavior of gossip
+   * directly, without gossip.
+   * 
+   * Default: false
+   */
+  disableGossip?: boolean;
 }
 
 /**
@@ -216,6 +245,10 @@ export class Conductor {
         signalAllowPlainText: true,
       },
     };
+    if(conductorConfig.cargoFeatureTestUtils) {
+      conductorConfig.network.disablePublish = createConductorOptions.disablePublish ?? false;
+      conductorConfig.network.disableGossip = createConductorOptions.disableGossip ?? false;
+    }
     const yamlDump = yaml.dump(conductorConfigYaml);
     logger.debug("Updated conductor config:");
     logger.debug(yamlDump);
