@@ -29,7 +29,7 @@ export interface Player extends AgentApp {
 export interface ScenarioOptions {
   // Timeout for requests to Admin and App API calls.
   timeout?: number;
-  
+
   // Disable local bootstrap and signal server.
   //
   // This will prevent peers from reaching each other.
@@ -178,11 +178,11 @@ export class Scenario {
   }
 
   private async ensureLocalServices() {
-    if(this.disableLocalServices) {
+    if (this.disableLocalServices) {
       this.bootstrapServerUrl = new URL("https://BAD_URL");
       this.signalingServerUrl = new URL("wss://BAD_URL");
     }
-    
+
     if (!this.serviceProcess) {
       console.log("starting local services");
       ({

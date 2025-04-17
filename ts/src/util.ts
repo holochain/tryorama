@@ -60,8 +60,8 @@ export const areConductorCellsDhtsSynced = async (
 
   // Dump all conductors' states
   const conductorStates: FullStateDump[] = await Promise.all(
-    conductorCells.map((conductorCell,) =>
-       conductorCell.conductor.adminWs().dumpFullState({
+    conductorCells.map((conductorCell) =>
+      conductorCell.conductor.adminWs().dumpFullState({
         cell_id: conductorCell.cellId,
         dht_ops_cursor: undefined,
       })
@@ -71,8 +71,8 @@ export const areConductorCellsDhtsSynced = async (
   // Compare published DhtOps to integrated DhtOps
   const allDhtOpsIntegrated = conductorStates.every(
     (conductor: FullStateDump) =>
-        conductor.integration_dump.integration_limbo.length === 0 &&
-        conductor.integration_dump.validation_limbo.length === 0
+      conductor.integration_dump.integration_limbo.length === 0 &&
+      conductor.integration_dump.validation_limbo.length === 0
   );
 
   // Compare conductors' integrated DhtOps
@@ -167,7 +167,7 @@ export const conductorCellsDhtSync = async (
       await pause(intervalMs);
     }
   }
-  
+
   throw Error(`Conductor Cell DHTs are not synced after ${timeoutMs}ms`);
 };
 

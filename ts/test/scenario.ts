@@ -361,7 +361,7 @@ test("dhtSync - Fails if some Ops are not synced among all conductors", async ()
   ]);
 
   // Alice creates 1 entry
-  const actionHash = await alice.cells[0].callZome<EntryHash>({
+  await alice.cells[0].callZome<EntryHash>({
     zome_name: TEST_ZOME_NAME,
     fn_name: "create",
     payload: "my entry",
@@ -371,7 +371,9 @@ test("dhtSync - Fails if some Ops are not synced among all conductors", async ()
   try {
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
     assert.fail();
-  } catch(e) { }
+  } catch (e) {
+    assert(true);
+  }
 
   await scenario.cleanUp();
 });
@@ -389,13 +391,14 @@ test("dhtSync - Fails if some Ops are not integrated in a conductor", async () =
   ]);
 
   // Alice creates 1 entry, but never publishes it because publishing is disabled
-  const actionHash = await alice.cells[0].callZome<EntryHash>({
+  await alice.cells[0].callZome<EntryHash>({
     zome_name: TEST_ZOME_NAME,
     fn_name: "create",
     payload: "my entry",
   });
 
-  while(true) {
+  const x = true;
+  while (x) {
     // Dump Bob's conductor state
     const bobStateDump = await bob.conductor.adminWs().dumpFullState({
       cell_id: alice.cells[0].cell_id,
@@ -404,20 +407,21 @@ test("dhtSync - Fails if some Ops are not integrated in a conductor", async () =
 
     // When Bob recieves Alice's Ops, and they are being validated,
     // then dhtSync should fail
-    if(bobStateDump.integration_dump.validation_limbo.length > 0) {
+    if (bobStateDump.integration_dump.validation_limbo.length > 0) {
       try {
         // Run with a 0ms timeout, so that we check the sync status only *once*,
         // while Bob's conductor is still in this state.
         await dhtSync([alice], alice.cells[0].cell_id[0], 0);
-        assert.fail()
-      } catch(e) {}
+        assert.fail();
+      } catch (e) {
+        assert(true);
+      }
       break;
     }
   }
 
   await scenario.cleanUp();
 });
-
 
 test("runScenario - call zome by role name", async () => {
   await runScenario(async (scenario: Scenario) => {
