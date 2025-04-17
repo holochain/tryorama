@@ -113,8 +113,7 @@ export const areConductorCellsDhtsSynced = async (
  *
  * @param players - Array of players.
  * @param dnaHash - DNA hash to compare integrated DhtOps from.
- * @param interval - Interval to pause between comparisons (defaults to 50 ms).
- * @param timeout - A timeout for the delay (optional).
+ * @param timeoutMs - A timeout for the delay (defaults to 60000 milliseconds).
  * @returns A promise that is resolved after all agents' DHT states match.
  *
  * @public
@@ -122,11 +121,10 @@ export const areConductorCellsDhtsSynced = async (
 export const dhtSync = async (
   players: Player[],
   dnaHash: DnaHash,
-  interval = 50,
-  timeout?: number
+  timeoutMs = 60000
 ) => {
   const conductorCells = playersToConductorCells(players, dnaHash);
-  return conductorCellsDhtSync(conductorCells, interval, timeout);
+  return conductorCellsDhtSync(conductorCells, 500, timeoutMs);
 };
 
 /**
@@ -142,31 +140,34 @@ export const dhtSync = async (
  */
 export const conductorCellsDhtSync = async (
   conductorCells: ConductorCell[],
-  interval = 50,
-  timeout?: number
+  intervalMs: number,
+  timeoutMs: number
 ) => {
   if (!isConductorCellDnaHashEqual(conductorCells)) {
     throw Error("Cannot compare DHT state of different DNAs");
   }
 
-  const startTime = performance.now();
+  const startTime = Date.now();
   let completed = false;
 
   while (!completed) {
     // Check if timeout has passed
-    const currentTime = performance.now();
-    if (timeout && Math.floor((currentTime - startTime) * 1000) >= timeout)
+    const currentTime = Date.now();
+    console.log(Math.floor(currentTime - startTime), timeoutMs);
+    if (Math.floor(currentTime - startTime) >= timeoutMs)
       throw Error(
-        `Timeout of ${timeout} ms has passed, but players integrated DhtOps are not syncronized`
+        `Timeout of ${timeoutMs} ms has passed, but players integrated DhtOps are not syncronized`
       );
 
     // Check if Integrated DhtOps are syncronized
     completed = await areConductorCellsDhtsSynced(conductorCells);
 
     if (!completed) {
-      await pause(interval);
+      await pause(intervalMs);
     }
   }
+  
+  throw Error(`Conductor Cell DHTs are not synced after ${timeoutMs}ms`);
 };
 
 /**
