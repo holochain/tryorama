@@ -70,13 +70,16 @@ export const areConductorCellsDhtsSynced = async (
   );
 
   // Get total number of published DhtOps
-  const totalPublishedDhtOpsCount = sum(conductorStates.map((state) => state.source_chain_dump.published_ops_count));
+  const totalPublishedDhtOpsCount = sum(
+    conductorStates.map((state) => state.source_chain_dump.published_ops_count)
+  );
 
   // Compare total number of published DhtOps to integrated DhtOps count in each conductor
   const allDhtOpsIntegrated = conductorStates.every(
-    (state: FullStateDump) => state.integration_dump.integrated.length === totalPublishedDhtOpsCount &&
-    state.integration_dump.integration_limbo.length === 0 &&
-    state.integration_dump.validation_limbo.length === 0
+    (state: FullStateDump) =>
+      state.integration_dump.integrated.length === totalPublishedDhtOpsCount &&
+      state.integration_dump.integration_limbo.length === 0 &&
+      state.integration_dump.validation_limbo.length === 0
   );
 
   // Compare conductors' integrated DhtOps
