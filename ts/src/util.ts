@@ -69,9 +69,11 @@ export const areConductorCellsDhtsSynced = async (
   );
 
   // Compare published DhtOps to integrated DhtOps
-  const allDhtOpsIntegrated = conductorStates.every((conductor: FullStateDump) => {
-    conductor.source_chain_dump.published_ops_count === conductor.integration_dump.integrated.length
-  });
+  const allDhtOpsIntegrated = conductorStates.every(
+    (conductor: FullStateDump) =>
+        conductor.integration_dump.integration_limbo.length === 0 &&
+        conductor.integration_dump.validation_limbo.length === 0
+  );
 
   // Compare conductors' integrated DhtOps
   const conductorDhtOpsIntegrated = conductorStates.map((conductor) => {
