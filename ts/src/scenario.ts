@@ -49,7 +49,7 @@ export class Scenario {
   noDpki: boolean;
   dpkiNetworkSeed: string;
   networkSeed: string;
-  disableLocalServices: boolean;
+  disableLocalServices: boolean | undefined;
   serviceProcess: ChildProcessWithoutNullStreams | undefined;
   bootstrapServerUrl: URL | undefined;
   signalingServerUrl: URL | undefined;
@@ -178,7 +178,13 @@ export class Scenario {
   }
 
   private async ensureLocalServices() {
-    if (!this.serviceProcess && !this.disableLocalServices) {
+    if(this.disableLocalServices) {
+      this.bootstrapServerUrl = new URL("https://BAD_URL");
+      this.signalingServerUrl = new URL("wss://BAD_URL");
+    }
+    
+    if (!this.serviceProcess) {
+      console.log("starting local services");
       ({
         servicesProcess: this.serviceProcess,
         bootstrapServerUrl: this.bootstrapServerUrl,
