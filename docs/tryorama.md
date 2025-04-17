@@ -104,17 +104,6 @@ Run the `hc` command to delete all conductor data.
 </td></tr>
 <tr><td>
 
-[conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs)](./tryorama.conductorcellsdhtsync.md)
-
-
-</td><td>
-
-A utility function to wait until all conductors' integrated DhtOps are identical for a DNA.
-
-
-</td></tr>
-<tr><td>
-
 [createConductor(signalingServerUrl, options)](./tryorama.createconductor.md)
 
 

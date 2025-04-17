@@ -138,7 +138,7 @@ export const dhtSync = async (
  *
  * @public
  */
-export const conductorCellsDhtSync = async (
+const conductorCellsDhtSync = async (
   conductorCells: ConductorCell[],
   intervalMs: number,
   timeoutMs: number

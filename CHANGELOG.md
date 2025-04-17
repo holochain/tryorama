@@ -9,6 +9,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Changed
 - **BREAKING CHANGE** The utility function `dhtSync` has removed the `interval` argument. The interval is now hard-coded to 500 milliseconds.
 - **BREAKING CHANGE** The utility function `dhtSync` parameter `timeout` has been renamed to `timeoutMs`, and now defaults to 60000 milliseconds.
+- **BREAKING CHANGE** The utility function `conductorCellsDhtSync` has been made private. Use its wrapper `dhtSync` instead.
 
 ### Fixed
 - Return an error if spawning `kitsune2-bootstrap-srv` fails
