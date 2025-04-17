@@ -74,7 +74,9 @@ export const areConductorCellsDhtsSynced = async (
 
   // Compare total number of published DhtOps to integrated DhtOps count in each conductor
   const allDhtOpsIntegrated = conductorStates.every(
-    (state: FullStateDump) => state.integration_dump.integrated.length === totalPublishedDhtOpsCount
+    (state: FullStateDump) => state.integration_dump.integrated.length === totalPublishedDhtOpsCount &&
+    state.integration_dump.integration_limbo.length === 0 &&
+    state.integration_dump.validation_limbo.length === 0
   );
 
   // Compare conductors' integrated DhtOps

@@ -184,7 +184,6 @@ export class Scenario {
     }
 
     if (!this.serviceProcess) {
-      console.log("starting local services");
       ({
         servicesProcess: this.serviceProcess,
         bootstrapServerUrl: this.bootstrapServerUrl,
