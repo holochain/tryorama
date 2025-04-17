@@ -25,6 +25,7 @@
           devShells.default = pkgs.mkShell {
             packages = [
               # add packages from Holonix
+              inputs'.holonix.packages.hc
               inputs'.holonix.packages.holochain
               inputs'.holonix.packages.lair-keystore
               inputs'.holonix.packages.rust
