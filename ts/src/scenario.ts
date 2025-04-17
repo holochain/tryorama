@@ -29,6 +29,13 @@ export interface Player extends AgentApp {
 export interface ScenarioOptions {
   // Timeout for requests to Admin and App API calls.
   timeout?: number;
+  
+  // Disable local bootstrap and signal server.
+  //
+  // This will prevent peers from reaching each other.
+  //
+  // Default: false
+  disableLocalServices?: boolean;
 }
 
 /**
@@ -42,6 +49,7 @@ export class Scenario {
   noDpki: boolean;
   dpkiNetworkSeed: string;
   networkSeed: string;
+  disableLocalServices: boolean;
   serviceProcess: ChildProcessWithoutNullStreams | undefined;
   bootstrapServerUrl: URL | undefined;
   signalingServerUrl: URL | undefined;
@@ -57,6 +65,7 @@ export class Scenario {
     this.noDpki = false;
     this.dpkiNetworkSeed = uuidv4();
     this.networkSeed = uuidv4();
+    this.disableLocalServices = options?.disableLocalServices ?? false;
     this.serviceProcess = undefined;
     this.bootstrapServerUrl = undefined;
     this.signalingServerUrl = undefined;
@@ -169,7 +178,7 @@ export class Scenario {
   }
 
   private async ensureLocalServices() {
-    if (!this.serviceProcess) {
+    if (!this.serviceProcess && !this.disableLocalServices) {
       ({
         servicesProcess: this.serviceProcess,
         bootstrapServerUrl: this.bootstrapServerUrl,

@@ -178,14 +178,18 @@
     },
     "root": {
       "inputs": {
-        "flake-parts": [
+        "crane": [
           "holonix",
-          "flake-parts"
+          "crane"
         ],
         "holonix": "holonix",
         "nixpkgs": [
           "holonix",
           "nixpkgs"
+        ],
+        "rust-overlay": [
+          "holonix",
+          "rust-overlay"
         ]
       }
     },

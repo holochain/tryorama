@@ -1,50 +1,50 @@
 {
-  description = "Flake for Holochain app development with customized Holochain build";
-
   inputs = {
-    holonix.url = "github:holochain/holonix?ref=main";
+    holonix = {
+      url = "github:holochain/holonix?ref=main";
+    };
 
     nixpkgs.follows = "holonix/nixpkgs";
-    flake-parts.follows = "holonix/flake-parts";
+
+    # lib to build a nix package from a rust crate
+    crane.follows = "holonix/crane";
+
+    # Rust toolchain
+    rust-overlay.follows = "holonix/rust-overlay";
   };
 
-  outputs = inputs@{ flake-parts, ... }: flake-parts.lib.mkFlake { inherit inputs; } {
-    systems = builtins.attrNames inputs.holonix.devShells;
-    perSystem = { inputs', pkgs, ... }:
-      let
-        # Override arguments passed in to Holochain build with above feature arguments.
-        customHolochain = inputs'.holonix.packages.holochain.override {
-          cargoExtraArgs = "--features test-utils";
-        };
-      in
-      {
-        formatter = pkgs.nixpkgs-fmt;
+  outputs = inputs@{ nixpkgs, holonix, crane, rust-overlay, ... }:
+    holonix.inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      # provide a dev shell for all systems that the holonix flake supports
+      systems = builtins.attrNames holonix.devShells;
 
-        devShells.default = pkgs.mkShell {
-          packages = [
-            # Include custom builds of Holochain in dev shell.
-            customHolochain
-          ]
-          ++ (with inputs'.holonix.packages; [
-            holochain
-            bootstrap-srv
-            lair-keystore
-            rust
-          ]) ++ (with pkgs; [
-            nodejs_20
+      perSystem = { inputs', config, system, pkgs, lib, ... }:
+        {
+          formatter = pkgs.nixpkgs-fmt;
 
-            (lib.optional pkgs.stdenv.isDarwin [
+          devShells.default = pkgs.mkShell {
+            packages = [
+              # add packages from Holonix
+              inputs'.holonix.packages.holochain
+              inputs'.holonix.packages.lair-keystore
+              inputs'.holonix.packages.rust
+              inputs'.holonix.packages.bootstrap-srv
+
+              # add further packages from nixpkgs
+              pkgs.nodejs
+
+              (lib.optional pkgs.stdenv.isDarwin [
                 pkgs.libiconv
                 pkgs.darwin.apple_sdk.frameworks.CoreFoundation
                 pkgs.darwin.apple_sdk.frameworks.Security
                 pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
               ])
-          ]);
+            ];
 
-          shellHook = ''
-            export PS1='\[\033[1;34m\][holonix:\w]\$\[\033[0m\] '
-          '';
+            shellHook = ''
+              export PS1='\[\033[1;34m\][holonix:\w]\$\[\033[0m\] '
+            '';
+          };
         };
-      };
-  };
+    };
 }
