@@ -6,6 +6,7 @@ import {
 } from "@holochain/client";
 import isEqual from "lodash/isEqual.js";
 import sortBy from "lodash/sortBy.js";
+import sum from "lodash/sum.js";
 import { Player } from "./scenario.js";
 import { ConductorCell } from "./types.js";
 
@@ -68,11 +69,12 @@ export const areConductorCellsDhtsSynced = async (
     )
   );
 
-  // Compare published DhtOps to integrated DhtOps
+  // Get total number of published DhtOps
+  const totalPublishedDhtOpsCount = sum(conductorStates.map((state) => state.source_chain_dump.published_ops_count));
+
+  // Compare total number of published DhtOps to integrated DhtOps count in each conductor
   const allDhtOpsIntegrated = conductorStates.every(
-    (conductor: FullStateDump) =>
-      conductor.integration_dump.integration_limbo.length === 0 &&
-      conductor.integration_dump.validation_limbo.length === 0
+    (state: FullStateDump) => state.integration_dump.integrated.length === totalPublishedDhtOpsCount
   );
 
   // Compare conductors' integrated DhtOps
@@ -154,7 +156,6 @@ const conductorCellsDhtSync = async (
   while (!completed) {
     // Check if timeout has passed
     const currentTime = Date.now();
-    console.log(Math.floor(currentTime - startTime), timeoutMs);
     if (Math.floor(currentTime - startTime) >= timeoutMs)
       throw Error(
         `Timeout of ${timeoutMs} ms has passed, but players integrated DhtOps are not syncronized`
@@ -167,8 +168,6 @@ const conductorCellsDhtSync = async (
       await pause(intervalMs);
     }
   }
-
-  throw Error(`Conductor Cell DHTs are not synced after ${timeoutMs}ms`);
 };
 
 /**
