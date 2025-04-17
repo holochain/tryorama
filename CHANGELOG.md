@@ -7,8 +7,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+- **BREAKING CHANGE** The utility function `dhtSync` has removed the `interval` argument. The interval is now hard-coded to 500 milliseconds.
+- **BREAKING CHANGE** The utility function `dhtSync` parameter `timeout` has been renamed to `timeoutMs`, and now defaults to 60000 milliseconds.
+
 ### Fixed
 - Return an error if spawning `kitsune2-bootstrap-srv` fails
+- `dhtSync` now fails if some Ops have not yet been integrated by all conductors.
 
 ## 2025-04-11: v0.18.0-rc.1
 ### Fixed
