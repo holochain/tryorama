@@ -9,7 +9,7 @@ A utility function to wait until all conductors' integrated DhtOps are identical
 **Signature:**
 
 ```typescript
-conductorCellsDhtSync: (conductorCells: ConductorCell[], interval?: number, timeout?: number) => Promise<void>
+conductorCellsDhtSync: (conductorCells: ConductorCell[], intervalMs: number, timeoutMs: number) => Promise<never>
 ```
 
 ## Parameters
@@ -48,7 +48,7 @@ Array of ConductorCell.
 </td></tr>
 <tr><td>
 
-interval
+intervalMs
 
 
 </td><td>
@@ -57,14 +57,12 @@ number
 
 
 </td><td>
-
-_(Optional)_ Interval to pause between comparisons (defaults to 50 ms).
 
 
 </td></tr>
 <tr><td>
 
-timeout
+timeoutMs
 
 
 </td><td>
@@ -73,15 +71,13 @@ number
 
 
 </td><td>
-
-_(Optional)_ A timeout for the delay (optional).
 
 
 </td></tr>
 </tbody></table>
 **Returns:**
 
-Promise&lt;void&gt;
+Promise&lt;never&gt;
 
 A promise that is resolved after all agents' DHT states match.
 

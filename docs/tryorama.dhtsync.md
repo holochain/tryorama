@@ -9,7 +9,7 @@ A utility function to wait until all conductors' integrated DhtOps are identical
 **Signature:**
 
 ```typescript
-dhtSync: (players: Player[], dnaHash: DnaHash, interval?: number, timeout?: number) => Promise<void>
+dhtSync: (players: Player[], dnaHash: DnaHash, timeoutMs?: number) => Promise<never>
 ```
 
 ## Parameters
@@ -64,7 +64,7 @@ DNA hash to compare integrated DhtOps from.
 </td></tr>
 <tr><td>
 
-interval
+timeoutMs
 
 
 </td><td>
@@ -74,30 +74,14 @@ number
 
 </td><td>
 
-_(Optional)_ Interval to pause between comparisons (defaults to 50 ms).
-
-
-</td></tr>
-<tr><td>
-
-timeout
-
-
-</td><td>
-
-number
-
-
-</td><td>
-
-_(Optional)_ A timeout for the delay (optional).
+_(Optional)_ A timeout for the delay (defaults to 60000 milliseconds).
 
 
 </td></tr>
 </tbody></table>
 **Returns:**
 
-Promise&lt;void&gt;
+Promise&lt;never&gt;
 
 A promise that is resolved after all agents' DHT states match.
 

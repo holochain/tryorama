@@ -104,7 +104,7 @@ Run the `hc` command to delete all conductor data.
 </td></tr>
 <tr><td>
 
-[conductorCellsDhtSync(conductorCells, interval, timeout)](./tryorama.conductorcellsdhtsync.md)
+[conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs)](./tryorama.conductorcellsdhtsync.md)
 
 
 </td><td>
@@ -126,7 +126,7 @@ The function to create a conductor. It starts a sandbox conductor via the Holoch
 </td></tr>
 <tr><td>
 
-[dhtSync(players, dnaHash, interval, timeout)](./tryorama.dhtsync.md)
+[dhtSync(players, dnaHash, timeoutMs)](./tryorama.dhtsync.md)
 
 
 </td><td>
