@@ -4,12 +4,12 @@
 
 ## dhtSync() function
 
-A utility function to wait until all conductors' integrated DhtOps are identical for a DNA.
+A utility function to wait until all conductors' DhtOps have been integrated, and are identical for a given DNA.
 
 **Signature:**
 
 ```typescript
-dhtSync: (players: Player[], dnaHash: DnaHash, timeoutMs?: number) => Promise<never>
+dhtSync: (players: Player[], dnaHash: DnaHash, intervalMs?: number, timeoutMs?: number) => Promise<void>
 ```
 
 ## Parameters
@@ -64,6 +64,22 @@ DNA hash to compare integrated DhtOps from.
 </td></tr>
 <tr><td>
 
+intervalMs
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ Interval to pause between comparisons (defaults to 50 milliseconds).
+
+
+</td></tr>
+<tr><td>
+
 timeoutMs
 
 
@@ -81,7 +97,7 @@ _(Optional)_ A timeout for the delay (defaults to 60000 milliseconds).
 </tbody></table>
 **Returns:**
 
-Promise&lt;never&gt;
+Promise&lt;void&gt;
 
 A promise that is resolved after all agents' DHT states match.
 

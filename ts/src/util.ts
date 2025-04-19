@@ -115,11 +115,12 @@ export const areConductorCellsDhtsSynced = async (
 };
 
 /**
- * A utility function to wait until all conductors' integrated DhtOps are
- * identical for a DNA.
+ * A utility function to wait until all conductors' DhtOps have been integrated,
+ * and are identical for a given DNA.
  *
  * @param players - Array of players.
  * @param dnaHash - DNA hash to compare integrated DhtOps from.
+ * @param intervalMs - Interval to pause between comparisons (defaults to 50 milliseconds).
  * @param timeoutMs - A timeout for the delay (defaults to 60000 milliseconds).
  * @returns A promise that is resolved after all agents' DHT states match.
  *
@@ -128,10 +129,11 @@ export const areConductorCellsDhtsSynced = async (
 export const dhtSync = async (
   players: Player[],
   dnaHash: DnaHash,
+  intervalMs = 500,
   timeoutMs = 60000
 ) => {
   const conductorCells = playersToConductorCells(players, dnaHash);
-  return conductorCellsDhtSync(conductorCells, 500, timeoutMs);
+  return conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs);
 };
 
 /**
@@ -145,7 +147,7 @@ export const dhtSync = async (
  *
  * @public
  */
-const conductorCellsDhtSync = async (
+export const conductorCellsDhtSync = async (
   conductorCells: ConductorCell[],
   intervalMs: number,
   timeoutMs: number

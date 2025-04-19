@@ -411,7 +411,7 @@ test("dhtSync - Fails if some Ops are not integrated in a conductor", async () =
       try {
         // Run with a 0ms timeout, so that we check the sync status only *once*,
         // while Bob's conductor is still in this state.
-        await dhtSync([alice], alice.cells[0].cell_id[0], 0);
+        await dhtSync([alice], alice.cells[0].cell_id[0], 500, 0);
         assert.fail();
       } catch (e) {
         assert(true);
