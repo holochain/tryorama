@@ -105,6 +105,23 @@ URL \| undefined
 </td></tr>
 <tr><td>
 
+[disableLocalServices](./tryorama.scenario.disablelocalservices.md)
+
+
+</td><td>
+
+
+</td><td>
+
+boolean \| undefined
+
+
+</td><td>
+
+
+</td></tr>
+<tr><td>
+
 [dpkiNetworkSeed](./tryorama.scenario.dpkinetworkseed.md)
 
 
