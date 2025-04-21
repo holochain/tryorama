@@ -120,7 +120,7 @@ export const areConductorCellsDhtsSynced = async (
  *
  * @param players - Array of players.
  * @param dnaHash - DNA hash to compare integrated DhtOps from.
- * @param intervalMs - Interval to pause between comparisons (defaults to 50 milliseconds).
+ * @param intervalMs - Interval to pause between comparisons (defaults to 500 milliseconds).
  * @param timeoutMs - A timeout for the delay (defaults to 60000 milliseconds).
  * @returns A promise that is resolved after all agents' DHT states match.
  *
