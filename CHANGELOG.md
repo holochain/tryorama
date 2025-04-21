@@ -11,7 +11,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Fixed
 - Return an error if spawning `kitsune2-bootstrap-srv` fails
-- The utility functions `dhtSync` and `conductorCellsDhtSync` now check that all Ops have been integrated and not in limbo.
+- The utility functions `dhtSync` and `conductorCellsDhtSync` now check that all Ops have been integrated and are not in limbo.
 
 ## 2025-04-11: v0.18.0-rc.1
 ### Fixed
