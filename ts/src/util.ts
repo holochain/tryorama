@@ -6,6 +6,7 @@ import {
 } from "@holochain/client";
 import isEqual from "lodash/isEqual.js";
 import sortBy from "lodash/sortBy.js";
+import sum from "lodash/sum.js";
 import { Player } from "./scenario.js";
 import { ConductorCell } from "./types.js";
 
@@ -60,12 +61,25 @@ export const areConductorCellsDhtsSynced = async (
 
   // Dump all conductors' states
   const conductorStates: FullStateDump[] = await Promise.all(
-    conductorCells.map((conductorCell) => {
-      return conductorCell.conductor.adminWs().dumpFullState({
+    conductorCells.map((conductorCell) =>
+      conductorCell.conductor.adminWs().dumpFullState({
         cell_id: conductorCell.cellId,
         dht_ops_cursor: undefined,
-      });
-    })
+      })
+    )
+  );
+
+  // Get total number of published DhtOps
+  const totalPublishedDhtOpsCount = sum(
+    conductorStates.map((state) => state.source_chain_dump.published_ops_count)
+  );
+
+  // Determine if all published ops are integrated in every conductor, and none are in limbo
+  const allDhtOpsIntegrated = conductorStates.every(
+    (state: FullStateDump) =>
+      state.integration_dump.integrated.length === totalPublishedDhtOpsCount &&
+      state.integration_dump.integration_limbo.length === 0 &&
+      state.integration_dump.validation_limbo.length === 0
   );
 
   // Compare conductors' integrated DhtOps
@@ -93,21 +107,21 @@ export const areConductorCellsDhtsSynced = async (
       },
     ]);
   });
-  const status = conductorDhtOpsIntegrated.every((ops) =>
+  const allDhtOpsSynced = conductorDhtOpsIntegrated.every((ops) =>
     isEqual(ops, conductorDhtOpsIntegrated[0])
   );
 
-  return status;
+  return allDhtOpsSynced && allDhtOpsIntegrated;
 };
 
 /**
- * A utility function to wait until all conductors' integrated DhtOps are
- * identical for a DNA.
+ * A utility function to wait until all conductors' DhtOps have been integrated,
+ * and are identical for a given DNA.
  *
  * @param players - Array of players.
  * @param dnaHash - DNA hash to compare integrated DhtOps from.
- * @param interval - Interval to pause between comparisons (defaults to 50 ms).
- * @param timeout - A timeout for the delay (optional).
+ * @param intervalMs - Interval to pause between comparisons (defaults to 500 milliseconds).
+ * @param timeoutMs - A timeout for the delay (defaults to 60000 milliseconds).
  * @returns A promise that is resolved after all agents' DHT states match.
  *
  * @public
@@ -115,11 +129,11 @@ export const areConductorCellsDhtsSynced = async (
 export const dhtSync = async (
   players: Player[],
   dnaHash: DnaHash,
-  interval = 50,
-  timeout?: number
+  intervalMs = 500,
+  timeoutMs = 60000
 ) => {
   const conductorCells = playersToConductorCells(players, dnaHash);
-  return conductorCellsDhtSync(conductorCells, interval, timeout);
+  return conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs);
 };
 
 /**
@@ -135,29 +149,30 @@ export const dhtSync = async (
  */
 export const conductorCellsDhtSync = async (
   conductorCells: ConductorCell[],
-  interval = 50,
-  timeout?: number
+  intervalMs: number,
+  timeoutMs: number
 ) => {
   if (!isConductorCellDnaHashEqual(conductorCells)) {
     throw Error("Cannot compare DHT state of different DNAs");
   }
 
-  const startTime = performance.now();
-  let completed = false;
+  // Always run the check at least once, even if the timeoutMs is 0.
+  let completed = await areConductorCellsDhtsSynced(conductorCells);
 
+  const startTime = Date.now();
   while (!completed) {
     // Check if timeout has passed
-    const currentTime = performance.now();
-    if (timeout && Math.floor((currentTime - startTime) * 1000) >= timeout)
+    const currentTime = Date.now();
+    if (Math.floor(currentTime - startTime) >= timeoutMs)
       throw Error(
-        `Timeout of ${timeout} ms has passed, but players integrated DhtOps are not syncronized`
+        `Timeout of ${timeoutMs} ms has passed, but players integrated DhtOps are not syncronized`
       );
 
     // Check if Integrated DhtOps are syncronized
     completed = await areConductorCellsDhtsSynced(conductorCells);
 
     if (!completed) {
-      await pause(interval);
+      await pause(intervalMs);
     }
   }
 };
