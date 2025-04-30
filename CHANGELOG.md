@@ -7,6 +7,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Added
 ### Removed
 ### Changed
+### Fixed
+
+## 2025-04-30: v0.18.0
+
+### Changed
 - The utility function `dhtSync` parameter `timeoutMs` now defaults to 60000 milliseconds, and the parameter `intervalMs` now defaults to 500 milliseconds.
 
 ### Fixed
