@@ -9,7 +9,7 @@ Add all agents of all conductors to each other. Shortcuts peer discovery through
 **Signature:**
 
 ```typescript
-addAllAgentsToAllConductors: (conductors: Conductor[]) => Promise<void>
+addAllAgentsToAllConductors: (conductors: IConductor[]) => Promise<void>
 ```
 
 ## Parameters
@@ -37,7 +37,7 @@ conductors
 
 </td><td>
 
-[Conductor](./tryorama.conductor.md)<!-- -->\[\]
+[IConductor](./tryorama.iconductor.md)<!-- -->\[\]
 
 
 </td><td>

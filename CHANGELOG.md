@@ -5,6 +5,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- More options for conductor startup. All can be left at defaults in most cases but the defaults provided by Tryorama
+  are more appropriate for testing than the defaults that Holochain provides. The new options are `initiateJitterMs`,
+  `roundTimeoutMs` and `transportTimeoutS`.
 ### Removed
 ### Changed
 ### Fixed

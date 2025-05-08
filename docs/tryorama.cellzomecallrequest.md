@@ -9,5 +9,8 @@ The zome request options adapted to a specific cell.
 **Signature:**
 
 ```typescript
-export type CellZomeCallRequest = Omit<CallZomeRequest, "cap_secret" | "cell_id">;
+export type CellZomeCallRequest = Omit<CallZomeRequest, "cap_secret" | "cell_id" | "payload" | "provenance"> & {
+    provenance?: AgentPubKey;
+    payload?: unknown;
+};
 ```

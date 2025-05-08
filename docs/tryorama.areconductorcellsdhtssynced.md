@@ -9,7 +9,7 @@ A utility function to compare conductors' integrated DhtOps.
 **Signature:**
 
 ```typescript
-areConductorCellsDhtsSynced: (conductorCells: ConductorCell[]) => Promise<boolean>
+areConductorCellsDhtsSynced: (conductorCells: IConductorCell[]) => Promise<boolean>
 ```
 
 ## Parameters
@@ -37,7 +37,7 @@ conductorCells
 
 </td><td>
 
-[ConductorCell](./tryorama.conductorcell.md)<!-- -->\[\]
+[IConductorCell](./tryorama.iconductorcell.md)<!-- -->\[\]
 
 
 </td><td>

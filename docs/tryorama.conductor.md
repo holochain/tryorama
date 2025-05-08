@@ -9,8 +9,9 @@ A class to manage a conductor running on localhost.
 **Signature:**
 
 ```typescript
-export declare class Conductor 
+export declare class Conductor implements IConductor 
 ```
+**Implements:** [IConductor](./tryorama.iconductor.md)
 
 ## Methods
 
@@ -127,18 +128,6 @@ Install an app for multiple agents into the conductor.
 </td><td>
 
 Install an application into the conductor.
-
-
-</td></tr>
-<tr><td>
-
-[setNetworkConfig(createConductorOptions)](./tryorama.conductor.setnetworkconfig.md)
-
-
-</td><td>
-
-
-</td><td>
 
 
 </td></tr>
