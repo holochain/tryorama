@@ -81,6 +81,38 @@ export interface NetworkConfig {
    * Default: 100
    */
   minInitiateIntervalMs?: number;
+
+  /**
+   * A jitter value to add to the `initiateIntervalMs`.
+   *
+   * This is used to avoid peers always being the gossip initiator or acceptor. It can be
+   * set to `0` to disable jitter, but it is recommended to leave this at the default value.
+   *
+   * Default: 30
+   */
+  initiateJitterMs?: number;
+
+  /**
+   * The timeout for a round of gossip.
+   *
+   * This is the maximum amount of time that a gossip round is allowed to take.
+   *
+   * Default: 10,000
+   */
+  roundTimeoutMs?: number;
+
+  /**
+   * The network timeout for transport operations.
+   *
+   * This controls how long Holochain will spend waiting for connections to be established and
+   * other low-level network operations.
+   *
+   * If you are writing tests that start and stop conductors, you may want to set this to a lower
+   * value to avoid waiting for connections to conductors that are no longer running.
+   *
+   * Default: 15
+   */
+  transportTimeoutS?: number;
 }
 
 /**
@@ -107,7 +139,6 @@ export const createConductor = async (
 ) => {
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
-    "networkType",
     "timeout",
   ]);
   const conductor = await Conductor.create(
@@ -117,6 +148,9 @@ export const createConductor = async (
   const networkConfig: NetworkConfig = pick(options, [
     "initiateIntervalMs",
     "minInitiateIntervalMs",
+    "initiateJitterMs",
+    "roundTimeoutMs",
+    "transportTimeoutS",
   ]);
   conductor.setNetworkConfig(networkConfig);
   if (options?.startup !== false) {
@@ -169,7 +203,7 @@ export class Conductor {
     createConductorProcess.stdin.end();
 
     const conductor = new Conductor(options?.timeout);
-    const createConductorPromise = new Promise<Conductor>((resolve, reject) => {
+    return new Promise<Conductor>((resolve, reject) => {
       createConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`creating conductor config\n${data.toString()}`);
         const tmpDirMatches = [
@@ -187,7 +221,6 @@ export class Conductor {
         reject(err);
       });
     });
-    return createConductorPromise;
   }
 
   setNetworkConfig(createConductorOptions: NetworkConfig) {
@@ -211,9 +244,12 @@ export class Conductor {
         initiateIntervalMs: createConductorOptions.initiateIntervalMs ?? 100,
         minInitiateIntervalMs:
           createConductorOptions.minInitiateIntervalMs ?? 100,
+        initiateJitterMs: createConductorOptions.initiateJitterMs ?? 30,
+        roundTimeoutMs: createConductorOptions.roundTimeoutMs ?? 10_000,
       },
       tx5Transport: {
         signalAllowPlainText: true,
+        timeoutS: createConductorOptions.transportTimeoutS ?? 15,
       },
     };
     const yamlDump = yaml.dump(conductorConfigYaml);
@@ -255,8 +291,7 @@ export class Conductor {
         if (conductorLaunched) {
           // This is the last output of the startup process.
           const portConfiguration = JSON.parse(conductorLaunched[1]);
-          const adminPort = portConfiguration.admin_port;
-          this.adminApiUrl.port = adminPort;
+          this.adminApiUrl.port = portConfiguration.admin_port;
           this.conductorProcess = runConductorProcess;
           resolve();
         }
@@ -289,7 +324,7 @@ export class Conductor {
     }
 
     logger.debug("shutting down conductor\n");
-    const conductorShutDown = new Promise<number | null>((resolve) => {
+    return new Promise<number | null>((resolve) => {
       // I don't know why this is possibly undefined despite the initial guard
       assert(this.conductorProcess);
       this.conductorProcess.on("exit", (code) => {
@@ -301,7 +336,6 @@ export class Conductor {
       });
       this.conductorProcess.kill("SIGINT");
     });
-    return conductorShutDown;
   }
 
   private async connectAdminWs() {
@@ -447,11 +481,10 @@ export class Conductor {
  */
 export const cleanAllConductors = async () => {
   const conductorProcess = spawn("hc", ["sandbox", "clean"]);
-  const cleanPromise = new Promise<void>((resolve) => {
+  return new Promise<void>((resolve) => {
     conductorProcess.stdout.once("end", () => {
       logger.debug("sandbox conductors cleaned\n");
       resolve();
     });
   });
-  return cleanPromise;
 };
