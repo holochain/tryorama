@@ -54,6 +54,11 @@ jobs:
       - name: Install JS packages
         run: nix develop -c $SHELL -c "npm ci"
 
+      - name: Check docs up-to-date
+        run: |
+          nix develop -c $SHELL -c "npm build"
+          git diff --exit-code
+
       - name: Run tests
         run: nix develop -c $SHELL -c "npm t"
 
