@@ -26,7 +26,7 @@ Description
 
 Tryorama
 
-Tools for managing Holochain [Conductors](./tryorama.conductor.md)<!-- -->.
+Tools for managing Holochain [Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->.
 
 
 </td></tr>

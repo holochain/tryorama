@@ -37,25 +37,6 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[disableLocalServices?](./tryorama.scenariooptions.disablelocalservices.md)
-
-
-</td><td>
-
-
-</td><td>
-
-boolean
-
-
-</td><td>
-
-_(Optional)_
-
-
-</td></tr>
-<tr><td>
-
 [timeout?](./tryorama.scenariooptions.timeout.md)
 
 

@@ -28,7 +28,7 @@ export const _ALLOWED_ORIGIN = "tryorama-interface";
 export const runLocalServices = async () => {
   const logger = makeLogger("Local services");
   const servicesProcess = spawn("kitsune2-bootstrap-srv");
-  const startUpComplete = new Promise<{
+  return new Promise<{
     servicesProcess: ChildProcessWithoutNullStreams;
     bootstrapServerUrl: URL;
     signalingServerUrl: URL;
@@ -63,7 +63,6 @@ export const runLocalServices = async () => {
     });
     servicesProcess.stderr.on("data", (data) => logger.error(data.toString()));
   });
-  return startUpComplete;
 };
 
 /**
@@ -77,7 +76,7 @@ export const stopLocalServices = (
   if (localServicesProcess.pid === undefined) {
     return null;
   }
-  const serverShutdown = new Promise<number | null>((resolve) => {
+  return new Promise<number | null>((resolve) => {
     localServicesProcess.on("exit", (code) => {
       localServicesProcess?.removeAllListeners();
       localServicesProcess?.stdout.removeAllListeners();
@@ -86,7 +85,6 @@ export const stopLocalServices = (
     });
     localServicesProcess.kill();
   });
-  return serverShutdown;
 };
 
 /**
