@@ -135,7 +135,7 @@ export type CreateConductorOptions = Pick<
  */
 export const createConductor = async (
   signalingServerUrl: URL,
-  options?: ConductorOptions & NetworkConfig
+  options?: ConductorOptions & NetworkConfig,
 ) => {
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
@@ -143,7 +143,7 @@ export const createConductor = async (
   ]);
   const conductor = await Conductor.create(
     signalingServerUrl,
-    createConductorOptions
+    createConductorOptions,
   );
   const networkConfig: NetworkConfig = pick(options, [
     "initiateIntervalMs",
@@ -188,7 +188,7 @@ export class Conductor {
    */
   static async create(
     signalingServerUrl: URL,
-    options?: CreateConductorOptions
+    options?: CreateConductorOptions,
   ) {
     const args = ["sandbox", "--piped", "create", "--in-process-lair"];
     args.push("network");
@@ -226,14 +226,14 @@ export class Conductor {
   setNetworkConfig(createConductorOptions: NetworkConfig) {
     const conductorConfig = readFileSync(
       `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
-      "utf-8"
+      "utf-8",
     );
     const conductorConfigYaml = yaml.load(conductorConfig);
     assert(conductorConfigYaml && typeof conductorConfigYaml === "object");
     assert(
       "network" in conductorConfigYaml &&
         conductorConfigYaml.network &&
-        typeof conductorConfigYaml.network === "object"
+        typeof conductorConfigYaml.network === "object",
     );
     if ("mem_bootstrap" in conductorConfigYaml.network) {
       delete conductorConfigYaml.network.mem_bootstrap;
@@ -265,7 +265,7 @@ export class Conductor {
   async startUp() {
     assert(
       this.conductorDir,
-      "error starting conductor: conductor has not been created"
+      "error starting conductor: conductor has not been created",
     );
     if (this.conductorProcess) {
       logger.error("error starting conductor: conductor is already running\n");
@@ -385,14 +385,14 @@ export class Conductor {
     const callZome = appWs.callZome.bind(appWs);
     appWs.callZome = async (
       req: CallZomeRequest | RoleNameCallZomeRequest,
-      timeout?: number
+      timeout?: number,
     ) => {
       let cellId;
       if ("role_name" in req) {
         assert(appWs.cachedAppInfo);
         cellId = appWs.getCellIdFromRoleName(
           req.role_name,
-          appWs.cachedAppInfo
+          appWs.cachedAppInfo,
         );
       } else {
         cellId = req.cell_id;
@@ -449,8 +449,8 @@ export class Conductor {
     };
     logger.debug(
       `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
-        agent_key
-      )}`
+        agent_key,
+      )}`,
     );
     return this.adminWs().installApp(installAppRequest);
   }
@@ -466,8 +466,8 @@ export class Conductor {
           rolesSettings: appsForAgent.rolesSettings,
           installedAppId: options.installedAppId,
           networkSeed: options.networkSeed,
-        })
-      )
+        }),
+      ),
     );
   }
 }

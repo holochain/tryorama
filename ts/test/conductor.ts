@@ -78,12 +78,12 @@ test("Conductor with custom network config", async () => {
   });
   const tmpDirPath = conductor.getTmpDirectory();
   const conductorConfig = yaml.load(
-    readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, { encoding: "utf-8" })
+    readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, { encoding: "utf-8" }),
   );
   assert.ok(
     conductorConfig &&
       typeof conductorConfig === "object" &&
-      "network" in conductorConfig
+      "network" in conductorConfig,
   );
   const { network } = conductorConfig;
   assert.ok(network && typeof network === "object" && "advanced" in network);
@@ -94,7 +94,7 @@ test("Conductor with custom network config", async () => {
     k2Gossip &&
       typeof k2Gossip === "object" &&
       "initiateIntervalMs" in k2Gossip &&
-      "minInitiateIntervalMs" in k2Gossip
+      "minInitiateIntervalMs" in k2Gossip,
   );
   assert.strictEqual(k2Gossip.initiateIntervalMs, initiateIntervalMs);
   assert.strictEqual(k2Gossip.minInitiateIntervalMs, minInitiateIntervalMs);
@@ -148,7 +148,7 @@ test("Revoke agent key", async () => {
       zome_name: "coordinator",
       fn_name: "create",
       payload: entryContent,
-    })
+    }),
   );
 
   await conductor.shutDown();
@@ -248,7 +248,7 @@ test("Install app with deferred memproofs", async () => {
   assert.deepEqual(
     appInfo.status,
     { type: "disabled", value: { reason: { type: "never_started" } } },
-    "app status is never_started"
+    "app status is never_started",
   );
 
   const response = await appWs.provideMemproofs({});
@@ -262,7 +262,7 @@ test("Install app with deferred memproofs", async () => {
   assert.deepEqual(
     appInfo.status,
     { type: "running" },
-    "app status is running"
+    "app status is running",
   );
 
   await conductor.shutDown();
@@ -302,7 +302,7 @@ test("Install app with roles settings", async () => {
           },
         },
       },
-    }
+    },
   );
 
   const port = await conductor.attachAppInterface();
@@ -317,12 +317,12 @@ test("Install app with roles settings", async () => {
   assert.equal(
     provisionedCell.dna_modifiers.network_seed,
     "hello",
-    "unexpected network seed"
+    "unexpected network seed",
   );
   assert.deepEqual(
     yaml.load(decode(provisionedCell.dna_modifiers.properties) as string),
     { progenitor: progenitorKey },
-    "unexpected dna modifiers"
+    "unexpected dna modifiers",
   );
 
   await conductor.shutDown();
@@ -384,18 +384,18 @@ test("Get a convenience function for zome calls", async () => {
   assert.equal(
     typeof coordinatorZomeCall,
     "function",
-    "getZomeCaller returns a function"
+    "getZomeCaller returns a function",
   );
 
   const entryHeaderHash: ActionHash = await coordinatorZomeCall(
     "create",
-    "test-entry"
+    "test-entry",
   );
   const entryHeaderHashB64 = Buffer.from(entryHeaderHash).toString("base64");
   assert.equal(entryHeaderHash.length, 39, "ActionHash is 39 bytes long");
   assert.ok(
     entryHeaderHashB64.startsWith("hCkk"),
-    "ActionHash starts with hCkk"
+    "ActionHash starts with hCkk",
   );
 
   await conductor.shutDown();
@@ -426,10 +426,10 @@ test("Install multiple agents and apps and get access to agents and cells", asyn
   const bob = await enableAndGetAgentApp(adminWs, appWsBob, bobApp);
 
   alice.cells.forEach((cell) =>
-    assert.deepEqual(cell.cell_id[1], alice.agentPubKey)
+    assert.deepEqual(cell.cell_id[1], alice.agentPubKey),
   );
   bob.cells.forEach((cell) =>
-    assert.deepEqual(cell.cell_id[1], bob.agentPubKey)
+    assert.deepEqual(cell.cell_id[1], bob.agentPubKey),
   );
 
   await conductor.shutDown();
@@ -478,8 +478,8 @@ test("Zome call can time out before completion", async () => {
   await assert.rejects(
     cell.callZome(
       { zome_name: "coordinator", fn_name: "create", payload: "test" },
-      1
-    )
+      1,
+    ),
   );
 
   await conductor.shutDown();
@@ -502,7 +502,7 @@ test("Create and read an entry using the entry zome", async () => {
     {
       installedAppId: installed_app_id,
       agentPubKey,
-    }
+    },
   );
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -551,7 +551,7 @@ test("Clone cell management", async () => {
     {
       installedAppId: appId,
       agentPubKey,
-    }
+    },
   );
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -568,12 +568,12 @@ test("Clone cell management", async () => {
   assert.deepEqual(
     cloneCell.clone_id,
     new CloneIdHelper(ROLE_NAME, 0).toString(),
-    "clone id is 'role_name.0'"
+    "clone id is 'role_name.0'",
   );
   assert.deepEqual(
     cloneCell.cell_id[1],
     alice.cells[0].cell_id[1],
-    "agent pub key in clone cell and base cell match"
+    "agent pub key in clone cell and base cell match",
   );
 
   const testContent = "test-content";
@@ -596,7 +596,7 @@ test("Clone cell management", async () => {
       payload: entryActionHash,
       provenance: agentPubKey,
     }),
-    "disabled clone cell cannot be called"
+    "disabled clone cell cannot be called",
   );
 
   const enabledCloneCell = await appWs.enableCloneCell({
@@ -605,7 +605,7 @@ test("Clone cell management", async () => {
   assert.deepEqual(
     enabledCloneCell,
     cloneCell,
-    "enabled clone cell matches created clone cell"
+    "enabled clone cell matches created clone cell",
   );
   const readEntryResponse: typeof testContent = await appWs.callZome(
     {
@@ -615,12 +615,12 @@ test("Clone cell management", async () => {
       payload: entryActionHash,
       provenance: agentPubKey,
     },
-    40000
+    40000,
   );
   assert.equal(
     readEntryResponse,
     testContent,
-    "enabled clone cell can be called"
+    "enabled clone cell can be called",
   );
 
   await appWs.disableCloneCell({
@@ -634,7 +634,7 @@ test("Clone cell management", async () => {
     appWs.enableCloneCell({
       clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
     }),
-    "deleted clone cell cannot be enabled"
+    "deleted clone cell cannot be enabled",
   );
 
   await conductor.shutDown();

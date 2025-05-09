@@ -98,7 +98,7 @@ export class Scenario {
    */
   async addPlayerWithApp(
     appBundleSource: AppBundleSource,
-    options?: AppOptions
+    options?: AppOptions,
   ): Promise<Player> {
     await this.ensureLocalServices();
     const conductor = await this.addConductor();
@@ -119,7 +119,7 @@ export class Scenario {
     const agentApp: AgentApp = await enableAndGetAgentApp(
       adminWs,
       appWs,
-      appInfo
+      appInfo,
     );
     return { conductor, appWs, ...agentApp };
   }
@@ -135,13 +135,13 @@ export class Scenario {
     playersApps: Array<{
       appBundleSource: AppBundleSource;
       options?: AppOptions;
-    }>
+    }>,
   ) {
     await this.ensureLocalServices();
     return await Promise.all(
       playersApps.map((playerApp) =>
-        this.addPlayerWithApp(playerApp.appBundleSource, playerApp.options)
-      )
+        this.addPlayerWithApp(playerApp.appBundleSource, playerApp.options),
+      ),
     );
   }
 
@@ -205,7 +205,7 @@ export class Scenario {
 export const runScenario = async (
   testScenario: (scenario: Scenario) => Promise<void>,
   cleanUp = true,
-  options?: ScenarioOptions
+  options?: ScenarioOptions,
 ) => {
   const scenario = new Scenario(options);
   try {

@@ -42,7 +42,7 @@ test("runScenario - Catch error when calling non-existent zome", async () => {
       alice.cells[0].callZome<EntryHash>({
         zome_name: "NOZOME",
         fn_name: "create",
-      })
+      }),
     );
   });
 });
@@ -55,7 +55,7 @@ test("runScenario - Catch error when attaching a protected port", async () => {
     });
 
     await assert.rejects(
-      alice.conductor.attachAppInterface({ port: 300, allowed_origins: "*" })
+      alice.conductor.attachAppInterface({ port: 300, allowed_origins: "*" }),
     );
   });
 });
@@ -68,7 +68,7 @@ test("runScenario - Catch error when calling a zome of an undefined cell", async
     });
 
     assert.throws(() =>
-      alice.cells[2].callZome({ zome_name: "", fn_name: "" })
+      alice.cells[2].callZome({ zome_name: "", fn_name: "" }),
     );
   });
 });
@@ -111,17 +111,17 @@ test("Set custom network config", async () => {
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     },
-    { networkConfig: { initiateIntervalMs, minInitiateIntervalMs } }
+    { networkConfig: { initiateIntervalMs, minInitiateIntervalMs } },
   );
 
   const tmpDirPath = alice.conductor.getTmpDirectory();
   const conductorConfig = yaml.load(
-    readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, { encoding: "utf-8" })
+    readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, { encoding: "utf-8" }),
   );
   assert.ok(
     conductorConfig &&
       typeof conductorConfig === "object" &&
-      "network" in conductorConfig
+      "network" in conductorConfig,
   );
   const { network } = conductorConfig;
   assert.ok(network && typeof network === "object" && "advanced" in network);
@@ -132,7 +132,7 @@ test("Set custom network config", async () => {
     k2Gossip &&
       typeof k2Gossip === "object" &&
       "initiateIntervalMs" in k2Gossip &&
-      "minInitiateIntervalMs" in k2Gossip
+      "minInitiateIntervalMs" in k2Gossip,
   );
   assert.strictEqual(k2Gossip.initiateIntervalMs, initiateIntervalMs);
   assert.strictEqual(k2Gossip.minInitiateIntervalMs, minInitiateIntervalMs);
@@ -239,7 +239,7 @@ test("Conductor maintains data after shutdown and restart", async () => {
     .issueAppAuthenticationToken({ installed_app_id: bob.appId });
   bob.appWs = await bob.conductor.connectAppWs(
     issuedBob.token,
-    appInterfaceInfo.port
+    appInterfaceInfo.port,
   );
   const readContentAfterRestart: typeof content = await bob.appWs.callZome({
     cell_id: bob.cells[0].cell_id,
@@ -371,7 +371,7 @@ test("dhtSync - Fails if some Ops are not synced among all conductors", async ()
   try {
     await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
     assert.fail();
-  } catch (e) {
+  } catch {
     assert(true);
   }
 
@@ -413,7 +413,7 @@ test("dhtSync - Fails if some Ops are not integrated in a conductor", async () =
         // while Bob's conductor is still in this state.
         await dhtSync([alice], alice.cells[0].cell_id[0], 500, 0);
         assert.fail();
-      } catch (e) {
+      } catch {
         assert(true);
       }
       break;

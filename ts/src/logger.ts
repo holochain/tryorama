@@ -3,7 +3,7 @@ import env from "./env.js";
 
 const myFormat = format.printf(
   ({ level, message, label, timestamp }) =>
-    `${timestamp} [${label}] ${level}: ${message}`
+    `${timestamp} [${label}] ${level}: ${message}`,
 );
 
 export const makeLogger = (label?: string) =>
@@ -21,7 +21,7 @@ export const makeLogger = (label?: string) =>
       format.colorize(),
       format.timestamp({ format: "mediumTime" }),
       format.label({ label: label ? `Tryorama - ${label}` : "Tryorama" }),
-      myFormat
+      myFormat,
     ),
     transports: [new transports.Console({ level: env.logLevel })],
   });

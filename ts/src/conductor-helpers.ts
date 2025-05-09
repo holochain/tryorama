@@ -36,7 +36,7 @@ export const runLocalServices = async () => {
     servicesProcess.on("error", (err: NodeJS.ErrnoException) => {
       if (err.code === "ENOENT") {
         logger.error(
-          "No kitsune2-bootstrap-srv binary found in the environment."
+          "No kitsune2-bootstrap-srv binary found in the environment.",
         );
       } else {
         logger.error("Failed to spawn kitsune2-bootstrap-srv: ", err);
@@ -71,7 +71,7 @@ export const runLocalServices = async () => {
  * @public
  */
 export const stopLocalServices = (
-  localServicesProcess: ChildProcessWithoutNullStreams
+  localServicesProcess: ChildProcessWithoutNullStreams,
 ) => {
   if (localServicesProcess.pid === undefined) {
     return null;
@@ -110,14 +110,14 @@ export const addAllAgentsToAllConductors = async (conductors: Conductor[]) => {
               agent_infos: agentInfosToShareAbout,
             });
           }
-        })
+        }),
       );
-    })
+    }),
   );
 };
 
 function assertZomeResponse<T>(
-  response: CallZomeResponse
+  response: CallZomeResponse,
 ): asserts response is T {
   return;
 }
@@ -135,7 +135,7 @@ function assertZomeResponse<T>(
 export const enableAndGetAgentApp = async (
   adminWs: AdminWebsocket,
   appWs: AppWebsocket,
-  appInfo: AppInfo
+  appInfo: AppInfo,
 ) => {
   const enableAppResponse = await adminWs.enableApp({
     installed_app_id: appInfo.installed_app_id,
@@ -180,7 +180,7 @@ export const enableAndGetAgentApp = async (
  */
 export const getCallableCell = (
   appWs: AppWebsocket,
-  cell: ClonedCell | ProvisionedCell
+  cell: ClonedCell | ProvisionedCell,
 ) => ({
   ...cell,
   callZome: async <T>(request: CellZomeCallRequest, timeout?: number) => {
@@ -190,7 +190,7 @@ export const getCallableCell = (
         cell_id: cell.cell_id,
         payload: request.payload ?? null,
       },
-      timeout
+      timeout,
     );
     assertZomeResponse<T>(callZomeResponse);
     return callZomeResponse;
@@ -215,5 +215,5 @@ export const getZomeCaller =
         fn_name: fnName,
         payload,
       },
-      timeout
+      timeout,
     );
