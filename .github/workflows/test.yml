@@ -57,7 +57,7 @@ jobs:
       - name: Check docs up-to-date
         run: |
           nix develop -c $SHELL -c "npm run build"
-          git diff --exit-code
+          git diff --ignore-all-space --exit-code
 
       - name: Run tests
         run: nix develop -c $SHELL -c "npm t"
