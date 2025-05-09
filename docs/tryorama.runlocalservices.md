@@ -4,7 +4,7 @@
 
 ## runLocalServices() function
 
-Spawn a signalling server to enable connections between conductors.
+Spawn bootstrap and signalling server to enable peer discovery and connections between peers.
 
 **Signature:**
 

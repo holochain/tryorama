@@ -9,11 +9,11 @@ Create curried version of `callZome` function for a specific cell.
 **Signature:**
 
 ```typescript
-getCallableCell: (appWs: IAppWebsocket, cell: ClonedCell | ProvisionedCell) => {
+getCallableCell: (appWs: AppWebsocket, cell: ClonedCell | ProvisionedCell) => {
     callZome: <T>(request: CellZomeCallRequest, timeout?: number) => Promise<T>;
     cell_id: import("@holochain/client").CellId;
     clone_id: string;
-    original_dna_hash: import("@spartan-hc/holo-hash").DnaHash;
+    original_dna_hash: Uint8Array;
     dna_modifiers: import("@holochain/client").DnaModifiers;
     name: string;
     enabled: boolean;
@@ -50,7 +50,7 @@ appWs
 
 </td><td>
 
-[IAppWebsocket](./tryorama.iappwebsocket.md)
+AppWebsocket
 
 
 </td><td>
@@ -78,7 +78,7 @@ Cell to bind zome call function to.
 </tbody></table>
 **Returns:**
 
-{ callZome: &lt;T&gt;(request: [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)<!-- -->, timeout?: number) =&gt; Promise&lt;T&gt;; cell\_id: import("@holochain/client").CellId; clone\_id: string; original\_dna\_hash: import("@spartan-hc/holo-hash").DnaHash; dna\_modifiers: import("@holochain/client").DnaModifiers; name: string; enabled: boolean; } \| { callZome: &lt;T&gt;(request: [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)<!-- -->, timeout?: number) =&gt; Promise&lt;T&gt;; cell\_id: import("@holochain/client").CellId; dna\_modifiers: import("@holochain/client").DnaModifiers; name: string; }
+{ callZome: &lt;T&gt;(request: [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)<!-- -->, timeout?: number) =&gt; Promise&lt;T&gt;; cell\_id: import("@holochain/client").CellId; clone\_id: string; original\_dna\_hash: Uint8Array; dna\_modifiers: import("@holochain/client").DnaModifiers; name: string; enabled: boolean; } \| { callZome: &lt;T&gt;(request: [CellZomeCallRequest](./tryorama.cellzomecallrequest.md)<!-- -->, timeout?: number) =&gt; Promise&lt;T&gt;; cell\_id: import("@holochain/client").CellId; dna\_modifiers: import("@holochain/client").DnaModifiers; name: string; }
 
 A callable cell.
 

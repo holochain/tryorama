@@ -9,5 +9,5 @@ A signal handler for the conductor.
 **Signature:**
 
 ```typescript
-signalHandler?: AppSignalCb;
+signalHandler?: SignalCb;
 ```

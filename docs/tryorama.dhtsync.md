@@ -4,12 +4,12 @@
 
 ## dhtSync() function
 
-A utility function to wait until all conductors' integrated DhtOps are identical for a DNA.
+A utility function to wait until all conductors' DhtOps have been integrated, and are identical for a given DNA.
 
 **Signature:**
 
 ```typescript
-dhtSync: (players: IPlayer[], dnaHash: DnaHash, interval?: number, timeout?: number) => Promise<void>
+dhtSync: (players: Player[], dnaHash: DnaHash, intervalMs?: number, timeoutMs?: number) => Promise<void>
 ```
 
 ## Parameters
@@ -37,7 +37,7 @@ players
 
 </td><td>
 
-[IPlayer](./tryorama.iplayer.md)<!-- -->\[\]
+[Player](./tryorama.player.md)<!-- -->\[\]
 
 
 </td><td>
@@ -64,7 +64,7 @@ DNA hash to compare integrated DhtOps from.
 </td></tr>
 <tr><td>
 
-interval
+intervalMs
 
 
 </td><td>
@@ -74,13 +74,13 @@ number
 
 </td><td>
 
-_(Optional)_ Interval to pause between comparisons (defaults to 50 ms).
+_(Optional)_ Interval to pause between comparisons (defaults to 500 milliseconds).
 
 
 </td></tr>
 <tr><td>
 
-timeout
+timeoutMs
 
 
 </td><td>
@@ -90,7 +90,7 @@ number
 
 </td><td>
 
-_(Optional)_ A timeout for the delay (optional).
+_(Optional)_ A timeout for the delay (defaults to 60000 milliseconds).
 
 
 </td></tr>

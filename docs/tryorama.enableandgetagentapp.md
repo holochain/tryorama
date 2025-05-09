@@ -9,7 +9,7 @@ Enable an app and build an agent app object.
 **Signature:**
 
 ```typescript
-enableAndGetAgentApp: (adminWs: IAdminWebsocket, appWs: IAppWebsocket, appInfo: AppInfo) => Promise<AgentApp>
+enableAndGetAgentApp: (adminWs: AdminWebsocket, appWs: AppWebsocket, appInfo: AppInfo) => Promise<AgentApp>
 ```
 
 ## Parameters
@@ -37,7 +37,7 @@ adminWs
 
 </td><td>
 
-[IAdminWebsocket](./tryorama.iadminwebsocket.md)
+AdminWebsocket
 
 
 </td><td>
@@ -53,7 +53,7 @@ appWs
 
 </td><td>
 
-[IAppWebsocket](./tryorama.iappwebsocket.md)
+AppWebsocket
 
 
 </td><td>

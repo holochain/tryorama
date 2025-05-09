@@ -6,11 +6,7 @@
 
 Tryorama
 
-Tools for managing Holochain [Conductors](./tryorama.conductor.md) and [TryCP Conductors](./tryorama.trycpconductor.md)<!-- -->.
-
-## Remarks
-
-TryCP stands for Tryorama Control Protocol and is a protocol to enable remote management of Holochain conductors on network hosts.
+Tools for managing Holochain [Conductors](./tryorama.conductor.md)<!-- -->.
 
 ## Classes
 
@@ -44,80 +40,6 @@ A class to manage a conductor running on localhost.
 </td><td>
 
 An abstraction of a test scenario to write tests against Holochain hApps, running on a local conductor.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpClient](./tryorama.trycpclient.md)
-
-
-</td><td>
-
-A factory class to create client connections to a running TryCP server.
-
-With a client, conductors on the server can ba configured, started and stopped. All valid Admin and App API commands can be sent to the server too.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpConductor](./tryorama.trycpconductor.md)
-
-
-</td><td>
-
-A class to manage a conductor running on a TryCP server.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpScenario](./tryorama.trycpscenario.md)
-
-
-</td><td>
-
-A test scenario abstraction with convenience functions to manage TryCP clients and players (agent + conductor).
-
-Clients in turn help manage conductors on TryCP servers. Clients can be added to a scenario to keep track of all server connections. When finishing a test scenario, all conductors of all clients can be easily cleaned up and the client connections closed.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpServer](./tryorama.trycpserver.md)
-
-
-</td><td>
-
-A factory class to start and stop local instances of the TryCP server.
-
-
-</td></tr>
-</tbody></table>
-
-## Enumerations
-
-<table><thead><tr><th>
-
-Enumeration
-
-
-</th><th>
-
-Description
-
-
-</th></tr></thead>
-<tbody><tr><td>
-
-[NetworkType](./tryorama.networktype.md)
-
-
-</td><td>
-
-The network type the conductor should use to communicate with peers.
 
 
 </td></tr>
@@ -182,7 +104,7 @@ Run the `hc` command to delete all conductor data.
 </td></tr>
 <tr><td>
 
-[conductorCellsDhtSync(conductorCells, interval, timeout)](./tryorama.conductorcellsdhtsync.md)
+[conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs)](./tryorama.conductorcellsdhtsync.md)
 
 
 </td><td>
@@ -204,23 +126,12 @@ The function to create a conductor. It starts a sandbox conductor via the Holoch
 </td></tr>
 <tr><td>
 
-[createTryCpConductor(tryCpClient, options)](./tryorama.createtrycpconductor.md)
+[dhtSync(players, dnaHash, intervalMs, timeoutMs)](./tryorama.dhtsync.md)
 
 
 </td><td>
 
-The function to create a TryCP Conductor. By default configures and starts it.
-
-
-</td></tr>
-<tr><td>
-
-[dhtSync(players, dnaHash, interval, timeout)](./tryorama.dhtsync.md)
-
-
-</td><td>
-
-A utility function to wait until all conductors' integrated DhtOps are identical for a DNA.
+A utility function to wait until all conductors' DhtOps have been integrated, and are identical for a given DNA.
 
 
 </td></tr>
@@ -275,7 +186,7 @@ A utility function to wait the given amount of time.
 
 </td><td>
 
-Spawn a signalling server to enable connections between conductors.
+Spawn bootstrap and signalling server to enable peer discovery and connections between peers.
 
 
 </td></tr>
@@ -318,333 +229,12 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[AdminApiResponseAgentInfo](./tryorama.adminapiresponseagentinfo.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAgentInfoAdded](./tryorama.adminapiresponseagentinfoadded.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAgentPubKeyGenerated](./tryorama.adminapiresponseagentpubkeygenerated.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppAuthenticationTokenIssued](./tryorama.adminapiresponseappauthenticationtokenissued.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppDisabled](./tryorama.adminapiresponseappdisabled.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppEnabled](./tryorama.adminapiresponseappenabled.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppInstalled](./tryorama.adminapiresponseappinstalled.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppInterfaceAttached](./tryorama.adminapiresponseappinterfaceattached.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppInterfacesListed](./tryorama.adminapiresponseappinterfaceslisted.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppsListed](./tryorama.adminapiresponseappslisted.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppStarted](./tryorama.adminapiresponseappstarted.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseAppUninstalled](./tryorama.adminapiresponseappuninstalled.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseCellIdsListed](./tryorama.adminapiresponsecellidslisted.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseCloneCellDeleted](./tryorama.adminapiresponseclonecelldeleted.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseCoordinatorsUpdated](./tryorama.adminapiresponsecoordinatorsupdated.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseDnaRegistered](./tryorama.adminapiresponsednaregistered.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseDnasDefinitionReturned](./tryorama.adminapiresponsednasdefinitionreturned.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseDnasListed](./tryorama.adminapiresponsednaslisted.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseFullStateDumped](./tryorama.adminapiresponsefullstatedumped.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseGetCompatibleCells](./tryorama.adminapiresponsegetcompatiblecells.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseNetworkStatsDumped](./tryorama.adminapiresponsenetworkstatsdumped.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseStateDumped](./tryorama.adminapiresponsestatedumped.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseStorageInfo](./tryorama.adminapiresponsestorageinfo.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AdminApiResponseZomeCallCapabilityGranted](./tryorama.adminapiresponsezomecallcapabilitygranted.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
 [AgentApp](./tryorama.agentapp.md)
 
 
 </td><td>
 
 Provides direct access to cells of an app and the agent key.
-
-
-</td></tr>
-<tr><td>
-
-[ApiErrorResponse](./tryorama.apierrorresponse.md)
-
-
-</td><td>
-
-Error response from the Admin or App API.
-
-
-</td></tr>
-<tr><td>
-
-[AppApiResponseAppInfo](./tryorama.appapiresponseappinfo.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AppApiResponseCloneCellCreated](./tryorama.appapiresponseclonecellcreated.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AppApiResponseCloneCellDisabled](./tryorama.appapiresponseclonecelldisabled.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AppApiResponseCloneCellEnabled](./tryorama.appapiresponseclonecellenabled.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AppApiResponseMemproofsProvided](./tryorama.appapiresponsememproofsprovided.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AppApiResponseNetworkInfo](./tryorama.appapiresponsenetworkinfo.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[AppApiResponseZomeCall](./tryorama.appapiresponsezomecall.md)
-
-
-</td><td>
-
 
 
 </td></tr>
@@ -661,22 +251,12 @@ Optional arguments when installing a hApp.
 </td></tr>
 <tr><td>
 
-[ClientPlayers](./tryorama.clientplayers.md)
+[ConductorCell](./tryorama.conductorcell.md)
 
 
 </td><td>
 
-A TryCP client and its associated players.
-
-
-</td></tr>
-<tr><td>
-
-[ClientsPlayersOptions](./tryorama.clientsplayersoptions.md)
-
-
-</td><td>
-
+A Conductor and a CellId
 
 
 </td></tr>
@@ -703,56 +283,11 @@ DNA source and additional options.
 </td></tr>
 <tr><td>
 
-[DownloadLogsResponse](./tryorama.downloadlogsresponse.md)
+[NetworkConfig](./tryorama.networkconfig.md)
 
 
 </td><td>
 
-Response for downloading logs.
-
-
-</td></tr>
-<tr><td>
-
-[DownloadLogsResponseType](./tryorama.downloadlogsresponsetype.md)
-
-
-</td><td>
-
-Enumerated response for downloading logs.
-
-
-</td></tr>
-<tr><td>
-
-[IConductor](./tryorama.iconductor.md)
-
-
-</td><td>
-
-Base interface of a Tryorama conductor. Both [Conductor](./tryorama.conductor.md) and [TryCpConductor](./tryorama.trycpconductor.md) implement this interface.
-
-
-</td></tr>
-<tr><td>
-
-[IConductorCell](./tryorama.iconductorcell.md)
-
-
-</td><td>
-
-A Conductor and a CellId
-
-
-</td></tr>
-<tr><td>
-
-[IPlayer](./tryorama.iplayer.md)
-
-
-</td><td>
-
-Combines an agent hApp with the conductor they belong to.
 
 
 </td></tr>
@@ -769,275 +304,12 @@ A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->.
 </td></tr>
 <tr><td>
 
-[RequestAdminInterfaceMessage](./tryorama.requestadmininterfacemessage.md)
-
-
-</td><td>
-
-All possible calls to the Admin API.
-
-
-</td></tr>
-<tr><td>
-
-[RequestAppInfo](./tryorama.requestappinfo.md)
-
-
-</td><td>
-
-Request app info from a conductor.
-
-
-</td></tr>
-<tr><td>
-
-[RequestCallAdminInterface](./tryorama.requestcalladmininterface.md)
-
-
-</td><td>
-
-Request a call to the Admin API.
-
-
-</td></tr>
-<tr><td>
-
-[RequestCallAppInterface](./tryorama.requestcallappinterface.md)
-
-
-</td><td>
-
-Request a call to the App API.
-
-
-</td></tr>
-<tr><td>
-
-[RequestCallAppInterfaceEncoded](./tryorama.requestcallappinterfaceencoded.md)
-
-
-</td><td>
-
-Msgpack encoded request to call an app interface.
-
-
-</td></tr>
-<tr><td>
-
-[RequestCallZome](./tryorama.requestcallzome.md)
-
-
-</td><td>
-
-Request to call a zome on a conductor's app interface.
-
-
-</td></tr>
-<tr><td>
-
-[RequestConfigurePlayer](./tryorama.requestconfigureplayer.md)
-
-
-</td><td>
-
-Request to create configuration files and directories for a conductor.
-
-
-</td></tr>
-<tr><td>
-
-[RequestConnectAppInterface](./tryorama.requestconnectappinterface.md)
-
-
-</td><td>
-
-Request to connect an app interface to a conductor.
-
-
-</td></tr>
-<tr><td>
-
-[RequestCreateCloneCell](./tryorama.requestcreateclonecell.md)
-
-
-</td><td>
-
-Create a clone cell.
-
-
-</td></tr>
-<tr><td>
-
-[RequestDeleteCloneCell](./tryorama.requestdeleteclonecell.md)
-
-
-</td><td>
-
-Delete a disabled clone cell.
-
-
-</td></tr>
-<tr><td>
-
-[RequestDisableCloneCell](./tryorama.requestdisableclonecell.md)
-
-
-</td><td>
-
-Disable a clone cell.
-
-
-</td></tr>
-<tr><td>
-
-[RequestDisconnectAppInterface](./tryorama.requestdisconnectappinterface.md)
-
-
-</td><td>
-
-Request to disconnect a connected app interface from a conductor.
-
-
-</td></tr>
-<tr><td>
-
-[RequestDownloadDna](./tryorama.requestdownloaddna.md)
-
-
-</td><td>
-
-Request to download a DNA from a URL.
-
-
-</td></tr>
-<tr><td>
-
-[RequestDownloadLogs](./tryorama.requestdownloadlogs.md)
-
-
-</td><td>
-
-Request type for fetching logs from a given conductor.
-
-
-</td></tr>
-<tr><td>
-
-[RequestEnableApp](./tryorama.requestenableapp.md)
-
-
-</td><td>
-
-Request to enable the app.
-
-
-</td></tr>
-<tr><td>
-
-[RequestEnableCloneCell](./tryorama.requestenableclonecell.md)
-
-
-</td><td>
-
-Enable a disabled clone cell.
-
-
-</td></tr>
-<tr><td>
-
-[RequestNetworkInfo](./tryorama.requestnetworkinfo.md)
-
-
-</td><td>
-
-Request network info.
-
-
-</td></tr>
-<tr><td>
-
-[RequestProvideMemproofs](./tryorama.requestprovidememproofs.md)
-
-
-</td><td>
-
-Request to provide deferred memproofs for an app.
-
-
-</td></tr>
-<tr><td>
-
-[RequestReset](./tryorama.requestreset.md)
-
-
-</td><td>
-
-Request deletion of \*\*all\*\* conductors.
-
-
-</td></tr>
-<tr><td>
-
-[RequestSaveDna](./tryorama.requestsavedna.md)
-
-
-</td><td>
-
-Request to save a DNA to the server's file system.
-
-
-</td></tr>
-<tr><td>
-
-[RequestShutdown](./tryorama.requestshutdown.md)
-
-
-</td><td>
-
-Request shutdown of a conductor.
-
-
-</td></tr>
-<tr><td>
-
-[RequestStartup](./tryorama.requeststartup.md)
-
-
-</td><td>
-
-Request startup of a conductor.
-
-
-</td></tr>
-<tr><td>
-
 [ScenarioOptions](./tryorama.scenariooptions.md)
 
 
 </td><td>
 
 Options when creating a scenario.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpConductorOptions](./tryorama.trycpconductoroptions.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
-[TryCpPlayer](./tryorama.trycpplayer.md)
-
-
-</td><td>
-
-A player tied to a [TryCpConductor](./tryorama.trycpconductor.md)<!-- -->.
 
 
 </td></tr>
@@ -1058,55 +330,11 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[AppApiResponseOk](./tryorama.appapiresponseok.md)
+[CONDUCTOR\_CONFIG](./tryorama.conductor_config.md)
 
 
 </td><td>
 
-
-
-</td></tr>
-<tr><td>
-
-[DEFAULT\_PARTIAL\_PLAYER\_CONFIG](./tryorama.default_partial_player_config.md)
-
-
-</td><td>
-
-The default partial config for a TryCP conductor.
-
-
-</td></tr>
-<tr><td>
-
-[TRYCP\_SERVER\_HOST](./tryorama.trycp_server_host.md)
-
-
-</td><td>
-
-Default TryCP server host address.
-
-
-</td></tr>
-<tr><td>
-
-[TRYCP\_SERVER\_PORT](./tryorama.trycp_server_port.md)
-
-
-</td><td>
-
-Default TryCP server port.
-
-
-</td></tr>
-<tr><td>
-
-[TRYCP\_SUCCESS\_RESPONSE](./tryorama.trycp_success_response.md)
-
-
-</td><td>
-
-Empty success response.
 
 
 </td></tr>
@@ -1127,34 +355,12 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[AdminApiResponse](./tryorama.adminapiresponse.md)
-
-
-</td><td>
-
-All possible responses from the Admin API.
-
-
-</td></tr>
-<tr><td>
-
 [AgentsAppsOptions](./tryorama.agentsappsoptions.md)
 
 
 </td><td>
 
 An app and an optional agent pub key for each agent. Optionally a network seed to be used for DNA installation.
-
-
-</td></tr>
-<tr><td>
-
-[AppApiResponse](./tryorama.appapiresponse.md)
-
-
-</td><td>
-
-App API Responses.
 
 
 </td></tr>
@@ -1193,132 +399,12 @@ The zome request options adapted to a specific cell.
 </td></tr>
 <tr><td>
 
-[ConductorId](./tryorama.conductorid.md)
-
-
-</td><td>
-
-
-
-</td></tr>
-<tr><td>
-
 [CreateConductorOptions](./tryorama.createconductoroptions.md)
 
 
 </td><td>
 
 Options for using the conductor factory.
-
-
-</td></tr>
-<tr><td>
-
-[IAdminWebsocket](./tryorama.iadminwebsocket.md)
-
-
-</td><td>
-
-AdminWebsocket interface for local and TryCP conductors.
-
-
-</td></tr>
-<tr><td>
-
-[IAppWebsocket](./tryorama.iappwebsocket.md)
-
-
-</td><td>
-
-AppWebsocket interface for local and TryCP conductors.
-
-
-</td></tr>
-<tr><td>
-
-[RequestAdminInterfaceMessageType](./tryorama.requestadmininterfacemessagetype.md)
-
-
-</td><td>
-
-The types of all possible calls to the Admin API.
-
-
-</td></tr>
-<tr><td>
-
-[RequestCallAppInterfaceMessage](./tryorama.requestcallappinterfacemessage.md)
-
-
-</td><td>
-
-All possible calls to the App API.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpApiResponse](./tryorama.trycpapiresponse.md)
-
-
-</td><td>
-
-Possible responses from the Admin and App APIs.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpConductorLogLevel](./tryorama.trycpconductorloglevel.md)
-
-
-</td><td>
-
-Log level for a TryCP conductor.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpControlResponse](./tryorama.trycpcontrolresponse.md)
-
-
-</td><td>
-
-A response from the TryCP server.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpRequest](./tryorama.trycprequest.md)
-
-
-</td><td>
-
-Contains all possible request types.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpResponseErrorValue](./tryorama.trycpresponseerrorvalue.md)
-
-
-</td><td>
-
-Error response values.
-
-
-</td></tr>
-<tr><td>
-
-[TryCpSuccessResponse](./tryorama.trycpsuccessresponse.md)
-
-
-</td><td>
-
-Possible values a for success response from the TryCP server.
 
 
 </td></tr>
