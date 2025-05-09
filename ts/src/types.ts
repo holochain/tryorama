@@ -47,7 +47,7 @@ export type CellZomeCallRequest = Omit<
  */
 export type CallZomeFn = <T>(
   request: CellZomeCallRequest,
-  timeout?: number
+  timeout?: number,
 ) => Promise<T>;
 
 /**

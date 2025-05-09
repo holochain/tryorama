@@ -53,7 +53,7 @@ export const areDhtsSynced = async (players: Player[], dnaHash: DnaHash) => {
  * @public
  */
 export const areConductorCellsDhtsSynced = async (
-  conductorCells: ConductorCell[]
+  conductorCells: ConductorCell[],
 ) => {
   if (!isConductorCellDnaHashEqual(conductorCells)) {
     throw Error("Cannot compare DHT state of different DNAs");
@@ -65,13 +65,13 @@ export const areConductorCellsDhtsSynced = async (
       conductorCell.conductor.adminWs().dumpFullState({
         cell_id: conductorCell.cellId,
         dht_ops_cursor: undefined,
-      })
-    )
+      }),
+    ),
   );
 
   // Get total number of published DhtOps
   const totalPublishedDhtOpsCount = sum(
-    conductorStates.map((state) => state.source_chain_dump.published_ops_count)
+    conductorStates.map((state) => state.source_chain_dump.published_ops_count),
   );
 
   // Determine if all published ops are integrated in every conductor, and none are in limbo
@@ -79,7 +79,7 @@ export const areConductorCellsDhtsSynced = async (
     (state: FullStateDump) =>
       state.integration_dump.integrated.length === totalPublishedDhtOpsCount &&
       state.integration_dump.integration_limbo.length === 0 &&
-      state.integration_dump.validation_limbo.length === 0
+      state.integration_dump.validation_limbo.length === 0,
   );
 
   // Compare conductors' integrated DhtOps
@@ -99,7 +99,7 @@ export const areConductorCellsDhtsSynced = async (
         if ("ChainOp" in op) {
           // Secondly sort by chain op signature.
           return Buffer.from(Object.values(op.ChainOp)[0][0]).toString(
-            "base64"
+            "base64",
           );
         } else {
           // Sorting by signatures is sufficient for warrant ops.
@@ -108,7 +108,7 @@ export const areConductorCellsDhtsSynced = async (
     ]);
   });
   const allDhtOpsSynced = conductorDhtOpsIntegrated.every((ops) =>
-    isEqual(ops, conductorDhtOpsIntegrated[0])
+    isEqual(ops, conductorDhtOpsIntegrated[0]),
   );
 
   return allDhtOpsSynced && allDhtOpsIntegrated;
@@ -130,7 +130,7 @@ export const dhtSync = async (
   players: Player[],
   dnaHash: DnaHash,
   intervalMs = 500,
-  timeoutMs = 60000
+  timeoutMs = 60000,
 ) => {
   const conductorCells = playersToConductorCells(players, dnaHash);
   return conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs);
@@ -150,7 +150,7 @@ export const dhtSync = async (
 export const conductorCellsDhtSync = async (
   conductorCells: ConductorCell[],
   intervalMs: number,
-  timeoutMs: number
+  timeoutMs: number,
 ) => {
   if (!isConductorCellDnaHashEqual(conductorCells)) {
     throw Error("Cannot compare DHT state of different DNAs");
@@ -165,7 +165,7 @@ export const conductorCellsDhtSync = async (
     const currentTime = Date.now();
     if (Math.floor(currentTime - startTime) >= timeoutMs)
       throw Error(
-        `Timeout of ${timeoutMs} ms has passed, but players integrated DhtOps are not syncronized`
+        `Timeout of ${timeoutMs} ms has passed, but players integrated DhtOps are not syncronized`,
       );
 
     // Check if Integrated DhtOps are syncronized
@@ -188,7 +188,7 @@ export const conductorCellsDhtSync = async (
  */
 const isConductorCellDnaHashEqual = (conductorCells: ConductorCell[]) => {
   const dnaHashes = conductorCells.map(
-    (conductorCell) => conductorCell.cellId[0]
+    (conductorCell) => conductorCell.cellId[0],
   );
   return dnaHashes.every((val: DnaHash) => val === dnaHashes[0]);
 };
