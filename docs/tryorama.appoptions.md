@@ -75,7 +75,7 @@ _(Optional)_ App ID to override the app manifest's app name.
 </td></tr>
 <tr><td>
 
-[membraneProofs?](./tryorama.appoptions.membraneproofs.md)
+[networkConfig?](./tryorama.appoptions.networkconfig.md)
 
 
 </td><td>
@@ -83,12 +83,12 @@ _(Optional)_ App ID to override the app manifest's app name.
 
 </td><td>
 
-Record&lt;string, MembraneProof&gt;
+[NetworkConfig](./tryorama.networkconfig.md)
 
 
 </td><td>
 
-_(Optional)_ Proofs of membership for the hApp.
+_(Optional)_ Network config for the player.
 
 
 </td></tr>
@@ -113,6 +113,25 @@ _(Optional)_ A network seed to override the hApps' network seed.
 </td></tr>
 <tr><td>
 
+[rolesSettings?](./tryorama.appoptions.rolessettings.md)
+
+
+</td><td>
+
+
+</td><td>
+
+RoleSettingsMap
+
+
+</td><td>
+
+_(Optional)_ Role specific settings or modifiers that will override any settings in the hApp's dna manifest(s).
+
+
+</td></tr>
+<tr><td>
+
 [signalHandler?](./tryorama.appoptions.signalhandler.md)
 
 
@@ -121,7 +140,7 @@ _(Optional)_ A network seed to override the hApps' network seed.
 
 </td><td>
 
-AppSignalCb
+SignalCb
 
 
 </td><td>

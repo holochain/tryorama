@@ -9,7 +9,7 @@ The function to create a conductor. It starts a sandbox conductor via the Holoch
 **Signature:**
 
 ```typescript
-createConductor: (signalingServerUrl: URL, options?: ConductorOptions) => Promise<Conductor>
+createConductor: (signalingServerUrl: URL, options?: ConductorOptions & NetworkConfig) => Promise<Conductor>
 ```
 
 ## Parameters
@@ -51,7 +51,7 @@ options
 
 </td><td>
 
-[ConductorOptions](./tryorama.conductoroptions.md)
+[ConductorOptions](./tryorama.conductoroptions.md) &amp; [NetworkConfig](./tryorama.networkconfig.md)
 
 
 </td><td>
