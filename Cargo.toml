@@ -6,8 +6,8 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-hdi = "0.6.1"
-hdk = "0.5.1"
+hdi = "0.6.2"
+hdk = "0.5.2"
 serde = "1.0.192"
 
 [profile.dev]

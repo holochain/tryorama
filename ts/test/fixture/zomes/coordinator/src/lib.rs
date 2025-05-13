@@ -1,5 +1,5 @@
 use hdk::prelude::*;
-use integrity::{Content, EntryTypes, UpdateInput};
+use integrity::{Content, EntryTypes, EntryTypesUnit, UpdateInput};
 
 #[hdk_extern]
 pub fn create(input: Content) -> ExternResult<ActionHash> {
@@ -29,6 +29,18 @@ pub fn update(input: UpdateInput) -> ExternResult<ActionHash> {
 pub fn delete(hash: ActionHash) -> ExternResult<ActionHash> {
     let deleted_hash = delete_entry(hash)?;
     Ok(deleted_hash)
+}
+
+#[hdk_extern]
+pub fn agent_activity(agent: AgentPubKey) -> ExternResult<AgentActivity> {
+    let chain = get_agent_activity(
+        agent,
+        ChainQueryFilter::new()
+            .action_type(ActionType::Create)
+            .entry_type(EntryTypesUnit::Content.try_into()?),
+        ActivityRequest::Full,
+    )?;
+    Ok(chain)
 }
 
 #[derive(Serialize, Deserialize, SerializedBytes, Debug)]
