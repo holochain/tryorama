@@ -23,8 +23,10 @@ const TEST_ZOME_NAME = "coordinator";
 test("runScenario - Install hApp bundle and access cells through role ids", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      type: "path",
-      value: FIXTURE_HAPP_URL.pathname,
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
     });
     assert.ok(alice.namedCells.get("test"));
   });
@@ -33,8 +35,10 @@ test("runScenario - Install hApp bundle and access cells through role ids", asyn
 test("runScenario - Catch error when calling non-existent zome", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      type: "path",
-      value: FIXTURE_HAPP_URL.pathname,
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
     });
 
     await expect(
@@ -49,8 +53,10 @@ test("runScenario - Catch error when calling non-existent zome", async () => {
 test("runScenario - Catch error when attaching a protected port", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      type: "path",
-      value: FIXTURE_HAPP_URL.pathname,
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
     });
 
     await expect(
@@ -62,8 +68,10 @@ test("runScenario - Catch error when attaching a protected port", async () => {
 test("runScenario - Catch error when calling a zome of an undefined cell", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      type: "path",
-      value: FIXTURE_HAPP_URL.pathname,
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
     });
 
     assert.throws(() =>
@@ -72,46 +80,51 @@ test("runScenario - Catch error when calling a zome of an undefined cell", async
   });
 });
 
-test.only("runScenario - Catch error that occurs in a signal handler", async () => {
-  await runScenario(async (scenario: Scenario) => {
-    let signalHandlerAlice: SignalCb | undefined;
-    const signalReceivedAlice = new Promise<Signal>((_, reject) => {
-      signalHandlerAlice = () => {
-        reject();
-      };
-    });
+test.sequential(
+  "runScenario - Catch error that occurs in a signal handler",
+  async () => {
+    await runScenario(async (scenario: Scenario) => {
+      let signalHandlerAlice: SignalCb | undefined;
+      const signalReceivedAlice = new Promise<Signal>((_, reject) => {
+        signalHandlerAlice = () => {
+          reject();
+        };
+      });
 
-    const alice = await scenario.addPlayerWithApp({
-      type: "path",
-      value: FIXTURE_HAPP_URL.pathname,
-    });
-    assert.ok(signalHandlerAlice);
-    assert.ok("on" in alice.appWs);
-    alice.appWs.on("signal", signalHandlerAlice);
+      const alice = await scenario.addPlayerWithApp({
+        appBundleSource: {
+          type: "path",
+          value: FIXTURE_HAPP_URL.pathname,
+        },
+      });
+      assert.ok(signalHandlerAlice);
+      assert.ok("on" in alice.appWs);
+      alice.appWs.on("signal", signalHandlerAlice);
 
-    const signalAlice = { value: "hello alice" };
-    alice.cells[0].callZome({
-      zome_name: TEST_ZOME_NAME,
-      fn_name: "signal_loopback",
-      payload: signalAlice,
-    });
+      const signalAlice = { value: "hello alice" };
+      alice.cells[0].callZome({
+        zome_name: TEST_ZOME_NAME,
+        fn_name: "signal_loopback",
+        payload: signalAlice,
+      });
 
-    await expect(signalReceivedAlice).rejects.toThrow();
-  });
-});
+      await expect(signalReceivedAlice).rejects.toThrow();
+    });
+  },
+);
 
 test("Set custom network config", async () => {
   const scenario = new Scenario();
   const initiateIntervalMs = 10_000;
   const minInitiateIntervalMs = 20_000;
 
-  const alice = await scenario.addPlayerWithApp(
-    {
+  const alice = await scenario.addPlayerWithApp({
+    appBundleSource: {
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     },
-    { networkConfig: { initiateIntervalMs, minInitiateIntervalMs } },
-  );
+    options: { networkConfig: { initiateIntervalMs, minInitiateIntervalMs } },
+  });
 
   const tmpDirPath = alice.conductor.getTmpDirectory();
   const conductorConfig = yaml.load(
@@ -143,8 +156,10 @@ test("Install hApp bundle and access cell by role name", async () => {
   const scenario = new Scenario();
 
   const alice = await scenario.addPlayerWithApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   assert.ok(alice.namedCells.get("test"));
   await scenario.cleanUp();
@@ -368,7 +383,7 @@ test("dhtSync - Fails if some Ops are not synced among all conductors", async ()
 
   // Bob never receives the entry
   try {
-    await dhtSync([alice, bob], alice.cells[0].cell_id[0]);
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0], undefined, 5000);
     assert.fail();
   } catch {
     assert(true);
@@ -425,8 +440,10 @@ test("dhtSync - Fails if some Ops are not integrated in a conductor", async () =
 test("runScenario - call zome by role name", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
-      type: "path",
-      value: FIXTURE_HAPP_URL.pathname,
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
     });
 
     const result = (await alice.namedCells.get("test")?.callZome({

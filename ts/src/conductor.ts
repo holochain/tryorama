@@ -1,7 +1,6 @@
 import {
   AdminWebsocket,
   AppAuthenticationToken,
-  AppBundleSource,
   AppWebsocket,
   AttachAppInterfaceRequest,
   CallZomeRequest,
@@ -11,16 +10,17 @@ import {
   RoleNameCallZomeRequest,
 } from "@holochain/client";
 import getPort, { portNumbers } from "get-port";
+import yaml from "js-yaml";
 import pick from "lodash/pick.js";
 import assert from "node:assert";
 import { ChildProcessWithoutNullStreams, spawn } from "node:child_process";
+import { readFileSync, writeFileSync } from "node:fs";
 import { URL } from "node:url";
 import { v4 as uuidv4 } from "uuid";
 import { _ALLOWED_ORIGIN } from "./conductor-helpers.js";
 import { makeLogger } from "./logger.js";
-import { AgentsAppsOptions, AppOptions } from "./types.js";
-import { readFileSync, writeFileSync } from "node:fs";
-import yaml from "js-yaml";
+import { AppWithOptions } from "./scenario.js";
+import { AgentsAppsOptions } from "./types.js";
 
 const logger = makeLogger();
 
@@ -434,14 +434,16 @@ export class Conductor {
    * @param options - {@link AppOptions} for the hApp bundle (optional).
    * @returns An agent app with cells and conductor handle.
    */
-  async installApp(appBundleSource: AppBundleSource, options?: AppOptions) {
+  async installApp(appWithOptions: AppWithOptions) {
     const agent_key =
-      options?.agentPubKey ?? (await this.adminWs().generateAgentPubKey());
-    const installed_app_id = options?.installedAppId ?? `app-${uuidv4()}`;
-    const roles_settings = options?.rolesSettings;
-    const network_seed = options?.networkSeed;
+      appWithOptions.options?.agentPubKey ??
+      (await this.adminWs().generateAgentPubKey());
+    const installed_app_id =
+      appWithOptions.options?.installedAppId ?? `app-${uuidv4()}`;
+    const roles_settings = appWithOptions.options?.rolesSettings;
+    const network_seed = appWithOptions.options?.networkSeed;
     const installAppRequest: InstallAppRequest = {
-      source: appBundleSource,
+      source: appWithOptions.appBundleSource,
       agent_key,
       roles_settings,
       installed_app_id,
@@ -460,14 +462,7 @@ export class Conductor {
    */
   async installAgentsApps(options: AgentsAppsOptions) {
     return Promise.all(
-      options.agentsApps.map((appsForAgent) =>
-        this.installApp(appsForAgent.app, {
-          agentPubKey: appsForAgent.agentPubKey,
-          rolesSettings: appsForAgent.rolesSettings,
-          installedAppId: options.installedAppId,
-          networkSeed: options.networkSeed,
-        }),
-      ),
+      options.agentsApps.map((appsForAgent) => this.installApp(appsForAgent)),
     );
   }
 }
