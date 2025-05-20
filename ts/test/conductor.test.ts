@@ -13,26 +13,25 @@ import {
   Signal,
   SignalCb,
 } from "@holochain/client";
+import { decode, encode } from "@msgpack/msgpack";
+import fs from "fs";
+import yaml from "js-yaml";
 import { readFileSync, realpathSync } from "node:fs";
 import { URL } from "node:url";
-import test from "node:test";
-import assert from "node:assert";
+import { assert, test, expect } from "vitest";
+import zlib from "zlib";
 import {
-  CONDUCTOR_CONFIG,
-  Player,
   cleanAllConductors,
+  CONDUCTOR_CONFIG,
   createConductor,
   dhtSync,
   enableAndGetAgentApp,
   getZomeCaller,
+  PlayerApp,
   runLocalServices,
   stopLocalServices,
 } from "../src";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "./fixture";
-import { decode, encode } from "@msgpack/msgpack";
-import fs from "fs";
-import yaml from "js-yaml";
-import zlib from "zlib";
 
 const ROLE_NAME = "test";
 
@@ -143,13 +142,13 @@ test("Revoke agent key", async () => {
   assert.deepEqual(response, [], "revoked key on all cells");
 
   // After revoking her key, Alice should no longer be able to create an entry.
-  await assert.rejects(
+  await expect(
     alice.cells[0].callZome({
       zome_name: "coordinator",
       fn_name: "create",
       payload: entryContent,
     }),
-  );
+  ).rejects.toThrow();
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -296,8 +295,6 @@ test("Install app with roles settings", async () => {
             modifiers: {
               network_seed: "hello",
               properties: yaml.dump({ progenitor: progenitorKey }),
-              origin_time: originTime,
-              quantum_time: quantumTime,
             },
           },
         },
@@ -475,12 +472,12 @@ test("Zome call can time out before completion", async () => {
   const cell = alice.namedCells.get(ROLE_NAME);
   assert.ok(cell);
 
-  await assert.rejects(
+  await expect(
     cell.callZome(
       { zome_name: "coordinator", fn_name: "create", payload: "test" },
       1,
     ),
-  );
+  ).rejects.toThrow();
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -588,7 +585,7 @@ test("Clone cell management", async () => {
   await appWs.disableCloneCell({
     clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
   });
-  await assert.rejects(
+  await expect(
     appWs.callZome({
       cell_id: cloneCell.cell_id,
       zome_name: "coordinator",
@@ -597,7 +594,7 @@ test("Clone cell management", async () => {
       provenance: agentPubKey,
     }),
     "disabled clone cell cannot be called",
-  );
+  ).rejects.toThrow();
 
   const enabledCloneCell = await appWs.enableCloneCell({
     clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
@@ -630,12 +627,12 @@ test("Clone cell management", async () => {
     app_id: appId,
     clone_cell_id: { type: "dna_hash", value: cloneCell.cell_id[0] },
   });
-  await assert.rejects(
+  await expect(
     appWs.enableCloneCell({
       clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
     }),
     "deleted clone cell cannot be enabled",
-  );
+  ).rejects.toThrow();
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -673,12 +670,12 @@ test("2 agent apps test", async () => {
   const appWs2 = await conductor2.connectAppWs(issued2.token, port2);
   const aliceAgentApp = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
   const bobAgentApp = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
-  const alice: Player = {
+  const alice: PlayerApp = {
     conductor: conductor1,
     appWs: appWs1,
     ...aliceAgentApp,
   };
-  const bob: Player = {
+  const bob: PlayerApp = {
     conductor: conductor2,
     appWs: appWs2,
     ...bobAgentApp,
@@ -725,7 +722,7 @@ test("Create and read an entry, 2 conductors, 2 cells, 2 agents", async () => {
   });
   const appWs1 = await conductor1.connectAppWs(issued1.token, port1);
   const aliceAgentApp = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
-  const alice: Player = {
+  const alice: PlayerApp = {
     conductor: conductor1,
     appWs: appWs1,
     ...aliceAgentApp,
@@ -742,7 +739,7 @@ test("Create and read an entry, 2 conductors, 2 cells, 2 agents", async () => {
   });
   const appWs2 = await conductor2.connectAppWs(issued2.token, port2);
   const bobAgentApp = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
-  const bob: Player = {
+  const bob: PlayerApp = {
     conductor: conductor2,
     appWs: appWs2,
     ...bobAgentApp,

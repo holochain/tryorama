@@ -6,10 +6,9 @@ import {
   Signal,
   SignalCb,
 } from "@holochain/client";
-import { readFileSync } from "node:fs";
 import yaml from "js-yaml";
-import assert from "node:assert";
-import { test } from "node:test";
+import { readFileSync } from "node:fs";
+import { assert, test, expect } from "vitest";
 import {
   CONDUCTOR_CONFIG,
   Scenario,
@@ -38,12 +37,12 @@ test("runScenario - Catch error when calling non-existent zome", async () => {
       value: FIXTURE_HAPP_URL.pathname,
     });
 
-    await assert.rejects(
+    await expect(
       alice.cells[0].callZome<EntryHash>({
         zome_name: "NOZOME",
         fn_name: "create",
       }),
-    );
+    ).rejects.toThrow();
   });
 });
 
@@ -54,9 +53,9 @@ test("runScenario - Catch error when attaching a protected port", async () => {
       value: FIXTURE_HAPP_URL.pathname,
     });
 
-    await assert.rejects(
+    await expect(
       alice.conductor.attachAppInterface({ port: 300, allowed_origins: "*" }),
-    );
+    ).rejects.toThrow();
   });
 });
 
@@ -73,7 +72,7 @@ test("runScenario - Catch error when calling a zome of an undefined cell", async
   });
 });
 
-test("runScenario - Catch error that occurs in a signal handler", async () => {
+test.only("runScenario - Catch error that occurs in a signal handler", async () => {
   await runScenario(async (scenario: Scenario) => {
     let signalHandlerAlice: SignalCb | undefined;
     const signalReceivedAlice = new Promise<Signal>((_, reject) => {
@@ -97,7 +96,7 @@ test("runScenario - Catch error that occurs in a signal handler", async () => {
       payload: signalAlice,
     });
 
-    await assert.rejects(signalReceivedAlice);
+    await expect(signalReceivedAlice).rejects.toThrow();
   });
 });
 

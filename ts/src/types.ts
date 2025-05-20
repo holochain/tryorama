@@ -69,7 +69,7 @@ export type CallableCell = Pick<
  */
 export interface AgentApp {
   appId: string;
-  agentPubKey: Uint8Array;
+  agentPubKey: AgentPubKey;
   cells: CallableCell[];
   namedCells: Map<RoleName, CallableCell>;
 }
