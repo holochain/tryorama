@@ -123,19 +123,48 @@ export class Scenario {
    * @param networkConfig - Optional {@link NetworkConfig}
    * @returns An array of {@link Player}s
    */
-  async addPlayers(amount: number, networkConfig?: NetworkConfig) {
-    return new Array(amount).fill(0).map(async () => {
-      const conductor = await this.addConductor();
-      if (networkConfig) {
-        conductor.setNetworkConfig(networkConfig);
-      }
-      const agentPubKey = await conductor.adminWs().generateAgentPubKey();
-      const player: Player = { conductor, agentPubKey };
-      return player;
-    });
+  async addPlayers(
+    amount: number,
+    networkConfig?: NetworkConfig,
+  ): Promise<Player[]> {
+    await this.ensureLocalServices();
+    return Promise.all(
+      new Array(amount).fill(0).map(async () => {
+        const conductor = await this.addConductor();
+        if (networkConfig) {
+          conductor.setNetworkConfig(networkConfig);
+        }
+        const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+        return { conductor, agentPubKey };
+      }),
+    );
   }
 
-  async installAppsForPlayers() {}
+  /**
+   * Installs the provided apps for the provided players.
+   *
+   * The number of players must be at least as high as the number of apps.
+   * **The agent pub key of the app options will be overwritten by the player's
+   * agent pub key**.
+   *
+   * @param appsWithOptions - The apps with options to be installed
+   * @param players - The players the apps are installed for
+   * @returns An array of player apps.
+   */
+  async installAppsForPlayers(
+    appsWithOptions: AppWithOptions[],
+    players: Player[],
+  ) {
+    await this.ensureLocalServices();
+    return Promise.all(
+      appsWithOptions.map((appWithOptions, i) => {
+        const player = players[i];
+        appWithOptions.options = appWithOptions.options ?? {};
+        appWithOptions.options.agentPubKey = player.agentPubKey;
+        return this.installPlayerApp(player.conductor, appWithOptions);
+      }),
+    );
+  }
 
   /**
    * Create and add a single player with an app installed to the scenario.
@@ -144,7 +173,7 @@ export class Scenario {
    * @param options - {@link AppOptions}.
    * @returns A player with the installed app.
    */
-  async addPlayerWithApp(appWithOptions: AppWithOptions): Promise<PlayerApp> {
+  async addPlayerWithApp(appWithOptions: AppWithOptions) {
     await this.ensureLocalServices();
     const conductor = await this.addConductor();
     if (appWithOptions.options?.networkConfig) {
@@ -154,6 +183,13 @@ export class Scenario {
       ...appWithOptions.options,
       networkSeed: appWithOptions.options?.networkSeed ?? this.networkSeed,
     };
+    return this.installPlayerApp(conductor, appWithOptions);
+  }
+
+  private async installPlayerApp(
+    conductor: Conductor,
+    appWithOptions: AppWithOptions,
+  ): Promise<PlayerApp> {
     const appInfo = await conductor.installApp(appWithOptions);
     const adminWs = conductor.adminWs();
     const port = await conductor.attachAppInterface();

@@ -10,6 +10,7 @@ import yaml from "js-yaml";
 import { readFileSync } from "node:fs";
 import { assert, test, expect } from "vitest";
 import {
+  AppWithOptions,
   CONDUCTOR_CONFIG,
   Scenario,
   dhtSync,
@@ -453,5 +454,37 @@ test("runScenario - call zome by role name", async () => {
     })) as ActionHash;
 
     assert.ok(result);
+  });
+});
+
+test("runScenario - add players and then install apps for them", async () => {
+  await runScenario(async (scenario) => {
+    const players = await scenario.addPlayers(2);
+    const appsWithOptions: AppWithOptions[] = [
+      { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+      { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+    ];
+    const [aliceApp, bobApp] = await scenario.installAppsForPlayers(
+      appsWithOptions,
+      players,
+    );
+    assert.deepEqual(aliceApp.agentPubKey, players[0].agentPubKey);
+    assert.deepEqual(bobApp.agentPubKey, players[1].agentPubKey);
+
+    const content = "test-content";
+    const createEntryHash = await aliceApp.cells[0].callZome<EntryHash>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "create",
+      payload: content,
+    });
+
+    await dhtSync([aliceApp, bobApp], aliceApp.cells[0].cell_id[0]);
+
+    const readContent = await bobApp.cells[0].callZome<typeof content>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "read",
+      payload: createEntryHash,
+    });
+    assert.equal(readContent, content);
   });
 });
