@@ -241,7 +241,23 @@ Create and add a conductor to the scenario.
 </td></tr>
 <tr><td>
 
-[addPlayersWithApps(playersApps)](./tryorama.scenario.addplayerswithapps.md)
+[addPlayers(amount, networkConfig)](./tryorama.scenario.addplayers.md)
+
+
+</td><td>
+
+
+</td><td>
+
+Create conductors with agents and add them to the scenario.
+
+The specified number of conductors is created and one agent is generated on each conductor.
+
+
+</td></tr>
+<tr><td>
+
+[addPlayersWithApps(appsWithOptions)](./tryorama.scenario.addplayerswithapps.md)
 
 
 </td><td>
@@ -255,7 +271,7 @@ Create and add multiple players to the scenario, with an app installed for each 
 </td></tr>
 <tr><td>
 
-[addPlayerWithApp(appBundleSource, options)](./tryorama.scenario.addplayerwithapp.md)
+[addPlayerWithApp(appWithOptions)](./tryorama.scenario.addplayerwithapp.md)
 
 
 </td><td>
@@ -278,6 +294,18 @@ Create and add a single player with an app installed to the scenario.
 </td><td>
 
 Shut down and delete all conductors in the scenario.
+
+
+</td></tr>
+<tr><td>
+
+[installAppsForPlayers()](./tryorama.scenario.installappsforplayers.md)
+
+
+</td><td>
+
+
+</td><td>
 
 
 </td></tr>

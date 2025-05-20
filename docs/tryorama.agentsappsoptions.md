@@ -10,12 +10,10 @@ An app and an optional agent pub key for each agent. Optionally a network seed t
 
 ```typescript
 export type AgentsAppsOptions = {
-    agentsApps: Array<{
-        app: AppBundleSource;
-    } & AppOptions>;
+    agentsApps: AppWithOptions[];
     networkSeed?: string;
     installedAppId?: InstalledAppId;
 };
 ```
-**References:** [AppOptions](./tryorama.appoptions.md)
+**References:** [AppWithOptions](./tryorama.appwithoptions.md)
 

@@ -118,7 +118,7 @@ Install an app for multiple agents into the conductor.
 </td></tr>
 <tr><td>
 
-[installApp(appBundleSource, options)](./tryorama.conductor.installapp.md)
+[installApp(appWithOptions)](./tryorama.conductor.installapp.md)
 
 
 </td><td>

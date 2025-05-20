@@ -9,7 +9,7 @@ Create and add a single player with an app installed to the scenario.
 **Signature:**
 
 ```typescript
-addPlayerWithApp(appBundleSource: AppBundleSource, options?: AppOptions): Promise<Player>;
+addPlayerWithApp(appWithOptions: AppWithOptions): Promise<PlayerApp>;
 ```
 
 ## Parameters
@@ -32,40 +32,22 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-appBundleSource
+appWithOptions
 
 
 </td><td>
 
-AppBundleSource
+[AppWithOptions](./tryorama.appwithoptions.md)
 
 
 </td><td>
-
-The bundle or path to the bundle.
-
-
-</td></tr>
-<tr><td>
-
-options
-
-
-</td><td>
-
-[AppOptions](./tryorama.appoptions.md)
-
-
-</td><td>
-
-_(Optional)_ [AppOptions](./tryorama.appoptions.md)<!-- -->.
 
 
 </td></tr>
 </tbody></table>
 **Returns:**
 
-Promise&lt;[Player](./tryorama.player.md)<!-- -->&gt;
+Promise&lt;[PlayerApp](./tryorama.playerapp.md)<!-- -->&gt;
 
-A local player instance.
+A player with the installed app.
 
