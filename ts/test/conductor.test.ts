@@ -5,7 +5,6 @@ import {
   AppSignal,
   CellProvisioningStrategy,
   CloneIdHelper,
-  Duration,
   EntryHash,
   fakeAgentPubKey,
   ProvisionedCell,
@@ -18,7 +17,7 @@ import fs from "fs";
 import yaml from "js-yaml";
 import { readFileSync, realpathSync } from "node:fs";
 import { URL } from "node:url";
-import { assert, test, expect } from "vitest";
+import { assert, expect, test } from "vitest";
 import zlib from "zlib";
 import {
   cleanAllConductors,
@@ -272,12 +271,6 @@ test("Install app with deferred memproofs", async () => {
 test("Install app with roles settings", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
-
-  const originTime = Date.now();
-  const quantumTime: Duration = {
-    secs: originTime,
-    nanos: 0,
-  };
 
   const progenitorKey = Uint8Array.from(await fakeAgentPubKey());
 

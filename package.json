@@ -28,7 +28,7 @@
   "scripts": {
     "build": "rimraf ./lib && tsc && npm run build:docs",
     "build:docs": "api-extractor run --local && api-documenter markdown -i docs/temp -o docs",
-    "prepare": "npm run lint",
+    "prepare": "npm run lint && npm run format",
     "lint": "eslint --fix --ext .ts ts/src ts/test eslint.config.mjs",
     "format": "prettier --write \"ts/**/*.ts\"",
     "test": "vitest --run",
@@ -58,7 +58,6 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-tsdoc": "^0.4.0",
     "prettier": "^3.0.0",
     "rimraf": "^6.0.0",
