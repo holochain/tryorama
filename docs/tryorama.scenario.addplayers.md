@@ -11,7 +11,7 @@ The specified number of conductors is created and one agent is generated on each
 **Signature:**
 
 ```typescript
-addPlayers(amount: number, networkConfig?: NetworkConfig): Promise<Promise<Player>[]>;
+addPlayers(amount: number, networkConfig?: NetworkConfig): Promise<Player[]>;
 ```
 
 ## Parameters
@@ -67,7 +67,7 @@ _(Optional)_ Optional [NetworkConfig](./tryorama.networkconfig.md)
 </tbody></table>
 **Returns:**
 
-Promise&lt;Promise&lt;[Player](./tryorama.player.md)<!-- -->&gt;\[\]&gt;
+Promise&lt;[Player](./tryorama.player.md)<!-- -->\[\]&gt;
 
 An array of [Player](./tryorama.player.md)<!-- -->s
 

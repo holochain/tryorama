@@ -299,13 +299,17 @@ Shut down and delete all conductors in the scenario.
 </td></tr>
 <tr><td>
 
-[installAppsForPlayers()](./tryorama.scenario.installappsforplayers.md)
+[installAppsForPlayers(appsWithOptions, players)](./tryorama.scenario.installappsforplayers.md)
 
 
 </td><td>
 
 
 </td><td>
+
+Installs the provided apps for the provided players.
+
+The number of players must be at least as high as the number of apps. \*\*The agent pub key of the app options will be overwritten by the player's agent pub key\*\*.
 
 
 </td></tr>
