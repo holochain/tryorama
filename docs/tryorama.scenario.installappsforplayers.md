@@ -6,7 +6,11 @@
 
 Installs the provided apps for the provided players.
 
-The number of players must be at least as high as the number of apps. \*\*The agent pub key of the app options will be overwritten by the player's agent pub key\*\*.
+The number of players must be at least as high as the number of apps.
+
+\# Errors
+
+If any of the app options contains an agent pub key, an error is thrown, because the agent pub keys of the players will be used for app installation.
 
 **Signature:**
 
