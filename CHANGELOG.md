@@ -5,9 +5,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- A new method `Scenario#addPlayers` that creates the specified number of conductors and generates an agent per conductor.
+- A new method `Scenario#installAppForPlayers` that installs the specified app for the provided players. The combination of these two methods caters for the use cases where agent keys are generated prior to app installation for further usage, e.g. when generating mem proofs in a separate step.
 ### Removed
 ### Changed
-- Updated dependencies to latest versions
+- Updated dependencies to latest versions.
+- Type `Player` is now a conductor with an associated agent key. It used to be the conductor with an installed app for the agent. That has been renamed to `PlayerApp` in alignment with the type `AgentApp` (app id + agent key + cells), which `PlayerApp` extends.
 
 ### Fixed
 

@@ -9,7 +9,7 @@ Install an application into the conductor.
 **Signature:**
 
 ```typescript
-installApp(appBundleSource: AppBundleSource, options?: AppOptions): Promise<import("@holochain/client").AppInfo>;
+installApp(appWithOptions: AppWithOptions): Promise<import("@holochain/client").AppInfo>;
 ```
 
 ## Parameters
@@ -32,33 +32,15 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-appBundleSource
+appWithOptions
 
 
 </td><td>
 
-AppBundleSource
+[AppWithOptions](./tryorama.appwithoptions.md)
 
 
 </td><td>
-
-The bundle or path to the bundle.
-
-
-</td></tr>
-<tr><td>
-
-options
-
-
-</td><td>
-
-[AppOptions](./tryorama.appoptions.md)
-
-
-</td><td>
-
-_(Optional)_ [AppOptions](./tryorama.appoptions.md) for the hApp bundle (optional).
 
 
 </td></tr>

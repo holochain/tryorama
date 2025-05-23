@@ -9,10 +9,7 @@ Create and add multiple players to the scenario, with an app installed for each 
 **Signature:**
 
 ```typescript
-addPlayersWithApps(playersApps: Array<{
-        appBundleSource: AppBundleSource;
-        options?: AppOptions;
-    }>): Promise<Player[]>;
+addPlayersWithApps(appsWithOptions: AppWithOptions[]): Promise<PlayerApp[]>;
 ```
 
 ## Parameters
@@ -35,12 +32,12 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-playersApps
+appsWithOptions
 
 
 </td><td>
 
-Array&lt;{ appBundleSource: AppBundleSource; options?: [AppOptions](./tryorama.appoptions.md)<!-- -->; }&gt;
+[AppWithOptions](./tryorama.appwithoptions.md)<!-- -->\[\]
 
 
 </td><td>
@@ -52,7 +49,7 @@ An array with an app for each player.
 </tbody></table>
 **Returns:**
 
-Promise&lt;[Player](./tryorama.player.md)<!-- -->\[\]&gt;
+Promise&lt;[PlayerApp](./tryorama.playerapp.md)<!-- -->\[\]&gt;
 
 All created players.
 

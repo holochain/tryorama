@@ -1,6 +1,5 @@
 import type {
   AgentPubKey,
-  AppBundleSource,
   CallZomeRequest,
   CellId,
   ClonedCell,
@@ -17,6 +16,7 @@ import type {
   SignalCb,
 } from "@holochain/client";
 import { Conductor, NetworkConfig } from "./conductor.js";
+import { AppWithOptions } from "./scenario.js";
 
 /**
  * @internal
@@ -69,7 +69,7 @@ export type CallableCell = Pick<
  */
 export interface AgentApp {
   appId: string;
-  agentPubKey: Uint8Array;
+  agentPubKey: AgentPubKey;
   cells: CallableCell[];
   namedCells: Map<RoleName, CallableCell>;
 }
@@ -110,7 +110,7 @@ export interface AppOptions {
  * @public
  */
 export type AgentsAppsOptions = {
-  agentsApps: Array<{ app: AppBundleSource } & AppOptions>;
+  agentsApps: AppWithOptions[];
 
   /**
    * A unique ID for the DNAs (optional).

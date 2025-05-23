@@ -1,4 +1,8 @@
-import { AppBundleSource, AppWebsocket } from "@holochain/client";
+import {
+  type AgentPubKey,
+  AppBundleSource,
+  AppWebsocket,
+} from "@holochain/client";
 import assert from "node:assert";
 import { ChildProcessWithoutNullStreams } from "node:child_process";
 import { v4 as uuidv4 } from "uuid";
@@ -8,17 +12,37 @@ import {
   runLocalServices,
   stopLocalServices,
 } from "./conductor-helpers.js";
-import { cleanAllConductors, Conductor, createConductor } from "./conductor.js";
+import {
+  cleanAllConductors,
+  Conductor,
+  createConductor,
+  NetworkConfig,
+} from "./conductor.js";
 import { AgentApp, AppOptions } from "./types.js";
 
 /**
- * A player tied to a {@link Conductor}.
+ * A player consists of a {@link Conductor} and an agent pub key.
  *
  * @public
  */
-export interface Player extends AgentApp {
-  appWs: AppWebsocket;
+export interface Player {
+  agentPubKey: AgentPubKey;
   conductor: Conductor;
+}
+
+/**
+ * @public
+ */
+export interface PlayerApp extends Player, AgentApp {
+  appWs: AppWebsocket;
+}
+
+/**
+ * @public
+ */
+export interface AppWithOptions {
+  appBundleSource: AppBundleSource;
+  options?: AppOptions;
 }
 
 /**
@@ -90,26 +114,83 @@ export class Scenario {
   }
 
   /**
+   * Create conductors with agents and add them to the scenario.
+   *
+   * The specified number of conductors is created and one agent is
+   * generated on each conductor.
+   *
+   * @param amount - The number of players to be created.
+   * @param networkConfig - Optional {@link NetworkConfig}
+   * @returns An array of {@link Player}s
+   */
+  async addPlayers(
+    amount: number,
+    networkConfig?: NetworkConfig,
+  ): Promise<Player[]> {
+    await this.ensureLocalServices();
+    return Promise.all(
+      new Array(amount).fill(0).map(async () => {
+        const conductor = await this.addConductor();
+        if (networkConfig) {
+          conductor.setNetworkConfig(networkConfig);
+        }
+        const agentPubKey = await conductor.adminWs().generateAgentPubKey();
+        return { conductor, agentPubKey };
+      }),
+    );
+  }
+
+  /**
+   * Installs the provided apps for the provided players.
+   *
+   * The number of players must be at least as high as the number of apps.
+   * **The agent pub key of the app options will be overwritten by the player's
+   * agent pub key**.
+   *
+   * @param appsWithOptions - The apps with options to be installed
+   * @param players - The players the apps are installed for
+   * @returns An array of player apps.
+   */
+  async installAppsForPlayers(
+    appsWithOptions: AppWithOptions[],
+    players: Player[],
+  ) {
+    await this.ensureLocalServices();
+    return Promise.all(
+      appsWithOptions.map((appWithOptions, i) => {
+        const player = players[i];
+        appWithOptions.options = appWithOptions.options ?? {};
+        appWithOptions.options.agentPubKey = player.agentPubKey;
+        return this.installPlayerApp(player.conductor, appWithOptions);
+      }),
+    );
+  }
+
+  /**
    * Create and add a single player with an app installed to the scenario.
    *
    * @param appBundleSource - The bundle or path to the bundle.
    * @param options - {@link AppOptions}.
-   * @returns A local player instance.
+   * @returns A player with the installed app.
    */
-  async addPlayerWithApp(
-    appBundleSource: AppBundleSource,
-    options?: AppOptions,
-  ): Promise<Player> {
+  async addPlayerWithApp(appWithOptions: AppWithOptions) {
     await this.ensureLocalServices();
     const conductor = await this.addConductor();
-    if (options?.networkConfig) {
-      conductor.setNetworkConfig(options.networkConfig);
+    if (appWithOptions.options?.networkConfig) {
+      conductor.setNetworkConfig(appWithOptions.options.networkConfig);
     }
-    options = {
-      ...options,
-      networkSeed: options?.networkSeed ?? this.networkSeed,
+    appWithOptions.options = {
+      ...appWithOptions.options,
+      networkSeed: appWithOptions.options?.networkSeed ?? this.networkSeed,
     };
-    const appInfo = await conductor.installApp(appBundleSource, options);
+    return this.installPlayerApp(conductor, appWithOptions);
+  }
+
+  private async installPlayerApp(
+    conductor: Conductor,
+    appWithOptions: AppWithOptions,
+  ): Promise<PlayerApp> {
+    const appInfo = await conductor.installApp(appWithOptions);
     const adminWs = conductor.adminWs();
     const port = await conductor.attachAppInterface();
     const issued = await adminWs.issueAppAuthenticationToken({
@@ -128,19 +209,14 @@ export class Scenario {
    * Create and add multiple players to the scenario, with an app installed
    * for each player.
    *
-   * @param playersApps - An array with an app for each player.
+   * @param appsWithOptions - An array with an app for each player.
    * @returns All created players.
    */
-  async addPlayersWithApps(
-    playersApps: Array<{
-      appBundleSource: AppBundleSource;
-      options?: AppOptions;
-    }>,
-  ) {
+  async addPlayersWithApps(appsWithOptions: AppWithOptions[]) {
     await this.ensureLocalServices();
     return await Promise.all(
-      playersApps.map((playerApp) =>
-        this.addPlayerWithApp(playerApp.appBundleSource, playerApp.options),
+      appsWithOptions.map((appWithOptions) =>
+        this.addPlayerWithApp(appWithOptions),
       ),
     );
   }
