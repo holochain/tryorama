@@ -9,7 +9,7 @@ A utility function to wait until all conductors' DhtOps have been integrated, an
 **Signature:**
 
 ```typescript
-dhtSync: (players: Player[], dnaHash: DnaHash, intervalMs?: number, timeoutMs?: number) => Promise<void>
+dhtSync: (players: PlayerApp[], dnaHash: DnaHash, intervalMs?: number, timeoutMs?: number) => Promise<void>
 ```
 
 ## Parameters
@@ -37,7 +37,7 @@ players
 
 </td><td>
 
-[Player](./tryorama.player.md)<!-- -->\[\]
+[PlayerApp](./tryorama.playerapp.md)<!-- -->\[\]
 
 
 </td><td>

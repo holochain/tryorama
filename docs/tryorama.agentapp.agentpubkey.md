@@ -7,5 +7,5 @@
 **Signature:**
 
 ```typescript
-agentPubKey: Uint8Array;
+agentPubKey: AgentPubKey;
 ```

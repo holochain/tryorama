@@ -45,7 +45,7 @@ Description
 
 </td><td>
 
-Uint8Array
+AgentPubKey
 
 
 </td><td>

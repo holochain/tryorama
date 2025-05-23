@@ -5,7 +5,6 @@ import {
   AppSignal,
   CellProvisioningStrategy,
   CloneIdHelper,
-  Duration,
   EntryHash,
   fakeAgentPubKey,
   ProvisionedCell,
@@ -13,26 +12,25 @@ import {
   Signal,
   SignalCb,
 } from "@holochain/client";
+import { decode, encode } from "@msgpack/msgpack";
+import fs from "fs";
+import yaml from "js-yaml";
 import { readFileSync, realpathSync } from "node:fs";
 import { URL } from "node:url";
-import test from "node:test";
-import assert from "node:assert";
+import { assert, expect, test } from "vitest";
+import zlib from "zlib";
 import {
-  CONDUCTOR_CONFIG,
-  Player,
   cleanAllConductors,
+  CONDUCTOR_CONFIG,
   createConductor,
   dhtSync,
   enableAndGetAgentApp,
   getZomeCaller,
+  PlayerApp,
   runLocalServices,
   stopLocalServices,
 } from "../src";
 import { FIXTURE_DNA_URL, FIXTURE_HAPP_URL } from "./fixture";
-import { decode, encode } from "@msgpack/msgpack";
-import fs from "fs";
-import yaml from "js-yaml";
-import zlib from "zlib";
 
 const ROLE_NAME = "test";
 
@@ -117,8 +115,10 @@ test("Revoke agent key", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -143,13 +143,13 @@ test("Revoke agent key", async () => {
   assert.deepEqual(response, [], "revoked key on all cells");
 
   // After revoking her key, Alice should no longer be able to create an entry.
-  await assert.rejects(
+  await expect(
     alice.cells[0].callZome({
       zome_name: "coordinator",
       fn_name: "create",
       payload: entryContent,
     }),
-  );
+  ).rejects.toThrow();
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -160,8 +160,10 @@ test("Get app info with app ws", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   await conductor
     .adminWs()
@@ -183,8 +185,10 @@ test("Get app info with app agent ws", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   await conductor
     .adminWs()
@@ -234,8 +238,10 @@ test("Install app with deferred memproofs", async () => {
   const zippedAppBundle = zlib.gzipSync(encode(appBundle));
 
   const app = await conductor.installApp({
-    type: "bytes",
-    value: zippedAppBundle,
+    appBundleSource: {
+      type: "bytes",
+      value: zippedAppBundle,
+    },
   });
 
   const port = await conductor.attachAppInterface();
@@ -274,20 +280,14 @@ test("Install app with roles settings", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
 
-  const originTime = Date.now();
-  const quantumTime: Duration = {
-    secs: originTime,
-    nanos: 0,
-  };
-
   const progenitorKey = Uint8Array.from(await fakeAgentPubKey());
 
-  const app = await conductor.installApp(
-    {
+  const app = await conductor.installApp({
+    appBundleSource: {
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     },
-    {
+    options: {
       rolesSettings: {
         [ROLE_NAME]: {
           type: "provisioned",
@@ -296,14 +296,12 @@ test("Install app with roles settings", async () => {
             modifiers: {
               network_seed: "hello",
               properties: yaml.dump({ progenitor: progenitorKey }),
-              origin_time: originTime,
-              quantum_time: quantumTime,
             },
           },
         },
       },
     },
-  );
+  });
 
   const port = await conductor.attachAppInterface();
   const issued = await conductor
@@ -334,8 +332,10 @@ test("Install and call an app", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -369,8 +369,10 @@ test("Get a convenience function for zome calls", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -408,8 +410,8 @@ test("Install multiple agents and apps and get access to agents and cells", asyn
   const conductor = await createConductor(signalingServerUrl);
   const [aliceApp, bobApp] = await conductor.installAgentsApps({
     agentsApps: [
-      { app: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
-      { app: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+      { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+      { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
     ],
   });
   const adminWs = conductor.adminWs();
@@ -441,8 +443,10 @@ test("Get a named cell by role name", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -462,8 +466,10 @@ test("Zome call can time out before completion", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
   const app = await conductor.installApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
@@ -475,12 +481,12 @@ test("Zome call can time out before completion", async () => {
   const cell = alice.namedCells.get(ROLE_NAME);
   assert.ok(cell);
 
-  await assert.rejects(
+  await expect(
     cell.callZome(
       { zome_name: "coordinator", fn_name: "create", payload: "test" },
       1,
     ),
-  );
+  ).rejects.toThrow();
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -497,13 +503,13 @@ test("Create and read an entry using the entry zome", async () => {
   assert.ok(agentPubKeyB64.startsWith("hCAk"));
 
   const installed_app_id = "entry-app";
-  const app = await conductor.installApp(
-    { type: "path", value: FIXTURE_HAPP_URL.pathname },
-    {
+  const app = await conductor.installApp({
+    appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname },
+    options: {
       installedAppId: installed_app_id,
       agentPubKey,
     },
-  );
+  });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
   const issued = await adminWs.issueAppAuthenticationToken({
@@ -546,13 +552,13 @@ test("Clone cell management", async () => {
   const conductor = await createConductor(signalingServerUrl);
   const agentPubKey = await conductor.adminWs().generateAgentPubKey();
   const appId = "entry-app";
-  const app = await conductor.installApp(
-    { type: "path", value: FIXTURE_HAPP_URL.pathname },
-    {
+  const app = await conductor.installApp({
+    appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname },
+    options: {
       installedAppId: appId,
       agentPubKey,
     },
-  );
+  });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();
   const issued = await adminWs.issueAppAuthenticationToken({
@@ -588,7 +594,7 @@ test("Clone cell management", async () => {
   await appWs.disableCloneCell({
     clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
   });
-  await assert.rejects(
+  await expect(
     appWs.callZome({
       cell_id: cloneCell.cell_id,
       zome_name: "coordinator",
@@ -597,7 +603,7 @@ test("Clone cell management", async () => {
       provenance: agentPubKey,
     }),
     "disabled clone cell cannot be called",
-  );
+  ).rejects.toThrow();
 
   const enabledCloneCell = await appWs.enableCloneCell({
     clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
@@ -630,12 +636,12 @@ test("Clone cell management", async () => {
     app_id: appId,
     clone_cell_id: { type: "dna_hash", value: cloneCell.cell_id[0] },
   });
-  await assert.rejects(
+  await expect(
     appWs.enableCloneCell({
       clone_cell_id: { type: "clone_id", value: cloneCell.clone_id },
     }),
     "deleted clone cell cannot be enabled",
-  );
+  ).rejects.toThrow();
 
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
@@ -645,7 +651,7 @@ test("Clone cell management", async () => {
 test("2 agent apps test", async () => {
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();
-  const app: AppBundleSource = {
+  const appBundleSource: AppBundleSource = {
     type: "path",
     value: FIXTURE_HAPP_URL.pathname,
   };
@@ -657,8 +663,8 @@ test("2 agent apps test", async () => {
     bootstrapServerUrl,
   });
 
-  const aliceApp = await conductor1.installApp(app);
-  const bobApp = await conductor2.installApp(app);
+  const aliceApp = await conductor1.installApp({ appBundleSource });
+  const bobApp = await conductor2.installApp({ appBundleSource });
   const adminWs1 = conductor1.adminWs();
   const adminWs2 = conductor2.adminWs();
   const port1 = await conductor1.attachAppInterface();
@@ -673,12 +679,12 @@ test("2 agent apps test", async () => {
   const appWs2 = await conductor2.connectAppWs(issued2.token, port2);
   const aliceAgentApp = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
   const bobAgentApp = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
-  const alice: Player = {
+  const alice: PlayerApp = {
     conductor: conductor1,
     appWs: appWs1,
     ...aliceAgentApp,
   };
-  const bob: Player = {
+  const bob: PlayerApp = {
     conductor: conductor2,
     appWs: appWs2,
     ...bobAgentApp,
@@ -709,7 +715,7 @@ test("2 agent apps test", async () => {
 test("Create and read an entry, 2 conductors, 2 cells, 2 agents", async () => {
   const { servicesProcess, bootstrapServerUrl, signalingServerUrl } =
     await runLocalServices();
-  const app: AppBundleSource = {
+  const appBundleSource: AppBundleSource = {
     type: "path",
     value: FIXTURE_HAPP_URL.pathname,
   };
@@ -718,14 +724,14 @@ test("Create and read an entry, 2 conductors, 2 cells, 2 agents", async () => {
     bootstrapServerUrl,
   });
   const adminWs1 = conductor1.adminWs();
-  const aliceApp = await conductor1.installApp(app);
+  const aliceApp = await conductor1.installApp({ appBundleSource });
   const port1 = await conductor1.attachAppInterface();
   const issued1 = await adminWs1.issueAppAuthenticationToken({
     installed_app_id: aliceApp.installed_app_id,
   });
   const appWs1 = await conductor1.connectAppWs(issued1.token, port1);
   const aliceAgentApp = await enableAndGetAgentApp(adminWs1, appWs1, aliceApp);
-  const alice: Player = {
+  const alice: PlayerApp = {
     conductor: conductor1,
     appWs: appWs1,
     ...aliceAgentApp,
@@ -735,14 +741,14 @@ test("Create and read an entry, 2 conductors, 2 cells, 2 agents", async () => {
     bootstrapServerUrl,
   });
   const adminWs2 = conductor2.adminWs();
-  const bobApp = await conductor2.installApp(app);
+  const bobApp = await conductor2.installApp({ appBundleSource });
   const port2 = await conductor2.attachAppInterface();
   const issued2 = await adminWs2.issueAppAuthenticationToken({
     installed_app_id: bobApp.installed_app_id,
   });
   const appWs2 = await conductor2.connectAppWs(issued2.token, port2);
   const bobAgentApp = await enableAndGetAgentApp(adminWs2, appWs2, bobApp);
-  const bob: Player = {
+  const bob: PlayerApp = {
     conductor: conductor2,
     appWs: appWs2,
     ...bobAgentApp,
@@ -785,8 +791,10 @@ test("Receive a signal", async () => {
   const conductor = await createConductor(signalingServerUrl);
 
   const aliceApp = await conductor.installApp({
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
   });
   const adminWs = conductor.adminWs();
   const port = await conductor.attachAppInterface();

@@ -28,12 +28,12 @@
   "scripts": {
     "build": "rimraf ./lib && tsc && npm run build:docs",
     "build:docs": "api-extractor run --local && api-documenter markdown -i docs/temp -o docs",
-    "prepare": "npm run lint",
+    "prepare": "npm run lint && npm run format",
     "lint": "eslint --fix --ext .ts ts/src ts/test eslint.config.mjs",
     "format": "prettier --write \"ts/**/*.ts\"",
-    "test": "tsx --test ts/test/index.ts",
-    "test:conductor": "tsx ts/test/conductor.ts",
-    "test:scenario": "tsx ts/test/scenario.ts",
+    "test": "vitest --run",
+    "test:conductor": "vitest --run ts/test/conductor.test.ts",
+    "test:scenario": "vitest --run ts/test/scenario.test.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
@@ -58,12 +58,11 @@
     "@typescript-eslint/eslint-plugin": "^8.0.0",
     "@typescript-eslint/parser": "^8.0.0",
     "eslint": "^9.0.0",
-    "eslint-plugin-prettier": "^5.0.0",
     "eslint-plugin-tsdoc": "^0.4.0",
     "prettier": "^3.0.0",
     "rimraf": "^6.0.0",
-    "tsx": "^4.7.2",
     "typescript": "^5.0.0",
-    "typescript-eslint": "^8.0.0"
+    "typescript-eslint": "^8.0.0",
+    "vitest": "^3.1.4"
   }
 }

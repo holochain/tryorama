@@ -82,7 +82,7 @@ A utility function to compare conductors' integrated DhtOps.
 </td></tr>
 <tr><td>
 
-[areDhtsSynced(players, dnaHash)](./tryorama.aredhtssynced.md)
+[areDhtsSynced(playerApps, dnaHash)](./tryorama.aredhtssynced.md)
 
 
 </td><td>
@@ -251,6 +251,16 @@ Optional arguments when installing a hApp.
 </td></tr>
 <tr><td>
 
+[AppWithOptions](./tryorama.appwithoptions.md)
+
+
+</td><td>
+
+
+
+</td></tr>
+<tr><td>
+
 [ConductorCell](./tryorama.conductorcell.md)
 
 
@@ -298,7 +308,17 @@ DNA source and additional options.
 
 </td><td>
 
-A player tied to a [Conductor](./tryorama.conductor.md)<!-- -->.
+A player consists of a [Conductor](./tryorama.conductor.md) and an agent pub key.
+
+
+</td></tr>
+<tr><td>
+
+[PlayerApp](./tryorama.playerapp.md)
+
+
+</td><td>
+
 
 
 </td></tr>

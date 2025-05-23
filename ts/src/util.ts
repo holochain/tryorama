@@ -7,7 +7,7 @@ import {
 import isEqual from "lodash/isEqual.js";
 import sortBy from "lodash/sortBy.js";
 import sum from "lodash/sum.js";
-import { Player } from "./scenario.js";
+import { PlayerApp } from "./scenario.js";
 import { ConductorCell } from "./types.js";
 
 /**
@@ -24,10 +24,10 @@ export const pause = (milliseconds: number) => {
   });
 };
 
-const playersToConductorCells = (players: Player[], dnaHash: DnaHash) =>
-  players.map((player) => ({
-    conductor: player.conductor,
-    cellId: [dnaHash, player.agentPubKey] as CellId,
+const playerAppsToConductorCells = (players: PlayerApp[], dnaHash: DnaHash) =>
+  players.map((playerApp) => ({
+    conductor: playerApp.conductor,
+    cellId: [dnaHash, playerApp.agentPubKey] as CellId,
   }));
 
 /**
@@ -39,8 +39,11 @@ const playersToConductorCells = (players: Player[], dnaHash: DnaHash) =>
  *
  * @public
  */
-export const areDhtsSynced = async (players: Player[], dnaHash: DnaHash) => {
-  const conductorCells = playersToConductorCells(players, dnaHash);
+export const areDhtsSynced = async (
+  playerApps: PlayerApp[],
+  dnaHash: DnaHash,
+) => {
+  const conductorCells = playerAppsToConductorCells(playerApps, dnaHash);
   return areConductorCellsDhtsSynced(conductorCells);
 };
 
@@ -127,12 +130,12 @@ export const areConductorCellsDhtsSynced = async (
  * @public
  */
 export const dhtSync = async (
-  players: Player[],
+  players: PlayerApp[],
   dnaHash: DnaHash,
   intervalMs = 500,
   timeoutMs = 60000,
 ) => {
-  const conductorCells = playersToConductorCells(players, dnaHash);
+  const conductorCells = playerAppsToConductorCells(players, dnaHash);
   return conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs);
 };
 
