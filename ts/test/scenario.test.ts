@@ -179,6 +179,19 @@ test("Add players with hApp bundles", async () => {
   await scenario.cleanUp();
 });
 
+test("Add players with the same hApp bundle", async () => {
+  const scenario = new Scenario();
+  assert.ok(scenario.networkSeed);
+  const [alice, bob] = await scenario.addPlayersWithSameApp(
+    { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+    2,
+  );
+  assert.ok(alice.namedCells.get("test"));
+  assert.ok(bob.namedCells.get("test"));
+
+  await scenario.cleanUp();
+});
+
 test("Create and read an entry, 2 conductors", async () => {
   // The wrapper takes care of creating a scenario and shutting down or deleting
   // all conductors involved in the test scenario.
@@ -466,6 +479,34 @@ test("runScenario - add players and then install apps for them", async () => {
     ];
     const [aliceApp, bobApp] = await scenario.installAppsForPlayers(
       appsWithOptions,
+      players,
+    );
+    assert.deepEqual(aliceApp.agentPubKey, players[0].agentPubKey);
+    assert.deepEqual(bobApp.agentPubKey, players[1].agentPubKey);
+
+    const content = "test-content";
+    const createEntryHash = await aliceApp.cells[0].callZome<EntryHash>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "create",
+      payload: content,
+    });
+
+    await dhtSync([aliceApp, bobApp], aliceApp.cells[0].cell_id[0]);
+
+    const readContent = await bobApp.cells[0].callZome<typeof content>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "read",
+      payload: createEntryHash,
+    });
+    assert.equal(readContent, content);
+  });
+});
+
+test("runScenario - add players and then install the same app for them", async () => {
+  await runScenario(async (scenario) => {
+    const players = await scenario.addPlayers(2);
+    const [aliceApp, bobApp] = await scenario.installSameAppForPlayers(
+      { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
       players,
     );
     assert.deepEqual(aliceApp.agentPubKey, players[0].agentPubKey);

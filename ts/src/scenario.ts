@@ -144,8 +144,11 @@ export class Scenario {
    * Installs the provided apps for the provided players.
    *
    * The number of players must be at least as high as the number of apps.
-   * **The agent pub key of the app options will be overwritten by the player's
-   * agent pub key**.
+   *
+   * # Errors
+   *
+   * If any of the app options contains an agent pub key, an error is thrown,
+   * because the agent pub keys of the players will be used for app installation.
    *
    * @param appsWithOptions - The apps with options to be installed
    * @param players - The players the apps are installed for
@@ -155,10 +158,45 @@ export class Scenario {
     appsWithOptions: AppWithOptions[],
     players: Player[],
   ) {
+    if (
+      appsWithOptions.some(
+        (appWithOptions) => appWithOptions.options?.agentPubKey,
+      )
+    ) {
+      throw new Error(
+        "Agent pub key in app options must not be set. Agent pub keys are taken from the players.",
+      );
+    }
     await this.ensureLocalServices();
     return Promise.all(
       appsWithOptions.map((appWithOptions, i) => {
         const player = players[i];
+        appWithOptions.options = appWithOptions.options ?? {};
+        appWithOptions.options.agentPubKey = player.agentPubKey;
+        return this.installPlayerApp(player.conductor, appWithOptions);
+      }),
+    );
+  }
+
+  /**
+   * Installs the same provided app for the provided players.
+   *
+   * @param appsWithOptions - The app with options to be installed for all players
+   * @param players - The players the apps are installed for
+   * @returns An array of player apps.
+   */
+  async installSameAppForPlayers(
+    appWithOptions: AppWithOptions,
+    players: Player[],
+  ) {
+    if (appWithOptions.options?.agentPubKey) {
+      throw new Error(
+        "Agent pub key in app options must not be set. Agent pub keys are taken from the players.",
+      );
+    }
+    await this.ensureLocalServices();
+    return Promise.all(
+      players.map((player) => {
         appWithOptions.options = appWithOptions.options ?? {};
         appWithOptions.options.agentPubKey = player.agentPubKey;
         return this.installPlayerApp(player.conductor, appWithOptions);
@@ -206,15 +244,31 @@ export class Scenario {
   }
 
   /**
+   * Create and add multiple players to the scenario, with the same app installed
+   * for each player.
+   *
+   * @param appsWithOptions - An app to be installed for each player
+   * @returns All created player apps.
+   */
+  async addPlayersWithSameApp(appWithOptions: AppWithOptions, amount: number) {
+    await this.ensureLocalServices();
+    return Promise.all(
+      new Array(amount)
+        .fill(0)
+        .map(() => this.addPlayerWithApp(appWithOptions)),
+    );
+  }
+
+  /**
    * Create and add multiple players to the scenario, with an app installed
    * for each player.
    *
    * @param appsWithOptions - An array with an app for each player.
-   * @returns All created players.
+   * @returns All created player apps.
    */
   async addPlayersWithApps(appsWithOptions: AppWithOptions[]) {
     await this.ensureLocalServices();
-    return await Promise.all(
+    return Promise.all(
       appsWithOptions.map((appWithOptions) =>
         this.addPlayerWithApp(appWithOptions),
       ),
