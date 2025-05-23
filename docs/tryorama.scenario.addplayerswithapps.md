@@ -51,5 +51,5 @@ An array with an app for each player.
 
 Promise&lt;[PlayerApp](./tryorama.playerapp.md)<!-- -->\[\]&gt;
 
-All created players.
+All created player apps.
 
