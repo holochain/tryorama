@@ -1,5 +1,33 @@
 use hdk::prelude::*;
-use integrity::{Content, EntryTypes, UpdateInput};
+use integrity::{Content, EntryTypes, EntryTypesUnit, UpdateInput};
+
+#[derive(Serialize, Deserialize, Debug, Clone, SerializedBytes)]
+pub struct Payload {
+    content: Content,
+    hash: ActionHash,
+}
+
+#[hdk_extern]
+pub fn create_and_delete(input: Payload) -> ExternResult<ActionHash> {
+    let action_hash = create_entry(EntryTypes::Content(input.content))?;
+    delete_link(input.hash)?;
+    Ok(action_hash)
+}
+
+#[hdk_extern]
+pub fn query_content(_: ()) -> ExternResult<Vec<Content>> {
+    let filter = ChainQueryFilter::new()
+        .include_entries(true)
+        .action_type(ActionType::Create)
+        .entry_type(EntryTypesUnit::Content.try_into()?);
+
+    let result = query(filter)?;
+
+    Ok(result
+        .into_iter()
+        .filter_map(|r| r.try_into().ok())
+        .collect())
+}
 
 #[hdk_extern]
 pub fn create(input: Content) -> ExternResult<ActionHash> {
