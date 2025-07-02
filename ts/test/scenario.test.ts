@@ -21,6 +21,52 @@ import { FIXTURE_HAPP_URL } from "./fixture";
 
 const TEST_ZOME_NAME = "coordinator";
 
+test.only("Check that zome calls are atomic", async () => {
+  // The wrapper takes care of creating a scenario and shutting down or deleting
+  // all conductors involved in the test scenario.
+  await runScenario(async (scenario) => {
+    // Construct proper paths for a hApp file created by the `hc app pack` command.
+    const appBundleSource: AppBundleSource = {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    };
+
+    // Add 2 players with the test hApp to the Scenario. The returned players
+    // can be destructured.
+    const [alice] = await scenario.addPlayersWithApps([
+      { appBundleSource },
+      { appBundleSource },
+    ]);
+
+    // Content to be passed to the zome function that create an entry,
+    const content = "Should not be committed";
+
+    // this should fail because the hash is a random hash that should not exist in the DHT
+    await expect(
+      alice.cells[0].callZome<EntryHash>({
+        zome_name: TEST_ZOME_NAME,
+        fn_name: "create_and_delete",
+        payload: {
+          content,
+          hash: "uhCkkP4iYhmu0a8VZf2KzHgWyxnZKy4_3xdB-fkS7RzDGei0YRUff",
+        },
+      }),
+    ).rejects.toThrow();
+
+    // Now when I query I should not receive any entry of type Content since
+    // the only own that I wrote is in a failed zome call
+    const queryResult = await alice.cells[0].callZome<typeof content>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "query_content",
+      payload: null,
+    });
+
+    console.log(" Query result: ", queryResult);
+    // TODO: BUG This should return array of 0 but it returns the value that is passed in the failed zome call
+    assert.equal(queryResult.length, 0);
+  });
+});
+
 test("runScenario - Install hApp bundle and access cells through role ids", async () => {
   await runScenario(async (scenario: Scenario) => {
     const alice = await scenario.addPlayerWithApp({
