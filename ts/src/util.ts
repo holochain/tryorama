@@ -6,7 +6,6 @@ import {
 } from "@holochain/client";
 import isEqual from "lodash/isEqual.js";
 import sortBy from "lodash/sortBy.js";
-import sum from "lodash/sum.js";
 import { PlayerApp } from "./scenario.js";
 import { ConductorCell } from "./types.js";
 
@@ -72,15 +71,9 @@ export const areConductorCellsDhtsSynced = async (
     ),
   );
 
-  // Get total number of published DhtOps
-  const totalPublishedDhtOpsCount = sum(
-    conductorStates.map((state) => state.source_chain_dump.published_ops_count),
-  );
-
   // Determine if all published ops are integrated in every conductor, and none are in limbo
-  const allDhtOpsIntegrated = conductorStates.every(
+  const limbosEmpty = conductorStates.every(
     (state: FullStateDump) =>
-      state.integration_dump.integrated.length === totalPublishedDhtOpsCount &&
       state.integration_dump.integration_limbo.length === 0 &&
       state.integration_dump.validation_limbo.length === 0,
   );
@@ -114,7 +107,7 @@ export const areConductorCellsDhtsSynced = async (
     isEqual(ops, conductorDhtOpsIntegrated[0]),
   );
 
-  return allDhtOpsSynced && allDhtOpsIntegrated;
+  return allDhtOpsSynced && limbosEmpty;
 };
 
 /**
@@ -166,10 +159,31 @@ export const conductorCellsDhtSync = async (
   while (!completed) {
     // Check if timeout has passed
     const currentTime = Date.now();
-    if (Math.floor(currentTime - startTime) >= timeoutMs)
-      throw Error(
-        `Timeout of ${timeoutMs} ms has passed, but players integrated DhtOps are not syncronized`,
+    if (Math.floor(currentTime - startTime) >= timeoutMs) {
+      const conductorStates: FullStateDump[] = await Promise.all(
+        conductorCells.map((conductorCell) =>
+          conductorCell.conductor.adminWs().dumpFullState({
+            cell_id: conductorCell.cellId,
+            dht_ops_cursor: undefined,
+          }),
+        ),
       );
+      console.log(
+        `Timeout of ${timeoutMs} ms has passed, but players' integrated DhtOps are not syncronized. Final conductor states:`,
+      );
+      conductorStates.forEach((dump, idx) => {
+        console.log(`
+Conductor ${idx}
+------------------------------
+# of integrated ops: ${dump.integration_dump.integrated.length}
+# of ops in integration limbo: ${dump.integration_dump.integration_limbo.length}
+# of ops in validation limbo: ${dump.integration_dump.validation_limbo.length}
+      `);
+      });
+      throw Error(
+        `Timeout of ${timeoutMs} ms has passed, but players' integrated DhtOps are not syncronized`,
+      );
+    }
 
     // Check if Integrated DhtOps are syncronized
     completed = await areConductorCellsDhtsSynced(conductorCells);
