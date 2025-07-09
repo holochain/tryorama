@@ -8,6 +8,9 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 ### Fixed
+
+## 2025-07-09: v0.18.3
+### Fixed
 - Fixed the logic in `dhtSync` to determine whether conductors are in sync ([#287](https://github.com/holochain/tryorama/pull/287))
 
 ## 2025-05-23: v0.18.2
