@@ -1,7 +1,7 @@
 {
   "name": "@holochain/tryorama",
   "description": "Toolset to manage Holochain conductors and facilitate running test scenarios",
-  "version": "0.18.2",
+  "version": "0.18.3",
   "author": "Holochain Foundation",
   "license": "MIT",
   "keywords": [
