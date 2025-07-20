@@ -433,7 +433,7 @@ test("dhtSync - Fails if some Ops are not integrated in a conductor", async () =
       dht_ops_cursor: undefined,
     });
 
-    // When Bob recieves Alice's Ops, and they are being validated,
+    // When Bob receives Alice's Ops, and they are being validated,
     // then dhtSync should fail
     if (bobStateDump.integration_dump.validation_limbo.length > 0) {
       try {
