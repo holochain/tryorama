@@ -101,7 +101,7 @@ export const addAllAgentsToAllConductors = async (conductors: Conductor[]) => {
       const agentInfosToShareAbout = await playerToShareAbout
         .adminWs()
         .agentInfo({
-          cell_id: null,
+          dna_hashes: null,
         });
       await Promise.all(
         conductors.map(async (playerToShareWith, playerToShareWithIdx) => {
