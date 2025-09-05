@@ -81,38 +81,35 @@ test("runScenario - Catch error when calling a zome of an undefined cell", async
   });
 });
 
-test.sequential(
-  "runScenario - Catch error that occurs in a signal handler",
-  async () => {
-    await runScenario(async (scenario: Scenario) => {
-      let signalHandlerAlice: SignalCb | undefined;
-      const signalReceivedAlice = new Promise<Signal>((_, reject) => {
-        signalHandlerAlice = () => {
-          reject();
-        };
-      });
-
-      const alice = await scenario.addPlayerWithApp({
-        appBundleSource: {
-          type: "path",
-          value: FIXTURE_HAPP_URL.pathname,
-        },
-      });
-      assert.ok(signalHandlerAlice);
-      assert.ok("on" in alice.appWs);
-      alice.appWs.on("signal", signalHandlerAlice);
-
-      const signalAlice = { value: "hello alice" };
-      alice.cells[0].callZome({
-        zome_name: TEST_ZOME_NAME,
-        fn_name: "signal_loopback",
-        payload: signalAlice,
-      });
-
-      await expect(signalReceivedAlice).rejects.toThrow();
+test("runScenario - Catch error that occurs in a signal handler", async () => {
+  await runScenario(async (scenario: Scenario) => {
+    let signalHandlerAlice: SignalCb | undefined;
+    const signalReceivedAlice = new Promise<Signal>((_, reject) => {
+      signalHandlerAlice = () => {
+        reject();
+      };
     });
-  },
-);
+
+    const alice = await scenario.addPlayerWithApp({
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    });
+    assert.ok(signalHandlerAlice);
+    assert.ok("on" in alice.appWs);
+    alice.appWs.on("signal", signalHandlerAlice);
+
+    const signalAlice = { value: "hello alice" };
+    alice.cells[0].callZome({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "signal_loopback",
+      payload: signalAlice,
+    });
+
+    await expect(signalReceivedAlice).rejects.toThrow();
+  });
+});
 
 test("Set custom network config", async () => {
   const scenario = new Scenario();

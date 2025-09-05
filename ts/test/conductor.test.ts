@@ -8,7 +8,6 @@ import {
   EntryHash,
   fakeAgentPubKey,
   ProvisionedCell,
-  RevokeAgentKeyResponse,
   Signal,
   SignalCb,
 } from "@holochain/client";
@@ -16,7 +15,6 @@ import { decode, encode } from "@msgpack/msgpack";
 import fs from "fs";
 import yaml from "js-yaml";
 import { readFileSync, realpathSync } from "node:fs";
-import { URL } from "node:url";
 import { assert, expect, test } from "vitest";
 import zlib from "zlib";
 import {
@@ -111,51 +109,6 @@ test("Spawn a conductor and check for admin ws", async () => {
   await cleanAllConductors();
 });
 
-test("Revoke agent key", async () => {
-  const { servicesProcess, signalingServerUrl } = await runLocalServices();
-  const conductor = await createConductor(signalingServerUrl);
-  const app = await conductor.installApp({
-    appBundleSource: {
-      type: "path",
-      value: FIXTURE_HAPP_URL.pathname,
-    },
-  });
-  const adminWs = conductor.adminWs();
-  const port = await conductor.attachAppInterface();
-  const issued = await adminWs.issueAppAuthenticationToken({
-    installed_app_id: app.installed_app_id,
-  });
-  const appWs = await conductor.connectAppWs(issued.token, port);
-  const alice = await enableAndGetAgentApp(adminWs, appWs, app);
-
-  // Alice can create an entry before revoking agent key.
-  const entryContent = "test-content";
-  const createEntryResponse: EntryHash = await alice.cells[0].callZome({
-    zome_name: "coordinator",
-    fn_name: "create",
-    payload: entryContent,
-  });
-  assert.ok(createEntryResponse, "created entry successfully");
-
-  const response: RevokeAgentKeyResponse = await conductor
-    .adminWs()
-    .revokeAgentKey({ app_id: alice.appId, agent_key: alice.agentPubKey });
-  assert.deepEqual(response, [], "revoked key on all cells");
-
-  // After revoking her key, Alice should no longer be able to create an entry.
-  await expect(
-    alice.cells[0].callZome({
-      zome_name: "coordinator",
-      fn_name: "create",
-      payload: entryContent,
-    }),
-  ).rejects.toThrow();
-
-  await conductor.shutDown();
-  await stopLocalServices(servicesProcess);
-  await cleanAllConductors();
-});
-
 test("Get app info with app ws", async () => {
   const { servicesProcess, signalingServerUrl } = await runLocalServices();
   const conductor = await createConductor(signalingServerUrl);
@@ -175,7 +128,7 @@ test("Get app info with app ws", async () => {
   const appWs = await conductor.connectAppWs(issued.token, port);
   const appInfo = await appWs.appInfo();
   assert.ok(appInfo);
-  assert.deepEqual(appInfo.status, { type: "running" });
+  assert.deepEqual(appInfo.status, { type: "enabled" });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
@@ -199,7 +152,7 @@ test("Get app info with app agent ws", async () => {
     .issueAppAuthenticationToken({ installed_app_id: app.installed_app_id });
   const appWs = await conductor.connectAppWs(issued.token, port);
   const appInfo = await appWs.appInfo();
-  assert.deepEqual(appInfo.status, { type: "running" });
+  assert.deepEqual(appInfo.status, { type: "enabled" });
   await conductor.shutDown();
   await stopLocalServices(servicesProcess);
   await cleanAllConductors();
@@ -213,7 +166,7 @@ test("Install app with deferred memproofs", async () => {
 
   const appBundle: AppBundle = {
     manifest: {
-      manifest_version: "1",
+      manifest_version: "0",
       name: "app",
       roles: [
         {
@@ -223,7 +176,7 @@ test("Install app with deferred memproofs", async () => {
             deferred: false,
           },
           dna: {
-            bundled: "dna_1",
+            path: "dna_1",
             modifiers: { network_seed: "Some_seed" },
           },
         },
@@ -253,7 +206,7 @@ test("Install app with deferred memproofs", async () => {
   let appInfo = await appWs.appInfo();
   assert.deepEqual(
     appInfo.status,
-    { type: "disabled", value: { reason: { type: "never_started" } } },
+    { type: "disabled", value: { type: "never_started" } },
     "app status is never_started",
   );
 
@@ -267,8 +220,8 @@ test("Install app with deferred memproofs", async () => {
   appInfo = await appWs.appInfo();
   assert.deepEqual(
     appInfo.status,
-    { type: "running" },
-    "app status is running",
+    { type: "enabled" },
+    "app status is enabled",
   );
 
   await conductor.shutDown();
