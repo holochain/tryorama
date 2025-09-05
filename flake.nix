@@ -1,7 +1,7 @@
 {
   inputs = {
     holonix = {
-      url = "github:holochain/holonix?ref=main-0.5";
+      url = "github:holochain/holonix?ref=main";
     };
 
     nixpkgs.follows = "holonix/nixpkgs";
@@ -34,12 +34,7 @@
               # add further packages from nixpkgs
               pkgs.nodejs
 
-              (lib.optional pkgs.stdenv.isDarwin [
-                pkgs.libiconv
-                pkgs.darwin.apple_sdk.frameworks.CoreFoundation
-                pkgs.darwin.apple_sdk.frameworks.Security
-                pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-              ])
+              (lib.optional pkgs.stdenv.isDarwin [ pkgs.libiconv ])
             ];
 
             shellHook = ''
