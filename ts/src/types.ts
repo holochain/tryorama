@@ -3,32 +3,17 @@ import type {
   CallZomeRequest,
   CellId,
   ClonedCell,
-  DnaBundle,
   DnaProperties,
   DnaSource,
-  HoloHash,
   InstalledAppId,
   MembraneProof,
   ProvisionedCell,
-  RegisterDnaRequest,
   RoleName,
   RoleSettingsMap,
   SignalCb,
 } from "@holochain/client";
 import { Conductor, NetworkConfig } from "./conductor.js";
 import { AppWithOptions } from "./scenario.js";
-
-/**
- * @internal
- */
-export type _RegisterDnaReqOpts = Omit<
-  RegisterDnaRequest,
-  "hash" | "path" | "bundle"
-> & {
-  hash?: HoloHash;
-  path?: string;
-  bundle?: DnaBundle;
-};
 
 /**
  * The zome request options adapted to a specific cell.
