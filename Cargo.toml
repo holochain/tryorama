@@ -6,8 +6,9 @@ members = [
 resolver = "2"
 
 [workspace.dependencies]
-hdi = "0.6.1"
-hdk = "0.5.1"
+hdi = "0.7.0-dev.13"
+hdk = "0.6.0-dev.15"
+holochain_serialized_bytes = "0.0.56"
 serde = "1.0.192"
 
 [profile.dev]
