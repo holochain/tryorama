@@ -8,6 +8,7 @@ crate-type = ["cdylib", "rlib"]
 name = "coordinator"
 
 [dependencies]
-hdk = {workspace = true}
-integrity = {path = "../integrity"}
-serde = {workspace = true}
+hdk = { workspace = true }
+holochain_serialized_bytes = { workspace = true }
+integrity = { path = "../integrity" }
+serde = { workspace = true }

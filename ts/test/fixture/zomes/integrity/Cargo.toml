@@ -9,6 +9,7 @@ name = "integrity"
 
 [dependencies]
 chrono = { version = "0.4", default-features = false }
-getrandom = { version = "0.2", features = ["custom"] }
+getrandom = { version = "0.3" }
 hdi = { workspace = true }
+holochain_serialized_bytes = { workspace = true }
 serde = { workspace = true }
