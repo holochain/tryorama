@@ -77,7 +77,7 @@ export const stopLocalServices = (
     return null;
   }
   return new Promise<number | null>((resolve) => {
-    localServicesProcess.on("exit", (code) => {
+    localServicesProcess.addListener("close", (code) => {
       localServicesProcess?.removeAllListeners();
       localServicesProcess?.stdout.removeAllListeners();
       localServicesProcess?.stderr.removeAllListeners();
@@ -137,12 +137,9 @@ export const enableAndGetAgentApp = async (
   appWs: AppWebsocket,
   appInfo: AppInfo,
 ) => {
-  const enableAppResponse = await adminWs.enableApp({
+  await adminWs.enableApp({
     installed_app_id: appInfo.installed_app_id,
   });
-  if (enableAppResponse.errors.length) {
-    throw new Error(`failed to enable app: ${enableAppResponse.errors}`);
-  }
   const cells: CallableCell[] = [];
   const namedCells = new Map<RoleName, CallableCell>();
   Object.keys(appInfo.cell_info).forEach((role_name) => {
