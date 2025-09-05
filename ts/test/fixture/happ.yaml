@@ -1,5 +1,5 @@
 ---
-manifest_version: "1"
+manifest_version: "0"
 name: entry-happ
 description: ""
 roles:
@@ -8,6 +8,6 @@ roles:
       strategy: create
       deferred: false
     dna:
-      bundled: ./entry.dna
+      path: ./entry.dna
       version: ~
       clone_limit: 1

@@ -1,13 +1,15 @@
 ---
-manifest_version: "1"
+manifest_version: "0"
 name: crud-dna
 integrity:
-  network_seed: 9a28aac8-337c-11eb-adc1-0Z02acw20115
+  network_seed: ~
   properties: ~
   zomes:
     - name: integrity
-      bundled: "../../../target/wasm32-unknown-unknown/release/integrity.wasm"
+      path: "../../../target/wasm32-unknown-unknown/release/integrity.wasm"
 coordinator:
   zomes:
     - name: coordinator
-      bundled: "../../../target/wasm32-unknown-unknown/release/coordinator.wasm"
+      path: "../../../target/wasm32-unknown-unknown/release/coordinator.wasm"
+      dependencies:
+      - name: integrity
