@@ -37,7 +37,7 @@
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
-    "@holochain/client": "^0.20.0-dev.1",
+    "@holochain/client": "^0.20.0-dev.2",
     "get-port": "^7.0.0",
     "js-yaml": "^4.1.0",
     "lodash": "^4.17.21",
