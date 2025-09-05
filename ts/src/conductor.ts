@@ -207,7 +207,7 @@ export class Conductor {
       createConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.debug(`creating conductor config\n${data.toString()}`);
         const tmpDirMatches = [
-          ...data.toString().matchAll(/ConfigRootPath\("(.*?)"\)/g),
+          ...data.toString().matchAll(/DataRootPath\("(.*?)"\)/g),
         ];
         if (tmpDirMatches.length) {
           conductor.conductorDir = tmpDirMatches[0][1];
@@ -272,12 +272,10 @@ export class Conductor {
       return;
     }
 
-    const runConductorProcess = spawn("hc", [
-      "sandbox",
+    const runConductorProcess = spawn("holochain", [
       "--piped",
-      "run",
-      "-e",
-      this.conductorDir,
+      "-c",
+      `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
     ]);
     runConductorProcess.stdin.write(LAIR_PASSWORD);
     runConductorProcess.stdin.end();
@@ -285,13 +283,12 @@ export class Conductor {
     const startPromise = new Promise<void>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.info(data.toString());
-        const conductorLaunched = data
-          .toString()
-          .match(/Conductor launched #!\d ({.*})/);
+        const conductorLaunched = data.toString().match(/Conductor ready\./);
         if (conductorLaunched) {
           // This is the last output of the startup process.
-          const portConfiguration = JSON.parse(conductorLaunched[1]);
-          this.adminApiUrl.port = portConfiguration.admin_port;
+          const adminPort = data.toString().match(/###ADMIN_PORT:(\d*)###/);
+          assert(adminPort);
+          this.adminApiUrl.port = adminPort[1];
           this.conductorProcess = runConductorProcess;
           resolve();
         }
@@ -325,16 +322,15 @@ export class Conductor {
 
     logger.debug("shutting down conductor\n");
     return new Promise<number | null>((resolve) => {
-      // I don't know why this is possibly undefined despite the initial guard
       assert(this.conductorProcess);
-      this.conductorProcess.on("exit", (code) => {
+      this.conductorProcess.addListener("close", (code) => {
         this.conductorProcess?.removeAllListeners();
         this.conductorProcess?.stdout.removeAllListeners();
         this.conductorProcess?.stderr.removeAllListeners();
         this.conductorProcess = undefined;
         resolve(code);
       });
-      this.conductorProcess.kill("SIGINT");
+      this.conductorProcess.kill("SIGTERM");
     });
   }
 
