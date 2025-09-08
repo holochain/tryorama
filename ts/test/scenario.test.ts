@@ -86,7 +86,7 @@ test("runScenario - Catch error that occurs in a signal handler", async () => {
     let signalHandlerAlice: SignalCb | undefined;
     const signalReceivedAlice = new Promise<Signal>((_, reject) => {
       signalHandlerAlice = () => {
-        reject();
+        reject(new Error("signal handler error"));
       };
     });
 

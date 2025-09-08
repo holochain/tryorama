@@ -30,7 +30,7 @@ const logger = makeLogger();
 export const CONDUCTOR_CONFIG = "conductor-config.yaml";
 const HOST_URL = new URL("ws://localhost");
 const DEFAULT_TIMEOUT = 60000;
-const LAIR_PASSWORD = "lair-password";
+const LAIR_PASSWORD = "lair-password\n";
 
 /**
  * @public
@@ -312,9 +312,10 @@ export class Conductor {
     }
 
     logger.debug("closing admin and app web sockets\n");
-    assert(this._adminWs, "admin websocket is not connected");
-    await this._adminWs.client.close();
-    this._adminWs = undefined;
+    if (this._adminWs) {
+      await this._adminWs.client.close();
+      this._adminWs = undefined;
+    }
     if (this._appWs) {
       await this._appWs.client.close();
       this._appWs = undefined;
@@ -323,7 +324,12 @@ export class Conductor {
     logger.debug("shutting down conductor\n");
     return new Promise<number | null>((resolve) => {
       assert(this.conductorProcess);
+      // Kill process after timeout if terminating didn't succeed.
+      const timer = setTimeout(() => {
+        this.conductorProcess?.kill("SIGKILL");
+      }, 5_000);
       this.conductorProcess.addListener("close", (code) => {
+        clearTimeout(timer);
         this.conductorProcess?.removeAllListeners();
         this.conductorProcess?.stdout.removeAllListeners();
         this.conductorProcess?.stderr.removeAllListeners();

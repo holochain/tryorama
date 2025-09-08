@@ -34,7 +34,7 @@
               # add further packages from nixpkgs
               pkgs.nodejs
 
-              (lib.optional pkgs.stdenv.isDarwin [ pkgs.libiconv ])
+              (lib.optional pkgs.stdenv.isDarwin pkgs.libiconv)
             ];
 
             shellHook = ''
