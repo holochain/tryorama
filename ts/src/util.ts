@@ -169,7 +169,7 @@ export const conductorCellsDhtSync = async (
         ),
       );
       console.log(
-        `Timeout of ${timeoutMs} ms has passed, but players' integrated DhtOps are not syncronized. Final conductor states:`,
+        `Timeout of ${timeoutMs} ms has passed, but players' integrated DhtOps are not synchronized. Final conductor states:`,
       );
       conductorStates.forEach((dump, idx) => {
         console.log(`
@@ -181,11 +181,11 @@ Conductor ${idx}
       `);
       });
       throw Error(
-        `Timeout of ${timeoutMs} ms has passed, but players' integrated DhtOps are not syncronized`,
+        `Timeout of ${timeoutMs} ms has passed, but players' integrated DhtOps are not synchronized`,
       );
     }
 
-    // Check if Integrated DhtOps are syncronized
+    // Check if Integrated DhtOps are synchronized
     completed = await areConductorCellsDhtsSynced(conductorCells);
 
     if (!completed) {
