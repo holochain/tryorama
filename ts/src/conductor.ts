@@ -123,7 +123,6 @@ export interface NetworkConfig {
    *
    * Default: 1
    */
-
   targetArcFactor?: number;
 }
 
