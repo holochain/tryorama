@@ -133,7 +133,7 @@ export interface NetworkConfig {
  * only including fields that can be overridden via the options of `addPlayerWithApps`.
  */
 
-type NetworkAdvancedK2GossipConfigYaml = Omit<NetworkConfig, 'targetArcFactor'|'timeoutS'>;
+type NetworkAdvancedK2GossipConfigYaml = Omit<NetworkConfig, 'targetArcFactor'|'transportTimeoutS'>;
 
 interface NetworkAdvancedTx5TransportConfigYaml {
   signalAllowPlainText: boolean;
