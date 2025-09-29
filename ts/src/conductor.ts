@@ -113,6 +113,42 @@ export interface NetworkConfig {
    * Default: 15
    */
   transportTimeoutS?: number;
+
+  /**
+   * The target arc factor for gossip.
+   *
+   * This controls the range of DHT locations that the peer will aim to store and serve during gossip.
+   *
+   * For leacher nodes that do not contribute to gossip, set to zero.
+   *
+   * Default: 1
+   */
+
+  targetArcFactor?: number;
+}
+
+/**
+ * Conductor Configuration YAML
+ * 
+ * These types are a subset of the actual conductor configuration,
+ * only including fields that can be overridden via the options of `addPlayerWithApps`.
+ */
+
+type NetworkAdvancedK2GossipConfigYaml = Omit<NetworkConfig, 'targetArcFactor'|'timeoutS'>;
+
+interface NetworkAdvancedTx5TransportConfigYaml {
+  signalAllowPlainText: boolean;
+  timeoutS: number;
+}
+
+interface ConductorConfigYaml {
+  network: {
+    advanced: {
+      k2Gossip: NetworkAdvancedK2GossipConfigYaml,
+      tx5Transport: NetworkAdvancedTx5TransportConfigYaml
+    };
+    target_arc_factor: number;
+  };
 }
 
 /**
@@ -151,6 +187,7 @@ export const createConductor = async (
     "initiateJitterMs",
     "roundTimeoutMs",
     "transportTimeoutS",
+    "targetArcFactor",
   ]);
   conductor.setNetworkConfig(networkConfig);
   if (options?.startup !== false) {
@@ -228,7 +265,7 @@ export class Conductor {
       `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
       "utf-8",
     );
-    const conductorConfigYaml = yaml.load(conductorConfig);
+    const conductorConfigYaml = yaml.load(conductorConfig) as ConductorConfigYaml;
     assert(conductorConfigYaml && typeof conductorConfigYaml === "object");
     assert(
       "network" in conductorConfigYaml &&
@@ -238,6 +275,8 @@ export class Conductor {
     if ("mem_bootstrap" in conductorConfigYaml.network) {
       delete conductorConfigYaml.network.mem_bootstrap;
     }
+    conductorConfigYaml.network.target_arc_factor =
+      createConductorOptions.targetArcFactor ?? 1;
     assert("advanced" in conductorConfigYaml.network);
     conductorConfigYaml.network.advanced = {
       k2Gossip: {
