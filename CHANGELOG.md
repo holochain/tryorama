@@ -5,6 +5,8 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+-  A new configuration field `targetArcFactor` has been added to `NetworkConfig`, allowing test scenarios to be written with 0-arc conductors ([#300](https://github.com/holochain/tryorama/pull/300))
+
 ### Removed
 ### Changed
 ### Fixed
