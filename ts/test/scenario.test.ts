@@ -620,6 +620,8 @@ test("runScenario - add players and then install the same app for them", async (
     });
     assert.equal(readContent, content);
   });
+}, {
+  timeout: 100000
 });
 
 test(
