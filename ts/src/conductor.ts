@@ -128,12 +128,15 @@ export interface NetworkConfig {
 
 /**
  * Conductor Configuration YAML
- * 
+ *
  * These types are a subset of the actual conductor configuration,
  * only including fields that can be overridden via the options of `addPlayerWithApps`.
  */
 
-type NetworkAdvancedK2GossipConfigYaml = Omit<NetworkConfig, 'targetArcFactor'|'transportTimeoutS'>;
+type NetworkAdvancedK2GossipConfigYaml = Omit<
+  NetworkConfig,
+  "targetArcFactor" | "transportTimeoutS"
+>;
 
 interface NetworkAdvancedTx5TransportConfigYaml {
   signalAllowPlainText: boolean;
@@ -143,8 +146,8 @@ interface NetworkAdvancedTx5TransportConfigYaml {
 interface ConductorConfigYaml {
   network: {
     advanced: {
-      k2Gossip: NetworkAdvancedK2GossipConfigYaml,
-      tx5Transport: NetworkAdvancedTx5TransportConfigYaml
+      k2Gossip: NetworkAdvancedK2GossipConfigYaml;
+      tx5Transport: NetworkAdvancedTx5TransportConfigYaml;
     };
     target_arc_factor: number;
   };
@@ -264,7 +267,9 @@ export class Conductor {
       `${this.conductorDir}/${CONDUCTOR_CONFIG}`,
       "utf-8",
     );
-    const conductorConfigYaml = yaml.load(conductorConfig) as ConductorConfigYaml;
+    const conductorConfigYaml = yaml.load(
+      conductorConfig,
+    ) as ConductorConfigYaml;
     assert(conductorConfigYaml && typeof conductorConfigYaml === "object");
     assert(
       "network" in conductorConfigYaml &&

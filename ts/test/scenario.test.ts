@@ -149,17 +149,19 @@ test("Set custom network config", async () => {
   const { network } = conductorConfig;
   assert.ok(network && typeof network === "object" && "advanced" in network);
   const { advanced } = network;
-    assert.ok(
+  assert.ok(
     network && typeof network === "object" && "target_arc_factor" in network,
   );
   assert.strictEqual(network.target_arc_factor, targetArcFactor);
 
-  assert.ok(advanced && typeof advanced === "object" && "tx5Transport" in advanced);
+  assert.ok(
+    advanced && typeof advanced === "object" && "tx5Transport" in advanced,
+  );
   const { tx5Transport } = advanced;
   assert.ok(
     tx5Transport &&
       typeof tx5Transport === "object" &&
-      "timeoutS" in tx5Transport
+      "timeoutS" in tx5Transport,
   );
   assert.strictEqual(tx5Transport.timeoutS, transportTimeoutS);
 
@@ -171,7 +173,7 @@ test("Set custom network config", async () => {
       "initiateIntervalMs" in k2Gossip &&
       "minInitiateIntervalMs" in k2Gossip &&
       "initiateJitterMs" in k2Gossip &&
-      "roundTimeoutMs" in k2Gossip
+      "roundTimeoutMs" in k2Gossip,
   );
   assert.strictEqual(k2Gossip.initiateIntervalMs, initiateIntervalMs);
   assert.strictEqual(k2Gossip.minInitiateIntervalMs, minInitiateIntervalMs);
@@ -209,17 +211,19 @@ test("Default network config", async () => {
   const { network } = conductorConfig;
   assert.ok(network && typeof network === "object" && "advanced" in network);
   const { advanced } = network;
-    assert.ok(
+  assert.ok(
     network && typeof network === "object" && "target_arc_factor" in network,
   );
   assert.strictEqual(network.target_arc_factor, targetArcFactor);
 
-  assert.ok(advanced && typeof advanced === "object" && "tx5Transport" in advanced);
+  assert.ok(
+    advanced && typeof advanced === "object" && "tx5Transport" in advanced,
+  );
   const { tx5Transport } = advanced;
   assert.ok(
     tx5Transport &&
       typeof tx5Transport === "object" &&
-      "timeoutS" in tx5Transport
+      "timeoutS" in tx5Transport,
   );
   assert.strictEqual(tx5Transport.timeoutS, transportTimeoutS);
 
@@ -231,7 +235,7 @@ test("Default network config", async () => {
       "initiateIntervalMs" in k2Gossip &&
       "minInitiateIntervalMs" in k2Gossip &&
       "initiateJitterMs" in k2Gossip &&
-      "roundTimeoutMs" in k2Gossip
+      "roundTimeoutMs" in k2Gossip,
   );
   assert.strictEqual(k2Gossip.initiateIntervalMs, initiateIntervalMs);
   assert.strictEqual(k2Gossip.minInitiateIntervalMs, minInitiateIntervalMs);
