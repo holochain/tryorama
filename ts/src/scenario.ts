@@ -15,7 +15,6 @@ import {
 import {
   cleanAllConductors,
   Conductor,
-  ConductorOptions,
   createConductor,
   NetworkConfig,
 } from "./conductor.js";
@@ -106,7 +105,7 @@ export class Scenario {
     await this.ensureLocalServices();
     assert(this.serviceProcess);
     assert(this.signalingServerUrl);
-    let defaultCreateOptions = {
+    const defaultCreateOptions = {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
     };
