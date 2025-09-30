@@ -109,11 +109,17 @@ export class Scenario {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
     };
-    const createOptions = networkConfig !== undefined ? {
-      ...defaultCreateOptions,
-      ...(networkConfig as NetworkConfig),
-    } : defaultCreateOptions;
-    const conductor = await createConductor(this.signalingServerUrl, createOptions);
+    const createOptions =
+      networkConfig !== undefined
+        ? {
+            ...defaultCreateOptions,
+            ...(networkConfig as NetworkConfig),
+          }
+        : defaultCreateOptions;
+    const conductor = await createConductor(
+      this.signalingServerUrl,
+      createOptions,
+    );
     this.conductors.push(conductor);
     return conductor;
   }
@@ -218,7 +224,9 @@ export class Scenario {
    */
   async addPlayerWithApp(appWithOptions: AppWithOptions) {
     await this.ensureLocalServices();
-    const conductor = await this.addConductor(appWithOptions.options?.networkConfig);
+    const conductor = await this.addConductor(
+      appWithOptions.options?.networkConfig,
+    );
     appWithOptions.options = {
       ...appWithOptions.options,
       networkSeed: appWithOptions.options?.networkSeed ?? this.networkSeed,
