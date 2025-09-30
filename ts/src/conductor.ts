@@ -119,7 +119,9 @@ export interface NetworkConfig {
    *
    * This controls the range of DHT locations that the peer will aim to store and serve during gossip.
    *
-   * For leacher nodes that do not contribute to gossip, set to zero.
+   * For leacher nodes that do not contribute to gossip, set to 0.
+   * 
+   * Values other than 1 or 0 will be rejected.
    *
    * Default: 1
    */
