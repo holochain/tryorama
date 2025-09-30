@@ -10,6 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ### Removed
 ### Changed
 ### Fixed
+- Network options are now applied before the conductor launches, to ensure they actually alter the conductor configuration. ([#300](https://github.com/holochain/tryorama/pull/300))
 
 ## 2025-09-09: v0.19.0-dev.1
 
