@@ -9,8 +9,44 @@ Create and add a conductor to the scenario.
 **Signature:**
 
 ```typescript
-addConductor(): Promise<Conductor>;
+addConductor(networkConfig?: NetworkConfig): Promise<Conductor>;
 ```
+
+## Parameters
+
+<table><thead><tr><th>
+
+Parameter
+
+
+</th><th>
+
+Type
+
+
+</th><th>
+
+Description
+
+
+</th></tr></thead>
+<tbody><tr><td>
+
+networkConfig
+
+
+</td><td>
+
+[NetworkConfig](./tryorama.networkconfig.md)
+
+
+</td><td>
+
+_(Optional)_
+
+
+</td></tr>
+</tbody></table>
 **Returns:**
 
 Promise&lt;[Conductor](./tryorama.conductor.md)<!-- -->&gt;
