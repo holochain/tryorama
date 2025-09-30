@@ -15,6 +15,7 @@ import {
 import {
   cleanAllConductors,
   Conductor,
+  ConductorOptions,
   createConductor,
   NetworkConfig,
 } from "./conductor.js";
@@ -101,14 +102,19 @@ export class Scenario {
    *
    * @returns The newly added conductor instance.
    */
-  async addConductor() {
+  async addConductor(networkConfig?: NetworkConfig) {
     await this.ensureLocalServices();
     assert(this.serviceProcess);
     assert(this.signalingServerUrl);
-    const conductor = await createConductor(this.signalingServerUrl, {
+    let defaultCreateOptions = {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
-    });
+    };
+    const createOptions = networkConfig !== undefined ? {
+      ...defaultCreateOptions,
+      ...(networkConfig as NetworkConfig),
+    } : defaultCreateOptions;
+    const conductor = await createConductor(this.signalingServerUrl, createOptions);
     this.conductors.push(conductor);
     return conductor;
   }
@@ -213,10 +219,7 @@ export class Scenario {
    */
   async addPlayerWithApp(appWithOptions: AppWithOptions) {
     await this.ensureLocalServices();
-    const conductor = await this.addConductor();
-    if (appWithOptions.options?.networkConfig) {
-      conductor.setNetworkConfig(appWithOptions.options.networkConfig);
-    }
+    const conductor = await this.addConductor(appWithOptions.options?.networkConfig);
     appWithOptions.options = {
       ...appWithOptions.options,
       networkSeed: appWithOptions.options?.networkSeed ?? this.networkSeed,
