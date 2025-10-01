@@ -573,7 +573,10 @@ test("runScenario - 0-arc conductor", async () => {
     await sue.conductor.shutDown();
 
     // Alice still has an empty arc
-    const aliceStorageArc = await getPlayerStorageArc(alice, alice.cells[0].cell_id[0]);
+    const aliceStorageArc = await getPlayerStorageArc(
+      alice,
+      alice.cells[0].cell_id[0],
+    );
     assert.equal(aliceStorageArc, EMPTY_ARC);
 
     // Alice cannot get the entry
