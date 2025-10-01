@@ -2,11 +2,9 @@ import { AppBundleSource, DhtArc, EntryHash } from "@holochain/client";
 import { assert, expect, test } from "vitest";
 import { Scenario, dhtSync, storageArc } from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
+import { EMPTY_ARC, FULL_ARC } from "./constants";
 
 const TEST_ZOME_NAME = "coordinator";
-
-const FULL_ARC: DhtArc = [0, 4_294_967_295];
-const EMPTY_ARC: DhtArc = null;
 
 test("dhtSync - Create multiple entries, read the last, 2 conductors", async () => {
   const scenario = new Scenario();

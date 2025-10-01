@@ -16,8 +16,10 @@ import {
   dhtSync,
   getZomeCaller,
   runScenario,
+  storageArc,
 } from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
+import { EMPTY_ARC, FULL_ARC } from "./constants";
 
 const TEST_ZOME_NAME = "coordinator";
 
@@ -515,6 +517,7 @@ test(
   "runScenario - 0-arc conductor",
   async () => {
     await runScenario(async (scenario) => {
+      // Alice has a 0-arc conductor
       const alice = await scenario.addPlayerWithApp({
         appBundleSource: {
           type: "path",
@@ -527,13 +530,13 @@ test(
         },
       });
 
+      // Bob and Sue have full-arc conductors
       const bob = await scenario.addPlayerWithApp({
         appBundleSource: {
           type: "path",
           value: FIXTURE_HAPP_URL.pathname,
         },
       });
-
       const sue = await scenario.addPlayerWithApp({
         appBundleSource: {
           type: "path",
@@ -548,8 +551,8 @@ test(
         payload: "test-content",
       });
 
-      // Wait for bob & sue to sync, so that bob declares a full arc
-      await dhtSync([bob, sue], bob.cells[0].cell_id[0]);
+      // Wait for Bob to declare a full storage arc
+      await storageArc(bob, bob.cells[0].cell_id[0], FULL_ARC)
 
       // Alice gets the entry
       const readContent = await alice.cells[0].callZome({
@@ -566,13 +569,16 @@ test(
         payload: "test-content-2",
       });
 
-      // Wait for bob & sue to sync
+      // Wait for Bob & Sue to sync
       await dhtSync([bob, sue], bob.cells[0].cell_id[0]);
 
       // Bob and Sue go offline
       await bob.conductor.shutDown();
       await sue.conductor.shutDown();
 
+      // Alice still has an empty arc
+      await storageArc(alice, alice.cells[0].cell_id[0], EMPTY_ARC);
+      
       // Alice cannot get the entry
       await expect(
         alice.cells[0].callZome({
