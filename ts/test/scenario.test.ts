@@ -508,10 +508,7 @@ test(
       });
       assert.equal(readContent, content);
     });
-  },
-  {
-    timeout: 100000,
-  },
+  }
 );
 
 test(
@@ -585,8 +582,5 @@ test(
         }),
       ).rejects.toThrow();
     });
-  },
-  {
-    timeout: 100000,
-  },
+  }
 );
