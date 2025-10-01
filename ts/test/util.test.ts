@@ -1,15 +1,20 @@
 import {
   AppBundleSource,
+  DhtArc,
   EntryHash,
 } from "@holochain/client";
-import { assert, test,  } from "vitest";
+import { assert, expect, test } from "vitest";
 import {
   Scenario,
   dhtSync,
+  storageArc,
 } from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
 
 const TEST_ZOME_NAME = "coordinator";
+
+const FULL_ARC: DhtArc = [0, 4_294_967_295];
+const EMPTY_ARC: DhtArc = null;
 
 test("dhtSync - Create multiple entries, read the last, 2 conductors", async () => {
   const scenario = new Scenario();
@@ -121,6 +126,56 @@ test("dhtSync - Fails if some Ops are not integrated in a conductor", async () =
       break;
     }
   }
+
+  await scenario.cleanUp();
+});
+
+test("storageArc - Succeeds for 2 conductors, both start as empty arc, one creates an entry, both reach full arc", async () => {
+  const scenario = new Scenario();
+  const appBundleSource: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
+  const [alice, bob] = await scenario.addPlayersWithApps([
+    { appBundleSource },
+    { appBundleSource },
+  ]);
+
+  // Alice & Bob have empty storage arcs
+  await Promise.all([
+    storageArc(alice, alice.cells[0].cell_id[0], EMPTY_ARC),
+    storageArc(bob, alice.cells[0].cell_id[0], EMPTY_ARC),
+  ]);
+
+  // Alice creates 1 entry
+  await alice.cells[0].callZome<EntryHash>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "create",
+    payload: "this is an entry",
+  });
+
+  // Alice and Bob have full storage arcs
+  await Promise.all([
+    storageArc(alice, alice.cells[0].cell_id[0], FULL_ARC),
+    storageArc(bob, alice.cells[0].cell_id[0], FULL_ARC),
+  ]);
+
+  await scenario.cleanUp();
+})
+
+test("storageArc - Fails for only 1 conductor which never reaches full storage arc", async () => {
+  const scenario = new Scenario();
+
+  const appBundleSource: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
+  const [alice] = await scenario.addPlayersWithApps([
+    { appBundleSource },
+  ]);
+
+  // Alice never reaches full storage arc
+  await expect(storageArc(alice, alice.cells[0].cell_id[0], FULL_ARC)).rejects.toThrow();
 
   await scenario.cleanUp();
 });
