@@ -220,9 +220,9 @@ const isConductorCellDnaHashEqual = (conductorCells: ConductorCell[]) => {
  * @param player - A Player.
  * @param dnaHash - The DNA to check the storage arc for.
  * @param storageArc - The desired storage DhtArc to wait for.
- * @param interval - Interval to pause between comparisons (defaults to 500 ms).
- * @param timeout - A timeout for the delay (optional).
- * @returns A promise that is resolved the agent's storage arc matches the desired storage arc
+ * @param intervalMs - Interval between comparisons in milliseconds (default 500).
+ * @param timeoutMs - Timeout in milliseconds (default 40_000).
+ * @returns A promise that resolves when the player's storage arc matches; rejects on timeout.
  *
  * @public
  */
@@ -266,9 +266,9 @@ export const storageArc = async (
  * @param dnaHash - The DNA to get the storage arc for.
  * @returns A Promise containing the storage DhtArc
  *
- * @internal
+ * @public
  */
-const getPlayerStorageArc = async (
+export const getPlayerStorageArc = async (
   player: PlayerApp,
   dnaHash: DnaHash,
 ): Promise<DhtArc> => {
@@ -277,10 +277,14 @@ const getPlayerStorageArc = async (
       dna_hash: dnaHash,
       include_dht_summary: false,
     });
-  const networkAgentSummary = networkMetrics[
-    encodeHashToBase64(dnaHash)
-  ].local_agents.find((l: LocalAgentSummary) =>
-    isEqual(l.agent, player.agentPubKey),
+
+  const dnaHashB64 = encodeHashToBase64(dnaHash);
+  if (networkMetrics[dnaHashB64] === undefined) {
+    throw new Error(`DNA ${dnaHashB64} was not included in NetworkMetrics`);
+  }
+
+  const networkAgentSummary = networkMetrics[dnaHashB64].local_agents.find(
+    (l: LocalAgentSummary) => isEqual(l.agent, player.agentPubKey),
   );
 
   if (networkAgentSummary === undefined) {
