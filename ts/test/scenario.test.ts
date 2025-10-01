@@ -482,111 +482,105 @@ test("runScenario - add players and then install apps for them", async () => {
   });
 });
 
-test(
-  "runScenario - add players and then install the same app for them",
-  async () => {
-    await runScenario(async (scenario) => {
-      const players = await scenario.addPlayers(2);
-      const [aliceApp, bobApp] = await scenario.installSameAppForPlayers(
-        { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
-        players,
-      );
-      assert.deepEqual(aliceApp.agentPubKey, players[0].agentPubKey);
-      assert.deepEqual(bobApp.agentPubKey, players[1].agentPubKey);
+test("runScenario - add players and then install the same app for them", async () => {
+  await runScenario(async (scenario) => {
+    const players = await scenario.addPlayers(2);
+    const [aliceApp, bobApp] = await scenario.installSameAppForPlayers(
+      { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+      players,
+    );
+    assert.deepEqual(aliceApp.agentPubKey, players[0].agentPubKey);
+    assert.deepEqual(bobApp.agentPubKey, players[1].agentPubKey);
 
-      const content = "test-content";
-      const createEntryHash = await aliceApp.cells[0].callZome<EntryHash>({
-        zome_name: TEST_ZOME_NAME,
-        fn_name: "create",
-        payload: content,
-      });
+    const content = "test-content";
+    const createEntryHash = await aliceApp.cells[0].callZome<EntryHash>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "create",
+      payload: content,
+    });
 
-      await dhtSync([aliceApp, bobApp], aliceApp.cells[0].cell_id[0]);
+    await dhtSync([aliceApp, bobApp], aliceApp.cells[0].cell_id[0]);
 
-      const readContent = await bobApp.cells[0].callZome<typeof content>({
+    const readContent = await bobApp.cells[0].callZome<typeof content>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "read",
+      payload: createEntryHash,
+    });
+    assert.equal(readContent, content);
+  });
+});
+
+test("runScenario - 0-arc conductor", async () => {
+  await runScenario(async (scenario) => {
+    // Alice has a 0-arc conductor
+    const alice = await scenario.addPlayerWithApp({
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+      options: {
+        networkConfig: {
+          targetArcFactor: 0,
+        },
+      },
+    });
+
+    // Bob and Sue have full-arc conductors
+    const bob = await scenario.addPlayerWithApp({
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    });
+    const sue = await scenario.addPlayerWithApp({
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    });
+
+    // Bob creates an entry
+    const createEntryHash = await bob.cells[0].callZome<EntryHash>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "create",
+      payload: "test-content",
+    });
+
+    // Wait for Bob to declare a full storage arc
+    await storageArc(bob, bob.cells[0].cell_id[0], FULL_ARC);
+
+    // Alice gets the entry
+    const readContent = await alice.cells[0].callZome({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "read",
+      payload: createEntryHash,
+    });
+    assert.equal(readContent, "test-content");
+
+    // Bob creates another entry
+    const createEntryHash2 = await bob.cells[0].callZome<EntryHash>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "create",
+      payload: "test-content-2",
+    });
+
+    // Wait for Bob & Sue to sync
+    await dhtSync([bob, sue], bob.cells[0].cell_id[0]);
+
+    // Bob and Sue go offline
+    await bob.conductor.shutDown();
+    await sue.conductor.shutDown();
+
+    // Alice still has an empty arc
+    await storageArc(alice, alice.cells[0].cell_id[0], EMPTY_ARC);
+
+    // Alice cannot get the entry
+    await expect(
+      alice.cells[0].callZome({
         zome_name: TEST_ZOME_NAME,
         fn_name: "read",
-        payload: createEntryHash,
-      });
-      assert.equal(readContent, content);
-    });
-  }
-);
-
-test(
-  "runScenario - 0-arc conductor",
-  async () => {
-    await runScenario(async (scenario) => {
-      // Alice has a 0-arc conductor
-      const alice = await scenario.addPlayerWithApp({
-        appBundleSource: {
-          type: "path",
-          value: FIXTURE_HAPP_URL.pathname,
-        },
-        options: {
-          networkConfig: {
-            targetArcFactor: 0,
-          },
-        },
-      });
-
-      // Bob and Sue have full-arc conductors
-      const bob = await scenario.addPlayerWithApp({
-        appBundleSource: {
-          type: "path",
-          value: FIXTURE_HAPP_URL.pathname,
-        },
-      });
-      const sue = await scenario.addPlayerWithApp({
-        appBundleSource: {
-          type: "path",
-          value: FIXTURE_HAPP_URL.pathname,
-        },
-      });
-
-      // Bob creates an entry
-      const createEntryHash = await bob.cells[0].callZome<EntryHash>({
-        zome_name: TEST_ZOME_NAME,
-        fn_name: "create",
-        payload: "test-content",
-      });
-
-      // Wait for Bob to declare a full storage arc
-      await storageArc(bob, bob.cells[0].cell_id[0], FULL_ARC)
-
-      // Alice gets the entry
-      const readContent = await alice.cells[0].callZome({
-        zome_name: TEST_ZOME_NAME,
-        fn_name: "read",
-        payload: createEntryHash,
-      });
-      assert.equal(readContent, "test-content");
-
-      // Bob creates another entry
-      const createEntryHash2 = await bob.cells[0].callZome<EntryHash>({
-        zome_name: TEST_ZOME_NAME,
-        fn_name: "create",
-        payload: "test-content-2",
-      });
-
-      // Wait for Bob & Sue to sync
-      await dhtSync([bob, sue], bob.cells[0].cell_id[0]);
-
-      // Bob and Sue go offline
-      await bob.conductor.shutDown();
-      await sue.conductor.shutDown();
-
-      // Alice still has an empty arc
-      await storageArc(alice, alice.cells[0].cell_id[0], EMPTY_ARC);
-      
-      // Alice cannot get the entry
-      await expect(
-        alice.cells[0].callZome({
-          zome_name: TEST_ZOME_NAME,
-          fn_name: "read",
-          payload: createEntryHash2,
-        }),
-      ).rejects.toThrow();
-    });
-  }
-);
+        payload: createEntryHash2,
+      }),
+    ).rejects.toThrow();
+  });
+});

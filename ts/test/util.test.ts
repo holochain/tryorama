@@ -1,4 +1,4 @@
-import { AppBundleSource, DhtArc, EntryHash } from "@holochain/client";
+import { AppBundleSource, EntryHash } from "@holochain/client";
 import { assert, expect, test } from "vitest";
 import { Scenario, dhtSync, storageArc } from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
