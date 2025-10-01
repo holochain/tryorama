@@ -115,5 +115,5 @@ _(Optional)_
 
 Promise&lt;void&gt;
 
-A promise that is resolved after all agents' DHT states match.
+A promise that is resolved the agent's storage arc matches the desired storage arc
 
