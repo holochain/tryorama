@@ -159,6 +159,17 @@ Create curried version of `callZome` function for a specific cell.
 </td></tr>
 <tr><td>
 
+[getPlayerStorageArc(player, dnaHash)](./tryorama.getplayerstoragearc.md)
+
+
+</td><td>
+
+A utility function to get the storage arc for a given player and dna hash.
+
+
+</td></tr>
+<tr><td>
+
 [getZomeCaller(cell, zomeName)](./tryorama.getzomecaller.md)
 
 

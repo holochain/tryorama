@@ -266,9 +266,9 @@ export const storageArc = async (
  * @param dnaHash - The DNA to get the storage arc for.
  * @returns A Promise containing the storage DhtArc
  *
- * @internal
+ * @public
  */
-const getPlayerStorageArc = async (
+export const getPlayerStorageArc = async (
   player: PlayerApp,
   dnaHash: DnaHash,
 ): Promise<DhtArc> => {
