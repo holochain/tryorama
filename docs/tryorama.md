@@ -212,6 +212,17 @@ Shutdown signalling server process.
 
 
 </td></tr>
+<tr><td>
+
+[storageArc(player, dnaHash, storageArc, intervalMs, timeoutMs)](./tryorama.storagearc.md)
+
+
+</td><td>
+
+A utility function to wait until a player's storage arc matches a desired storage arc for a DNA
+
+
+</td></tr>
 </tbody></table>
 
 ## Interfaces
