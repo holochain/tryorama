@@ -220,9 +220,9 @@ const isConductorCellDnaHashEqual = (conductorCells: ConductorCell[]) => {
  * @param player - A Player.
  * @param dnaHash - The DNA to check the storage arc for.
  * @param storageArc - The desired storage DhtArc to wait for.
- * @param interval - Interval to pause between comparisons (defaults to 500 ms).
- * @param timeout - A timeout for the delay (optional).
- * @returns A promise that is resolved after all agents' DHT states match.
+ * @param intervalMs - Interval between comparisons in milliseconds (default 500).
+ * @param timeoutMs - Timeout in milliseconds (default 40_000).
+ * @returns A promise that resolves when the player's storage arc matches; rejects on timeout.
  *
  * @public
  */

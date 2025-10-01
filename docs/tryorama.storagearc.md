@@ -90,7 +90,7 @@ number
 
 </td><td>
 
-_(Optional)_
+_(Optional)_ Interval between comparisons in milliseconds (default 500).
 
 
 </td></tr>
@@ -106,7 +106,7 @@ number
 
 </td><td>
 
-_(Optional)_
+_(Optional)_ Timeout in milliseconds (default 40\_000).
 
 
 </td></tr>
@@ -115,5 +115,5 @@ _(Optional)_
 
 Promise&lt;void&gt;
 
-A promise that is resolved after all agents' DHT states match.
+A promise that resolves when the player's storage arc matches; rejects on timeout.
 
