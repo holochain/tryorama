@@ -594,35 +594,39 @@ test("runScenario - add players and then install apps for them", async () => {
   });
 });
 
-test("runScenario - add players and then install the same app for them", async () => {
-  await runScenario(async (scenario) => {
-    const players = await scenario.addPlayers(2);
-    const [aliceApp, bobApp] = await scenario.installSameAppForPlayers(
-      { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
-      players,
-    );
-    assert.deepEqual(aliceApp.agentPubKey, players[0].agentPubKey);
-    assert.deepEqual(bobApp.agentPubKey, players[1].agentPubKey);
+test(
+  "runScenario - add players and then install the same app for them",
+  async () => {
+    await runScenario(async (scenario) => {
+      const players = await scenario.addPlayers(2);
+      const [aliceApp, bobApp] = await scenario.installSameAppForPlayers(
+        { appBundleSource: { type: "path", value: FIXTURE_HAPP_URL.pathname } },
+        players,
+      );
+      assert.deepEqual(aliceApp.agentPubKey, players[0].agentPubKey);
+      assert.deepEqual(bobApp.agentPubKey, players[1].agentPubKey);
 
-    const content = "test-content";
-    const createEntryHash = await aliceApp.cells[0].callZome<EntryHash>({
-      zome_name: TEST_ZOME_NAME,
-      fn_name: "create",
-      payload: content,
+      const content = "test-content";
+      const createEntryHash = await aliceApp.cells[0].callZome<EntryHash>({
+        zome_name: TEST_ZOME_NAME,
+        fn_name: "create",
+        payload: content,
+      });
+
+      await dhtSync([aliceApp, bobApp], aliceApp.cells[0].cell_id[0]);
+
+      const readContent = await bobApp.cells[0].callZome<typeof content>({
+        zome_name: TEST_ZOME_NAME,
+        fn_name: "read",
+        payload: createEntryHash,
+      });
+      assert.equal(readContent, content);
     });
-
-    await dhtSync([aliceApp, bobApp], aliceApp.cells[0].cell_id[0]);
-
-    const readContent = await bobApp.cells[0].callZome<typeof content>({
-      zome_name: TEST_ZOME_NAME,
-      fn_name: "read",
-      payload: createEntryHash,
-    });
-    assert.equal(readContent, content);
-  });
-}, {
-  timeout: 100000
-});
+  },
+  {
+    timeout: 100000,
+  },
+);
 
 test(
   "runScenario - 0-arc conductor",
