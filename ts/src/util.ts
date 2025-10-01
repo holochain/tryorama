@@ -277,10 +277,14 @@ export const getPlayerStorageArc = async (
       dna_hash: dnaHash,
       include_dht_summary: false,
     });
-  const networkAgentSummary = networkMetrics[
-    encodeHashToBase64(dnaHash)
-  ].local_agents.find((l: LocalAgentSummary) =>
-    isEqual(l.agent, player.agentPubKey),
+
+  const dnaHashB64 = encodeHashToBase64(dnaHash);
+  if (networkMetrics[dnaHashB64] === undefined) {
+    throw new Error(`DNA ${dnaHashB64} was not included in NetworkMetrics`);
+  }
+
+  const networkAgentSummary = networkMetrics[dnaHashB64].local_agents.find(
+    (l: LocalAgentSummary) => isEqual(l.agent, player.agentPubKey),
   );
 
   if (networkAgentSummary === undefined) {
