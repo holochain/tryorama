@@ -139,13 +139,6 @@ test("storageArc - Succeeds for 2 conductors, both start as empty arc, one creat
     storageArc(bob, alice.cells[0].cell_id[0], EMPTY_ARC),
   ]);
 
-  // Alice creates 1 entry
-  await alice.cells[0].callZome<EntryHash>({
-    zome_name: TEST_ZOME_NAME,
-    fn_name: "create",
-    payload: "this is an entry",
-  });
-
   // Alice and Bob have full storage arcs
   await Promise.all([
     storageArc(alice, alice.cells[0].cell_id[0], FULL_ARC),
