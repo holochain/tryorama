@@ -243,10 +243,10 @@ export const storageArc = async (
     if (Math.floor(currentTime - startTime) >= timeoutMs) {
       const currentStorageArc = await getPlayerStorageArc(player, dnaHash);
       console.log(
-        `Timeout of ${timeoutMs} ms has passed, but player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`
+        `Timeout of ${timeoutMs} ms has passed, but player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`,
       );
       throw Error(
-        `Timeout of ${timeoutMs} ms has passed, but player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`
+        `Timeout of ${timeoutMs} ms has passed, but player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`,
       );
     }
 
@@ -268,17 +268,25 @@ export const storageArc = async (
  *
  * @internal
  */
-const getPlayerStorageArc = async (player: PlayerApp, dnaHash: DnaHash): Promise<DhtArc> => {
-  const networkMetrics: DumpNetworkMetricsResponse = await player.appWs.dumpNetworkMetrics({
-    dna_hash: dnaHash,
-    include_dht_summary: false,
-  });
-  const networkAgentSummary = networkMetrics[encodeHashToBase64(dnaHash)]
-    .local_agents
-    .find((l: LocalAgentSummary) => isEqual(l.agent, player.agentPubKey));
+const getPlayerStorageArc = async (
+  player: PlayerApp,
+  dnaHash: DnaHash,
+): Promise<DhtArc> => {
+  const networkMetrics: DumpNetworkMetricsResponse =
+    await player.appWs.dumpNetworkMetrics({
+      dna_hash: dnaHash,
+      include_dht_summary: false,
+    });
+  const networkAgentSummary = networkMetrics[
+    encodeHashToBase64(dnaHash)
+  ].local_agents.find((l: LocalAgentSummary) =>
+    isEqual(l.agent, player.agentPubKey),
+  );
 
-  if(networkAgentSummary === undefined) {
-    throw new Error(`Agent ${encodeHashToBase64(player.agentPubKey)} was not included in NetworkMetrics local_agents`);
+  if (networkAgentSummary === undefined) {
+    throw new Error(
+      `Agent ${encodeHashToBase64(player.agentPubKey)} was not included in NetworkMetrics local_agents`,
+    );
   }
 
   return networkAgentSummary.storage_arc;
@@ -295,7 +303,11 @@ const getPlayerStorageArc = async (player: PlayerApp, dnaHash: DnaHash): Promise
  *
  * @internal
  */
-const isEqualPlayerStorageArc = async (player: PlayerApp, dnaHash: DnaHash, storageArc: DhtArc): Promise<boolean> => {
+const isEqualPlayerStorageArc = async (
+  player: PlayerApp,
+  dnaHash: DnaHash,
+  storageArc: DhtArc,
+): Promise<boolean> => {
   const currentStorageArc = await getPlayerStorageArc(player, dnaHash);
   return isEqual(currentStorageArc, storageArc);
 };

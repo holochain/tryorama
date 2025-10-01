@@ -1,14 +1,6 @@
-import {
-  AppBundleSource,
-  DhtArc,
-  EntryHash,
-} from "@holochain/client";
+import { AppBundleSource, DhtArc, EntryHash } from "@holochain/client";
 import { assert, expect, test } from "vitest";
-import {
-  Scenario,
-  dhtSync,
-  storageArc,
-} from "../src";
+import { Scenario, dhtSync, storageArc } from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
 
 const TEST_ZOME_NAME = "coordinator";
@@ -161,7 +153,7 @@ test("storageArc - Succeeds for 2 conductors, both start as empty arc, one creat
   ]);
 
   await scenario.cleanUp();
-})
+});
 
 test("storageArc - Fails for only 1 conductor which never reaches full storage arc", async () => {
   const scenario = new Scenario();
@@ -170,12 +162,12 @@ test("storageArc - Fails for only 1 conductor which never reaches full storage a
     type: "path",
     value: FIXTURE_HAPP_URL.pathname,
   };
-  const [alice] = await scenario.addPlayersWithApps([
-    { appBundleSource },
-  ]);
+  const [alice] = await scenario.addPlayersWithApps([{ appBundleSource }]);
 
   // Alice never reaches full storage arc
-  await expect(storageArc(alice, alice.cells[0].cell_id[0], FULL_ARC)).rejects.toThrow();
+  await expect(
+    storageArc(alice, alice.cells[0].cell_id[0], FULL_ARC),
+  ).rejects.toThrow();
 
   await scenario.cleanUp();
 });
