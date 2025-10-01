@@ -110,12 +110,12 @@ export class Scenario {
       bootstrapServerUrl: this.bootstrapServerUrl,
     };
     const createOptions =
-      networkConfig !== undefined
-        ? {
+      networkConfig === undefined
+        ? defaultCreateOptions
+        : {
             ...defaultCreateOptions,
             ...(networkConfig as NetworkConfig),
-          }
-        : defaultCreateOptions;
+          };
     const conductor = await createConductor(
       this.signalingServerUrl,
       createOptions,
