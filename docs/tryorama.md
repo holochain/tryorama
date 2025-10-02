@@ -159,6 +159,17 @@ Create curried version of `callZome` function for a specific cell.
 </td></tr>
 <tr><td>
 
+[getPlayerStorageArc(player, dnaHash)](./tryorama.getplayerstoragearc.md)
+
+
+</td><td>
+
+A utility function to get the storage arc for a given player and dna hash.
+
+
+</td></tr>
+<tr><td>
+
 [getZomeCaller(cell, zomeName)](./tryorama.getzomecaller.md)
 
 
@@ -209,6 +220,17 @@ A wrapper function to create and run a scenario. A scenario is created and all i
 </td><td>
 
 Shutdown signalling server process.
+
+
+</td></tr>
+<tr><td>
+
+[storageArc(player, dnaHash, storageArc, intervalMs, timeoutMs)](./tryorama.storagearc.md)
+
+
+</td><td>
+
+A utility function to wait until a player's storage arc matches a desired storage arc for a DNA
 
 
 </td></tr>

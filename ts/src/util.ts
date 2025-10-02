@@ -1,7 +1,10 @@
 import {
   CellId,
+  DhtArc,
   DnaHash,
+  DumpNetworkMetricsResponse,
   FullStateDump,
+  LocalAgentSummary,
   encodeHashToBase64,
 } from "@holochain/client";
 import isEqual from "lodash/isEqual.js";
@@ -137,7 +140,7 @@ export const dhtSync = async (
  * identical for a DNA.
  *
  * @param conductorCells - Array of ConductorCell.
- * @param interval - Interval to pause between comparisons (defaults to 50 ms).
+ * @param interval - Interval to pause between comparisons.
  * @param timeout - A timeout for the delay (optional).
  * @returns A promise that is resolved after all agents' DHT states match.
  *
@@ -208,4 +211,107 @@ const isConductorCellDnaHashEqual = (conductorCells: ConductorCell[]) => {
     (conductorCell) => conductorCell.cellId[0],
   );
   return dnaHashes.every((val: DnaHash) => val === dnaHashes[0]);
+};
+
+/**
+ * A utility function to wait until a player's storage arc matches a desired
+ * storage arc for a DNA
+ *
+ * @param player - A Player.
+ * @param dnaHash - The DNA to check the storage arc for.
+ * @param storageArc - The desired storage DhtArc to wait for.
+ * @param intervalMs - Interval between comparisons in milliseconds (default 500).
+ * @param timeoutMs - Timeout in milliseconds (default 40_000).
+ * @returns A promise that resolves when the player's storage arc matches; rejects on timeout.
+ *
+ * @public
+ */
+export const storageArc = async (
+  player: PlayerApp,
+  dnaHash: DnaHash,
+  storageArc: DhtArc,
+  intervalMs = 500,
+  timeoutMs = 40_000,
+) => {
+  // Always run the check at least once, even if the timeoutMs is 0.
+  let completed = await isEqualPlayerStorageArc(player, dnaHash, storageArc);
+
+  const startTime = Date.now();
+  while (!completed) {
+    // Check if timeout has passed
+    const currentTime = Date.now();
+    if (Math.floor(currentTime - startTime) >= timeoutMs) {
+      const currentStorageArc = await getPlayerStorageArc(player, dnaHash);
+      console.log(
+        `Timeout of ${timeoutMs} ms has passed, but player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`,
+      );
+      throw Error(
+        `Timeout of ${timeoutMs} ms has passed, but player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`,
+      );
+    }
+
+    // Check if storage arc matches
+    completed = await isEqualPlayerStorageArc(player, dnaHash, storageArc);
+
+    if (!completed) {
+      await pause(intervalMs);
+    }
+  }
+};
+
+/**
+ * A utility function to get the storage arc for a given player and dna hash.
+ *
+ * @param player - A Player.
+ * @param dnaHash - The DNA to get the storage arc for.
+ * @returns A Promise containing the storage DhtArc
+ *
+ * @public
+ */
+export const getPlayerStorageArc = async (
+  player: PlayerApp,
+  dnaHash: DnaHash,
+): Promise<DhtArc> => {
+  const networkMetrics: DumpNetworkMetricsResponse =
+    await player.appWs.dumpNetworkMetrics({
+      dna_hash: dnaHash,
+      include_dht_summary: false,
+    });
+
+  const dnaHashB64 = encodeHashToBase64(dnaHash);
+  if (networkMetrics[dnaHashB64] === undefined) {
+    throw new Error(`DNA ${dnaHashB64} was not included in NetworkMetrics`);
+  }
+
+  const networkAgentSummary = networkMetrics[dnaHashB64].local_agents.find(
+    (l: LocalAgentSummary) => isEqual(l.agent, player.agentPubKey),
+  );
+
+  if (networkAgentSummary === undefined) {
+    throw new Error(
+      `Agent ${encodeHashToBase64(player.agentPubKey)} was not included in NetworkMetrics local_agents`,
+    );
+  }
+
+  return networkAgentSummary.storage_arc;
+};
+
+/**
+ * A utility function to get the storage arc for a given player and dna hash,
+ * and then compare it to a desired storage arc.
+ *
+ * @param player - A Player.
+ * @param dnaHash - The DNA to get the storage arc for.
+ * @param storageArc - The desired storage DhtArc to compare to.
+ * @returns boolean
+ *
+ * @internal
+ */
+const isEqualPlayerStorageArc = async (
+  player: PlayerApp,
+  dnaHash: DnaHash,
+  storageArc: DhtArc,
+): Promise<boolean> => {
+  const currentStorageArc = await getPlayerStorageArc(player, dnaHash);
+  return isEqual(currentStorageArc, storageArc);
 };

@@ -34,6 +34,7 @@
     "test": "vitest --run",
     "test:conductor": "vitest --run ts/test/conductor.test.ts",
     "test:scenario": "vitest --run ts/test/scenario.test.ts",
+    "test:util": "vitest --run ts/test/util.test.ts",
     "prepublishOnly": "npm run build"
   },
   "dependencies": {
