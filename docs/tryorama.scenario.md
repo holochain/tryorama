@@ -227,7 +227,7 @@ Description
 </th></tr></thead>
 <tbody><tr><td>
 
-[addConductor()](./tryorama.scenario.addconductor.md)
+[addConductor(networkConfig)](./tryorama.scenario.addconductor.md)
 
 
 </td><td>

@@ -14,10 +14,13 @@ import {
   CONDUCTOR_CONFIG,
   Scenario,
   dhtSync,
+  getPlayerStorageArc,
   getZomeCaller,
   runScenario,
+  storageArc,
 } from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
+import { EMPTY_ARC, FULL_ARC } from "./constants";
 
 const TEST_ZOME_NAME = "coordinator";
 
@@ -115,13 +118,26 @@ test("Set custom network config", async () => {
   const scenario = new Scenario();
   const initiateIntervalMs = 10_000;
   const minInitiateIntervalMs = 20_000;
+  const initiateJitterMs = 5_000;
+  const roundTimeoutMs = 20_000;
+  const transportTimeoutS = 1_000;
+  const targetArcFactor = 0;
 
   const alice = await scenario.addPlayerWithApp({
     appBundleSource: {
       type: "path",
       value: FIXTURE_HAPP_URL.pathname,
     },
-    options: { networkConfig: { initiateIntervalMs, minInitiateIntervalMs } },
+    options: {
+      networkConfig: {
+        initiateIntervalMs,
+        minInitiateIntervalMs,
+        initiateJitterMs,
+        roundTimeoutMs,
+        transportTimeoutS,
+        targetArcFactor,
+      },
+    },
   });
 
   const tmpDirPath = alice.conductor.getTmpDirectory();
@@ -136,16 +152,98 @@ test("Set custom network config", async () => {
   const { network } = conductorConfig;
   assert.ok(network && typeof network === "object" && "advanced" in network);
   const { advanced } = network;
+  assert.ok(
+    network && typeof network === "object" && "target_arc_factor" in network,
+  );
+  assert.strictEqual(network.target_arc_factor, targetArcFactor);
+
+  assert.ok(
+    advanced && typeof advanced === "object" && "tx5Transport" in advanced,
+  );
+  const { tx5Transport } = advanced;
+  assert.ok(
+    tx5Transport &&
+      typeof tx5Transport === "object" &&
+      "timeoutS" in tx5Transport,
+  );
+  assert.strictEqual(tx5Transport.timeoutS, transportTimeoutS);
+
   assert.ok(advanced && typeof advanced === "object" && "k2Gossip" in advanced);
   const { k2Gossip } = advanced;
   assert.ok(
     k2Gossip &&
       typeof k2Gossip === "object" &&
       "initiateIntervalMs" in k2Gossip &&
-      "minInitiateIntervalMs" in k2Gossip,
+      "minInitiateIntervalMs" in k2Gossip &&
+      "initiateJitterMs" in k2Gossip &&
+      "roundTimeoutMs" in k2Gossip,
   );
   assert.strictEqual(k2Gossip.initiateIntervalMs, initiateIntervalMs);
   assert.strictEqual(k2Gossip.minInitiateIntervalMs, minInitiateIntervalMs);
+  assert.strictEqual(k2Gossip.initiateJitterMs, initiateJitterMs);
+  assert.strictEqual(k2Gossip.roundTimeoutMs, roundTimeoutMs);
+
+  await scenario.cleanUp();
+});
+
+test("Default network config", async () => {
+  const scenario = new Scenario();
+  const initiateIntervalMs = 100;
+  const minInitiateIntervalMs = 100;
+  const initiateJitterMs = 30;
+  const roundTimeoutMs = 10_000;
+  const transportTimeoutS = 15;
+  const targetArcFactor = 1;
+
+  const alice = await scenario.addPlayerWithApp({
+    appBundleSource: {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    },
+  });
+
+  const tmpDirPath = alice.conductor.getTmpDirectory();
+  const conductorConfig = yaml.load(
+    readFileSync(`${tmpDirPath}/${CONDUCTOR_CONFIG}`, { encoding: "utf-8" }),
+  );
+  assert.ok(
+    conductorConfig &&
+      typeof conductorConfig === "object" &&
+      "network" in conductorConfig,
+  );
+  const { network } = conductorConfig;
+  assert.ok(network && typeof network === "object" && "advanced" in network);
+  const { advanced } = network;
+  assert.ok(
+    network && typeof network === "object" && "target_arc_factor" in network,
+  );
+  assert.strictEqual(network.target_arc_factor, targetArcFactor);
+
+  assert.ok(
+    advanced && typeof advanced === "object" && "tx5Transport" in advanced,
+  );
+  const { tx5Transport } = advanced;
+  assert.ok(
+    tx5Transport &&
+      typeof tx5Transport === "object" &&
+      "timeoutS" in tx5Transport,
+  );
+  assert.strictEqual(tx5Transport.timeoutS, transportTimeoutS);
+
+  assert.ok(advanced && typeof advanced === "object" && "k2Gossip" in advanced);
+  const { k2Gossip } = advanced;
+  assert.ok(
+    k2Gossip &&
+      typeof k2Gossip === "object" &&
+      "initiateIntervalMs" in k2Gossip &&
+      "minInitiateIntervalMs" in k2Gossip &&
+      "initiateJitterMs" in k2Gossip &&
+      "roundTimeoutMs" in k2Gossip,
+  );
+  assert.strictEqual(k2Gossip.initiateIntervalMs, initiateIntervalMs);
+  assert.strictEqual(k2Gossip.minInitiateIntervalMs, minInitiateIntervalMs);
+  assert.strictEqual(k2Gossip.initiateJitterMs, initiateJitterMs);
+  assert.strictEqual(k2Gossip.roundTimeoutMs, roundTimeoutMs);
 
   await scenario.cleanUp();
 });
@@ -410,5 +508,84 @@ test("runScenario - add players and then install the same app for them", async (
       payload: createEntryHash,
     });
     assert.equal(readContent, content);
+  });
+});
+
+test("runScenario - 0-arc conductor", async () => {
+  await runScenario(async (scenario) => {
+    // Alice has a 0-arc conductor
+    const alice = await scenario.addPlayerWithApp({
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+      options: {
+        networkConfig: {
+          targetArcFactor: 0,
+        },
+      },
+    });
+
+    // Bob and Sue have full-arc conductors
+    const bob = await scenario.addPlayerWithApp({
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    });
+    const sue = await scenario.addPlayerWithApp({
+      appBundleSource: {
+        type: "path",
+        value: FIXTURE_HAPP_URL.pathname,
+      },
+    });
+
+    // Bob creates an entry
+    const createEntryHash = await bob.cells[0].callZome<EntryHash>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "create",
+      payload: "test-content",
+    });
+
+    // Wait for Bob to declare a full storage arc
+    await storageArc(bob, bob.cells[0].cell_id[0], FULL_ARC);
+
+    // Alice gets the entry
+    const readContent = await alice.cells[0].callZome({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "read",
+      payload: createEntryHash,
+    });
+    assert.equal(readContent, "test-content");
+
+    // Bob creates another entry
+    const createEntryHash2 = await bob.cells[0].callZome<EntryHash>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "create",
+      payload: "test-content-2",
+    });
+
+    // Wait for Bob & Sue to sync
+    await dhtSync([bob, sue], bob.cells[0].cell_id[0]);
+
+    // Bob and Sue go offline
+    await bob.conductor.shutDown();
+    await sue.conductor.shutDown();
+
+    // Alice still has an empty arc
+    const aliceStorageArc = await getPlayerStorageArc(
+      alice,
+      alice.cells[0].cell_id[0],
+    );
+    assert.equal(aliceStorageArc, EMPTY_ARC);
+
+    // Alice cannot get the entry
+    await expect(
+      alice.cells[0].callZome({
+        zome_name: TEST_ZOME_NAME,
+        fn_name: "read",
+        payload: createEntryHash2,
+      }),
+    ).rejects.toThrow();
   });
 });

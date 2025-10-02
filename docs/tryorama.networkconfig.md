@@ -128,6 +128,33 @@ Default: 10,000
 </td></tr>
 <tr><td>
 
+[targetArcFactor?](./tryorama.networkconfig.targetarcfactor.md)
+
+
+</td><td>
+
+
+</td><td>
+
+number
+
+
+</td><td>
+
+_(Optional)_ The target arc factor for gossip.
+
+This controls the range of DHT locations that the peer will aim to store and serve during gossip.
+
+For leacher nodes that do not contribute to gossip, set to 0.
+
+Values other than 1 or 0 will be rejected.
+
+Default: 1
+
+
+</td></tr>
+<tr><td>
+
 [transportTimeoutS?](./tryorama.networkconfig.transporttimeouts.md)
 
 
