@@ -186,7 +186,7 @@ export const createConductor = async (
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
     "timeout",
-    "label"
+    "label",
   ]);
   const conductor = await Conductor.create(
     signalingServerUrl,
@@ -322,7 +322,9 @@ export class Conductor {
       "error starting conductor: conductor has not been created",
     );
     if (this.conductorProcess) {
-      this._logger.error("error starting conductor: conductor is already running\n");
+      this._logger.error(
+        "error starting conductor: conductor is already running\n",
+      );
       return;
     }
 

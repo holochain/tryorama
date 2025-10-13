@@ -142,7 +142,7 @@ export class Scenario {
   ): Promise<Player[]> {
     await this.ensureLocalServices();
     return Promise.all(
-      new Array(amount).fill(0).map(async (i) => {
+      new Array(amount).fill(0).map(async (_, i) => {
         const conductor = await this.addConductor(networkConfig, `Player ${i}`);
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
@@ -263,9 +263,12 @@ export class Scenario {
   async addPlayersWithSameApp(appWithOptions: AppWithOptions, amount: number) {
     await this.ensureLocalServices();
     return Promise.all(
-      new Array(amount)
-        .fill(0)
-        .map(() => this.addPlayerWithApp(appWithOptions)),
+      new Array(amount).fill(0).map((_, i) =>
+        this.addPlayerWithApp({
+          label: `Player ${i}`, // default label
+          ...appWithOptions,
+        }),
+      ),
     );
   }
 
@@ -282,7 +285,7 @@ export class Scenario {
       appsWithOptions.map((appWithOptions, i) =>
         this.addPlayerWithApp({
           label: `Player ${i}`, // default label
-          ...appWithOptions
+          ...appWithOptions,
         }),
       ),
     );
