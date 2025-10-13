@@ -43,6 +43,7 @@ export interface PlayerApp extends Player, AgentApp {
 export interface AppWithOptions {
   appBundleSource: AppBundleSource;
   options?: AppOptions;
+  label?: string;
 }
 
 /**
@@ -101,13 +102,14 @@ export class Scenario {
    *
    * @returns The newly added conductor instance.
    */
-  async addConductor(networkConfig?: NetworkConfig) {
+  async addConductor(networkConfig?: NetworkConfig, label?: string) {
     await this.ensureLocalServices();
     assert(this.serviceProcess);
     assert(this.signalingServerUrl);
     const defaultCreateOptions = {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
+      label,
     };
     const createOptions =
       networkConfig === undefined
@@ -140,11 +142,8 @@ export class Scenario {
   ): Promise<Player[]> {
     await this.ensureLocalServices();
     return Promise.all(
-      new Array(amount).fill(0).map(async () => {
-        const conductor = await this.addConductor();
-        if (networkConfig) {
-          conductor.setNetworkConfig(networkConfig);
-        }
+      new Array(amount).fill(0).map(async (i) => {
+        const conductor = await this.addConductor(networkConfig, `Player ${i}`);
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
       }),
@@ -226,6 +225,7 @@ export class Scenario {
     await this.ensureLocalServices();
     const conductor = await this.addConductor(
       appWithOptions.options?.networkConfig,
+      appWithOptions.label,
     );
     appWithOptions.options = {
       ...appWithOptions.options,
@@ -279,8 +279,11 @@ export class Scenario {
   async addPlayersWithApps(appsWithOptions: AppWithOptions[]) {
     await this.ensureLocalServices();
     return Promise.all(
-      appsWithOptions.map((appWithOptions) =>
-        this.addPlayerWithApp(appWithOptions),
+      appsWithOptions.map((appWithOptions, i) =>
+        this.addPlayerWithApp({
+          label: `Player ${i}`, // default label
+          ...appWithOptions
+        }),
       ),
     );
   }
