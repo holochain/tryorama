@@ -143,7 +143,10 @@ export class Scenario {
     await this.ensureLocalServices();
     return Promise.all(
       new Array(amount).fill(0).map(async (_, i) => {
-        const conductor = await this.addConductor(networkConfig, this.generatePlayerLabel(i));
+        const conductor = await this.addConductor(
+          networkConfig,
+          this.generatePlayerLabel(i),
+        );
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
       }),
