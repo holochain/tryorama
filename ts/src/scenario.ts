@@ -143,7 +143,7 @@ export class Scenario {
     await this.ensureLocalServices();
     return Promise.all(
       new Array(amount).fill(0).map(async (_, i) => {
-        const conductor = await this.addConductor(networkConfig, `Player ${i}`);
+        const conductor = await this.addConductor(networkConfig, this.generatePlayerLabel(i));
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
       }),
@@ -265,7 +265,7 @@ export class Scenario {
     return Promise.all(
       new Array(amount).fill(0).map((_, i) =>
         this.addPlayerWithApp({
-          label: `Player ${i}`, // default label
+          label: this.generatePlayerLabel(i),
           ...appWithOptions,
         }),
       ),
@@ -284,7 +284,7 @@ export class Scenario {
     return Promise.all(
       appsWithOptions.map((appWithOptions, i) =>
         this.addPlayerWithApp({
-          label: `Player ${i}`, // default label
+          label: this.generatePlayerLabel(i),
           ...appWithOptions,
         }),
       ),
@@ -336,6 +336,10 @@ export class Scenario {
         signalingServerUrl: this.signalingServerUrl,
       } = await runLocalServices());
     }
+  }
+
+  private generatePlayerLabel(index: number): string {
+    return `Player ${this.conductors.length + index}`;
   }
 }
 
