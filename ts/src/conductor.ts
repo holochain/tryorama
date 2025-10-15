@@ -345,7 +345,6 @@ export class Conductor {
     });
     await startPromise;
     await this.connectAdminWs();
-    console.log('connected admin ws');
   }
 
   /**

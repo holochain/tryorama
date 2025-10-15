@@ -130,7 +130,7 @@ export class Scenario {
    *
    * The specified number of conductors is created and one agent is
    * generated on each conductor.
-   * 
+   *
    * Each conductor is created sequentially, once the previous has
    * completed startup.
    *
@@ -161,7 +161,7 @@ export class Scenario {
    * Installs the provided apps for the provided players.
    *
    * The number of players must be at least as high as the number of apps.
-   * 
+   *
    * Each app is installed sequentially, once the previous has
    * completed installation.
    *
@@ -204,7 +204,7 @@ export class Scenario {
 
   /**
    * Installs the same provided app for the provided players.
-   * 
+   *
    * The app is installed into each player's conductor sequentially, once the previous has
    * completed installation.
    *
@@ -277,7 +277,7 @@ export class Scenario {
   /**
    * Create and add multiple players to the scenario, with the same app installed
    * for each player.
-   * 
+   *
    * Each conductor is created sequentially, once the previous has
    * completed startup.
    *
@@ -294,8 +294,7 @@ export class Scenario {
         await pause(i * 1000);
 
         return this.addPlayerWithApp(appWithOptions);
-      }
-      ),
+      }),
     );
 
     return res;
@@ -312,12 +311,12 @@ export class Scenario {
     await this.ensureLocalServices();
     return Promise.all(
       appsWithOptions.map(async (appWithOptions, i) => {
-          // Wait 1s between conductor launches.
-          // This is a workaround to avoid gossip initiate race conditions.
-          await pause(i * 1000);
+        // Wait 1s between conductor launches.
+        // This is a workaround to avoid gossip initiate race conditions.
+        await pause(i * 1000);
 
-          return this.addPlayerWithApp(appWithOptions);
-      })
+        return this.addPlayerWithApp(appWithOptions);
+      }),
     );
   }
 
