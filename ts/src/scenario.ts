@@ -191,7 +191,8 @@ export class Scenario {
     return Promise.all(
       appsWithOptions.map(async (appWithOptions, i) => {
         // Wait 1s between conductor launches.
-        // This is a workaround to avoid gossip initiate race conditions.
+        // This is a workaround to avoid connection failures.
+        // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
         const player = players[i];
@@ -312,7 +313,8 @@ export class Scenario {
     return Promise.all(
       appsWithOptions.map(async (appWithOptions, i) => {
         // Wait 1s between conductor launches.
-        // This is a workaround to avoid gossip initiate race conditions.
+        // This is a workaround to avoid connection failures.
+        // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
         return this.addPlayerWithApp(appWithOptions);
