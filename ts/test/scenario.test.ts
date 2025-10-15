@@ -188,10 +188,10 @@ test("Set custom network config", async () => {
 
 test("Default network config", async () => {
   const scenario = new Scenario();
-  const initiateIntervalMs = 100;
-  const minInitiateIntervalMs = 100;
-  const initiateJitterMs = 30;
-  const roundTimeoutMs = 10_000;
+  const initiateIntervalMs = 3_000;
+  const minInitiateIntervalMs = 3_000;
+  const initiateJitterMs = 1_000;
+  const roundTimeoutMs = 5_000;
   const transportTimeoutS = 15;
   const targetArcFactor = 1;
 
