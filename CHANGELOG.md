@@ -7,7 +7,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## 2025-10-15: v0.19.0-dev.2
 
 ### Added
-- A new method `storageArc` that polls for network metrics and to check if an agent's storage arc is equal to a desired storage arc for a given dna hash. ([#301](https://github.com/holochain/tryorama/pull/301))
+- A new method `storageArc` that polls for network metrics to check if an agent's storage arc is equal to a desired storage arc for a given dna hash. ([#301](https://github.com/holochain/tryorama/pull/301))
 -  A new configuration field `targetArcFactor` has been added to `NetworkConfig`, allowing test scenarios to be written with 0-arc conductors ([#300](https://github.com/holochain/tryorama/pull/300))
 
 ### Removed
