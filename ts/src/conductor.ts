@@ -286,11 +286,11 @@ export class Conductor {
     assert("advanced" in conductorConfigYaml.network);
     conductorConfigYaml.network.advanced = {
       k2Gossip: {
-        initiateIntervalMs: createConductorOptions.initiateIntervalMs ?? 100,
+        initiateIntervalMs: createConductorOptions.initiateIntervalMs ?? 3_000,
         minInitiateIntervalMs:
-          createConductorOptions.minInitiateIntervalMs ?? 100,
-        initiateJitterMs: createConductorOptions.initiateJitterMs ?? 30,
-        roundTimeoutMs: createConductorOptions.roundTimeoutMs ?? 10_000,
+          createConductorOptions.minInitiateIntervalMs ?? 3_000,
+        initiateJitterMs: createConductorOptions.initiateJitterMs ?? 1_000,
+        roundTimeoutMs: createConductorOptions.roundTimeoutMs ?? 5_000,
       },
       tx5Transport: {
         signalAllowPlainText: true,
@@ -345,6 +345,7 @@ export class Conductor {
     });
     await startPromise;
     await this.connectAdminWs();
+    console.log('connected admin ws');
   }
 
   /**
