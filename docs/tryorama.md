@@ -104,17 +104,6 @@ Run the `hc` command to delete all conductor data.
 </td></tr>
 <tr><td>
 
-[conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs)](./tryorama.conductorcellsdhtsync.md)
-
-
-</td><td>
-
-A utility function to wait until all conductors' integrated DhtOps are identical for a DNA.
-
-
-</td></tr>
-<tr><td>
-
 [createConductor(signalingServerUrl, options)](./tryorama.createconductor.md)
 
 
@@ -176,6 +165,17 @@ A utility function to get the storage arc for a given player and dna hash.
 </td><td>
 
 Get a shorthand function to call a cell's zome.
+
+
+</td></tr>
+<tr><td>
+
+[integratedOpsCount(player, cellId, targetIntegratedOpsCount, intervalMs, timeoutMs)](./tryorama.integratedopscount.md)
+
+
+</td><td>
+
+A utility function to wait until a player's integrated Ops count equals a desired count a DNA
 
 
 </td></tr>
