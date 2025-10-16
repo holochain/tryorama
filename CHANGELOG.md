@@ -10,7 +10,7 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 - A new method `integratedOpsCount` that polls for integrated ops and checks if the number of integrated ops is equal to the desired number for a given dna hash. (#[302](https://github.com/holochain/tryorama/pull/302))
 
 ### Removed
-- Utility function `conductorCellsDhtSync` has been removed. Use `dhtSync` directly instead. (#[302](https://github.com/holochain/tryorama/pull/302))
+- **BREAKING**: Utility function `conductorCellsDhtSync` has been removed. Use `dhtSync` directly instead. (#[302](https://github.com/holochain/tryorama/pull/302))
 
 ### Changed
 ### Fixed
