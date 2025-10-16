@@ -99,7 +99,8 @@ test("dhtSync - Fails if some Ops are not synced among all conductors", async ()
     payload: "my entry",
   });
 
-  // Bob does not receive the entry within the timeout
+  // Bob does not receive the entry within the timeout.
+  // A 0ms timeout does one check for dht, then times out.
   try {
     await dhtSync([alice, bob], alice.cells[0].cell_id[0], undefined, 0);
     assert.fail();
