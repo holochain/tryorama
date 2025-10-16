@@ -6,6 +6,8 @@
 
 Create and add multiple players to the scenario, with the same app installed for each player.
 
+Each conductor is created sequentially, once the previous has completed startup.
+
 **Signature:**
 
 ```typescript

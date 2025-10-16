@@ -8,6 +8,8 @@ Installs the provided apps for the provided players.
 
 The number of players must be at least as high as the number of apps.
 
+Each app is installed sequentially, once the previous has completed installation.
+
 \# Errors
 
 If any of the app options contains an agent pub key, an error is thrown, because the agent pub keys of the players will be used for app installation.
