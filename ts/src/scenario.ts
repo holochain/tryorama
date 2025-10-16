@@ -44,7 +44,6 @@ export interface PlayerApp extends Player, AgentApp {
 export interface AppWithOptions {
   appBundleSource: AppBundleSource;
   options?: AppOptions;
-  label?: string;
 }
 
 /**
@@ -103,14 +102,13 @@ export class Scenario {
    *
    * @returns The newly added conductor instance.
    */
-  async addConductor(networkConfig?: NetworkConfig, label?: string) {
+  async addConductor(networkConfig?: NetworkConfig) {
     await this.ensureLocalServices();
     assert(this.serviceProcess);
     assert(this.signalingServerUrl);
     const defaultCreateOptions = {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
-      label,
     };
     const createOptions =
       networkConfig === undefined
@@ -152,10 +150,7 @@ export class Scenario {
         // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
-        const conductor = await this.addConductor(
-          networkConfig,
-          this.generatePlayerLabel(i),
-        );
+        const conductor = await this.addConductor(networkConfig);
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
       }),
@@ -253,7 +248,6 @@ export class Scenario {
     await this.ensureLocalServices();
     const conductor = await this.addConductor(
       appWithOptions.options?.networkConfig,
-      appWithOptions.label,
     );
     appWithOptions.options = {
       ...appWithOptions.options,
@@ -300,10 +294,7 @@ export class Scenario {
         // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
-        return this.addPlayerWithApp({
-          label: this.generatePlayerLabel(i),
-          ...appWithOptions,
-        });
+        return this.addPlayerWithApp(appWithOptions);
       }),
     );
 
@@ -326,10 +317,7 @@ export class Scenario {
         // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
-        return this.addPlayerWithApp({
-          label: this.generatePlayerLabel(i),
-          ...appWithOptions,
-        });
+        return this.addPlayerWithApp(appWithOptions);
       }),
     );
   }
@@ -379,10 +367,6 @@ export class Scenario {
         signalingServerUrl: this.signalingServerUrl,
       } = await runLocalServices());
     }
-  }
-
-  private generatePlayerLabel(index: number): string {
-    return `Player ${this.conductors.length + index}`;
   }
 }
 

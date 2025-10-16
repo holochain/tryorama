@@ -53,25 +53,6 @@ AppBundleSource
 </td></tr>
 <tr><td>
 
-[label?](./tryorama.appwithoptions.label.md)
-
-
-</td><td>
-
-
-</td><td>
-
-string
-
-
-</td><td>
-
-_(Optional)_
-
-
-</td></tr>
-<tr><td>
-
 [options?](./tryorama.appwithoptions.options.md)
 
 
