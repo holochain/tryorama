@@ -190,10 +190,13 @@ export class Scenario {
         // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
-        const player = players[i];
-        appWithOptions.options = appWithOptions.options ?? {};
-        appWithOptions.options.agentPubKey = player.agentPubKey;
-        return this.installPlayerApp(player.conductor, appWithOptions);
+        return this.installPlayerApp(players[i].conductor, {
+          ...appWithOptions,
+          options: {
+            ...appWithOptions.options,
+            agentPubKey: players[i].agentPubKey,
+          },
+        });
       }),
     );
   }
