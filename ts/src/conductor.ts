@@ -324,18 +324,22 @@ export class Conductor {
     ]);
     runConductorProcess.stdin.write(LAIR_PASSWORD);
     runConductorProcess.stdin.end();
+    this.conductorProcess = runConductorProcess;
 
-    const startPromise = new Promise<void>((resolve) => {
+    // Wait for conductor startup to complete and admin ws to be available
+    let adminPortLogged = false;
+    const adminPortPromise = new Promise<string>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.info(data.toString());
-        const conductorLaunched = data.toString().match(/Conductor ready\./);
-        if (conductorLaunched) {
-          // This is the last output of the startup process.
+
+        if(!adminPortLogged) {
+          // Once we have an admin port, the conductor is launched and usable.
           const adminPort = data.toString().match(/###ADMIN_PORT:(\d*)###/);
-          assert(adminPort);
-          this.adminApiUrl.port = adminPort[1];
-          this.conductorProcess = runConductorProcess;
-          resolve();
+          
+          if(adminPort !== null) {
+            adminPortLogged = true;
+            resolve(adminPort[1]);
+          }
         }
       });
 
@@ -343,7 +347,9 @@ export class Conductor {
         logger.error(data.toString());
       });
     });
-    await startPromise;
+    this.adminApiUrl.port = await adminPortPromise;
+
+    // Connect to admin ws
     await this.connectAdminWs();
   }
 
