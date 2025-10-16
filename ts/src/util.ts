@@ -33,9 +33,9 @@ export const pause = (milliseconds: number) => {
  *
  * If the timeout is reached, then throws an error containing the string returned by the given function `onTimeoutMessage`.
  *
- * @param isCompletedFn - Function to run on an interval, until the result is `true`.
+ * @param isComplete - Function to run on an interval, until the result is `true`.
  * @param onTimeoutMessage - Function that generates a string message which will be logged and thrown when the timeout is reached.
- * @param input - The input parameters to pass to `isCompletedFn` and `isCompletedFn`.
+ * @param input - The input parameters to pass to `isComplete` and `onTimeoutMessage`.
  * @param intervalMs -  Interval to pause between isCompleted runs (defaults to 500 milliseconds).
  * @param timeoutMs - A timeout for the delay (defaults to 60000 milliseconds).
  */
