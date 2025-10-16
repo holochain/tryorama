@@ -21,9 +21,8 @@ import { _ALLOWED_ORIGIN } from "./conductor-helpers.js";
 import { makeLogger } from "./logger.js";
 import { AppWithOptions } from "./scenario.js";
 import { AgentsAppsOptions } from "./types.js";
-import { Logger } from "winston";
 
-const defaultLogger = makeLogger();
+const logger = makeLogger();
 
 /**
  * @public
@@ -53,11 +52,6 @@ export interface ConductorOptions {
    * Timeout for requests to Admin and App API.
    */
   timeout?: number;
-
-  /**
-   * Label to identify this conductor in logs.
-   */
-  label?: string;
 }
 
 /**
@@ -168,7 +162,7 @@ interface ConductorConfigYaml {
  */
 export type CreateConductorOptions = Pick<
   ConductorOptions,
-  "bootstrapServerUrl" | "timeout" | "label"
+  "bootstrapServerUrl" | "timeout"
 >;
 
 /**
@@ -186,7 +180,6 @@ export const createConductor = async (
   const createConductorOptions: CreateConductorOptions = pick(options, [
     "bootstrapServerUrl",
     "timeout",
-    "label",
   ]);
   const conductor = await Conductor.create(
     signalingServerUrl,
@@ -218,16 +211,14 @@ export class Conductor {
   private adminApiUrl: URL;
   private _adminWs: AdminWebsocket | undefined;
   private _appWs: AppWebsocket | undefined;
-  private _logger: Logger;
   private readonly timeout: number;
 
-  private constructor(label?: string, timeout?: number) {
+  private constructor(timeout?: number) {
     this.conductorProcess = undefined;
     this.conductorDir = undefined;
     this.adminApiUrl = new URL(HOST_URL.href);
     this._adminWs = undefined;
     this._appWs = undefined;
-    this._logger = makeLogger(label);
     this.timeout = timeout ?? DEFAULT_TIMEOUT;
   }
 
@@ -247,15 +238,15 @@ export class Conductor {
     }
     args.push("webrtc");
     args.push(signalingServerUrl.href);
-    defaultLogger.debug("spawning hc sandbox with args:", args);
+    logger.debug("spawning hc sandbox with args:", args);
     const createConductorProcess = spawn("hc", args);
     createConductorProcess.stdin.write(LAIR_PASSWORD);
     createConductorProcess.stdin.end();
 
-    const conductor = new Conductor(options?.label, options?.timeout);
+    const conductor = new Conductor(options?.timeout);
     return new Promise<Conductor>((resolve, reject) => {
       createConductorProcess.stdout.on("data", (data: Buffer) => {
-        defaultLogger.debug(`creating conductor config\n${data.toString()}`);
+        logger.debug(`creating conductor config\n${data.toString()}`);
         const tmpDirMatches = [
           ...data.toString().matchAll(/DataRootPath\("(.*?)"\)/g),
         ];
@@ -267,7 +258,7 @@ export class Conductor {
         resolve(conductor);
       });
       createConductorProcess.stderr.on("data", (err) => {
-        defaultLogger.error(`error when creating conductor config: ${err}\n`);
+        logger.error(`error when creating conductor config: ${err}\n`);
         reject(err);
       });
     });
@@ -307,8 +298,8 @@ export class Conductor {
       },
     };
     const yamlDump = yaml.dump(conductorConfigYaml);
-    this._logger.debug("Updated conductor config:");
-    this._logger.debug(yamlDump);
+    logger.debug("Updated conductor config:");
+    logger.debug(yamlDump);
     writeFileSync(`${this.conductorDir}/${CONDUCTOR_CONFIG}`, yamlDump);
   }
 
@@ -322,9 +313,7 @@ export class Conductor {
       "error starting conductor: conductor has not been created",
     );
     if (this.conductorProcess) {
-      this._logger.error(
-        "error starting conductor: conductor is already running\n",
-      );
+      logger.error("error starting conductor: conductor is already running\n");
       return;
     }
 
@@ -341,13 +330,13 @@ export class Conductor {
     let adminPortLogged = false;
     const adminPortPromise = new Promise<string>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
-        this._logger.info(data.toString());
+        logger.info(data.toString());
 
-        if (!adminPortLogged) {
+        if(!adminPortLogged) {
           // Once we have an admin port, the conductor is launched and usable.
           const adminPort = data.toString().match(/###ADMIN_PORT:(\d*)###/);
-
-          if (adminPort !== null) {
+          
+          if(adminPort !== null) {
             adminPortLogged = true;
             resolve(adminPort[1]);
           }
@@ -355,7 +344,7 @@ export class Conductor {
       });
 
       runConductorProcess.stderr.on("data", (data: Buffer) => {
-        this._logger.error(data.toString());
+        logger.error(data.toString());
       });
     });
     this.adminApiUrl.port = await adminPortPromise;
@@ -369,11 +358,11 @@ export class Conductor {
    */
   async shutDown() {
     if (!this.conductorProcess) {
-      this._logger.info("shut down conductor: conductor is not running");
+      logger.info("shut down conductor: conductor is not running");
       return null;
     }
 
-    this._logger.debug("closing admin and app web sockets\n");
+    logger.debug("closing admin and app web sockets\n");
     if (this._adminWs) {
       await this._adminWs.client.close();
       this._adminWs = undefined;
@@ -383,7 +372,7 @@ export class Conductor {
       this._appWs = undefined;
     }
 
-    this._logger.debug("shutting down conductor\n");
+    logger.debug("shutting down conductor\n");
     return new Promise<number | null>((resolve) => {
       assert(this.conductorProcess);
       // Kill process after timeout if terminating didn't succeed.
@@ -408,7 +397,7 @@ export class Conductor {
       wsClientOptions: { origin: _ALLOWED_ORIGIN },
       defaultTimeout: this.timeout,
     });
-    this._logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
+    logger.debug(`connected to Admin API @ ${this.adminApiUrl.href}\n`);
   }
 
   /**
@@ -422,7 +411,7 @@ export class Conductor {
       port: await getPort({ port: portNumbers(30000, 40000) }),
       allowed_origins: _ALLOWED_ORIGIN,
     };
-    this._logger.debug(`attaching App API to port ${request.port}\n`);
+    logger.debug(`attaching App API to port ${request.port}\n`);
     const { port } = await this.adminWs().attachAppInterface(request);
     return port;
   }
@@ -435,7 +424,7 @@ export class Conductor {
    * @returns An app websocket.
    */
   async connectAppWs(token: AppAuthenticationToken, port: number) {
-    this._logger.debug(`connecting App WebSocket to port ${port}\n`);
+    logger.debug(`connecting App WebSocket to port ${port}\n`);
     const appApiUrl = new URL(this.adminApiUrl.href);
     appApiUrl.port = port.toString();
     const appWs = await AppWebsocket.connect({
@@ -513,7 +502,7 @@ export class Conductor {
       installed_app_id,
       network_seed,
     };
-    this._logger.debug(
+    logger.debug(
       `installing app with id ${installed_app_id} for agent ${encodeHashToBase64(
         agent_key,
       )}`,
@@ -542,7 +531,7 @@ export const cleanAllConductors = async () => {
   const conductorProcess = spawn("hc", ["sandbox", "clean"]);
   return new Promise<void>((resolve) => {
     conductorProcess.stdout.once("end", () => {
-      defaultLogger.debug("sandbox conductors cleaned\n");
+      logger.debug("sandbox conductors cleaned\n");
       resolve();
     });
   });
