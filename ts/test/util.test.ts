@@ -18,8 +18,7 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
     { appBundleSource },
   ]);
 
-  // Alice and Bob init their cells
-  // TODO This is a workaround for https://github.com/holochain/holochain/issues/5363
+  // Alice and Bob init their cells to trigger creation of InitZomesComplete Ops
   await bob.cells[0].callZome<string>({
     zome_name: TEST_ZOME_NAME,
     fn_name: "init",
