@@ -6,6 +6,8 @@
 
 Installs the same provided app for the provided players.
 
+The app is installed into each player's conductor sequentially, once the previous has completed installation.
+
 **Signature:**
 
 ```typescript

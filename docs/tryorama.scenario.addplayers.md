@@ -8,6 +8,8 @@ Create conductors with agents and add them to the scenario.
 
 The specified number of conductors is created and one agent is generated on each conductor.
 
+Each conductor is created sequentially, once the previous has completed startup.
+
 **Signature:**
 
 ```typescript

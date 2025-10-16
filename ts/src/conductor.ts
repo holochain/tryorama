@@ -295,11 +295,11 @@ export class Conductor {
     assert("advanced" in conductorConfigYaml.network);
     conductorConfigYaml.network.advanced = {
       k2Gossip: {
-        initiateIntervalMs: createConductorOptions.initiateIntervalMs ?? 100,
+        initiateIntervalMs: createConductorOptions.initiateIntervalMs ?? 3_000,
         minInitiateIntervalMs:
-          createConductorOptions.minInitiateIntervalMs ?? 100,
-        initiateJitterMs: createConductorOptions.initiateJitterMs ?? 30,
-        roundTimeoutMs: createConductorOptions.roundTimeoutMs ?? 10_000,
+          createConductorOptions.minInitiateIntervalMs ?? 3_000,
+        initiateJitterMs: createConductorOptions.initiateJitterMs ?? 1_000,
+        roundTimeoutMs: createConductorOptions.roundTimeoutMs ?? 5_000,
       },
       tx5Transport: {
         signalAllowPlainText: true,
@@ -335,18 +335,22 @@ export class Conductor {
     ]);
     runConductorProcess.stdin.write(LAIR_PASSWORD);
     runConductorProcess.stdin.end();
+    this.conductorProcess = runConductorProcess;
 
-    const startPromise = new Promise<void>((resolve) => {
+    // Wait for conductor startup to complete and admin ws to be available
+    let adminPortLogged = false;
+    const adminPortPromise = new Promise<string>((resolve) => {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
         this._logger.info(data.toString());
-        const conductorLaunched = data.toString().match(/Conductor ready\./);
-        if (conductorLaunched) {
-          // This is the last output of the startup process.
+
+        if (!adminPortLogged) {
+          // Once we have an admin port, the conductor is launched and usable.
           const adminPort = data.toString().match(/###ADMIN_PORT:(\d*)###/);
-          assert(adminPort);
-          this.adminApiUrl.port = adminPort[1];
-          this.conductorProcess = runConductorProcess;
-          resolve();
+
+          if (adminPort !== null) {
+            adminPortLogged = true;
+            resolve(adminPort[1]);
+          }
         }
       });
 
@@ -354,7 +358,9 @@ export class Conductor {
         this._logger.error(data.toString());
       });
     });
-    await startPromise;
+    this.adminApiUrl.port = await adminPortPromise;
+
+    // Connect to admin ws
     await this.connectAdminWs();
   }
 

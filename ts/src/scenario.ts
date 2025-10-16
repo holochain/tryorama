@@ -19,6 +19,7 @@ import {
   NetworkConfig,
 } from "./conductor.js";
 import { AgentApp, AppOptions } from "./types.js";
+import { pause } from "./util.js";
 
 /**
  * A player consists of a {@link Conductor} and an agent pub key.
@@ -132,6 +133,9 @@ export class Scenario {
    * The specified number of conductors is created and one agent is
    * generated on each conductor.
    *
+   * Each conductor is created sequentially, once the previous has
+   * completed startup.
+   *
    * @param amount - The number of players to be created.
    * @param networkConfig - Optional {@link NetworkConfig}
    * @returns An array of {@link Player}s
@@ -143,6 +147,11 @@ export class Scenario {
     await this.ensureLocalServices();
     return Promise.all(
       new Array(amount).fill(0).map(async (_, i) => {
+        // Wait 1s between conductor launches.
+        // This is a workaround to avoid connection failures.
+        // See https://github.com/holochain/tryorama/issues/297
+        await pause(i * 1000);
+
         const conductor = await this.addConductor(
           networkConfig,
           this.generatePlayerLabel(i),
@@ -157,6 +166,9 @@ export class Scenario {
    * Installs the provided apps for the provided players.
    *
    * The number of players must be at least as high as the number of apps.
+   *
+   * Each app is installed sequentially, once the previous has
+   * completed installation.
    *
    * # Errors
    *
@@ -182,7 +194,12 @@ export class Scenario {
     }
     await this.ensureLocalServices();
     return Promise.all(
-      appsWithOptions.map((appWithOptions, i) => {
+      appsWithOptions.map(async (appWithOptions, i) => {
+        // Wait 1s between conductor launches.
+        // This is a workaround to avoid connection failures.
+        // See https://github.com/holochain/tryorama/issues/297
+        await pause(i * 1000);
+
         const player = players[i];
         appWithOptions.options = appWithOptions.options ?? {};
         appWithOptions.options.agentPubKey = player.agentPubKey;
@@ -193,6 +210,9 @@ export class Scenario {
 
   /**
    * Installs the same provided app for the provided players.
+   *
+   * The app is installed into each player's conductor sequentially, once the previous has
+   * completed installation.
    *
    * @param appsWithOptions - The app with options to be installed for all players
    * @param players - The players the apps are installed for
@@ -209,7 +229,12 @@ export class Scenario {
     }
     await this.ensureLocalServices();
     return Promise.all(
-      players.map((player) => {
+      players.map(async (player, i) => {
+        // Wait 1s between conductor launches.
+        // This is a workaround to avoid connection failures.
+        // See https://github.com/holochain/tryorama/issues/297
+        await pause(i * 1000);
+
         appWithOptions.options = appWithOptions.options ?? {};
         appWithOptions.options.agentPubKey = player.agentPubKey;
         return this.installPlayerApp(player.conductor, appWithOptions);
@@ -260,19 +285,29 @@ export class Scenario {
    * Create and add multiple players to the scenario, with the same app installed
    * for each player.
    *
+   * Each conductor is created sequentially, once the previous has
+   * completed startup.
+   *
    * @param appsWithOptions - An app to be installed for each player
    * @returns All created player apps.
    */
   async addPlayersWithSameApp(appWithOptions: AppWithOptions, amount: number) {
     await this.ensureLocalServices();
-    return Promise.all(
-      new Array(amount).fill(0).map((_, i) =>
-        this.addPlayerWithApp({
+    const res = await Promise.all(
+      new Array(amount).fill(0).map(async (_, i) => {
+        // Wait 1s between conductor launches.
+        // This is a workaround to avoid connection failures.
+        // See https://github.com/holochain/tryorama/issues/297
+        await pause(i * 1000);
+
+        return this.addPlayerWithApp({
           label: this.generatePlayerLabel(i),
           ...appWithOptions,
-        }),
-      ),
+        });
+      }),
     );
+
+    return res;
   }
 
   /**
@@ -285,12 +320,17 @@ export class Scenario {
   async addPlayersWithApps(appsWithOptions: AppWithOptions[]) {
     await this.ensureLocalServices();
     return Promise.all(
-      appsWithOptions.map((appWithOptions, i) =>
-        this.addPlayerWithApp({
+      appsWithOptions.map(async (appWithOptions, i) => {
+        // Wait 1s between conductor launches.
+        // This is a workaround to avoid connection failures.
+        // See https://github.com/holochain/tryorama/issues/297
+        await pause(i * 1000);
+
+        return this.addPlayerWithApp({
           label: this.generatePlayerLabel(i),
           ...appWithOptions,
-        }),
-      ),
+        });
+      }),
     );
   }
 
