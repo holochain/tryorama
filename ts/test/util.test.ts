@@ -1,6 +1,6 @@
 import { AppBundleSource, EntryHash } from "@holochain/client";
 import { assert, expect, test } from "vitest";
-import { Scenario, dhtSync, storageArc } from "../src";
+import { Scenario, dhtSync, integratedOpsCount, storageArc } from "../src";
 import { FIXTURE_HAPP_URL } from "./fixture";
 import { EMPTY_ARC, FULL_ARC } from "./constants";
 
@@ -161,4 +161,71 @@ test("storageArc - Fails for only 1 conductor which never reaches full storage a
   ).rejects.toThrow();
 
   await scenario.cleanUp();
+});
+
+test("integratedOpsCount - Counts Ops published on first zome call", async () => {
+  const scenario = new Scenario();
+
+  const appBundleSource: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
+  const alice = await scenario.addPlayerWithApp({ appBundleSource });
+
+  // Trigger integration workflow by calling 'init'
+  // This is a workaround for https://github.com/holochain/holochain/issues/5363
+  await alice.cells[0].callZome<string>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "init",
+    payload: null,
+  });
+
+  await integratedOpsCount(alice, alice.cells[0].cell_id, 9);
+
+  // Create an entry
+  await alice.cells[0].callZome<string>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "create",
+    payload: "1",
+  });
+
+  // This should integrate 3 more ops
+  await integratedOpsCount(alice, alice.cells[0].cell_id, 14);
+
+  // Create a private entry
+  await alice.cells[0].callZome<string>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "create_private",
+    payload: "1",
+  });
+
+  // This should integrate 2 more ops
+  await integratedOpsCount(alice, alice.cells[0].cell_id, 16);
+});
+
+test("integratedOpsCount - Fails if timeout reached before integrated ops count matches", async () => {
+  const scenario = new Scenario();
+
+  const appBundleSource: AppBundleSource = {
+    type: "path",
+    value: FIXTURE_HAPP_URL.pathname,
+  };
+  const alice = await scenario.addPlayerWithApp({ appBundleSource });
+
+  // Trigger integration workflow by calling 'init'
+  // This is a workaround for https://github.com/holochain/holochain/issues/5363
+  await alice.cells[0].callZome<string>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "init",
+    payload: null,
+  });
+
+  try {
+    await integratedOpsCount(alice, alice.cells[0].cell_id, 0);
+    assert.fail();
+  } catch {
+    assert.ok(
+      "integratedOpsCount threw an error because ops count did not match after timeout",
+    );
+  }
 });
