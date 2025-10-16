@@ -8,6 +8,12 @@ pub fn create(input: Content) -> ExternResult<ActionHash> {
 }
 
 #[hdk_extern]
+pub fn create_private(input: Content) -> ExternResult<ActionHash> {
+    let action_hash = create_entry(EntryTypes::PrivateContent(input))?;
+    Ok(action_hash)
+}
+
+#[hdk_extern]
 pub fn read(hash: ActionHash) -> ExternResult<Option<Content>> {
     let entry = match get(hash, GetOptions::default())? {
         Some(record) => record
