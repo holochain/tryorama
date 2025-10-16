@@ -307,3 +307,59 @@ const isEqualPlayerStorageArc = async (
   const currentStorageArc = await getPlayerStorageArc(player, dnaHash);
   return isEqual(currentStorageArc, storageArc);
 };
+
+/**
+ * A utility function to wait until a player's integrated Ops count equals a desired
+ * count a DNA
+ *
+ * @param player - A Player.
+ * @param dnaHash - The DNA to check the storage arc for.
+ * @param targetIntegratedOpsCount - The desired integrated Ops count to wait for.
+ * @param intervalMs - Interval between comparisons in milliseconds (default 500).
+ * @param timeoutMs - Timeout in milliseconds (default 40_000).
+ * @returns A promise that resolves when the player's storage arc matches; rejects on timeout.
+ *
+ * @public
+ */
+export const integratedOpsCount = async (
+  player: PlayerApp,
+  cellId: CellId,
+  targetIntegratedOpsCount: number,
+  intervalMs = 500,
+  timeoutMs = 40_000,
+) =>
+  retryUntilCompleteOrTimeout(
+    async ({ player, cellId, targetIntegratedOpsCount }) => {
+      const playerFullState: FullStateDump = await player.conductor
+        .adminWs()
+        .dumpFullState({
+          cell_id: cellId,
+          dht_ops_cursor: undefined,
+        });
+
+      return (
+        playerFullState.integration_dump.integrated.length ===
+        targetIntegratedOpsCount
+      );
+    },
+    async ({ player, cellId, targetIntegratedOpsCount }) => {
+      const dump: FullStateDump = await player.conductor
+        .adminWs()
+        .dumpFullState({
+          cell_id: cellId,
+          dht_ops_cursor: undefined,
+        });
+
+      console.error(`
+Conductor
+------------------------------
+# of integrated ops: ${dump.integration_dump.integrated.length}
+# of ops in integration limbo: ${dump.integration_dump.integration_limbo.length}
+# of ops in validation limbo: ${dump.integration_dump.validation_limbo.length}\n`);
+
+      return `Target Integrated Ops Count: ${targetIntegratedOpsCount}, Current Integrated Ops Count: ${dump.integration_dump.integrated.length}`;
+    },
+    { player, cellId, targetIntegratedOpsCount },
+    intervalMs,
+    timeoutMs,
+  );
