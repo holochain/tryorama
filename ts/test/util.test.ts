@@ -19,7 +19,7 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
   ]);
 
   // Alice and Bob init their cells
-  // This is a workaround for https://github.com/holochain/holochain/issues/5363
+  // TODO This is a workaround for https://github.com/holochain/holochain/issues/5363
   await bob.cells[0].callZome<string>({
     zome_name: TEST_ZOME_NAME,
     fn_name: "init",

@@ -186,7 +186,7 @@ export class Scenario {
     return Promise.all(
       appsWithOptions.map(async (appWithOptions, i) => {
         // Wait 1s between conductor launches.
-        // This is a workaround to avoid connection failures.
+        // TODO This is a workaround to avoid connection failures.
         // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
@@ -221,7 +221,7 @@ export class Scenario {
     return Promise.all(
       players.map(async (player, i) => {
         // Wait 1s between conductor launches.
-        // This is a workaround to avoid connection failures.
+        // TODO This is a workaround to avoid connection failures.
         // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
@@ -285,7 +285,7 @@ export class Scenario {
     const res = await Promise.all(
       new Array(amount).fill(0).map(async (_, i) => {
         // Wait 1s between conductor launches.
-        // This is a workaround to avoid connection failures.
+        // TODO This is a workaround to avoid connection failures.
         // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
@@ -308,7 +308,7 @@ export class Scenario {
     return Promise.all(
       appsWithOptions.map(async (appWithOptions, i) => {
         // Wait 1s between conductor launches.
-        // This is a workaround to avoid connection failures.
+        // TODO This is a workaround to avoid connection failures.
         // See https://github.com/holochain/tryorama/issues/297
         await pause(i * 1000);
 
