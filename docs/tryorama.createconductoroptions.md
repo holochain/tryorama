@@ -9,7 +9,7 @@ Options for using the conductor factory.
 **Signature:**
 
 ```typescript
-export type CreateConductorOptions = Pick<ConductorOptions, "bootstrapServerUrl" | "timeout">;
+export type CreateConductorOptions = Pick<ConductorOptions, "bootstrapServerUrl" | "timeout" | "label">;
 ```
 **References:** [ConductorOptions](./tryorama.conductoroptions.md)
 
