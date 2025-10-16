@@ -56,7 +56,7 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
   // Alice has no ops in validation or integration limbo
   const aliceDump = await alice.conductor.adminWs().dumpFullState({
     cell_id: alice.cells[0].cell_id,
-    dht_ops_cursor: undefined
+    dht_ops_cursor: undefined,
   });
   assert.equal(aliceDump.integration_dump.integration_limbo.length, 0);
   assert.equal(aliceDump.integration_dump.validation_limbo.length, 0);
@@ -64,7 +64,7 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
   // Bob has no ops in validation or integration limbo
   const bobDump = await bob.conductor.adminWs().dumpFullState({
     cell_id: bob.cells[0].cell_id,
-    dht_ops_cursor: undefined
+    dht_ops_cursor: undefined,
   });
   assert.equal(bobDump.integration_dump.integration_limbo.length, 0);
   assert.equal(bobDump.integration_dump.validation_limbo.length, 0);
