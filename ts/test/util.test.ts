@@ -201,6 +201,8 @@ test("integratedOpsCount - Counts Ops published on first zome call", async () =>
 
   // This should integrate 2 more ops
   await integratedOpsCount(alice, alice.cells[0].cell_id, 16);
+
+  await scenario.cleanUp();
 });
 
 test("integratedOpsCount - Fails if timeout reached before integrated ops count matches", async () => {
@@ -228,4 +230,6 @@ test("integratedOpsCount - Fails if timeout reached before integrated ops count 
       "integratedOpsCount threw an error because ops count did not match after timeout",
     );
   }
+
+  await scenario.cleanUp();
 });
