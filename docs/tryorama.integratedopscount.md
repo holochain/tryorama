@@ -4,7 +4,7 @@
 
 ## integratedOpsCount() function
 
-A utility function to wait until a player's integrated Ops count equals a desired count a DNA
+A utility function to wait until a player's integrated Ops count equals a desired count for a DNA
 
 **Signature:**
 
@@ -57,6 +57,8 @@ CellId
 
 
 </td><td>
+
+The Cell to check the integrated Ops count for.
 
 
 </td></tr>
@@ -113,5 +115,5 @@ _(Optional)_ Timeout in milliseconds (default 40\_000).
 
 Promise&lt;void&gt;
 
-A promise that resolves when the player's storage arc matches; rejects on timeout.
+A promise that resolves when the player's integrated ops count matches; rejects on timeout.
 

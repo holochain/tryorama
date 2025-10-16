@@ -315,14 +315,14 @@ const isEqualPlayerStorageArc = async (
 
 /**
  * A utility function to wait until a player's integrated Ops count equals a desired
- * count a DNA
+ * count for a DNA
  *
  * @param player - A Player.
- * @param dnaHash - The DNA to check the storage arc for.
+ * @param cellId - The Cell to check the integrated Ops count for.
  * @param targetIntegratedOpsCount - The desired integrated Ops count to wait for.
  * @param intervalMs - Interval between comparisons in milliseconds (default 500).
  * @param timeoutMs - Timeout in milliseconds (default 40_000).
- * @returns A promise that resolves when the player's storage arc matches; rejects on timeout.
+ * @returns A promise that resolves when the player's integrated ops count matches; rejects on timeout.
  *
  * @public
  */

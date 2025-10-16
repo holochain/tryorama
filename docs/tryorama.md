@@ -175,7 +175,7 @@ Get a shorthand function to call a cell's zome.
 
 </td><td>
 
-A utility function to wait until a player's integrated Ops count equals a desired count a DNA
+A utility function to wait until a player's integrated Ops count equals a desired count for a DNA
 
 
 </td></tr>
