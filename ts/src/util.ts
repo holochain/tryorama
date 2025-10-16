@@ -28,6 +28,11 @@ export const pause = (milliseconds: number) => {
 
 /**
  *
+ * A utility function to wait until a given function `isComplete` returns `true` for a given `input`,
+ * or a timeout is reached.
+ *
+ * If the timeout is reached, then throws an error containing the string returned by the given function `onTimeoutMessage`.
+ *
  * @param isCompletedFn - Function to run on an interval, until the result is `true`.
  * @param onTimeoutMessage - Function that generates a string message which will be logged and thrown when the timeout is reached.
  * @param input - The input parameters to pass to `isCompletedFn` and `isCompletedFn`.
