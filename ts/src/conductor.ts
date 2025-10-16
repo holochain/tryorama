@@ -332,11 +332,11 @@ export class Conductor {
       runConductorProcess.stdout.on("data", (data: Buffer) => {
         logger.info(data.toString());
 
-        if(!adminPortLogged) {
+        if (!adminPortLogged) {
           // Once we have an admin port, the conductor is launched and usable.
           const adminPort = data.toString().match(/###ADMIN_PORT:(\d*)###/);
-          
-          if(adminPort !== null) {
+
+          if (adminPort !== null) {
             adminPortLogged = true;
             resolve(adminPort[1]);
           }

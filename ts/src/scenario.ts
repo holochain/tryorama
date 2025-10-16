@@ -144,7 +144,7 @@ export class Scenario {
   ): Promise<Player[]> {
     await this.ensureLocalServices();
     return Promise.all(
-      new Array(amount).fill(0).map(async (_, i) => {
+      new Array(amount).fill(0).map(async () => {
         const conductor = await this.addConductor(networkConfig);
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
