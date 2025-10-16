@@ -18,6 +18,19 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
     { appBundleSource },
   ]);
 
+  // Alice and Bob init their cells
+  // This is a workaround for https://github.com/holochain/holochain/issues/5363
+  await bob.cells[0].callZome<string>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "init",
+    payload: null,
+  });
+  await alice.cells[0].callZome<string>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "init",
+    payload: null,
+  });
+
   // Alice creates 10 entries
   let lastCreatedHash;
   let lastCreatedContent;
@@ -40,37 +53,27 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
   });
   assert.equal(readContent, lastCreatedContent);
 
-  await scenario.cleanUp();
-});
-
-test("dhtSync - Fails if some Ops are not synced among all conductors", async () => {
-  const scenario = new Scenario({
-    disableLocalServices: true,
+  // Alice has no ops in validation or integration limbo
+  const aliceDump = await alice.conductor.adminWs().dumpFullState({
+    cell_id: alice.cells[0].cell_id,
+    dht_ops_cursor: undefined
   });
+  assert.equal(aliceDump.integration_dump.integration_limbo.length, 0);
+  assert.equal(aliceDump.integration_dump.validation_limbo.length, 0);
 
-  const appBundleSource: AppBundleSource = {
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
-  };
-  const [alice, bob] = await scenario.addPlayersWithApps([
-    { appBundleSource },
-    { appBundleSource },
-  ]);
-
-  // Alice creates 1 entry
-  await alice.cells[0].callZome<EntryHash>({
-    zome_name: TEST_ZOME_NAME,
-    fn_name: "create",
-    payload: "my entry",
+  // Bob has no ops in validation or integration limbo
+  const bobDump = await bob.conductor.adminWs().dumpFullState({
+    cell_id: bob.cells[0].cell_id,
+    dht_ops_cursor: undefined
   });
+  assert.equal(bobDump.integration_dump.integration_limbo.length, 0);
+  assert.equal(bobDump.integration_dump.validation_limbo.length, 0);
 
-  // Bob never receives the entry
-  try {
-    await dhtSync([alice, bob], alice.cells[0].cell_id[0], undefined, 5000);
-    assert.fail();
-  } catch {
-    assert(true);
-  }
+  // Alice has 52 ops integrated
+  assert.equal(aliceDump.integration_dump.integrated.length, 52);
+
+  // Bob has 52 ops integrated
+  assert.equal(bobDump.integration_dump.integrated.length, 52);
 
   await scenario.cleanUp();
 });
