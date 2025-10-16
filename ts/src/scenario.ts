@@ -145,11 +145,6 @@ export class Scenario {
     await this.ensureLocalServices();
     return Promise.all(
       new Array(amount).fill(0).map(async (_, i) => {
-        // Wait 1s between conductor launches.
-        // This is a workaround to avoid connection failures.
-        // See https://github.com/holochain/tryorama/issues/297
-        await pause(i * 1000);
-
         const conductor = await this.addConductor(networkConfig);
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
