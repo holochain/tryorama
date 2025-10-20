@@ -169,7 +169,7 @@ test("storageArc - Fails for only 1 conductor which never reaches full storage a
   await scenario.cleanUp();
 });
 
-test("integratedOpsCount - Counts Ops published on first zome call", () =>
+test("integratedOpsCount - Succeeds when integrated Ops count matches", () =>
   runScenario(async (scenario: Scenario) => {
     const appBundleSource: AppBundleSource = {
       type: "path",
@@ -177,13 +177,19 @@ test("integratedOpsCount - Counts Ops published on first zome call", () =>
     };
     const alice = await scenario.addPlayerWithApp({ appBundleSource });
 
-    // Trigger creation of InitZomesComplete Ops by calling 'init' manually
-    await alice.cells[0].callZome<string>({
-      zome_name: TEST_ZOME_NAME,
-      fn_name: "init",
-      payload: null,
-    });
-
+    // Create a cap grant authorizing alice's key to sign zome calls,
+    // which internally also triggers zome initialization.
+    //
+    // In tryorama, this authorization happens automatically at a Player's first zome call.
+    // Here we do it manually so we can track which Ops will be created directly by subsequent zome calls.
+    //
+    // TODO This creates 4 Ops: 2 via the zome initialization workflow, and 2 for the new cap grant.
+    // Currently, the cap grant Ops are stuck in integration limbo.
+    // As a workaround we assert only 2 additional Ops.
+    // See https://github.com/holochain/holochain/issues/5363
+    await alice.conductor
+      .adminWs()
+      .authorizeSigningCredentials(alice.cells[0].cell_id);
     await integratedOpsCount(alice, alice.cells[0].cell_id, 9);
 
     // Create an entry
