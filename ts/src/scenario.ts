@@ -250,6 +250,8 @@ export class Scenario {
   /**
    * Create and add a single player with an app installed to the scenario.
    *
+   * This should not be called multiple times in parallel. Instead use `addPlayersWithApps` or `addPlayersWithSameApp`.
+   *
    * @param appBundleSource - The bundle or path to the bundle.
    * @param options - {@link AppOptions}.
    * @returns A player with the installed app.
