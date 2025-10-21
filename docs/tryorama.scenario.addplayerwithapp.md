@@ -6,6 +6,8 @@
 
 Create and add a single player with an app installed to the scenario.
 
+This should not be called multiple times in parallel. Instead use `addPlayersWithApps` or `addPlayersWithSameApp`<!-- -->.
+
 **Signature:**
 
 ```typescript

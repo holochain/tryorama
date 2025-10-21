@@ -299,6 +299,8 @@ Each conductor is created sequentially, once the previous has completed startup.
 
 Create and add a single player with an app installed to the scenario.
 
+This should not be called multiple times in parallel. Instead use `addPlayersWithApps` or `addPlayersWithSameApp`<!-- -->.
+
 
 </td></tr>
 <tr><td>

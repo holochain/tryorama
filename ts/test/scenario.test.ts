@@ -308,7 +308,7 @@ test("Create and read an entry, 2 conductors", async () => {
     const content = "Hello Tryorama";
 
     // The cells of the installed hApp are returned in the same order as the DNAs
-    // in the app manifesassert.
+    // in the app manifest.
     const createEntryHash = await alice.cells[0].callZome<EntryHash>({
       zome_name: TEST_ZOME_NAME,
       fn_name: "create",

@@ -5,9 +5,19 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
-- A new method `storageArc` that polls for network metrics and to check if an agent's storage arc is equal to a desired storage arc for a given dna hash. ([#300](https://github.com/holochain/tryorama/pull/301))
--  A new configuration field `targetArcFactor` has been added to `NetworkConfig`, allowing test scenarios to be written with 0-arc conductors ([#300](https://github.com/holochain/tryorama/pull/300))
 - A new optional field `label` was added to the types `AppWithOptions`, `ConductorOptions`, `CreateConductorOptions`, and to the function `addConductor`. It allows overriding the default label which will prefix log messages of that Conductor instance.
+
+### Removed
+### Changed
+### Fixed
+- When creating conductors with `Scenario#addPlayers`, `Scenario#installAppsForPlayers`, `Scenario#installSameAppForPlayers`, `Scenario#addPlayersWithApps`, and `Scenario#addPlayersWithSameApp` each conductor is created sequentially and waits for startup. This is a workaround to avoid connection failures which can cause test failures. ([#303](https://github.com/holochain/tryorama/pull/303))
+- Fixed flaky behavior in recognizing conductor startup success. ([#303](https://github.com/holochain/tryorama/pull/303))
+
+## 2025-10-15: v0.19.0-dev.2
+
+### Added
+- A new method `storageArc` that polls for network metrics to check if an agent's storage arc is equal to a desired storage arc for a given dna hash. ([#301](https://github.com/holochain/tryorama/pull/301))
+-  A new configuration field `targetArcFactor` has been added to `NetworkConfig`, allowing test scenarios to be written with 0-arc conductors ([#300](https://github.com/holochain/tryorama/pull/300))
 
 ### Removed
 ### Changed
