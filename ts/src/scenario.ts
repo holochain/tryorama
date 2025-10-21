@@ -130,6 +130,9 @@ export class Scenario {
    * The specified number of conductors is created and one agent is
    * generated on each conductor.
    *
+   * Each conductor is created sequentially, once the previous has
+   * completed startup.
+   *
    * @param amount - The number of players to be created.
    * @param networkConfig - Optional {@link NetworkConfig}
    * @returns An array of {@link Player}s
@@ -141,10 +144,7 @@ export class Scenario {
     await this.ensureLocalServices();
     return Promise.all(
       new Array(amount).fill(0).map(async () => {
-        const conductor = await this.addConductor();
-        if (networkConfig) {
-          conductor.setNetworkConfig(networkConfig);
-        }
+        const conductor = await this.addConductor(networkConfig);
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
       }),
@@ -155,6 +155,9 @@ export class Scenario {
    * Installs the provided apps for the provided players.
    *
    * The number of players must be at least as high as the number of apps.
+   *
+   * Each app is installed sequentially, once the previous has
+   * completed installation.
    *
    * # Errors
    *
@@ -178,19 +181,38 @@ export class Scenario {
         "Agent pub key in app options must not be set. Agent pub keys are taken from the players.",
       );
     }
+
+    if (appsWithOptions.length !== players.length) {
+      throw new Error(
+        "The number of AppsWithOptions must match the number of Players.",
+      );
+    }
+
     await this.ensureLocalServices();
-    return Promise.all(
-      appsWithOptions.map((appWithOptions, i) => {
-        const player = players[i];
-        appWithOptions.options = appWithOptions.options ?? {};
-        appWithOptions.options.agentPubKey = player.agentPubKey;
-        return this.installPlayerApp(player.conductor, appWithOptions);
-      }),
-    );
+
+    // Sequentially install apps.
+    // TODO This is a workaround to avoid connection failures.
+    // See https://github.com/holochain/tryorama/issues/297
+    const playerApps = [];
+    for (const i in players) {
+      const playerApp = await this.installPlayerApp(players[i].conductor, {
+        ...appsWithOptions[i],
+        options: {
+          ...appsWithOptions[i].options,
+          agentPubKey: players[i].agentPubKey,
+        },
+      });
+      playerApps.push(playerApp);
+    }
+
+    return playerApps;
   }
 
   /**
    * Installs the same provided app for the provided players.
+   *
+   * The app is installed into each player's conductor sequentially, once the previous has
+   * completed installation.
    *
    * @param appsWithOptions - The app with options to be installed for all players
    * @param players - The players the apps are installed for
@@ -206,17 +228,29 @@ export class Scenario {
       );
     }
     await this.ensureLocalServices();
-    return Promise.all(
-      players.map((player) => {
-        appWithOptions.options = appWithOptions.options ?? {};
-        appWithOptions.options.agentPubKey = player.agentPubKey;
-        return this.installPlayerApp(player.conductor, appWithOptions);
-      }),
-    );
+
+    // Sequentially install apps.
+    // TODO This is a workaround to avoid connection failures.
+    // See https://github.com/holochain/tryorama/issues/297
+    const playerApps = [];
+    for (const i in players) {
+      const options = appWithOptions.options ?? {};
+      options.agentPubKey = players[i].agentPubKey;
+
+      const playerApp = await this.installPlayerApp(players[i].conductor, {
+        ...appWithOptions,
+        options,
+      });
+      playerApps.push(playerApp);
+    }
+
+    return playerApps;
   }
 
   /**
    * Create and add a single player with an app installed to the scenario.
+   *
+   * This should not be called multiple times in parallel. Instead use `addPlayersWithApps` or `addPlayersWithSameApp`.
    *
    * @param appBundleSource - The bundle or path to the bundle.
    * @param options - {@link AppOptions}.
@@ -257,16 +291,25 @@ export class Scenario {
    * Create and add multiple players to the scenario, with the same app installed
    * for each player.
    *
+   * Each conductor is created sequentially, once the previous has
+   * completed startup.
+   *
    * @param appsWithOptions - An app to be installed for each player
    * @returns All created player apps.
    */
   async addPlayersWithSameApp(appWithOptions: AppWithOptions, amount: number) {
     await this.ensureLocalServices();
-    return Promise.all(
-      new Array(amount)
-        .fill(0)
-        .map(() => this.addPlayerWithApp(appWithOptions)),
-    );
+
+    // Sequentially create conductors and install apps.
+    // TODO This is a workaround to avoid connection failures.
+    // See https://github.com/holochain/tryorama/issues/297
+    const playerApps = [];
+    for (let i = 0; i < amount; i++) {
+      const playerApp = await this.addPlayerWithApp(appWithOptions);
+      playerApps.push(playerApp);
+    }
+
+    return playerApps;
   }
 
   /**
@@ -278,11 +321,17 @@ export class Scenario {
    */
   async addPlayersWithApps(appsWithOptions: AppWithOptions[]) {
     await this.ensureLocalServices();
-    return Promise.all(
-      appsWithOptions.map((appWithOptions) =>
-        this.addPlayerWithApp(appWithOptions),
-      ),
-    );
+
+    // Sequentially create conductors and install apps.
+    // TODO This is a workaround to avoid connection failures.
+    // See https://github.com/holochain/tryorama/issues/297
+    const playerApps = [];
+    for (const i in appsWithOptions) {
+      const playerApp = await this.addPlayerWithApp(appsWithOptions[i]);
+      playerApps.push(playerApp);
+    }
+
+    return playerApps;
   }
 
   /**
