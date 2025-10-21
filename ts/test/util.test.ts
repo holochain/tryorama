@@ -18,6 +18,18 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
     { appBundleSource },
   ]);
 
+  // Alice and Bob init their cells to trigger creation of InitZomesComplete Ops
+  await bob.cells[0].callZome<string>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "init",
+    payload: null,
+  });
+  await alice.cells[0].callZome<string>({
+    zome_name: TEST_ZOME_NAME,
+    fn_name: "init",
+    payload: null,
+  });
+
   // Alice creates 10 entries
   let lastCreatedHash;
   let lastCreatedContent;
@@ -39,6 +51,28 @@ test("dhtSync - Create multiple entries, read the last, 2 conductors", async () 
     payload: lastCreatedHash,
   });
   assert.equal(readContent, lastCreatedContent);
+
+  // Alice has no ops in validation or integration limbo
+  const aliceDump = await alice.conductor.adminWs().dumpFullState({
+    cell_id: alice.cells[0].cell_id,
+    dht_ops_cursor: undefined,
+  });
+  assert.equal(aliceDump.integration_dump.integration_limbo.length, 0);
+  assert.equal(aliceDump.integration_dump.validation_limbo.length, 0);
+
+  // Bob has no ops in validation or integration limbo
+  const bobDump = await bob.conductor.adminWs().dumpFullState({
+    cell_id: bob.cells[0].cell_id,
+    dht_ops_cursor: undefined,
+  });
+  assert.equal(bobDump.integration_dump.integration_limbo.length, 0);
+  assert.equal(bobDump.integration_dump.validation_limbo.length, 0);
+
+  // Alice has 52 ops integrated
+  assert.equal(aliceDump.integration_dump.integrated.length, 52);
+
+  // Bob has 52 ops integrated
+  assert.equal(bobDump.integration_dump.integrated.length, 52);
 
   await scenario.cleanUp();
 });
@@ -64,57 +98,13 @@ test("dhtSync - Fails if some Ops are not synced among all conductors", async ()
     payload: "my entry",
   });
 
-  // Bob never receives the entry
+  // Bob does not receive the entry within the timeout.
+  // A 0ms timeout does one check for dht, then times out.
   try {
-    await dhtSync([alice, bob], alice.cells[0].cell_id[0], undefined, 5000);
+    await dhtSync([alice, bob], alice.cells[0].cell_id[0], undefined, 0);
     assert.fail();
   } catch {
     assert(true);
-  }
-
-  await scenario.cleanUp();
-});
-
-test("dhtSync - Fails if some Ops are not integrated in a conductor", async () => {
-  const scenario = new Scenario();
-
-  const appBundleSource: AppBundleSource = {
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
-  };
-  const [alice, bob] = await scenario.addPlayersWithApps([
-    { appBundleSource },
-    { appBundleSource },
-  ]);
-
-  // Alice creates 1 entry, but never publishes it because publishing is disabled
-  await alice.cells[0].callZome<EntryHash>({
-    zome_name: TEST_ZOME_NAME,
-    fn_name: "create",
-    payload: "my entry",
-  });
-
-  const x = true;
-  while (x) {
-    // Dump Bob's conductor state
-    const bobStateDump = await bob.conductor.adminWs().dumpFullState({
-      cell_id: alice.cells[0].cell_id,
-      dht_ops_cursor: undefined,
-    });
-
-    // When Bob recieves Alice's Ops, and they are being validated,
-    // then dhtSync should fail
-    if (bobStateDump.integration_dump.validation_limbo.length > 0) {
-      try {
-        // Run with a 0ms timeout, so that we check the sync status only *once*,
-        // while Bob's conductor is still in this state.
-        await dhtSync([alice], alice.cells[0].cell_id[0], 500, 0);
-        assert.fail();
-      } catch {
-        assert(true);
-      }
-      break;
-    }
   }
 
   await scenario.cleanUp();

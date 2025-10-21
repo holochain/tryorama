@@ -253,6 +253,8 @@ Create conductors with agents and add them to the scenario.
 
 The specified number of conductors is created and one agent is generated on each conductor.
 
+Each conductor is created sequentially, once the previous has completed startup.
+
 
 </td></tr>
 <tr><td>
@@ -281,6 +283,8 @@ Create and add multiple players to the scenario, with an app installed for each 
 
 Create and add multiple players to the scenario, with the same app installed for each player.
 
+Each conductor is created sequentially, once the previous has completed startup.
+
 
 </td></tr>
 <tr><td>
@@ -294,6 +298,8 @@ Create and add multiple players to the scenario, with the same app installed for
 </td><td>
 
 Create and add a single player with an app installed to the scenario.
+
+This should not be called multiple times in parallel. Instead use `addPlayersWithApps` or `addPlayersWithSameApp`<!-- -->.
 
 
 </td></tr>
@@ -325,6 +331,8 @@ Installs the provided apps for the provided players.
 
 The number of players must be at least as high as the number of apps.
 
+Each app is installed sequentially, once the previous has completed installation.
+
 \# Errors
 
 If any of the app options contains an agent pub key, an error is thrown, because the agent pub keys of the players will be used for app installation.
@@ -342,6 +350,8 @@ If any of the app options contains an agent pub key, an error is thrown, because
 </td><td>
 
 Installs the same provided app for the provided players.
+
+The app is installed into each player's conductor sequentially, once the previous has completed installation.
 
 
 </td></tr>

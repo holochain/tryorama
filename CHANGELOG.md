@@ -4,6 +4,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ## \[Unreleased\]
 
+### Added
+### Removed
+### Changed
+### Fixed
+- When creating conductors with `Scenario#addPlayers`, `Scenario#installAppsForPlayers`, `Scenario#installSameAppForPlayers`, `Scenario#addPlayersWithApps`, and `Scenario#addPlayersWithSameApp` each conductor is created sequentially and waits for startup. This is a workaround to avoid connection failures which can cause test failures. ([#303](https://github.com/holochain/tryorama/pull/303))
+- Fixed flaky behavior in recognizing conductor startup success. ([#303](https://github.com/holochain/tryorama/pull/303))
+
 ## 2025-10-15: v0.19.0-dev.2
 
 ### Added
