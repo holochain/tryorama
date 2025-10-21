@@ -44,7 +44,7 @@ const retryUntilCompleteOrTimeout = async <T>(
   onTimeoutMessage: (input: T) => Promise<string>,
   input: T,
   intervalMs: number = 500,
-  timeoutMs: number = 60000,
+  timeoutMs: number = 40_000,
 ) => {
   // Always run the check at least once, even if the timeoutMs is 0.
   let completed = await isComplete(input);
@@ -172,7 +172,7 @@ export const dhtSync = async (
   players: PlayerApp[],
   dnaHash: DnaHash,
   intervalMs = 500,
-  timeoutMs = 60000,
+  timeoutMs = 40_000,
 ) =>
   retryUntilCompleteOrTimeout(
     ({ players, dnaHash }) => {
