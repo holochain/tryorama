@@ -5,8 +5,12 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+- A new optional field `label` was added to the types `AppWithOptions`, `ConductorOptions`, `CreateConductorOptions`, and to the function `addConductor`. It allows overriding the default label which will prefix log messages of that Conductor instance.
+
 ### Removed
 ### Changed
+- Log messages from Conductors that were created with `addPlayers` functions are now prefixed by `Tryorama - Player #` where "#" is the Player index. This makes it easier to distinguish log messages from different conductors. ([#302](https://github.com/holochain/tryorama/pull/302))
+
 ### Fixed
 - When creating conductors with `Scenario#addPlayers`, `Scenario#installAppsForPlayers`, `Scenario#installSameAppForPlayers`, `Scenario#addPlayersWithApps`, and `Scenario#addPlayersWithSameApp` each conductor is created sequentially and waits for startup. This is a workaround to avoid connection failures which can cause test failures. ([#303](https://github.com/holochain/tryorama/pull/303))
 - Fixed flaky behavior in recognizing conductor startup success. ([#303](https://github.com/holochain/tryorama/pull/303))
