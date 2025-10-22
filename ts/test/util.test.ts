@@ -164,15 +164,10 @@ test("integratedOpsCount - Succeeds when integrated Ops count matches", () =>
     //
     // In tryorama, this authorization happens automatically at a Player's first zome call.
     // Here we do it manually so we can track which Ops will be created directly by subsequent zome calls.
-    //
-    // TODO This creates 4 Ops: 2 via the zome initialization workflow, and 2 for the new cap grant.
-    // Currently, the cap grant Ops are stuck in integration limbo.
-    // As a workaround we assert only 2 additional Ops.
-    // See https://github.com/holochain/holochain/issues/5363
     await alice.conductor
       .adminWs()
       .authorizeSigningCredentials(alice.cells[0].cell_id);
-    await integratedOpsCount(alice, alice.cells[0].cell_id, 9);
+    await integratedOpsCount(alice, alice.cells[0].cell_id, 11);
 
     // Create an entry
     await alice.cells[0].callZome<string>({
@@ -182,12 +177,6 @@ test("integratedOpsCount - Succeeds when integrated Ops count matches", () =>
     });
 
     // This should integrate 3 more ops
-    //
-    // TODO Currently, it also integrates 2 more which are stuck in integration_limbo
-    // until another record is written to the source chain via a zome call.
-    // As a workaround we assert 5 additional ops.
-    // See https://github.com/holochain/holochain/issues/5363
-
     await integratedOpsCount(alice, alice.cells[0].cell_id, 14);
 
     // Create a private entry
