@@ -55,6 +55,25 @@ _(Optional)_ A bootstrap server URL for peers to discover each other.
 </td></tr>
 <tr><td>
 
+[label?](./tryorama.conductoroptions.label.md)
+
+
+</td><td>
+
+
+</td><td>
+
+string
+
+
+</td><td>
+
+_(Optional)_ Label to identify this conductor in logs.
+
+
+</td></tr>
+<tr><td>
+
 [startup?](./tryorama.conductoroptions.startup.md)
 
 

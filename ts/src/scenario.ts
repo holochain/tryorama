@@ -43,6 +43,7 @@ export interface PlayerApp extends Player, AgentApp {
 export interface AppWithOptions {
   appBundleSource: AppBundleSource;
   options?: AppOptions;
+  label?: string;
 }
 
 /**
@@ -101,13 +102,14 @@ export class Scenario {
    *
    * @returns The newly added conductor instance.
    */
-  async addConductor(networkConfig?: NetworkConfig) {
+  async addConductor(networkConfig?: NetworkConfig, label?: string) {
     await this.ensureLocalServices();
     assert(this.serviceProcess);
     assert(this.signalingServerUrl);
     const defaultCreateOptions = {
       timeout: this.timeout,
       bootstrapServerUrl: this.bootstrapServerUrl,
+      label,
     };
     const createOptions =
       networkConfig === undefined
@@ -143,8 +145,11 @@ export class Scenario {
   ): Promise<Player[]> {
     await this.ensureLocalServices();
     return Promise.all(
-      new Array(amount).fill(0).map(async () => {
-        const conductor = await this.addConductor(networkConfig);
+      new Array(amount).fill(0).map(async (_, i) => {
+        const conductor = await this.addConductor(
+          networkConfig,
+          this.generatePlayerLabel(i),
+        );
         const agentPubKey = await conductor.adminWs().generateAgentPubKey();
         return { conductor, agentPubKey };
       }),
@@ -260,6 +265,7 @@ export class Scenario {
     await this.ensureLocalServices();
     const conductor = await this.addConductor(
       appWithOptions.options?.networkConfig,
+      appWithOptions.label,
     );
     appWithOptions.options = {
       ...appWithOptions.options,
@@ -379,6 +385,10 @@ export class Scenario {
         signalingServerUrl: this.signalingServerUrl,
       } = await runLocalServices());
     }
+  }
+
+  private generatePlayerLabel(index: number): string {
+    return `Player ${this.conductors.length + index}`;
   }
 }
 
