@@ -190,31 +190,28 @@ test("integratedOpsCount - Succeeds when integrated Ops count matches", () =>
     await integratedOpsCount(alice, alice.cells[0].cell_id, 16);
   }));
 
-test("integratedOpsCount - Fails if timeout reached before integrated ops count matches", async () => {
-  const scenario = new Scenario();
+test("integratedOpsCount - Fails if timeout reached before integrated ops count matches", async () =>
+  runScenario(async (scenario: Scenario) => {
+    const appBundleSource: AppBundleSource = {
+      type: "path",
+      value: FIXTURE_HAPP_URL.pathname,
+    };
+    const alice = await scenario.addPlayerWithApp({ appBundleSource });
 
-  const appBundleSource: AppBundleSource = {
-    type: "path",
-    value: FIXTURE_HAPP_URL.pathname,
-  };
-  const alice = await scenario.addPlayerWithApp({ appBundleSource });
+    // Trigger integration workflow by calling 'init'
+    // This is a workaround for https://github.com/holochain/holochain/issues/5363
+    await alice.cells[0].callZome<string>({
+      zome_name: TEST_ZOME_NAME,
+      fn_name: "init",
+      payload: null,
+    });
 
-  // Trigger integration workflow by calling 'init'
-  // This is a workaround for https://github.com/holochain/holochain/issues/5363
-  await alice.cells[0].callZome<string>({
-    zome_name: TEST_ZOME_NAME,
-    fn_name: "init",
-    payload: null,
-  });
-
-  try {
-    await integratedOpsCount(alice, alice.cells[0].cell_id, 0);
-    assert.fail();
-  } catch {
-    assert.ok(
-      "integratedOpsCount threw an error because ops count did not match after timeout",
-    );
-  }
-
-  await scenario.cleanUp();
-});
+    try {
+      await integratedOpsCount(alice, alice.cells[0].cell_id, 0);
+      assert.fail();
+    } catch {
+      assert.ok(
+        "integratedOpsCount threw an error because ops count did not match after timeout",
+      );
+    }
+  }));
