@@ -26,6 +26,49 @@ export const pause = (milliseconds: number) => {
   });
 };
 
+/**
+ *
+ * A utility function to wait until a given function `isComplete` returns `true` for a given `input`,
+ * or a timeout is reached.
+ *
+ * If the timeout is reached, then throws an error containing the string returned by the given function `onTimeoutMessage`.
+ *
+ * @param isComplete - Function to run on an interval, until the result is `true`.
+ * @param onTimeoutMessage - Function that generates a string message which will be logged and thrown when the timeout is reached.
+ * @param input - The input parameters to pass to `isComplete` and `onTimeoutMessage`.
+ * @param intervalMs -  Interval to pause between isCompleted runs (defaults to 500 milliseconds).
+ * @param timeoutMs - A timeout for the delay (defaults to 60000 milliseconds).
+ */
+const retryUntilCompleteOrTimeout = async <T>(
+  isComplete: (input: T) => Promise<boolean>,
+  onTimeoutMessage: (input: T) => Promise<string>,
+  input: T,
+  intervalMs: number = 500,
+  timeoutMs: number = 40_000,
+) => {
+  // Always run the check at least once, even if the timeoutMs is 0.
+  let completed = await isComplete(input);
+
+  const startTime = Date.now();
+  while (!completed) {
+    // Check if timeout has passed
+    const currentTime = Date.now();
+    if (Math.floor(currentTime - startTime) >= timeoutMs) {
+      const timeoutMessage = await onTimeoutMessage(input);
+      const failureMessage = `Timeout of ${timeoutMs} ms has passed. ${timeoutMessage}`;
+
+      console.error(failureMessage);
+      throw Error(failureMessage);
+    }
+
+    completed = await isComplete(input);
+
+    if (!completed) {
+      await pause(intervalMs);
+    }
+  }
+};
+
 const playerAppsToConductorCells = (players: PlayerApp[], dnaHash: DnaHash) =>
   players.map((playerApp) => ({
     conductor: playerApp.conductor,
@@ -129,40 +172,15 @@ export const dhtSync = async (
   players: PlayerApp[],
   dnaHash: DnaHash,
   intervalMs = 500,
-  timeoutMs = 60000,
-) => {
-  const conductorCells = playerAppsToConductorCells(players, dnaHash);
-  return conductorCellsDhtSync(conductorCells, intervalMs, timeoutMs);
-};
-
-/**
- * A utility function to wait until all conductors' integrated DhtOps are
- * identical for a DNA.
- *
- * @param conductorCells - Array of ConductorCell.
- * @param interval - Interval to pause between comparisons.
- * @param timeout - A timeout for the delay (optional).
- * @returns A promise that is resolved after all agents' DHT states match.
- *
- * @public
- */
-export const conductorCellsDhtSync = async (
-  conductorCells: ConductorCell[],
-  intervalMs: number,
-  timeoutMs: number,
-) => {
-  if (!isConductorCellDnaHashEqual(conductorCells)) {
-    throw Error("Cannot compare DHT state of different DNAs");
-  }
-
-  // Always run the check at least once, even if the timeoutMs is 0.
-  let completed = await areConductorCellsDhtsSynced(conductorCells);
-
-  const startTime = Date.now();
-  while (!completed) {
-    // Check if timeout has passed
-    const currentTime = Date.now();
-    if (Math.floor(currentTime - startTime) >= timeoutMs) {
+  timeoutMs = 40_000,
+) =>
+  retryUntilCompleteOrTimeout(
+    ({ players, dnaHash }) => {
+      const conductorCells = playerAppsToConductorCells(players, dnaHash);
+      return areConductorCellsDhtsSynced(conductorCells);
+    },
+    async ({ players, dnaHash }) => {
+      const conductorCells = playerAppsToConductorCells(players, dnaHash);
       const conductorStates: FullStateDump[] = await Promise.all(
         conductorCells.map((conductorCell) =>
           conductorCell.conductor.adminWs().dumpFullState({
@@ -171,31 +189,24 @@ export const conductorCellsDhtSync = async (
           }),
         ),
       );
-      console.log(
-        `Timeout of ${timeoutMs} ms has passed, but players' integrated DhtOps are not syncronized. Final conductor states:`,
-      );
-      conductorStates.forEach((dump, idx) => {
-        console.log(`
+
+      console.error(
+        conductorStates.map(
+          (dump, idx) => `
 Conductor ${idx}
 ------------------------------
 # of integrated ops: ${dump.integration_dump.integrated.length}
 # of ops in integration limbo: ${dump.integration_dump.integration_limbo.length}
-# of ops in validation limbo: ${dump.integration_dump.validation_limbo.length}
-      `);
-      });
-      throw Error(
-        `Timeout of ${timeoutMs} ms has passed, but players' integrated DhtOps are not syncronized`,
+# of ops in validation limbo: ${dump.integration_dump.validation_limbo.length}\n`,
+        ),
       );
-    }
 
-    // Check if Integrated DhtOps are syncronized
-    completed = await areConductorCellsDhtsSynced(conductorCells);
-
-    if (!completed) {
-      await pause(intervalMs);
-    }
-  }
-};
+      return `Players' integrated DhtOps are not syncronized.`;
+    },
+    { players, dnaHash },
+    intervalMs,
+    timeoutMs,
+  );
 
 /**
  * A utility function to verify if all ConductorCells in an array have CellIds with
@@ -232,32 +243,18 @@ export const storageArc = async (
   storageArc: DhtArc,
   intervalMs = 500,
   timeoutMs = 40_000,
-) => {
-  // Always run the check at least once, even if the timeoutMs is 0.
-  let completed = await isEqualPlayerStorageArc(player, dnaHash, storageArc);
-
-  const startTime = Date.now();
-  while (!completed) {
-    // Check if timeout has passed
-    const currentTime = Date.now();
-    if (Math.floor(currentTime - startTime) >= timeoutMs) {
+) =>
+  retryUntilCompleteOrTimeout(
+    ({ player, dnaHash, storageArc }) =>
+      isEqualPlayerStorageArc(player, dnaHash, storageArc),
+    async ({ player, dnaHash, storageArc }) => {
       const currentStorageArc = await getPlayerStorageArc(player, dnaHash);
-      console.log(
-        `Timeout of ${timeoutMs} ms has passed, but player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`,
-      );
-      throw Error(
-        `Timeout of ${timeoutMs} ms has passed, but player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`,
-      );
-    }
-
-    // Check if storage arc matches
-    completed = await isEqualPlayerStorageArc(player, dnaHash, storageArc);
-
-    if (!completed) {
-      await pause(intervalMs);
-    }
-  }
-};
+      return `Player's storage arc did not match the desired storage arc ${storageArc}. Final storage arc: ${currentStorageArc}`;
+    },
+    { player, dnaHash, storageArc },
+    intervalMs,
+    timeoutMs,
+  );
 
 /**
  * A utility function to get the storage arc for a given player and dna hash.
@@ -315,3 +312,59 @@ const isEqualPlayerStorageArc = async (
   const currentStorageArc = await getPlayerStorageArc(player, dnaHash);
   return isEqual(currentStorageArc, storageArc);
 };
+
+/**
+ * A utility function to wait until a player's integrated Ops count equals a desired
+ * count for a DNA
+ *
+ * @param player - A Player.
+ * @param cellId - The Cell to check the integrated Ops count for.
+ * @param targetIntegratedOpsCount - The desired integrated Ops count to wait for.
+ * @param intervalMs - Interval between comparisons in milliseconds (default 500).
+ * @param timeoutMs - Timeout in milliseconds (default 40_000).
+ * @returns A promise that resolves when the player's integrated ops count matches; rejects on timeout.
+ *
+ * @public
+ */
+export const integratedOpsCount = async (
+  player: PlayerApp,
+  cellId: CellId,
+  targetIntegratedOpsCount: number,
+  intervalMs = 500,
+  timeoutMs = 40_000,
+) =>
+  retryUntilCompleteOrTimeout(
+    async ({ player, cellId, targetIntegratedOpsCount }) => {
+      const playerFullState: FullStateDump = await player.conductor
+        .adminWs()
+        .dumpFullState({
+          cell_id: cellId,
+          dht_ops_cursor: undefined,
+        });
+
+      return (
+        playerFullState.integration_dump.integrated.length ===
+        targetIntegratedOpsCount
+      );
+    },
+    async ({ player, cellId, targetIntegratedOpsCount }) => {
+      const dump: FullStateDump = await player.conductor
+        .adminWs()
+        .dumpFullState({
+          cell_id: cellId,
+          dht_ops_cursor: undefined,
+        });
+
+      console.error(`
+Conductor
+------------------------------
+# of integrated ops: ${dump.integration_dump.integrated.length}
+# of ops in integration limbo: ${dump.integration_dump.integration_limbo.length}
+# of ops in validation limbo: ${dump.integration_dump.validation_limbo.length}\n`);
+
+      return `Target Integrated Ops Count: ${targetIntegratedOpsCount}, Current Integrated Ops Count: ${dump.integration_dump.integrated.length}`;
+    },
+    { player, cellId, targetIntegratedOpsCount },
+    intervalMs,
+    timeoutMs,
+  );

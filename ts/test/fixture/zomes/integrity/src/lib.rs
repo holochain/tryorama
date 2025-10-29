@@ -14,4 +14,6 @@ pub struct UpdateInput {
 #[unit_enum(EntryTypesUnit)]
 pub enum EntryTypes {
     Content(Content),
+    #[entry_type(visibility = "private")]
+    PrivateContent(Content),
 }

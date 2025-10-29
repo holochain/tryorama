@@ -6,8 +6,11 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 
 ### Added
 - A new optional field `label` was added to the types `AppWithOptions`, `ConductorOptions`, `CreateConductorOptions`, and to the function `addConductor`. It allows overriding the default label which will prefix log messages of that Conductor instance.
+- A new method `integratedOpsCount` that polls for integrated ops and checks if the number of integrated ops is equal to the desired number for a given dna hash. (#[305](https://github.com/holochain/tryorama/pull/305))
 
 ### Removed
+- **BREAKING**: Utility function `conductorCellsDhtSync` has been removed. Use `dhtSync` directly instead. (#[305](https://github.com/holochain/tryorama/pull/305))
+
 ### Changed
 - Log messages from Conductors that were created with `addPlayers` functions are now prefixed by `Tryorama - Player #` where "#" is the Player index. This makes it easier to distinguish log messages from different conductors. ([#302](https://github.com/holochain/tryorama/pull/302))
 
