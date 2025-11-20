@@ -5,6 +5,13 @@ This project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.htm
 ## \[Unreleased\]
 
 ### Added
+### Removed
+### Changed
+### Fixed
+
+## 2025-11-20: v0.19.0
+
+### Added
 - A new optional field `label` was added to the types `AppWithOptions`, `ConductorOptions`, `CreateConductorOptions`, and to the function `addConductor`. It allows overriding the default label which will prefix log messages of that Conductor instance.
 - A new method `integratedOpsCount` that polls for integrated ops and checks if the number of integrated ops is equal to the desired number for a given dna hash. (#[305](https://github.com/holochain/tryorama/pull/305))
 
