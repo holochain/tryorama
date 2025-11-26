@@ -44,7 +44,7 @@ const retryUntilCompleteOrTimeout = async <T>(
   onTimeoutMessage: (input: T) => Promise<string>,
   input: T,
   intervalMs: number = 500,
-  timeoutMs: number = 40_000,
+  timeoutMs: number = 60_000,
 ) => {
   // Always run the check at least once, even if the timeoutMs is 0.
   let completed = await isComplete(input);
@@ -172,7 +172,7 @@ export const dhtSync = async (
   players: PlayerApp[],
   dnaHash: DnaHash,
   intervalMs = 500,
-  timeoutMs = 40_000,
+  timeoutMs = 60_000,
 ) =>
   retryUntilCompleteOrTimeout(
     ({ players, dnaHash }) => {
@@ -232,7 +232,7 @@ const isConductorCellDnaHashEqual = (conductorCells: ConductorCell[]) => {
  * @param dnaHash - The DNA to check the storage arc for.
  * @param storageArc - The desired storage DhtArc to wait for.
  * @param intervalMs - Interval between comparisons in milliseconds (default 500).
- * @param timeoutMs - Timeout in milliseconds (default 40_000).
+ * @param timeoutMs - Timeout in milliseconds (default 60_000).
  * @returns A promise that resolves when the player's storage arc matches; rejects on timeout.
  *
  * @public
@@ -242,7 +242,7 @@ export const storageArc = async (
   dnaHash: DnaHash,
   storageArc: DhtArc,
   intervalMs = 500,
-  timeoutMs = 40_000,
+  timeoutMs = 60_000,
 ) =>
   retryUntilCompleteOrTimeout(
     ({ player, dnaHash, storageArc }) =>
@@ -321,7 +321,7 @@ const isEqualPlayerStorageArc = async (
  * @param cellId - The Cell to check the integrated Ops count for.
  * @param targetIntegratedOpsCount - The desired integrated Ops count to wait for.
  * @param intervalMs - Interval between comparisons in milliseconds (default 500).
- * @param timeoutMs - Timeout in milliseconds (default 40_000).
+ * @param timeoutMs - Timeout in milliseconds (default 60_000).
  * @returns A promise that resolves when the player's integrated ops count matches; rejects on timeout.
  *
  * @public
@@ -331,7 +331,7 @@ export const integratedOpsCount = async (
   cellId: CellId,
   targetIntegratedOpsCount: number,
   intervalMs = 500,
-  timeoutMs = 40_000,
+  timeoutMs = 60_000,
 ) =>
   retryUntilCompleteOrTimeout(
     async ({ player, cellId, targetIntegratedOpsCount }) => {
