@@ -201,7 +201,7 @@ Conductor ${idx}
         ),
       );
 
-      return `Players' integrated DhtOps are not syncronized.`;
+      return `Players' integrated DhtOps are not synchronized.`;
     },
     { players, dnaHash },
     intervalMs,
