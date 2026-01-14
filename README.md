@@ -1,3 +1,12 @@
+> [!NOTE]
+> **This project is no longer maintained directly by the Holochain team.**
+> 
+> Tryorama can continue to be used with Holochain 0.6, but **support for Holochain 0.7+ should not be expected from the Holochain team**. For testing Holochain DNAs, the Holochain team instead recommends using [sweettest](https://github.com/holochain/holochain/tree/develop/crates/hdk/src/sweetest), which is the test harness used in Holochain's own tests.
+>
+> See [this issue](https://github.com/holochain/holochain/issues/5546) for more information on the official maintenance status of downstream tools.
+> 
+> A fork of this project is still maintained by the community at [holochain-open-dev/tryorama](https://github.com/holochain-open-dev/tryorama).
+
 [![Holochain](https://img.shields.io/badge/Project-Holochain-blue.svg?style=flat-square)](http://holochain.org/)
 [![Discord](https://img.shields.io/badge/Discord-DEV.HC-blue.svg?style=flat-square)](https://discord.gg/k55DS5dmPH)
 [![License: CAL 1.0](https://img.shields.io/badge/License-CAL%201.0-blue.svg)](https://github.com/holochain/cryptographic-autonomy-license)
