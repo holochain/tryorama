@@ -1,7 +1,7 @@
 > [!NOTE]
 > **This project is no longer maintained directly by the Holochain team.**
 > 
-> Tryorama can continue to be used with Holochain 0.6, but **support for Holochain 0.7+ should not be expected from the Holochain team**. For testing Holochain DNAs, the Holochain team instead recommends using [sweettest](https://github.com/holochain/holochain/tree/develop/crates/hdk/src/sweetest), which is the test harness used in Holochain's own tests.
+> Tryorama can continue to be used with Holochain 0.6, but **support for Holochain 0.7+ should not be expected from the Holochain team**. For testing Holochain DNAs, the Holochain team instead recommends using [sweettest](https://github.com/holochain/holochain/tree/develop/crates/holochain/src/sweettest), which is the test harness used in Holochain's own tests.
 >
 > See [this issue](https://github.com/holochain/holochain/issues/5546) for more information on the official maintenance status of downstream tools.
 > 
