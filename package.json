@@ -65,5 +65,10 @@
     "typescript": "^5.0.0",
     "typescript-eslint": "^8.0.0",
     "vitest": "^3.1.4"
+  },
+  "overrides": {
+    "@microsoft/api-extractor": {
+      "lodash": "4.18.0"
+    }
   }
 }
